@@ -170,23 +170,6 @@ of the silence unchanged the whole time.
       root, before spawning any `Agent`/`Task` call that will edit files. Done when: the line is added and stays
       inside the file's 10KB size budget (condense elsewhere if needed, never raise the cap).
 
-- [x] [OPERATOR] P3. ✅ **RESOLVED same session, 2026-08-21 (slot 1, pre-compact audit) — a SEPARATE, narrow residual
-      of this same landing, found then fixed since it was live-blocking the quality gate.** Slot 1's own
-      `.tabs/1/agent-orchestrator` checkout had an unresolved `git stash pop` conflict in
-      `config/litellm/grok_gemini_proxy.yaml` (both conflict-side markers present, `git status` showed `UU`) — a
-      leftover autostash (`stash@{0}`) from this slot's own repeated `quickmerge`/`safe-doc-push` pull-rebase
-      cycles colliding with the incoming `055bd037b7` Kimi-removal commit. Initially flagged read-only (foreign
-      pre-existing content, `never git stash drop foreign WIP`), but a routine `quality-gates.sh` re-run in the
-      same session found it was actively failing `test_proxy_config_file_exists_and_parses` (malformed YAML) —
-      genuinely blocking, not cosmetic, so it needed resolving rather than staying flagged. Diagnosed both sides
-      before touching it (`git log --all -p` confirmed the "stashed" side's Gemini Paid-Tier-3 `proj5` entries had
-      NEVER been committed anywhere — the only surviving copy — while `grok_gemini_translation_proxy_2026_08_14.md`
-      confirmed they were real, intentional, planned capacity, not stray content) — kept the `proj5` entries,
-      dropped the Kimi block (confirmed correctly-removed per this doc's own resolution above). Verified: no
-      residual conflict markers, YAML parses (9 models), the specific failing test passes (57 passed/2 skipped),
-      full `quality-gates.sh` green. Shipped `agent-orchestrator@ff1abe563f`. NOT caused by or related to the
-      mis-located sub-agent (todo 4) — ordinary autostash collision on a shared/reused checkout.
-
 ## Codex SSOTs
 
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`

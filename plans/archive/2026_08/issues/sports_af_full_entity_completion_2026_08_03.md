@@ -56,19 +56,23 @@ context_scope:
   ]
 ---
 
-> **🟢 CROSS-PLAN BANNER — DISCHARGED 2026-08-21 (slot-7 reconciliation).** The gate this banner tracked (added
-> 2026-08-08) required this doc's P0 re-census to genuinely converge (all 8 in-scope AF entities down to their
-> honest-absence floors, zero `attempted_failed`) BEFORE `sports_taxonomy_p2_migration_2026_08_08.md`'s 19-token
-> uppercase→lowercase IS vocabulary rename could execute — to avoid the fetch loop writing a token the registry no
-> longer expected while backfills were still in flight. **Ordering was honored, verified from both docs' own
-> Progress Logs**: this doc's P0 re-census closed **2026-08-12 (slot 32)** — every entity converged to its
-> honest-absence floor (PLAYER_STATS 14 · INJURIES 72 · STANDINGS 68 · TEAMS 76 · FIXTURE_STATS 133 · FIXTURE_LINEUPS
-> 133, all `expected_unattempted`/absent, zero `attempted_failed`) — a full **two days before** the P2 rename's
-> 19-token re-stamp actually ran on `canonical-migration-sports-19token-restamp-20260814-045346` (2026-08-14,
-> slot-26). The rename therefore made its one pass over a corpus that was already finished, exactly as this gate was
-> designed to ensure. This doc itself carries `status: resolved` / `resolved_by:
-> sports_af_full_entity_completion-9798da269f23`. No further action is required of this doc; kept as a past-tense
-> record so a future reader does not mistake a live constraint for a closed one.
+> **🟡 CROSS-PLAN BANNER (added 2026-08-08) — an IS data_type vocabulary migration is inbound and is GATED ON THIS
+> DOC.** The sports venue/data-type canonicalisation chain (authored 2026-08-08 from the live distinct-values audit)
+> carries an operator ruling to **merge the sports data_type vocabulary to a single lowercase form** — which renames
+> every UPPERCASE API-Football entity token this campaign writes and measures (`FIXTURES`, `FIXTURE_EVENTS`,
+> `FIXTURE_STATS`, `FIXTURE_LINEUPS`, `PLAYER_STATS`, `INJURIES`, `STANDINGS`, `TEAMS`) to `fixtures`, `fixture_events`,
+> … .
+>
+> **Ordering is settled: this doc runs FIRST, the rename waits.** The rename phase declares
+> `depends_on: sports_af_full_entity_completion_2026_08_03` + `gate_on_depends: true`. Rationale: renaming the registry
+> while the two remaining all-leagues backfills (`FIXTURE_LINEUPS` 58,523 · `INJURIES` 62,709) are in flight would make
+> the fetch loop write a token the registry no longer expects — minting phantom `expected_unattempted` rows — and would
+> leave this doc's P0 re-census measuring the pre-rename axis. Letting this campaign converge first means the migration
+> makes ONE pass over the finished corpus.
+>
+> **Action required of THIS doc: none.** Do NOT "fix" the uppercase tokens here, do not pre-emptively lowercase
+> anything, and do not treat the casing as drift — it is the correct vocabulary until the gated rename phase lands. Keep
+> launching the backfills and closing the re-census exactly as written.
 
 ## Why this doc exists (not folded into the parent plan or the FIXTURE_EVENTS issue doc)
 
@@ -192,7 +196,7 @@ not urgent enough to block this campaign.
 - [x] ✅ [SCRIPT] P1. **Launch FIXTURE_STATS all-leagues backfill** — CONFIRMED RUNNING 2026-08-03: VM
       `af-backfill-20260803-233053` (launched by `unified-trading-sa`, `purpose=api-football-backfill`,
       `managed-by=deployment-service`), metadata confirms
-      `entity=FIXTURE_STATS source=API_FOOTBALL start_date=2020-06-06`. FIXTURE_EVENTS pass-3 singleton lock had
+      `entity=FIXTURE_STATS source=API_FOOTBALL     start_date=2020-06-06`. FIXTURE_EVENTS pass-3 singleton lock had
       cleared (it is the only `af-backfill-*`/ `af-audit-*` VM RUNNING — the prior three are TERMINATED). `run.log`
       shows healthy per-fixture progress (`[[VM_PROGRESS]] last_completed_date=2020-06-13→2020-06-14`, manifest writes,
       correct rate-limit backoff handling). No duplicate VM launched — a second concurrent AF-consuming VM would violate
@@ -237,13 +241,13 @@ not urgent enough to block this campaign.
       (`priority=999`+`priority_override=true`+ a false synthetic `prereqs.prerequisites` condition) via a single
       authenticated POST — **no backlog.yaml filesystem access needed at all**, worker-callable. Called it:
       `condition=auto_unpark__sports_af_full_entity_completion-003`, confirmed via `GET /api/backlog/parked`
-      (`parked: true`, `priority_override` implied by presence in that list). This task will not be offered to ANY
+      (`parked:     true`, `priority_override` implied by presence in that list). This task will not be offered to ANY
       slot again until that condition is flipped true. **Unpark criteria** (for whoever does it — operator via dashboard
       "Dispatch now", or a worker instructed to check): re-run
       `instruments-service/scripts/census_fixture_stats_lineups_widening_volume_2026_07_31.py`, confirm FIXTURE_STATS
       non-MVP captured count is at/near the full ~68k needed (it was 125/68,284 = 0.18% at park time, 2026-08-04T01:40Z)
       — once genuinely converging,
-      `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-003 {"value": true, "set_by": "operator"}`
+      `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-003     {"value": true, "set_by": "operator"}`
       (or `POST /api/backlog/sports_af_full_entity_completion-003/unpark`). **Residual gap, not fixed here**:
       FIXTURE_STATS itself has no dedicated recurring-retry todo of its own — every relaunch to date happened only as a
       side-effect of this task's repeated redispatch. Now that this task is parked, nothing will proactively relaunch

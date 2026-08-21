@@ -64,6 +64,8 @@ baseline:
     count: 4
   execution-service/execution_service/sports_execution/adapters/bookmaker_api/api_football.py:
     count: 4
+  execution-service/execution_service/sports_execution/adapters/bookmaker_api/onexbet.py:
+    count: 7
   execution-service/execution_service/sports_execution/adapters/exchanges/betfair.py:
     count: 8
   execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py:
@@ -782,4 +784,8 @@ baseline:
     count: 3
   unified-trading-pm/plans/audit/results/cf_manifest_audit_2026_06_01.py:
     count: 1
+  unified-trading-system-ui/context/api-contracts/canonical-schemas/crosscutting/errors/__init__.py:
+    count: 2
+  unified-trading-system-ui/context/internal-contracts/schemas/events.py:
+    count: 2
 note: Seeded 2026-05-20 (slot 1) — lint_sweep_774602ea8 regression-audit Phase 1.

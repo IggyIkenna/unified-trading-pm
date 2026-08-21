@@ -596,13 +596,12 @@ something" check while being economically incorrect, whereas `[]` is at least vi
 SUB_AGENT_MANDATORY_RULES escalation clause for a money-path architectural ambiguity, this is reported rather than
 guessed.
 
-**Minor incidental finding — FIXED 2026-07-26 via `defi_satellite_ao_dispatch_batch2_2026_07_26.md`**:
-`tests/integration/test_recursive_borrow_scenarios.py` imported `_build_carry_recursive_staked` (the **plain**
+**Minor incidental finding (not fixed, outside this task's file scope)**:
+`tests/integration/test_recursive_borrow_scenarios.py` imports `_build_carry_recursive_staked` (the **plain**
 archetype's catalog builder) aliased as `_build_carry_recursive_borrow_perp_hedged` for its Family-2 registry, instead
-of `build_carry_basis_perp_inv` — so that file's `FAMILY_2_CELL_IDS` was actually built from the wrong catalog (10
-plain-archetype rows, not `CARRY_BASIS_PERP_INV`'s real 10-row catalog). Harmless (both happened to satisfy the same
-`len(...) >= 5` assertion) but fixed: import corrected to `build_carry_basis_perp_inv`, `FAMILY_2_CELL_IDS` now
-reflects the real 10-row `CARRY_BASIS_PERP_INV` catalog, 40/40 tests pass. Shipped `strategy-service@628a0a32`.
+of `build_carry_basis_perp_inv` — so that file's `FAMILY_2_CELL_IDS` is actually built from the wrong catalog (10
+plain-archetype rows, not `CARRY_BASIS_PERP_INV`'s real 10-row catalog). Harmless today (both happen to satisfy the same
+`len(...) >= 5` assertion) but should be fixed alongside whichever future work actually touches this test file.
 
 ### What's still needed (new scoped follow-up, not built here)
 

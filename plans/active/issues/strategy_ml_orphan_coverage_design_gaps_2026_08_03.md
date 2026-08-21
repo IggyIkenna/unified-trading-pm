@@ -14,9 +14,6 @@ summary: >-
   manifest-WRITE design pass for (b)/(c)) before a sweep is buildable — building one now would be a mechanical port onto
   a shape that doesn't exist, exactly what this parent doc's own text warned against.
 status: open
-archive_exempt: true # all 5 todos done (last: strategy-service@21d46d75) but this doc has 11 corpus referrers
-  # (grepped 2026-08-21) that a same-turn archive-move would need to fix too; deferred as its own
-  # follow-up rather than rushed. See Progress Log.
 nature: issue
 asset_group: [cefi, defi, tradfi]
 stage: [data]
@@ -158,10 +155,12 @@ just (c).
       extension — strategy-service@4733a7e7 (extend `strategy_orphan_sweep.py` for orders/positions/pnl and/or
       backtest_results; `ml_orphan_sweep.py` for models/metadata/training_artifacts) mirroring the A-E taxonomy pattern.
       Repo: strategy-service, ml-service.
-- [x] 5. ✅ [BACKEND] P2. **DONE — shipped `strategy-service@21d46d75`, 2026-08-21.** Split out of todo 1's
-      now-resolved decision. Mechanical sub-parts shipped 2026-08-09 (slot 8). Real-caller sub-part: operator
-      answered the BLK question 2026-08-21 (verbatim below); code wired, QG green, landed. Wire up a real caller
-      for `strategy_orders`/`strategy_positions`/`strategy_pnl`: add explicit
+- [ ] 5. [BACKEND] P2. **New 2026-08-09, split out of todo 1's now-resolved decision. Mechanical sub-parts SHIPPED
+      2026-08-09 (slot 8). Real-caller sub-part: operator answered the BLK question 2026-08-21 (verbatim below);
+      code wired + QG green 2026-08-21 — retagged from `[OPERATOR]` (question resolved) to `[BACKEND]`; checkbox
+      stays open only because the commit has not landed yet (see Progress Log — blocked on an unrelated concurrent
+      session's dirty `unified-api-contracts` checkout tripping quickmerge's pre-flight dep-audit, not an operator or
+      code gate).** Wire up a real caller for `strategy_orders`/`strategy_positions`/`strategy_pnl`: add explicit
       `PROTOCOL_DATA_SINK_BUCKET_STRATEGY_ORDERS`-class deployment config (currently defaults to `LocalDataSink()` — no
       `PROTOCOL_DATA_SINK_BACKEND`/bucket env var set in
       `deployment-service/terraform/services/strategy-service/gcp/main.tf:197-224`) — **done, strategy-service /
@@ -179,21 +178,6 @@ just (c).
       through `get_data_sink(routing_key="strategy_orders")` to the documented `PATH_REGISTRY` path, deployment
       config sets an explicit GCS backend, `bash scripts/quality-gates.sh` is green, AND the commit lands on
       `live-defi-rollout` (currently blocked — see Progress Log). Repo: strategy-service, deployment-service.
-- [ ] [DOCS] P3. **New 2026-08-21 — archive this doc.** All 5 todos above are done; this doc is
-      `archive_exempt: true` only because it has 11 corpus referrers to fix in the same move
-      (`plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`,
-      `plans/archive/issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`,
-      `plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md`,
-      `plans/audit/results/code_completion_scope_2026_08_19.md`,
-      `plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,
-      `plans/active/code_readiness_t3_features_ml_strategy_2026_08_19.md`,
-      `plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md`,
-      `plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`,
-      `plans/active/issues/plan_reconciler_findings_security_and_cross_cutting_master_2026_08_19.md`,
-      `plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_19.md`,
-      `plans/active/issues/plan_reconciler_findings_ui_2026_08_18.md`). Done-when: `git mv` to
-      `plans/archive/issues/`, `status:` flipped to `ARCHIVED <date>`, `archive_exempt:` removed, every
-      referrer above repointed to the new path.
 
 ## Progress Log
 

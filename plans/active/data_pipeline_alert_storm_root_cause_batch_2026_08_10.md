@@ -74,7 +74,7 @@ source: >-
   Interactive session 2026-08-10, operator-pasted #data-pipeline-alerts dump, traced to root cause across 6 repos.
   Operator decisions recorded inline: chain fix = "both, sequenced"; packaging = one batch plan + existing-doc
   enhancements; dispatch = all human/local.
-last_updated: 2026-08-21 # (was: 2026-08-17, 2026-08-15, then 2026-06-27 before that -- ag-closeout-audit cefi Phase 2 2026-08-21: bumped to match latest Progress Log entry)
+last_updated: 2026-08-17 # (was: 2026-08-15, then 2026-06-27 before that -- plan-reconcile 2026-08-19: bumped again to match latest Progress Log entry, na-eligibility-audit 2026-08-17)
 ---
 
 # Data-pipeline alert-storm root-cause batch (2026-08-10)
@@ -372,7 +372,7 @@ last_updated: 2026-08-21 # (was: 2026-08-17, 2026-08-15, then 2026-06-27 before 
 
 | item                                                                                                              | state / why deferred                                                                                                                                                                                                                                                                                                                               | blocked-on                       |
 | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| **deployment-service ship** (#1 relaunch state + #2/#3/#5/#6 alert accuracy)                                      | **CORRECTED 2026-08-21 (ag-closeout-audit cefi tranche, Phase 2 sweep): DONE — stale row, never revised.** This row was a pre-`quickmerge` snapshot; the doc's own checked `[x]` todos above (relaunch state + the alert-accuracy quartet, both citing `deployment-service@0c38c00d`) already record the ship, and the later "Deferred work after 2026-08-11" table's `~~**deployment-service ship**~~` row confirms `0c38c00d` shipped (3,317 passed). Independently re-verified live: `git cat-file -t 0c38c00d` resolves to a real commit and `git merge-base --is-ancestor 0c38c00d HEAD` confirms it is an ancestor of current `deployment-service` HEAD — no basedpyright-ratchet failure remains against it today.        | shipped — landed        |
+| **deployment-service ship** (#1 relaunch state + #2/#3/#5/#6 alert accuracy)                                      | **Not done.** Code complete, lint clean, 392 tests pass, all files under the 960 cap. Gate FAILS on the basedpyright ratchet: `1268 errors > BASEDPYRIGHT_MAX_ERRORS=1259` — the two extractions (`_captured_reader.py`, `_classify.py`) added ~9 type errors above baseline. Ratchets only go DOWN, so these must be fixed, not baselined.        | nobody — pick up directly        |
 | **agent-orchestrator ship** (#17)                                                                                 | **CORRECTED 2026-08-12 (/plan-reconcile): DONE.** This row was a stale pre-compaction snapshot — the doc's own checked `[x]` todo (line 187, "Make /data-pipeline-alerts-reconcile AO-schedulable") cites resolving evidence `agent-orchestrator@0eb0da5`, `AO_QG_EXIT=0`, 3,364/0 tests, matching this row's own gate figures, proving it landed. | shipped — landed                 |
 | **features-service ship** (#14)                                                                                   | **CORRECTED 2026-08-12 (/plan-reconcile): DONE.** Stale pre-compaction snapshot — the doc's own checked `[x]` todo (line 172, honest-absence fix) cites the identical `FS_QG_EXIT=0, 18,387 passed` figure with a landed sha `features-service@692ce76b`, proving it shipped.                                                                      | shipped — landed                 |
 | **liquidations P0 root cause**                                                                                    | **Not done.** Operator approved FULL remediation (fix + re-drive ~150k cells). Diagnosis is NOT yet complete — see the reversal in the Progress Log below.                                                                                                                                                                                         | nobody — highest-value next item |
@@ -407,8 +407,6 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
 
 ## Progress Log
 
-- **ag-closeout-audit 2026-08-21 (cefi tranche, Phase 2)**: fixed the stale `deployment-service ship` deferred-work
-  row (contradicted this doc's own `[x]` checkboxes) — see the row's own "CORRECTED" text for the evidence.
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 2, operator ruling)**: three items ruled via AskUserQuestion.
   (1) Cross-cloud WIF for the AO VM — **approved** — extracted to `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md`
   (`assigned_vm: planning`). (2) Chain relabel migration part 2 — **re-verify plan is current, then dispatch** — same
@@ -468,13 +466,16 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   SPOT with `instanceTerminationAction=DELETE`), stranding its per-VM manifest shard (`_index/per_vm/` has NO
   `...-052119.parquet`). Pre-fix `_PROGRESS_RE` didn't match `POLARS AGGREGATED` → SILENT → false GONE_NO_CAPTURE
   CRITICAL page. Root causes + fix SHAs, all on `origin/live-defi-rollout`: (1) detector false-page →
-  `deployment-service@2f077c97` (POLARS AGGREGATED → PROGRESS → EXPECTED_NO_CAPTURE); (2) OOM on undersized machine →
-  `deployment-service@5597e398` (cefi/defi → e2-highmem-8); (3) stranded shard on preemption →
-  `unified-trading-library@3b006d9f` (preemption-safe per-VM drain). **Data safety verified**: availability index
-  shows 118,549 `captured` cefi MDPS rows for 2021 (13,225 `attempted_failed`) + the GCS blob present — no data lost,
-  sibling VMs cover the range. **Remaining systemic issue (not this finding)**: the exit-code monitor's
-  relaunch-budget bug (this plan's todo #1, code-complete but unshipped; escalation `agt-c06379` dispatched on it) —
-  no MTDS code change needed, that side was already correct.
+  `deployment-service@2f077c97` (POLARS AGGREGATED → PROGRESS → EXPECTED_NO_CAPTURE; re-ran the shipped classifier on
+  the real run.log → now EXPECTED_NO_CAPTURE, no page); (2) OOM on undersized machine → `deployment-service@5597e398`
+  (cefi/defi → e2-highmem-8); (3) stranded shard on preemption → `unified-trading-library@3b006d9f` (preemption-safe
+  per-VM drain). **Data safety verified**: availability index for cefi shows 118,549 `captured` MDPS rows for 2021
+  (13,225 `attempted_failed`) + `processed_candles/by_date/day=2021-01-01/` present in GCS — the VM's death lost
+  nothing; sibling VMs cover the range. **Remaining systemic issue (not this finding)**: the live fleet storm (~1000+
+  SPOT mdps VMs, still spawning every ~15s, launcher `launch-mdps-sharded-backfill.sh` has no singleton guard) is the
+  exit-code monitor's relaunch-budget bug — this plan's todo #1 (durable race-free relaunch state) is code-complete but
+  unshipped; sibling escalation `agt-c06379` (deployment-service) is dispatched on it. This finding needs no MTDS code
+  change — the MTDS side was already correct.
 - **2026-08-10→14 (data_pipeline_failure escalation worker, 4 dispatches condensed: agt-b947d5 2026-08-10,
   agt-f601e4 slot-7 2026-08-13, agt-8ec9c8 slots 6+14 2026-08-14, agt-07b27b slot-21 2026-08-14) — repeat-dispatch
   cluster for `(cefi, book_snapshot_5)` DP-FETCH-009, condensed 2026-08-15 per this plan's own line-cap trim todo

@@ -384,16 +384,6 @@ unknown rather than guessed.
 
 ## Progress Log
 
-- **ag-closeout-audit 2026-08-21 (defi/cefi tranche, Phase 2 sweep)**: re-verified the "must land BEFORE the
-  strategy-service repository is sent" gate. `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`
-  (line 6-8) still frames the repository send as gated on this plan's work; no evidence found that the repo has
-  since been sent. The 2 remaining P0 items (beta-hedge, vol-target — both need a new book-level aggregation layer
-  designed before they can be built, per the 2026-08-20 seam-investigation notes below) are genuine open
-  design/build work, not a mechanical hygiene fix — this doc correctly stays `status: draft` / `assigned_vm: NA`.
-  Flagging for operator visibility only: this plan has sat undispatched since 2026-08-12 despite the explicit
-  deadline language, and the beta-hedge/vol-target design decision (where does book-wide `target_net_delta` get
-  aggregated across a client's live strategy instances) has been open since at least 2026-08-20 with no owner
-  named.
 - **2026-08-12 (later)** — **All three blocking audits closed.** Together they were the gate on writing the artefacts
   once instead of twice, and the net result is narrower than feared: the catalogue layer has exactly **two** misplaced
   cross-archetype clusters, not an open-ended sprawl, and the custody model needed no design work at all. Three findings

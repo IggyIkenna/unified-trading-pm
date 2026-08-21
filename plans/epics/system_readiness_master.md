@@ -65,7 +65,6 @@ codex_ssots:
   - /codex/06-coding-standards/config-reloader-pattern.md
   - /codex/09-strategy/operational/paper-batch-live-reconciliation.md
 related_plans:
-  - /plans/active/venue_websocket_resilience_and_error_code_mapping_2026_08_21.md
   - /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md
   - /plans/active/venue_e2e_wiring_2026_08_16.md
   - /plans/active/venue_smoke_test_bar_2026_08_16.md
@@ -76,10 +75,8 @@ related_plans:
   - /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md
   - /plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md
   - /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md
-last_updated: "2026-08-21" # was 2026-08-19 — linked venue_websocket_resilience_and_error_code_mapping_2026_08_21
-  # as the executor of W14's "every venue error code understood" P0 (+ ws-protocol registry axis, stale-feed
-  # rotation, feed-SLA/alerting/kill-switch wiring); prior: 2026-08-17→19 credentials as W1's 7th readiness
-  # dimension + live-mode cross-reference + priority venue/protocol acceptance cohort
+last_updated: "2026-08-19" # was 2026-08-17 — added credentials as W1's 7th readiness dimension + manual/automated
+  # live-mode cross-reference + named the priority venue/protocol acceptance cohort, see body
 locked_by:
 locked_since:
 resolved_by:
@@ -552,9 +549,6 @@ strategy's `ExposureAggregator` rather than keeping a duplicate local exposure v
 
 - [ ] [BACKEND] P0. **Every venue error code understood across every consumer** — MTDS, instruments-service, execution
       adaptors, and strategy-service balance queries. Every request and response schema, code and format.
-      → Executed by `/plans/active/venue_websocket_resilience_and_error_code_mapping_2026_08_21.md` (Phase B
-      exhaustive per-venue error-code research from public API docs + Phase C consumer wiring; that plan flips this
-      checkbox with census-test evidence when the wiring lands).
 - [ ] [BACKEND] P0. **Pin the exchange version tested**, so a venue-side version change triggers a **cassette re-run to
       detect drift** — and only then, not on every build.
 - [ ] [OPERATOR] P0. **Test accounts with credentials for each venue** — a prerequisite for the above, and an operator
@@ -748,39 +742,29 @@ two ways: we host it, or they run our container themselves. Surfaced while audit
 [`platform-external-api-walkthrough.html`](/codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html)
 §25 for [`client_artefact_remediation_nickai_2026_08_18.md`](/plans/active/client_artefact_remediation_nickai_2026_08_18.md).
 
-- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — execution-service@79e951ea (subscriber) + execution-service@99962afa1f (startup wiring).
-      Strategy instructions now reach execution through the UTL `EventTransport` facade, not a service dependency;
-      Evidence: both commits exist and are ancestors of `origin/live-defi-rollout`, with the source plan evidence from `bash scripts/quality-gates.sh --no-fix`. Source: `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`.
-- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-20 — execution-service@f0a33fd3d8 + execution-service@62d2e3ab76.
-      Execution subscribes only to the feature groups it needs; Evidence: both commits exist and are ancestors of `origin/live-defi-rollout`, with the source plan evidence from `bash scripts/quality-gates.sh --no-fix`. Source: `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`.
+- [ ] [BACKEND] P0. **Strategy → execution instruction delivery over messaging, not a service dependency.** Same
+      UTL `EventTransport` facade market data already uses — Pub/Sub-backed, keyed on what the subscriber needs.
+      A direct service-to-service call is explicitly out — this is a T4 service boundary.
+- [ ] [BACKEND] P0. **Features-service → execution subscription.** Execution subscribes to only the feature groups
+      it needs, not a broadcast of everything features-service produces.
 - [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — execution-service@c6b8bd02ad. Every strategy-emitted instruction is persisted one-by-one through the existing manifest/shard pipeline; Evidence: bash scripts/quality-gates.sh --no-fix (8877 passed, 22 skipped, 1 xpassed; isolated quickmerge gate green).
       Queryable through the existing BigQuery external-table pattern; distinct from market-tick-data aggregation (W2/W3), a separate axis.
-
-Full todo detail, commit SHAs, and evidence: `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`
-— this section tracks landed/open status only and does not duplicate the plan's evidence trail.
-
-- [x] [BACKEND] P0. Instruction action vocabulary past TRADE/QUOTE — SWAP, LEND, WITHDRAW, STAKE, UNSTAKE, BORROW,
-      REPAY, TRANSFER, CANCEL, BRIDGE, and ATOMIC are now all wired on the external HTTP surface (the DeFi actions
-      via a `defi_adapter=` injection seam, TRANSFER/CANCEL/BRIDGE via the transfer-wiring seam, ATOMIC via the
-      existing multi-leg router), each producing a real settlement result or an honest structured rejection, never
-      a silent drop or fabricated success. SHIPPED 2026-08-20/21. The underlying venue-side ATOMIC multi-leg
-      execution engine (compensation semantics, partial-fill handling) is a separate, genuinely open follow-up —
-      tracked in `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md`. Detail: the
-      plan's "Instruction action vocabulary" section.
-- [x] [BACKEND] P0. Kill-switch and flatten-position as instructions — SHIPPED 2026-08-21.
-      `KILL_SWITCH`/`FLATTEN_POSITION` route through the existing kill-switch and
-      `AccountInstructionOrchestrator.CLOSE_ALL` primitives, not a second authority path.
 - [ ] [BACKEND] P0. **Three execution-service deployment topology, one schema, protocol per deployment**:
-      internal (Pub/Sub), external-automated (registered/allow-listed clients, HTTP/WebSocket), manual (HTTP).
-      Same `StrategyInstructionEnvelope` across all three. STILL OPEN — a verification pass now that the
-      messaging-bridge and vocabulary prerequisites have landed; not started.
-- [ ] [BACKEND] P0. **External hosting, two ways**: we run it for a registered client, or they run the same image
-      themselves (Dockerized, config-driven). STILL OPEN, not started.
-- [ ] [BACKEND] P1. **Broker and routing configuration via the existing `venue_constraints` field** — population
-      and validation only, no new schema. STILL OPEN, not started.
-- [ ] [BACKEND] P1. **Registered-client management for the external-automated deployment** — allow-list +
-      onboarding. A related but DISTINCT mechanism shipped 2026-08-21 (`_enforce_client_org_binding` — a
-      client_id-vs-org_id ownership binding, not an org allow-list) does not close this. STILL OPEN, not started.
+      internal (Pub/Sub, our own strategy-service), external-automated (registered/allow-listed clients, HTTP or
+      WebSocket depending on the latency bar), manual (DART or an external trading UI/API, HTTP — manual trading
+      has no latency floor to defend). Same `StrategyInstructionEnvelope` across all three.
+- [ ] [BACKEND] P0. **External hosting, two ways**: we run and maintain the execution-service deployment for a
+      registered client, OR they run the same image themselves (Dockerized, config-driven, our hot-reload config
+      model per W6) — on their infrastructure or ours. The call shape is identical either way.
+- [ ] [BACKEND] P0. **Complete the instruction action vocabulary past TRADE** — the other 10 action types on
+      `StrategyInstructionEnvelope` currently return HTTP 501; wire each for both the internal and external paths.
+- [ ] [BACKEND] P0. **Add kill-switch and flatten-position as instructions**, not only as internal system behaviour
+      (W15/security kill-switches already exist as an operational control) — a caller must be able to send them,
+      scoped the same way the internal kill-switch is (all-live / per-archetype / per-venue).
+- [ ] [BACKEND] P1. **Broker and routing configuration via the existing `venue_constraints` field** — no new
+      schema needed, per operator direction 2026-08-19; population and validation, not design.
+- [ ] [BACKEND] P1. **Registered-client management for the external-automated deployment** — who is allow-listed,
+      and how a new client gets onboarded.
 
 Codex SSOTs: `/codex/02-data/live-data-persistence-and-event-log.md` (EventTransport facade),
 `/codex/04-architecture/tier-and-import-architecture.md` (no service→service dependency).

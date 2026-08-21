@@ -239,163 +239,31 @@ designed. They're session-process mistakes worth recording so they aren't repeat
    labels minus the two removed providers — not a mechanical auto-merge, needed a real read of both
    sides' intent.
 
-## Part 4 — bugs 4a/4b: bulk account-sweep pile-up + health-ring gap (SHIPPED)
-
-Found while checking on bugs 1-3's live impact: operator reported "more tasks are given to
-gemini models and some of them are dying or going stale". Live investigation (24h/60min
-`activity_log` breakdowns by account, same method as Part 1) found TWO more stacked bugs,
-distinct from bugs 1-3, both in the account-failover path rather than the fresh-dispatch path:
-
-**Bug 4a**: `rotate_all_slots_off_account()` (`server/server.py`) calls
-`select_account_for_spawn()` once per slot being swept off a dead/disabled account, in a tight
-loop with NO commit in between — the actual reassignment is deferred to background threads
-started only AFTER the whole loop finishes. Every call therefore sees the SAME stale
-`_active_slot_counts_by_account()` snapshot, so every slot in the sweep independently
-"discovers" the same single least-loaded account and piles onto it. Confirmed live: at
-2026-08-21 08:33:39 UTC an operator disabled `codex-luna` via the dashboard (`account_disabled`
-event, `slot_id=None` — a dashboard action, not this session); the resulting sweep dumped ~13
-slots onto ONE Gemini account (`gemini-3-5-flash-lite-proj1`) within 15 seconds
-(`account_rotation_triggered` timestamps 08:33:41-08:33:55, all `"to":
-"gemini-3-5-flash-lite-proj1"`), blowing past its real rate ceiling — all 13 sessions died
-together ~3 minutes later (8 `tmux_session_lost` rows at 08:36:19-21, empty
-`pane_dead_status`/`pane_pid`, elevated host load).
-
-**Bug 4b**: `autospawn._provider_health_ok`'s in-memory failure ring is fed ONLY by
-`record_spawn_outcome`, called ONLY at the initial tmux-spawn attempt (3 call sites, all in
-`autospawn.py`) — never when a session dies LATER (mid-conversation rate-limit exhaustion,
-tmux pane death). So the overloaded account from bug 4a never tripped the health gate and kept
-looking free: in the 60 minutes after the incident it absorbed 92 `gemini_request_selected`
-events while ALSO producing 12 `tmux_session_lost` + 13 `autospawn_failed` + 4
-`worker_polling_dead` events — nothing was suppressing further selection despite continuous,
-measurable failure. Real backlog work (a security audit, live-trading VM tasks, an execution
-OMS-persistence task) kept getting bounced and requeued.
-
-**Fix (both, one commit)**: `agent-orchestrator@98b9bf1183`.
-- 4a: generalized `_pick_headroom_account`'s existing single-id `exclude_id` to also accept an
-  `exclude_ids: frozenset[str]`, threaded through all 8 `_pick_headroom_account` call sites
-  inside `select_account_for_spawn` (additive, defaults to empty — no-op for every other
-  caller). `rotate_all_slots_off_account` now accumulates a local `sweep_picked: set[str]`,
-  passing it as `exclude_ids` on each iteration so slots spread across the live pool instead of
-  piling onto one; a round-reset (mirroring `_next_rotation_combo`'s own semantics) fires once
-  every live candidate has had a turn, so a single-account pool still gets every slot rather
-  than wrongly returning `None`. First implementation attempt had a real bug here (forgot to
-  clear the exclusion set on reset, collapsing back into pile-up after one round) — caught by
-  the regression test written for it before shipping, not by manual inspection.
-- 4b: `tmux_pruner.py`'s existing `death_class` classifier (`"unexplained"` vs
-  `"intentional_teardown"`) now calls `autospawn.record_spawn_outcome(slot.account_id,
-  ok=False)` for every `"unexplained"` death — intentional teardowns are excluded (not the
-  account's fault). Reuses the SAME `_provider_health_ok` gate already checked before every
-  free-provider pick, no new mechanism.
-- Immediate stopgap: `gemini-3-5-flash-lite-proj1` manually `disable_account`'d while the fix
-  shipped (fully reversible via `enable_account`) — the account had been actively, continuously
-  failing for over an hour, wasting real task attempts.
-- 4 new regression tests (`tests/test_account_rotation.py`,
-  `tests/test_tmux_pruner_death_class_signals.py`): bulk-sweep spreads N slots across M live
-  accounts; single-live-account sweep still serves every slot via round-reset; an unexplained
-  tmux death records a spawn failure for the bound account; an intentional-teardown death does
-  NOT. Full `quality-gates.sh`: 5280 passed / 4 skipped, coverage 86.06% (baseline 85.86%,
-  ratchet-clean).
-
-**Superseded by Part 5** (the "not yet done" note originally here — no RECURRENCE proof yet — is
-addressed by the audit + fix below; kept as history, not re-stated).
-
-## Part 5 — bug 4a's exact pattern found in the ROUTINE refill/resume paths too (SHIPPED)
-
-Operator: "we dont have to check that in day or two, we have to check it in two hours. see if you
-can find any other issues related to it." Audited every `select_account_for_spawn`/
-`select_account_with_non_strict_retry` call site in the fleet (17 total) for the SAME
-bulk-selection-before-any-commit shape bug 4a was fixed in.
-
-**Found**: `AutoSpawnLoop._run_one_tick` (the ROUTINE refill tick — runs constantly, not just on a
-rare account-disable event) and `AutoSpawnLoop._resume_pass` (dead-worker resume) both pick an
-account per slot inside one DB session via `select_account_with_non_strict_retry`, with the actual
-spawn/resume deferred to a later concurrent phase (`_do_spawns_concurrently`) — the IDENTICAL shape
-that let bug 4a pile 13 slots onto one account, just in the high-frequency path instead of the rare
-bulk-sweep path. Every OTHER call site was checked and ruled out (single-item decision points, not
-batch loops): `escalation.escalate()`/`_maybe_alert_pool_exhaustion` (one PR/wall or a
-headroom-only check, not a dispatch), `plan_health.dispatch()` (one scheduled job per call),
-`main_agent_keeper`'s 4 call sites (the singleton main-agent slot, not a fleet loop),
-`worker_liveness_watchdog._handle_usage_cap` (loops over slots but acts — kill + respawn —
-synchronously per slot before the next iteration, so it doesn't share the staleness mechanism).
-Also confirmed no `@lru_cache`/similar caching on the headroom-check functions that could add a
-DIFFERENT kind of staleness.
-
-**Fix**: `agent-orchestrator@ba855161ae`. Generalized `select_account_with_non_strict_retry` to
-accept `exclude_ids` (mirrors `select_account_for_spawn`'s own bug-4a parameter). Factored the
-exclude+round-reset spreading logic into a new shared helper,
-`autospawn.select_account_with_tick_spread` (mutates a caller-owned `set[str]` in place — adds a
-successful pick, clears-then-reseeds on a round-reset) — needed as a separate function, not inlined
-twice, both to avoid duplicating the logic AND to keep `_run_one_tick` under the ruff C901
-complexity ceiling once the extra branching was added inline (first attempt tripped it: 28 > 26).
-Both `_run_one_tick` and `_resume_pass` now call it instead of `select_account_with_non_strict_retry`
-directly. 4 new regression tests for the shared helper. 1240+ tests across all four bug areas pass;
-full `quality-gates.sh` green (5284 passed/4 skipped, coverage 86.06%). Live-verified: root checkout
-restarted onto `ba855161ae` at 10:20:30 UTC.
-
-**Process note**: shipping this hit a real async-wait trap worth recording — the FIRST
-`quality-gates.sh` background run reported "completed, exit 0" via the harness notification, but the
-scratchpad session directory its output was redirected into had been silently rotated away mid-run
-(the harness's own session-id changed, same class of issue Part 3 item 2 already documented), so the
-"pass" was actually a phantom — the log file didn't exist and QG likely never ran at all. A SECOND
-attempt then hit the OTHER known trap (Part 3 item 1's cousin): the session's persisted cwd had
-drifted to the bare workspace root between calls, so `quality-gates.sh` genuinely failed
-("No such file or directory") while still reporting exit 0 for the wrapping echo. Only a THIRD
-attempt, with the `cd` and the log path both baked into the SAME self-contained backgrounded command
-and the resulting log file's line count verified (9331 real lines, not a stub), produced trustworthy
-evidence. Lesson: a "completed, exit 0" notification is not itself proof of a real pass — read the
-log content and check it isn't suspiciously short/absent before shipping on it.
-
 ## Todos
 
-- [ ] [OPERATOR] P2. Re-enable `gemini-3-5-flash-lite-proj1` (paused 2026-08-21 as bug 4a/4b's
-      immediate stopgap — see Part 4) once comfortable the fix prevents a recurrence, or leave
-      paused if the account has an independent problem worth investigating further first.
-- [ ] [DATA] P3. Re-check bugs 4a/4b/5's live effectiveness ~2 hours after shipping (operator
-      directive, not "a day or two" — the original wording here): does a fresh bulk account-sweep OR
-      a routine refill/resume tick spread across multiple destinations instead of piling onto one,
-      and does a repeatedly-dying account's `free_provider_spawn_selected` share drop off after a
-      few `tmux_session_lost` events instead of staying flat. A session-scoped one-shot check is
-      already scheduled for 12:02 UTC 2026-08-21 (CronCreate job `be0aad88`, this session only —
-      gone if the session ends first; re-derive manually via the `activity_log` queries in Part 1/4
-      if it doesn't fire). Repo: agent-orchestrator.
-- [x] [SCRIPT] P3. **Found while verifying bug 1 post-ship.** The live (gitignored, per-VM)
-      `data/config/accounts.json` on the planning VM still carried 3 dead Kimi entries
-      (`kimi-k3`/`kimi-k2-6`/`kimi-k2-7-code`) — harmless (gracefully skipped) but not a true "removed
-      from the accounts list". Deleted directly on the planning VM (host-level, gitignored, no
-      PR/ship) — 2026-08-21. Evidence: `claude_headroom_exclusion_readout.py` re-run post-delete shows
-      zero `load_accounts: skipping malformed account entry (id='kimi-*')` tracebacks, JSON re-validated
-      (`python3 -c "import json; json.load(...)"`).
-- [x] [BACKEND] P1. Fix bug 1 — `account_is_usable()` (`server/state_store/account_usage.py`) now only
-      treats `overage_status == "rejected"` as blocking when the account is ALSO at/over the existing
-      `five_hour_pct_ceiling()`/`weekly_pct_ceiling()` (default 99%), instead of unconditionally.
-      Shipped `agent-orchestrator@e3a3ef4166`. Live-verified post-deploy (orchestrator.service restarted
-      2026-08-21 08:52:39 UTC via `ao-self-pull.sh`) via `claude_headroom_exclusion_readout.py`: 4/8
-      Claude accounts (`sub-a-ikenna`, `sub-e-odum2default`, `sub-f-odum2default`, `sub-h-igboestates`)
-      flipped `usable=False` → `True`; `_anthropic_pool_headroom_pct` went `None` → `74.5`;
-      `effective_fraction` (share routed OFF Claude) went `1.0` → `0.75`. The remaining 4 accounts
-      correctly stay `usable=False` (genuinely rate-limited/near-ceiling, not this bug). 2 new regression
-      tests added (`tests/test_auth_failed_rotation.py`) proving both directions: near-ceiling +
-      overage-rejected still blocks (preserves the original 2026-08-18 protection), far-from-ceiling +
-      overage-rejected is now usable.
-- [x] [BACKEND] P1. Fix bug 2 — `_live_free_combo_ids()` (`server/autospawn.py`) now gated by
-      `_account_meets_dispatch_headroom()` (real RPM/RPD checks for Gemini/NVIDIA, pct ceilings for
-      every poller-backed provider) instead of bare `account_is_usable()`, threaded through
-      `_select_rotation_combo()`'s new `five_hour_ceiling`/`weekly_ceiling` params from
-      `select_account_for_spawn`'s own already-resolved ceilings. Shipped in the same commit,
-      `agent-orchestrator@e3a3ef4166`. Not independently live-verified against real Gemini traffic yet
-      (needs dispatch activity to accumulate — the prior 36%+ Gemini rotation-failure rate was measured
-      over 24h) — re-check `_free_provider_spawn_selected_event`/`autospawn_failed` counts for Gemini in
-      a day or two.
-- [x] [BACKEND] P2. Fix bug 3 — `free_provider_priority` default changed from `["deepseek"]`
-      (alphabetical fallthrough for everything else) to explicit
-      `["deepseek", "gemini", "glm", "ollama", "codex"]`, shipped in the same commit. **Not
-      operator-confirmed** — implemented on reasoned-default judgment rather than waiting on the
-      cost/latency/reliability call this todo originally flagged as `[OPERATOR]`-gated: codex placed
-      LAST because it has no real quota/rate-limit signal at all
-      (nvidia_codex_exhaustion_observability_gap_2026_08_19, still open) and so never fails a headroom
-      check regardless of actual usage — providers with an observable real signal (Gemini RPM/RPD, GLM's
-      `glm_quota_poller.py` pct fields) get first refusal instead. Operator: flag if a different order is
-      wanted; the config default is a one-line change (`server/config.py` ~line 1600).
+- [ ] [SCRIPT] P3. **Found while verifying bug 1 post-ship.** The live (gitignored, per-VM)
+      `data/config/accounts.json` on the planning VM still carries 3 dead Kimi entries
+      (`kimi-k3`/`kimi-k2-6`/`kimi-k2-7-code`) — `load_accounts()` now gracefully skips them (logged,
+      not fatal, since `"kimi"` is no longer a valid `AccountProvider` literal post-removal), so this
+      is harmless today, but it isn't a true "removed from the accounts list" the way the operator
+      asked for. Delete the 3 entries from the live JSON file directly (not git-tracked, no PR/ship
+      needed — a plain edit on the planning VM). Repo: agent-orchestrator, host-level config only.
+- [ ] [BACKEND] P1. Fix bug 1 — make the `overage_status == "rejected"` exclusion proportional to
+      actual usage (only block when the account is also near its included-quota ceiling), so Claude
+      accounts with real headroom re-enter `_anthropic_pool_headroom_pct`/`_quota_adaptive_fraction`.
+      Read current `account_is_usable()` call sites first (6+ per its own docstring) before deciding
+      whether to change it directly or add a parallel check. Verify with
+      `scripts/orchestrator/claude_headroom_exclusion_readout.py` (new, this session — run from the
+      LIVE checkout per its own docstring, not a per-slot worktree) — re-confirmed 2026-08-21 post-ship
+      that bug 1 is still live (all 8 Claude accounts still `usable=False`). Repo: agent-orchestrator.
+- [ ] [BACKEND] P1. Fix bug 2 — wire `_live_free_combo_ids()` to `_account_meets_dispatch_headroom()`
+      (or the specific per-provider checks it composes) so Gemini/GLM/etc. are only rotated into the
+      Phase-4 pool when they can actually serve the request. Repo: agent-orchestrator.
+- [ ] [BACKEND] P2. Fix bug 3 — replace `free_provider_priority`'s 1-entry-plus-alphabetical-fallthrough
+      default with a real, explicit ranking. Needs an operator call on the actual intended order
+      (cost/latency/reliability tradeoff across codex/gemini/glm/ollama) — flag as
+      `[OPERATOR]`-gated for the ordering decision itself, `[BACKEND]` for the mechanical config change
+      once decided. Repo: agent-orchestrator.
 - [ ] [OPERATOR] P2. Top up the DeepSeek wallet (currently `-$0.63`, shared by both
       `deepseek-v4-flash`/`deepseek-v4-pro`) — real, separate exhaustion, not a routing bug, but it's
       what makes bug 3 bite constantly right now.
@@ -431,44 +299,3 @@ log content and check it isn't suspiciously short/absent before shipping on it.
   leaving the round-robin findings only in chat. All Part 1 findings are live-verified (real function
   calls against the real DB, real 24h activity_log queries), not re-derived from docs. Part 1's three
   fixes are NOT yet implemented — this doc's primary open scope.
-- **2026-08-21 (slot 13, interactive, later same session)**: operator directive "fix all the bugs you
-  found related to round robin first so that claude and other accounts can start working" — all 3
-  fixes implemented, tested (350+ targeted tests + full `quality-gates.sh`: 5271 passed/4 skipped,
-  coverage 86.05% vs. 85.86% baseline, basedpyright/tsc/vitest clean), shipped
-  `agent-orchestrator@e3a3ef4166`, and live-verified post-deploy (bug 1 confirmed via
-  `claude_headroom_exclusion_readout.py`: 4/8 Claude accounts now usable, pool headroom `None`→`74.5`,
-  effective off-Claude fraction `1.0`→`0.75`; bug 2 shipped but not yet independently traffic-verified;
-  bug 3 shipped on reasoned default, not operator-confirmed — see its todo). Also cleared the 3 dead
-  Kimi entries from the live `accounts.json` (todo 1). **Notable en-route incident, not a defect**: while
-  the full QG ran, AO's own pre-spawn dirty-state gate (`DirtyStateResolution.COMMIT_AND_PUSH`,
-  `plans/epics/orchestrator_master.md` § 'Fresh-spawn dirty-commit (Phase 3A)') auto-committed slot 13's
-  in-progress working tree as `chore(orphan-wip): inherited WIP from predecessor` — AO's dispatcher does
-  not appear to distinguish a live interactive session from an idle slot when deciding whether to spawn
-  into it, so it treated my dirty tree as abandoned WIP. Content was verified byte-identical to my actual
-  edits before proceeding; no worker actually ended up running concurrently in the slot (checked
-  `SlotRow` + live processes — none found), so no real contention occurred this time, but the same
-  mechanism could clobber output ordering or race a genuinely-concurrent worker in future. Recovered
-  safely via `git reset --soft HEAD~1` (unpushed, local-only commit — content re-verified identical
-  after reset) and re-shipped through normal quickmerge with a correct message. Not filed as a new issue
-  since it's a known, documented, non-destructive safety net working as designed — flagging here in case
-  it recurs with worse timing.
-- **2026-08-21 (slot 13, interactive, later same session)**: operator reported Gemini tasks "dying or
-  going stale" post-deploy and asked to check overall dispatch spread. Live investigation found bugs
-  4a/4b (Part 4) — root-caused, fixed, tested (4 new regression tests, one of which caught a real bug
-  in the first fix attempt before it shipped), full `quality-gates.sh` green (5280 passed/4 skipped,
-  86.06% coverage), shipped `agent-orchestrator@98b9bf1183`, live-verified via `orchestrator.service`
-  restart (09:42:32 UTC). Paused the one actively-failing Gemini account as an immediate stopgap
-  (reversible, todo above). Dispatch-spread check (the operator's second ask): selections ARE now
-  reaching multiple Gemini sub-accounts, both GLM accounts, and multiple Claude accounts, not just
-  `codex-luna` — bugs 1-3 are working as intended; the "dying/stale" symptom was entirely bugs 4a/4b,
-  not a shortfall in bugs 1-3's fix.
-- **2026-08-21 (slot 13, interactive, later same session)**: operator corrected the re-check interval
-  to 2 hours (not "a day or two") and asked for a further audit for related issues. Found bug 4a's
-  exact pattern also present in `_run_one_tick`/`_resume_pass` (Part 5) — the routine, high-frequency
-  paths, not just the rare bulk-sweep one. Fixed, tested, shipped `agent-orchestrator@ba855161ae`,
-  live-verified via `orchestrator.service` restart (10:20:30 UTC). Scheduled a session-scoped one-shot
-  check (CronCreate `be0aad88`, fires ~12:02 UTC) to re-verify live effectiveness. Hit and recovered
-  from two real async-wait traps while shipping this (see Part 5's "Process note") — a phantom QG
-  "pass" from a rotated-away scratchpad session directory, then a genuine QG failure masked by cwd
-  drift — worth remembering: a background task's "completed, exit 0" notification is not itself proof
-  of a real pass.

@@ -45,7 +45,6 @@ related:
     /plans/archive/issues/sports_odds_vm_consolidator_stale_stall_2026_08_18.md,
     /plans/active/sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/live_sports_odds_upstream_failure_masked_as_honest_absence_2026_08_20.md,
   ]
 created: 2026-08-20
 context_scope:
@@ -185,21 +184,10 @@ Ask the operator for the credential decision (see the /blocked ask on this escal
   so a topped-up key is not re-drained and the pointless 401 loop ends. Provenance:
   this issue doc, `odds_api_adapter.py::_run_league_fetch_loop` (lines 855-862 — trip
   only fires on OUT_OF_USAGE_CREDITS / present x-requests-remaining, which the historical
-  endpoint's 401 does not provide). **➡️ EXTRACTED → `plans/active/sports_satellite_ao_dispatch_batch17_2026_08_21.md`
-  todo 1** (ag-closeout-audit sports Phase 3, 2026-08-21) — bounded, conflict-clear, no operator gate. Checkbox here
-  flips once that batch's own todo lands.
+  endpoint's 401 does not provide).
 - [ ] [SCRIPT] P1 — provision-check the live sink topic (`persist-{ag}-{dt}`) BEFORE a
   live producer launches (the 08-16 boot-time 404 window: writer-flip landed ahead of
-  topic provisioning). Provenance: this issue doc §What I found item 6. **Re-verified 2026-08-21**: the SPECIFIC
-  gap this todo names (the `persist-sports-odds` topic missing at this VM's 08-16 boot) is already closed — the
-  topic + warm-sink subscription + BQ external table were provisioned by
-  `/plans/active/sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md`'s Phase-0 work
-  (`deployment-service@cc9974d07e` + `terraform apply`, landed 2026-08-16), per that plan's own Progress Log ("the
-  event-log spine's `persist-sports-odds` Pub/Sub topic + warm-sink GCS subscription + BQ external table never
-  existed... found and fixed"). What is NOT yet built is the general STANDING pre-launch provision-check this todo
-  actually asks for (a reusable guard any future live-producer launch runs before booting) — left open as that
-  narrower, still-real ask, not extracted this pass (no concretely scoped implementation target named yet, unlike
-  todo 1 above).
+  topic provisioning). Provenance: this issue doc §What I found item 6.
 - [ ] [OPERATOR] P0 — top-up `odds-api-key` quota / pause `mtds-backfill-odds-*`, and
   relaunch `mtds-live-sports-odds-api-odds-20260816-145019` on current LDR. Provenance:
   the /blocked ask for escalation `agt-f712d7`.
@@ -207,11 +195,3 @@ Ask the operator for the credential decision (see the /blocked ask on this escal
 ## Progress Log
 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **ag-closeout-audit 2026-08-21 (sports tranche, Phase 2/3 sweep)**: found this doc and
-  `live_sports_odds_upstream_failure_masked_as_honest_absence_2026_08_20.md` describe the identical incident (same
-  VM `mtds-live-sports-odds-api-odds-20260816-145019`, same root cause) filed hours apart with no cross-reference
-  either direction — added the sibling doc to `related:` above (bidirectional fix, see that doc's own Progress Log).
-  Re-verified the two open non-OPERATOR todos: the CODE todo is still open, bounded, and conflict-clear — extracted
-  into `sports_satellite_ao_dispatch_batch17_2026_08_21.md`. The SCRIPT todo's cited incident-specific gap is already
-  closed by later work (annotated above); the narrower standing-guard ask stays open, not extracted (no scoped
-  implementation target yet).

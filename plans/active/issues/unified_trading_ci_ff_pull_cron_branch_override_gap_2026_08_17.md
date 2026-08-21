@@ -236,27 +236,6 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
       once genuinely idle, or an interactive session on those specific laptops reconciles directly per the
       liveness-gated realign recipe already used above. Repo: unified-trading-ci.
 
-- [ ] [OPERATOR] P2. Reconcile the orchestrator VM's (`ip-172-31-5-118`) two remaining diverged
-      `unified-trading-ci` clones — the MAIN-workspace clone (`ahead 3 / behind 5`) and slot-16
-      (`ahead 7 / behind 5`), measured 2026-08-21 09:4x via `/api/fleet/git-health` + a per-clone audit over
-      SSM. All 32 OTHER ci clones on that VM are already `main...origin/main` clean. Both are the SHAPE-B
-      residue (on `main` already, but local `main` polluted by the pre-2026-08-17 cron FF-merging
-      `live-defi-rollout` into it) — NOT the stranded-branch shape, so `24106a7374`'s Step 2b correctly does
-      not touch them. Repair is `git checkout -B main origin/main`, proven lossless by measurement:
-      `dirty=0` and `git rev-list HEAD --not --remotes=origin` = 0 on both. NOT done from this session
-      because both slots reported `status=working` (slot-16 mid-task
-      `cross_cutting_satellite_ao_dispatch_batch21-d3c17ca9d783`) and `ao-watchdog/SKILL.md` § 3g rule 1
-      forbids an outside session touching a live slot. Do it when they go idle. Note the standing
-      "its own worker reconciles in due course" assumption has now empirically failed — slot 0 has been
-      diverged since 2026-08-11 (10 days).
-- [ ] [OPERATOR] P2. Revive the `Mac` laptop's slot cron + reporter — `/api/fleet/git-health` (2026-08-21)
-      shows all 11 of its `unified-trading-ci` rows last reported `2026-08-19T19:57:03Z` with
-      `reporter_stale: true`, `ff_cron_stale: true` and `ff_pull_last_result: conflict` from
-      `2026-08-19T19:53:14Z`. That host has not run a sweep in 2 days, so its 11 diverged rows are a STALE
-      snapshot of unknown current shape, and NO fix can reach it until the cron runs again — the
-      self-updating crontab entry is precisely what would deliver `24106a7374` to it. Once it sweeps again,
-      re-measure before assuming either shape.
-
 ## Progress Log
 
 - **2026-08-17 (slot-5, interactive)**: root-caused via SSM live-VM check (confirmed still-firing,
@@ -342,25 +321,3 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
     EXISTS on GitHub despite being retired — which is why `_branch_state.py`'s "ref missing → fall back to
     main" check never fires (its own 2026-08-08 comment says so). Deleting that remote branch would remove this
     entire failure class at the source, but it is a shared-branch deletion and was not done here.
-- **FLEET-WIDE MEASUREMENT 2026-08-21** (`/api/fleet/git-health` via the sanctioned read-only SSM path, since the
-  endpoint is `AUTHED_DEPS` and 401s unauthenticated from a dev checkout): 74 slots, 1,619 repos, 4 hosts. The
-  `unified-trading-ci` row per host — **`MacBook-Pro` 12/12 clean** (this session's host; the "Mac.mynet" hostname is
-  ambiguous, the AO's own host label is the reliable one), **`hk` 16/16 clean**, **`ip-172-31-5-118` 33 clean + slot-0
-  diverged** (ahead 3 / behind 5), **`Mac` 11 diverged + 1 clean** (ahead 6 / behind 3, `drift_violation: true`).
-  So this doc's `[OPERATOR] P3` todo was right that two hosts were involved, but had them mis-scoped: `MacBook-Pro`
-  was the one reachable/fixed this session, and **`Mac`** is the one still stranded, plus the orchestrator VM's own
-  slot 0. Total still-stranded at measurement time: **12 slots across 2 hosts**.
-- **Why those 12 need no cross-host access** (supersedes the "either their own dispatch/heal cycle self-corrects or an
-  interactive session on those laptops reconciles" framing): the crontab entry self-updates
-  `scripts/dev/slot-cron-ff-pull.sh` from `origin/live-defi-rollout` before every `--all-slots` run, and the Step 2b
-  fix is already ON that branch (`24106a7374`) — no promotion to `main` required. Each stranded slot's `ahead=6`
-  commits are LDR-only cherry-pick duplicates that DO exist on `origin/live-defi-rollout`, so Step 2b's
-  `git rev-list HEAD --not --remotes=origin` guard scores them 0-unpushed and the heal fires; a clone whose tree is
-  genuinely dirty correctly refuses instead.
-- **DO NOT delete `unified-trading-ci`'s retired `origin/live-defi-rollout` yet** — recorded here because it looks
-  like the obvious root fix and is currently the WRONG move. Step 2b's safety guard proves "nothing at stake" by
-  finding the stranded HEAD's commits on some origin ref; that ref IS `origin/live-defi-rollout`. Delete it while any
-  slot is still stranded and the guard flips to `head_unpushed=6`, refuses, and strands those slots HARDER than
-  before. It is only a candidate once every host reports clean — and even then it is an operator call: the
-  2026-08-07 ruling (`unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`, archived) deliberately chose
-  "enforced single-branch + stop pushing to LDR" and reconciled the branches byte-identical rather than deleting.

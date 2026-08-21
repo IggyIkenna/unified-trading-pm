@@ -179,15 +179,14 @@ context_scope:
       `TestTransferInstructionPath`'s). Full resolution record:
       `/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md` § "Resolution
       2026-08-21". Evidence: bash scripts/quality-gates.sh --no-fix (8872 passed, 22 skipped, 1 xpassed, 89 warnings in 237.24s; sentinel=4af371549778653f8240e1f3ca5ebb32a37e44f6).
-- [x] [BACKEND] P1. ✅ SHIPPED 2026-08-21 — execution-service@4e35a09b2. `BORROW`/`REPAY` wired on
-      `POST /external/instructions` through the same `defi_adapter=` injection seam on `BorrowHandler` proven 5x
-      by SWAP/LEND/WITHDRAW/STAKE/UNSTAKE — new `dispatch_borrow_live()` calls `AAVEConnector.borrow()`/`.repay()`
-      through the same `_resolve_live_connector` credential seam. Tests:
-      `test_defi_live_dispatch.py::TestDispatchBorrowLive`,
-      `test_external_instruction_api.py::TestBorrowRepayInstructionPath`. Evidence:
-      `bash scripts/quality-gates.sh --no-fix` (8915 passed, cov 82.53%). Full record:
-      `/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md` § "Resolution
-      2026-08-21 (BORROW/REPAY)".
+- [ ] [BACKEND] P1. Wire `BORROW`/`REPAY` on `POST /external/instructions` through an analogous `defi_adapter=`
+      injection seam on `BorrowHandler` — split out of the combined todo above (deliberately out of scope for the
+      2026-08-21 change per explicit operator instruction: "do not touch BorrowHandler, stop and report if scope
+      would expand there"). `AAVEConnector.borrow()`/`repay()` are the real, already-live-capable connector
+      methods to call — same connector `defi_live_dispatch.py` already resolves for LEND/WITHDRAW, so this is a
+      direct structural mirror of the LEND/WITHDRAW half of the work just shipped, not new design. Tracked in
+      detail: `/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`'s own
+      Follow-ups.
 - [x] [BACKEND] P0. Wire `TRANSFER`/`CANCEL` on the same surface — **shipped execution-service@3af76e1a01**
       (2026-08-20, `instruction_router.py`/`external_instruction_api.py`/`transfer_handler.py`/`deribit.py`/
       `run_phase3c.py`/`tests/unit/test_external_instruction_api.py`, verified ancestor of
@@ -207,15 +206,11 @@ context_scope:
       structural gate rejecting every CeFi venue (see
       /plans/archive/issues/external_instruction_transfer_cefi_venue_category_registry_gap_2026_08_20.md
       `resolved_by`). Both produce a real result or an honest structured rejection, never a silent drop.
-- [x] [BACKEND] P2. ✅ SHIPPED 2026-08-21 — execution-service@0aa709f0. `BRIDGE` routes through
-      `TransferHandler` via a new `force_transfer_type` override + a new `LiveBridgeTransferAdapter` wrapping the
-      pre-existing (never-wired) `SocketBridgeConnector`, backed by a new durable GCS `TransferStateStore`.
-      Source-chain-leg broadcast success returns PENDING, never a fabricated instant success; destination-chain
-      settlement is not confirmed synchronously. Tests: `test_transfer_handler_bridge.py`,
-      `test_live_bridge_adapter.py`, `test_external_instruction_bridge_lp_translation.py`. Evidence:
-      `bash scripts/quality-gates.sh --no-fix`. Full record:
-      `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md` § "Resolution (BRIDGE,
-      2026-08-21)".
+- [ ] [BACKEND] P2. Wire `BRIDGE` on the same surface. SPLIT OUT from the original combined
+      TRANSFER/BRIDGE/CANCEL todo above (2026-08-20) — BRIDGE genuinely needs new execution engineering, not a
+      translation-shim wiring task like TRANSFER/CANCEL. Full evidence + done-when:
+      /plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md. Blocked on:
+      bridge-protocol selection.
 - [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — Wire `ATOMIC` through the existing `InstructionRouter.route_signal()` multi-leg dispatch; `execution-service@1636abd22e` translates each leg into the shared execution contract and returns per-leg results. Evidence: `bash scripts/quality-gates.sh --no-fix` (ALL QUALITY GATES PASSED, 934s); direct HTTP verification returned `200 COMPLETED_SUCCESS` with 2 per-leg results. The real venue-side atomic/compensation engine remains tracked in `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md`.
 - [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — Add `KILL_SWITCH`/`FLATTEN_POSITION` as coordinated `InstructionActionV2`
       members in unified-api-contracts and route authorized external controls through the existing kill-switch and
@@ -255,12 +250,6 @@ context_scope:
       `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` —
       unified-trading-pm@20ef76d216 + Evidence: PM diff review; `e2e-testing/tests/unit/test_atomic_instruction_live_routing_seam.py`
       and deployed `api.main` wiring verified.
-- [x] [AGENT] P0. ✅ 2026-08-21 — reconciled. Found + fixed 2 more stale todos in THIS plan while doing so:
-      `BORROW`/`REPAY` and `BRIDGE` had already shipped (execution-service@4e35a09b2, @0aa709f0) but were still
-      unchecked above — flipped, with evidence, in this same pass. With those corrected, "Instruction action
-      vocabulary" is now fully done; only "Deployment topology and external hosting" (4 todos) remains open.
-      Also corrected `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md`, whose
-      title + Follow-ups still claimed BRIDGE was unwired after the commit that wired it landed. Epic's W22
-      section (`/plans/epics/system_readiness_master.md`) updated to match: messaging bridge, vocabulary, and
-      kill-switch/flatten-position items flipped to done; the 4 deployment-topology/external-hosting items
-      correctly left open, pointing here for detail rather than duplicating it.
+- [ ] [AGENT] P0. Confirm the epic's own W22 section (`/plans/epics/system_readiness_master.md`) reflects this
+      plan's real landed state once every todo above is done or explicitly re-scoped — the epic's todos should
+      point here, not duplicate the detail.

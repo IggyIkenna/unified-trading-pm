@@ -37,7 +37,7 @@ related:
 created: "2026-08-17"
 author: slot-33 (data_engineering)
 last_updated: "2026-08-17"
-parent_epic: tradfi_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
@@ -114,7 +114,3 @@ assumed.
   `engine/feature_group_service.py`, confirmed via grep to be the actual `record_empty(...)` call site that
   dispatches to `_calculate_options_iv`/`_calculate_options_term_structure`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **ag-closeout-audit 2026-08-21 (tradfi tranche, Phase 2 sweep)**: re-routed `parent_epic` from
-  `security_and_cross_cutting_master` → `tradfi_master` — this is single-AG tradfi content (a TRADFI-only
-  features-service volatility feature-group bug, `asset_group: [tradfi]`), not genuinely cross-cutting; per the
-  asset-group-specific-content routes to the owning AG epic rule (CLAUDE.md "Epic assignment (HARD RULE)").

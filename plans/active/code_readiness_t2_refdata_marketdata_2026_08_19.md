@@ -186,19 +186,15 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Walkthrough feedback 2026-08-21 — refdata/coverage cluster (operator feedback on platform-external-api-walkthrough.html)
 
-- [x] ✅ [BACKEND] P1. **Kalshi perp — DATA-ONLY repoint, PROCEED (operator ruling 2026-08-21, final — see
-      code_readiness_t2_refdata_marketdata_2026_08_19.md's own "Walkthrough feedback 2026-08-21" section).** Wire
-      RSA-PSS auth from existing GSM secrets (MEASURED 2026-08-21: HTTP 200 with real perp market data on
-      `external-api.kalshi.com/trade-api/v2/margin/markets`), repoint `kalshi_perp.py` to the margin host, flip
-      `_REPOINT_PENDING`, keep the write-guard, discover the real funding-rates subpath (the docstring's literal
-      path 404s), update the stale BLOCKED-CREDENTIALS docstring claim. Never re-enable against the events host.
-      An EARLIER same-day hold ("auth probe ≠ perps trading rights") is SUPERSEDED for data capture, remains in
-      force ONLY for TRADING integration (gated on the member-by-member perps rights signup).
-      ✅ 2026-08-21 — **SHIPPED, instruments-service@2dcee7e149** (verified ancestor of `origin/live-defi-rollout`).
-      Repointed + RSA-PSS signed (`get_secret_client()` only), `_REPOINT_PENDING = False`, write-guard kept,
-      parser rewritten for the REAL measured schema (16 tickers confirmed). Funding rates: probed read-only,
-      genuinely undiscoverable — `get_funding_rate` stays `NotImplementedError`, documented; no order/transfer
-      touched. Shipped isolated; waited out an unrelated `unified-api-contracts@4f25d5f0` break (resolved by `instruments-service@b15eae62bc`).
+- [ ] [BACKEND] P1. **Kalshi perp — DATA-ONLY repoint, PROCEED (operator ruling 2026-08-21, final).** Wire
+      RSA-PSS auth from existing GSM secrets (kalshi-api-key-id + kalshi-private-key-pem — MEASURED 2026-08-21:
+      HTTP 200 with real perp market data on `external-api.kalshi.com/trade-api/v2/margin/markets`), repoint
+      `kalshi_perp.py` enumeration to the margin host, flip `_REPOINT_PENDING`, keep the write-guard, discover
+      the real funding-rates subpath (the docstring's literal path 404s), update the stale BLOCKED-CREDENTIALS
+      docstring claim. Never re-enable against the events host. An EARLIER same-day hold ("auth probe ≠ perps
+      trading rights, do not repoint") applied before the operator distinguished the data path — it is
+      SUPERSEDED for data capture and remains in force ONLY for TRADING integration, which stays gated on the
+      member-by-member perps rights signup.
 - [x] ✅ [AGENT] P1. Classify the sports bookmaker roster for the operator (NOT for the artefact): for each of the
       27 kept books, is it (a) an odds-api bookmaker, (b) covered by the Unity central-wallet integration, or (c)
       neither — legacy arbitrage-research leftovers. Deliver the (c) list as a removal proposal; removal itself is
@@ -940,53 +936,18 @@ todos only to confirm they are data-movement, then leave it.
      | (c) neither — HIGH-confidence removal candidates | 4 | BETOPENLY, NOVIG, ONEXBET, PROPHETX — canonical token + odds_api key exist, never wired into live fetch scope, zero manifest presence, no Unity coverage; arbitrage-research vintage |
      | (c) neither — LOW-MEDIUM confidence flags | 2 | BETMGM (captured=1,591), BETWAY (captured=1,803) — same unwired pattern but real historical rows; operator judgment call, not proposed for removal |
 
-- [x] [BACKEND] P1. **Operator ruling 2026-08-21 (see
-      `/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md`): REMOVE ALL 6 stale
-      bookmakers** — BETOPENLY, NOVIG, ONEXBET,
+- [ ] [BACKEND] P1. **Operator ruling 2026-08-21: REMOVE ALL 6 stale bookmakers** — BETOPENLY, NOVIG, ONEXBET,
       PROPHETX (high-confidence) AND BETMGM, BETWAY (operator chose removal over retention). Registry removal in
       unified-api-contracts (handed to the wave-1a registry lane — same-file discipline on
       `market_data_categories.py`) MUST follow the entity-rename/split consumer-migration rule: enumerate and
       migrate EVERY consumer in the same change (a token grep misses path-prefix/filename/registry-membership
       binders; sports paths via `candidate_parquet_paths()`); manifest/GCS row disposition for BETMGM/BETWAY's
       historical rows is data-side and stays out of this code pass (flag as follow-up, no deletion of prod data
-      without the delete-safety protocol). — **DONE 2026-08-21, `unified-api-contracts@710db834`.** Removed from
-      every wave-1a registry surface (venue_constants.py, _sports_venue_constants.py, market_data_categories.py,
-      venue_adapter_keys.py, _odds_api_maps.py, registry/__init__.py exports, capability_declarations/_sports.py,
-      venue_granularity_seed.py + tests/unit/test_venue_adapter_keys.py, tests/unit/test_data_status_registries.py,
-      incl. the stale `len(sports_venues) == 39` count fixed to 33). `bash scripts/quality-gates.sh --no-fix`
-      green (13458 passed, 0 failed) before commit. `registry/data/sports_bookmaker_league_coverage.json`'s
-      BETMGM/BETWAY historical rows left untouched (data-side, follow-up todo below). **Cross-repo grep found a
-      SEPARATE, un-enumerated registry family that was OUT OF SCOPE for this pass**: `execution-service` has a
-      real import-time binding on ONEXBET via `unified_api_contracts.canonical.domain.bookmaker_registry.
-      BOOKMAKER_REGISTRY["onexbet"]` (`sports_execution/adapters/bookmaker_api/onexbet.py` module level) — removing
-      that key would `KeyError` at execution-service import time, even though the `OneXBetAdapter` class itself is
-      confirmed dead-routed (`SportsHandler.BOOKMAKER_VENUES` is empty, per
-      `sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md` finding 11). Per this session's dispatch
-      instructions ("if any live code binds them, STOP and report instead of shipping a break"), the
-      `bookmaker_registry.py` / `canonical/domain/sports/*` / `external/{onexbet,betway}/*` /
-      `venue_manifest/betting_sports.py` / `sports_bookmaker_league_coverage.py` family was left untouched — full
-      finding + next-pass plan filed as a new todo in
-      `/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md`. Also left untouched (generated,
-      no in-repo generator script found to regenerate them honestly): `openapi/capability-manifest.json` and
-      `openapi/venue-coverage-report.md` still list the 6 removed venues — flagged as a follow-up below, not
-      hand-edited per the "never hand-edit generated files" instruction.
-- [ ] [BACKEND] P2. Regenerate `unified-api-contracts/openapi/capability-manifest.json` +
-      `openapi/venue-coverage-report.md` to drop the 6 removed bookmaker venues (BETMGM/BETOPENLY/BETWAY/NOVIG/
-      ONEXBET/PROPHETX still appear as stale nodes/rows as of `710db834`) — no in-repo generator script was found
-      for either file during this session's grep of `scripts/`; locate or rebuild the generator first, then run it
-      (never hand-edit the generated output).
-- [x] ✅ [BACKEND] P3. **Second registry family, ONEXBET half — execution-service side DONE; UAC side landed
-      out-of-order.** `unified-api-contracts@cdb8ae88` ("complete the 6-bookmaker removal") deleted
-      `canonical/domain/bookmaker_registry.py` + `external/onexbet/` WITHOUT waiting for execution-service's side
-      first — violating this todo's own STOP-condition ordering — which broke execution-service's entire test
-      collection (`ModuleNotFoundError` transitively via conftest.py). Retired `OneXBetAdapter` +
-      `test_onexbet_adapter.py` + dangling re-exports to match (re-confirmed dead/unrouted first) —
-      execution-service@f4391ac596. See `w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`'s
-      2026-08-21 slot-21 Progress Log entry for full detail.
-- [ ] [BACKEND] P3. The other 5 tokens (BETOPENLY/NOVIG/PROPHETX/BETMGM/BETWAY) still have stale string-mapping
-      references in execution-service's `aggregator/odds_api.py` and `cli/handlers/live_execution_venues.py` (no
-      dedicated adapter class, lower risk than ONEXBET, but same enumerate-and-migrate treatment needed) —
-      UAC-side tokens for all 6 are already gone per `unified-api-contracts@cdb8ae88`.
+      without the delete-safety protocol).
+
+     Removal of the 4 HIGH-confidence candidates and the BETMGM/BETWAY judgment call both stay `[OPERATOR]`-gated
+     in the issue doc's own todos — nothing removed this session, per the dispatch instructions ("removal itself
+     stays operator-gated — do NOT remove anything").
   3. **24 unattributed manifest tokens — plan-conflict found, no code shipped.** Investigated before writing any
      attribution code and found `/plans/active/state_fabric_artefacts_2026_08_20.md` already ran the identical
      investigation same-week with a contrary, DOC-only prescribed fix (see that todo's own edit above for detail).

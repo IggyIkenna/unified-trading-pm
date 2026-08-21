@@ -74,11 +74,11 @@ market_data_timestamp_semantics, health_factor_monitor liquidation-protection ga
 | `issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md` | **big finding**: ~17.4M defi-scope non-canonical objects (~30.7M fleet-wide), fix shipped, migration-plan-destination decision open |
 | `issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md` | instrument_id naming design, correctly declined by batch11 |
 | `issues/defi_strategy_ids_carry_banned_sce_suffix_identity_migration_2026_08_19.md` | duplicate-tracking overlap w/ execution_delta_proxy_repricer_generalization, unreconciled |
-| `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md` | ➡️ EXTRACTED → batch19 (2026-08-21) |
+| `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md` | mechanical UAC registration, only cited in Deferred prose |
 | `issues/defi_upstream_instruments_catalog_stale_2026_07_15.md` | design, no concrete done-when |
 | `issues/defi_venue_e2e_batch1_deferred_followups_2026_08_17.md` | both items OPERATOR-tagged |
-| `issues/dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md` | mechanically fixed 2026-08-21 (correction banner added to the archived recommendation doc); all todos now done, eligible for archival |
-| `issues/dp_fetch_009_defi_dex_pool_swaps_uniswap_v3_ethereum_stale_schema_validation_failed_2026_08_16.md` | ➡️ EXTRACTED → batch19 (2026-08-21) |
+| `issues/dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md` | correct a disproven premise in an archived plan |
+| `issues/dp_fetch_009_defi_dex_pool_swaps_uniswap_v3_ethereum_stale_schema_validation_failed_2026_08_16.md` | `--apply` the reclass script |
 | `issues/dp_vm_001_mdps_defi_2022_exit_nonzero_singledate_hang_2026_08_15.md` | relaunch-vs-wait + internal-timeout add |
 | `issues/dp_vm_001_mdps_defi_2026_lock_ttl_staleness_budget_mismatch_2026_08_15.md` | budget-align + cross-check |
 | `issues/dp_vm_002_mdps_defi_2022_dex_pool_swaps_pregenesis_no_manifest_trace_2026_08_15.md` | confirm-if-recurs |
@@ -86,53 +86,31 @@ market_data_timestamp_semantics, health_factor_monitor liquidation-protection ga
 | `issues/exec_tenderly_2026_08_15.md` | OPERATOR credential provision |
 | `issues/glassnode_kaiko_credential_ask_2026_08_09.md` | BLOCKED-CREDENTIALS |
 | `issues/health_factor_monitor_no_production_entrypoint_liquidation_unprotected_2026_08_19.md` | see cross-tranche big findings item 6 |
-| `issues/karak_decommission_2026_08_16.md` (27 items) | mechanically fixed 2026-08-21 (parent_epic -> defi_master); ruled Human/non-AO plan by design, still orphaned by design (operator ruling) |
-| `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md` | ➡️ EXTRACTED → batch19 (2026-08-21) |
+| `issues/karak_decommission_2026_08_16.md` (27 items) | ruled Human/non-AO plan by design, mistagged parent_epic (should be defi_master not security_and_cross_cutting_master) |
+| `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md` | re-run for a real verdict |
 | `issues/mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md` | deferred post-cutover |
 | `issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md` | 4 build/design todos, 2 already extracted via batch17 |
 | `issues/onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md` | quant-math design call |
 | `issues/pendle_venue_onboarding_2026_08_16.md` | conflict w/ venue_readiness_and_registry_hardening (NA) — do not double-dispatch |
 | `issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md` + `pnl_true_native_staking_return_spec_2026_08_20.md` | Option B build, operator-ruled 2026-07-29, unbuilt |
-| `issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md` | mechanically fixed 2026-08-21 (asset_group -> `[ao]`) — no longer this tranche's orphan |
-| `issues/three_chain_registries_disagree_none_authoritative_2026_08_19.md` | re-verified 2026-08-21, still BLOCKED-OPERATOR-DECISION, one-line, cheap to close |
+| `issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md` | mistagged — real owner is `ao` tranche (dispatch/crash-loop bug) |
+| `issues/three_chain_registries_disagree_none_authoritative_2026_08_19.md` | BLOCKED-OPERATOR-DECISION, one-line, cheap to close |
 | `lst_rate_honest_coverage_2026_07_21.md` | 2 items explicit operator-owned boundaries |
 
 ## Mechanical hygiene flags
 
 - `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` (self-dispatched): `mtds-oracle-prices-backfill`
-  VM shows **zero running instances** — **RE-VERIFIED 2026-08-21 (Phase 2 sweep)**: still zero instances, unchanged
-  since the 2026-08-20 check. No verify/relaunch/terminal decision made — this is the doc's own tracked AO todo,
-  not something Phase 2 hygiene can resolve without doing the substantive verification work itself. Cross-link
-  finding: `defi_oracle_prices_onchain_branch_retry_starvation_2026_08_16.md`'s 2 open P2 todos are separately
-  gated on the SAME VM's terminal state — resolving it once would unblock both docs.
+  VM shows **zero running instances** 5 days after last checkpoint — no verify/relaunch/terminal decision made.
+  Risk: incomplete oracle_prices honest-coverage for 5 DeFi lending protocols.
 - `strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md` (draft/NA): doc's own text says it "must
   land BEFORE the strategy-service repository is sent" — sits undispatched despite explicit deadline language.
-  **RE-VERIFIED 2026-08-21**: still gating (no evidence the repo has been sent); remaining P0 items (beta-hedge,
-  vol-target) are genuine open design work (need a new book-level aggregation layer), not mechanical — Progress Log
-  note added to the doc for operator visibility, status/assignment correctly unchanged.
 - `defi_consolidated_closeout_2026_07_18.md` and `defi_track01_per_instrument_and_canon_id_2026_07_24.md` are both
   `assigned_vm: NA` — the tranche's de-facto master/gate docs cannot count as coverage, inflating the orphan count
-  structurally (not a real gap for anything gated correctly on them). No action needed — methodology caveat only.
-- 2 batch plans stuck `status: draft` for days: `defi_satellite_ao_dispatch_batch14_2026_08_16.md` (5 days),
-  `defi_satellite_ao_dispatch_batch18_2026_08_19.md` (2 days). **RE-VERIFIED 2026-08-21**: both re-checked for
-  content drift (none found); flipping `status: draft` -> `active` is explicitly reserved as an operator decision
-  by both docs' own Progress Logs — not done here. Flagged for operator attention in both docs directly.
+  structurally (not a real gap for anything gated correctly on them).
+- 2 batch plans stuck `status: draft` for days: `defi_satellite_ao_dispatch_batch14_2026_08_16.md`,
+  `defi_satellite_ao_dispatch_batch18_2026_08_19.md`.
 
 ## Progress Log
 
 - **2026-08-21**: Doc created directly from the 2026-08-21 /ag-closeout-audit defi Phase-1 sweep (4 batches). No
   mechanical fixes applied yet.
-- **ag-closeout-audit 2026-08-21 (Phase 2 + Phase 3 sweep)**: Phase 2 — re-verified all 4 mechanical hygiene flags;
-  applied fixes where genuinely mechanical (VM-state re-check logged, batch-draft content re-verified + flagged for
-  operator, strategy-service-expansion re-verified + flagged). Found + mechanically fixed 2 additional frontmatter
-  mistags while reading orphan-table rows: `karak_decommission_2026_08_16.md` (`parent_epic` ->
-  `defi_master`), `solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md` (`asset_group` -> `[ao]`,
-  content is 100% agent-orchestrator crash-loop, not defi-data). Closed
-  `dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md`'s sole open todo (doc-correction,
-  added a banner to the archived `defi_dex_pool_fees_retirement_recommendation_2026_08_04.md`) — doc now has 0 open
-  todos, eligible for archival. Phase 3 — read ~13 orphan-table rows in full (not just the one-liner); extracted 3
-  conflict-clear bounded items into `plans/active/defi_satellite_ao_dispatch_batch19_2026_08_21.md` (turbo-API
-  mechanical UAC venue registration, DP-FETCH-009 reclass `--apply` VM run, MDPS DEFI e2e re-run + report) with
-  source docs annotated `➡️ EXTRACTED`. ~40 of the 54 orphan rows were NOT re-read in full this pass (budget) —
-  see batch19's own "Not read in full this pass" list for the complete inventory; their one-line classifications in
-  the table above are carried forward unverified.

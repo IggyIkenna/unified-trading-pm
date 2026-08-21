@@ -155,7 +155,6 @@ a systemd unit needs host root / SSM on the old orchestrator VM (`i-0c9b283b31d6
       (`i-042a6332509482556`, the box that actually hosts the glue/writer fleet today — confirmed live below), not the
       old orchestrator VM (`i-0c9b283b31d6b5ca7`), which no longer hosts runners since the 2026-08-05 fleet-split
       migration. Cross-ref `/codex/05-infrastructure/deployment-observability.md`, `/codex/04-architecture/ci-alerting.md`.
-      **➡️ EXTRACTED 2026-08-21 (ag-closeout-audit, ci tranche Phase 3) → `plans/active/ci_satellite_ao_dispatch_batch17_2026_08_21.md` todo 1.**
       **2026-08-05 addendum: a THIRD failure mode found (see Progress Log) — "active" at the systemd level but hung
       mid-job for hours, then failing to re-register with GitHub even after restart. The watchdog must catch this too,
       not just crash-loop and cleanly-inactive**, e.g. alert on a runner whose `journalctl` shows "Running job" with no

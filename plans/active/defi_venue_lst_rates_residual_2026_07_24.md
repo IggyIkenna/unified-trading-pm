@@ -238,10 +238,3 @@ read-only scoping finding.
   gate-unblocking session.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (3 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-- **2026-08-21 (slot-16, batch2-finalize source-doc reconciliation)**: re-confirmed 0 open todos (checkbox + prose),
-  matching the 2026-08-11 entry above. **Did NOT flip `status:` to a terminal value** — `check_terminal_status_archived.py`
-  fires unconditionally on any terminal-status doc still in `plans/active/`, regardless of `archive_exempt` (same
-  precedent `defi_satellite_ao_dispatch_batch2_2026_07_26.md` itself documents for the identical situation): a status
-  flip and the archival `git mv` must land in the SAME commit, and running the full corpus-referrer archival ritual is
-  out of this reconciliation task's scope (as the 2026-08-11 entry already decided). `status: active` stays correct
-  until a dedicated archival pass runs.

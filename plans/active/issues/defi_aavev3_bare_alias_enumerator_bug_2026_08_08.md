@@ -195,11 +195,9 @@ defect (phantom-venue emission) without touching a registry other code may depen
       a 2nd QG re-run at 07:0x went red with 35 failures ALL in dep-sensitive data-status/turbo
       suites, none touching the fix's two files — the mid-window quickmerge ancestor cascade pulled
       newer UTL/UAC into the workspace, so treat that red as upstream drift, not this diff, and
-      re-gate once the peer's UAC migration lands); (b) ✅ DONE 2026-08-21 — `instruments-service`
-      streaming purge script SHIPPED as `instruments-service@26c898e470` (the executed code, landed
-      for provenance; the peer's UAC migration landed and IS QG went green — 5,427 passed; the one
-      residual import-patterns step was a deep `unified_trading_library.cloud_interface` import,
-      fixed to the top-level form pre-ship). After (a) lands: relaunch the
+      re-gate once the peer's UAC migration lands); (b) `instruments-service` streaming purge
+      script rewrite (the EXACT bytes that executed the purge — must land for provenance; IS QG is red
+      solely on the peer's UAC breakage, re-gate once UAC lands). After (a) lands: relaunch the
       zombie-watchdog VM (kill `vm-zombie-watchdog-*` + re-run `launch-vm-zombie-watchdog.sh`) so the live
       daemon picks up the new `defi-aavev3-bare-alias-purge-` 90-min idle threshold.
 - [ ] [CLEANUP] P3. After the durability re-check passes: per the script's own `Delete-when` lifecycle

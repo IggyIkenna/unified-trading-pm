@@ -214,11 +214,15 @@ todos only to confirm they are data-movement, then leave it.
       the SAME already-authorized internal call, never a second independent authority path). Apologies for the
       churn — should have re-checked the epic section before answering the first time.
 
-      **RE-POINTED and CLOSED 2026-08-21 — redundant with W22's own already-queued todo** ("Add
-      `KILL_SWITCH`/`FLATTEN_POSITION` — coordinate with T1"), the real live mechanism now; closing the direct
-      ask above so T1 doesn't field it twice. T1's own plan closed its mirror citing T4's stale FIRST (wrong)
-      answer, not the corrected one — not editing T1's plan (not this tranche's), no functional harm since
-      W22's todo is authoritative regardless.
+      **RE-POINTED and CLOSED 2026-08-21 — the direct ask to T1 above is redundant with W22's own todo, which is
+      the actual live mechanism now.** `w22_strategy_execution_messaging_external_api_2026_08_20.md` already
+      carries "Add `KILL_SWITCH`/`FLATTEN_POSITION` as `InstructionActionV2` members — coordinate with T1" (queued
+      in the AO backlog) — the identical ask this item makes directly, just via a tracked, fleet-dispatchable todo
+      instead of prose. Closing here so T1 isn't fielding the same request from two different plans. **Cross-plan
+      drift found while checking**: T1's own plan closed ITS mirror of this item citing T4's FIRST (wrong,
+      since-corrected) answer — "do NOT add KILL_SWITCH/FLATTEN_POSITION" — not the corrected one above. Not
+      editing T1's plan directly (not this tranche's to touch); no functional harm since W22's todo is the real
+      mechanism regardless of what T1's closed checkbox says, but worth T1 noticing next time they touch that item.
 - [x] ✅ [FROM-T1] P1. **Spun out into the dedicated W22 AO plan, 2026-08-20 —
       `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`'s "Messaging bridge" section**
       (execution-service opened its own EventTransport subscriber build there; T3's matching inbound item is
@@ -260,13 +264,6 @@ todos only to confirm they are data-movement, then leave it.
       `BLOCKED` on the actual Ceffu API spec landing somewhere in this workspace (not a credential ask — a
       documentation ask). No code change needed here beyond the real Ceffu REST implementation once the spec
       lands; do NOT invent a distinct Ceffu custody member — the artefact already lists Ceffu alongside
-
-      **Operator-confirmed 2026-08-21: keys (testnet + live) are coming — POD/Binance relationship, priority
-      item, just external-party-gated.** Explicitly directed that "all the code should be wired so that once we
-      have the keys, we are ready to go" — confirmed true per the trace above (the full dispatch path already
-      routes to `CeffuCustodyProvider` correctly; only the REST implementation itself is stubbed). Nothing
-      further to build now; this stays `BLOCKED-CREDENTIALS` (not a design gap) and is the correct, ready-to-go
-      state to be in once the keys land.
       Copper/manual-transfer/prime-broker eligibility on `VenueCapabilityV2.transfer_capability` (shipped
       `unified-api-contracts@45a545e5ad`).
 - [x] ✅ [FROM-T5] P0. **Shipped — `execution-service@7202047877`.** Expose a real per-venue instruction-path check in `execution-service` — this is the leg the
@@ -396,13 +393,13 @@ todos only to confirm they are data-movement, then leave it.
       fields did not exist). Evidence:
       `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
 - [ ] [BLOCKED-OPERATOR] P1. Delta-proxy — the POSITION and CREDIT legs of the triple. NOT deferred by this
-      tranche. **RE-CHECKED 2026-08-21 — "OPEN — needs an operator ruling" was stale; corrected, still blocked,
-      different reason.** The Wave-0/Q12-Q16 rulings the old note cited as open ARE resolved (issue doc §15
-      item 5, §16) — but that RULES OUT this todo's shape rather than unblocking it: issue doc says Q12-Q16's
-      answers are directional only, real implementation is the fabric's snapshot/factor-state contract, explicitly
-      "NOT literal scalar delta/gamma/theta fields on `StrategyInstructionEnvelope`" (what this todo would build) —
-      see `/codex/04-architecture/cross-domain-state-fabric.md`, needs open P0 todos R9 + R10/R11 first (issue doc
-      §16, neither execution-service-local).
+      tranche. **RE-CHECKED 2026-08-20, still genuinely blocked — reference updated, was stale.** The Q12-Q16
+      citation this todo carried is itself stale per T1's own plan: the actual current blocker is
+      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` §15 ("OPEN — needs an
+      operator ruling next session"), which supersedes Q12-Q16 with a full FACTOR-STATE MODEL (§11-14) and its
+      own 4 named open questions plus 5 outstanding Wave-0 rulings — a real design, not a stub. Execution-side
+      work resumes the moment that shape is decided; the price leg above is independent of it and is already
+      shipped.
 
 ### W11 — order lifecycle and execution state
 
@@ -843,15 +840,22 @@ todos only to confirm they are data-movement, then leave it.
       `execution_instruction`/`instruction-path`/`864.*row` to check whether the readiness-dump fix
       (`unified-trading-pm@8d47cf3393`) needed a codex update too — no codex doc describes that mechanism's
       internals (it lives in the skill's own `SKILL.md`, not `codex/`), so nothing there to fix.
-- [x] ✅ [BACKEND] P2. **Build real per-action, role-based authorization + structured audit for AccountInstruction —
-      both halves CLOSED (audit 2026-08-20, authorization 2026-08-21).** Full mechanism + evidence + open follow-up
-      now live in `/codex/04-architecture/account-instructions.md` §Authorization/§Audit (this plan doesn't
-      duplicate it). Summary: `execution_service/v2/authorization_registry.py` (new) gates `dispatch()` via a
-      GSM-backed `RoleRegistry` + per-action `ACTION_REQUIREMENTS`; WITHDRAW enforces the operator's real 2-of-3
-      CFO/CEO/BizDev-Lead rule via new UAC field `additional_authorization_ids`; every other action fails closed.
-      18 new tests, both repos' `quality-gates.sh` green. Evidence: `unified-api-contracts@7623729496`,
-      `execution-service@b4de8e1035`. Still open (operator-gated, tracked in the codex doc, not here): load real
-      GSM secret values for CFO/CEO/BizDev-Lead; rule on the other 8 actions' role assignments.
+- [ ] [BACKEND] P2. **Build real per-action, role-based authorization + structured audit for AccountInstruction —
+      surfaced by the post-phase codex audit 2026-08-20.** `/codex/04-architecture/account-instructions.md`'s
+      Authorization table (Ops lead / Strategy owner + ops / Compliance + 2-of-N / firm officer / etc., one row
+      per `AccountActionV2` member) and Audit section (per-instruction post-state snapshot, permanent structured
+      retention) are the DESIGN TARGET, now annotated as such in that doc.
+
+      **Audit half CLOSED 2026-08-20 — `execution-service@d162dd6793`.** `dispatch()` previously deleted its own
+      `now_utc` parameter with a "kept as part of the signature for a later audit-event emit" comment — nothing
+      emitted anything. Every dispatch outcome (rejected-missing-auth, CLOSE_ALL executed, log-only-accept) now
+      emits a real `log_event` + `persist_audit_log` call — the exact same two-call pattern `orders/oms.py`'s
+      `ORDER_UPDATED` event already establishes in this repo, not a new mechanism. 6 new tests, including one
+      proving a rejection is itself audited, not silently dropped. **Authorization/RBAC half remains genuinely
+      open** — `dispatch()` still only checks `authorization_id` is a non-empty string, no role lookup, no
+      per-action requirement — deliberately not attempted: needs a role registry + an authorization-record lookup
+      neither this tranche nor UAC currently define, a real design question outside self-serve scope. SSOT:
+      `/codex/04-architecture/account-instructions.md` §Authorization, §Audit.
 - [x] ✅ [AGENT] P0. Confirm every execution marker in the artefacts now reads live, or is one of the five allowed
       pending states. **Structural blocker fixed 2026-08-20, this todo's own remaining scope re-measured**: the
       readiness-dump's `execution_instruction` leg was hardcoded venue-independent-`unverified` for all 864 rows
@@ -897,9 +901,12 @@ todos only to confirm they are data-movement, then leave it.
 
 ### 2026-08-20 session
 
-**Where to work.** `.tabs/5`, NOT `.tabs/7` (no `.venv`). Shared checkout: scope commits by name, never `git add .`.
-**`.venv/bin/activate` does NOT persist across Bash tool calls** — always invoke `.venv/bin/python -m <tool>`
-explicitly or a check silently runs against the wrong interpreter (cost one false-alarm diagnosis this session).
+**Where to work.** `.tabs/5`, NOT `.tabs/7` (no `.venv`). Shared with another live session on other repos: scope
+every commit by name, never `git add .`. **`.venv/bin/activate` does NOT persist across Bash tool calls** — each
+call is a fresh shell; a bare `python` in a LATER call silently resolves to whatever's on default PATH, not the
+sourced venv. Always invoke `.venv/bin/python -m <tool>` explicitly, every call, or a lint/test check silently
+runs against the wrong interpreter (cost one full false-alarm diagnosis this session: an `AttributeError` that
+looked like a real gate failure was actually a wrong-python artifact).
 
 **Landed (each verified against origin, never by quickmerge's exit code):**
 
@@ -974,8 +981,9 @@ checkboxes above, not duplicated here)
 
 | item | state | why |
 |---|---|---|
+| Kill-switch/flatten-position as instructions | `[FROM-T1]` | waiting on T1 landing `KILL_SWITCH`/`FLATTEN_POSITION` on `StrategyInstructionType`; T4's answer already given |
 | Ceffu integration | `[FROM-T1]` | corrected 2026-08-21: wiring already reaches CeffuCustodyProvider via TransferHandler; only ceffu.py's REST impl is pending — genuinely no Ceffu API spec exists anywhere in the workspace, a docs gap not credentials |
-| Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | corrected 2026-08-21: rulings landed but rule OUT scalar-field shape — real blocker is unbuilt fabric snapshot contract (R9/R10/R11), see `execution_delta_proxy_repricer_generalization_2026_08_18.md` §16 |
+| Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | superseded Q12-Q16 → now `execution_delta_proxy_repricer_generalization_2026_08_18.md` §15, still open |
 | 9-state order lifecycle full unification | open P0 | terminal-state-never-overwritten validation shipped `execution-service@69a9a088be`; full vocabulary de-dup (oms.py/persistent_oms.py duplicate files) still open |
 | BATCH settlement gap | open P1, 3/5 done | `CONVERT_DUST`/`WITHDRAW`/`REPAY` closed; `LP_MINT`/`LP_BURN` `BLOCKED-` on T1 landing the UAC schema (shape already specified on T1's plan) |
 | execution-policy/fill-model-gaps (own doc) | 7/13 closed | remaining 6 are real design gaps or out-of-repo-scope, see the doc directly |
@@ -986,6 +994,3 @@ checkboxes above, not duplicated here)
 | W14 exchange-version pinning | spun to dedicated plan | `w14_execution_service_exchange_version_pinning_and_cassette_drift_2026_08_20` |
 | W15 venue-adaptor security audit | spun to dedicated plan | `w15_execution_service_venue_adaptor_security_audit_2026_08_20` |
 | W22 strategy→execution messaging | spun to dedicated plan | `w22_strategy_execution_messaging_external_api_2026_08_20` |
-
-**2026-08-21 — delta-proxy POSITION/CREDIT re-checked against that day's rulings: still blocked, reason corrected
-in place** (table row above + the todo itself) — no code changed.
