@@ -178,6 +178,52 @@ book-snapshot/depth-rebuild connector (no per-update exchange ts exists to carry
 doesn't parse the underlying chain event's own timestamp. The P0 schema-split todo above must account for `mixed`
 connectors needing a per-path decision, not just a per-file one.
 
+## Findings — `resolve_mtds_ts_event_timestamp_naming_collision` disposition (2026-08-21)
+
+Batch21 item (`cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`), source: this doc's "Close or supersede
+`resolve_mtds_ts_event_timestamp_naming_collision`" todo.
+
+**Disposition: PARTIALLY LANDED — shipped in full, then a Phase-4 regression forced a partial revert; the current,
+permanent state is a restoration of Phase 1, not Phase 4's intended end-state. Separately, and this is the part that
+matters for the P0 schema-split todos above: the prior project solved a different, narrower problem than this
+issue's live-tick semantic-collapse finding — it does not pre-empt any of the P0 work.**
+
+**What the prior project was**: a full scoping-through-shipping project, archived 2026-08-05
+(`/plans/archive/2026_08/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md`, superseded by its own
+gated finalize/closeout plan, both archived the same day with all checkboxes verified against 4 landed SHAs). It
+addressed the PARQUET-WRITE-TIME column-name collision in `market_tick_data_service/engine/orchestrator/
+symbol_rules.py`'s `_COLUMN_ALIASES` — Databento's `ts_event` (nanoseconds) vs Tardis/CeFi's `timestamp`
+(microseconds) sharing a column name after aliasing, forcing MDPS to infer units via a magnitude heuristic instead
+of the column name. 4 phases shipped: Phase 1 dual-write (market-tick-data-service@5efc76cc), Phase 2 MDPS
+`ts_event`-priority migration (market-data-processing-service@cdc68f0), Phase 3 consumer audit/migration
+(features-service@719f926c), Phase 4 alias REMOVAL (market-tick-data-service@a11b4ccf).
+
+**The regression**: Phase 4's removal of the `ts_event`→`timestamp` copy broke VIX/CBOE `ohlcv_1m` writes 5 days
+later (`tradfi_vix_backfill_launch_failed_2026_08_10.md`) — those writers only ever emit `ts_event`, and once the
+copy was gone, `_TICK_REQUIRED_COLUMNS`'s `timestamp` requirement failed schema validation. The fix restored the
+Phase-1 dual-write copy permanently: read directly today, `symbol_rules.py:84-88`'s `_COLUMN_ALIASES` still contains
+`"ts_event": "timestamp"` (alongside `"size": "amount"` and a later-added `"quantity": "amount"`), and
+`_apply_column_aliases()` (lines 119-141) COPIES rather than renames, preserving the source column. Both the
+function's own docstring (lines 120-129) and the regression test
+`test_symbol_rules_column_aliases.py::test_ts_event_copied_to_timestamp_both_present` cite
+`resolve_mtds_ts_event_timestamp_naming_collision` and the 2026-08-10 incident by name as the reason the copy is
+back. So: not forgotten (it is live in code comments and an active regression test today), not descoped (every
+phase shipped) — but the true end state is Phase 4's removal having been effectively undone. Production has run the
+Phase-1 dual-write permanently since shortly after 2026-08-10, not the clean single-column end-state Phase 4
+intended.
+
+**Why the P0 schema-split todos above do NOT re-do this work**: `_apply_column_aliases`'s only two call sites
+(`engine/orchestrator/partitioned_writer.py:246,335`) run strictly on an aggregated `pd.DataFrame` immediately
+before parquet write — never on the live `ReceivedTick` dataclass (`market_tick_data_service/live/
+_ws_window_helpers.py:48`) or anywhere under `live/connectors/`. The prior project's own blast-radius survey (its
+"Consumers that depend on the timestamp column name" table) never mentions `ReceivedTick` or the live WS path at
+all — its scope was strictly post-write parquet columns. This issue's P0 finding is upstream of that:
+`ReceivedTick.timestamp` is a single field whose MEANING (exchange-event-time vs local-arrival-time) varies by
+adapter, decided before any DataFrame or column-alias logic ever runs. The two are different axes of the same
+broader "one timestamp field, ambiguous provenance" theme — the prior project fixed the unit/column-name axis at
+the write boundary; this issue's P0 todos (field split, monotonic receive order, region tag) are entirely new work
+on the live-ingestion axis, not a re-run of anything already shipped.
+
 ## Progress Log
 
 **2026-08-20 — filed.** No code touched. Filed after an operator correction to an orchestrating-session claim; the
