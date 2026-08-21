@@ -149,6 +149,12 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    **2026-08-17 update — first re-run attempt (`pipeline-e2e-check-mdps-20260817-005300-c59390`, launched 00:53
    UTC) CRASHED silently, relaunching (see item 5 for root cause + why this is a relaunch-safe mitigation, not a
    blind retry).**
+   **2026-08-21 update (slot-24, data_engineering)**: 4 more re-run attempts (batch19's extraction of this exact
+   todo), all still "PROVED NOTHING" — but the OOM/chain-axis/streamed-read bugs are now confirmed NOT the cause.
+   Root-caused instead to the consolidated index blob being hours-stale despite a healthy, fast-running manifest
+   consolidator — full evidence chain + next steps in
+   `/plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`.
+   Still open; do not re-attempt a plain re-run without first reading that doc.
 5. `[DATA] P1.` NEW finding 2026-08-17 (slot-3, data_engineering). The 00:53 UTC DEFI re-run (`c59390`) died
    silently mid-run: `run.log` goes dead at `2026-08-17 01:18:49Z` (last line, no error/traceback), `EXIT_STATUS`
    never advanced past `RUNNING`, and the VM is **absent entirely** from `gcloud compute instances list` (not
@@ -180,6 +186,15 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
       subprocess.
 
 ## Progress Log
+- **2026-08-21 (slot-24, data_engineering)**: 4 shipped diagnostic rounds against the batch19-extracted DEFI
+  re-run todo, each QG-green and re-verified live on a fresh driver VM, isolated the mechanism precisely: OOM /
+  chain-axis composition / streamed-read `service_name` filter are all confirmed working correctly. The real
+  blocker is one layer up — filed as
+  `/plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`
+  (consolidated index blob >4h stale despite the DEFI manifest consolidator completing successfully every ~1-2min).
+  Also fixed an unrelated pre-existing pip-audit red (`PYSEC-2026-3721`) blocking shipment in unified-trading-library
+  along the way (`unified-trading-library@3095f35151`). Evidence commits: `market-data-processing-service@47a51b1287`,
+  `market-data-processing-service@907ff58912`, `unified-trading-library@3095f35151`.
 - **2026-08-21 — stale P2 corrected:** direct code read and git blame verified 4990d2361 already shipped per-leg gc.collect() on 2026-08-20; the prior open checkbox and Real fix still needed prose were stale and are closed with commit evidence.
 
 - **2026-08-19** (`/plan-reconcile security_and_cross_cutting_master` Phase 2.4, zero-checkbox sweep): this entire
