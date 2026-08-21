@@ -312,14 +312,26 @@ def _run_only(paths: list[str], quiet: bool) -> int:
     check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12): a
     path that silently resolved to nothing reported "0 violation(s)" / exit 0, a
     clean bill of health for a file that was never actually checked.
+
+    `plans/archive/` is skipped here too (same exclusion `target_files()` and the
+    diff-base git-ls-tree filter both already apply, see `target_files()`'s
+    docstring) — archived docs are frozen historical record outside every active
+    audit's scope, so a staged edit to one (e.g. a frontmatter-only summary
+    backfill) must not be blocked by that doc's own pre-existing, unrelated
+    dangling references. Skipped paths are reported, not silently dropped, so this
+    stays distinct from the unresolved-path failure mode above.
     """
     format_violations: list[str] = []
     existence_violations: list[str] = []
     unresolved: list[str] = []
+    skipped_archived: list[str] = []
     for raw in paths:
         p = Path(raw)
         if not p.is_absolute():
             p = Path.cwd() / p
+        if "plans/archive/" in p.as_posix():
+            skipped_archived.append(str(p))
+            continue
         if not p.is_file():
             unresolved.append(str(p))
             continue
@@ -341,6 +353,8 @@ def _run_only(paths: list[str], quiet: bool) -> int:
             print(f"  DANGLING  {v}")
         for u in unresolved:
             print(f"  UNRESOLVED  --only path did not resolve to a file: {u}")
+        for s in skipped_archived:
+            print(f"  SKIPPED (plans/archive/, frozen historical record): {s}")
 
     print(f"{'✅' if n == 0 else '❌'} check_reference_paths (--only): {n} violation(s) in staged files")
     if unresolved:
