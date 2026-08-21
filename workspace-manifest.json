@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "607e5479760148fa022c97581640a970553aefb1"
+      "ldr_ci_status_sha": "54fe7a6228c19eb2ea202769f782b2246b96ea78"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "43f84d26d43b75f0cbe886a2d3e7d653c0e5a26c"
+      "ldr_ci_status_sha": "38aa41d177b237b02116f1fc586d8214672b064c"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -780,7 +780,7 @@
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "93cfc383349a3e820dd4dfc294ed541d0cbcf0c2"
+      "ldr_ci_status_sha": "49fe8971cb6181b8fab85a8d331fa24d55b6215a"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "666467d0ee8f63f339afe8bae45a97c5d07b1de0"
+      "ldr_ci_status_sha": "7c166e25ba870c44b3d4d4bb1e4d7e76b1fcbfbf"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "2d025cabe003376d8c0aed86170bc8c1daed4802"
+      "ldr_ci_status_sha": "49ea399fa94ca1b53b3f3724168223d8ba3251ee"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1327,14 +1327,14 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "828f299c5d7e935f5d2f9368c986443cfe1f0bfd"
+      "ldr_ci_status_sha": "9d0c077eab2399c80a0dce74724d8edfbfe2ca6b"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
