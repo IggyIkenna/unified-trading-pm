@@ -747,8 +747,9 @@ two ways: we host it, or they run our container themselves. Surfaced while audit
       A direct service-to-service call is explicitly out — this is a T4 service boundary.
 - [ ] [BACKEND] P0. **Features-service → execution subscription.** Execution subscribes to only the feature groups
       it needs, not a broadcast of everything features-service produces.
-- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — execution-service@c6b8bd02ad. Every strategy-emitted instruction is persisted one-by-one through the existing manifest/shard pipeline; Evidence: bash scripts/quality-gates.sh --no-fix (8877 passed, 22 skipped, 1 xpassed; isolated quickmerge gate green).
-      Queryable through the existing BigQuery external-table pattern; distinct from market-tick-data aggregation (W2/W3), a separate axis.
+- [ ] [BACKEND] P0. **Every strategy-emitted instruction sinked to GCS, one by one, for audit and analysis** —
+      reuse the existing manifest/shard pipeline rather than inventing a parallel one; queryable via BigQuery
+      external tables. Distinct from market-tick-data aggregation (W2/W3), which is a separate axis.
 - [ ] [BACKEND] P0. **Three execution-service deployment topology, one schema, protocol per deployment**:
       internal (Pub/Sub, our own strategy-service), external-automated (registered/allow-listed clients, HTTP or
       WebSocket depending on the latency bar), manual (DART or an external trading UI/API, HTTP — manual trading
