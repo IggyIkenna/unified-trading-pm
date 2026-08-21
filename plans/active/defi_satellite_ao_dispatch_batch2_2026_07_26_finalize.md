@@ -89,7 +89,7 @@ context_scope:
       `lst_rate_honest_coverage_2026_07_21.md`'s Phase 5 #2 item correctly stays open/unflipped — batch2's own citing
       todo explicitly verified-but-declined to force-close it (backfill genuinely not done yet). Evidence:
       unified-trading-pm@832b8de031.
-- [ ] [REVIEW] P1. **Re-check the 3 conflict-gated + 11 operator-gated + 3 time-gated + 1 too-large-or-risky + 2
+- [x] ✅ [REVIEW] P1. **Re-check the 3 conflict-gated + 11 operator-gated + 3 time-gated + 1 too-large-or-risky + 2
       human-only Deferred items from batch2's own doc**, now that time has passed and batch2's own todos have landed.
       For each of the 20 Deferred items: re-read the specific gating ground to check if it has since cleared — if so,
       extract it as a new tracked todo in a follow-up `batch3` (do not draft it directly here, this finalize plan's own
@@ -97,7 +97,51 @@ context_scope:
       speculative) — do not re-surface an already-asked operator question a second time, just note the re-check happened
       and it's still awaiting an answer. **Done when**: each of the 20 Deferred items has either (a) a note that it's
       ready for `batch3` extraction because its gate cleared, or (b) an explicit re-verified confirmation the gate is
-      still open.
+      still open. **Done 2026-08-21** — re-checked all 20 via 5 parallel read-only investigations (doc-read + grep per
+      item, zero code/file edits). **17/20 fully CLEARED, nothing to extract** (already resolved/archived by other,
+      independent work since 2026-07-26): #1 D15 HYPERLIQUID/ASTER phase-label reconciliation (cefi migration COMPLETE
+      2026-08-06, doc archived); #3 `lst_exchange_rate_data_availability_2026_07_21.md` false-positive-orphan
+      reconfirmed (0 open todos, archived 2026-07-30); #5 `_INSTRUMENT_TYPE_ALIASES` SSOT reconciliation (ruled
+      2026-08-08, shipped `unified-api-contracts@768c6f93`); #6 legacy precanonical composite venue objects (fold +
+      delete both complete, archived 2026-08-08); #7 perp_daily_ctx/perp_mark_price manifest gap (both shipped
+      2026-08-04, operator-decision sub-item resolved MOOT 2026-08-08; side-finding already its own tracked doc); #8
+      CURVE/Balancer chain collision (all 4 fixes + 2 later findings resolved, archived 2026-07-30); #9 swaps_ohlcv
+      candle axis gap (Path A shipped 2026-08-02, Path B moot); #10 write_defi_rows leaf-symbol capture (expedited fix
+      shipped 2026-07-27, violation rate collapsed to ~0-1%); #11 e2e collateral-validation dead import (operator ruled
+      Option A 2026-07-29, shipped + all 9 scenarios verified PASS); #12 non-tardis dexperp smoketest follow-ups (all 3
+      remaining items closed 2026-08-15/16/17; the k-prefix casing piece already has its own active AO-dispatch doc);
+      #14 lending-instrument-type historical restamp (`--apply` run, verified genuine no-op, archived 2026-07-31); #16
+      staking-yields lst_rates handler gaps (both remaining §6 items shipped 2026-08-05/15); #17 mtds dex-pools/swaps
+      backfill verification (convergence re-confirmed 2026-08-03/04/05, archived); #18 dexpool second writer path
+      (root-caused + fixed via the dex-pool-symbol-fix-backfill-purge plan, archived 2026-07-29); #19 onchain manifest
+      dishonest/recompute-blocked (diagnostic resolved the "frozen consolidator" premise as wrong; remaining chain-field
+      collector scope already lives, tracked, in `features_onchain_featureless_shards_and_vocabulary_split_2026_07-20.md`);
+      #20 solana dex-pool-swaps indexer scope (operator ruled "prioritize" 2026-08-08 — a dedicated
+      `solana_dex_pool_swaps_indexer_2026_08_08.md` + finalize now exists and is 2/5 todos shipped; nothing left for
+      this scoping doc to spawn). **1/20 CLEARED and READY FOR `batch3` EXTRACTION** (not drafted here, per this todo's
+      own scope): #15 `defi_morpho_lending_indices_never_wired_2026_07_12.md` — its blocking condition
+      `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` flipped `true` on 2026-08-07T16:44Z (per
+      `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s Progress Log, citing `mtds-dex-swaps-backfill` writing 63,765
+      rows) but every subsequent audit (`na-eligibility-audit`, `context-scout`) kept re-citing a stale 2026-08-02
+      `false` reading without re-querying live state — the sole open todo (re-run the `mvp_backfill_defi_onchain_v10-001`
+      G2 gate for `lending_indices`) has been genuinely dispatchable for ~2 weeks. **2/20 STILL OPEN, gate unchanged —
+      not re-surfaced**: #2 `e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`'s delta_one venue-aware
+      `funding_oi` annualisation — live code (`features_service/delta_one/app/calculators/funding_oi.py:16-22`) still
+      confirms no venue param exists and still cites this exact issue as its open P2 tracker; genuinely unclaimed by any
+      plan, not blocked by anything external (a `batch3` candidate once someone scopes it — left deferred here since
+      this todo's job is re-check, not fresh drafting). #4 `defi_adapter_dead_code_audit_2026_07_24.md` — 3 of its 4 §6
+      sub-items are resolved/already-extracted (Jupiter, onchain_event_poller/alchemy/thegraph,
+      Helius/native_staking_handler → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`); the remaining
+      `GovernanceParamsEventPoller` cross-repo re-verify is confirmed STILL an unruled, already-pending OPERATOR-NOTIFY
+      question as of today (cited in both `na_eligibility_audit_defi_blocks_2026_08_16.md` and
+      `ag_closeout_audit_defi_parked_2026_08_21.md`) — not re-surfaced, just reconfirmed open. #13
+      `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md` — the original WHAT-decision (Option B +
+      `ShareClass` enum unification) WAS ruled 2026-07-29 and shipped (`unified-api-contracts@4df243f7`), but the doc
+      carries its own separate, still-standing `## OPERATOR GATE` requiring a 3-lens money-path review before the
+      actual build dispatches — reaffirmed KEEP-NA through 2026-08-21 (most recently
+      `pnl_true_native_staking_return_spec_2026_08_20.md`) — net: still gated, just under a narrower/different
+      condition than originally described; not ready for `batch3`. Evidence: 5 parallel read-only sub-agent
+      investigations (unified-trading-pm repo only, zero commits by them); full per-item citations above.
 - [ ] [DOC] P2. **Action batch2's 3 non-batched findings.** (1) Retag
       `mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` (batch2's "Note — 1 mistag found") — read
       the doc's real content to decide the correct `asset_group` (likely `cross-cutting` or `infra`, confirm), fix the
@@ -128,6 +172,13 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-21 (slot-4)** — Todo 2: re-checked all 20 of batch2's Deferred items (5 parallel read-only sub-agent
+  investigations, one doc-read + grep pass per item, zero file edits by them). 17/20 fully cleared with nothing to
+  extract (independently resolved/archived elsewhere since 2026-07-26); 1/20 (#15, Morpho lending-indices G2 gate)
+  cleared and ready for `batch3` extraction — its blocking condition flipped `true` 2026-08-07 but no subsequent audit
+  re-checked live state; 2/20 (#2 delta_one funding_oi venue-annualisation, #4's `GovernanceParamsEventPoller`
+  sub-item, #13's narrower money-path-review gate) confirmed still genuinely open, not re-surfaced. Full per-item
+  citations in todo 2's own checkbox above.
 - **2026-08-21 (slot-16)** — Reconciled all 20 distinct source docs batch2's 23 todos cite. 3 genuine gaps fixed
   (2 stale-prose corrections, 1 status flip to `resolved`); the other 17 were already correctly reconciled by the
   original batch2 workers themselves. Full detail in todo 1's own checkbox above.
