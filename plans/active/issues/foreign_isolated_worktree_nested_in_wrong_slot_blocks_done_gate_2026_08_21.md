@@ -2,23 +2,28 @@
 doc_type: issue
 title: A quickmerge --isolated worktree from a DIFFERENT slot/session appears nested inside slot 16's own directory tree, repeatedly blocking /done's dirty-check for unrelated tasks
 summary: >-
-  Slot 16's worktree contains `.tabs/16/oms-wt.oc3YkB` — a live git worktree whose HEAD commits are authored
-  `ikennaigboaka [slot-2·laptop]`, not slot 16. It is a genuinely LIVE, actively-committing session (confirmed via
-  `pgrep -f oms-wt.oc3YkB` returning 2 processes, and commits landing every few minutes) working an execution-service
-  DeFi transfer/bridge refactor — not orphaned WIP. Because it is a `git status`-dirty directory physically located
-  under `.tabs/16/`, the orchestrator's `/api/slots/16/done` dirty-check (`worker.md` DONE-GATE) treats it as slot 16's
-  own uncommitted WIP and hard-rejects `/done` with `required_action: "quickmerge-or-stash"` — even though slot 16's
-  own actual work (unrelated plan-doc edits, already committed + pushed + verified on origin) has nothing to do with
-  it. This blocked 3 separate `/done` calls in one session (2026-08-21, slot 16) across 2 different unrelated tasks.
-  Per RULES.md's "don't touch dirty files in another agent's tree" + the LIVENESS-gated inherited-dirty-WIP rule, this
-  worktree must NOT be stashed/touched while live — so the only available response each time was to wait and retry.
+  Slot 16's worktree contains `.tabs/16/oms-wt.oc3YkB` — a git worktree whose HEAD commit author has been observed
+  under 3 DIFFERENT identities across one session (`ikennaigboaka [slot-2·laptop]`, `github-actions[bot]`,
+  `uts-backmerge-bot`), each a fresh commit within minutes of checking — this is CLAUDE.md's own documented
+  `main-backmerge-to-ldr` automation fast-forwarding the branch, NOT a live human editing session (an earlier
+  "confirmed live via pgrep" claim in this doc's first Progress Log entry was a self-match false positive — the
+  pgrep command's own argument contained the search string — and is now superseded). The actual liveness signal
+  (mtime on the staged working-tree files) shows the WIP itself is ~6h+ stale as of the 2026-08-21 10:29 check —
+  likely genuinely abandoned, not live. Regardless: because it is a `git status`-dirty directory physically located
+  under `.tabs/16/`, the orchestrator's `/api/slots/16/done` dirty-check (`worker.md` DONE-GATE) treats it as slot
+  16's own uncommitted WIP and hard-rejects `/done` with `required_action: "quickmerge-or-stash"` — even though slot
+  16's own actual work (unrelated plan-doc edits, already committed + pushed + verified on origin) has nothing to do
+  with it. This blocked 4+ separate `/done` calls in one session (2026-08-21, slot 16) across 2 different unrelated
+  tasks. This AO worker (role: review, PM-docs scope) lacks the execution-service domain context to safely judge
+  whether the WIP is truly abandoned and safe to stash — that decision is now BLOCKED-OPERATOR-DECISION (see the
+  correction todo below), not a routine wait-and-retry.
 status: open
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator]
+repos: [agent-orchestrator, execution-service]
 scope: [engineer, admin]
-tags: [multi-agent-safety, per-tab-worktrees, quickmerge-isolated, done-gate, worker-lifecycle]
+tags: [multi-agent-safety, per-tab-worktrees, quickmerge-isolated, done-gate, worker-lifecycle, blocked-operator-decision]
 related:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
@@ -26,7 +31,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-21
-priority: P2
+priority: P1
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -111,6 +116,30 @@ orphaned and the check short-circuited; the pattern is otherwise a real, recurri
       DIFFERENT, unlocated tool, not quickmerge.sh itself). Not investigated further this session — deeper forensics
       (e.g. asking the peer directly, or inspecting shell history/rc files) is out of scope for an unattended AO
       worker and risks an unbounded search.
+- [ ] [REVIEW] P1. **CORRECTION, 2026-08-21 (slot-16): the earlier "confirmed live" verdicts (Progress Log entries
+      below, timestamped pre-this-entry) were a measurement trap — commit-recency is NOT the right liveness signal
+      here.** `oms-wt.oc3YkB`'s HEAD commit has now been observed under **3 distinct author identities across the
+      session** (`ikennaigboaka [slot-2·laptop]` → `github-actions[bot]` → `uts-backmerge-bot`), each landing a fresh
+      commit within minutes of the check — but this is CLAUDE.md's own documented `main-backmerge-to-ldr` automation
+      fast-forwarding the branch, not a human editing files. Checked the actual liveness signal instead — **file
+      mtime on the staged working-tree files**: `execution_service/engine/quote_maintenance.py` and `pyproject.toml`
+      both show mtime `2026-08-21 04:20:07`, vs. a check-time of `2026-08-21 10:29:06` — **~6h9m stale**, while the
+      workspace's own documented rule is `mtime <120s → PROTECT` (i.e. >>120s is the DEAD-claim threshold). The
+      staged 30-file diff has also been byte-identical across every check this session (spanning the pre-compact
+      boundary) despite 3 backmerge-bot commits landing on HEAD in that window — a live editing session would show
+      the staged set or file mtimes moving, not a frozen diff under a moving HEAD. **Net: this worktree's WIP is very
+      likely genuinely abandoned (dead), not live** — reclassifying the earlier "live" Progress Log entries as
+      incorrect (based on a bot-driven HEAD, not the WIP author's activity). **Not acting on this myself**: per the
+      done-gate's own contract, a dead claim may be inherited+committed or slot-tagged-stashed, but that applies to a
+      slot's OWN checkout — `oms-wt.oc3YkB` is a DIFFERENT repo (execution-service) with a mid-refactor defi
+      transfer/bridge change-set I have zero context on (deleted `bridge_state_store.py`/`lp_concentrated_dispatch.py`
+      /`live_bridge_adapter.py`, modified routing/handler files) — judging whether it's safe to stash/commit requires
+      execution-service domain knowledge and repo ownership this AO worker (role: review, task scope: PM docs) does
+      not have. **BLOCKED-OPERATOR-DECISION**: recommend the operator either (a) confirm with whoever owns
+      `slot-2`/the `execution-service` transfer refactor whether this WIP is abandoned and safe to stash/discard, or
+      (b) if confirmed dead, have someone with execution-service context run the sanctioned
+      `git stash push --include-untracked -m 'orchestrator-slot-16-<task_id>'` recovery themselves. Until then this
+      stays a live-adjacent block from the done-gate's perspective (unactioned, not unresolved-observation).
 - [ ] [SCRIPT] P2. **NARROWED 2026-08-21**: since `scripts/quickmerge.sh --isolated` is now evidenced NOT to be the
       creator (see todo 1 above), this todo is no longer "fix quickmerge.sh's path resolution" — it is instead
       **locate the actual tool that creates `<tag>-wt.<random>`-style directories flat inside `.tabs/<N>/`** (grepped
