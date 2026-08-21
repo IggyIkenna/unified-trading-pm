@@ -15,8 +15,10 @@ scope: [engineer, admin]
 tags: [data-pipeline, dp-fetch-009, dp-run-mostly-empty, cefi, liquidations, aster, attempted-failed]
 related:
   - /codex/05-infrastructure/data-pipeline-alerts.md
-  - /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md
   - /plans/active/issues/dp_fetch_009_cefi_liquidations_raw_contract_overwritten_2026_08_20.md
+  # 2026-08-21 (archival sweep): dropped cefi_hl_aster_batch_data_gaps_2026_06_22 (archived to
+  # plans/archive/issues/, fully resolved — durable facts already in /codex/02-data/cefi-capture-universe.md +
+  # /codex/05-infrastructure/manifest-consolidator-ssot.md).
 parent_epic: observability_master
 source:
   - DP-FETCH-009 escalation agt-9d9a98 (2026-08-20)

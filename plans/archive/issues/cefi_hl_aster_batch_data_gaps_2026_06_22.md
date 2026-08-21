@@ -4,7 +4,7 @@ title: CeFi HL/ASTER batch data gaps — day-bleed rejection, HL trades under-ca
 summary:
   "CeFi HL/ASTER batch data gaps — day-bleed rejection, HL trades under-capture, and ASTER liquidation
   misclassification, found via a per-data_type manifest breakdown (consolidated index + live per-VM shards)."
-status: open
+status: resolved
 nature: process
 asset_group:
   [cefi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
@@ -38,7 +38,6 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -56,6 +55,12 @@ context_scope:
 ---
 
 # CeFi HL/ASTER batch data gaps — not 100%, with 3 diagnosed bugs
+
+> **ARCHIVED 2026-08-21** — 0 open todos across every section (consolidator freeze fix, empty_confirmed over-seeding
+> purge, HL/ASTER historical backfill, TARDIS CEX mvp-gate, alert-routing umbrella split, universe expansion). The
+> two codex SSOTs this work established (`/codex/02-data/cefi-capture-universe.md`,
+> `/codex/05-infrastructure/manifest-consolidator-ssot.md`) were already shipped by this doc's own `[DOCS] P2` todo.
+> `archive_exempt` bridge (set 2026-08-12) dropped per its own instruction. Moved to `plans/archive/issues/`.
 
 > **History extracted 2026-07-25** (line-cap remediation) — the original 2026-06-22/23 findings, BUG #1-4 diagnosis, and
 > their shipped fixes/migration now live in
