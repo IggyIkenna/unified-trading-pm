@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: SPORTS UAC SchemaContract registration — close the SSOT gap for all 19 sports data_types
-summary:
+summary: Declare UAC SchemaContracts for every SPORTS data_type currently written to GCS without a contract (19 of 20 live
+  types). Today only `(sports, odds, trades)` is registered; FIXTURES, INJURIES, XG, WEATHER, etc. all fall back to raw
+  parquet projection in the drilldown schema modal, and downstream consumers (FSS, strategy-service, deployment-api) have
+  no SSOT to validate against. Also drop the SFI_STANDINGS phantom (schema bug — endpoint doesn't exist).
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,11 +22,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-04-24
-overview:
-  Declare UAC SchemaContracts for every SPORTS data_type currently written to GCS without a contract (19 of 20 live
-  types). Today only `(sports, odds, trades)` is registered; FIXTURES, INJURIES, XG, WEATHER, etc. all fall back to raw
-  parquet projection in the drilldown schema modal, and downstream consumers (FSS, strategy-service, deployment-api)
-  have no SSOT to validate against. Also drop the SFI_STANDINGS phantom (schema bug — endpoint doesn't exist).
 priority: P2
 owner: agent
 completed: 2026-04-25

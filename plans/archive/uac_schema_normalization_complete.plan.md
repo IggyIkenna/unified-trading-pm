@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: UAC Schema Normalization Complete
-summary:
+summary: 'Full resolution of unified-api-contracts schema normalization across every data provider with no exceptions. Combines
+  SCHEMA_NORMALIZATION_AUDIT, SCHEMA_NORMALIZATION_AUDIT_FULL, and SCHEMA_NORMALIZATION_GAPS_AUDIT into a single executable
+  plan. Target: 0 orphaned schemas, 70% test coverage for UAC, interfaces own integration tests (real auth). Future: config-driven
+  subscription to interfaces.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +14,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
-overview: 'Full resolution of unified-api-contracts schema normalization across every data provider with no exceptions. Combines SCHEMA_NORMALIZATION_AUDIT, SCHEMA_NORMALIZATION_AUDIT_FULL, and SCHEMA_NORMALIZATION_GAPS_AUDIT into a single executable plan. Target: 0 orphaned schemas, 70% test coverage for UAC, interfaces own integration tests (real auth). Future: config-driven subscription to interfaces.'
 todos:
 - {id: phase1-cefi-core, content: 'CeFi core: coinbase (order/fill), upbit (order), aster (trade/orderbook/order/ticker), hyperliquid (order/fill/ticker), nautilus (order/fill). Add normalizers per GAPS §2.1.', status: completed}
 - {id: phase1-tradfi, content: 'TradFi: ibkr, fix, prime_broker, versifi + Databento (TradFi provider: CME, futures, options). TradFi parity with CeFi where possible. Per GAPS §2.2.', status: completed}

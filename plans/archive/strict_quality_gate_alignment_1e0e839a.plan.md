@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Strict Quality Gate Alignment
-summary:
+summary: Reconcile PM and Codex Quality Gate SSOT, establish repo-type-specific templates, harden the audit prompt to cover
+  all cursor rules and quickmerge behavior, and roll out setup.sh, quality-gates.sh, .cursorignore, and .gitignore to every
+  repo (no skips; covers frontend, backend, libraries, Python, bash, TypeScript).
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,10 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-04"
-overview:
-  Reconcile PM and Codex Quality Gate SSOT, establish repo-type-specific templates, harden the audit prompt to cover all
-  cursor rules and quickmerge behavior, and roll out setup.sh, quality-gates.sh, .cursorignore, and .gitignore to every
-  repo (no skips; covers frontend, backend, libraries, Python, bash, TypeScript).
 todos:
   - {
       id: reconcile-ssot,

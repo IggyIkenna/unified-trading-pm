@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: Visualizer to Analytics UI Port
-summary:
+summary: Port execution-analytics-ui functionality into execution-analytics-ui to achieve 100% audit grade, alignment with
+  PM plans and codex, and full integration with execution-results-api and execution-service domain data.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
-overview: Port execution-analytics-ui functionality into execution-analytics-ui to achieve 100% audit grade, alignment with PM plans and codex, and full integration with execution-results-api and execution-service domain data.
 todos:
 - {id: infra-setup, content: 'Add infrastructure dependencies to execution-analytics-ui: axios, @tanstack/react-query, zustand, recharts, tailwind css, postcss. Configure Vite proxy /api → http://localhost:8002. Add @/ path alias. Configure authApiClient (axios + auth interceptor). Add api/types.ts aligned with execution-results-api schemas (ResultSummary, ResultsResponse, ExecutionAlpha). Fix GridResult → ResultSummary schema mismatch.', status: completed}
 - {id: p0-pages, content: 'Port P0 core analytics pages from execution-analytics-ui: (1) LoadResults — browse GCS/local results, bucket/prefix selection; uses /results, /results/buckets, /results/prefixes endpoints; (2) Analysis — alpha histogram, equity curve; uses /results, /results/execution_alpha; (3) DeepDive — per-result fills/orders/timeline tabs; (4) AlgorithmComparison — compare algorithms with bar/radar charts. Port Zustand stores (resultsStore, filterStore) and React Query hooks.', status: completed}

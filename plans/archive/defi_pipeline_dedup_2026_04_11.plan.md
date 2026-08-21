@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: defi-pipeline-dedup
-summary:
+summary: Deduplicate DeFi data pipeline — collect-* as canonical path, bypass MDPS for pre-bucketed data, cross-service
+  validation
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-14'
-overview: Deduplicate DeFi data pipeline — collect-* as canonical path, bypass MDPS for pre-bucketed data, cross-service validation
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: hatchling-migration
-summary:
+summary: Migrate all repos from setuptools to hatchling build backend for clean uv editable installs
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +11,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-12'
-overview: Migrate all repos from setuptools to hatchling build backend for clean uv editable installs
 type: code
 epic: none
 completion_gates: {code: C5, deployment: none, business: none}

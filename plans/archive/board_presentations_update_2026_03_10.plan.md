@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: board-presentations-update-2026-03-10
-summary:
+summary: Update all 10 existing HTML presentations and create 3 new ones for the board meeting on 2026-03-31, including
+  rehearsals on March 13 and March 18.
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
-overview: Update all 10 existing HTML presentations and create 3 new ones for the board meeting on 2026-03-31, including rehearsals on March 13 and March 18.
 type: business
 epic: epic-business
 superseded_by: presentations_2026_03_13

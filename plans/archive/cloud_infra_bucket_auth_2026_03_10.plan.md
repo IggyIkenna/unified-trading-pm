@@ -1,7 +1,13 @@
 ---
 doc_type: plan
 title: cloud-infra-bucket-auth
-summary:
+summary: 'Cloud infrastructure rollout: GCP_SA_KEY propagation to all 62 repos, GCS bucket audit + creation
+
+  for all required buckets, BigQuery external table setup, SIT smoke tests for bucket availability
+
+  and cloud auth (GCP + AWS), and a framework for dual-cloud auth testing (GCP always; AWS when
+
+  creds available). Covers the question: "do all services have their buckets, and can they auth?"'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,15 +17,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
-overview: 'Cloud infrastructure rollout: GCP_SA_KEY propagation to all 62 repos, GCS bucket audit + creation
-
-  for all required buckets, BigQuery external table setup, SIT smoke tests for bucket availability
-
-  and cloud auth (GCP + AWS), and a framework for dual-cloud auth testing (GCP always; AWS when
-
-  creds available). Covers the question: "do all services have their buckets, and can they auth?"
-
-  '
 type: infra
 epic: epic-infra
 completion_gates: {code: C5, deployment: D3, business: none}

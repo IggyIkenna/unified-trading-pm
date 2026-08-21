@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: sports-execution-venue-coverage
-summary:
+summary: 'Comprehensive sports execution coverage plan for all venues the Odds API covers. Adds venue
+
+  execution profiles to UAC, browser automation infrastructure to USEI, and execution adapters
+
+  for ~70 bookmakers. Designed for world-class sports arbitrage.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,13 +15,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-15'
-overview: 'Comprehensive sports execution coverage plan for all venues the Odds API covers. Adds venue
-
-  execution profiles to UAC, browser automation infrastructure to USEI, and execution adapters
-
-  for ~70 bookmakers. Designed for world-class sports arbitrage.
-
-  '
 todos:
 - {id: p0-venue-execution-schema, content: '[AGENT] P0. Create VenueExecutionProfile Pydantic model in UAC canonical/domain/sports/
 

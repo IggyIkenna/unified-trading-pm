@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: UI Coverage Uplift — 70% Floor
-summary:
+summary: 'Get all 12 active UI repos to ≥70% line coverage enforced at CI time. Current state: 0.6%–43% where measured;
+  7 repos have no coverage-summary.json. Strategy: write mock-API tests per repo, add vitest thresholds, align templates
+  and propagation scripts so the floor is preserved on future rollouts.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
-overview: 'Get all 12 active UI repos to ≥70% line coverage enforced at CI time. Current state: 0.6%–43% where measured; 7 repos have no coverage-summary.json. Strategy: write mock-API tests per repo, add vitest thresholds, align templates and propagation scripts so the floor is preserved on future rollouts.
-
-  '
 isProject: false
 todos:
 - {id: create-plan, content: Create this plan file and set up todo tracking., status: completed, notes: Done 2026-03-10.}

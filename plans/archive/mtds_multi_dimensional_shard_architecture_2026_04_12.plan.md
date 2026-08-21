@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: mtds-multi-dimensional-shard-architecture
-summary:
+summary: Multi-dimensional shard tracking, schema validation, smart caching, and UAC governance for MTDS
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +11,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-14'
-overview: Multi-dimensional shard tracking, schema validation, smart caching, and UAC governance for MTDS
 type: code
 epic: epic-code-completion
 archived_date: 2026-05-06

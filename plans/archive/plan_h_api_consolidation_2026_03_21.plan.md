@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: plan-h-api-consolidation
-summary:
+summary: Consolidate 9 domain data API repos into one unified-trading-api with entitlement middleware, WebSocket multiplexing,
+  and unified OpenAPI spec
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
-overview: Consolidate 9 domain data API repos into one unified-trading-api with entitlement middleware, WebSocket multiplexing, and unified OpenAPI spec
 type: mixed
 epic: epic-code-completion
 locked_by:

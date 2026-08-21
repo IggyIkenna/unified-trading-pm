@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: UAC Nested Domain Deviations
-summary:
+summary: Update the UAC refactor plan so Sports and DeFi are nested under the canonical domains they deviate from (domain,
+  execution, errors), not top-level siblings. This makes it clear where each vertical diverges from canon and improves navigability.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-14'
-overview: Update the UAC refactor plan so Sports and DeFi are nested under the canonical domains they deviate from (domain, execution, errors), not top-level siblings. This makes it clear where each vertical diverges from canon and improves navigability.
 todos: []
 isProject: false
 ---

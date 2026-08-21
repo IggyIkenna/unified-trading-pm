@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: mtds-massive-reorganisation
-summary:
+summary: Reorganise market-tick-data-service from 34,765L/139 files to 850L/13 files following instruments-service patterns
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +11,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-24'
-overview: Reorganise market-tick-data-service from 34,765L/139 files to 850L/13 files following instruments-service patterns
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

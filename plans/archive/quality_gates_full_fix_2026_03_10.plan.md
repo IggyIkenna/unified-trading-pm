@@ -1,7 +1,15 @@
 ---
 doc_type: plan
 title: Quality Gates Full Fix — All Repos Pass Unit Tests + Coverage
-summary:
+summary: "Systematically run unit tests (RUN_INTEGRATION=false) across all repos, fix every failing test and coverage gap\
+  \ properly. No bypasses. No type:ignore hacks. No test exemptions. Fix root causes.\nCoverage targets:\n  - T0–T3 libraries:\
+  \ >= 80%\n  - Services / APIs: >= 70%\n  - Exceptions (exactly 4 repos, designated below): allowed below 70%\n  - UIs:\
+  \ no Python coverage target; smoke tests required\n\nPermitted < 70% repos (real-time / tick-level repos with tiny unit-test\
+  \ surface):\n  1. market-tick-data-service    (live-tick ingestion, integration-only meaningful tests)\n  2. execution-service\
+  \           (1200+ tests but heavy integration surface; 26% placeholder)\n  3. features-commodity-service  (early-stage,\
+  \ <15 tests currently)\n  4. market-data-processing-service (pipeline throughput service)\n\nAll other repos must meet\
+  \ targets above. Fix tests — do not lower thresholds.\n**Paused:** superseded for active execution by `quality_gates_systemic_remediation_2026_03_16.md`.\
+  \ Coverage targets here remain the normative reference for repo floors."
 status: paused
 nature: record
 asset_group: [cross-cutting]
@@ -11,8 +19,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
-overview: "Systematically run unit tests (RUN_INTEGRATION=false) across all repos, fix every failing test and coverage gap properly. No bypasses. No type:ignore hacks. No test exemptions. Fix root causes.\nCoverage targets:\n  - T0–T3 libraries: >= 80%\n  - Services / APIs: >= 70%\n  - Exceptions (exactly 4 repos, designated below): allowed below 70%\n  - UIs: no Python coverage target; smoke tests required\n\nPermitted < 70% repos (real-time / tick-level repos with tiny unit-test surface):\n  1. market-tick-data-service    (live-tick ingestion, integration-only meaningful tests)\n  2. execution-service           (1200+ tests but heavy integration surface; 26% placeholder)\n  3. features-commodity-service  (early-stage, <15 tests currently)\n  4. market-data-processing-service (pipeline throughput service)\n\nAll other repos must meet targets above. Fix tests — do not lower thresholds.\n**Paused:** superseded for active execution by `quality_gates_systemic_remediation_2026_03_16.md`. Coverage\
-  \ targets here remain the normative reference for repo floors.\n"
 type: infra
 epic: epic-infra
 completion_gates: {code: C4, deployment: none, business: none}

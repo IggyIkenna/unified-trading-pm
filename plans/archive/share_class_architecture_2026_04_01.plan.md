@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: share-class-architecture
-summary:
+summary: Cross-cutting share class (ETH/USDT/BTC) architecture across UAC, strategy, execution, P&L, position, risk services
+  + UI
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,9 +20,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-02"
-overview:
-  Cross-cutting share class (ETH/USDT/BTC) architecture across UAC, strategy, execution, P&L, position, risk services +
-  UI
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

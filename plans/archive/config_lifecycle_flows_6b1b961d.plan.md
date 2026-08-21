@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: Config Lifecycle Flows
-summary:
+summary: 'Implement the two config lifecycle flows: (1) generate grid configs and mass-deploy them as batch jobs, and (2)
+  review batch results, select the best configs, and promote them to live -- across Strategy UI, ML Training UI, and deployment-ui.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-17'
-overview: 'Implement the two config lifecycle flows: (1) generate grid configs and mass-deploy them as batch jobs, and (2) review batch results, select the best configs, and promote them to live -- across Strategy UI, ML Training UI, and deployment-ui.'
 todos:
 - {id: dimensional-grid-selection, content: Build DimensionalGrid with checkbox row selection + selection toolbar (extends existing dimensional-grid-component todo), status: pending}
 - {id: strategy-grid-results-wire, content: 'Replace StrategyGridResults static table with DimensionalGrid, wire to backtest results API (mock-api first)', status: pending}

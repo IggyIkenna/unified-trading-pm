@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: zero-baseline-typecheck-2026-03-10
-summary:
+summary: Eliminate all .basedpyright-baseline.json suppressions across every repo so basedpyright runs with 0 errors and
+  empty/absent baseline files.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,9 +20,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-10"
-overview:
-  Eliminate all .basedpyright-baseline.json suppressions across every repo so basedpyright runs with 0 errors and
-  empty/absent baseline files.
 type: code
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: none, business: none }

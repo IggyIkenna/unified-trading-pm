@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: production-mock-e2e-plan-d90c8f20
-summary:
+summary: 'Bring all 60+ repos to production-standard mock E2E testability: libraries via UAC (+ unified-internal-contracts
+  where applicable), VCR cassettes, and strict schema validation; services and APIs via mock data replay, error handling,
+  events, and load/performance checks; UIs via mock API, smoke tests, and demo mode. Mock-only default in CI; optional sandbox
+  mode when secrets present. Deployment closure: D2 (CI mock/E2E green) — staging integration (D3) is out of scope for this
+  plan.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +15,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
-overview: 'Bring all 60+ repos to production-standard mock E2E testability: libraries via UAC (+ unified-internal-contracts where applicable), VCR cassettes, and strict schema validation; services and APIs via mock data replay, error handling, events, and load/performance checks; UIs via mock API, smoke tests, and demo mode. Mock-only default in CI; optional sandbox mode when secrets present. Deployment closure: D2 (CI mock/E2E green) — staging integration (D3) is out of scope for this plan.'
 type: infra
 epic: epic-infra
 completion_gates: {code: C5, deployment: D2, business: none}

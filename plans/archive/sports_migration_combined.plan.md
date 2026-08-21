@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: sports-migration-combined
-summary:
+summary: Consolidates sports_migration_gap_fix and sports_migration_phase2_full — all actionable todos complete; live VCR
+  cassettes blocked on api_keys_and_auth phase-4.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-09'
-overview: Consolidates sports_migration_gap_fix and sports_migration_phase2_full — all actionable todos complete; live VCR cassettes blocked on api_keys_and_auth phase-4.
 todos:
 - {id: b1-scraper-adapters, content: 'B1 — Scraper adapters in USEI; validate CSS selectors; website version fingerprinting; Playwright in base image. DONE 2026-03-09: Added _CSS_H2H/_CSS_OVER_UNDER constants + validate_css_selectors() at module-import to all 13 full scraper adapters (bet365, betway, coral, williamhill, ladbrokes, bwin, paddypower, skybet, unibet, betvictor, betfred, bet888sport, boylesports). register_scraper_version() seeds ScraperVersionRegistry at import. get_odds() delegates to wrap_get_odds_with_stale_tracking() + _get_odds_inner() for auto stale-flagging. sbobet stub: register_scraper_version with css_selector_hash="stub". Added 39 new unit tests (3 per adapter). All 426 unit tests pass; coverage 80.44%. Commits: 32c5513.', status: done}
 - {id: b5-b6-deployment, content: 'B5–B6 — Odds API validation; sports sharding; Dockerfile base image; deployment configs. DONE 2026-03-10: B5: odds_api_validator.py added to market-tick-data-service/adapters/sports/ (OddsValidationResult, validate_odds_payload, validate_canonical_odds_dict; 29 unit tests pass; basedpyright 0 errors). B6: Dockerfile + pip.conf added to features-sports-service (uses unified-trading-library base image — no Playwright; FSS is batch/API only). deployment-service configs updated: dependencies.yaml (features-sports-service entry + SPORTS category_domain_mapping), expected_start_dates.yaml (SPORTS category_start 2020-08-01, 8 leagues), checklist.features-sports-service.yaml (items 6,11,14,15 marked done). Commits: market-tick-data-service d5ebecc, deployment-service 406199d, features-sports-service ba62fa3.', status: done}

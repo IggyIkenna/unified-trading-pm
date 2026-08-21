@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: batch-live-design-symmetry-preaudit
-summary:
+summary: Citadel-grade pre-execution audit manifest for the spawned plan derived from `batch_live_design_symmetry_2026_05_08.md`.
+  Per-Tab pre-audit + service-readiness Groups A-G + QG STEP violation pre-flight + cross-plan banners + risk register +
+  collision matrix + ServiceEmissionPolicy gaps + spawned-plan readiness checklist + Tab-8 paste-ready operator recipe.
 status: ready-for-plan-extraction
 nature: record
 asset_group: [cross-cutting]
@@ -31,11 +33,6 @@ related:
     unified-trading-pm/plans/active/defi_master_2026_05_07.md,
   ]
 created: 2026-05-10
-overview:
-  Citadel-grade pre-execution audit manifest for the spawned plan derived from
-  `batch_live_design_symmetry_2026_05_08.md`. Per-Tab pre-audit + service-readiness Groups A-G + QG STEP violation
-  pre-flight + cross-plan banners + risk register + collision matrix + ServiceEmissionPolicy gaps + spawned-plan
-  readiness checklist + Tab-8 paste-ready operator recipe.
 type: pre-audit-manifest
 operator: ikenna
 locked_by: live-defi-rollout

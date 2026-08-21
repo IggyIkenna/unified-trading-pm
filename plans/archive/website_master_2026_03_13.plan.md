@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: website-master-2026-03-13
-summary:
+summary: 'Consolidates all website-related plans: odum-research-website repo integration into workspace manifest, content
+  refresh with current system capabilities, domain migration from Yell to self-managed hosting, hosting board presentations
+  on the website, and admin portal with role-based access (7 roles).'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
-overview: 'Consolidates all website-related plans: odum-research-website repo integration into workspace manifest, content refresh with current system capabilities, domain migration from Yell to self-managed hosting, hosting board presentations on the website, and admin portal with role-based access (7 roles).
-
-  '
 type: business
 epic: epic-business
 completion_gates: {code: C3, deployment: D3, business: B4}
@@ -32,4 +31,3 @@ todos:
 
     ', status: pending}
 ---
-

@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: trading-system-audit-prompt
-summary:
+summary: DO NOT ARCHIVE — used for continuous audit checks. Canonical audit checklist for the unified trading system workspace
+  against institutional-grade standards. Covers workspace governance, code quality, security, architecture, schema governance,
+  observability, deployment, technical debt, cross-repo alignment, CI/CD pipeline quality, UI/npm governance, and tooling
+  SSOT quality (Sections 1–17).
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +14,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-02-28'
-overview: DO NOT ARCHIVE — used for continuous audit checks. Canonical audit checklist for the unified trading system workspace against institutional-grade standards. Covers workspace governance, code quality, security, architecture, schema governance, observability, deployment, technical debt, cross-repo alignment, CI/CD pipeline quality, UI/npm governance, and tooling SSOT quality (Sections 1–17).
 type: infra
 epic: none
 completion_gates: {code: C5, deployment: none, business: none}

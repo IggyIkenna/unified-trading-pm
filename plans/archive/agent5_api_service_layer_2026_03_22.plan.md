@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: agent5-api-service-layer
-summary:
+summary: Refactor unified-trading-api from mock/real if-else to service layer pattern, wire MockStateStore from UTL, add
+  POST /admin/reset
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-22'
-overview: Refactor unified-trading-api from mock/real if-else to service layer pattern, wire MockStateStore from UTL, add POST /admin/reset
 todos:
 - {id: a5-p0-service-interfaces, content: '- [x] [AGENT] P0. DONE — services/ directory already exists with DomainService Protocol in base.py, MockDomainService in mock_service.py, LiveDomainService in live_service.py, factory.py with get_service(). VERIFY the Protocol covers all 15 domains listed. If any domain methods are missing, ADD them to the existing Protocol — do NOT recreate.
 

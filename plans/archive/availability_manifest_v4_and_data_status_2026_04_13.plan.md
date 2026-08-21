@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: availability-manifest-v4-and-data-status
-summary:
+summary: Universal availability manifest schema v4 — proper shard columns, atomic writes, UAC SSOT registry, data status
+  page hierarchy, codex documentation
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-13"
-overview:
-  Universal availability manifest schema v4 — proper shard columns, atomic writes, UAC SSOT registry, data status page
-  hierarchy, codex documentation
 type: mixed
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: D3, business: B3 }

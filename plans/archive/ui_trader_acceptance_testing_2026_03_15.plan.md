@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: ui-trader-acceptance-testing-2026-03-15
-summary:
+summary: 'Trader acceptance testing for all 12 UIs: visual quality fixes (scrunched layouts, overlapping elements), bidirectional
+  UI-API mapping audit (no orphan APIs or UIs, batch + live), API mock validation (cache-based stateful mode), domain data
+  completeness (positions, P&L, reconciliation, backtest, config, deployment), stress scenario simulation (drawdowns, missing
+  data, bad schemas, delays), health status verbosity, process hygiene (zombies, shutdown), and UX reorganization (config
+  control, manual trade entry, tab/UI consolidation). Central fixes in ui-kit benefit all UIs.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +15,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-16'
-overview: 'Trader acceptance testing for all 12 UIs: visual quality fixes (scrunched layouts, overlapping elements), bidirectional UI-API mapping audit (no orphan APIs or UIs, batch + live), API mock validation (cache-based stateful mode), domain data completeness (positions, P&L, reconciliation, backtest, config, deployment), stress scenario simulation (drawdowns, missing data, bad schemas, delays), health status verbosity, process hygiene (zombies, shutdown), and UX reorganization (config control, manual trade entry, tab/UI consolidation). Central fixes in ui-kit benefit all UIs.
-
-  '
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D2, business: B6}

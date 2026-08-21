@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: position-precision-pnl-hardening-2026-03-11
-summary:
+summary: Fix inverse perp is_inverse hardcode, add margin_type to instruments, and add fee/funding/yield reconciliation
+  engines to eliminate unexplained P&L and achieve attribution correctness.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
-overview: Fix inverse perp is_inverse hardcode, add margin_type to instruments, and add fee/funding/yield reconciliation engines to eliminate unexplained P&L and achieve attribution correctness.
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}
