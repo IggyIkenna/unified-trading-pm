@@ -61,16 +61,27 @@ source: >-
 
 ## From `walkthrough_file_shared_checkout_repeated_content_loss_2026_08_20.md`
 
-- [ ] [BACKEND] P1. **Add a pre-write safety snapshot for agent-authored client-artefact edits.** Before a
-      single-file structure-pass agent begins editing a large, contested file (the pattern that produced 2 of the 3
-      losses this issue documents), snapshot its current content (content-hashed, timestamped) to a location
-      outside the shared working tree — a scratchpad or a dedicated GCS prefix, not another spot in the same
-      contended checkout — so a repeat working-tree loss has a designed recovery path instead of a lucky scratchpad
-      find. Done when: the snapshot mechanism exists, is exercised by at least one real edit session, and its
-      recovery path is exercised once (restore from a snapshot, confirm content matches). Source:
-      `walkthrough_file_shared_checkout_repeated_content_loss_2026_08_20.md` todo 2 (the pre-write safety snapshot
-      item — NOT todo 1 "determine the actual reset mechanism" or todo 3 "investigate whether this file is
-      unusually contended," both genuine root-cause investigation left on the source doc).
+- [x] ✅ [BACKEND] P1. Shipped — `unified-trading-pm@d626d4d987`. **Add a pre-write safety snapshot for
+      agent-authored client-artefact edits.** Before a single-file structure-pass agent begins editing a large,
+      contested file (the pattern that produced 2 of the 3 losses this issue documents), snapshot its current
+      content (content-hashed, timestamped) to a location outside the shared working tree — a scratchpad or a
+      dedicated GCS prefix, not another spot in the same contended checkout — so a repeat working-tree loss has a
+      designed recovery path instead of a lucky scratchpad find. Done when: the snapshot mechanism exists, is
+      exercised by at least one real edit session, and its recovery path is exercised once (restore from a
+      snapshot, confirm content matches). Source: `walkthrough_file_shared_checkout_repeated_content_loss_2026_08_20.md`
+      todo 2 (the pre-write safety snapshot item — NOT todo 1 "determine the actual reset mechanism" or todo 3
+      "investigate whether this file is unusually contended," both genuine root-cause investigation left on the
+      source doc). **Delivered**: `scripts/dev/snapshot-client-artefact.sh` (`snapshot`/`list`/`restore`
+      subcommands; content-hashed + timestamped; stores under `$HOME/.cache/agent-artefact-snapshots/` — outside
+      any repo working tree by construction, shared host-wide across slots, same convention as `PREK_CACHE_DIR` /
+      `QM_ISO_VENV_CACHE`; identity keyed by repo-name + repo-relative path so a snapshot from one slot restores
+      from any other slot). 9/9 bats tests passing (`tests/test_snapshot_client_artefact.bats`, hermetic scratch
+      repos — covers snapshot/restore/list, integrity-check-on-corruption, fail-closed on no-snapshot/no-`--to`).
+      **Both Done-when bars exercised for real**, not just unit-tested: ran `snapshot` against the actual 891KB
+      contested file this issue names
+      (`codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html`), then `restore`d it to
+      a scratch destination and confirmed byte-identical recovery
+      (`sha256=50ac2677ba682255ad62e9561c37fb0a07352699eb615266dd64301f0406d0c6` on both sides, `diff` clean).
 - [ ] [DOC] P2. **Add the 2026-08-20 shared-checkout content-loss incident to
       `/codex/05-infrastructure/per-tab-worktrees.md`** as a concrete case study alongside the existing
       multi-agent-collision documentation — the existing guidance anticipates loss occurring via a git operation
@@ -122,3 +133,11 @@ source: >-
   them carry an enumerated, currently-verified target list in that doc's own text (the raw per-finding transcripts
   from that one-off sweep were explicitly not preserved), so a worker picking them up would need to re-derive the
   candidate set first rather than execute against a fixed list — not the bounded-outcome bar this split applies.
+- **2026-08-21 (slot-8 worker)**: Item 1 shipped — `unified-trading-pm@d626d4d987`. New
+  `scripts/dev/snapshot-client-artefact.sh` (snapshot/list/restore, content-hashed + timestamped, stored under
+  `$HOME/.cache/agent-artefact-snapshots/` — outside every repo's working tree so a git reset/blind revert on a
+  checkout cannot touch it) + `tests/test_snapshot_client_artefact.bats` (9/9 passing). Exercised both Done-when
+  bars for real against the actual incident file
+  (`codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html`): snapshot taken, restored
+  to a scratch path, byte-identical (`diff` clean, matching sha256). See the checkbox above for full delivered
+  detail.
