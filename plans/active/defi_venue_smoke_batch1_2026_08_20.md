@@ -46,7 +46,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 - [ ] [BACKEND] P1. Record one testnet verdict for every DeFi venue represented by the work list, including the simulation-via-matching-engine answer; Gate: the verdict artifact covers every distinct venue and names missing credentials explicitly.
 - [ ] [BACKEND] P1. Add or run testnet smoke coverage where credentials already exist or can be provisioned, while recording an honest unavailable result where they do not; retain the full path and file an operator credential request when a credential gap is confirmed. Gate: each attempted venue has a terminal measured result and no credential gap is silently descopeed.
 - [ ] [BACKEND] P1. Convert every failed or absent DeFi row into a tracked follow-up with venue, data type, source, and owner rather than treating absence as success; Gate: every non-passing row has a linked plan todo or an explicit declared-absence reason.
-- [x] ✅ [BACKEND] P0. Confirm the batch preserves source-scoped Databento exemptions and does not bypass the canonical-path oracle or manifest atom checks; Evidence: market-tick-data-service@06531f00; generator rerun reported 8 Databento exemptions and 232 DeFi rows; focused oracle negative-control tests passed. Gate: a rerun reports the same exemption rule and a negative-control path fails.
+- [x] ✅ [BACKEND] P0. Confirm the batch preserves source-scoped Databento exemptions and does not bypass the canonical-path oracle or manifest atom checks; Evidence: market-tick-data-service@06531f00 and unified-api-contracts@3381166647; generator rerun reported 8 Databento exemptions and 232 DeFi rows; focused exemption-set and canonical negative-control tests passed. Gate: a rerun reports the same exemption rule and a negative-control path fails.
 
 ## Progress Log
 
@@ -67,3 +67,9 @@ adds the DeFi generator-scoped enumeration and explicit `--asset-group DEFI` gua
 passed the repository quality gate (11,110 passed, 28 skipped, 1 xpassed) and was verified as `HEAD ==
 origin/live-defi-rollout`. The measured MDPS execution remains RED as recorded above; IS/MTDS/features terminal
 evidence is still a follow-up and is deliberately not represented as green here.
+
+**2026-08-21 — source/exemption and canonical negative-control coverage shipped (slot 25, backend_engineer).**
+`unified-api-contracts@3381166647` adds the focused canonical negative-control test alongside the exact
+source-scoped exemption assertions. Isolated quickmerge completed with full quality gates green (439s), and
+ancestry was verified against `origin/live-defi-rollout`. This evidence closes only the checked source/oracle
+contract item; the remaining DeFi capture and testnet P1 work stays open.
