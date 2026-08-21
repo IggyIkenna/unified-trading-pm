@@ -155,9 +155,12 @@ just (c).
       extension — strategy-service@4733a7e7 (extend `strategy_orphan_sweep.py` for orders/positions/pnl and/or
       backtest_results; `ml_orphan_sweep.py` for models/metadata/training_artifacts) mirroring the A-E taxonomy pattern.
       Repo: strategy-service, ml-service.
-- [ ] 5. [OPERATOR] P2. **New 2026-08-09, split out of todo 1's now-resolved decision. Mechanical sub-parts SHIPPED
-      2026-08-09 (slot 8); the real-caller sub-part is now BLOCKED on an operator decision — see BLK below.** Wire up a
-      real caller for `strategy_orders`/`strategy_positions`/`strategy_pnl`: add explicit
+- [ ] 5. [BACKEND] P2. **New 2026-08-09, split out of todo 1's now-resolved decision. Mechanical sub-parts SHIPPED
+      2026-08-09 (slot 8). Real-caller sub-part: operator answered the BLK question 2026-08-21 (verbatim below);
+      code wired + QG green 2026-08-21 — retagged from `[OPERATOR]` (question resolved) to `[BACKEND]`; checkbox
+      stays open only because the commit has not landed yet (see Progress Log — blocked on an unrelated concurrent
+      session's dirty `unified-api-contracts` checkout tripping quickmerge's pre-flight dep-audit, not an operator or
+      code gate).** Wire up a real caller for `strategy_orders`/`strategy_positions`/`strategy_pnl`: add explicit
       `PROTOCOL_DATA_SINK_BUCKET_STRATEGY_ORDERS`-class deployment config (currently defaults to `LocalDataSink()` — no
       `PROTOCOL_DATA_SINK_BACKEND`/bucket env var set in
       `deployment-service/terraform/services/strategy-service/gcp/main.tf:197-224`) — **done, strategy-service /
@@ -165,13 +168,16 @@ just (c).
       (`PATH_REGISTRY["strategy_orders"].path_template` declares
       `strategy_orders/by_date/day={date}/strategy_id={strategy_id}/` but the real writer call resolves to bucket-root
       `day={date}/strategy_id={strategy_id}/{uuid}.parquet` with no prefix — same class as todo 3b's
-      `ml_predictions`/`strategy_instructions` fixes) — **done, strategy-service, see Progress Log**. **Still open**:
-      wiring an actual real (non-test) caller of `store_orders_batch`/`store_positions`/`store_pnl` — investigation this
-      session found `OrderRecord`/UAC `OrderData` has ZERO real-data producers anywhere in the workspace (see BLK
-      question in Progress Log); inventing one would fabricate the `strategy_orders` corpus, not wire it up. **Done
-      when**: a real caller writes through `get_data_sink(routing_key="strategy_orders")` to the documented
-      `PATH_REGISTRY` path, deployment config sets an explicit GCS backend, and `bash scripts/quality-gates.sh` is
-      green. Repo: strategy-service, deployment-service.
+      `ml_predictions`/`strategy_instructions` fixes) — **done, strategy-service, see Progress Log**. Real-caller
+      wiring — **done in code 2026-08-21, ship pending, see Progress Log** — through the standalone/benchmark
+      paper-run path (`paper_run_handler.py` → `GroupBRunner` → real `BenchmarkFillRecord` fills →
+      `paper_run_emit.emit_paper_run_ledger`/`emit_strategy_sinks`), which reuses
+      `ledger_emit.trade_fill_records()` (the same real conversion the canonical InstructionLedger write already
+      uses) to derive `StrategyOrderRecord`/`PositionRecord`/`PnLRecord` rows and calls
+      `CloudStrategyStorage.store_orders_batch`/`store_positions`/`store_pnl`. **Done when**: a real caller writes
+      through `get_data_sink(routing_key="strategy_orders")` to the documented `PATH_REGISTRY` path, deployment
+      config sets an explicit GCS backend, `bash scripts/quality-gates.sh` is green, AND the commit lands on
+      `live-defi-rollout` (currently blocked — see Progress Log). Repo: strategy-service, deployment-service.
 
 ## Progress Log
 
@@ -238,4 +244,65 @@ just (c).
     exists and inventing one is fabrication. **(C)** wire `strategy_orders` from execution-service's real fill data
     instead of strategy-service — a different repo/flow, out of this todo's declared repos, much larger scope.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
-- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).
+- **2026-08-21** (operator answer + real-caller wiring) — Operator answered the BLK-75060009-class question this
+  todo carried open, verbatim: "it would execute paper and batch because ultimately strategy and execution batch
+  can be run separately — strategy is pre-processing the orders from its expected fills to get benchmark pnl when
+  run alone. execution is taking those orders and computing alpha execution pnl. when run together in paper or
+  live (different flavour of mode) they message each other and rely on each other. allows us to separately test
+  and get prod ready." Investigation (code-reading only, matching this doc's own discipline) confirmed BOTH real
+  code paths the operator described exist and are live/CLI-reachable — NOT fabricated, matching Option (A)-ish
+  from the 2026-08-09 BLK question, but via a different real producer than that BLK's own DeFi-instruction framing
+  found:
+  1. **Standalone/benchmark mode — real, wired.** `strategy_service/cli/handlers/paper_run_handler.py`'s
+     `--operation paper-run` (registered in `service_entry.py`'s `_OPERATIONS`, the Stage-A paper-run cron) drives
+     `GroupBRunner.run()` (`engine/backtest/runner.py`) — "the SAME `V2EngineOrchestrator` the live path runs" per
+     its own module docstring — producing a real `GroupBBacktestResult` with real `BenchmarkFillRecord` fills
+     (`engine/backtest/benchmark_fills.py`, deterministic benchmark-price fills, the "expected fills" the operator
+     described) and forwards them to `paper_run_emit.emit_paper_run_ledger`, which already turns them into keyed
+     `TradeFillRecord`s (`ledger_emit.trade_fill_records()`) for the canonical InstructionLedger — confirming this
+     IS the real "strategy pre-processing its own expected fills to get benchmark pnl when run alone" path.
+  2. **Combined paper/live messaging mode — real, wired, but a DIFFERENT sink domain.** `GroupBHandler`
+     (`cli/handlers/group_b_handler.py`) wires `GroupBRunner`'s `atomic_publisher`/`instruction_publisher` onto the
+     real UTL `EventTransport` spine (`engine/strategies/v2/live_routing.py::publish_atomic_instruction`/
+     `publish_strategy_instruction`) so execution-service can consume real `AtomicInstruction`/
+     `StrategyInstructionEnvelope` events and compute its own alpha-execution PnL — matching "execution is taking
+     those orders and computing alpha execution pnl... they message each other." This is real and already wired,
+     but is execution-service's own `execution_fills`/positions/pnl domain (different PATH_REGISTRY entries,
+     different buckets) — NOT the `strategy_orders`/`strategy_positions`/`strategy_pnl` sinks this todo covers.
+     Also: `GroupBHandler` is NOT registered in `service_entry.py`'s `_OPERATIONS` dispatch table and has zero
+     non-test callers anywhere in the workspace (confirmed by grep) — it has no real invocation path today
+     regardless, so there is no live call site to hook these sinks into without inventing one.
+
+  **Wired**: `strategy-service/strategy_service/engine/core/cloud_strategy_storage.py` — `store_orders_batch`
+  gained `client_id`/`mode` params (default `client_id=""` preserves the pre-existing
+  `test_cloud_strategy_storage_job_id.py` call sites) and its write partition now actually includes
+  `client_id`/`mode` (previously added as params but not threaded into the write call — a bug caught and fixed in
+  the same session); `PositionRecord` gained `instrument_id`/`venue` columns (the `"positions"` output schema
+  declares both non-nullable — `store_positions` would have silently failed schema validation on every real call
+  without them); added pure helper functions `order_records_from_fills`/`position_records_from_fills`/
+  `total_pnl_from_fills`/`pnl_record_from_metrics` mapping real `TradeFillRecord`s to
+  `StrategyOrderRecord`/`PositionRecord`/`PnLRecord` rows.
+  `strategy-service/strategy_service/engine/backtest/paper_run_emit.py` — new `emit_strategy_sinks()` function,
+  called from `emit_paper_run_ledger()` right after the primary `write_paper_run()` ledger write (wrapped in
+  try/except so a sink-write failure never breaks the primary, already-succeeded ledger write); groups the run's
+  real `TradeFillRecord`s by `(day, strategy_id)` (matching `PATH_REGISTRY["strategy_orders"]`'s
+  `client_id`/`strategy_id`/`day`/`mode` partition grain) and calls `store_orders_batch`/`store_positions`/
+  `store_pnl` once per group.
+  **Tested**: new `strategy-service/tests/unit/engine/backtest/test_paper_run_emit_strategy_sinks.py` — real
+  `BenchmarkFillRecord`/`TradeInstruction` objects through the real `trade_fill_records()` conversion and the real
+  (local-backend) `get_data_sink()` write path (no sink method mocked); asserts 2 real fills spanning 2 days
+  produce 2 real per-group writes each to `strategy_orders`/`strategy_positions`/`strategy_pnl`, that the written
+  object-key URIs carry the correct `client_id=`/`strategy_id=`/`mode=`/`day=` partition segments, that a
+  read-back of the actual written orders parquet carries the real fill values (price/qty/side/status), and that
+  zero fills is a real no-op.
+  **QG**: `bash scripts/quality-gates.sh --no-fix` — 6448 passed, 0 failed, import-patterns/lint/format clean.
+  **Ship status — NOT YET LANDED**: `bash scripts/quickmerge.sh` (scoped `--files` to exactly the 3 touched
+  files) failed at STAGE 2 Pre-flight Audit 3× across ~10 minutes, every time on the SAME cause: an unrelated
+  concurrent session's uncommitted work in the sibling dependency repo `unified-api-contracts`
+  (`bookmaker_registry.py`/`sports/bookmaker.py`/`risk_service/risk.py`/`_tradfi.py` — sports/tradfi/risk
+  changes, nothing to do with this todo) trips quickmerge's path-dependency dirty-check. Per this workspace's
+  multi-agent safety rules that is NOT this session's work to commit, revert, or otherwise touch. The 3
+  strategy-service files remain uncommitted-but-QG-green on disk in the slot-4 checkout, ready to ship the moment
+  `unified-api-contracts` goes clean — retry `bash scripts/quickmerge.sh ... --files '...'` from
+  `strategy-service/` with no further code changes needed. Checkbox stays open until that commit actually lands.
