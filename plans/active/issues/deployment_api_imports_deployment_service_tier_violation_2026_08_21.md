@@ -161,14 +161,18 @@ DIFFERENT escalation, `agt-614918`); not this doc's scope, not touched here, cro
       each item below one at a time — design, implement, `quality-gates.sh` green in both repos, ship via
       quickmerge, flip this todo's checklist — same rigor as the two already-shipped fixes. Repo: deployment-api +
       deployment-service.
-      - [ ] `_gcs_tail` (`_aws_deployments.py:162`, `read_terminal_exit_code`) — genuinely portable (takes an
-            injected UTL `StorageClient`, no deployment-service state). Relocate a SELF-CONTAINED copy of
-            `read_terminal_exit_code`/`read_text_tail`/`_call_with_timeout`/`EXIT_STATUS_BLOB`/`RUN_LOG_BLOB` to a
-            new UTL module — deliberately NOT importing deployment-service's own `_gcs.py`/`_gcs_tail.py` copies
-            back out, since `_gcs.py` is a 959-line module with 5 OTHER internal deployment-service consumers
-            (`exit_code_fleet_monitor.py`, `heartbeat_stall_watcher.py`, `scripts/vm/vm_zombie_watchdog.py` + 3
-            test files) not worth the blast radius to touch — accept this one small, low-drift-risk duplication
-            rather than widening scope. Lowest-risk item, do first.
+      - [x] `_gcs_tail` (`_aws_deployments.py:162`, `read_terminal_exit_code`) — DONE 2026-08-21. Relocated a
+            self-contained copy of `read_terminal_exit_code`/`read_text_tail`/`_call_with_timeout`/
+            `EXIT_STATUS_BLOB`/`RUN_LOG_BLOB` to a new `unified_trading_library/deployment_gcs_tail.py` module
+            (deliberately NOT importing deployment-service's own `_gcs.py`/`_gcs_tail.py` back out, per the
+            original design note — `_gcs.py` has 5 other internal deployment-service-only consumers not worth
+            the blast radius). Bare `except Exception:` sites converted to `except Exception as exc: logger.debug(...)`
+            to match `deployment_admission_gate.py`'s sibling convention and clear UTL's broad-except gate.
+            Shipped: `unified-trading-library@b565fcb9fa` (module + `__init__.py` export + 7 unit tests, mirrors
+            deployment-service's own `test_gcs_tail.py` coverage), `deployment-api@f0f2681876` (`_aws_deployments.py`
+            call site swapped to `from unified_trading_library import read_terminal_exit_code`). Both repos'
+            `quality-gates.sh` green before ship. Re-verified: `check-dependency-alignment.py --repo deployment-api
+            --json` still `aligned: false` (expected — 6 call sites remain of the original 7).
       - [ ] `manifest_reader` (`_deploy_turbo.py:606`, `ManifestReader.get_coverage_summary`) — **no new endpoint
             needed.** deployment-service already exposes `GET /api/v1/data-coverage-summary`
             (`deployment_service/api/routes/state.py:592`) wrapping the exact same call
