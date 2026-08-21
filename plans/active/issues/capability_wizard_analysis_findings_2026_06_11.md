@@ -25,7 +25,6 @@ source: [found while building the capability wizard/manifest 2026-06-11]
 assigned_vm: planning
 resolved_by:
 locked_by:
-archive_exempt: true
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -539,26 +538,13 @@ staked-vs-spot equivalence.
 
 ### F46 — Three CeFi perp adapters are NotImplementedError scaffolds (binance/bybit/okx) — BLOCKED-CREDENTIALS
 
-**Status: STALE / RESOLVED — verified against current code 2026-08-21/22 (D12/D19 operator-ruling dispatch,
-execution-service).** The `binance_native.py`/`bybit_native.py`/`okx_native.py` scaffolds this finding named no longer
-exist in the tree — repo-wide grep for `NotImplementedError` under `trade_execution/adapters/` finds it only in
-`bitfinex_native.py`/`bitget_native.py` (unrelated venues, still real scaffolds). Binance/Bybit/OKX were superseded by
-CCXT-wrapper adapters (`binance_ccxt.py`/`bybit_ccxt.py`/`okx_ccxt.py`, 524-860 lines each) with real, non-stub
-`place_order()` implementations (idempotent submit via `place_ccxt_order_idempotent`, sim-mode + live-mode both wired,
-existing mocked-CCXT unit test coverage: `tests/trade_execution/unit/test_binance_adapter.py` /
-`test_bybit_ccxt.py` / `test_okx_ccxt.py`). Binance/Bybit have real pooled GSM-secret credential wiring today
-(`binance-trade-api-key(-secret)`, `bybit-trade-api-key`/`bybit-api-key` fallback pair — both verified present with
-non-empty content) — confirmed working end-to-end via a live probe against the real `execution_service.cli.handlers.
-live_execution_credentials._CredentialsMixin._load_venue_trade_credentials` resolver. **OKX remains genuinely
-unwired at the pooled-credential level** — not because `place_order()` is unimplemented (it is, fully), but because
-OKX's credential model is per-client (`exec-{client}-okx-{api-key,api-secret,passphrase}`, 8 clients provisioned:
-anu/gp/ik/nn/pr/sl/sl2/std), not a pooled/house key the way Binance/Deribit/Bybit are — `_load_venue_trade_credentials`
-returns `(None, None)` for OKX by design, pending the separate OKX/Hyperliquid scope-separation design call already
-tracked as its own `[BACKEND] P2` todo in
-`/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md` (approved-to-build 2026-08-08, still
-unscoped) — not re-litigated here. This finding's original BLOCKED-CREDENTIALS framing is stale; the credentials named
-in the operator's D12 ruling (`binance-trade-api-key(-secret)`, `bybit-trade-api-key`, `bybit-api-secret`) are already
-present in GSM and the corresponding Binance/Bybit `place_order()` paths are real and credentialed today.
+**Status**: OPEN (pre-existing; surfaced by the 2026-06-13 order-semantics scan).
+`trade_execution/adapters/ binance_native.py:326`, `bybit_native.py:318`, `okx_native.py:329` all raise
+`NotImplementedError` on `place_order` — HMAC/v5 request SIGNING is implemented but the HTTP client is not injected, so
+no order reaches the venue. Only hyperliquid (CCXT), deribit (perp+options), and drift (Solana CLOB) place
+CeFi/DeFi-CLOB orders end-to-end today. This is the live-execution coverage truth now declared in
+`VENUE_ORDER_SEMANTICS` (`auth_wired=not_registered` for the three scaffolds). Wiring them is BLOCKED-CREDENTIALS (needs
+live API keys + the HTTP client injection). Not a wizard/manifest defect — the manifest now honestly reflects it.
 
 ### F47 — Verdict-matrix declares venue cells AVAILABLE that the v2 slot-label venue-token registry rejects
 
@@ -686,7 +672,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 
 | Domain                         | Findings                                                                                                                                                      | Status                                              | Evidence                                                                                                                            |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | STALE/RESOLVED (verified 2026-08-21/22)             | `binance_ccxt.py`/`bybit_ccxt.py`/`okx_ccxt.py` real `place_order()`; OKX pooled-credential gap tracked separately  |
+| Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | BLOCKED-CREDENTIALS                                 | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError`                                       |
 | Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP) — F43 RESOLVED uac@61ba5239 (2026-07-15, plan-reconcile §10)                                     | FIXED uac@f3440731 (2026-07-28)                     | UAC registry                                                                                                                        |
 | Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects)                                                                                                    | FIXED (verified 2026-07-30)                         | `KNOWN_VENUE_TOKENS` + verdict-matrix regression test — see F47 section above                                                       |
 | Catalogue ↔ engine             | F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                                                                                     | FIXED (verified 2026-07-30)                         | verdict-matrix demotes to `not_registered(no_v2_engine)` + `test_f48_engineless_archetypes_are_not_registered` — see F48 todo above |
@@ -765,14 +751,8 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 
 **Tracked, gated (engine — strategy-service LOGIC FREEZE / credentials / operator decision):**
 
-- [x] ✅ [ADAPTER] P1. **F46 — implement binance/bybit/okx perp `place_order`** — STALE, already done. Verified
-      2026-08-21/22 (D12/D19 dispatch): the named `binance_native.py`/`bybit_native.py`/`okx_native.py`
-      NotImplementedError scaffolds no longer exist — superseded by real, credentialed `binance_ccxt.py`/
-      `bybit_ccxt.py`/`okx_ccxt.py` `place_order()` implementations (existing mocked-CCXT unit tests). Binance/Bybit
-      pooled GSM credentials confirmed present + working; OKX's per-client credential model (not pooled) is a
-      separate, already-tracked `[BACKEND] P2` design item in
-      `/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`, not re-opened here. Target:
-      execution-service.
+- [ ] [ADAPTER][BLOCKED-CREDENTIALS] P1. **F46 — implement binance/bybit/okx perp `place_order`** (scaffolds raise
+      NotImplementedError). BLOCKED-CREDENTIALS (named venue API creds). Target: execution-service.
 - [x] ✅ [SPEC] P1. **F45 — assign an owner for the exposure-normalization / netting pipeline** (LST→underlying net
       delta; primitives exist, no service owns it; multi-leg inter-leg delta unmanaged). **DONE 2026-06-15** —
       `plans/archive/2026_06/engine_findings_remediation_2026_06_15.md` shipped the owner decision + consolidation:
@@ -900,21 +880,10 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped the openapi scripts dir (Phase-0 generator
   fixes are all shipped) for the execution-service adapters dir, since the sole remaining open item (F46,
-  BLOCKED-CREDENTIALS) is the binance/bybit/okx `place_order` scaffolds there. **Correction 2026-08-22**: that
-  BLOCKED-CREDENTIALS framing is now stale — see F46's own section above (STALE/RESOLVED, verified 2026-08-21/22),
-  which found the named scaffold files no longer exist, superseded by credentialed CCXT-wrapper adapters.
+  BLOCKED-CREDENTIALS) is the binance/bybit/okx `place_order` scaffolds there.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) — re-verified against the full
   checkbox sweep: F46 (execution-service adapters, BLOCKED-CREDENTIALS) remains the sole genuinely open `- [ ]` todo
   in this doc (F54's `scripts/openapi/*` path-drift fix landed today but was already tracked/closed, not a new
   dependency for the doc's remaining open work); all 5 entries still accurate, unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
-- **D12/D19 dispatch, execution-service (slot 6) 2026-08-21/22**: Flipped F46 (the sole remaining open `- [ ]` todo)
-  — verified against current code that the named `binance_native.py`/`bybit_native.py`/`okx_native.py`
-  NotImplementedError scaffolds no longer exist, superseded by real, credentialed CCXT-wrapper adapters (see F46's
-  own section + the Risk-domain index row above for full evidence). This doc now has 0 open `- [ ]` todos.
-  **`archive_exempt: true` set (not archived)** — this doc is explicitly a "running log" (its own summary: "Running
-  log of bugs... found while building the capability wizard/manifest"), a standing companion tracker to the
-  (already-archived) gap-discovery doc, not a bounded task list — new findings get appended here over time rather
-  than this doc being a closeable unit of work. 0-open-todos is an expected transient state for a running log, not
-  evidence of completion; archiving it would just get re-created the next time a wizard/manifest finding surfaces.

@@ -39,7 +39,7 @@ created: 2026-08-16
 parent_epic: ci_master
 assigned_vm: NA
 priority: P3
-last_updated: 2026-08-21
+last_updated: 2026-08-16
 source: >-
   ag_closeout_auditor scheduled run 2026-08-16 (tranche=ci, slot 21, DISPATCH_ID=agt-114e5f).
 resolved_by:
@@ -204,14 +204,12 @@ chat-ephemeral, home" rule regardless.
       `/plans/archive/2026_08/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md` line 77 — operator
       confirmed accurate as transcribed 2026-08-19 (interactive session); doc's own checkbox flipped and archived
       (unified-trading-pm@3e477497254f). No correction needed.
-- [ ] [OPERATOR] P3. BLOCKED-OPERATOR-DECISION (named 2026-08-21, D32 ruling: "Provide the ruling — 6 audit passes
-      with no forward decision is pure churn either way" — the ruling adopted is that the operator must actually
-      decide, not that a design answer was itself supplied). **Rule on
-      `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md`'s 2 open items** (atomic multi-repo
-      rollout mechanism design; standing git-log-first runbook worth formalizing or not) — reconfirmed KEEP-NA by 6
-      separate na-eligibility-audit passes since 2026-08-01 with no scoping decision ever made. Done when: operator
-      rules, or the doc is explicitly marked won't-fix. Ledger: D32,
-      /plans/active/issues_corpus_completion_dispatch_2026_08_21.md.
+- [ ] [OPERATOR] P3. **Rule on `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md`'s 2 open
+      items** (atomic multi-repo rollout mechanism design; standing git-log-first runbook worth formalizing or not) —
+      reconfirmed KEEP-NA by 6 separate na-eligibility-audit passes since 2026-08-01 with no scoping decision ever
+      made. Escalating rather than letting a 7th audit re-confirm the same non-decision: either explicitly rule this
+      out of scope (stop future reconfirmation churn) or provide the missing design call so it becomes AO-eligible.
+      Done when: operator rules, or the doc is explicitly marked won't-fix.
 - [x] ✅ [DOCS] P2. **DONE 2026-08-18 (na-eligibility-audit, ci tranche).** Extracted into
       `plans/archive/issues/promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md` (content carried
       forward verbatim; the issue was later archived after a live re-check). Source doc
@@ -273,10 +271,6 @@ balanced.**
   (2 [OPERATOR], 2 [DOC] cross-tranche retags not this tranche's to execute, 1 [DOCS] extraction still gated on
   batch15 draining) are unchanged and correctly still open.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-
-**2026-08-21 — ruling D32 (Workflow-drift design items)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-AUTONOMOUS_AGENT_RULES rule 2): Provide the ruling — 6 audit passes with no forward decision is pure churn either
-way. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 
 **na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — 5 open items re-read end-to-end. Item
 (extract ci_alert linkage) executed this pass, closed above with citation to `ci_satellite_ao_dispatch_batch16_

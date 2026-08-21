@@ -18,7 +18,6 @@ scope: [engineer, admin]
 tags: [ag-closeout-audit, escalation, big-findings, live-capital-safety]
 related: [/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
 created: 2026-08-21
-last_updated: 2026-08-21
 author: claude-session-2026-08-21
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -97,18 +96,12 @@ finding the 6th instance one doc at a time.
 
 ## Operational incidents actively burning resources right now
 
-7. **Databento CME billing block — 8+ days stale, burning real SPOT compute daily, unanswered decision. RESOLVED
-   2026-08-21 (operator ruling D5): operator pays the invoice directly; the fleet wave mechanism is paused.**
+7. **Databento CME billing block — 8+ days stale, burning real SPOT compute daily, unanswered decision.**
    `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`. Billing-blocked since
    2026-08-12, zero recovery through 2026-08-21 (measured 8.0+ days live-capture staleness and still growing). A
    fleet-wide `tradfi-bf-cme-ohlcv-1m-` relaunch wave burns real SPOT compute daily (114+ distinct VM launches/day
-   per the 2026-08-20 alert sweep) against a wall that cannot succeed. **Root cause of the daily wave found +
-   fixed same-day**: NOT the Terraform-managed `uts-prod-tradfi-wave-launcher-cron` Cloud Scheduler job (confirmed
-   `state: PAUSED` since 2026-06-24, unchanged) but a separate, undocumented crontab entry on the AO orchestrator
-   VM's `ubuntu` user running `scripts/wave_launcher.py` directly every 3h — paused at the source, 2 currently-running
-   zero-progress CME VMs stopped (confirmed via `run.log`/`PROGRESS.json` — both stuck on 402
-   `account_delinquent_invoice` every attempted date), and a live GLBX.MDP3 billing-probe gate shipped into
-   `wave_launcher.py` as defense-in-depth for whenever the mechanism is re-enabled.
+   per the 2026-08-20 alert sweep) against a wall that cannot succeed. Open `[OPERATOR] P1` "pause vs. accept"
+   decision unanswered for over a week.
 8. **Nightly BLRS determinism reconciliation — failed 55 of 56 scheduled runs since mid-May, escalation stuck 8+
    days, AND a separate dedup bug caused 10 duplicate escalation-worker dispatches in ~30 hours.**
    `plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md`. Root cause fully diagnosed
@@ -178,13 +171,9 @@ finding the 6th instance one doc at a time.
 
 ## Recommended next actions (not yet executed — this doc is the record, not the fix)
 
-- [x] N. ✅ [INFRA] P0. Item 7 (tradfi Databento billing) — RESOLVED 2026-08-21 per D5 ruling: OPERATOR-RULED —
-      APPROVED, operator pays the Databento CME invoice; the tradfi-bf-cme-ohlcv-1m fleet wave mechanism is paused
-      (autonomous, zero-cost — see item 7 body above for the paused-crontab + billing-probe-gate evidence), relaunch
-      only after billing clears. Source: this doc; ledger D5.
-- [ ] [OPERATOR] P0. Rule on item 8 above (recon_bucket nightly recon fleet-wide Cloud Run Job provisioning) — still
-      live, actively wasting real compute/paging capacity right now, not covered by today's decision ledger.
-      Source: this doc.
+- [ ] [OPERATOR] P0. Rule on items 7 and 8 above (tradfi Databento billing pause-vs-accept; recon_bucket nightly
+      recon fleet-wide Cloud Run Job provisioning) — both are live, actively wasting real compute/paging capacity
+      right now. Source: this doc.
 - [ ] [OPERATOR] P0. Decide disposition for items 1-6 (execution-service/defi live-capital-safety gaps) — at minimum
       confirm whether these are already scheduled for a dedicated engineering pass outside the AO-dispatch system.
       Source: this doc.
@@ -192,12 +181,8 @@ finding the 6th instance one doc at a time.
       paging-capability gap on the orchestrator's own alerting. Source: this doc.
 - [ ] [INFRA] P2. Schedule a dedicated review of `safe-doc-push.sh`'s stash/quarantine reconcile logic (item 11) —
       8+ independent incidents against the workspace's mandated shipping tool. Source: this doc.
-- [ ] [DOCS] P3. Per D1 ruling (ADOPTED-REC 2026-08-21, autonomous-dispatch authority: "approve all — repeated
-      audits agree these are churn, not live tasks"): formally supersede
-      `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`'s own tracked Phase 1-3 checkboxes — add a closing
-      note stating the na-eligibility-audit skill now IS that plan's execution (it runs incrementally per-tranche),
-      then archive it. Done-when: the doc is archived with a superseded-by note citing D1. Source: this doc;
-      ledger D1.
+- [ ] [OPERATOR] P3. Rule on item 13 (na_docs_validity_and_ao_eligibility_audit's own stuck Phase 1-3) — supersede
+      or genuinely schedule. Source: this doc.
 - [ ] [OPERATOR] P2. Decide whether to promote `cross_cutting_satellite_ao_dispatch_batch19`/`batch20` from draft to
       active, or explicitly abandon them and re-derive their content into fresh batches. Source: this doc.
 
@@ -206,11 +191,3 @@ finding the 6th instance one doc at a time.
 - **2026-08-21**: Doc created directly from the 2026-08-21 full `/ag-closeout-audit` sweep (30 Phase-1 batches, all
   10 tranches, 777 candidate docs). This is a synthesis doc — no new investigation performed here; every finding
   cites its own source doc for full detail.
-- **2026-08-21 — ruling D1 (Stale meta-doc disposition)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-  AUTONOMOUS_AGENT_RULES rule 2): Approve all — repeated audits agree these are churn, not live tasks; the two
-  keep-open items and the one split are the only exceptions. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
-  ledger.
-- **2026-08-21 — ruling D5 (Databento CME billing + relaunch fleet)**: OPERATOR-RULED 2026-08-21 — APPROVED:
-  operator pays the Databento CME invoice; agent pauses the tradfi-bf-cme-ohlcv-1m fleet wave mechanism NOW
-  (autonomous, zero-cost), relaunch only after billing clears. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

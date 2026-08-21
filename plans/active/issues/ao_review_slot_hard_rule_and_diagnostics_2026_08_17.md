@@ -34,7 +34,6 @@ related:
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-21"
 author: main (Claude Code, interactive session, operator-reported)
 parent_epic: orchestrator_master
 resolved_by: agent-orchestrator@7df307a411 (partial — review-role half only)
@@ -132,16 +131,12 @@ own design pass first (see Todo 2), not a copy-paste of this guard.
       it, what guardrails replace the dirty-worktree refusal's safety rationale, how it avoids repeating the exact
       2026-07-17 incident this refusal was built to prevent) before implementation — do not rush a change to this
       code path.
-- [ ] [BACKEND] P2. Per D35 ruling (OPERATOR-RULED 2026-08-21 — APPROVED: reopen the IDE-compatible human-fleet
-      heartbeat design as a FRESH ruling/mechanism revisit; the UserPromptSubmit rejection STANDS, propose a
-      DIFFERENT carrier): design + propose a non-UserPromptSubmit IDE-compatible heartbeat carrier reusing
-      `scripts/human_fleet/ao_client.sh`'s existing IDE-agnostic bearer-token transport — a hook/mechanism that
-      fires identically across terminal/IDE/Desktop/web without re-litigating the rejected UserPromptSubmit
-      approach. Done-when: a concrete carrier mechanism is proposed and either implemented or handed back for
-      operator sign-off. **Context (retagged 2026-08-19, operator ruling BLK-cf790dbf)**: the prior
-      "operator-approved via AskUserQuestion" framing was stale — `ao_human_fleet_integration_2026_08_15.md` has an
-      explicit design-decisions section that evaluated and REJECTED `UserPromptSubmit` as a heartbeat carrier, and
-      that rejection STANDS. Original text preserved below for context: before the `/autonomous`
+- [ ] [BLOCKED-OPERATOR-DECISION] P2. **Resume the interrupted IDE-compatible human-fleet heartbeat work** —
+      **retagged 2026-08-19 (operator ruling, BLK-cf790dbf)**: the "operator-approved via AskUserQuestion" framing
+      below is STALE. `ao_human_fleet_integration_2026_08_15.md` has an explicit design-decisions section that
+      evaluated and REJECTED `UserPromptSubmit` as a heartbeat carrier, and per the operator's ruling that rejection
+      STANDS — this todo needs a NEW operator ruling before proceeding, not a resumption of the prior approval.
+      Original text preserved below for context if a future ruling does authorize it: before the `/autonomous`
       fleet-crisis pivot took over: `scripts/human_fleet/ao-statusline-heartbeat.sh`'s `statusLine`-based mechanism is
       confirmed terminal-only (does not fire in Cursor/VS Code IDE-extension mode — `COLUMNS`/`LINES` never populate);
       Claude Code's `UserPromptSubmit` hook is confirmed to fire identically across terminal/IDE/Desktop/web (official
@@ -176,7 +171,3 @@ own design pass first (see Todo 2), not a copy-paste of this guard.
   as a genuine conflict against `ao_human_fleet_integration_2026_08_15.md`'s own explicit "do not re-open without a
   new operator ruling" rejection of the same carrier mechanism — still needs an operator call, not a worker read.
   Doc stays `assigned_vm: NA`.
-- **2026-08-21 — ruling D35 (IDE heartbeat mechanism)**: OPERATOR-RULED 2026-08-21 — APPROVED: reopen the
-  IDE-compatible human-fleet heartbeat design as a FRESH ruling/mechanism revisit (the UserPromptSubmit rejection
-  stands; propose a different carrier). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
-  ledger.

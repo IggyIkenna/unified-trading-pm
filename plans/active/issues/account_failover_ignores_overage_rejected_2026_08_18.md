@@ -55,7 +55,6 @@ related:
     /codex/04-architecture/agent-orchestrator-alerting.md,
   ]
 created: "2026-08-18"
-last_updated: 2026-08-21
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -146,10 +145,9 @@ list detects that state.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. DEFERRED-BY-DESIGN — operator declined the top-up 2026-08-21 ("not topping up claude, we
-      have loads"): `sub-b-iggy2london` stays unusable until the 2026-08-23 weekly reset
-      (`2026-08-23T19:00:00Z`); failover routes around it in the meantime. Ledger: D29,
-      /plans/active/issues_corpus_completion_dispatch_2026_08_21.md.
+- [ ] [OPERATOR] P2. **Decide the immediate remediation**: top up / raise the overage limit on
+      `sub-b-iggy2london` now, or accept the account is unusable until the weekly reset
+      (`2026-08-23T19:00:00Z`) and let affected slots idle/fail over manually in the meantime.
 - [x] N. ✅ [BACKEND] P2. **Add `overage_status == "rejected"` as an explicit 5th failover-trigger
       condition** alongside the existing four pct/rate-limit checks in the account-monitoring code
       path that feeds `rotate_all_slots_off_account` (see `main.md` § "Account-failover triggers"
@@ -243,7 +241,3 @@ either way.
   same shape as the 3 siblings already extracted on 2026-08-19 — conflict-checked clear and extracted to
   `plans/active/ao_satellite_ao_dispatch_batch1_2026_08_21.md` item 1. Doc now stays NA for genuinely only ONE
   remaining item: the `[OPERATOR]` immediate-remediation decision.
-- **2026-08-21 — ruling D29 (Overage-rejected account top-up)**: OPERATOR-RULED 2026-08-21 — DECLINED ('not topping
-  up claude, we have loads'): overage-rejected accounts stay unusable until the 2026-08-23 weekly reset;
-  failover routes around them. Close the remediation todo as DEFERRED-BY-DESIGN citing this ruling. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -14,7 +14,6 @@ scope: [engineer, admin]
 tags: [ag-closeout-audit, cefi, orphan-projection]
 related: [/plans/active/issues/ag_closeout_audit_cross_tranche_big_findings_2026_08_21.md, /plans/active/cefi_consolidated_closeout_2026_07_18.md]
 created: 2026-08-21
-last_updated: 2026-08-21
 author: claude-session-2026-08-21
 parent_epic: cefi_master
 assigned_vm: NA
@@ -91,12 +90,8 @@ issue docs) · orphaned_partial_coverage 3 · orphaned_never_touched ~48 · excl
       action needed.
 - [ ] [DATA] P1. `issues/cefi_okx_spot_bybit_spot_backfill_never_relaunched_2026_08_16.md` — 3 relaunch todos,
       Tardis N=1-blocked. Taxonomy: resource-gated.
-- [ ] [INFRA] P2. Per D8 ruling (ADOPTED-REC 2026-08-21: "Promote all — already conflict-checked, vetted work idle
-      only for lack of sign-off"): promote `plans/active/cefi_satellite_ao_dispatch_batch22_2026_08_19.md` from
-      `status: draft` to `status: active` (its finalize companion is already `status: active`). This is the doc
-      that would carry `issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md`'s extracted item
-      into real AO coverage. Done-when: the batch22 frontmatter reads `status: active` and
-      `regen_backlog_from_plan.py` ingests its todos (confirmed via a live backlog listing).
+- [ ] [DATA] P2. `issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md` — extracted to draft
+      `batch22` (not real coverage — draft ≠ active). Taxonomy: false-orphan (draft-batch-limbo) — promote batch22.
 - [ ] [DATA] P2. `issues/cefi_residual_followups_after_honest_done_2026_07_17.md` — 586 marker-less rows
       `[OPERATOR]`-gated; Parquet CONTENT backfill P0 tracked in `cefi_content_migration_fleet_half_incomplete`
       (not in covering set — reconcile citation). Taxonomy: partial, citation gap.
@@ -147,12 +142,9 @@ issue docs) · orphaned_partial_coverage 3 · orphaned_never_touched ~48 · excl
       P0 recurrence risk. **RE-VERIFIED 2026-08-21: FALSE ORPHAN.** Already `assigned_vm: planning` /
       `execution_scope: orchestrator-agent` / `sequential: true` — genuinely self-dispatched; its sole remaining
       todo (the MTDS image rebuild, `[INFRA] P2`) is already a normal AO todo. No batch extraction needed.
-- [ ] [DATA] P2. Per D15 ruling (ADOPTED-REC 2026-08-21: "instFamily lookup — deterministic and consistent with
-      the already-ruled mechanism for the original xperp ambiguity"): fix
-      `issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md`'s newer 2026-08-18 BTC/ETH/SOL/XAU
-      disambiguation item by implementing an instFamily lookup (same mechanism already used for the original xperp
-      ambiguity). Done-when: BTC/ETH/SOL/XAU instId markers resolve correctly via instFamily, verified against real
-      OKX instrument data.
+- [ ] [DATA] P2. `issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md` — newer 2026-08-18
+      BTC/ETH/SOL/XAU disambiguation item, uncovered (older crypto-base item already closed via batch21).
+      Taxonomy: uncovered.
 - [ ] [DATA] P2. `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md` — 2 live prod-GCS split-brain
       MERGE ops, delete/move-safety-gated. Taxonomy: delete-safety-gated.
 - [ ] [DATA] P2. `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md` — OKX/Hyperliquid scope-separation
@@ -212,14 +204,6 @@ operator attention as a genuine 72+-day live-data gap, just not for the reason o
 
 ## Progress Log
 
-- **2026-08-21 — ruling D8 (Draft satellite batches activation)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
-  authority, AUTONOMOUS_AGENT_RULES rule 2): Promote all — each is already conflict-checked, vetted work idle only
-  for lack of sign-off; the defi batch also stops recurring false DP-FETCH-009 pages. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
-- **2026-08-21 — ruling D15 (OKX-FUTURES xperp disambiguation)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
-  authority, AUTONOMOUS_AGENT_RULES rule 2): instFamily lookup — deterministic and consistent with the
-  already-ruled mechanism for the original xperp ambiguity. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 - **ag-closeout-audit 2026-08-21 (cefi tranche, Phase 2 + Phase 3 sweep)**: Phase 2 applied the one real mechanical
   fix (`data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`'s stale Deferred-work table row) and re-verified
   the other 2 flagged items needed no per-doc action. Phase 3 re-verified all ~31 orphan-list docs; found ZERO

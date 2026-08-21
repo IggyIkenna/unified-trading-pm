@@ -331,17 +331,9 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       server running", zero `lsof` handles on the path; the only live tmux server on the host is pid 3514516 on the
       isolated fleet socket, `ELAPSED=448991s` (~124.7h / ~5.2 days) — unbroken since the 2026-08-13 17:14:35Z respawn
       this doc's own Progress Log already tracks. No further operator judgment needed on this item.
-- [x] ✅ [INFRA] P2. **DONE 2026-08-21** — `agent-orchestrator@5b917c1148`. Added `TmuxPruner._check_tmux_socket_isolation`,
-      run on the same two ticks as `_check_tmux_server_liveness`: resolves the current server via
-      `current_tmux_server_pid()` (this process's own env, same resolution any AO code path uses), looks up its
-      REAL bound socket via `find_tmux_server_pids()` (native `/proc/net/unix` scan, immune to the stale-cached-
-      path issue plain `lsof`/`ss` have), and compares against the expected isolated path
-      (`tmux_spawn.expected_isolated_socket_path()`, a new public accessor for the existing `_TMUX_DEFAULT_SOCKET`
-      constant). Fire-on-change + RESOLVED-bookend alert (new `tmux_socket_split_brain_detected`/`_resolved`
-      activity events + Slack pages), same shape as the existing tmux-server-died alert, disk-deduped so it
-      survives an orchestrator restart mid-episode. 6 new tests (transition, resolved-bookend, never-fires,
-      restart-survives-latch, no-server-reachable-is-not-a-split-brain, no-known-socket-for-pid edge case); full
-      quality-gates.sh green.
+- [ ] [INFRA] P2. Consider whether AO needs its own periodic self-check that the fleet's actual live server pid matches
+      the isolated socket (not just per-slot `has-session`) — the split-brain here persisted ~3h because nothing was
+      cross-checking "is the CURRENT server on the path we think it's on."
 - [ ] [INVESTIGATE] P2. **Checked 2026-08-21 — confirmed permanently unrecoverable, same as death #2 above, still
       open (waiting on recurrence).** Root-cause slots 10 & 11's genuine mid-task SIGTERM at 2026-08-14 23:33:47-48Z
       (part of the 5-slot cluster investigated below) — no OOM (`cgroup oom_kill=0` both), no elevated host
