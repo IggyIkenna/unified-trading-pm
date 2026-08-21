@@ -5,7 +5,7 @@ summary: >-
   The Prediction MTDS smoke driver selected a KALSHI raw parquet/instrument while executing the POLYMARKET trades
   row, then launched POLYMARKET force and skip VMs with that KALSHI identifier. The terminal VM wrote zero records,
   so the row is not a valid capture proof and the checker can mask a venue-routing defect as an ordinary absence.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -28,9 +28,11 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: market-tick-data-service@4d45e5541a
 context_scope: [market-tick-data-service/scripts/pipeline_e2e_check.py, /codex/02-data/availability-manifest-and-data-status.md]
 ---
+
+> **🟢 ARCHIVED 2026-08-21** — `status: resolved` with zero open todos; sampler fix shipped in `market-tick-data-service@4d45e5541a`, with the focused POLYMARKET/KALSHI regression and terminal rerun evidence recorded above. Archived per [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s archive-on-resolve rule.
 
 # Prediction smoke checker cross-venue sampling
 
@@ -53,7 +55,7 @@ violates the source-scoped `(venue, data_type)` shard atom and prevents the Pred
 
 ## Recommended decision
 
-- [ ] [BACKEND] P0. Make the MTDS smoke sampler enforce the requested `(asset_group, venue, data_type)` against the source parquet path and sampled instrument identity; reject or resample any candidate whose path venue differs from the requested venue, then add a regression test for the POLYMARKET/KALSHI collision (repo: market-tick-data-service). — `market-tick-data-service@4d45e5541a`.
+- [x] ✅ [BACKEND] P0. Make the MTDS smoke sampler enforce the requested `(asset_group, venue, data_type)` against the source parquet path and sampled instrument identity; reject or resample any candidate whose path venue differs from the requested venue, then add a regression test for the POLYMARKET/KALSHI collision (repo: market-tick-data-service). — `market-tick-data-service@4d45e5541a`.
 - [x] [BACKEND] P0. Rerun all four generator-scoped Prediction rows after the sampler fix, retaining per-row force/skip,
   canonical-path, manifest-atom, and genuine `capture_status` evidence (repo: market-tick-data-service).
 
