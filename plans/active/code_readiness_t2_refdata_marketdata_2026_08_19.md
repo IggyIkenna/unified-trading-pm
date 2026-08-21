@@ -186,15 +186,19 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Walkthrough feedback 2026-08-21 — refdata/coverage cluster (operator feedback on platform-external-api-walkthrough.html)
 
-- [ ] [BACKEND] P1. **Kalshi perp — DATA-ONLY repoint, PROCEED (operator ruling 2026-08-21, final).** Wire
-      RSA-PSS auth from existing GSM secrets (kalshi-api-key-id + kalshi-private-key-pem — MEASURED 2026-08-21:
-      HTTP 200 with real perp market data on `external-api.kalshi.com/trade-api/v2/margin/markets`), repoint
-      `kalshi_perp.py` enumeration to the margin host, flip `_REPOINT_PENDING`, keep the write-guard, discover
-      the real funding-rates subpath (the docstring's literal path 404s), update the stale BLOCKED-CREDENTIALS
-      docstring claim. Never re-enable against the events host. An EARLIER same-day hold ("auth probe ≠ perps
-      trading rights, do not repoint") applied before the operator distinguished the data path — it is
-      SUPERSEDED for data capture and remains in force ONLY for TRADING integration, which stays gated on the
-      member-by-member perps rights signup.
+- [x] ✅ [BACKEND] P1. **Kalshi perp — DATA-ONLY repoint, PROCEED (operator ruling 2026-08-21, final — see
+      code_readiness_t2_refdata_marketdata_2026_08_19.md's own "Walkthrough feedback 2026-08-21" section).** Wire
+      RSA-PSS auth from existing GSM secrets (MEASURED 2026-08-21: HTTP 200 with real perp market data on
+      `external-api.kalshi.com/trade-api/v2/margin/markets`), repoint `kalshi_perp.py` to the margin host, flip
+      `_REPOINT_PENDING`, keep the write-guard, discover the real funding-rates subpath (the docstring's literal
+      path 404s), update the stale BLOCKED-CREDENTIALS docstring claim. Never re-enable against the events host.
+      An EARLIER same-day hold ("auth probe ≠ perps trading rights") is SUPERSEDED for data capture, remains in
+      force ONLY for TRADING integration (gated on the member-by-member perps rights signup).
+      ✅ 2026-08-21 — **SHIPPED, instruments-service@2dcee7e149** (verified ancestor of `origin/live-defi-rollout`).
+      Repointed + RSA-PSS signed (`get_secret_client()` only), `_REPOINT_PENDING = False`, write-guard kept,
+      parser rewritten for the REAL measured schema (16 tickers confirmed). Funding rates: probed read-only,
+      genuinely undiscoverable — `get_funding_rate` stays `NotImplementedError`, documented; no order/transfer
+      touched. Shipped isolated; waited out an unrelated `unified-api-contracts@4f25d5f0` break (resolved by `instruments-service@b15eae62bc`).
 - [x] ✅ [AGENT] P1. Classify the sports bookmaker roster for the operator (NOT for the artefact): for each of the
       27 kept books, is it (a) an odds-api bookmaker, (b) covered by the Unity central-wallet integration, or (c)
       neither — legacy arbitrage-research leftovers. Deliver the (c) list as a removal proposal; removal itself is
