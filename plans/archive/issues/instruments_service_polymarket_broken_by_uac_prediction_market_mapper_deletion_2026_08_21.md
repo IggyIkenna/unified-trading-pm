@@ -37,7 +37,7 @@ summary: >-
   already-captured Polymarket `instrument_type` values would change, not attempted blind by a session whose actual
   task was an unrelated Kalshi-perp data repoint and who could not even run the full test suite to verify a fix's
   blast radius (collection itself is broken).
-status: open
+status: resolved # 2026-08-21 -- frozen local reproduction of the deleted PredictionMarketMapper keyword taxonomy landed in instruments-service; see Progress Log
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -57,7 +57,7 @@ parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P0
-resolved_by:
+resolved_by: slot-2 2026-08-21 -- instruments-service@b15eae62bc, quality-gates.sh --no-fix green (isolated worktree), 5403 passed (5390 pre-4f25d5f0 baseline + 13 new). See Progress Log.
 source: >-
   Hit live 2026-08-21 re-gating instruments-service after a coordinator signal that unified-api-contracts was clean
   at 4f25d5f0 and it was safe to retry an unrelated Kalshi-perp quickmerge. `quality-gates.sh --no-fix` failed at
@@ -81,6 +81,15 @@ depends_on: []
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-21** — `status: resolved` with zero open todos, unlocked; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule (ACKED-INTO-CODE). Resolution evidence carried in `resolved_by:`
+> (instruments-service@b15eae62bc). Codex-alignment check (6-step ritual step 3): this fix is a narrow instance of
+> the already-documented
+> [`entity-rename-and-split-consumer-migration-rule`](/codex/02-data/entity-rename-and-split-consumer-migration-rule.md)
+> — that SSOT already covers a UAC deletion breaking a downstream consumer's output vocabulary, so no new codex doc
+> was needed.
 
 ## What's broken
 
@@ -164,10 +173,63 @@ not just prediction-catalogue changes. Confirmed blocking
 complete + unit-tested + previously gate-green on everything except this pre-existing, unrelated
 import break that landed between QG runs).
 
-- [ ] [BACKEND] P0. Pick one of the two options above (or a third, better one) for
+- [x] ✅ [BACKEND] P0. Pick one of the two options above (or a third, better one) for
       `parsing.py::_build_instrument_id()`'s fallback-branch `category` derivation, apply it to
       `markets.py`/`parsing.py`/`__init__.py`, then confirm `quality-gates.sh --no-fix` collects +
       passes in instruments-service again (was 5390 passed before 4f25d5f0 landed — that is the
       bar, not just "collects"). Check whether any existing instruments-service test asserts the
       OLD coarse-bucket `instrument_type` values (e.g. `prediction::politics`) and update
-      deliberately, not incidentally.
+      deliberately, not incidentally. — instruments-service@b15eae62bc: option 1 (resurrected
+      locally, frozen, scoped to exactly this fallback branch). 5403 passed (baseline restored + 13
+      new tests). See Progress Log.
+
+## Progress Log
+
+- **2026-08-21 (slot-2)**: Resolved via a third option not enumerated above, closer in spirit to
+  option 1 ("resurrected locally") but narrower: `instruments_service/reference_data/adapters/
+  prediction/polymarket/_frozen_prediction_category.py` (new module) transcribes
+  `PredictionMarketMapper`'s `_categorize()` + `_DEFAULT_RULES` **verbatim** from
+  `git show 4f25d5f0^:unified_api_contracts/canonical/domain/prediction/prediction_mapping.py` —
+  same keyword lists, same priority order, same `"other"` fallback (never raises) — as a
+  single-purpose, explicitly-non-reusable, non-extensible module with a lifecycle-note docstring
+  stating it is instruments-service owning its own output vocabulary, not a resurrection of the
+  deleted UAC axis. `markets.py`'s `PredictionMarketMapper` import + `_MAPPER = PredictionMarketMapper()`
+  singleton were removed; `parsing.py`'s call site (`_parse_market`) now calls
+  `_pm._categorize_prediction_question(question)` directly (the deleted mapper's `venue`/
+  `market_id`/`resolution_date`/`outcomes` params never affected `category` — only `question` did,
+  confirmed by reading `_categorize()`'s body — so the simplification is behaviour-preserving, not
+  just import-preserving). `__init__.py`'s duplicate direct `PredictionMarketMapper` import +
+  re-export were also removed (repo-wide grep post-fix confirms zero remaining references to the
+  deleted symbol outside historical-provenance comments). Added
+  `tests/unit/test_polymarket_frozen_category_vocab.py`: (a) one representative question per
+  historical bucket reproduces the exact old label, plus a priority-ordering test (politics beats
+  financial when both match, mirroring the deleted mapper's descending-priority rule order), (b)
+  the frozen module and the polymarket package both import cleanly and the package no longer
+  exposes `PredictionMarketMapper`, (c) an unmatched question falls back to `"other"` without
+  raising (the deleted mapper's own fallback behaviour, verified by reading it — never guessed).
+  `quality-gates.sh --no-fix` over the whole ambient tree: 5403 passed (the pre-4f25d5f0 baseline
+  of 5390 + these 13 new tests), zero failures — full collection restored. No existing test
+  asserted the old bucket `instrument_type` string (checked via repo-wide grep for
+  `prediction::politics`/`financial`/`weather`/`entertainment`/`other`/`sports` before touching
+  anything): the only two live assertions on that family (`prediction::crypto`,
+  `prediction::sports::EPL`) are produced by branches that never read `category`, so nothing needed
+  updating.
+  **Correction to this issue doc's own framing** (found while reading the call site to scope the
+  fix, not assumed): `_build_instrument_id()`'s first return value (the `prediction::{category}`
+  label this issue calls "a real, live production field ... written into every captured Polymarket
+  InstrumentRecord") is bound at the `_parse_market()` call site (`parsing.py:92`) to
+  `_sub_category` — a name that is never read again anywhere in the file or the repo (confirmed via
+  `grep -rn "_sub_category"`, one hit, the binding itself). `InstrumentRecord.instrument_type` is
+  populated separately as the fixed enum `InstrumentType.PREDICTION_MARKET`, not this string. So in
+  the CURRENT `_parse_market()` pipeline, `category`'s only downstream effect is fully discarded —
+  it does not reach any `InstrumentRecord` field today, live or captured. This does not change the
+  fix (freezing the vocabulary byte-identically is still correct, cheap insurance against a future
+  re-wiring, and was the explicit task directive regardless), but it does correct the risk framing:
+  this was blocking `quality-gates.sh` collection workspace-wide (a real, severe P0), not silently
+  corrupting already-captured production data as first suspected. Ship evidence:
+  `instruments-service@b15eae62bc` (isolated-worktree quickmerge — the ambient working tree carries
+  an unrelated pre-existing dirty file, `scripts/purge_defi_aavev3_bare_alias_manifest_rows_2026_08_20.py`,
+  with its own import-pattern violation not touched by this session; `--isolated` scoped the
+  re-gate to only this fix's 5 named files against clean HEAD, confirmed landed via
+  `git merge-base --is-ancestor b15eae62bc origin/live-defi-rollout`). No PM-repo code changes; this
+  issue doc is the only PM-repo edit.
