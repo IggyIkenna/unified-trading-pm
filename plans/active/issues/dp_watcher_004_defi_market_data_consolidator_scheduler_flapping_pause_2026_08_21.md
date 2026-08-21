@@ -221,6 +221,18 @@ pending that answer, not by omission.
       2026-08-21T19:11:55.938445Z`) — the MacOS session's toggling never stopped, it resumed after the
       ~41min quiet window agt-0fc6b2 observed. `BLK-fbcafec2` remains formally unanswered. Still
       genuinely open — see Progress Log.**
+      **UPDATED 2026-08-21 (agt-bb2394, slot 31): job remains `PAUSED`, unchanged, through 20:07:38Z —
+      a ~56min quiet window with zero further toggles, the longest quiet period observed across this
+      whole incident. A legitimate, `deployment-service`-managed VM
+      (`defi-manifest-projection-20260821-195038`, labels `asset-group=defi env=prod
+      managed-by=deployment-service purpose=defi-manifest-projection`) is now `RUNNING` (created
+      ~20:01Z, i.e. after the last toggle). This is new evidence FOR option A (leave paused) — a
+      genuine in-flight defi manifest-projection job is exactly the kind of operation that would want
+      the consolidator held off, and its timing (started shortly after the toggling settled) is
+      consistent with the earlier MacOS-session iteration having been the operator setting this run
+      up rather than erratic tinkering. `BLK-fbcafec2` is STILL formally unanswered — did not resume,
+      did not duplicate the blocked-question (same reasoning as the 3 prior escalations: an open,
+      unanswered question already covers this exact decision). See Progress Log.**
 - [ ] [CODE] P3. Separate, confirmed, genuine gap (not the cause of this incident): if FLEET_HALT is
       *supposed* to be able to halt the manifest-consolidator schedulers during a defi-scoped revocation
       (implied by `_register_maintenance_windows`'s own docstring, which assumes the write/read bucket
@@ -322,3 +334,23 @@ pending that answer, not by omission.
   bug) — nothing in this session's findings changes that; no code shipped. Doc stays
   `assigned_vm: planning`, `status: open`, `priority: P2`. One-shot escalation `agt-17e0d2` closing out
   here.
+- **2026-08-21, data_pipeline_failure escalation agt-bb2394 (slot 31)**: re-dispatched for the same
+  DP-WATCHER-004 condition (boot context carried the raw finding, no pre-filed slug — appending to this
+  already-existing doc rather than filing a duplicate, per the pattern set by the 3 prior re-dispatches).
+  Live check (20:07:38Z): `state: PAUSED`, `userUpdateTime` unchanged at `2026-08-21T19:11:55.938445Z` —
+  a ~56min quiet window with no further toggle, longer than any quiet window observed so far in this
+  incident (previous longest was agt-0fc6b2's ~41min, which then resumed toggling per agt-17e0d2's
+  follow-up). `gcloud logging read` for the job confirmed zero scheduler-pause/resume events since
+  `19:11:56Z`. New finding: `gcloud compute instances list` shows `defi-manifest-projection-20260821-195038`
+  currently `RUNNING` (zone `asia-northeast1-c`), labeled `asset-group=defi env=prod
+  managed-by=deployment-service purpose=defi-manifest-projection`, created ~`20:01Z` — i.e. after the
+  MacOS session's toggling settled. This is a genuine, deployment-service-managed defi manifest job,
+  which plausibly explains the pause as deliberate (holding the consolidator off while a manifest
+  projection is in flight) rather than erratic local iteration — strengthening, not just repeating, the
+  case for option A on `BLK-fbcafec2`. Checked `BLK-fbcafec2` directly: still `answered_at: null`. Per
+  the same reasoning as the 3 prior escalations (an open, unanswered blocked-question already covers this
+  exact leave-vs-resume decision; a duplicate would be alert noise; resuming risks racing genuine
+  in-flight work), did **not** resume the job and did **not** post a second `/blocked` question. No code
+  shipped — this session's contribution is the new correlating VM evidence, appended above and here. Doc
+  stays `assigned_vm: planning`, `status: open`, `priority: P2`. One-shot escalation `agt-bb2394` closing
+  out here.
