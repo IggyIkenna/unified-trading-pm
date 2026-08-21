@@ -223,7 +223,7 @@ drift_direction: advance-code
   the only heavy host processes are a slot-2 peer quickmerge shipping adjacent DeFi handler fixes — it also skip-marks
   `test_defi_prefix_parser_handles_multi_hyphen_protocol_keys`, a pre-existing UAC `parse_defi_venue` multi-hyphen
   failure directly adjacent to this plan's glued-venue scope; see
-  `/plans/archive/issues/mtds_defi_prefix_parser_multi_hyphen_solana_native_2026_08_21.md`). Per-todo resume state,
+  `/plans/active/issues/mtds_defi_prefix_parser_multi_hyphen_solana_native_2026_08_21.md`). Per-todo resume state,
   scratch evidence in the session scratchpad: **Todo 3** — dry-run + full-reverify done (`task3_purge_dryrun.log`,
   `task3_full_reverify.log`); forward-apply NOT completed (216-byte `task3_forward_apply.log`): the worker found a
   REAL bug in its pyarrow mask before applying — `pc.equal(chain, "")` on a NULL chain yields null and non-Kleene

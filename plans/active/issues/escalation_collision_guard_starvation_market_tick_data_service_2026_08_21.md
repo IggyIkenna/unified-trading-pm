@@ -33,10 +33,9 @@ scope: [engineer, admin]
 tags: [ao-watchdog, escalation-queue-reconcile, stuck-escalation, collision-guard]
 related:
   [
-    /plans/archive/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
     /plans/archive/2026_08/issues/escalation_queue_autospawn_enqueue_lag_45min_2026_08_15.md,
     /cursor-configs/skills/escalation-queue-reconcile/SKILL.md,
-    /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
 created: "2026-08-21"
 parent_epic: agent_operating_framework_master
@@ -59,7 +58,7 @@ context_scope:
   [
     agent-orchestrator/server/escalation.py,
     cursor-configs/skills/escalation-queue-reconcile/SKILL.md,
-    /plans/archive/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
   ]
 ---
 

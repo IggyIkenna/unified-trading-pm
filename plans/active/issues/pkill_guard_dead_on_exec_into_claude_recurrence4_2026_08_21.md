@@ -172,11 +172,8 @@ round-robin-account-selection work in the same file.
       sourced-function tests to assert the new PATH-export behavior instead. Full agent-orchestrator quality-gates.sh
       run green (5291 passed, 86.07% coverage, dashboard tsc+vitest clean) — shipped `agent-orchestrator@2fe498b30f`.
       **The `unified-trading-pm` half (the actual `pkill-guard-bin/{pkill,pgrep}` script files + this doc's own
-      closeout) landed as `unified-trading-pm@dbc5ac0bcd`** — confirmed via `git fetch` + `git rev-list --count origin/live-defi-rollout..HEAD` = 0 and a
-      `git show origin/live-defi-rollout:scripts/hooks/pkill-guard-bin/pkill` read-back (see Progress Log for the
-      retry history). 2026-08-21 live re-verification (separate session, before re-enabling codex-luna): both wrapper
-      files confirmed present + executable on the shared top-level `unified-trading-pm` checkout every slot spawn
-      resolves against, and `dbc5ac0bcd` confirmed an ancestor of that checkout's HEAD too. Todo fully closed.
+      closeout) is committed locally but NOT yet pushed** — see the Progress Log entry below for why and the exact
+      recovery command; this is the one open item blocking this todo's final close.
 - [ ] [INFRA] P2. `death_forensics.check_external_kill`'s regex (`server/death_forensics.py`) requires an explicit
       `-9`/`-KILL`/`-SIGKILL` token to flag a kill/pkill EXECVE record as suspected — a bare `pkill -f "<name>"`
       (default SIGTERM, no such flag) is structurally invisible to it. Widen the regex to also flag a bare
@@ -217,31 +214,3 @@ round-robin-account-selection work in the same file.
   pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md' from `unified-trading-pm` — check
   `git rev-list --count origin/live-defi-rollout..HEAD` first (may already be 0 by the time this is read, since the
   content was re-verified safe on every attempt and only the timing lost the race).
-- 2026-08-21 (closing entry, later same day, separate session): the push above landed as `unified-trading-pm@dbc5ac0bcd`
-  — rigorously confirmed (`git fetch` + `rev-list --count` = 0 + `git status --short` empty + a direct
-  `git show origin/live-defi-rollout:scripts/hooks/pkill-guard-bin/pkill` read-back showing real file content). Before
-  re-enabling codex-luna, ran a live pre-flight check of every fix in this cluster, none through AO/account-enable (so
-  zero fleet spend): (1) `cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns` = 0, confirmed still live on the
-  host; (2) direct `unshare --user --map-root-user --pid --mount --fork --mount-proc` succeeded, and a plain
-  `unshare --user --map-root-user /bin/sh -c 'cat /proc/self/uid_map'` printed a populated map — the exact write that
-  used to fail Permission-denied is now succeeding; (3) ran the actual codex CLI directly (`codex exec --sandbox
-  workspace-write`, no AO involved) — it warned system `bwrap` is absent (expected, confirmed via a filesystem-wide
-  `find` — none is installed) and fell back to its own bundled bubblewrap, then genuinely executed a sandboxed shell
-  command end-to-end and returned the real output. This is a live, direct reproduction of the exact operation that used
-  to throw `TransportClosedError`, now succeeding; (4) confirmed `agent-orchestrator`'s live server process (cwd
-  `/home/ubuntu/unified-trading-system-repos`) has `2fe498b30f` as an ancestor of its checkout's HEAD — the
-  context-window/guard fix is the code actually running, not just committed; root cron
-  `*/2 * * * * ... ao-self-pull.sh` confirmed installed and pulling `live-defi-rollout` on a 2-min cycle; (5) confirmed
-  `CLAUDE_CODE_MAX_CONTEXT_TOKENS` is a real string the installed Claude Code CLI binary actually references (via
-  `strings` on the native binary) — the fix's env var is not a guessed/nonexistent name — and read the shipped
-  `_CODEX_LUNA_CONTEXT_WINDOW_EXPORT` constant directly out of the running checkout's own module, confirming it still
-  emits `272000` for `gpt-5.6-luna`, matching `model_tier.context_window()`'s SSOT value; (6) confirmed
-  `pkill-guard-bin/{pkill,pgrep}` are present, executable, and ancestor-confirmed against `dbc5ac0bcd` on the ONE shared
-  top-level `unified-trading-pm` checkout every slot's spawn resolves the guard directory against (verified by reading
-  `tmux_spawn.py`'s own path construction: it strips everything from `/.tabs/` onward, so this is a single shared
-  location, not a per-slot copy needing its own pull). No live tmux fleet sessions were running at check time (`tmux
-  list-sessions` found no server), so no currently-running pane's actual PATH was inspected directly — that gap is
-  covered by the already-passing `test_pkill_guard_bin_survives_exec_and_fresh_subshell` regression test instead. Net:
-  every mechanism this incident cluster touched is independently, live-verified fixed; the one thing not yet observed
-  is a real codex-luna account spawn end-to-end through AO's own dispatch path, which needs the account re-enabled —
-  operator go-ahead requested before flipping it.

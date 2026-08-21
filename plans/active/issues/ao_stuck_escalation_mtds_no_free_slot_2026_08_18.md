@@ -52,10 +52,6 @@ context_scope:
   ]
 ---
 
-> **🟢 ARCHIVED 2026-08-21** — all todos resolved and evidence-backed (account-spread self-corrected
-> once [[ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21]]'s bugs 1-5 landed; see
-> [[ci_escalation_reserve_slots_claimed_by_class_a_dispatch_2026_08_21]] for the live re-check).
-
 # Stuck escalation agt-ed7277 — CONFIRMED: the 3 reserved slots are themselves paused
 
 ## The row (last pulled 2026-08-18 ~09:27 UTC)
@@ -143,16 +139,9 @@ spawn workers.
       above — expected queue-draining contention with only a 3-slot reserve, not a regression; ties
       directly into the "spread across multiple accounts" follow-up below (a 3-slot single-account
       reserve saturates fast under simultaneous escalations). (repo: agent-orchestrator)
-- [x] ✅ [BACKEND] P2. **RESOLVED 2026-08-21.** Spread 31/32/33 across more than one account
-      instead of triple-booking sub-b — today's incident is exactly what a single-account reserve
-      produces the moment that one account gets paused/exhausted. **Operator decision 2026-08-21**:
-      assigned to the agent already working
-      [[ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21]], whose bugs 1-5 landed same
-      day (`agent-orchestrator@e3a3ef4166` → `@ba855161ae`). Confirmed self-corrected per
-      [[ci_escalation_reserve_slots_claimed_by_class_a_dispatch_2026_08_21]]'s own re-check: 31/32/33
-      now occupied by 3 different accounts (zero `codex-luna`), and all escalation dispatches in the
-      4.5h window since the fix spread across 6 distinct accounts with no single-account monopoly.
-      (repo: agent-orchestrator)
+- [ ] [OPERATOR] P2. Spread 31/32/33 across more than one account instead of triple-booking sub-b —
+      today's incident is exactly what a single-account reserve produces the moment that one
+      account gets paused/exhausted. (repo: agent-orchestrator)
 - [x] N. ✅ [SCRIPT] P2. Pull `overage_disabled_reason` for the other 21 disabled accounts (the field
       name this session's first pass got wrong) to understand whether that's a temporary overage
       window or something needing operator action — separate from this specific stuck row, but

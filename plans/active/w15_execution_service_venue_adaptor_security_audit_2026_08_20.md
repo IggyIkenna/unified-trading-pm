@@ -213,10 +213,10 @@ impression:
 - [ ] [BACKEND] P2. Fix Morpho typed-params entry points (`supply_from_params`, `borrow_from_params`, `repay_from_params`, `flash_loan_from_params`) which unconditionally divide the wei amount by `10**18` regardless of the loan token's actual decimals -- same bug class as the already-tracked Aave P2 item above, but for Morpho. Currently dead code (zero callers anywhere in the repo, confirmed via grep) and the synthetic `market_id` these methods construct (`f"{loanToken}_{collateralToken}"`) does not match any real `config["morpho_markets"]` key, so the live branch already fails closed via the just-landed "market not found" error regardless; only the backtest-simulation branch is affected. MEDIUM finding: checklist point 3 (`morpho.py:499-524` -- the `Decimal(params.amount) / Decimal(10**18)` conversions). (repo: execution-service)
 - [x] ✅ [BACKEND] P0. Validate Kamino transaction intent before signing: enforce positive amount and address/mint relationships, inspect/allowlist fee payer, programs, accounts, and token-approval scope in API-produced transactions, and add retry idempotency; HIGH findings: checklist points 2, 3, 5, and 6 (`kamino.py`) — execution-service@09452cd7dd
 - [ ] [BACKEND] P1. Cross-check Kamino's `market_address` against the reserve's actual on-chain market (kamino.py's `_verify_reserve_mint()` currently only cross-checks `token_mint` against the reserve, since `KaminoReserve`/`_build_reserve_from_payload()` carry no market field) -- needs either a Kamino markets-list API call this connector doesn't otherwise make, or raw on-chain reserve-account deserialization; see the 2026-08-21 slot-5 Progress Log entry below for why it wasn't done inline. (repo: execution-service)
-- [x] ✅ [BACKEND] P0. Harden Idle vault writes: validate positive amounts, enforce caller minimum-output/deadline bounds for mint/redeem, fail closed instead of simulating success in incomplete live mode, and add durable idempotency across approval plus mint retries; HIGH findings: checklist points 3, 4, 6, and 7 (`idle.py`). — execution-service@7d0e32de0e + evidence: quality-gates.sh green (301s, sentinel matched committed HEAD); 22 new regression tests (`tests/defi_execution/unit/test_idle_hardening.py`); see Progress Log entry below.
+- [ ] [BACKEND] P0. Harden Idle vault writes: validate positive amounts, enforce caller minimum-output/deadline bounds for mint/redeem, fail closed instead of simulating success in incomplete live mode, and add durable idempotency across approval plus mint retries; HIGH findings: checklist points 3, 4, 6, and 7 (`idle.py`).
 - [x] ✅ [BACKEND] P0. Harden Lido, EtherFi, and Rocket Pool writes: validate finite positive amounts before `to_wei()`, fail closed when `is_live` lacks loaded credentials instead of entering simulation, and add durable idempotency across approval-plus-wrap sequences and retries; HIGH findings: checklist points 3 and 6 (`lido.py:217-292,316-359,376-389`; `etherfi.py:211-325`; `rocket_pool.py:160-214`). — execution-service@e517f601f3 + evidence: quality-gates.sh full run green (8907 passed); new `staking_idempotency.py` mirrors the established `aave_idempotency.py`/`morpho_idempotency.py` durable-idempotency pattern, applied per transaction step (submit/deposit/approve/wrap/unwrap) so a retry replays an already-landed step instead of resubmitting it; `unwrap_wsteth()` also hardened (same finding class, `lido.py:422-432` in the original audit).
-- [x] ✅ [BACKEND] P0. Replace Marinade's placeholder `Instruction(accounts=[])` writes with validated protocol account metas, enforce positive lamport-safe amounts, and add retry/idempotency protection around Solana broadcast; HIGH findings: checklist points 2, 3, and 6 (`marinade.py:176-202`). — execution-service@bc9ca94964 + evidence: replaced placeholder `Instruction(accounts=[])` deposit/liquidUnstake writes with validated Marinade Anchor account metas; added lamport-safe positive-amount validation; added new `solana_idempotency.py` module (mirrors the established `staking_idempotency.py`/`aave_idempotency.py` durable-idempotency pattern, separate module because `SolanaTransactionResult` is attribute-based, not dict-shaped) wired around the Solana broadcast; quality-gates.sh green; post-push ancestry verified. (repo: execution-service)
-- [x] ✅ [BACKEND] P0. Validate finite/positive amounts (reject non-positive Decimal before `to_wei()`/lamport conversion) and validate operator/network/address parameters instead of accepting arbitrary caller-supplied strings, across the second staking/restaking group; HIGH finding: checklist point 3 (`symbiotic.py:141-161,243-279`; `karak.py:141-163,244-284`; `kelpdao.py:154-178,212-258`; `puffer.py:156-186,188-212,214-242`; `renzo.py:119-154,178-225`; `eigenlayer.py:88-91,379-498`; `jito.py:104-125,228-305`; `jito_restaking.py:163-185,210-273`; `solblaze.py:164-202,204-242`). — execution-service@67fb2c6070 + evidence: quality-gates.sh full run green (8907 passed incl. 21 new regression tests in `tests/defi_execution/unit/test_second_staking_group_input_validation.py`); added a shared `require_valid_eth_address()` helper in `_evm_generic.py` alongside the existing `require_finite_positive_amount()`, plus a local Solana-pubkey validator for `jito_restaking.py`'s `delegate()`; jito.py's fetched jitoSOL/SOL ratio is now also constrained positive before use as a divisor/multiplier; fixed 3 pre-existing test fixtures (`test_karak_connector.py`, `test_kelpdao_connector.py`, `test_jito_restaking_connector.py`) that used malformed placeholder addresses/pubkeys the missing validation had been silently accepting. (repo: execution-service)
+- [ ] [BACKEND] P0. Replace Marinade's placeholder `Instruction(accounts=[])` writes with validated protocol account metas, enforce positive lamport-safe amounts, and add retry/idempotency protection around Solana broadcast; HIGH findings: checklist points 2, 3, and 6 (`marinade.py:176-202`).
+- [ ] [BACKEND] P0. Validate finite/positive amounts (reject non-positive Decimal before `to_wei()`/lamport conversion) and validate operator/network/address parameters instead of accepting arbitrary caller-supplied strings, across the second staking/restaking group; HIGH finding: checklist point 3 (`symbiotic.py:141-161,243-279`; `karak.py:141-163,244-284`; `kelpdao.py:154-178,212-258`; `puffer.py:156-186,188-212,214-242`; `renzo.py:119-154,178-225`; `eigenlayer.py:88-91,379-498`; `jito.py:104-125,228-305`; `jito_restaking.py:163-185,210-273`; `solblaze.py:164-202,204-242`). (repo: execution-service)
 - [ ] [BACKEND] P0. Add durable idempotency across approval-plus-deposit and withdrawal/delegate retries for the live-capable connectors in the second staking/restaking group (Solana-only Jito/Jito-Restaking/SolBlaze are simulation-only and PASS/N-A here); HIGH finding: checklist point 6 (`symbiotic.py:186-202,254-263`; `karak.py:187-190,244-284`; `kelpdao.py:194-197,212-258`; `puffer.py:196-200,214-242`; `renzo.py:119-154,178-225`; `eigenlayer.py:170-221,379-498`). (repo: execution-service)
 - [ ] [BACKEND] P0. Fix fabricated-success write paths that report success without performing the on-chain action, including under `is_live=True`: Symbiotic and Karak `delegate()`; Kelp DAO's unwired withdrawal queue and `delegate()`; Puffer's unwired withdrawal queue; Renzo's unwired withdrawal queue and `delegate()`; EigenLayer's `complete_withdrawal()` and `claim_rewards()`; HIGH finding: checklist point 7 (`symbiotic.py:265-279`; `karak.py:244-284`; `kelpdao.py:212-258`; `puffer.py:214-242`; `renzo.py:178-225`; `eigenlayer.py:481-498,516-547`). (repo: execution-service)
 - [ ] [BACKEND] P0. Enforce a real minimum-output bound on Kelp DAO deposits instead of the hardcoded `minRSETHAmountExpected=0`, and add minimum-output/deadline bounds plus correct instant-vs-delayed withdrawal reporting across the rest of the second staking/restaking group; HIGH finding: checklist point 4 (`kelpdao.py:201-210`); MEDIUM findings: checklist point 4 (`symbiotic.py:171-202,243-263`; `karak.py:173-203,244-268`; `puffer.py:156-186,214-242`; `renzo.py:119-154,178-225`; `jito.py:104-125,228-305`; `jito_restaking.py:210-250`; `solblaze.py:164-202,204-242`). (repo: execution-service)
@@ -806,56 +806,3 @@ execution-service@09452cd7dd; post-push ancestry independently verified.
 
 New P1 follow-up todo added above (market_address/reserve relationship cross-check infeasible with the
 current `get_vault_info()` payload shape, which carries no market field).
-
-### 2026-08-21 — slot 19 Idle vault-write hardening (checklist points 3, 4, 6, 7)
-
-Fixed the "Harden Idle vault writes..." P0 todo, closing the four HIGH findings the 2026-08-20 slot-10
-lending audit recorded for `idle.py` (`idle.py:196-224,254-287,290-364` in the pre-fix line numbering).
-All four fixes bind the live write path; the backtest/simulation path keeps its existing math but is
-now precision-quantized (see below).
-
-- **Point 3 (input validation):** new module-level `_validate_amount()` (finite/positive/
-  precision-bounded-by-decimals, mirrors `aave_live.py:_validate_amount()`) runs in BOTH modes for
-  deposit/withdraw and for the new `min_shares`/`min_underlying` floor params, before any state
-  change — `to_wei()` silently truncates over-precision, which previously let a 7th-decimal USDC
-  amount move less value than the caller asked for. Simulation math now quantizes minted shares to
-  whole share-wei (18 decimals) and redeemed underlying to the token's own decimals (ROUND_DOWN,
-  mirroring on-chain integer division) so a full-balance round-trip (e.g. `1000/1.06` DAI, a
-  non-terminating 25-decimal quotient) stays exactly representable and withdrawable — caught by the
-  pre-existing `test_withdraw_simulation` on the first gate run, fixed by this quantization.
-- **Point 4 (min-output/deadline bounds):** `deposit()`/`withdraw()` grew keyword-only
-  `min_shares`/`min_underlying`, `max_slippage_bps` (0..1000, `bridge.py`-compatible), and
-  `deadline` (unix seconds; default now+120s, capped at now+1800s, past deadlines refused). The
-  floor is the caller's explicit bound when supplied — a live implied output already below it raises
-  `ValueError` pre-broadcast — else derived from the LIVE `tokenPrice()` read (non-positive price
-  fails closed) times the slippage tolerance. Floor + resolved deadline are recorded in the live
-  TxResult. Disclosed scope limit: the derived `mintIdleToken(uint256,bool,address)` ABI (not
-  verifiable on etherscan without an API key) carries no on-chain min-out parameter, so the floor
-  binds at this connector's pre-broadcast boundary only — it cannot protect against share-price
-  movement between submission and block inclusion.
-- **Point 7 (fail closed):** live mode with missing wallet/web3 now returns an honest
-  `success: False` ("Refusing to simulate a live-mode write") instead of falling through to the
-  simulation path; `claim_rewards()` — previously a fabricated `success: True, claimed 0` in live
-  mode — refuses in live mode (IDLE rewards distributor contract not wired in this module).
-- **Point 6 (durable idempotency):** new `execution_service/defi_execution/protocols/
-  idle_idempotency.py`, modeled directly on `aave_idempotency.py` (same `TransferStateStore`
-  Protocol from `bridge.py`, config key `transfer_state_store`, namespace `"idle"`). The approve +
-  mint/redeem sequence runs as ONE `execute_idle_op_idempotent()` unit keyed by
-  `idle:chain:wallet:operation:token:wei_amount`: a completed prior attempt replays its cached
-  TxResult with zero resubmission (verified across a FRESH connector instance sharing the store);
-  a clean returned failure (revert, broadcast error) clears the lock so a fresh retry proceeds; an
-  ambiguous exception (e.g. connection drop between approve and mint) leaves the lock and raises
-  `IdleOperationInFlightError` until `clear_stale_operation()` is called after out-of-band
-  verification. All validation deliberately runs BEFORE the idempotent wrapper so a `ValueError`
-  never falsely marks an intent ambiguous.
-
-22 new regression tests (`tests/defi_execution/unit/test_idle_hardening.py`): non-positive and
-over-precision rejection (USDC 7th decimal, shares 19th decimal), backtest regression check,
-fail-closed without credentials (deposit/withdraw/claim_rewards, with no simulated-balance
-mutation), non-USDC live refusal, invalid-slippage / expired / too-distant deadline rejection,
-caller-floor breach refused with zero broadcasts, derived floor + deadline recorded in live
-results, idempotent replay for deposit AND withdraw (no resubmission), a different amount not
-deduped, clean-revert retry, ambiguous-exception lock + `clear_stale_operation()` recovery, and
-durable-store replay across connector instances. Full `quality-gates.sh` green (301s, sentinel
-matched the committed HEAD). Shipped via quickmerge — execution-service@7d0e32de0e; post-push
-ancestry independently verified.
