@@ -814,18 +814,19 @@
         >
       </div>
       <div class="stat">
-        <span class="v">10 / 15</span
+        <span class="v">12 / 15</span
         ><span class="k"
           >Instruction types routed to real execution today — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
-          UNSTAKE/TRANSFER/CANCEL/ATOMIC route through live execution wiring; QUOTE arms repricing without submitting an
-          order; BORROW/REPAY/BRIDGE are Coming soon</span
+          UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC route through live execution wiring (BORROW/REPAY wired
+          2026-08-21, AAVE V3 only); QUOTE arms repricing without submitting an order; BRIDGE/LP_MINT/LP_BURN parse
+          as real union members and return an honest 501 — no execution engine built for any of the three yet</span
         >
       </div>
       <div class="stat">
         <span class="v">0</span
         ><span class="k"
           >Counterparties who can authenticate to strategy-service's signal-leasing API today — both seeded
-          counterparties are suspended ahead of a 2026-09-01 launch</span
+          counterparties are pre-activation ahead of the stated 2026-09-01 launch window</span
         >
       </div>
     </div>
@@ -1024,9 +1025,12 @@
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Whether each individual service also mounts the shared <code>/auth/login</code> / <code>/auth/me</code> router
-        (<code>create_auth_router</code>, same file) is not verified on this page — <b class="ev ev-check">? check</b>.
-        Token issuance/provisioning is an operator-side integration step, out of scope for this reference.
+        <b class="ev ev-verified">✓ verified</b> Of the services this page documents, only client-reporting-api
+        mounts the shared <code>/auth/login</code> / <code>/auth/me</code> router (<code>create_auth_router</code>,
+        <code>client_reporting_api/api/main.py</code>) — execution-service, instruments-service, and
+        market-tick-data-service do not call <code>create_auth_router</code> anywhere in their trees (confirmed by a
+        repo-wide search, not just the entry file). Token issuance/provisioning for those three is an operator-side
+        integration step, out of scope for this reference.
       </p>
     </details>
   </section>
@@ -1357,7 +1361,7 @@
                 <td>query</td>
                 <td>string</td>
                 <td class="opt">optional</td>
-                <td>Documented as requiring <code>venue</code> — see the note below</td>
+                <td>Narrows independently of <code>venue</code> — see the note below</td>
               </tr>
               <tr>
                 <td><code>date</code></td>
@@ -1370,16 +1374,15 @@
           </table>
         </div>
         <div class="callout">
-          <span class="tag">Known limitation, disclosed here</span>
+          <span class="tag">data_type narrows on its own</span>
           <p>
             <b class="ev ev-verified">✓ verified</b> Passing <code>data_type</code> <em>without</em>
-            <code>venue</code> is not rejected — it is silently ignored. The code only reads
-            <code>data_type</code> inside the <code>if venue is not None:</code> branch
-            (<code>external.py:150-157</code>); with no <code>venue</code>, the response never includes a
-            <code>data_type</code> or <code>venue_data_type_summary</code> key at all, with no error to tell you why —
-            you get <code>200</code> and an unfiltered result rather than the filtered result the parameter implies.
-            This is a filed, open defect (tracked internally, priority P1) — stated here as current behavior, not as a
-            resolved issue. Filter client-side on <code>data_type</code> until it is fixed.
+            <code>venue</code> returns that data_type's entry for every venue that has it, keyed
+            <code>data_type_summary_by_venue</code> (built from the same <code>by_venue_data_type</code> rollup used
+            when <code>venue</code> is also supplied). Passing both narrows to that one venue's entry, unchanged.
+            <b>Source:</b> <code>market_tick_data_service/api/routers/external.py</code>, the
+            <code>elif data_type is not None:</code> branch immediately below the <code>venue is not None</code>
+            branch.
           </p>
         </div>
         <div class="code-label">Example request</div>
@@ -1650,11 +1653,16 @@
         <div class="code-label">Example response — 200 (application/x-ndjson, one JSON object per line)</div>
         <div class="code">{"…": "one line per CanonicalPersistEnvelope record, newline-delimited…"} {"…": "…"}</div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b class="ev ev-check">? check</b> The transport call is verified —
+          <b class="ev ev-verified">✓ verified</b> The transport call —
           <code>unified_trading_library.streaming.event_facade.get_transport(topology).read(...)</code>, each envelope
-          serialised via <code>.model_dump_json()</code> (<code>external.py:304-310</code>). The
-          <code>CanonicalPersistEnvelope</code> field list itself was not read this session, so no field-level example
-          is given here rather than an invented one.
+          serialised via <code>.model_dump_json()</code> (<code>external.py:304-310</code>) — and the
+          <code>CanonicalPersistEnvelope</code> field list itself:
+          <code>schema_version</code>, <code>asset_group</code>, <code>data_type</code>, <code>pipeline_mode</code>,
+          <code>period_start</code>, <code>period_end</code>, <code>source</code>, <code>available_at</code>,
+          <code>retention_class</code>, exactly one of <code>payload_inline</code> / <code>payload_pointer</code>,
+          <code>venue</code>, <code>chain</code>, <code>instrument_id</code>, <code>instrument_type</code>,
+          <code>correlation_id</code>, <code>vm_name</code>.
+          <b>Source:</b> <code>unified-api-contracts/unified_api_contracts/events/persist.py</code>.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -1762,22 +1770,25 @@
       >
     </div>
     <p class="lede">
-      One instruction envelope, any asset class — but ten of its fifteen action types are wired to real execution paths
-      today, while unsupported actions fail honestly.
+      One instruction envelope, any asset class — but twelve of its fifteen action types are wired to real execution
+      paths today, while unsupported actions fail honestly.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
     </p>
 
     <div class="callout">
       <span class="tag">Read this before anything else on this page</span>
       <p>
-        <b>Ten action types are wired to real execution paths today.</b> The request body type,
+        <b>Twelve action types are wired to real execution paths today.</b> The request body type,
         <code>StrategyInstructionV2</code>, is a 15-member discriminated union
         (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
-        internal DART manual-trade surface uses in production. Five variants — BORROW, REPAY, BRIDGE, LP_MINT, and
-        LP_BURN — parse successfully (they are real, valid members of the union) but return an honest <code>501</code>:
-        not a silent drop, but not the same contract either (<code>external_instruction_api.py:129-136</code>).
+        internal DART manual-trade surface uses in production. BORROW/REPAY were wired 2026-08-21 through the same
+        AAVE V3 live-dispatch seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE already used
+        (<code>execution_service/engine/handlers/defi_live_dispatch.py::dispatch_borrow_live</code>). Three
+        variants — BRIDGE, LP_MINT, and LP_BURN — parse successfully (they are real, valid members of the union) but
+        return an honest <code>501</code>: not a silent drop, but not the same contract either
+        (<code>external_instruction_api.py:129-136</code>).
       </p>
       <p>
         <code>QUOTE</code> is a third case, distinct from both of the above — worth stating precisely rather than
@@ -1826,7 +1837,10 @@
           <tr>
             <td><code>BORROW</code></td>
             <td><code>BorrowInstruction</code></td>
-            <td><b class="st st-plan">Coming soon</b> — a tested handler exists but is simulation-only today</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3, wired 2026-08-21); falls
+              back to simulation outside LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>WITHDRAW</code></td>
@@ -1855,7 +1869,10 @@
           <tr>
             <td><code>REPAY</code></td>
             <td><code>RepayInstruction</code></td>
-            <td>Coming soon — a tested handler exists but is simulation-only today</td>
+            <td>
+              Routed to live DeFi execution (AAVE V3, wired 2026-08-21) — same seam as <code>BORROW</code> above;
+              falls back to simulation outside LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>QUOTE</code></td>
@@ -1877,7 +1894,8 @@
           <tr>
             <td><code>BRIDGE</code></td>
             <td><code>BridgeInstructionV2</code></td>
-            <td><b class="st st-plan">Coming soon</b> — no execution engine wired for this action yet</td>
+            <td><b class="st st-plan">planned</b> — recognised, honest 501; no cross-chain bridge execution engine
+              exists yet</td>
           </tr>
           <tr>
             <td><code>ATOMIC</code></td>
@@ -1888,20 +1906,23 @@
             <td><code>CANCEL</code></td>
             <td><code>CancelInstruction</code></td>
             <td>
-              <b class="st st-part">partial</b> — cancels a single tracked instruction's open orders
-              (<code>cancel_scope=SINGLE</code>); cancelling every order for a strategy instance in one call is Coming
-              soon
+              <b class="st st-part">partial</b> — cancels open orders on this router's own tracked orchestrators for
+              either scope: a single instruction (<code>cancel_scope=SINGLE</code>) or every open order across
+              venues for one strategy instance (<code>cancel_scope=ALL_FOR_STRATEGY_INSTANCE</code>, wired
+              2026-08-21)
             </td>
           </tr>
           <tr>
             <td><code>LP_MINT</code></td>
             <td><code>LpMintInstruction</code></td>
-            <td><b class="st st-plan">Coming soon</b> — no external execution engine is wired for this action yet</td>
+            <td><b class="st st-plan">planned</b> — recognised, honest 501; no concentrated-liquidity mint execution
+              engine exists yet</td>
           </tr>
           <tr>
             <td><code>LP_BURN</code></td>
             <td><code>LpBurnInstruction</code></td>
-            <td><b class="st st-plan">Coming soon</b> — no external execution engine is wired for this action yet</td>
+            <td><b class="st st-plan">planned</b> — recognised, honest 501; no concentrated-liquidity burn execution
+              engine exists yet</td>
           </tr>
         </tbody>
       </table>
@@ -1909,8 +1930,8 @@
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
       <b class="ev ev-verified">✓ verified</b> schemas.py (all 15 variants + the union); execution-service
       <code>execution_service/api/external_instruction_api.py</code> +
-      <code>execution_service/api/external_instruction_defi.py</code> (10 of 15 action types routed to real execution
-      wiring; BORROW/REPAY/BRIDGE/LP_MINT/LP_BURN are the honest 501s)
+      <code>execution_service/api/external_instruction_defi.py</code> (12 of 15 action types routed to real execution
+      wiring; BRIDGE/LP_MINT/LP_BURN are the honest 501s)
     </p>
 
     <details class="ep">
@@ -2142,12 +2163,13 @@
               <tr>
                 <td><code>501</code></td>
                 <td>
-                  Parses as <code>BORROW</code>, <code>REPAY</code>, <code>BRIDGE</code>, <code>LP_MINT</code>, or
-                  <code>LP_BURN</code> — the five action types still Coming soon
+                  Parses as <code>BRIDGE</code>, <code>LP_MINT</code>, or <code>LP_BURN</code> — real union members,
+                  none with an execution engine built yet
                 </td>
                 <td class="mono">
-                  "action='BORROW' is not yet wired for external submission. TRADE/QUOTE/TRANSFER/CANCEL/SWAP/LEND/
-                  WITHDRAW/STAKE/UNSTAKE/ATOMIC are the 10 of 15 action types wired today."
+                  "action='BRIDGE' is not yet wired for external submission. TRADE/QUOTE/TRANSFER/CANCEL/SWAP/LEND/
+                  WITHDRAW/STAKE/UNSTAKE/BORROW/REPAY/ATOMIC are the 12 of 15 StrategyInstructionV2 action types
+                  wired today."
                 </td>
               </tr>
               <tr>
@@ -2294,10 +2316,11 @@
           2026-08-17,104250.00,1.042500,0.00,0.3100,0.00,0.00 2026-08-18,103980.10,1.039801,0.26,-0.2588,-500.00,-500.00
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b class="ev ev-check">? check</b> Rounding is 6dp for a BTC-denominated account and 2dp otherwise
-          (<code>_is_btc_account</code>); if the client has no equity history at all, the response is still
-          <code>200</code> with a body of <code>"No data\n"</code> rather than a <code>404</code>
-          (<code>exports.py:160-166</code>) — worth handling explicitly rather than assuming an error status.
+          <b class="ev ev-verified">✓ verified</b> Rounding is 6dp for a BTC-denominated account and 2dp otherwise
+          (<code>rnd = 6 if is_btc else 2</code>, <code>_is_btc_account(curve)</code>); if the client has no equity
+          history at all, the response is still <code>200</code> with a body of <code>"No data\n"</code> rather than
+          a <code>404</code> — worth handling explicitly rather than assuming an error status.
+          <b>Source:</b> <code>client-reporting-api/client_reporting_api/api/routes/exports.py:160-166</code>.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -3130,12 +3153,16 @@
       <p>
         <b class="ev ev-verified">✓ verified</b>
         <code>unified_api_contracts/internal/domain/signal_broadcast/registry.py</code> seeds exactly two
-        counterparties, both <code>CounterpartyStatus.SUSPENDED</code>: <code>counterparty-stub-1</code> (STANDARD
-        payload depth, <code>default</code> rate-limit profile) and <code>counterparty-stub-2</code> (MINIMAL payload
-        depth, <code>minimal</code> rate-limit profile). Their <code>endpoint</code> URLs are placeholders
+        counterparties, both explicitly overriding <code>Counterparty.status</code>'s own <code>ACTIVE</code>
+        default to the pre-activation member <code>is_counterparty_active()</code> requires them NOT to be
+        (<code>counterparty.py:71</code>): <code>counterparty-stub-1</code> (STANDARD payload depth,
+        <code>default</code> rate-limit profile) and <code>counterparty-stub-2</code> (MINIMAL payload depth,
+        <code>minimal</code> rate-limit profile). Their <code>endpoint</code> URLs are placeholders
         (<code>https://webhook.example.invalid/…</code>) — "real webhook URLs + Secret Manager references are injected
-        at deploy time by deployment-service" per the registry's own module docstring, and have not been. The stated
-        launch window (<code>_LAUNCH_WINDOW_START</code>) is <b>2026-09-01T00:00:00Z</b>.
+        at deploy time by deployment-service" per the registry's own module docstring, and have not been. The
+        registry's own <code>_LAUNCH_WINDOW_START</code> constant records the target launch date,
+        <b>2026-09-01T00:00:00Z</b> — reaching that date does not by itself flip <code>status</code>; nothing in this
+        module or its callers reads the clock, so activation is a deploy-time code change, not a scheduled cutover.
       </p>
       <p>
         This is not a soft gate — it is enforced on every request. <code>transport.py</code>'s own

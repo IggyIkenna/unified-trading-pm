@@ -63,9 +63,17 @@ one day suggests the pattern is worth a sweep, not just two point fixes.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Decide and implement the correct contract**: either reject `data_type` without `venue` with a
+- [x] ✅ [BACKEND] P1. **Decide and implement the correct contract**: either reject `data_type` without `venue` with a
       422 naming the missing parameter, or make the filter work independently of `venue`. Do NOT leave a third
       option where it silently no-ops. Whichever is chosen, the API reference must be updated in the same change.
+      — market-tick-data-service@8addeac2 + evidence: chose "make the filter work independently of venue" (more
+      useful than a 422, and non-breaking for existing venue+data_type callers). New `elif data_type is not None:`
+      branch in `get_availability()` returns `data_type_summary_by_venue` (every venue's entry for that data_type,
+      from the same `by_venue_data_type` rollup). 2 new regression tests
+      (`test_data_type_without_venue_filters_across_every_venue`,
+      `test_data_type_without_venue_matching_nothing_is_empty_not_fabricated`) both pass. Doc updated in the same
+      pass: `platform-api-reference.html`'s "Known limitation, disclosed here" callout rewritten as the fixed
+      reality with a Source citation (unified-trading-pm, same session).
 - [x] ✅ [REVIEW] P1. **EXTRACTED 2026-08-21** — check the sibling parameters (`asset_group`, `instrument_type`,
       any other optional filter) on the same endpoint for the same conditional-branch bug. Extracted to
       `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch (na-eligibility-audit,
@@ -73,6 +81,15 @@ one day suggests the pattern is worth a sweep, not just two point fixes.
 - [x] ✅ [AGENT] P2. **EXTRACTED 2026-08-21** — sweep the three external routers for silent-no-op parameters
       generally. Extracted to `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch
       (na-eligibility-audit, cross-cutting tranche, batch 2 of 3).
+- [ ] [AGENT] P3. Every todo above is done — this doc is archive-ready. Run the 6-step archival ritual
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), including the referrer fix for the
+      4 files this session found still citing this doc's path (`plans/active/cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`,
+      `codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html`,
+      `plans/active/issues/external_market_data_response_leaks_vendor_pipeline_mode_2026_08_20.md`,
+      `plans/audit/results/code_readiness_allocation_2026_08_19.json`). Deferred rather than done inline this
+      session because 2 of those 4 files are actively-edited by other concurrent sessions (the T5 walkthrough
+      wave-2 pass and the AO-dispatched batch21 plan) — touching them here risked a collision; a dedicated pass
+      once those land is safer.
 
 ## Progress Log
 
@@ -80,6 +97,10 @@ one day suggests the pattern is worth a sweep, not just two point fixes.
 in the API reference as known behaviour pending this fix rather than documented as intended.
 
 - **context-scout 2026-08-20**: populated context_scope (3 entries).
+- **2026-08-21 — fixed and shipped** (part of the platform-api-reference.html zero-disclosure operator directive):
+  `market-tick-data-service@8addeac2` (direct-push dirty-deps carve-out — quickmerge pre-flight was blocked on a
+  concurrent session's live uncommitted WIP in unified-api-contracts, unrelated to this diff). All 3 todos now
+  done; archival deferred as its own todo above (2 of 4 referrers are concurrently in-flight elsewhere).
 - **na-eligibility-audit 2026-08-21**: RECLASSIFY (per-todo split) — todos 2-3 (check sibling params; sweep 3
   external routers) are pure investigation tasks; extracted to
   `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`. Todo 1 ("Decide and implement the correct
