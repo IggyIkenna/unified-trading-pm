@@ -184,9 +184,14 @@ defect (phantom-venue emission) without touching a registry other code may depen
       source, citing this doc's existing delete-safety proof (same population).
 - [ ] [SHIP] P1. Land the two fix commits currently blocked by a PEER session's in-flight
       `unified-api-contracts` WIP (its prediction-domain migration breaks every consumer's QG/pre-flight;
-      both commits are otherwise ready): (a) `deployment-service` watchdog prefix-threshold +
-      launcher 64GB/KEEP_VM change (QG was green pre-block; content restored in slot-2 tree after one
-      contention sweep — recovery pinned on local branch `aavev3-watchdog-fix-backup` = `70cf3231`;
+      both commits are otherwise ready): (a) `deployment-service` — GREW during the same session's
+      pattern-debt work (whole_index_script_pattern_debt_2026_08_21.md Progress Log has the full file
+      list): the original watchdog prefix-threshold + launcher 64GB/KEEP_VM change, PLUS the migration
+      templates' streaming/CAS port (migration_common.py, template_{purge,canonicalize,reconcile,
+      backfill}.py, 5 test files, 2 consumer scripts), 5 more watchdog threshold entries, and the
+      KEEP_VM generalization in lib/launcher_common.sh — ship as one reviewed unit (QG was green
+      pre-block on the original pair; the full batch's QG verdict is in the pattern-debt doc's log;
+      earlier recovery branch `aavev3-watchdog-fix-backup` = `70cf3231` covers only the original pair;
       a 2nd QG re-run at 07:0x went red with 35 failures ALL in dep-sensitive data-status/turbo
       suites, none touching the fix's two files — the mid-window quickmerge ancestor cascade pulled
       newer UTL/UAC into the workspace, so treat that red as upstream drift, not this diff, and
