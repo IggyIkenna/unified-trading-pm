@@ -599,3 +599,4 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   worker-liveness drop) before applying — not applied on hunter-report trust alone. Full Phase 0 re-run clean after
   all 11 fixes; shipped as one batch, `unified-trading-pm@101efbe7c7`.
 - **context-scout 2026-08-20**: re-verified context_scope (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — 16 open items, a heterogeneous corpus of dead-link/staleness findings each individually needing human judgment (ambiguous successors, scope-mismatch calls, content-accuracy investigations); re-verified clean by 7+ prior audit passes with no new bounded item found on independent re-read.

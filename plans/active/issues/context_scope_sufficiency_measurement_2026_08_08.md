@@ -99,3 +99,4 @@ properly (likely via `/plan-brainstorm`) before authoring any implementation wor
   todo is authored.' No concrete spec exists yet. Agrees with round9 (2026-08-09).
 - **context-scout 2026-08-17**: re-scouted; context_scope unchanged (3 entries), still accurate — genuinely code-free
   design/proposal doc, no source paths.
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item is explicitly self-flagged "genuinely open-ended — resolve via /plan-brainstorm before any implementation todo is authored"; unchanged since 2026-08-10.

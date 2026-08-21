@@ -816,3 +816,4 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   the original kill-server root cause — worth re-reading live transcripts for future unexplained-death
   investigations before assuming a fresh mechanism, since plan-doc content alone already proved insufficient once
   (the "no shared task trigger" negative result two todos above, superseded by this entry).
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — active live-incident investigation, 10 open items spanning genuine unresolved root-cause work (death #2 at 14:30:28 still unexplained), an [OPERATOR]-gated dry-run graduation, and several judgment-bearing follow-ups; converges with the 2026-08-19 verdict, no content drift changing the disposition.

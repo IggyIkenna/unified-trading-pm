@@ -177,27 +177,27 @@ context-scout bug; flagging so the retry isn't silently assumed to be self-resol
 ## Disposition
 
 - [ ] [DOC] P3. Fix or remove the stale "DOUBLE-GATED" banner in `sports_taxonomy_p2_migration_2026_08_08.md`
-      (finding 1). Repo: unified-trading-pm.
+      (finding 1). Repo: unified-trading-pm. Extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` item 1 (na-eligibility-audit 2026-08-21, RECLASSIFY per-todo split).
 - [ ] [DOC] P3. Verify/correct the "main.md § Account-failover triggers" citation in
       `ao_satellite_ao_dispatch_batch25_2026_08_19.md` items 7-9, or confirm `server.py` alone is sufficient and
-      drop the dead citation (finding 2). Repo: unified-trading-pm.
+      drop the dead citation (finding 2). Repo: unified-trading-pm. Extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` item 2 (na-eligibility-audit 2026-08-21, RECLASSIFY per-todo split).
 - [ ] [DOC] P3. Fix or remove the miscited Codex SSOTs line in
-      `backlog_500_malformed_depends_on_comment_2026_08_19.md` (finding 3). Repo: unified-trading-pm.
-- [ ] [DOC] P3. Bump `last_updated` on `data_completion_tradfi_2026_07_15.md` (finding 4). Repo: unified-trading-pm.
+      `backlog_500_malformed_depends_on_comment_2026_08_19.md` (finding 3). Repo: unified-trading-pm. Extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` item 3 (na-eligibility-audit 2026-08-21, RECLASSIFY per-todo split).
+- [ ] [DOC] P3. Bump `last_updated` on `data_completion_tradfi_2026_07_15.md` (finding 4). Repo: unified-trading-pm. Extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` item 4 (na-eligibility-audit 2026-08-21, RECLASSIFY per-todo split).
 - [ ] [DOC] P3. Confirm or rule out the `idle_lingering_session_reclaim_not_firing_2026_08_19.md` cross-reference
-      for `codex_luna_heartbeat_sandbox_network_stuck_loop_2026_08_20.md` (finding 5). Repo: unified-trading-pm.
+      for `codex_luna_heartbeat_sandbox_network_stuck_loop_2026_08_20.md` (finding 5). Repo: unified-trading-pm. Extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` item 5 (na-eligibility-audit 2026-08-21, RECLASSIFY per-todo split).
 - [ ] [DOC] P3. Read `sports_taxonomy_p2_consumer_inventory_2026_08_12.md` and confirm whether it belongs in
-      `sports_taxonomy_p2_migration_2026_08_08.md`'s `context_scope` (finding 6). Repo: unified-trading-pm.
+      `sports_taxonomy_p2_migration_2026_08_08.md`'s `context_scope` (finding 6). Repo: unified-trading-pm. Extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` item 6 (na-eligibility-audit 2026-08-21, RECLASSIFY per-todo split).
 - [x] [DOC] P2. ✅ RESOLVED — the stale `status: active` duplicate copies of
       `redemption_wallet_transfer_execution_2026_08_20.md` + its finalize plan were deleted by a later same-session
       incoming commit; the real, correctly-archived content lives in `plans/archive/2026_08/` (finding 7).
 - [ ] [DOC] P3. Confirm whether `manifest_hygiene_daily_ag_list_boilerplate_bug_2026_08_19.md` todo 1 is already
-      closed by `e2e-testing@0a43d0ec70` (finding 8). Repo: unified-trading-pm.
+      closed by `e2e-testing@0a43d0ec70` (finding 8). Repo: unified-trading-pm. Extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` item 7 (na-eligibility-audit 2026-08-21, RECLASSIFY per-todo split).
 - [ ] [DOC] P3. Verify the correct propagation mechanism for `publish-package.yml` and fix
       `publish_package_semver_tag_race_breaks_consumer_builds_2026_08_20.md`'s recommended-fix prose if it names
-      the wrong one (finding 9). Repo: unified-trading-pm.
+      the wrong one (finding 9). Repo: unified-trading-pm. Extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` item 8 (na-eligibility-audit 2026-08-21, RECLASSIFY per-todo split).
 - [ ] [DOC] P3. Fix the wrong-repo `daily_determinism_handler.py` citation in
-      `epsilon_zero_determinism_proof_never_runs_2026_08_20.md`'s own body prose (finding 10). Repo:
+      `epsilon_zero_determinism_proof_never_runs_2026_08_20.md`'s own body prose (finding 10). Extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` item 9 (na-eligibility-audit 2026-08-21, RECLASSIFY per-todo split). Repo:
       unified-trading-pm.
 - [ ] [OPERATOR] P1. Verify live via `gcloud scheduler jobs describe` whether the 7 schedulers named in
       `zombie_cloud_scheduler_targets_missing_cloud_run_jobs_2026_08_20.md` are a genuine regression of
@@ -206,7 +206,7 @@ context-scout bug; flagging so the retry isn't silently assumed to be self-resol
 - [ ] [DOC] P3. Split the 3 line-cap-blocked docs (or shrink one section each) and/or migrate the 8
       archive-ref-blocked docs' `related:` citations to codex pointers per the archival ritual step 5 (finding 12),
       so the next context-scout pass can actually land their `context_scope` refresh instead of retrying
-      indefinitely. Repo: unified-trading-pm.
+      indefinitely. Repo: unified-trading-pm. Extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` item 10 (na-eligibility-audit 2026-08-21, RECLASSIFY per-todo split).
 
 ## Progress Log
 
@@ -223,3 +223,4 @@ context-scout bug; flagging so the retry isn't silently assumed to be self-resol
   this same window) and finding 12 records the line-cap/archive-ref structural blockers this session hit on 11
   other docs. Left the other run's 4-entry `context_scope` untouched — both scouting passes are independently valid,
   no need to re-litigate whose list wins.
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: RECLASSIFY (per-todo split) — 10 of 12 findings (1-6, 8-10, 12) are bounded, single-file doc-fixes with a stated verification method and no design/judgment call remaining; extracted to `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` (+ gated `_finalize` twin), each Disposition checkbox above updated with a pointer to its extraction item. Finding 7 stays `[x]` already-resolved. Finding 11 ([OPERATOR] P1, live GCP scheduler verification) stays here — explicitly tagged for human/admin action, the sole remaining reason this doc stays `assigned_vm: NA`.

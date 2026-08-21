@@ -175,3 +175,4 @@ not the dispatch-tooling gap). Suggested next steps:
   undecided open question with no stated done-when.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item ("consider whether the park mechanism should emit a warning/alert on id-change") is an undecided design question with no stated done-when; unchanged since 2026-08-10.

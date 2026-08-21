@@ -360,3 +360,4 @@ still in flight.
   filter vs. block the transition vs. something else) is still an open design call, not reduced to a single mechanical
   change. Staying parked.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item ([CODE] P2, fix the one-shot `/done` AgentRow gap) remains genuinely gated per the 2026-08-10 CONFLICT-PARKED verdict: the diagnostic surfaced 3 distinct proximate mechanisms and the actual fix approach (widen the status filter vs. block the transition vs. something else) is still an open design call `ao_satellite_ao_dispatch_batch6_2026_08_04.md` explicitly declined to claim.

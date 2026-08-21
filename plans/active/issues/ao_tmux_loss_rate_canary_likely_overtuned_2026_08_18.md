@@ -135,3 +135,4 @@ check for this directly rather than only counting raw crossings.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:96033122b406632d]: RECLASSIFY (per-todo split) — todo 1 (7-day ActivityRow rate measurement) extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3. Doc stays NA for todo 2 (the raise-threshold action, correctly conditional on todo 1's own result).
 - **context-scout 2026-08-19**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item (raise the threshold once confirmed over-tuned) stays explicitly conditioned on the measurement extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3, not yet landed; not a standalone bounded action.

@@ -162,3 +162,4 @@ None of these are answered in either existing bridge plan — they were never as
 - **2026-08-20**: filed following the operator's direct request to capture findings/decision not
   already in the two bridge plans, after the slot-31 heartbeat investigation. No code changed; no
   research spike started — that's explicitly gated on the `[OPERATOR]` todo above.
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — first audit pass. All 3 open items are explicitly gated on (or are) an [OPERATOR] decision on whether to research native Codex CLI vs. the translation bridge, given the standing 2026-08-14 "stays Claude Code" requirement; no default exists to dispatch against.
