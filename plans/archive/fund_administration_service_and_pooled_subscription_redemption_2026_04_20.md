@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: fund-administration-service-and-pooled-subscription-redemption
-summary:
+summary: Build the subscription/redemption rail for IM Pooled clients — UAC fund_administration domain types, new fund-administration-service
+  with subscription/redemption state machine + capital-routing orchestrator, platform UI pages under /services/im/funds/
+  — by extending existing primitives (TreasuryMonitor, TransferAdapter, CustodyProvider, FundNAVSnapshot, FeeStructure)
+  rather than re-inventing them. Treasury/buffer wallet split is already generic in position-balance-monitor-service; this
+  plan layers fund-admin semantics (share classes, NAV-strike unit issuance, grace-period redemption settlement) on top.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,13 +23,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-20"
-overview:
-  Build the subscription/redemption rail for IM Pooled clients — UAC fund_administration domain types, new
-  fund-administration-service with subscription/redemption state machine + capital-routing orchestrator, platform UI
-  pages under /services/im/funds/ — by extending existing primitives (TreasuryMonitor, TransferAdapter, CustodyProvider,
-  FundNAVSnapshot, FeeStructure) rather than re-inventing them. Treasury/buffer wallet split is already generic in
-  position-balance-monitor-service; this plan layers fund-admin semantics (share classes, NAV-strike unit issuance,
-  grace-period redemption settlement) on top.
 type: mixed
 epic: epic-path-to-100m
 locked_by: live-defi-rollout

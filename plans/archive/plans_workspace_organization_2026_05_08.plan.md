@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: plans-workspace-organization-2026-05-08
-summary:
+summary: 'Workspace-organization sweep covering two related cleanups: (1) extension rename `.plan.md` → `.md` for native
+  markdown-preview support across IDEs (Cursor, VS Code) without losing git history — **scoped to `plans/active/` and `plans/epics/`
+  only** (archive + ai + other dirs left untouched per operator direction 2026-05-08); (2) per-domain epic consolidation
+  where a master plan + a May-23 epic live in the same domain (tradfi_master + sp_prediction_may_23_2026 etc.). Both are
+  doc-only changes; both compose with the 9-master move to plans/epics/ shipped 2026-05-08.'
 status: complete
 nature: record
 asset_group: cross-cutting
@@ -16,7 +20,6 @@ owner: ikenna
 last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-overview: 'Workspace-organization sweep covering two related cleanups: (1) extension rename `.plan.md` → `.md` for native markdown-preview support across IDEs (Cursor, VS Code) without losing git history — **scoped to `plans/active/` and `plans/epics/` only** (archive + ai + other dirs left untouched per operator direction 2026-05-08); (2) per-domain epic consolidation where a master plan + a May-23 epic live in the same domain (tradfi_master + sp_prediction_may_23_2026 etc.). Both are doc-only changes; both compose with the 9-master move to plans/epics/ shipped 2026-05-08.'
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

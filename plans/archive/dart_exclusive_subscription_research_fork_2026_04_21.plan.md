@@ -1,18 +1,7 @@
 ---
 doc_type: plan
 title: dart-exclusive-subscription-research-fork-2026-04-21
-summary:
-status: complete
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos:
-  [strategy-service, unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-system-ui]
-scope: [engineer, admin]
-tags: []
-related: []
-created: "2026-04-21"
-overview: "DART clients subscribe to strategy instances with exclusive-lock semantics (only
+summary: 'DART clients subscribe to strategy instances with exclusive-lock semantics (only
 
   one DART client can subscribe to a given instance at a time; IM clients can still
 
@@ -36,9 +25,17 @@ overview: "DART clients subscribe to strategy instances with exclusive-lock sema
 
   catalogue — provides the Subscribe CTA surface), Plan C (PerformanceOverlay —
 
-  provides the backtest/paper/live series the admin reviews for approval).
-
-  "
+  provides the backtest/paper/live series the admin reviews for approval).'
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos:
+  [strategy-service, unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-04-21"
 type: mixed
 epic: epic-code-completion
 locked_by: live-defi-rollout
@@ -196,7 +193,7 @@ todos:
         unsubscribe-then-resubscribe, wrong\n          entitlement → 403.\n        -
         tests/integration/test_strategy_versions.py — fork requires\n          active subscription, approve rejects
         below-threshold backtest,\n          rollout retires prior version.\n      `cd unified-trading-api && bash
-        scripts/quality-gates.sh` green.\n      **DONE 2026-04-22** (UTA `f988419`). Feature flag lives
+        scripts/quality-gates.sh` green.\n **DONE 2026-04-22** (UTA `f988419`). Feature flag lives
         in\n      `app.state.feature_flags[\"dart_exclusive_enabled\"]` (default\n      False; 404 when disabled). 9
         smoke tests green covering all 6\n      endpoints' happy + unhappy paths. Full QG sweep deferred to Phase
         6.\nstatus: done\n",
@@ -243,7 +240,7 @@ todos:
         `tests/unit/version_governance/test_pending_approvals_runner.py`\n          — mocked backtest pipeline, asserts
         Firestore write +\n          `ADAPTER_FETCH_FAILED` event path on backtest exception.\n        -
         `tests/unit/test_config_reloaders.py` — Reloader hot-reload\n          path.\n      `cd strategy-service && bash
-        scripts/quality-gates.sh` green.\n      **DONE 2026-04-28** (strategy-service `d766279`).
+        scripts/quality-gates.sh` green.\n **DONE 2026-04-28** (strategy-service `d766279`).
         Ships\n      `tests/unit/version_governance/{conftest,test_backtest_gate,test_pending_approvals_runner,test_version_publisher}.py`\n      (20
         + 58 + 146 + 90 LoC; 314 LoC of new test coverage). The\n      existing `tests/unit/test_config_reloaders.py`
         was not extended in\n      this commit — VersionGovernanceReloader\

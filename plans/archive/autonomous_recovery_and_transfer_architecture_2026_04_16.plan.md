@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: autonomous-recovery-and-transfer-architecture
-summary:
+summary: Complete autonomous recovery matrix implementation (G1-G6), transfer architecture (CeFi internal, Copper live,
+  CCXT, venue wallet types), UI recovery controls, auto-deleverage wiring across all domains
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-16'
-overview: Complete autonomous recovery matrix implementation (G1-G6), transfer architecture (CeFi internal, Copper live, CCXT, venue wallet types), UI recovery controls, auto-deleverage wiring across all domains
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D3, business: B3}

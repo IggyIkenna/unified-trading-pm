@@ -1,7 +1,21 @@
 ---
 doc_type: plan
 title: repo-readiness-semver-hardening-2026-03-11
-summary:
+summary: 'Consolidate duplicate readiness checklist implementations (deployment-service/configs, codex/10-audit,
+
+  pm/docs) into ONE canonical location in codex/10-audit. Propagate via symlinks to PM, deployment-service
+
+  (sibling-clone for GHA), and system-integration-tests. Harden per-repo semver bump rules, add agent
+
+  major-bump gate in quickmerge.sh, and propagate all rules to AGENTS.md, SUB_AGENT_MANDATORY_RULES, and
+
+  GHA autonomous agent prompts.
+
+  All work complete as of 2026-03-11: 65 per-repo YAML files confirmed in codex/10-audit/repos/,
+
+  deployment-api wired to codex v3.0 SSOT, staging-to-main hard gate added, daily Telegram readiness
+
+  summary, legacy deployment-service checklist configs deleted.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,23 +33,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-11"
-overview: "Consolidate duplicate readiness checklist implementations (deployment-service/configs, codex/10-audit,
-
-  pm/docs) into ONE canonical location in codex/10-audit. Propagate via symlinks to PM, deployment-service
-
-  (sibling-clone for GHA), and system-integration-tests. Harden per-repo semver bump rules, add agent
-
-  major-bump gate in quickmerge.sh, and propagate all rules to AGENTS.md, SUB_AGENT_MANDATORY_RULES, and
-
-  GHA autonomous agent prompts.
-
-  All work complete as of 2026-03-11: 65 per-repo YAML files confirmed in codex/10-audit/repos/,
-
-  deployment-api wired to codex v3.0 SSOT, staging-to-main hard gate added, daily Telegram readiness
-
-  summary, legacy deployment-service checklist configs deleted.
-
-  "
 type: infra
 epic: epic-infra
 session_notes_2026_03_11:

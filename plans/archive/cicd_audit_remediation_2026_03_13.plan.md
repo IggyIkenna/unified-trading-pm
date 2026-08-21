@@ -1,7 +1,13 @@
 ---
 doc_type: plan
 title: cicd-audit-remediation-2026-03-13
-summary:
+summary: 'Remediates all P0/P1/P2 issues identified in the 2026-03-13 CI/CD pipeline audit. Adds diagram auto-regeneration
+  to PM quickmerge so the YAML remains the SSOT and the SVG/HTML are always current. Extends the diagram and CI-CD-FLOW.md
+  to show the active-plan-driven agent context cascade: plan → codex → cursor rules → agent context → implementation → dual
+  TG approval gates (plan sign-off + merge sign-off). Adds E2E tests for every fix, exercised via admin sync scripts where
+  GHA trigger is needed. Hardens race conditions (manifest concurrency, heredoc exits, dispatch retries, conflict retry-promotion,
+  SIT debounce starvation). Ensures human-readable semver is the headline at every layer — manifest history, Telegram alerts,
+  deployment UI, Docker tags — with SHAs as metadata only.'
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +17,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
-overview: 'Remediates all P0/P1/P2 issues identified in the 2026-03-13 CI/CD pipeline audit. Adds diagram auto-regeneration to PM quickmerge so the YAML remains the SSOT and the SVG/HTML are always current. Extends the diagram and CI-CD-FLOW.md to show the active-plan-driven agent context cascade: plan → codex → cursor rules → agent context → implementation → dual TG approval gates (plan sign-off + merge sign-off). Adds E2E tests for every fix, exercised via admin sync scripts where GHA trigger is needed. Hardens race conditions (manifest concurrency, heredoc exits, dispatch retries, conflict retry-promotion, SIT debounce starvation). Ensures human-readable semver is the headline at every layer — manifest history, Telegram alerts, deployment UI, Docker tags — with SHAs as metadata only.
-
-  '
 type: infra
 epic: epic-infra
 superseded_by: cicd_code_rollout_master_2026_03_13

@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: deployment-ui-version-selector
-summary:
+summary: Build selector dropdown in deployment-ui — shows available builds as "{version} @ {branch}" parsed from Artifact
+  Registry tags. Manual deploy of any build to any environment. New API endpoints in deployment-api for AR tag listing and
+  forward deploys.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
-overview: Build selector dropdown in deployment-ui — shows available builds as "{version} @ {branch}" parsed from Artifact Registry tags. Manual deploy of any build to any environment. New API endpoints in deployment-api for AR tag listing and forward deploys.
 type: feature
 epic: epic-infra
 completion_gates: {code: C3, deployment: none, business: none}

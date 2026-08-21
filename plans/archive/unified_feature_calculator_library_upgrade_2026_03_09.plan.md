@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: Unified Feature Calculator Library — BaseFeatureService Upgrade
-summary:
-status: DONE
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: [unified-trading-pm]
-scope: [engineer, admin]
-tags: []
-related: []
-created: 2026-03-09
-overview: "The 8 features-*-service repos (calendar, commodity, cross-instrument, delta-one, multi-timeframe,
+summary: 'The 8 features-*-service repos (calendar, commodity, cross-instrument, delta-one, multi-timeframe,
 
   onchain, sports, volatility) each independently implement the same boilerplate: UnifiedCloudConfig
 
@@ -27,9 +17,16 @@ overview: "The 8 features-*-service repos (calendar, commodity, cross-instrument
 
   All new library code: no Any, no os.getenv, basedpyright strict, ruff line-length 120,
 
-  MIN_COVERAGE=70 (library), >80% per service after refactor.
-
-  "
+  MIN_COVERAGE=70 (library), >80% per service after refactor.'
+status: DONE
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-03-09
 updated: 2026-03-10 18:00:00+00:00
 isProject: false
 todos:
@@ -70,7 +67,7 @@ cross-instrument, multi-timeframe, sports have no explicit shutdown handler |
       No service has /readiness endpoint except delta-one (via api/health.py).
 
 - id: design-base-class content: >- Design `BaseFeatureService` abstract class API before writing code. Define: abstract
-  methods `async   compute_features(self, payload: FeatureRequestT) -> FeatureResultT`; concrete methods
+  methods `async compute_features(self, payload: FeatureRequestT) -> FeatureResultT`; concrete methods
   `async startup(self)`, `async shutdown(self)`, `build_health_router() -> APIRouter`,
   `build_metrics() -> FeatureServiceMetrics`. Design `FeatureServiceConfig` TypedDict or dataclass (no os.getenv fields
   — all from UnifiedCloudConfig). Confirm design with library-tier-architecture.mdc: unified-feature-calculator-library
@@ -91,7 +88,7 @@ cross-instrument, multi-timeframe, sports have no explicit shutdown handler |
   UnifiedCloudConfig via @lru_cache(maxsize=1) singleton; abstract compute_features() with TypeVar-bound generic
   signature; built-in startup() calls setup_events from unified_events_interface (no try/except fallback); built-in
   shutdown() flushes metrics and logs shutdown event; correlation_id propagated via contextvars; no os.getenv()
-  anywhere. Export from src/unified_feature_calculator/**init**.py. Run `basedpyright   src/unified_feature_calculator/`
+  anywhere. Export from src/unified_feature_calculator/**init**.py. Run `basedpyright src/unified_feature_calculator/`
   — zero errors before proceeding. status: completed notes: | RESOLVED 2026-03-09: base_service.py created;
   BaseFeatureServiceV2 with abstract compute_features(), startup()/shutdown() lifecycle, correlation_id_var via
   contextvars. Exported from service_base/**init**.py and top-level **init**.py. Commit e17f550.
@@ -143,7 +140,7 @@ cross-instrument, multi-timeframe, sports have no explicit shutdown handler |
 - id: refactor-features-commodity-service content: >- Refactor features-commodity-service to extend BaseFeatureService.
   Remove duplicate boilerplate (same categories as calendar). Implement compute_features() with existing commodity
   logic. Run `bash scripts/quality-gates.sh`; fix failures; update coverage >80%. Commit:
-  `"refactor(features-commodity-service): extend BaseFeatureService from   library"`. status: completed notes: |
+  `"refactor(features-commodity-service): extend BaseFeatureService from library"`. status: completed notes: |
   RESOLVED 2026-03-09: CommodityFeatureService extends BaseFeatureServiceV2[CommodityFeatureRequest, CommoditySignal].
   Boilerplate removed: inline Prometheus metric definitions (metrics.py delegates to build_feature_metrics()),
   startup/shutdown lifecycle (base class). compute_features() delegates to SignalComposer.compose() + SignalPublisher.

@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: agent3-research-build
-summary:
+summary: Ensure Research/Build and Promote services have real content, absorb strategy-ui wizard and ml-training-ui experiment
+  tracking
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-22'
-overview: Ensure Research/Build and Promote services have real content, absorb strategy-ui wizard and ml-training-ui experiment tracking
 todos:
 - {id: a3-p0-research-overview, content: '- [x] [AGENT] P0. Verify `/services/research/overview` has real content (not placeholder). It should show: active experiments count, model registry status, backtest queue, recent results. Wire to API hooks: `GET /ml/models` (model count), `GET /execution/backtests` (recent backtests). If placeholder, build a dashboard with KPI cards for each research domain (ML, Strategy, Execution).
 

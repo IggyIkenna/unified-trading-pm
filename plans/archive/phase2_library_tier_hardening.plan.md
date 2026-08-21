@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: phase2-library-tier-hardening
-summary:
+summary: Hardens all library tiers (T0→T1→T2→T3) to fully green quality gates in strict sequential order (T0→T1→T2→T3 invariant).
+  Requires Phase 1 complete.
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
-overview: Hardens all library tiers (T0→T1→T2→T3) to fully green quality gates in strict sequential order (T0→T1→T2→T3 invariant). Requires Phase 1 complete.
 type: code
 epic: epic-code-completion
 superseded_by: cicd_code_rollout_master_2026_03_13

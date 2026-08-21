@@ -1,7 +1,13 @@
 ---
 doc_type: plan
 title: cross-service-architecture-audit-remediation
-summary:
+summary: 'Citadel-grade architecture audit of all 21 services (excluding instruments-service, already
+
+  being fixed). Identifies and remediates: reference data duplication, config violations,
+
+  domain boundary violations, runtime mode/topology violations, direct cloud SDK usage,
+
+  and duplicate type definitions. Uses instruments-service batch-validation plan as template.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,15 +17,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-18'
-overview: 'Citadel-grade architecture audit of all 21 services (excluding instruments-service, already
-
-  being fixed). Identifies and remediates: reference data duplication, config violations,
-
-  domain boundary violations, runtime mode/topology violations, direct cloud SDK usage,
-
-  and duplicate type definitions. Uses instruments-service batch-validation plan as template.
-
-  '
 type: infra
 epic: epic-code-completion
 completion_gates: {code: C4, deployment: D2, business: B4}

@@ -1,7 +1,13 @@
 ---
 doc_type: plan
 title: Cursor Context Bloat Reduction
-summary:
+summary: "Every new agent/chat in this workspace starts at ~55–70K tokens before any user message\nis typed. The always-apply\
+  \ cursor rules alone contribute ~25,559 tokens across 46 files.\nThis plan reduces that to ~10,000–12,000 tokens by:\n\
+  \  1. Demoting large, specialised rules from alwaysApply:true → alwaysApply:false\n     (agent-requestable / tag-triggered\
+  \ only).\n  2. Trimming verbose always-apply rules by extracting large tables/examples into\n     requestable companion\
+  \ files.\n  3. Keeping a compact always-apply core that covers safety-critical guardrails only.\n\nTarget: always-apply\
+  \ budget ≤ 12,000 tokens (down from 25,559).\nNothing important is dropped — all rules remain available, just not injected\
+  \ by default."
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,7 +19,6 @@ related: []
 created: 2026-03-09
 archived: '2026-03-09'
 archiveReason: 'Completed — always-apply token budget reduced from 25,559 to ~12,000 tokens (52% reduction) via PR #47.'
-overview: "Every new agent/chat in this workspace starts at ~55–70K tokens before any user message\nis typed. The always-apply cursor rules alone contribute ~25,559 tokens across 46 files.\nThis plan reduces that to ~10,000–12,000 tokens by:\n  1. Demoting large, specialised rules from alwaysApply:true → alwaysApply:false\n     (agent-requestable / tag-triggered only).\n  2. Trimming verbose always-apply rules by extracting large tables/examples into\n     requestable companion files.\n  3. Keeping a compact always-apply core that covers safety-critical guardrails only.\n\nTarget: always-apply budget ≤ 12,000 tokens (down from 25,559).\nNothing important is dropped — all rules remain available, just not injected by default.\n"
 updated: 2026-03-09
 isProject: false
 todos:

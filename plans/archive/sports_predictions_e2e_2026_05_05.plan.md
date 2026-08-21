@@ -1,7 +1,17 @@
 ---
 doc_type: plan
 title: sports-predictions-e2e
-summary:
+summary: 'Drive sports predictions running end-to-end on the live pipeline: feature-service-sports producing
+
+  honest non-NULL features → ML training (Model 2A walk-forward) → strategy-service paper trade
+
+  (ArbitrageStrategy + MLSportsStrategy) → upcoming-fixtures-ui showing predictions. Path uses
+
+  existing 288M Odds-API rows: re-key via migrate_sports_canonical.py + MDPS 8-bucket horizon
+
+  adapter (no API credits) → FSS → ML → strategy → UI. Gated on master roadmap Phase 6 deployment
+
+  activation and the features_sports_honest_coverage plan.'
 status: in_progress
 nature: record
 asset_group: [cross-cutting]
@@ -19,19 +29,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-05
-overview: "Drive sports predictions running end-to-end on the live pipeline: feature-service-sports producing
-
-  honest non-NULL features → ML training (Model 2A walk-forward) → strategy-service paper trade
-
-  (ArbitrageStrategy + MLSportsStrategy) → upcoming-fixtures-ui showing predictions. Path uses
-
-  existing 288M Odds-API rows: re-key via migrate_sports_canonical.py + MDPS 8-bucket horizon
-
-  adapter (no API credits) → FSS → ML → strategy → UI. Gated on master roadmap Phase 6 deployment
-
-  activation and the features_sports_honest_coverage plan.
-
-  "
 type: mixed
 epic: sports-predictions-e2e
 priority: P0

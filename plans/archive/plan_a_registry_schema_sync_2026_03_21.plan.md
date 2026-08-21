@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: plan-a-registry-schema-sync
-summary:
+summary: 'Backend-only: registry extraction, OpenAPI codegen pipeline, error code hardening, CI triggers for UAC/UIC'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +11,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
-overview: 'Backend-only: registry extraction, OpenAPI codegen pipeline, error code hardening, CI triggers for UAC/UIC'
 type: code
 epic: epic-code-completion
 locked_by:

@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: defi-rollout-cicd-pipeline
-summary:
+summary: Wire the live-defi-rollout feature branch into the full CI/CD pipeline — manifest-driven branch name, auto-merge
+  to staging on QG pass, and semver bump on main post-SIT.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
-overview: 'Wire the live-defi-rollout feature branch into the full CI/CD pipeline — manifest-driven branch name, auto-merge to staging on QG pass, and semver bump on main post-SIT.
-
-  '
 type: code
 epic: epic-deployment
 completion_gates: {code: C5, deployment: none, business: none}

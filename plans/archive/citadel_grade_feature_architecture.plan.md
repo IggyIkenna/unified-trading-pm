@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Citadel-Grade Feature Architecture
-summary:
+summary: 'Design a systematic, quant-grade feature engineering architecture targeting 50-100% annual returns: multi-resolution
+  feature banks across all 22 calculators, cross-asset feature matrix, regime-conditional model segmentation, multi-timeframe
+  stacking, and 6 new calculators filling structural gaps — all designed for LightGBM''s 15K→300 feature selection pipeline.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-02-28'
-overview: 'Design a systematic, quant-grade feature engineering architecture targeting 50-100% annual returns: multi-resolution feature banks across all 22 calculators, cross-asset feature matrix, regime-conditional model segmentation, multi-timeframe stacking, and 6 new calculators filling structural gaps — all designed for LightGBM''s 15K→300 feature selection pipeline.'
 todos:
 - {id: feed-all-22-groups, content: 'HIGHEST ROI: Update ml-training-service to subscribe to all 22 feature groups, not just 4 (technical_indicators, market_structure, returns, targets). Add: moving_averages, oscillators, volatility, momentum, volume_analysis, vwap, candlestick_patterns, streaks, round_numbers, microstructure, funding_oi, liquidations, futures_basis, volume_flow, temporal, economic_events, stablecoin_dominance, fear_greed, macro_dxy, yield_curve, news_sentiment, social_sentiment', status: completed}
 - {id: standardise-windows, content: 'Standardise IndicatorParams in parameters.py with canonical window families: MICRO_WINDOWS [2,3,5], SHORT_WINDOWS [8,12,20], MEDIUM_WINDOWS [30,50,100], LONG_WINDOWS [200]. Migrate hardcoded window lists in moving_averages.py and volatility.py to use get_params()', status: completed}

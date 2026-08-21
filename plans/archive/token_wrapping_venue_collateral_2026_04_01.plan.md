@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: token-wrapping-venue-collateral
-summary:
+summary: Wrapped/unwrapped token protocol mapping, venue collateral acceptance matrix, collateral haircuts in UAC
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +11,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-03"
-overview: Wrapped/unwrapped token protocol mapping, venue collateral acceptance matrix, collateral haircuts in UAC
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

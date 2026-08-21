@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: strategy-visibility-grafana-2026-03-10
-summary:
+summary: Deploy Grafana on Cloud Run, add Prometheus metrics to strategy/execution/PnL services, create 5 dashboards (strategy
+  performance, market data health, execution quality, system health, DeFi), and embed Grafana panels into unified-admin-ui.
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
-overview: Deploy Grafana on Cloud Run, add Prometheus metrics to strategy/execution/PnL services, create 5 dashboards (strategy performance, market data health, execution quality, system health, DeFi), and embed Grafana panels into unified-admin-ui.
 type: code
 epic: epic-code-completion
 superseded_by: cicd_code_rollout_master_2026_03_13

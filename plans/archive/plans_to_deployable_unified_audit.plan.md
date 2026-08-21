@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Plans to Deployable Unified Audit
-summary:
+summary: Canonical workflow for Plans → Code → Tested → Deployable. Unifies PM Codex Drift Zero, Other Alignment, and deployment
+  topology. Four-stage pipeline with Tested and Deployable gates. Supersedes pm_codex_drift_zero_architecture, other_alignment_plan,
+  PM_CODEX_VS_OTHER_ALIGNMENT_DIFF.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
-overview: Canonical workflow for Plans → Code → Tested → Deployable. Unifies PM Codex Drift Zero, Other Alignment, and deployment topology. Four-stage pipeline with Tested and Deployable gates. Supersedes pm_codex_drift_zero_architecture, other_alignment_plan, PM_CODEX_VS_OTHER_ALIGNMENT_DIFF.
 todos:
 - {id: phase-0-manifest-sync, content: 'Manifest sync (repository_dispatch); update version-bump workflows; remove broken manifest steps. GATE: workspace-manifest.json validates against JSON schema with zero errors; all repo entries have ci_status, quality_gate_status, coverage_pct, bypass_audit_path, testing_level, skipped_gates fields present; repository_dispatch event fires on PM push and reaches dependent workflows without error.', status: completed}
 - {id: phase-0b-cleanup, content: 'Codex + PM cleanup; fix paths, merge archives, create SSOT indexes. GATE: no broken relative links in any active plans/active/ .plan.md file; plans/archive/ contains only superseded plans; 00-SSOT-INDEX.md lists all canonical docs.', status: completed}

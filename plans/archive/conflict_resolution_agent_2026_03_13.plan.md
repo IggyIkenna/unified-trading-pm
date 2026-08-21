@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: conflict-resolution-agent
-summary:
+summary: Autonomous conflict resolution agent for the unified-trading-system CI pipeline. Triggered by merge-conflict-detected
+  repository_dispatch (from staging-to-main.yml or feature-branch-to-staging.yml template). Sets up workspace via setup-workspace-from-manifest.sh,
+  reads AGENTS.md + active PM plans + codex docs for context, uses Claude to propose a conflict resolution (preserving both
+  sides), runs quality gates on the resolved code, pushes an auto-resolve branch, opens a resolution PR, and notifies via
+  Telegram at start ("working") and end ("PR ready"). Humans review and approve; agent never self-merges.
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +15,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
-overview: 'Autonomous conflict resolution agent for the unified-trading-system CI pipeline. Triggered by merge-conflict-detected repository_dispatch (from staging-to-main.yml or feature-branch-to-staging.yml template). Sets up workspace via setup-workspace-from-manifest.sh, reads AGENTS.md + active PM plans + codex docs for context, uses Claude to propose a conflict resolution (preserving both sides), runs quality gates on the resolved code, pushes an auto-resolve branch, opens a resolution PR, and notifies via Telegram at start ("working") and end ("PR ready"). Humans review and approve; agent never self-merges.
-
-  '
 type: infra
 epic: epic-infra
 superseded_by: cicd_code_rollout_master_2026_03_13

@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: sports-phantom-fixtures-recovery-2026-05-06
-summary:
+summary: Recover Category A leagues (AUSTRIAN_BUNDESLIGA / GREEK_SUPER_LEAGUE / ~36 others) from phantom-captured FIXTURES
+  rows, then re-run dependent enrichments (PLAYER_STATS / FIXTURE_*) under the writer fix shipped in instruments-service
+  `f36651c`.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,10 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-05-06"
-overview:
-  Recover Category A leagues (AUSTRIAN_BUNDESLIGA / GREEK_SUPER_LEAGUE / ~36 others) from phantom-captured FIXTURES
-  rows, then re-run dependent enrichments (PLAYER_STATS / FIXTURE_*) under the writer fix shipped in instruments-service
-  `f36651c`.
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout
@@ -31,7 +29,7 @@ todos:
       content:
         "- [x] [HUMAN+AGENT] P0. Refresh SPORTS tarballs to ship the orchestrator writer fix + UAC dedupe to future
         VMs.\n      Command: `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group
-        SPORTS`\n      (use `/opt/homebrew/bin/bash` on macOS — the script uses bash-4 features).\n      Verify with
+        SPORTS`\n (use `/opt/homebrew/bin/bash` on macOS — the script uses bash-4 features).\n      Verify with
         `gcloud storage ls -l \"gs://deployment-scripts-central-element-323112/code/instruments-service-code.tar.gz\"`
         showing fresh mtime.\n      If the upload md5-mismatches and nukes a sibling tarball (mtds, etc.), re-run the
         script — same-day re-run reproduces fine.\n      **Done 2026-05-06**: instruments-service tarball mtime
@@ -130,13 +128,13 @@ todos:
         entities for the 75,590 deleted-phantom rows. Use the chain runner (deployment-service `5be53a7`) which
         auto-cycles through all 5 entities:\n      ```\n      tmux new-session -d -s phantom-chain bash
         deployment-service/scripts/vm/run-sports-phantom-downstream-chain.sh \\\\\n        --start-date 2020-06-06
-        --end-date 2026-05-04\n      ```\n      Or invoke launchers manually (singleton lock on `af-backfill-` prefix
+        --end-date 2026-05-04\n      ```\n Or invoke launchers manually (singleton lock on `af-backfill-` prefix
         means these are sequential, one VM at a time):\n      1. `bash
         deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity PLAYER_STATS 2020-06-06 2026-05-04` —
         15,646 attempted_failed rows\n      2. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh
-        --entity FIXTURE_STATS 2020-06-06 2026-05-04` — 17,919 rows\n      3. `bash
+        --entity FIXTURE_STATS 2020-06-06 2026-05-04` — 17,919 rows\n 3. `bash
         deployment-service/scripts/vm/launch-api-football-backfill-vm.sh\
-        \ --entity FIXTURE_EVENTS 2020-06-06 2026-05-04` — 17,590 rows\n      4. `bash
+        \ --entity FIXTURE_EVENTS 2020-06-06 2026-05-04` — 17,590 rows\n 4. `bash
         deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURE_LINEUPS 2020-06-06 2026-05-04`
         — 16,633 rows\n      5. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity INJURIES
         2020-06-06 2026-05-04` — 7,802 rows\n      (Optional alternative for PLAYER_STATS:

@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: deploy_missing_auto_launch_2026_05_07
-summary:
+summary: Successor plan to data_status_drilldown_shard_atom_alignment_2026_05_07 Phase 3 -- promote the Deploy-Missing flow
+  from preview-mode (operator copies + runs the gcloud command) to auto-launch (deployment-api directly invokes the launcher
+  script via gcloud). Requires deployment-api->gcloud security review + paired tarball-refresh wiring + per-VM observability
+  + idempotency guards.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,11 +15,6 @@ scope: [engineer, admin]
 tags: []
 related: [/plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md]
 created: "2026-05-07"
-overview:
-  Successor plan to data_status_drilldown_shard_atom_alignment_2026_05_07 Phase 3 -- promote the Deploy-Missing flow
-  from preview-mode (operator copies + runs the gcloud command) to auto-launch (deployment-api directly invokes the
-  launcher script via gcloud). Requires deployment-api->gcloud security review + paired tarball-refresh wiring + per-VM
-  observability + idempotency guards.
 type: code
 epic: epic-deployment
 completion_gates: { code: C5, deployment: D3, business: none }
@@ -619,12 +617,12 @@ that already shipped.
 - [x] [deployment-service] P0. Cloud Build trigger that runs the refresh script when invoked via REST. Returns the
       build_id so the deployment-api can poll for success. (deployment-service@a620e1f —
       `cloud-build/refresh-tarballs.cloudbuild.yaml` invokable via `cloudbuild_v1.CloudBuildClient.create_build` or
-      `gcloud builds submit     --config=...`. Substitutions: `_ASSET_GROUP`, `_BRANCH` (default live-defi-rollout),
+      `gcloud builds submit --config=...`. Substitutions: `_ASSET_GROUP`, `_BRANCH` (default live-defi-rollout),
       `_BUCKET` (default deployment-scripts-${PID}). 30min timeout; HIGHCPU_8 machine.)
 - [x] [deployment-api] P0. Pre-launch check: read the tarball's GCS object mtime, compare to `git rev-parse HEAD` of
       `live-defi-rollout`; if stale, kick the Cloud Build and wait for completion before proceeding.
       (deployment-api@faac20a — `deployment_api/services/tarball_staleness.py`:
-      `TarballStalenessChecker.{get_tarball_mtime, compute_bundle_oldest_mtime, is_stale,     trigger_refresh, poll_build, ensure_fresh}` +
+      `TarballStalenessChecker.{get_tarball_mtime, compute_bundle_oldest_mtime, is_stale, trigger_refresh, poll_build, ensure_fresh}` +
       `RefreshResult` dataclass + Protocol- based mocking for the Cloud Build invoker. Bundle membership mirrors
       create-code-tarballs.sh per-asset_group lists. 27/27 unit tests pass; QG lint+ basedpyright clean; 70.94%
       coverage. **Standalone module** — Phase 2 wires it into the auto-launch endpoint.)

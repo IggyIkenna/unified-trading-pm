@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: fixed-grid-config-refactor-2026-03-21
-summary:
+summary: Split ML training, strategy, and execution backtest configs into Fixed (lookup keys) vs Grid (combinatoric search)
+  tiers. Target-type-specific params move from top-level fields into per-type dicts. Enables unified mass backtesting across
+  TradFi/CeFi/DeFi/Sports without nonsensical cross-products.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,11 +13,6 @@ scope: [engineer, admin]
 tags: [ml, strategy, execution, config, backtest, grid, architecture]
 related: []
 created: "2026-03-21"
-overview: "Split ML training, strategy, and execution backtest configs into Fixed (lookup keys) vs Grid (combinatoric
-  search) tiers. Target-type-specific params move from top-level fields into per-type dicts. Enables unified mass
-  backtesting across TradFi/CeFi/DeFi/Sports without nonsensical cross-products.
-
-  "
 type: code
 epic: epic-code-completion
 priority: P0

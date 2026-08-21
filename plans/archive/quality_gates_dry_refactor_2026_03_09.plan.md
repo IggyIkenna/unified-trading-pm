@@ -1,7 +1,19 @@
 ---
 doc_type: plan
 title: Quality Gates DRY Refactor — Centralized Base Scripts
-summary:
+summary: "Every Python repo's scripts/quality-gates.sh is a near-identical ~473–641 line copy.\nOnly 3–6 lines differ per\
+  \ repo: SERVICE_NAME, SOURCE_DIR, MIN_COVERAGE, RUN_INTEGRATION,\nPYTEST_WORKERS, LOCAL_DEPS. With ~44 Python repos (27\
+  \ services + 17 libraries/interfaces\n+ codex + PM), ~25,000 lines of identical gate logic exist in parallel across the\
+  \ workspace.\nAny bug fix or new check must be manually propagated to all repos.\n\nThis plan extracts the shared body\
+  \ into 3 base scripts hosted in\nunified-trading-pm/scripts/quality-gates-base/ (PM is already a transitive dependency\n\
+  of every repo). Each repo's quality-gates.sh becomes a ~10-line config-and-source stub.\n\nRepo type mapping (confirmed\
+  \ from audit 2026-03-10):\n  - Service  (28 repos, 647L): SERVICE_NAME + SOURCE_DIR + MIN_COVERAGE + LOCAL_DEPS\n    Includes:\
+  \ all service/* repos + API repos (client-reporting-api, deployment-api,\n    execution-results-api, market-data-api)\
+  \ + ibkr-gateway-infra + trading-agent-service\n    + system-integration-tests. No separate base-api variant needed —\
+  \ APIs are FastAPI\n    services and use base-service.sh identically.\n  - Library  (17 repos, 473L): PACKAGE_NAME + SOURCE_DIR\
+  \ + MIN_COVERAGE + LOCAL_DEPS\n  - Codex    (1 repo,  488L):  SOURCE_DIR=\"\" + docs-only variant\n  - PM       (1 repo,\
+  \  641L):  self-hosting — owns the base scripts themselves\n  - UIs      (11 repos): JS/TS stub sourcing base-ui.sh (added\
+  \ 2026-03-10).\n    base-ui.sh adds --test flag support (skip lint, run typecheck+tests)."
 status: completed
 nature: record
 asset_group: [cross-cutting]
@@ -11,20 +23,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-03-09
-overview: "Every Python repo's scripts/quality-gates.sh is a near-identical ~473–641 line copy.\nOnly 3–6 lines differ
-  per repo: SERVICE_NAME, SOURCE_DIR, MIN_COVERAGE, RUN_INTEGRATION,\nPYTEST_WORKERS, LOCAL_DEPS. With ~44 Python repos
-  (27 services + 17 libraries/interfaces\n+ codex + PM), ~25,000 lines of identical gate logic exist in parallel across
-  the workspace.\nAny bug fix or new check must be manually propagated to all repos.\n\nThis plan extracts the shared
-  body into 3 base scripts hosted in\nunified-trading-pm/scripts/quality-gates-base/ (PM is already a transitive
-  dependency\nof every repo). Each repo's quality-gates.sh becomes a ~10-line config-and-source stub.\n\nRepo type
-  mapping (confirmed from audit 2026-03-10):\n  - Service  (28 repos, 647L): SERVICE_NAME + SOURCE_DIR + MIN_COVERAGE +
-  LOCAL_DEPS\n    Includes: all service/* repos + API repos (client-reporting-api,
-  deployment-api,\n    execution-results-api, market-data-api) + ibkr-gateway-infra + trading-agent-service\n\
-  \    + system-integration-tests. No separate base-api variant needed — APIs are FastAPI\n    services and use
-  base-service.sh identically.\n  - Library  (17 repos, 473L): PACKAGE_NAME + SOURCE_DIR + MIN_COVERAGE +
-  LOCAL_DEPS\n  - Codex    (1 repo,  488L):  SOURCE_DIR=\"\" + docs-only variant\n  - PM       (1
-  repo,  641L):  self-hosting — owns the base scripts themselves\n  - UIs      (11 repos): JS/TS stub sourcing
-  base-ui.sh (added 2026-03-10).\n    base-ui.sh adds --test flag support (skip lint, run typecheck+tests).\n"
 updated: 2026-03-11
 isProject: false
 todos:

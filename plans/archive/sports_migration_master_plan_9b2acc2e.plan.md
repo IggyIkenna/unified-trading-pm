@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Sports Migration Master Plan
-summary:
+summary: Comprehensive master plan to migrate all sports betting functionality from two archive sources (sports-betting-services-previous
+  and sports-betting-service) into the unified trading architecture, achieving 1000+ features, full arbitrage integration,
+  GCS hive schema alignment, and readiness to archive the sports repo.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,10 +21,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-04"
-overview:
-  Comprehensive master plan to migrate all sports betting functionality from two archive sources
-  (sports-betting-services-previous and sports-betting-service) into the unified trading architecture, achieving 1000+
-  features, full arbitrage integration, GCS hive schema alignment, and readiness to archive the sports repo.
 todos:
   - {
       id: phase-0-arch-alignment,

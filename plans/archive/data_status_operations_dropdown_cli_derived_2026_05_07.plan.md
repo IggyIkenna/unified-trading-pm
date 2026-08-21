@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: data-status-operations-dropdown-cli-derived
-summary:
+summary: Wire the deployment-ui service-operations dropdown to a CLI-derived SSOT so dropdown items match each service's
+  actual `--operation` axis and are click-through into the deploy form.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -24,9 +25,6 @@ related:
     master_to_live_defi_2026_05_23.plan.md,
   ]
 created: "2026-05-07"
-overview:
-  Wire the deployment-ui service-operations dropdown to a CLI-derived SSOT so dropdown items match each service's actual
-  `--operation` axis and are click-through into the deploy form.
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

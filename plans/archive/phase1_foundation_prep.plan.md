@@ -1,7 +1,18 @@
 ---
 doc_type: plan
 title: Phase 1 — Foundation & Prep
-summary:
+summary: 'Foundation and prep work that MUST complete before any library/service tier work (Phase 2) can start.
+
+  Three parallel streams: STREAM A (CI/CD infrastructure), STREAM B (deployment structure refactor),
+
+  STREAM C (quality gate baseline audit). No quickmerge runs until STREAM A is complete.
+
+  Phase 1 is complete when: all 55 repos have quickmerge + commit-msg hook; CI/CD pipeline live;
+
+  deployment structure refactored (UTD V3 split complete: deployment-service + deployment-api + deployment-ui + system-integration-tests;
+  visualizer-ui/api extracted);
+
+  SSOT docs clean; naming consistent.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,20 +22,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-02-28"
-overview: "Foundation and prep work that MUST complete before any library/service tier work (Phase 2) can start.
-
-  Three parallel streams: STREAM A (CI/CD infrastructure), STREAM B (deployment structure refactor),
-
-  STREAM C (quality gate baseline audit). No quickmerge runs until STREAM A is complete.
-
-  Phase 1 is complete when: all 55 repos have quickmerge + commit-msg hook; CI/CD pipeline live;
-
-  deployment structure refactored (UTD V3 split complete: deployment-service + deployment-api + deployment-ui +
-  system-integration-tests; visualizer-ui/api extracted);
-
-  SSOT docs clean; naming consistent.
-
-  "
 todos:
   - {
       id: p1-naming-cleanup-done,

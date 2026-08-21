@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: deployment-api-work-stream-a
-summary:
+summary: deployment-api endpoints for programmatic VM backfill launch + GCS event tail (work-stream-A keystone unblock for
+  the 2026-05-23 live-DeFi deadline)
 status: complete
 nature: record
 asset_group: cross-cutting
@@ -19,9 +20,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-05-07"
-overview:
-  deployment-api endpoints for programmatic VM backfill launch + GCS event tail (work-stream-A keystone unblock for the
-  2026-05-23 live-DeFi deadline)
 type: code
 epic: epic-code-completion
 priority: P0

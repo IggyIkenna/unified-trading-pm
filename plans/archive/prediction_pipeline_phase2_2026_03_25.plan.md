@@ -1,7 +1,23 @@
 ---
 doc_type: plan
 title: prediction-pipeline-phase2
-summary:
+summary: "Phase 2 of prediction pipeline: unified fixture ID for cross-venue arb, settlement index\nregistry, prediction\
+  \ market features, and 1-week validation run.\n\n## Problem\nPhase 1 wired the pipeline end-to-end (2000 instruments,\
+  \ 1500 trades, GCS verified). But:\n1. Sports instrument IDs use Polymarket condition_id — not the canonical fixture_id\
+  \ format\n   ``{fixture_id}::{market_type}::{outcome}::{bookmaker_key}`` used by CanonicalOdds.\n   This breaks cross-venue\
+  \ arb (Polymarket vs Betfair vs Odds API).\n2. No settlement index registry — what Chainlink feed settles BTC? What settles\
+  \ SPX?\n3. No prediction features in the features pipeline — BTC features exist in\n   polymarket-correlation-research\
+  \ but aren't in the system.\n4. No sports prediction features — odds spread, uncertainty, bookmaker consensus.\n\n## Solution\n\
+  Phase 2A: Unified fixture ID — cross-reference Polymarket with API-Football. Use\n``{fixture_id}::{market_type}::{outcome}::polymarket``\
+  \ matching CanonicalOdds format.\nPhase 2B: Settlement index registry in UAC.\nPhase 2C: Port BTC/SPX features from polymarket-correlation-research.\n\
+  Phase 2D: Sports prediction features template.\nPhase 2E: 1-week validation run (2026-03-19 to 2026-03-25).\n\n## Key\
+  \ Insight\nCanonicalOdds format: ``{fixture_id}::{market_type}::{outcome}::{bookmaker_key}``\nExample: ``1034567::h2h::home::betfair_ex_uk``\n\
+  For Polymarket: ``1034567::moneyline::home::polymarket``\nSame fixture_id = arb is GROUP BY fixture_id, outcome → compare\
+  \ prices.\n\n## Scope: 7 repos\n- unified-api-contracts — settlement registry, fixture ID helpers\n- unified-reference-data-interface\
+  \ — cross-reference Polymarket gameId → API-Football fixture_id\n- instruments-service (URDI sports/ sub-package) — fixture\
+  \ lookup by team+date (existing get_fixtures)\n- unified-features-interface — prediction feature calculators\n- features-prediction-service\
+  \ — new service or extend existing\n- unified-trading-pm — plan + validation scripts\n- unified-trading-pm/codex — update\
+  \ prediction-schema-paths.md"
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,9 +29,6 @@ related: []
 created: '2026-03-25'
 locked_by: live-defi-rollout
 locked_since: 2026-03-25
-overview: "Phase 2 of prediction pipeline: unified fixture ID for cross-venue arb, settlement index\nregistry, prediction market features, and 1-week validation run.\n\n## Problem\nPhase 1 wired the pipeline end-to-end (2000 instruments, 1500 trades, GCS verified). But:\n1. Sports instrument IDs use Polymarket condition_id — not the canonical fixture_id format\n   ``{fixture_id}::{market_type}::{outcome}::{bookmaker_key}`` used by CanonicalOdds.\n   This breaks cross-venue arb (Polymarket vs Betfair vs Odds API).\n2. No settlement index registry — what Chainlink feed settles BTC? What settles SPX?\n3. No prediction features in the features pipeline — BTC features exist in\n   polymarket-correlation-research but aren't in the system.\n4. No sports prediction features — odds spread, uncertainty, bookmaker consensus.\n\n## Solution\nPhase 2A: Unified fixture ID — cross-reference Polymarket with API-Football. Use\n``{fixture_id}::{market_type}::{outcome}::polymarket`` matching CanonicalOdds\
-  \ format.\nPhase 2B: Settlement index registry in UAC.\nPhase 2C: Port BTC/SPX features from polymarket-correlation-research.\nPhase 2D: Sports prediction features template.\nPhase 2E: 1-week validation run (2026-03-19 to 2026-03-25).\n\n## Key Insight\nCanonicalOdds format: ``{fixture_id}::{market_type}::{outcome}::{bookmaker_key}``\nExample: ``1034567::h2h::home::betfair_ex_uk``\nFor Polymarket: ``1034567::moneyline::home::polymarket``\nSame fixture_id = arb is GROUP BY fixture_id, outcome → compare prices.\n\n## Scope: 7 repos\n- unified-api-contracts — settlement registry, fixture ID helpers\n- unified-reference-data-interface — cross-reference Polymarket gameId → API-Football fixture_id\n- instruments-service (URDI sports/ sub-package) — fixture lookup by team+date (existing get_fixtures)\n- unified-features-interface — prediction feature calculators\n- features-prediction-service — new service or extend existing\n- unified-trading-pm — plan + validation scripts\n- unified-trading-pm/codex\
-  \ — update prediction-schema-paths.md\n"
 type: code
 epic: epic-code-completion
 completion_gates: {code: C4, deployment: D1, business: B4}

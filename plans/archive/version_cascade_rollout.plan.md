@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: Version Cascade Rollout — Automated Cross-Repo Version Pinning
-summary:
+summary: "Roll out the full automated version cascade system to all 59 workspace repos.\nWhen any repo merges feat:/fix:\
+  \ to main, the cascade automatically:\n  1. Bumps the repo's own pyproject.toml version\n  2. Dispatches to unified-trading-pm\
+  \ → updates workspace-manifest.json + bumps PM version\n  3. PM dispatches dependency-update to all direct dependents\
+  \ → each updates their pyproject.toml pin\nAll cross-repo dispatches use the existing GH_PAT secret (already in workspace).\n\
+  Locally: uv.sources path deps always use latest. In CI: constraints ensure correct minimum."
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -26,7 +30,6 @@ superseded_by: 'PARTIALLY SUPERSEDED 2026-03-13 by full_autonomous_agent_ci plan
   redesign-quickmerge-staging-first.
 
   '
-overview: "Roll out the full automated version cascade system to all 59 workspace repos.\nWhen any repo merges feat:/fix: to main, the cascade automatically:\n  1. Bumps the repo's own pyproject.toml version\n  2. Dispatches to unified-trading-pm → updates workspace-manifest.json + bumps PM version\n  3. PM dispatches dependency-update to all direct dependents → each updates their pyproject.toml pin\nAll cross-repo dispatches use the existing GH_PAT secret (already in workspace).\nLocally: uv.sources path deps always use latest. In CI: constraints ensure correct minimum.\n"
 todos:
 - {id: vc-vb-rollout, content: 'Propagate canonical version-bump.yml to all 58 non-PM repos: adds dispatch step + uses GH_PAT + dynamic repo name. Run: python3 scripts/propagation/rollout-version-bump-workflow.py. Then quickmerge each repo (parallel agents, one per tier batch).', status: done, notes: 'RESOLVED 2026-03-10: All 58 manifest repos already had version-bump.yml (UP-TO-DATE). After adding
 

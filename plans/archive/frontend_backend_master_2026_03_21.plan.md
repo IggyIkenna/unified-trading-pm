@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: frontend-backend-master
-summary:
+summary: 'Master plan for frontend-backend integration: backend Plans A-D+H, then UI Plans E-F'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +11,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
-overview: 'Master plan for frontend-backend integration: backend Plans A-D+H, then UI Plans E-F'
 type: mixed
 epic: epic-code-completion
 locked_by:

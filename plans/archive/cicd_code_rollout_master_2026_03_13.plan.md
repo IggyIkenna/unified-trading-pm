@@ -1,7 +1,13 @@
 ---
 doc_type: plan
 title: cicd-code-rollout-master-2026-03-13
-summary:
+summary: 'Master rollout plan consolidating 16 active plans into a single milestone-gated execution sequence. Covers: CI/CD
+  pipeline bug fixes (7 bugs), citadel-grade hardening (SIT debounce, starvation detection, Telegram rate-limiting, manifest
+  atomicity), workflow rollout to all 67 repos (composite actions, semver-agent, conflict-resolution-agent), library tier
+  completion (T0->T1->T2->T3 with invariant enforcement), service/UI hardening (19 services, 10 APIs, 13 UIs), deployment
+  infrastructure (AWS, IBKR, DeFi testnet, dev onboarding), features (cloud mode indicator, Grafana, Elysium fork, user
+  management), and the 1.0.0 stability gate with full production readiness audit. Each phase has exit criteria; next phase
+  starts only when current passes.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,15 +17,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-13"
-overview: "Master rollout plan consolidating 16 active plans into a single milestone-gated execution sequence. Covers:
-  CI/CD pipeline bug fixes (7 bugs), citadel-grade hardening (SIT debounce, starvation detection, Telegram
-  rate-limiting, manifest atomicity), workflow rollout to all 67 repos (composite actions, semver-agent,
-  conflict-resolution-agent), library tier completion (T0->T1->T2->T3 with invariant enforcement), service/UI hardening
-  (19 services, 10 APIs, 13 UIs), deployment infrastructure (AWS, IBKR, DeFi testnet, dev onboarding), features (cloud
-  mode indicator, Grafana, Elysium fork, user management), and the 1.0.0 stability gate with full production readiness
-  audit. Each phase has exit criteria; next phase starts only when current passes.
-
-  "
 todos:
   - { id: cleanup-delete-stale-develop-branch, content: "- [x] [SCRIPT] P0. Delete stale execution-service `develop`
         branch. Only repo with it — confirmed stale, all repos use three-tier model (feat/*/staging/main). Command: `cd

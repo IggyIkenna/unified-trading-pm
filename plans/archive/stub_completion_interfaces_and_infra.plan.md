@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: stub-completion-interfaces-and-infra
-summary:
+summary: Complete all raise NotImplementedError stubs and unimplemented TODOs across URDI, UMI, UTEI, UPI, UCI, and deployment-api
+  not tracked by other active plans.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,9 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-03-09
-overview:
-  Complete all raise NotImplementedError stubs and unimplemented TODOs across URDI, UMI, UTEI, UPI, UCI, and
-  deployment-api not tracked by other active plans.
 type: code
 epic: epic-code-completion
 archived: 2026-03-11

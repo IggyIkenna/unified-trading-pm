@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: mempool-feed-integration-2026-06-01
-summary:
+summary: Stub plan — wire a pending-mempool feed (Flashbots Protect / MEV-share / Alchemy private mempool) so live MEV sandwich
+  + advanced JIT can ship
 status: paused
 nature: record
 asset_group: defi
@@ -15,7 +16,6 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-01
 plan_type: infra
 owner: ikenna
-overview: Stub plan — wire a pending-mempool feed (Flashbots Protect / MEV-share / Alchemy private mempool) so live MEV sandwich + advanced JIT can ship
 type: infra
 epic: epic-infra
 completion_gates: {code: C5, deployment: D3, business: B6}

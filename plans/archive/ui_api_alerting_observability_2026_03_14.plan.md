@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: ui-api-alerting-observability-2026-03-14
-summary:
+summary: Full audit and remediation of UI↔API↔Service mappings, alerting system (Telegram + GCS persistence), observability
+  (LOG_LEVEL, event warehouse, logs-dashboard-ui backend), CI/CD alerting (centralized GHA workflow + persistence), and
+  cross-cutting concerns (OTel cleanup, branding, integration tests, retention policies). 12 UIs, 9 APIs (settlement-api
+  + config-api new), 22 services, ~65 repos.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,12 +14,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-14"
-overview: "Full audit and remediation of UI↔API↔Service mappings, alerting system (Telegram + GCS persistence),
-  observability (LOG_LEVEL, event warehouse, logs-dashboard-ui backend), CI/CD alerting (centralized GHA workflow +
-  persistence), and cross-cutting concerns (OTel cleanup, branding, integration tests, retention policies). 12 UIs, 9
-  APIs (settlement-api + config-api new), 22 services, ~65 repos.
-
-  "
 type: mixed
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: D3, business: none }

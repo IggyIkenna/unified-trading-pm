@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: mtds-per-instrument-sentinels
-summary:
+summary: Phase 8 — tighten MTDS honest-coverage denominator to per-instrument for per-instrument-shard data_types (trades
+  / book_snapshot_5 / derivative_ticker / options_chain / futures_chain).
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,9 +20,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-21"
-overview:
-  Phase 8 — tighten MTDS honest-coverage denominator to per-instrument for per-instrument-shard data_types (trades /
-  book_snapshot_5 / derivative_ticker / options_chain / futures_chain).
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: deployment-service-build-infrastructure-repair
-summary:
+summary: Repair deployment-service Dockerfile + cloudbuild.yaml so Cloud Build ships a fresh deployment-dashboard image
+  for the first time since 2026-02-20, unblocking Plan 3 (sports-scheduler cron) and Plan 6 (features-sports-service deployment).
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,10 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-04-22
-overview:
-  Repair deployment-service Dockerfile + cloudbuild.yaml so Cloud Build ships a fresh deployment-dashboard image for the
-  first time since 2026-02-20, unblocking Plan 3 (sports-scheduler cron) and Plan 6 (features-sports-service
-  deployment).
 priority: P0
 owner: agent
 locked_by: live-defi-rollout

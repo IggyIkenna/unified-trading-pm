@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: consolidated-defi-data-pipeline
-summary:
+summary: 'Consolidated remaining DeFi data pipeline work from 6 source plans.
+
+  Covers: MTDS normalization remaining (Solana lending, oracles, verification), DeFi E2E validation,
+
+  data coverage, instrument pipeline, multichain expansion, MEV protection.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,13 +15,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-16"
-overview: "Consolidated remaining DeFi data pipeline work from 6 source plans.
-
-  Covers: MTDS normalization remaining (Solana lending, oracles, verification), DeFi E2E validation,
-
-  data coverage, instrument pipeline, multichain expansion, MEV protection.
-
-  "
 type: mixed
 epic: epic-code-completion
 reconciliation_status: yaml_to_markdown_converted
