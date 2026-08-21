@@ -635,7 +635,18 @@ process_repo() {
   # Tree-SHA equality == byte-identical content regardless of squash history.
   # Capture SHA + tree from ONE commit read so STEP 1 (frozen-head) can freeze the EXACT
   # commit whose tree the SIT gate validates — no drift between the read and the freeze.
-  LDR_COMMIT_JSON=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" 2>/dev/null || echo '{}')
+  LDR_COMMIT_JSON=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" 2>/dev/null)
+  if [ -z "$LDR_COMMIT_JSON" ]; then
+    # sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08 P3: the original
+    # `2>/dev/null || echo '{}'` swallowed the real error, making a live GitHub platform
+    # outage indistinguishable in this step's own log from a genuine per-repo API
+    # regression (2026-08-17's ERR_LDR incident needed an out-of-band githubstatus.com
+    # check purely because of this). Re-run once, stderr-only, to surface the cause —
+    # only on the rare failure path, so the common success path pays no extra API call.
+    LDR_API_ERR=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" 2>&1 >/dev/null)
+    echo "::warning::$REPO: gh api commits/live-defi-rollout returned empty — ${LDR_API_ERR:0:300}"
+    LDR_COMMIT_JSON='{}'
+  fi
   LDR_SHA=$(printf '%s' "$LDR_COMMIT_JSON" | jq -r '.sha // empty' 2>/dev/null || echo "")
   LDR_TREE=$(printf '%s' "$LDR_COMMIT_JSON" | jq -r '.commit.tree.sha // empty' 2>/dev/null || echo "")
   [ -n "$LDR_TREE" ] || LDR_TREE="ERR_LDR"

@@ -177,7 +177,7 @@ context_scope:
       `test_external_instruction_api.py`'s new `TestSwapInstructionPath`/`TestLendInstructionPath`/
       `TestStakeInstructionPath` (each with an honest-FAILED-not-fabricated landmine test, mirroring
       `TestTransferInstructionPath`'s). Full resolution record:
-      `/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md` § "Resolution
+      `/plans/archive/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md` § "Resolution
       2026-08-21". Evidence: bash scripts/quality-gates.sh --no-fix (8872 passed, 22 skipped, 1 xpassed, 89 warnings in 237.24s; sentinel=4af371549778653f8240e1f3ca5ebb32a37e44f6).
 - [x] [BACKEND] P1. ✅ SHIPPED 2026-08-21 — execution-service@4e35a09b2. `BORROW`/`REPAY` wired on
       `POST /external/instructions` through the same `defi_adapter=` injection seam on `BorrowHandler` proven 5x
@@ -186,7 +186,7 @@ context_scope:
       `test_defi_live_dispatch.py::TestDispatchBorrowLive`,
       `test_external_instruction_api.py::TestBorrowRepayInstructionPath`. Evidence:
       `bash scripts/quality-gates.sh --no-fix` (8915 passed, cov 82.53%). Full record:
-      `/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md` § "Resolution
+      `/plans/archive/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md` § "Resolution
       2026-08-21 (BORROW/REPAY)".
 - [x] [BACKEND] P0. Wire `TRANSFER`/`CANCEL` on the same surface — **shipped execution-service@3af76e1a01**
       (2026-08-20, `instruction_router.py`/`external_instruction_api.py`/`transfer_handler.py`/`deribit.py`/

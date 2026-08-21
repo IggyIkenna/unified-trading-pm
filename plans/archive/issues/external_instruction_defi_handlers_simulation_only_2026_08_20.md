@@ -1,9 +1,9 @@
 ---
 doc_type: issue
 title: >-
-  `POST /external/instructions` (execution-service) — SWAP/LEND/WITHDRAW/BORROW/REPAY/STAKE/UNSTAKE stay HTTP 501:
-  the registered `HandlerRegistry` handlers for this family are backtest/paper-simulation only, never live-wired,
-  in EVERY operational mode
+  `POST /external/instructions` (execution-service) — SWAP/LEND/WITHDRAW/BORROW/REPAY/STAKE/UNSTAKE now route
+  through real live-dispatch handlers (RESOLVED 2026-08-21); this doc is the durable record of the fabricated-success
+  gap they were previously simulation-only
 summary: >-
   Discovered mid-implementation while wiring the remaining `StrategyInstructionV2` action types onto
   `execution-service/execution_service/api/external_instruction_api.py`'s external HTTP front door. The dispatching
@@ -44,7 +44,7 @@ summary: >-
   its own fabricated-success gap; see `/plans/active/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md`).
   BORROW/REPAY (`BorrowHandler`) closed same-day (execution-service@4e35a09b2) via the identical seam, once the
   pattern was proven 5x — see "Resolution 2026-08-21 (BORROW/REPAY)" below.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [execution]
@@ -71,7 +71,13 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
-resolved_by:
+resolved_by: >-
+  All 7 named action types resolved 2026-08-21: SWAP/LEND/WITHDRAW/STAKE/UNSTAKE via `execution-service@4af3715497`;
+  BORROW/REPAY via `execution-service@4e35a09b2` through the identical defi_adapter= seam. Full design record in
+  this doc's own "Resolution 2026-08-21" and "Resolution 2026-08-21 (BORROW/REPAY)" sections. As of 2026-08-21
+  later the same day, ALL 16 of 16 StrategyInstructionV2 action types (incl. BRIDGE/ATOMIC/LP_MINT/LP_BURN/CONTROL)
+  are wired — execution-service@b49a3f1a9 closes the full surface; fresh quality-gates.sh re-verified green on
+  HEAD 67fb2c607096f49921e3b2f465b1a243521b0e6a: 8906 passed, 0 failed.
 locked_by:
 locked_since:
 context_scope:
@@ -90,6 +96,10 @@ drift_direction: advance-code
 ---
 
 # SWAP/LEND/WITHDRAW/BORROW/REPAY/STAKE/UNSTAKE stay 501 on `POST /external/instructions` — real handlers exist but are simulation-only
+
+> **RESOLVED + ARCHIVED 2026-08-21.** All 7 action types now route through real live-dispatch handlers —
+> `execution-service@4af3715497` (SWAP/LEND/WITHDRAW/STAKE/UNSTAKE) + `execution-service@4e35a09b2`
+> (BORROW/REPAY). See `resolved_by` frontmatter and the "Resolution 2026-08-21" sections below for the full record.
 
 ## Why this is a P1, not a P2 like the BRIDGE/ATOMIC sibling
 

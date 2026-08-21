@@ -178,6 +178,47 @@ book-snapshot/depth-rebuild connector (no per-update exchange ts exists to carry
 doesn't parse the underlying chain event's own timestamp. The P0 schema-split todo above must account for `mixed`
 connectors needing a per-path decision, not just a per-file one.
 
+## Findings — disposition of `resolve_mtds_ts_event_timestamp_naming_collision` (2026-08-21)
+
+The in-code reference (`symbol_rules.py:70,127`; also `test_symbol_rules_column_aliases.py:18`) names
+`/plans/archive/2026_08/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md` — a real, fully-worked
+4-phase plan (Phase 1 dual-write, Phase 2 MDPS `ts_event`-priority read, Phase 3 consumer audit/migration, Phase 4
+alias removal). All 6 todos landed same-day 2026-08-05 and were verified via a gated finalize plan
+(`resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05_finalize_2026_08_05.md`) that confirmed all 4 cited
+SHAs on `origin/live-defi-rollout` and that `_COLUMN_ALIASES` no longer contained `ts_event→timestamp`.
+
+**Disposition: neither descoped nor forgotten — partially landed, then Phase 4 specifically was reverted in
+production 5 days later, and the archived plan pair was never corrected to reflect it.**
+
+- Phase 4 (`market-tick-data-service@a11b4ccf`, removing the `ts_event→timestamp` alias) broke VIX/CBOE `ohlcv_1m`
+  backfill writes on 2026-08-10 — `_TICK_REQUIRED_COLUMNS["ohlcv_1m"]` still required a `timestamp` column that no
+  longer existed, so every chunk failed `Schema validation FAILED: missing columns=['timestamp']`. Filed + resolved
+  as `/plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md` (a VIX-launch monitoring issue with no
+  cross-link back to the naming-collision plan pair).
+- The fix, same day, is a 3-commit sequence on market-tick-data-service (verified via `git log`): `8c46c456f7`
+  ("accept Databento-native ts_event as time column in `_validate_tick_schema`"), `fc7e25195d` ("add
+  ts_event→timestamp column alias for Databento OHLCV schema"), `dcd3b7c401` ("restore ts_event→timestamp alias
+  copy — unblock VIX/CBOE ohlcv_1m schema validation") — all dated 2026-08-10. `dcd3b7c401`'s own commit message
+  says "restore", and the current code comment (`symbol_rules.py:66-72`) confirms it explicitly: "This restores
+  the Phase-1 dual-write copy that the Phase-4 alias removal of
+  resolve_mtds_ts_event_timestamp_naming_collision dropped."
+- **Verified live 2026-08-21**: `symbol_rules.py:84-88`'s `_COLUMN_ALIASES` today is
+  `{"ts_event": "timestamp", "size": "amount", "quantity": "amount"}` — the `ts_event→timestamp` entry Phase 4
+  claimed to have removed is present again (plus a later, unrelated `quantity→amount` alias added 2026-08-16 for
+  the ASTER onchain-perps adapter). The archived plan's own banner ("Phase 4 ... code is on LDR") and its finalize
+  plan's verification ("`_COLUMN_ALIASES` on LDR no longer contains `ts_event→timestamp`") are both now STALE —
+  true only for the ~5 days between 2026-08-05 and 2026-08-10, never corrected after the revert.
+- Phases 1-3 remain intact and were not implicated in the regression (MDPS's `ts_event`-priority read path,
+  features-service's dual-accept consumer migration) — only Phase 4's specific "remove the alias" end-state is
+  currently un-done.
+
+**Why this matters for the P0 schema-split todos above**: (1) the `ts_event` column already exists today,
+dual-written alongside `timestamp`, for every Databento/TradFi tick — a schema-split design should build on this
+existing column rather than assume it doesn't exist; (2) `_TICK_REQUIRED_COLUMNS` (`symbol_rules.py:90-116`)
+hard-requires `"timestamp"` for every data_type including `ohlcv_1m` — any future field-split or alias-removal MUST
+audit/update every entry in that dict first, or repeat the exact 2026-08-10 regression; (3) neither archived doc was
+corrected after the revert — a reader trusting the archive alone would wrongly conclude the alias is gone today.
+
 ## Progress Log
 
 **2026-08-20 — filed.** No code touched. Filed after an operator correction to an orchestrating-session claim; the
@@ -197,3 +238,9 @@ use while an ambiguous one does not fail at all.
   full connector timestamp-semantics audit" section above: all 65 connector files classified (37 exchange-time w/
   arrival fallback, 11 pure arrival-time, 2 mixed-path, 15 BLOCKED-* scaffolds with no live emission). Pure
   classification, no schema change made.
+- **2026-08-21 (slot-10)** — Closed the `resolve_mtds_ts_event_timestamp_naming_collision` disposition todo
+  (`cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` item under this doc's own section). Added the
+  "Findings — disposition of resolve_mtds_ts_event_timestamp_naming_collision" section above: partially landed,
+  then Phase 4 (alias removal) was reverted in production 5 days later (market-tick-data-service@dcd3b7c401,
+  2026-08-10) after breaking VIX/CBOE `ohlcv_1m` backfills; the archived plan pair's "complete" claim is stale.
+  Pure investigation, no code changed.

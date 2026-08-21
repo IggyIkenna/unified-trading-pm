@@ -172,7 +172,7 @@ the call is still awaited (ordering preserved), and check the file's line/functi
       `web3.eth.call`s inside the async `process()` path. Converted both to `async def`, fanning out per-token via
       `asyncio.to_thread` + `asyncio.gather(Semaphore(8))`. Regression test
       `test_evm_lst_rows_queries_concurrently_not_sequentially` proves it (real `time.sleep` stub, asserts
-      wall-clock << N x sleep). Evidence: `market-tick-data-service@<pending-ship>`.
+      wall-clock << N x sleep). Evidence: `market-tick-data-service@894a942511`.
 - [ ] [INFRA] P3. **Fix the 2 blocking-write sites in SYNC functions** — per "Open — in priority order" item 3:
       `live/websocket_runner.py::_record_empty_window` and
       `unified_trading_library/streaming/live_aggregator.py::_handle_zero_tick_window` perform the same blocking

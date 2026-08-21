@@ -343,3 +343,17 @@ resolved_by:
   in P2 remains the unresolved deploy-chain step. The earlier 2026-08-19T21:5xZ handoff saying recovery was not
   executed is superseded by the later 22:2xZ entry documenting execution 6cfs6 and canonical-index advancement; retain
   that later entry as authoritative.
+- **2026-08-21 (data_pipeline_failure escalation worker, slot 22, agt-6ea9c3)**: the still-open P2 image-rebuild todo
+  now has a SECOND, independent live confirmation it's the correct/only remaining blocker — dispatched off a
+  DP-WATCHER-002 escalation for `manifest-consolidator-defi`, found the DEFI market-data consolidator exhibiting the
+  bit-for-bit identical `"fresh lock present"` / `"SILENT STALL … needs consolidate(bucket, force=True)"` /
+  `error=locked` signature this doc root-caused for cefi, streak climbing 206→239 across a 32-minute observation
+  window (15:53Z-16:25Z), canonical frozen since `06:38:39Z` (independently corroborated by
+  `mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`'s own manifest-read
+  finding). Checked deploy-chain status: `market-tick-data-service`'s `Dockerfile` `BASE_IMAGE_DIGEST` was bumped
+  TODAY (`@49a8dd80`, `16:07:59Z`, `quality-gates-v2` GREEN `16:09→16:28Z`) — but `gcloud builds list` (fleet-wide)
+  shows NO Cloud Build has fired for this repo since `10:18:11Z`, over 2h stale and >20min after the bump commit
+  landed. Filed the full write-up + a new P1 todo (why hasn't the build fired) on
+  `/plans/active/issues/dp_watcher_002_defi_market_data_consolidator_lock_wedge_2026_08_21.md` rather than
+  duplicating this doc's own still-open P2 — this doc's fix is confirmed the correct one, the remaining gap is
+  purely getting it deployed. No code changes shipped this session.

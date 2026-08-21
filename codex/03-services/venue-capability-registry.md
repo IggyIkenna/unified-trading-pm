@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: venue-capability-registry
-summary:
-  "The authoritative source of what each venue supports (operations, instruments, collateral/LTV, margin spec,
+summary: "The authoritative source of what each venue supports (operations, instruments, collateral/LTV, margin spec,
   commission structure, liquidation, rate limits, regional restrictions) — declared in UAC
   registry/capability_declarations/_{category}.py, queried via a typed facade by strategy/execution/risk/allocator;
   static at deploy time (consumers pin UAC major), no mid-run hot-reload except commission-tier values."
@@ -104,6 +103,14 @@ required_margin = margin_spec.required_for(positions)
 
 ## Capability declaration schema
 
+> **Note (2026-08-21)**: the dataclass below is the original V1-era design sketch. The real shipped registry type is
+> `VenueCapabilityV2` (Pydantic, `unified_api_contracts/internal/architecture_v2/venue_capability_v2.py`) — a superset
+> that has not been fully reconciled field-for-field against this doc. Its `features` set matches this doc's
+> illustrative `VenueFeature` example exactly (`CROSS_MARGIN`/`PORTFOLIO_MARGIN`/`SUBACCOUNT`/`ATOMIC_MULTI_LEG` all
+> survived a 2026-08-20 dedup against `VenueCapability`'s own overlapping members — 6 redundant duplicates removed,
+> `DARK_POOL`/`BACK_LAY_EXCHANGE` also unique-kept, `unified-api-contracts@0d7afa29e`), so no drift there. Its transfer
+> eligibility fields are new and not yet in this sketch — see "Transfer capability" below.
+
 ```python
 @dataclass
 class VenueCapability:
@@ -193,6 +200,28 @@ child_venues=[
     ...
 ]
 ```
+
+## Transfer capability (V2 addition, 2026-08-20)
+
+`VenueCapabilityV2` carries a `TransferCapabilityV2` field beyond the generic `Op.TRANSFER` `OperationSpec` shown
+above — declares WHICH transfer rails/custodians a venue is eligible for, not just whether transfer is supported at
+all. Schema only; population is separate, tracked work (per-venue values are not yet filled in for the 192+ venue
+estate — same gap as the collateral/margin fields above).
+
+```python
+class TransferCapabilityV2(BaseModel):
+    copper_eligible: bool = False
+    ceffu_eligible: bool = False           # CEFFU is a specific custody-provider identity Copper routes on behalf
+                                            # of, not a synonym — kept independent, not merged with copper_eligible
+    manual_transfer_eligible: bool = False
+    prime_broker_eligible: list[str] = []  # open-set of broker names, e.g. ["IBKR", "Alpaca"] — not a closed enum,
+                                            # so a new prime-broker integration never needs a schema edit
+```
+
+Every field defaults to the eligible-nowhere state. Field set sourced from
+`/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`. Unblocks W22 transfer routing on the
+schema side (`unified-api-contracts@45a545e5ad`); still needs real per-venue population before W22 can consume live
+values.
 
 ## Versioning
 

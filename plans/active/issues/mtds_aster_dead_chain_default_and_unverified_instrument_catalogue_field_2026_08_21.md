@@ -1,6 +1,6 @@
 ---
 doc_type: issue
-title: ASTER adapter carries a dead "off-chain" chain default + an unverified "off-chain" instrument-catalogue field — manifest itself confirmed CORRECT, this is a smaller code-hygiene loose end
+title: ASTER adapter carries a dead "off-chain" chain default + an unverified "off-chain" instrument-catalogue field — 2026-08-21 "manifest confirmed correct" verdict OVERRIDDEN by operator ruling, ASTER settles on BSC and needs its real chain
 summary: >-
   Operator asked whether `AsterAdapter`'s `chain="off-chain"` constructor default (vs. `umi_tick_provider.py`'s
   `_ASTER_CHAIN = ChainKind.BSC` and `migrate_defi_full_v9_canonical.py`'s `"ASTER": "BSC"`) represents a live bug
@@ -33,7 +33,7 @@ asset_group: [cefi]
 stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
-tags: [cefi, aster, chain-axis, code-hygiene, dead-code, low-priority]
+tags: [cefi, aster, chain-axis, data-correctness, backfill]
 related:
   [
     /codex/02-data/defi-canonical-naming-ssot.md,
@@ -47,12 +47,12 @@ last_updated: "2026-08-21"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P3
+priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.3
 assigned_role: data_engineer
-drift_direction: stable
+drift_direction: unknown
 depends_on: []
 resolved_by:
 locked_by:
@@ -117,24 +117,35 @@ venue-as-chain contamination class. No restamp, no code fix, no operator ruling 
       `_convert_symbol_to_instrument`/`_convert_symbol_to_spot_pair`'s returned instrument-definition dicts are
       used/written, and confirm whether any real consumer cares about the `"chain"` field's value there (if yes,
       decide `"off-chain"` vs `"BSC"` is correct for THAT context — instrument metadata is a different question from
-      the manifest partition key). (b) Confirm whether `umi_tick_provider.download()` is actually live-invoked for
-      `ASTER` in production (vs. `onchain_perp_batch_handler.py`'s own direct `AsterAdapter` calls being the only
-      real path), and if so, trace its caller's manifest-chain resolution to confirm it also lands on `""` (matching
-      the live-verified manifest state) rather than assuming it does. (c) If both trace to genuinely dead/unused
-      code, remove `AsterAdapter.__init__`'s misleading `chain` parameter (or default it to `""` to match reality)
-      as a small, low-risk cleanup — not urgent, no data-correctness impact either way per the manifest evidence
-      above. Repo: market-tick-data-service. Source: this doc. **Done when**: both consumers are identified with
-      evidence (not assumed dead), and either confirmed harmless (doc closes citing the trace) or a scoped fix ships
-      if a real consumer is found relying on the wrong value.
+      the manifest partition key; note the 2026-08-21 ruling below means `"BSC"` is now the more plausible correct
+      value fleet-wide, but this specific catalogue consumer was never traced). (b) Confirm whether
+      `umi_tick_provider.download()` is actually live-invoked for `ASTER` in production (vs.
+      `onchain_perp_batch_handler.py`'s own direct `AsterAdapter` calls being the only real path), and if so, trace
+      its caller's manifest-chain resolution — note this sub-question's premise ("matching the live-verified
+      manifest state" of `chain=""`) is now stale per the correction above; the expected match target is
+      `chain="BSC"` post-restamp, not `""`. (c) If both trace to genuinely dead/unused code, remove
+      `AsterAdapter.__init__`'s misleading `chain="off-chain"` default (repoint to `ChainKind.BSC`'s wire value, or
+      remove the parameter, to match the now-corrected convention) as a small, low-risk cleanup. Repo:
+      market-tick-data-service. Source: this doc. **Done when**: both consumers are identified with evidence (not
+      assumed dead), and either confirmed harmless (doc closes citing the trace) or a scoped fix ships if a real
+      consumer is found relying on the wrong value.
 
 ## Codex SSOTs
 
-- `/codex/02-data/defi-canonical-naming-ssot.md` § "On-chain perp CLOBs are CeFi, NOT DeFi" (the settled
-  asset_group + chain-axis convention this doc's manifest evidence confirms is being followed correctly for ASTER)
+- `/codex/02-data/defi-canonical-naming-ssot.md` § "On-chain perp CLOBs are CeFi, NOT DeFi" (asset_group + chain-axis
+  background; the specific "ASTER/HYPERLIQUID chain must be blank" sub-rule this doc originally cited as confirming
+  the manifest was updated 2026-08-21 to reflect the operator override — real chain, not blank, for these two)
 
 ## Progress Log
 
-- **2026-08-21**: Filed after operator question about ASTER's chain-value conventions. Manifest live-verified clean
-  (2,571,675 rows, 100% `chain=""`) — the core data-correctness question is answered negative (no bug in recorded
-  data). Filed as a tracked P3 follow-up per this workspace's hard rule against prose-only conclusions, not because
-  the finding is urgent.
+- **2026-08-21**: Filed after operator question about ASTER's chain-value conventions. Manifest live-verified
+  (2,571,675 rows, 100% `chain=""`) — at the time, concluded no bug in recorded data (matching the then-current
+  2026-07-21 restamp convention). Filed as a tracked P3 follow-up per this workspace's hard rule against
+  prose-only conclusions.
+- **2026-08-21 (same day, later)**: Operator ruling overrode the "no bug" verdict with confirmed web-research
+  evidence (Aster settles on BSC) — see "CORRECTION" section above. Priority raised P3→P2 (real data-correctness
+  fix + backfill, not low-urgency code hygiene). Code fix shipped `market-tick-data-service@10da166e15`
+  (`live-defi-rollout`, QG green, verified ancestor of origin post-push) in `onchain_perp_batch_handler.py`
+  (`_REAL_CHAIN_OVERRIDE["ASTER"] = "BSC"`); large backfill (2,571,675 rows) flagged as a new tracked `- [ ]` todo
+  for VM dispatch, not executed locally per this workspace's heavy-I/O rule. Doc stays `status: open` — this ships
+  a correct write-path plus a scoped, evidence-based backfill plan, not yet a completed backfill.
