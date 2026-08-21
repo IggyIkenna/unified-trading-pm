@@ -1090,14 +1090,40 @@
       <div class="callout">
         <span class="tag">What auth does not do on these two routers, stated exactly</span>
         <p>
-          <b class="ev ev-verified">✓ verified</b> On instruments-service, the endpoint itself discards
-          <code>AuthContext</code> after the dependency runs (<code>del auth</code>,
-          <code>instruments-service/instruments_service/api/routers/external.py:86</code>) — every authenticated caller
-          sees the same catalogue, because this is public reference data, not a per-client ledger. On
-          market-tick-data-service the auth dependency is mounted at the router level
-          (<code>dependencies=[Depends(_api_auth)]</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:52-56</code>) and no endpoint
-          function receives an <code>AuthContext</code> argument at all — auth is a gate, not a scope.
+          <b class="ev ev-verified">✓ verified</b> instruments-service now threads <code>AuthContext</code> through
+          instead of discarding it: both endpoints resolve the caller's <code>asset_group</code> query against
+          <code>instruments_service/api/entitlement.py::enforce_asset_group_entitlement</code> — an org-scoped
+          entitlement seam mirroring client-reporting-api's <code>enforce_entitlement</code> (see
+          <a href="#s5">§05</a>), adapted to a single-axis <code>asset_group</code> resource rather than a
+          per-client identity one. Internal/S2S callers (<code>auth.is_internal</code>) and any org whose
+          <code>subscription_tier</code> isn't explicitly tightened in <code>_TIER_ASSET_GROUPS</code> receive the
+          complete universe (default-full — reference data is the product's front door; the filter seam is real
+          and tested today, tightening a specific tier's scope is a config edit, not a route-logic one). A request
+          for an <code>asset_group</code> outside a tightened tier's scope 403s. 401 behavior is unchanged.
+          <b>Source:</b> <code>instruments-service/instruments_service/api/entitlement.py</code>,
+          <code>instruments-service/instruments_service/api/routers/external.py:94</code> (catalogue query),
+          <code>:131</code> (bulk parquet dump).
+        </p>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> On market-tick-data-service the auth dependency is still mounted at
+          the router level for the 401 gate (<code>dependencies=[Depends(_api_auth)]</code>,
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:71</code>) — but every
+          endpoint (availability, batch delivery, stream delivery) now ALSO receives the resolved
+          <code>AuthContext</code> (<code>auth: AuthDep</code>, the same cached dependency, not re-executed) and
+          threads it through <code>market_tick_data_service/api/entitlement.py</code> — an org-scoped entitlement seam
+          over <code>asset_group</code>/<code>venue</code>, mirroring client-reporting-api's
+          <code>enforce_entitlement</code> (see <a href="#s5">§05</a>) adapted to a SET-shaped resource rather than a
+          single-identity one. An explicit out-of-scope <code>asset_group</code> or <code>venue</code> ask 403s
+          (<code>enforce_market_data_entitlement</code>); the multi-venue
+          <code>data_type</code>-without-<code>venue</code> aggregate on <code>GET /availability</code> instead
+          silently narrows to the caller's entitled venues (<code>entitled_venues</code>) — never a 403, since no
+          single venue was explicitly named. Internal/S2S callers and any org with no registered entitlement record are
+          unrestricted (default-full — reference/market data is the front door; the seam is real and tested today,
+          tightening a specific org's scope is a data change via <code>register_org_entitlement</code>, not a route-logic
+          one). 401 behavior is unchanged. <b>Source:</b>
+          <code>market-tick-data-service/market_tick_data_service/api/entitlement.py</code>,
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:107-135</code> (availability),
+          <code>:260-282</code> (batch delivery), <code>:328-348</code> (stream delivery).
         </p>
       </div>
       <div class="callout">
