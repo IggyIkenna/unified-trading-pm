@@ -15,7 +15,7 @@ summary:
   "quality-gates"`/`pkill -f "vite"`/similar from ANY one agent`s Bash tool call — banned by RULES.md, but this is the
   4th confirmed occurrence of exactly this mistake happening anyway under time pressure — reaches the real
   /usr/bin/pkill unguarded and kills every slot''s identically-named process on this single shared VM simultaneously.'
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -35,7 +35,7 @@ priority: P0
 parent_epic: agent_operating_framework_master
 source: "Discovered via a 26-agent Workflow investigation into the DeepSeek mid-task death cluster, 2026-08-21 (operator: 'find out the real reason and read more jsonl files ... get to the root cause')"
 assigned_vm: NA
-resolved_by:
+resolved_by: slot-12, 2026-08-21
 locked_by:
 execution_scope: local-only
 drift_direction: advance-code
@@ -46,6 +46,16 @@ context_scope:
     /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-21** — status=resolved, archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
+> archive-on-resolve rule. All 4 todos done: the PATH-prepended `pkill-guard-bin/{pkill,pgrep}` binary-wrapper fix
+> (`agent-orchestrator@2fe498b30f` + `unified-trading-pm@dbc5ac0bcd`, verified against the real exec+fresh-subshell
+> topology); `death_forensics.check_external_kill`'s regex widened to catch bare `pkill`/`killall` without an
+> explicit signal flag (`agent-orchestrator@31c90ca3c1`); recurrence-#3's stale "root-fixed" claim corrected with a
+> pointer to this doc. Durable content migrated to codex:
+> `/codex/05-infrastructure/per-tab-worktrees.md`'s "pkill/pgrep cross-slot-kill guard" section now describes the
+> current binary-wrapper mechanism (not the superseded shell-function one) and explains why the two earlier
+> approaches failed.
 
 # pkill-guard dead-on-exec — 4th recurrence of the cross-slot broad-pattern kill (2026-08-21)
 
@@ -177,14 +187,16 @@ round-robin-account-selection work in the same file.
       retry history). 2026-08-21 live re-verification (separate session, before re-enabling codex-luna): both wrapper
       files confirmed present + executable on the shared top-level `unified-trading-pm` checkout every slot spawn
       resolves against, and `dbc5ac0bcd` confirmed an ancestor of that checkout's HEAD too. Todo fully closed.
-- [ ] [INFRA] P2. `death_forensics.check_external_kill`'s regex (`server/death_forensics.py`) requires an explicit
-      `-9`/`-KILL`/`-SIGKILL` token to flag a kill/pkill EXECVE record as suspected — a bare `pkill -f "<name>"`
-      (default SIGTERM, no such flag) is structurally invisible to it. Widen the regex to also flag a bare
-      `pkill`/`killall` invocation with a name/`-f` pattern (any signal, including the implicit default), since that
-      is exactly the recurring incident shape this checker exists to catch.
-- [ ] [DOC] P3. Once the real fix lands, re-verify recurrence-#3's own resolution note is corrected (it currently
-      reads as fully closed) — either supersede it explicitly or add a pointer here so a future reader doesn't trust
-      the stale "verified live" claim.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-21** — `agent-orchestrator@31c90ca3c1`. Widened `_EXTERNAL_KILL_ARGV_RE` so
+      `pkill`/`killall` match UNCONDITIONALLY (with or without an explicit signal flag) — `kill` itself stays
+      gated on an explicit `-9`/`-KILL`/`-SIGKILL` since a bare `kill <pid>` targeting one already-known PID is a
+      common, benign operation not worth flagging broadly, unlike pkill/killall's inherently pattern/name-based
+      mass-kill shape. 3 new tests (bare pkill detected, bare killall detected, bare kill still NOT flagged — locks
+      in the asymmetry); full quality-gates.sh green.
+- [x] ✅ [DOC] P3. **DONE 2026-08-21** — added a `🔴 CORRECTION 2026-08-21` banner to
+      `plans/archive/issues/pkill_broad_pattern_vite_cross_slot_kill_recurrence3_2026_08_14.md` explaining exactly
+      why its "root-fixed" claim was wrong (verified same-shell sourcing, never survival across `exec`-into-`claude`
+      + a fresh subshell) and pointing to this doc as the one that actually closes it. Shipped alongside this edit.
 
 ## Progress Log
 
