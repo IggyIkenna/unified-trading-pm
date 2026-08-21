@@ -218,3 +218,4 @@ used).
   1000L-cap class of finding: "splitting a plan is an operator-gated planning decision per CLAUDE.md, not a
   mechanical trim"). Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; sole open item still needs either splitting `defi_track01_per_instrument_and_canon_id_2026_07_24.md` under its own line cap or an operator-ruled `check_line_caps.sh` carve-out — both operator-gated per this corpus's established precedent. Doc stays `assigned_vm: NA`.

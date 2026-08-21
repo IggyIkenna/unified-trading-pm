@@ -162,3 +162,4 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; the 2 remaining open items (auto-escalate skip-to-park design call; a verification item gated on that) stay genuine judgment/design work per the 2026-08-17 verdict. Doc stays `assigned_vm: NA`.

@@ -840,3 +840,4 @@ code.
   spec out to `/plans/active/issues/pnl_true_native_staking_return_spec_2026_08_20.md` — this doc hit its 1000-line
   hard cap. Spec is SPEC ONLY, not yet reviewed/approved, stays under this doc's standing OPERATOR GATE. The open
   todo it documents (line ~774, Option B) stays tracked HERE, not in the spec doc.
+- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; sole open item (Option B, the FX-noise-isolated true-native-staking-return metric) remains under the doc's own standing `## OPERATOR GATE` (3-lens money-path review required before any accrual/NAV change ships) — the implementation spec was split out 2026-08-20 to `pnl_true_native_staking_return_spec_2026_08_20.md` for line-cap reasons, but the open todo and its gate stay tracked here. Doc stays `assigned_vm: NA`.

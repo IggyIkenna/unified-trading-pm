@@ -547,3 +547,4 @@ mode-threading residual and `[DESIGN] P3` completion-signal items remain genuine
   unresolved ownership ("whichever owns the IS catalogue backfill scheduling"). Multiple prior audits
   (2026-07-30/08-04/08-07) reached KEEP-NA on this same basis. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; sole open item (`[DESIGN] P3`, IS-catalogue-completion-signal retry-sweep) remains an explicit lower-priority nice-to-have with no concrete done-when and unresolved ownership, unchanged since 2026-08-09. Doc stays `assigned_vm: NA`.

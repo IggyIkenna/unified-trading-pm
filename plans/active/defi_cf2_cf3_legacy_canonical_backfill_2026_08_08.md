@@ -134,3 +134,4 @@ todos/plans or a documented reason it still can't be scoped.
   in this doc's own "Codex SSOTs" section but missing from context_scope) and
   `reshape_bybit_futures_chain_glued_to_hive_2026_07_13.py` (the concrete file the doc's own todo 3 names as the
   relabel-precedent pattern to cite, resolved from its `reshape_*_2026_07.py` glob reference).
+- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; all 6 open todos are still the scoping pass itself (re-run CF-audit, determine path shapes, size the work, confirm writer/reader conflict, split into dispatch-ready child plans, close the loop on the original todo) — none is a bounded fact yet per the doc's own repeated verdicts since 2026-08-08/09. Doc stays `assigned_vm: NA`.
