@@ -32,6 +32,8 @@ context_scope:
     unified-trading-pm/scripts/dev/slot-git-status-report.sh,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
@@ -96,7 +98,7 @@ The monitoring gap itself is unfixed: `slot-git-status-report.sh`'s slot-0 branc
       of `unified-trading-pm/scripts/dev/slot-git-status-report.sh` (around the `if slot_in_filter "0"` block) — a
       DIRTY or untracked-files verdict on a bare root repo should page the same way FF-pull-starvation or stash-pile
       regrowth already does. Extend `classify_repo`'s slot-0 call site, not the numbered-slot one. —
-      unified-trading-pm@0ace3cb194
+      unified-trading-pm@3ab65adb7e
 - [ ] [AGENT] P2. Once the alert lands, re-verify CLAUDE.md's slot-0 line (already corrected this session to
       "reported not enforced every 5 min") reads as accurate again — flip back to describing real enforcement only
       after the alert path is live and proven (at least one real DIRTY-slot-0 page observed).
@@ -128,7 +130,8 @@ The monitoring gap itself is unfixed: `slot-git-status-report.sh`'s slot-0 branc
   marker-clear-then-re-fire on a fresh episode, all 6 non-dirty states never firing, independent per-repo
   alerting across a multi-repo sweep, and the watchdog-off toggle. All 7 pass; re-ran the full
   `test_slot_git_status_*.bats` sibling suite (37 tests) to confirm zero regressions. Shipped:
-  unified-trading-pm@0ace3cb194. **P2 remains open and correctly gated** (per slot 5's note above — needs BOTH P1
+  unified-trading-pm@3ab65adb7e (SHA rewritten by subsequent rebases — see the checkbox above for the
+  latest). **P2 remains open and correctly gated** (per slot 5's note above — needs BOTH P1
   landed [now true] AND a first real DIRTY-slot-0 page observed in production, which hasn't happened yet since
   this is a new capability with no live trigger so far) — next worker/watcher on P2: do not flip it until an
   actual bare-root DIRTY page has fired and been confirmed in the AO dashboard/Slack.
