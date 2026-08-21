@@ -38,8 +38,8 @@ drift_direction: advance-code
 # Session checkpoint — 2026-08-21 walkthrough coordinator
 
 **Published artifacts (STABLE URLs — republish the same file path, or pass `url` from another session):**
-API Reference → https://claude.ai/code/artifact/ccc4566d-4560-4153-9eaf-fe17100c02ad ·
-Integration Guide → https://claude.ai/code/artifact/952680c2-2bda-4735-b298-8e99988896f6
+API Reference → https://claude.ai/code/artifact/98ca8a91-7cd1-442c-aed6-532f3df701fc ·
+Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-443a968ff8d4
 
 ## In-flight lane table (state at checkpoint)
 
