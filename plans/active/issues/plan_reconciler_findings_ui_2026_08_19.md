@@ -136,3 +136,11 @@ _Filled in at STEP 7._
   `ao_singleton_agent_kind_dedup_kills_concurrent_tranche_workers_2026_08_20.md`. Since the dispatch is
   unambiguously terminated (archived, will never resume to unlock this doc itself), clearing now matches the
   2026-08-15 operator ruling's underlying intent even though the literal `exit_reason` differs from the precedent.
+- **na-eligibility-audit 2026-08-21 (ui tranche)**: KEEP-NA, valid — process/tracking doc for an interrupted
+  `/plan-reconcile ui` run (dispatch `agt-c82f06` killed 18min in by the AO singleton-dedup bug filed above, before
+  its Coverage/Flips/Contradictions/Doc-drift/Hygiene/Codex/Archive/Refuted sections ever populated). 0 open
+  `- [ ] [TAG] P<n>.` checkboxes — only 2 carried-forward "Filed" prose notes, both genuinely still open (the P0
+  finalize doc's dispatch-inactivity check; the context-scout script bug, outside `plans/**`). Not archivable (the
+  run never completed its actual analysis). Correctly `assigned_vm: NA` / `execution_scope: local-only` — a
+  meta/tracking artifact, not AO-eligible content; re-running `/plan-reconcile ui` to actually finish this pass is
+  that skill's own job, not a todo tracked in this doc. No reclassification.
