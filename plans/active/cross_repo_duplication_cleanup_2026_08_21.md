@@ -108,11 +108,11 @@ Three audit findings collide with plans that already own those files. Per the fi
 
 - [ ] [AGENT] P0. Delete `unified_api_contracts/internal/ml_backup.py` — a 742-line checked-in backup file inside the
       SSOT contracts package. Verify zero importers first (grep + lazy re-export map in `internal/__init__.py`).
-- [ ] [AGENT] P0. Collapse `canonical/domain/bookmaker_registry.py` and `canonical/domain/sports/bookmaker_registry.py`
+- [x] ✅ [AGENT] P0. SHIPPED unified-api-contracts@e9bc03a915 — DELETED outright (zero importers) rather than shimmed; the no-shims gate rejected the shim. Also fixed a real double-dot relative-import bug in `sports/bookmaker.py`. Original: Collapse `canonical/domain/bookmaker_registry.py` and `canonical/domain/sports/bookmaker_registry.py`
       — 867 vs 868 lines with **1 differing line**. Keep one canonical definition, re-export from the other path.
-- [ ] [AGENT] P1. Delete `internal/domain/features_sports/storage.py` — shasum-identical, zero-importer copy of
+- [x] ✅ [AGENT] P1. SHIPPED unified-api-contracts@e9bc03a915 — the one test importer was repointed to `internal/sports.py` first. Original: Delete `internal/domain/features_sports/storage.py` — shasum-identical, zero-importer copy of
       `internal/sports.py`; its sibling `__init__.py` docstring already says the real storage types live elsewhere.
-- [ ] [AGENT] P2. Reconcile `internal/risk.py` (1,061 lines) against `internal/domain/risk_service/risk.py` (579
+- [x] ✅ [AGENT] P2. SHIPPED unified-api-contracts@e9bc03a915 — consolidated, keeping the 2 risk_service-unique classes local. Original: Reconcile `internal/risk.py` (1,061 lines) against `internal/domain/risk_service/risk.py` (579
       lines, 532 differing) — determine which is authoritative and re-export rather than duplicate.
 
 ### features-service
@@ -322,3 +322,14 @@ entries) but `quality-gates.sh --no-fix` exits 1 on two violations, neither intr
 **Consequence**: UAC (-1,551) is unshippable, and because quickmerge's pre-flight refuses any repo whose path
 dependency is dirty, ml-service (-45) and execution-service (-4,378) are blocked behind it despite both being
 gate-verified.
+
+### Blocker corrections (2026-08-21, later)
+
+- [x] ✅ **STEP 5.96 resolved itself upstream — the escalation above is STALE.** Re-applying the edits against the
+      pulled content produced ZERO changes; another session had already fixed it. No operator action needed.
+- [x] ✅ **The 2 "failing" UAC tests were host-contention timeouts, not defects.**
+      `tests/test_cassette_orphan_checker.py` needs ~183s; the gate runs pytest with `--timeout=150`. Both passed in
+      isolation. At load average 94 they timed out; at load 27 the full gate passed clean (GATE_EXIT=0).
+- [ ] [AGENT] P2. **Two UAC tests sit above the gate's per-test timeout under load** — `test_cassette_orphan_checker.py`
+      (~183s vs `--timeout=150`). This surfaces as phantom red for anyone gating on a busy host. Either speed the scan
+      up or give that module a longer timeout.
