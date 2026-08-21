@@ -122,3 +122,13 @@ re-diagnosing from scratch the next time it pages.
   via direct `gh run view`/`gh api` evidence; confirmed `supersede-check` is working exactly as its own documented
   logic intends (this is a gap in that logic's coverage, not a bug in what it currently checks). Did not implement a
   fix or fully confirm the trigger mechanism — scoped as follow-up work for whoever picks this up next.
+
+**na-eligibility-audit 2026-08-21** (ci tranche wave 2, first audit pass — doc filed 2026-08-20): KEEP-NA, valid.
+All 3 open todos are investigation/design work, none worker-determinable alone: (1) confirm the trigger mechanism
+for the second same-sha run — the doc's own "Working theory" section states this explicitly ("NOT fully confirmed —
+first thing to verify... What actually triggered the second run... was not identified this session"); (2) design +
+extend `supersede-check` to recognize a later-same-sha success as suppressible — the doc itself flags a real race
+condition to think through (the retry run may not have finished when the cancelled run's notify step evaluates),
+a genuine design call, not a mechanical patch; (3) verify whether a second alert (`25589117`) matches the same
+pattern — an open investigation, explicitly "NOT independently confirmed" per the doc's own STATUS section. Low
+priority (P3, "cosmetic Slack noise, not a real pipeline break" per the doc's own framing). No `assigned_vm` change.

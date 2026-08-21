@@ -370,3 +370,9 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Sole open item (warm git-object cache for JIT-ephemeral runner checkouts, P1) has a mechanism already implemented and canaried (fast-checkout.sh) but with an unresolved live-filesystem-visibility mystery: deployed files show ABSENT to the runner's own `[ -f ]` check while a concurrent direct SSM check of the identical path shows them present with correct permissions. Several hypotheses (env-var propagation, systemd sandboxing, zombie process, mount inconsistency) were investigated and ruled...
+
+**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — unchanged since the 2026-08-18 verdict.
+Sole open todo (warm git-object cache for JIT-ephemeral runner checkouts, P1) still carries its own "Do NOT roll out
+until this is understood" constraint pending on-VM diagnosis of the deployed-but-no-op `fast-checkout.sh` mystery —
+a live-infra diagnostic judgment call, not a bounded worker-determinable outcome. No new facts since 08-18 beyond
+routine context-scout refreshes. No `assigned_vm` change.

@@ -459,3 +459,14 @@ a systemd unit needs host root / SSM on the old orchestrator VM (`i-0c9b283b31d6
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 458-line doc tracking a P1 fleet CI outage (2 then 3 stopped glue-runner systemd units blocking UAC->main + 11 dependent repos). Every P1 host-access, root-cause, writer-pool-fix, VM-naming-disambiguation, and deploy-sync-automation todo is resolved with SHA/verification evidence (last closed 2026-08-16). The sole open todo (line 147, INFRA P2) bundles a real watchdog-extension implementation task — extend/sibling-check `glue-runner-crash-loop-watchdog.sh` to catch cleanly-inactive AND...
 - **context-scout 2026-08-20**: re-verified context_scope (4 entries), unchanged.
+
+**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — erring toward caution per this pass's own
+ambiguity rule. Sole open todo (line ~147, `[INFRA] P2`, close the monitoring gap) bundles 2 distinct
+watchdog-extension asks: (a) alert when a `github-glue-runner-<repo>@glue-1.service` sits cleanly `inactive`/`dead`/
+`failed` for >N minutes while peers are active, (b) alert on a runner whose `journalctl` shows "Running job" with no
+matching "completed" line for >N minutes. Both are plausibly implementable (the doc even names the target script
+and host), but neither states N, and this exact doc's own history includes a real prior misdiagnosis from ambiguous
+VM naming — the 2026-08-07 and 2026-08-18 audits both tagged this `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` rather than
+extract it, and re-reading it fresh this pass I did not find a stronger basis to override that judgment than they
+had. Not extracting this round either — flagging the ambiguity again rather than force a RECLASSIFY, consistent
+with "when genuinely unsure, err toward KEEP-NA." No `assigned_vm` change.

@@ -209,3 +209,10 @@ question's blast radius has shrunk since `fleet_workflow_template_dedup_to_unifi
 rather than let it be reconfirmed a 7th time with no decision. Not duplicating that escalation here -- see that doc
 for the standing ask.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries)
+
+**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — unchanged, 8th consecutive confirmation.
+Item 1 (P3 SCRIPT, atomic fleet-wide rollout mechanism) remains an open-ended design question by its own first word
+("Consider whether..."), no decided target mechanism. Item 2 (P3 DATA, git-log-first diagnostic runbook for future
+recurrences) remains a standing conditional procedure, not itself a startable one-off task, and stays demonstrably
+live/correct (last exercised by a real recurrence 2026-08-06). `ag_closeout_audit_ci_parked_2026_08_16.md` already
+filed the operator-ruling ask for item 1 rather than re-litigating it here again. No `assigned_vm` change.
