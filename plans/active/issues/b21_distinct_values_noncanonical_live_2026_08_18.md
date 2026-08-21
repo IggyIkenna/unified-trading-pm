@@ -164,7 +164,7 @@ sports instrument_type finding above.
       `LADBROKES_UK`, `LEOVEGAS`, `LOWVIG`, `MYBOOKIEAG`, `SPORT888`, `WILLIAMHILL_US`) after confirming each as a
       genuine, permanently-accepted bookmaker fan-out spelling (not a writer bug). Repo: unified-api-contracts.
       Done-when: registry updated and this panel's sports venue count drops accordingly. Done 2026-08-21:
-      Evidence: unified-api-contracts@3767b5b754; deployment-api@34c0f373e7; quality-gates.sh passed in both repos.
+      Evidence: unified-api-contracts@3767b5b7; deployment-api@34c0f373; quality-gates.sh passed in both repos.
 - [ ] [DATA] P2. Extend the sports instrument_types accepted-exception registry (or fix the writer per the P1 item
       above) for the 33 remaining `ASIAN_HANDICAP_*`/`OVER_UNDER_*`/`ODDS` line-value variants once classified.
       Repo: unified-api-contracts. Done-when: registry updated or writer fixed.
