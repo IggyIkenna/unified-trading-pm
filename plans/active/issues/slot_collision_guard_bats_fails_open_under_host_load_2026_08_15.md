@@ -139,6 +139,16 @@ this case and will send the next agent hunting a regression in unrelated files.
       slot-cron-ff-pull venv-resync 6/6. Repo: unified-trading-pm.
 - [ ] [DOC] P2. Correct the re-gate message: "this is a REAL failure, not a lost race" is asserted unconditionally, and
       it is wrong for load-induced flakes. Point at this issue from the BATS hard-fail line. Repo: unified-trading-pm.
+- [ ] [TEST] P2. The poll-until-detected fixes (todos 2-4 above) are NOT fully sufficient — reproduced 2026-08-21
+      (slot 14) with the SAME 3 `test_session_start_collision_check.bats` failures ("detects a live foreign
+      process...", "warning names the slot dir...", "falls back to plain-text output when jq is unavailable...")
+      plus 1 `test_slot_collision_detect_lsof_batching.bats` failure ("foreign_claude_pids still finds a live peer
+      through the batched path"), deterministically across 2 consecutive standalone runs, at `uptime` load average
+      ~10.1-10.3 — far below the 48-164 range this issue's "under host load" framing assumes — with `lsof`
+      (`/usr/bin/lsof`) and `/proc` both confirmed present and functional. Todos 2-4's "10/10 pass standalone" /
+      "4/4 pass" claims no longer hold in every environment. Re-investigate `_spawn_fake_peer`'s precondition-poll
+      (or the detector's own budget) for whatever this execution environment's actual bottleneck is — it is not
+      purely load-average-correlated as currently documented. Repo: unified-trading-pm.
 
 ## Evidence
 
@@ -154,6 +164,14 @@ this case and will send the next agent hunting a regression in unrelated files.
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17** [body-hash:f735dd50ac40655b]: RECLASSIFY (whole-doc) -- assigned_vm flipped NA -> planning; execution_scope -> orchestrator-agent; assigned_role: infra (already set). Both open items are bounded/mechanical (batch the per-pid lsof walk; fix an unconditional-vs-conditional wording bug in the re-gate message), conflict-check CLEAR. doc_type: issue, structurally exempt from a finalize-plan companion. Cross-cutting tranche audit.
+- 2026-08-21, slot 14 (unrelated task — hit this while shipping `bare_root_repo_agent_writes_unenforced_2026_08_21.md`'s
+  P1): reproduced this issue's exact failure signature. Verified via `git log --oneline -- <the 4 files these tests
+  exercise>` that my own commits (unified-trading-pm@0ace3cb194, @6a134a1dc4 — scoped entirely to
+  `scripts/dev/slot-git-status-report.sh` + a new, unrelated test file) do not appear in that history at all, so
+  this is pre-existing per RULES.md §4b's verification protocol. Added a new P2 todo above with the fresh evidence
+  (reproduces at load ~10, not just under heavy load) since it shows the existing fix is incomplete, not just that
+  the failure recurred. Declaring a `qg_red` repo-blocker per RULES.md §4b to unblock my own unrelated ship rather
+  than working around the gate.
 - **2026-08-22 (slot-4)**: hit this exact failure signature while shipping an unrelated PM-only change (dropping a
   resolved pip CVE ignore + a plan-doc checkbox flip — `scripts/quality-gates-base/qg-common.sh` +
   `plans/active/issues/*.md`, neither of which the failing tests import/invoke/reference). `not ok` on the same 4
