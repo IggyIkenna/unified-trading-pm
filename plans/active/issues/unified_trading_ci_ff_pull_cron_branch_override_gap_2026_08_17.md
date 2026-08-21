@@ -321,3 +321,25 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
     EXISTS on GitHub despite being retired — which is why `_branch_state.py`'s "ref missing → fall back to
     main" check never fires (its own 2026-08-08 comment says so). Deleting that remote branch would remove this
     entire failure class at the source, but it is a shared-branch deletion and was not done here.
+- **FLEET-WIDE MEASUREMENT 2026-08-21** (`/api/fleet/git-health` via the sanctioned read-only SSM path, since the
+  endpoint is `AUTHED_DEPS` and 401s unauthenticated from a dev checkout): 74 slots, 1,619 repos, 4 hosts. The
+  `unified-trading-ci` row per host — **`MacBook-Pro` 12/12 clean** (this session's host; the "Mac.mynet" hostname is
+  ambiguous, the AO's own host label is the reliable one), **`hk` 16/16 clean**, **`ip-172-31-5-118` 33 clean + slot-0
+  diverged** (ahead 3 / behind 5), **`Mac` 11 diverged + 1 clean** (ahead 6 / behind 3, `drift_violation: true`).
+  So this doc's `[OPERATOR] P3` todo was right that two hosts were involved, but had them mis-scoped: `MacBook-Pro`
+  was the one reachable/fixed this session, and **`Mac`** is the one still stranded, plus the orchestrator VM's own
+  slot 0. Total still-stranded at measurement time: **12 slots across 2 hosts**.
+- **Why those 12 need no cross-host access** (supersedes the "either their own dispatch/heal cycle self-corrects or an
+  interactive session on those laptops reconciles" framing): the crontab entry self-updates
+  `scripts/dev/slot-cron-ff-pull.sh` from `origin/live-defi-rollout` before every `--all-slots` run, and the Step 2b
+  fix is already ON that branch (`24106a7374`) — no promotion to `main` required. Each stranded slot's `ahead=6`
+  commits are LDR-only cherry-pick duplicates that DO exist on `origin/live-defi-rollout`, so Step 2b's
+  `git rev-list HEAD --not --remotes=origin` guard scores them 0-unpushed and the heal fires; a clone whose tree is
+  genuinely dirty correctly refuses instead.
+- **DO NOT delete `unified-trading-ci`'s retired `origin/live-defi-rollout` yet** — recorded here because it looks
+  like the obvious root fix and is currently the WRONG move. Step 2b's safety guard proves "nothing at stake" by
+  finding the stranded HEAD's commits on some origin ref; that ref IS `origin/live-defi-rollout`. Delete it while any
+  slot is still stranded and the guard flips to `head_unpushed=6`, refuses, and strands those slots HARDER than
+  before. It is only a candidate once every host reports clean — and even then it is an operator call: the
+  2026-08-07 ruling (`unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`, archived) deliberately chose
+  "enforced single-branch + stop pushing to LDR" and reconciled the branches byte-identical rather than deleting.
