@@ -566,7 +566,14 @@ strategy's `ExposureAggregator` rather than keeping a duplicate local exposure v
 ## W15 — Security
 
 - [ ] [BACKEND] P0. **Security audit of every venue adaptor for vulnerabilities, especially DeFi.** On-chain write
-      paths carry irreversible consequences; this is not a documentation exercise.
+      paths carry irreversible consequences; this is not a documentation exercise. **Status 2026-08-21**: dedicated
+      plan `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md` — 8 of 12 audit phases
+      complete, most CRITICAL/HIGH findings already fixed and shipped (bridge/CCTP, lending, both staking/restaking
+      groups, Uniswap/Jupiter/Orca/Raydium swap paths, CCXT order-boundary validation). **Still open, blocking
+      close-out**: CCXT order idempotency + fail-closed credential init (2 todos), perp/CLOB hardening for
+      Hyperliquid/Aster/Pacifica/Bybit (4 todos), native-REST hardening for Bitfinex/Bitget/Kraken (4 todos), the
+      TradFi-gateway and sports-adapter audit phases (not yet started), and the plan's own close-out phase. NOT yet
+      done — see that plan's live Todos section, not this line, for current status.
 
 ## W16 — Triggers, latency and preflight
 
