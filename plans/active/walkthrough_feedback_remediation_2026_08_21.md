@@ -141,12 +141,17 @@ drift_direction: advance-code
       allowlist (900-line hard gate), and 4 blank-`asset_group` false/true positives in
       `cloud_run_job_registry.py`/`deployment_classification.py` (STEP 5.96 ratchet, baseline=0) — both predate
       this session (confirmed via `git show HEAD`/`git status`), neither touches prediction code.
-- [x] [BACKEND] P0. Resolve ALL 12 unresolved (venue, data_type) pairs from `venue_instrument_type_triples()` —
-      unified-api-contracts@f79cd93632 + evidence: `unresolved == ()` live (683 triples), asserted in
-      `test_venue_instrument_type_axis.py::test_unresolved_cells_are_now_empty`. DERIBIT (real chain-bundle, registry's own "only DERIBIT" comment) got venue-scoped `VALID_DATA_TYPES_VENUE_ADDITIONS` self-reference rows for futures_chain/options_chain.
-      **Finding**: BINANCE-FUTURES+BYBIT/futures_chain — ruling framed BYBIT as real-bundle too, but `FUTURE_BUNDLE_VENUES["cefi"]={DERIBIT,OKX}` + its own "NOT a sound discriminator — BYBIT lists futures_chain yet captures per-contract" comment + 2 pre-existing regression tests all prove BYBIT is per-contract — retired BOTH venues' stale RAW keys (BINANCE-FUTURES's own ruled pattern), not a fabricated bundle.
-      COINBASE-ETHEREUM/oracle_prices, FRAX/MORPHOVAULTS vault_share_price, JUPITER-SOLANA/dex_pool_swaps, SOLANA-NATIVE-SOLANA/lst_rates, AAVE-PLASMA/lending_indices — real declared capabilities missing/misrouted `PROTOCOL_CAPABILITIES` entries; registered `frax`/`morphovaults`/`jupiter`/`solana_native` + a venue-specific slug-override table in `venue_instrument_type_axis.py` (AAVE-PLASMA→aave_v3, mirrors `venue_adapter_keys.py` precedent).
-      FRED/ohlcv_1d+yield_curve — venue-scoped `VALID_DATA_TYPES_VENUE_ADDITIONS` rows. QG green (13441 passed) after updating the one regression test the fix deliberately invalidated (now `{CBOE,DERIBIT,FRED}`).
+- [ ] [BACKEND] P0. Resolve ALL 12 unresolved (venue, data_type) pairs from `venue_instrument_type_triples()`
+      (enumerated live 2026-08-21; 678 triples total now, walkthrough says 660/12): AAVE-PLASMA/lending_indices,
+      BINANCE-FUTURES/futures_chain, BYBIT/futures_chain, COINBASE-ETHEREUM/oracle_prices,
+      DERIBIT/futures_chain, DERIBIT/options_chain, FRAX-ETHEREUM/vault_share_price, FRED/ohlcv_1d,
+      FRED/yield_curve, JUPITER-SOLANA/dex_pool_swaps, MORPHOVAULTS-ETHEREUM/vault_share_price,
+      SOLANA-NATIVE-SOLANA/lst_rates. Fix pattern per pair: venue-specific roster override where the capability
+      is real (Era-B: chains are instrument_types whose data_type is `trades`), or relabel/retire the stale
+      pre-Era-B RAW-dict key — BINANCE-FUTURES's dated quarterlies map to leaf `future`, not a chain bundle.
+      Then the walkthrough's "12 unresolved, disclosed" line is deleted, not softened.
+      **DEFERRED — not attempted this pass**: needs a per-pair fix decision (venue-specific roster override vs.
+      relabel/retire stale RAW-dict key) across 12 pairs plus a measured re-run; budget did not extend to it.
 - [ ] [BACKEND] P1. Fix the CeFi instrument_type roster over-fan: ASTER (perp-only per the registry's own
       comment at `market_data_categories.py:2114`) shows Futures-chain/Options-chain buckets in the artefact
       because `venue_instrument_type_axis.py`'s CeFi path probes the full asset-group roster with no venue-level
@@ -973,23 +978,3 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   "Security, audit and client isolation" directive doesn't apply — that string only exists in other artefacts, left
   for their owning session. Also split a text-merge artifact next to the `ControlInstruction` todo (two paragraphs
   concatenated on one line) — no content altered.
-
-- 2026-08-21 — **platform-external-api-walkthrough.html client-voice + completion pass, checkpoint 1/2.**
-  Re-verified against `origin/live-defi-rollout` first: `instruments-service@0abd96f3bb`
-  (`enforce_asset_group_entitlement`, wired `external.py:94`/`:131`), `execution-service@0aa709f076`
-  (`_enforce_client_org_binding`) confirmed ancestor + wired. **MTDS's entitlement seam did NOT verify** —
-  `market_tick_data_service/api/entitlement.py` is untracked, uncommitted local-only diff in this checkout (local
-  HEAD == origin HEAD `802784de`), absent from origin entirely, though `platform-api-reference.html`'s own §01
-  already claims it landed — flagged to the operator in this session's report, not fixed here (out of scope).
-  Rewrote the auth callout (was "del auth"/"gate not a scope" forensics) into landed-model prose mirroring
-  `platform-api-reference.html` §01; MTDS stated only as its real router-gate today. Two more stale claims fixed
-  while sourcing that rewrite: `ChainKind` is 24 members incl. `PLASMA` (confirmed on origin) — added the table
-  row, deleted the now-moot "Correction"/"gap surfaced" pair; `VENUE_CHAIN_MAP`'s docstring fix
-  (`unified-api-contracts@4d78e2f0c5`, confirmed ancestor) already states wallet-grouping-not-coverage, so its
-  callout was restated plainly instead of re-warning about a closed gap. Verified `StrategyInstructionV2` is 16
-  members on origin (dispatch chain confirmed NOT routing to `_submit_control_instruction`) — fixed 5 stale
-  "15 of 15" counts to "15 of 16" across §02/§26, added the missing `KILL_SWITCH`/`FLATTEN_POSITION` table row,
-  fixed §09's Control row (was "not yet expressible" — false; the gap is dispatch, not the schema); repointed
-  §14's dead `transfer_coordinator.py` citation to `transfer_handler.py`. **Lost-and-redone**: the first 5 edits were silently reverted by a concurrent write between two edit batches
-  (Edit tool's drift warning + `git diff` caught it, the `walkthrough_file_shared_checkout_repeated_content_loss_
-  2026_08_20.md` mode) — redone before this ship. **Checkpoint 2/2**: swept remaining narration outside the skip lanes. Markers: 204 (was 205, baseline 247).
