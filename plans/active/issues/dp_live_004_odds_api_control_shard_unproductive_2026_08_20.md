@@ -35,7 +35,8 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-20
+last_updated: 2026-08-21
+archive_exempt: true
 locked_since:
 context_scope:
   [
@@ -81,10 +82,11 @@ quality gate before shipping.
 - [x] [CODE] P1. Ship and verify the fan-out control-buffer fix — `market-tick-data-service@9097603c86` is an
   ancestor of `origin/live-defi-rollout`; the required quality gate completed green with 11,108 passed, 28 skipped,
   1 xpassed, and 17 warnings.
-- [ ] [VERIFY] P1. Re-run the DP-LIVE-004 candidate check against the named live shard and confirm no new false
-  empty-confirmed rows. The supported `deployment-service` meta monitor was run read-only on 2026-08-21 but timed out
-  after 300 seconds with exit 124 before producing a terminal candidate verdict. Existing live-writer evidence remains
-  positive (fresh bookmaker-fanout objects and manifest rows), but this verification is still open.
+- [x] ✅ [VERIFY] P1. Re-run the DP-LIVE-004 candidate check against the named live shard and confirm no new false
+  empty-confirmed rows — `deployment-service`'s production `check_live_capture_productivity` reader ran in dry-run mode
+  against `mtds-live-sports-odds-api-odds-20260816-145019` on 2026-08-21. The VM was RUNNING in `asia-northeast1-c`;
+  its `ODDS_API/odds` group had `last_captured_at=2026-08-21T02:20:50.647175+00:00` via bookmaker fan-out, 30
+  bookmaker groups were also fresh, and the checker returned `FIRED=[]` with exit code 0.
 
 ## Progress Log
 
@@ -92,3 +94,11 @@ quality gate before shipping.
 `9097603c86` (including the connector marker, control-id tracking, healthy-empty suppression, and failure-preserving
 regressions). The read-only live candidate check was attempted but timed out before a terminal result; no fresh live
 pass is asserted.
+
+
+**2026-08-21 — verification `dp_live_004_odds_api_control_shard_unproductive-31eee91d7f93`.** Re-ran the production
+`deployment-service` DP-LIVE-004 reader in dry-run mode against the named shard. It resolved the running VM and its
+per-VM parquet shard, observed fresh captured bookmaker fan-out rows (including the `ODDS_API/odds` source group), and
+returned `FIRED=[]` with exit code 0. No new false `empty_confirmed` candidate was emitted.
+
+> Archive follow-up is intentionally separate from this cross-repo checkbox flip; archive after the active-path commit lands.
