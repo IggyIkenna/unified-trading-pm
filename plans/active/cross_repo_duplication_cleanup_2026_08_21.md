@@ -183,8 +183,12 @@ Three audit findings collide with plans that already own those files. Per the fi
       `unified-trading-system-ui/context/internal-contracts/schemas/events.py`. STEP 5.83 (ADAPTER CONTRACT-CALL
       REGRESSION RATCHET) scans the whole workspace, not one repo, so with `context/` deleted the step hard-fails in
       EVERY repo's gate — measured: it failed execution-service's otherwise-green run (its own gate body passed,
-      552s). Remove those two baseline entries in the same change that deletes `context/`. Removing entries LOWERS the
-      ratchet, which is the permitted direction. `check_runbook_execution_owner.py` also references the path — check it.
+      552s). CORRECTED PROCEDURE: the baseline header states "DO NOT manually edit; the file is auto-generated" — the
+      sanctioned fix for a deleted file is `check_adapter_contract_regression.py --regenerate-baseline` run FROM A
+      KNOWN-GOOD HEAD. Do NOT regenerate while other repos carry uncommitted work: that would bake other sessions'
+      in-flight state into a shared workspace-wide ratchet and mask real regressions. Correct sequencing — land the
+      `context/` deletion, wait for a clean tree, then regenerate and land the baseline in one change.
+      `check_runbook_execution_owner.py` also references the path; check it too.
 
 
 - [ ] [OPERATOR] P0. **features-service and e2e-testing are coupled through the filesystem, and it broke 42 tests.**
@@ -204,7 +208,7 @@ Three audit findings collide with plans that already own those files. Per the fi
       Fix: have each wrapper re-export the shared symbols so the loaded module's namespace is unchanged. Do NOT land the
       e2e-testing change before this, or features-service goes red.
 - [ ] [OPERATOR] P1. **e2e-testing cannot commit — a pre-existing `git stash pop` conflict blocks it.**
-      `e2e-testing/docs/VM_BACKFILL_GUIDE.md` is `UU` with live the git "Updated upstream" / "Stashed changes" marker pair
+      `e2e-testing/docs/VM_BACKFILL_GUIDE.md` is `UU` carrying a live git conflict-marker pair
       markers, predating this session and owned by whoever holds that stash. Git refuses to commit ANY path while an
       unmerged entry exists, so this plan's e2e-testing work (-987 lines, gate green) is complete but unshippable.
       Related signal: 122 stash entries in this slot's `unified-trading-pm` checkout.
