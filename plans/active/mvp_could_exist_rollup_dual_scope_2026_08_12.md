@@ -26,8 +26,8 @@ related:
 created: "2026-08-12"
 last_updated: "2026-08-12"
 parent_epic: instruments_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 5
@@ -602,3 +602,14 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
   name as if it were an open active doc; worth a human check on whether todo 7 is now unblocked, not resolved here
   (out of this skill's scope to edit todo prose).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): RECLASSIFY (whole-doc), `assigned_vm: NA
+  → planning`. Sole remaining open todo ("Transition compat cleanup") is now unblocked (the 2026-08-19 plan_reconciler
+  correction confirmed its blocking regression, `data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`, is
+  `status: archived`/resolved) and has a fully-specified done-when (fresh rollup run produces the new dual-scope blob
+  shape for every `_DEFAULT_SERVICES` entry per a live GCS read citing object generation/timestamp, fallback code
+  deleted, full test suite green) — no design/judgment call remains, purely execution against an already-decided
+  design. Conflict-check: grepped active `assigned_vm: planning` docs for `data_status_rollup_worker`/rollup-compat
+  scope; the 2 hits found (`data_status_tab_and_downloads_remediation_2026_06_16.md`,
+  `infra_ops_residual_migration_verification_2026_07_24.md`) touch the same file for unrelated bugs (a beta-mode
+  exception-handling fix and a missing-`unique_instruments`-precompute fix respectively), not this todo's scope —
+  clear.

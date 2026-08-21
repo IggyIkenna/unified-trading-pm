@@ -104,17 +104,20 @@ superseded_by:
       path during the loss windows (`~19:00-19:32` local, 2026-08-20) — `ps aux` during the incident showed 16
       claude-matching processes with this slot's cwd; identify which, if any, ran a git write operation against this
       specific file.
-- [ ] [BACKEND] P1. **Add a pre-write safety snapshot for agent-authored client-artefact edits** — before a
-      single-file structure-pass agent begins editing a large, contested file, snapshot its current state
-      (content-hashed, timestamped) to a location outside the shared working tree, so a repeat of loss (2)/(3) has a
-      designed recovery path instead of a lucky scratchpad find.
+- [x] ✅ [BACKEND] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` item 1
+      (na-eligibility-audit 2026-08-21, cross-cutting tranche). **Add a pre-write safety snapshot for
+      agent-authored client-artefact edits** — before a single-file structure-pass agent begins editing a large,
+      contested file, snapshot its current state (content-hashed, timestamped) to a location outside the shared
+      working tree, so a repeat of loss (2)/(3) has a designed recovery path instead of a lucky scratchpad find.
 - [ ] [REVIEW] P1. **Investigate whether `platform-external-api-walkthrough.html` specifically is unusually
       contended** — it is the largest of the five client artefacts (now ~839KB) and was the target of both losses (2)
       and (3); check whether size, edit frequency, or being the T7b reconciliation target made it a hotspot other
       files in the same commits were not.
-- [ ] [DOC] P2. **Add this incident to `/codex/05-infrastructure/per-tab-worktrees.md`** as a concrete case study
-      alongside the existing multi-agent-collision documentation, since the existing guidance did not anticipate
-      working-tree loss occurring independently of a git operation this session performed.
+- [x] ✅ [DOC] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` item 2
+      (na-eligibility-audit 2026-08-21, cross-cutting tranche). **Add this incident to
+      `/codex/05-infrastructure/per-tab-worktrees.md`** as a concrete case study alongside the existing
+      multi-agent-collision documentation, since the existing guidance did not anticipate working-tree loss
+      occurring independently of a git operation this session performed.
 
 ## Progress Log
 
@@ -144,3 +147,13 @@ session is not sustainable for the remaining artefact work still in flight.
   position/api/routes/risk.py, margin_health.py, pnl/api/main.py, pnl_series.py); walkthrough ~9 (cross-refs +
   external_instruction_api auth-pending note); architecture 1; ss-walkthrough ~6. All content-shaped snippets
   are derived-from-source and regenerate in the wave-2 re-derive.
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): RECLASSIFY (per-todo split). Extracted 2 of
+  4 open items (the pre-write safety snapshot mechanism, the codex case-study addition) to
+  `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` items 1-2 — both are bounded engineering/doc work with
+  no open design call. The other 2 items (determine the actual working-tree-reset mechanism; investigate whether
+  this specific file is unusually contended) stay on this doc, `assigned_vm: NA` — genuine root-cause investigation
+  with no predetermined outcome, requiring live process/`git` forensics on a still-contended checkout. **Note**: the
+  RECURRENCE entries immediately above (2026-08-21, slot-2) are independent confirmation of this issue doc's own
+  thesis — the SAME file-loss pattern struck the actual walkthrough HTML files days after this doc was filed,
+  reinforcing that todo 1 (root-cause the reset mechanism) and the extracted safety-snapshot item are not
+  hypothetical.

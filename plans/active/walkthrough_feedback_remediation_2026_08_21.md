@@ -313,3 +313,17 @@ fresh same-day run; then the re-audit todo."
   operator input rather than flipped unsafely. Todos 2 (venue-set convergence), 4 (PredictionMarketCategory
   deletion), 5 (12 unresolved triples), 6 (ASTER roster over-fan) each need their own focused multi-file pass —
   left DEFERRED, not silently skipped; see inline blocker notes under each todo.
+
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — re-read against current
+  HEAD (16 open todos, down from 19 at plan creation via the T1 registry-cluster pass above). Consistent with its
+  entire family: all 5 sibling `code_readiness_t1-t5` tranche plans it overflows from are ALSO `assigned_vm: NA`,
+  and this doc explicitly carries "Dispatch prompts — local worktrees (paste one per Claude session)" — the
+  designed consumption model is an operator pasting per-cluster prompts into manually-launched local interactive
+  sessions (the `code_readiness_five_agent_coordinator_2026_08_19.md` pattern), not AO backlog dispatch.
+  Reclassifying this one doc out of its whole family would break that choreography (wave 1a-1d parallel / wave 2
+  gated after) without a corresponding change to its 5 siblings, which is out of this doc's own scope to decide
+  alone. **Note on this pass's own process**: this doc is under heavy concurrent editing (a real T1 pass landed
+  between this audit's first read and its ship attempt); the ship script's autostash/quarantine replay briefly
+  reverted this file to its pre-audit-session content mid-push (self-inflicted corruption, not a content defect)
+  — caught before shipping by re-diffing against a fresh `origin/live-defi-rollout` fetch rather than trusting the
+  script's own recovery output, and rebuilt from the current origin content plus only this note appended.

@@ -184,7 +184,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
 - [x] ✅ [PLAN] P2 (superseded). `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@1cfe7ad15. `workspace-constraints.toml` confirmed `aiohttp>=3.14.1,<4.0.0`. **Big
       finding**: the successor `execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md` was NOT just
-      "unblocked" — it was ALREADY DONE by another session (execution-service@9ce159a7, 2026-07-27 20:40 UTC, ~1h before
+      "unblocked" — it was ALREADY DONE by another session (execution-service@e00152b6, 2026-07-27 20:40 UTC, ~1h before
       this pass started) following the §5-RESOLVED #18/19 gate-lift. Archived BOTH docs together (the successor too —
       its sole todo was fully complete, archiving it alone would have left a done-but-unarchived doc). Both now at
       `plans/archive/issues/`.
@@ -716,7 +716,7 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     `UnderlyingTracker` is tested/used elsewhere but the repricer class itself has zero tests/callers (built, never
     wired in). **File as real work to wire in**: keep the module, open a new todo to integrate it into the live
     execution handler + add tests (MM delta-proxy repricing IS wanted). — **DONE 2026-07-28** —
-    `execution-service@89fbf99d1` (QG green, 626s, `.qg_last_passed_sha` verified == HEAD). Wired via a new
+    `execution-service@980a6ad0e` (QG green, 626s, `.qg_last_passed_sha` verified == HEAD). Wired via a new
     `execution_service/engine/quote_maintenance.py` (`QuoteMaintainer`), connecting the two things that already existed
     but were never joined: `execution_service.v2.handlers.QuoteHandler` (the typed dispatch point for strategy-service's
     `QuoteInstruction`, MARKET_MAKING archetypes) and `DeltaProxyRepricer` itself. `QuoteHandler.set_quote_maintainer()`
@@ -957,3 +957,7 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
   reconciliation, not bounded build work), consistent with the standing verdict.
 - **na-eligibility-audit 2026-08-17** [body-hash:38f6ffdd1b8045c3]: KEEP-NA, valid -- Reaffirmed KEEP-NA 3x (2026-07-30, 2026-08-04, 2026-08-07). Independently re-verified this pass by reading the full 957-line doc: all 4 remaining open items are cross-doc dependency checks -- perp_funding migration waiting on live SPOT VM completion plus an unresolved EXTENDED-STARKNET merge conflict; mvp_scope_catalogue_tagging waiting on batch1b (draft) to run; cryptovenue_equity_perps reporting that its Track 0 target doc genuinely still has Phase 3/4/1d-1f open regardless of Track 0's own status; colocated_feature_pipeline's item 1.5b gated on features_service_e2e_pipeline_test_2026_05_26.md reaching fully green (2 of 7 Track-1 todos there still open). This doc's own nature is judgment-based cross-doc reconciliation, not bounded execution.
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — re-affirms the 2026-08-17
+  pass. 3 open items remain, all cross-doc dependency/staleness checks against OTHER docs' live state (a July-vintage
+  migration tracker verifying successors' status, not bounded execution). Doc's own nature (judgment-based archival
+  reconciliation) unchanged.
