@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, iam, ssm, aws, access-denied, infra]
 related: [/plans/active/issues/ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md]
 created: "2026-08-09"
-last_updated: "2026-08-16"
+last_updated: "2026-08-21"
 author: slot-5 (data_engineering)
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -88,11 +88,16 @@ on shared AWS infra, not something to self-grant.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Grant `ikenna-worker` `ssm:SendCommand` + `ssm:GetCommandInvocation` on
-      `arn:aws:ec2:ap-northeast-1:427895769566:instance/i-0c9b283b31d6b5ca7` (or diagnose why it's currently missing —
-      may be a broader policy gap affecting other worker identities too) so `/check-agent-orchestrator` works from this
-      checkout. Verify with `bash agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` after the grant —
-      expect a fleet-wide summary instead of `AccessDeniedException`.
+- [ ] [INFRA] P2. Per D4 ruling (2026-08-21, ATTEMPT-THEN-ASK): attempt to grant `ikenna-worker` `ssm:SendCommand` +
+      `ssm:GetCommandInvocation` on `arn:aws:ec2:ap-northeast-1:427895769566:instance/i-0c9b283b31d6b5ca7` using this
+      slot's own existing self-service AWS identity/access (apply the already-ruled codebuild grant + scoped SSM
+      grant per the IAM self-service rule; also fix the credential-resolution path this doc documents). If a genuine
+      wall is hit (this identity cannot grant IAM policy to another IAM user), escalate with ≥2 options: A) operator
+      grants the SSM policy directly to `ikenna-worker` [recommended — matches every prior confirmation's finding that
+      `ikenna-worker` cannot self-inspect or self-grant]; B) route AO status checks through a different self-service
+      identity that CAN grant/hold this policy. Verify with
+      `bash agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` after any grant — expect a fleet-wide
+      summary instead of `AccessDeniedException`.
 
 ## Progress Log
 
@@ -235,3 +240,8 @@ on shared AWS infra, not something to self-grant.
   (fingerprint match: byte-identical `AccessDeniedException`/`ssm:SendCommand`/`ikenna-worker` evidence against the SAME
   instance ARN `i-0c9b283b31d6b5ca7`, already cross-linked bidirectionally via `related:`, now also carries this doc's
   14 independent confirmations) and the self-service-identity codex SSOT both docs' investigations turn on.
+
+**2026-08-21 — ruling D4 (AWS access for worker identities)**: ATTEMPT-THEN-ASK — apply the already-ruled codebuild
+grant + scoped SSM grant from this slot's AWS identity (IAM self-service rule); fix the credential-resolution path.
+Only if AWS admin is genuinely absent here, escalate. Source:
+/plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

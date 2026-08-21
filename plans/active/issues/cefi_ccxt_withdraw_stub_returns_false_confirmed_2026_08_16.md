@@ -25,6 +25,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-16
+last_updated: "2026-08-21"
 author: interactive-session
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
@@ -308,3 +309,9 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries) — added `engine/transfers/wiring.py`,
   the new bootstrap-wiring module created by this doc's own P1 fix (`build_transfer_wiring(config)`), the file the
   still-open wiring todo now targets.
+
+**2026-08-21 — ruling D12 (CEX execution credentials)**: OPERATOR-RULED 2026-08-21 — 'check Secret Manager, we have
+these': VERIFIED in GSM (central-element-323112): binance-trade-api-key/-secret, bybit-trade-api-key (+bybit-api-secret;
+bybit-trade-api-secret ABSENT), exec-<client>-okx-api-key/-secret/-passphrase x9, deribit-testnet-write-*,
+bybit-testnet-trade-*. Now EXECUTABLE: wire place_order() + verify the withdraw path on testnet. Source:
+/plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

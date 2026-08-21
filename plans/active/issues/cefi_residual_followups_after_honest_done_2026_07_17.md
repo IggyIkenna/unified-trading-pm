@@ -49,7 +49,7 @@ related:
   # cefi_mtds_writer_raw_symbol.../phantom_captures_cefi in the "Residuals" section's own item detail lines).
 created: 2026-07-17
 author: unknown
-last_updated: 2026-07-30
+last_updated: 2026-08-21
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -231,14 +231,14 @@ pairs stay honest-unresolved (reported, never guessed).
       `DERIBIT:OPTION:BTC-USD@INV-20190405-3250-C`), dated-FUTURE **9,091** decompose per-expiry (`adausd_200925` →
       `BINANCE-DELIVERY:FUTURE:ADA-USD@INV-20200926`); PERPETUAL 5,411 / SPOT_PAIR 8,405. All quote-bearing (gate's
       0-missing-quote assertion). (repo: instruments-service)
-- [ ] [OPERATOR] P2. **586 marker-less `VENUE:PERPETUAL:BASE-QUOTE` catalogue rows** (blueprint open-q #19, measured
-      2026-07-17: BITGET-FUTURES 275 / BINANCE-FUTURES 153 / COINBASE-FUTURES 107 / BINANCE-DELIVERY 27 /
-      BITFINEX-FUTURES 16 / OKX-SWAP 5 / BYBIT 3 — NOT just the 16 BITFINEX rows the blueprint recorded). Deliberately
-      OUT of scope of the Phase -1 fix (the gate is `0` `:PERP:`, not `0` marker-less) — rewriting them is a 586-row
-      blast radius that needs its own decision + drain. **2026-08-15 (`cefi_residual_ao_dispatch_2026_08_15.md`
-      todo 1)**: checked whether operator decision #4 above already covers this — it does not (decision #4 is the
-      general target; this item's own carve-out sentence, written in the same session, explicitly requires a separate
-      decision + drain). Blocked question filed: `BLK-96fd40c0`. Retag when answered. (repo: instruments-service)
+- [ ] [DATA] P2. Per D46 ruling (2026-08-21, autonomous-dispatch authority): rewrite now — rewrite the 586
+      marker-less `VENUE:PERPETUAL:BASE-QUOTE` catalogue rows (blueprint open-q #19: BITGET-FUTURES 275 /
+      BINANCE-FUTURES 153 / COINBASE-FUTURES 107 / BINANCE-DELIVERY 27 / BITFINEX-FUTURES 16 / OKX-SWAP 5 / BYBIT 3)
+      to the canonical decomposed form, using the already-proven catalogue-decompose pattern (the same drain-gated
+      rewrite mechanism as Phase 1's parquet content backfill — the pattern is already proven multiple times in this
+      doc; marginal cost is low). Repo: instruments-service. Done when: a fresh catalogue read shows 0 marker-less
+      `VENUE:PERPETUAL:BASE-QUOTE` rows for these 7 venues, snapshot-first and idempotency-reverified per the drain
+      HARD RULE. (Supersedes the earlier `BLK-96fd40c0` blocked question — now decided.)
 
 ## Phase 0a — Contract locks (design lock, before any code)
 
@@ -789,3 +789,7 @@ pairs stay honest-unresolved (reported, never guessed).
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms 2026-08-19 verdict; 5 open items unchanged (586
   marker-less catalogue rows OPERATOR-gated, features raw-schema design gap + dependent OOM-bound item, Parquet
   CONTENT backfill + Progress-Log-discipline sibling, both citation-fixed to the live in-flight fleet doc).
+
+**2026-08-21 — ruling D46 (586 marker-less CeFi rows)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+AUTONOMOUS_AGENT_RULES rule 2): Rewrite now — pattern already proven multiple times; marginal cost is low. Source:
+/plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

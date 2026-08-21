@@ -29,6 +29,7 @@ context_scope:
     market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py,
   ]
 created: 2026-08-12
+last_updated: "2026-08-21"
 author: claude-agent
 source: "2026-08-12 continuation session, verifying the liquidations re-derive's manifest outcome"
 priority: P0
@@ -244,10 +245,10 @@ days.
 - [x] [SCRIPT] P0. Finding 3 — FIXED (see above): `market-data-processing-service@d5a0b6cdc5`, 4th re-derive VM killed +
       relaunched with the fix included.
 
-- [ ] [OPERATOR] P2. Decide whether to upgrade the Tardis subscription to "pro"/"business" tier — would let
-      instruments-service source `contractMultiplier` directly instead of depending on a hand-maintained UAC registry
-      that needs manual re-verification if a venue's face values ever change. Not urgent — the UAC registry is a
-      complete, correct, cited fix for the CURRENT known instrument set.
+- [ ] [OPERATOR] P2. DEFERRED-BY-DESIGN — per D45 ruling (2026-08-21, autonomous-dispatch authority): keep the free
+      Tardis tier; the UAC `cefi_inverse_contract_multipliers` registry is a complete, correct, cited fix for the
+      current instrument set and upgrading is not urgent. Revisit only if a new venue/instrument needs a face-value
+      not yet covered.
 - [ ] [SCRIPT] P0. Monitor the (relaunched) liquidations re-derive to completion, same 3-way verification rigor as every
       prior attempt in this batch (log counters + manifest `written_at` + GCS `last_modified` — a clean exit code alone
       has already proven insufficient multiple times this batch). Confirm zero non-zero-rc dates before calling this
@@ -431,3 +432,7 @@ uncommitted across a checkpoint boundary, even mid-task.
   doc's later root-cause work (SchemaContractNotFoundError routing, the 2-segment instrument_id bug) actually
   touched.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
+
+**2026-08-21 — ruling D45 (Tardis tier upgrade)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+AUTONOMOUS_AGENT_RULES rule 2): Keep free tier — the registry is a complete, correct, cited fix for the current
+instrument set; not urgent. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
