@@ -808,3 +808,5 @@ have moved; use the section index above to locate it.
 - **na-eligibility-audit 2026-08-17** [body-hash:931d4c9859cfad4a]: KEEP-NA-STALE (already-duplicated) — both open items cited to sports_satellite_ao_dispatch_batch10_2026_08_06.md and sports_taxonomy_p3_consumers_2026_08_08.md, both independently re-verified to exist and be status:active. 5 prior audit rounds agree, no drift.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA-STALE (already-duplicated) — reconfirmed, sole open item (§E
+  `[MODEL] P2`) still cited to `sports_taxonomy_p3_consumers_2026_08_08.md` (status:active). No drift.

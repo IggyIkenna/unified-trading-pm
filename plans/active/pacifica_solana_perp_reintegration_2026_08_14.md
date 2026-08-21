@@ -237,7 +237,11 @@ direct testing, not documentation-reading:**
       `True`, to unblock real live order placement. The signing code itself is scaffolded and tested
       (`execution-service@4aafcbda77`) — this todo is purely the credential-provisioning + go-live decision, a
       human-only step per the workspace's wallet-keys hard-stop.
-- [ ] [SCRIPT] P2. **New follow-up (surfaced 2026-08-20)**: give PACIFICA-SOLANA a real strategy-service position
+- [x] ✅ [SCRIPT] P2. **EXTRACTED 2026-08-21 (na-eligibility-audit, cefi tranche)** — bounded/deterministic (mirror
+      an already-established registry-population pattern for another USDC-only CeFi perp venue), conflict-checked
+      clear against the whole active corpus. Live todo now `cefi_satellite_ao_dispatch_batch23_2026_08_21.md`
+      (`assigned_vm: planning`, `status: active`) — tracked there, not re-worked here. Original text: **New
+      follow-up (surfaced 2026-08-20)**: give PACIFICA-SOLANA a real strategy-service position
       reader. `position_interface/capabilities.py::POSITION_READ_MODE_CAPABILITIES` has no `pacifica` entry (confirmed
       via grep) and Pacifica's USDC-only margin means the LST-address fallback can't rescue it either — so
       `position_read_mode_availability("pacifica")` returns "none" on batch/live/paper today, even though §F already
@@ -524,3 +528,11 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   `OrderStatus.PENDING`→`PENDING_NEW`/`OrderStatus.OPEN`→`NEW` enum-rename autofix; restored those to HEAD by name
   before shipping — not this task's scope). Shipped via quickmerge (`--agent`, scoped `--files`); landed
   `unified-api-contracts@88cd9f912e` on `live-defi-rollout`, ahead=0/clean confirmed post-push.
+
+- **na-eligibility-audit 2026-08-21** [cefi tranche]: RECLASSIFY-SPLIT — the §F strategy-service position-reader
+  follow-up (surfaced 2026-08-20) is bounded/deterministic (mirror an established registry pattern, no open design
+  call), conflict-checked clear against the whole active corpus, extracted to
+  `cefi_satellite_ao_dispatch_batch23_2026_08_21.md` (+ gated finalize twin), both `assigned_vm: planning`,
+  `status: active`. This doc stays `assigned_vm: NA` — its remaining item (§E, the Solana `wallet_private_key`
+  provisioning + `supports_live` flip) is CLAUDE.md's explicit human-only wallet-keys hard-stop, unaffected by this
+  extraction.

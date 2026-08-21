@@ -204,3 +204,9 @@ file an issue") already points here, but the reasoning is worth recording:
   scoping refinement of that same open question. Doc-only edit, no production query/write performed or proposed —
   still under standing "docs only, no writes" scope. Git state reverified this pass: `live-defi-rollout`,
   `ahead=0`, clean tree, HEAD=`361051cac189733a0a46061a784fdbdbbe9b662a`.
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, mixed verdict — re-verified, 4 open items. Item 1 ([OPERATOR], wait
+  for sibling VMs) stays a genuine time/dependency gate. Items 2-3 remain cited to
+  `sports_satellite_ao_dispatch_batch14_2026_08_16.md` todo 9 (citation only, no new action). Item 4 (blank-timeframe
+  investigation) is new since the 2026-08-17 marker (added same-day by the pre-compact passes above, after that
+  marker was written) — genuinely open-ended diagnostic/forensic work (histogram comparison against incident
+  windows, casing-split investigation), not a bounded worker-determinable outcome. Doc stays `assigned_vm: NA`.

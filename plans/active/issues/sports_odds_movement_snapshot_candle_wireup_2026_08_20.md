@@ -29,9 +29,10 @@ related:
 created: "2026-08-20"
 last_updated: "2026-08-20"
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
+assigned_role: data_engineering
 resolved_by:
 locked_by:
 depends_on: []
@@ -206,3 +207,13 @@ under that model.
   - **Still open, honestly**: live end-to-end verification against real production GCS/manifest (no `--dry-run` or
     real write was exercised in this remediation session either) — tracked as its own todo above, not claimed
     done.
+
+- **na-eligibility-audit 2026-08-21**: RECLASSIFY (whole-doc) → `assigned_vm: planning` — sole open todo is a
+  bounded, worker-determinable verification action (dry-run against a real date range, then a small `--force`
+  range for one date, verified via manifest read-back) with an explicit script + flags + verification method named.
+  Not a design/judgment call — the design (merge into one per-date worker, venue-sentinel discriminator) is already
+  shipped and reviewed per the Progress Log above. Conflict-check clear: grepped `plans/active/` for
+  `odds_movement_snapshot_driver`/this doc's own path — only cross-references (as evidence, not competing dispatch
+  claims) in `sports_taxonomy_p2_migration_2026_08_08.md` and `sports_taxonomy_p4_backfill_2026_08_08.md`, no
+  existing `assigned_vm: planning` doc claims this exact verification step. `doc_type: issue`, so no companion
+  finalize plan required.

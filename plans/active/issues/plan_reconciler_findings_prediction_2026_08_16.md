@@ -193,11 +193,18 @@ grace status fresh rather than assuming still-blocked; most are now outside the 
       authoritative) is now transparently corrected in place, not silently left. Not re-litigated further after 4+
       calendar days of exhausted escalation channels (2026-08-15 origin through today). `BLK-e7b0e8da` closed — no
       further action.
-- [ ] [DOCS] P3. `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md:395-397` — an `[OPERATOR] P1` todo
+- [x] ✅ [DOCS] P3. `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md:395-397` — an `[OPERATOR] P1` todo
       (historically scope a false-kill class via Cloud Logging, bounded to a query task) may be mistagged — the
       corpus's own established `[OPERATOR]` positive-test precedent suggests this could be AO-dispatchable.
       **RE-CHECKED 2026-08-16 (Phase -1)**: still grace-protected — target's last commit is now 20:56:37Z (a
       na-eligibility-audit cefi-tranche pass), <1h old at re-check time. Left open, not reclassified.
+      **RESOLVED 2026-08-21 (na-eligibility-audit, prediction tranche)**: the mistag question is moot — the same-day
+      na-eligibility-audit cefi-tranche pass this Phase-1 re-check saw land (20:56:37Z) WAS the RECLASSIFY-SPLIT that
+      extracted this exact item (the false-kill-class Cloud Logging query) into
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md`, which has since executed it: verdict REFUTED, with a full
+      `gcloud logging read` evidence chain (zero watchdog-kill-log hits, zero `instances.delete` audit-log hits for any
+      of the named VMs; all 4-5 dispatch events were confirmed genuine GCE SPOT `compute.instances.preempted`
+      operations, not the false-kill bug) — see that doc's own `[x]` checkbox + Progress Log. No further action.
 - [x] ✅ [DOCS] P3. `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md:188` — stale reference to
       `prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` at its pre-archive `active/issues/` path.
       **FIXED 2026-08-16 (Phase -1)**: this doc's frontmatter `related:` already had the correct archived path (a
@@ -316,12 +323,19 @@ substitution, no HARD-STOP governance area, no new measurement.
       matches an established extraction-batch pattern in this corpus (NOT a bug, confirmed by hunter), but carries an
       uncalled-out double-execution risk if both an interactive session and AO dispatch the same physical action
       concurrently. Noted for awareness, not fixed (no single correct owner to remove without a planning decision).
-- [ ] [DATA] P3. `mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md` — last Progress Log entry
+- [x] ✅ [DATA] P3. `mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md` — last Progress Log entry
       (2026-08-15) left a DEFI VM's terminal status unconfirmed; given every prior run in this doc completed in
       1-2.5h and it's now 2026-08-16, the VM has almost certainly finished and the still-open re-run todo may be
       resolvable via a single `EXIT_STATUS` check rather than a fresh launch. Not independently verified this run
       (operational VM-status check, outside this sweep's doc-reconciliation bounds) — actionable follow-up for
-      whoever picks up that todo next.
+      whoever picks up that todo next. **RESOLVED 2026-08-21 (na-eligibility-audit, prediction tranche)**: the
+      suggested `EXIT_STATUS` check was performed (repeatedly) by that doc's own later sessions — the target VM is
+      confirmed fully DELETED (not merely terminated), `EXIT_STATUS` never left the boot placeholder, heartbeat
+      sidecar + tee'd log stopped in the same ~10s window with no OOM/timeout/preemption signature reachable from
+      any surviving artifact (serial console unrecoverable post-delete). Investigation reached a genuine dead end for
+      this specific VM (documented in-doc), plus found+fixed a real registry gap (`pipeline-e2e-check-` prefix was
+      unregistered in `VM_PREFIX_TO_BUCKET`, now fixed `deployment-service@ef6cd90c`). The specific ask this finding
+      raised — check `EXIT_STATUS` rather than assuming — has been executed; no further action from this citation.
 
 ## Archive candidates (operator review)
 
@@ -571,3 +585,17 @@ in this same run.
   NA-ratchet self-reference, 2 pointers at OTHER docs' possibly-bounded items (not extractable from this doc), and 1
   genuine OPERATOR_QUESTION (batch11/phase_d double-execution risk). Doc stays NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, stale-items — closed 2 of the 9 open items with
+  hard evidence (both flipped `[x]` above): the `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` `[OPERATOR]
+  P1` mistag question is moot — the same-day 2026-08-16 na-eligibility-audit cefi-tranche pass this doc's own Phase-1
+  re-check observed WAS the RECLASSIFY-SPLIT that extracted it (to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md`),
+  which has since executed and REFUTED it with a full Cloud Logging evidence chain; the
+  `mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md` VM-status follow-up was independently
+  performed by that doc's own later sessions (VM confirmed deleted, investigation dead-ended, a real registry gap
+  found+fixed as a bonus) — the specific ask ("check `EXIT_STATUS`") is done. 9 open -> 7. Remaining 7 items
+  re-confirmed correctly non-dispatchable: cross-tranche routing pointers (tradfi dangling-refs, tradfi AG-closeout
+  orphan, corpus-wide NA-ratchet growth — none prediction-attributable, unchanged class of finding), 2 routed REVIEW
+  notes (cross-cutting close+archive pass still not created per a fresh check of `ag_closeout_audit_rollout_2026_07_25.md`;
+  the `instruments_remaining_work_audit_2026_07_10.md` D6 contradiction, out-of-tranche), and 2 awareness-only notes
+  with no single correct owner (batch11/phase_d double-execution risk; the `prediction_live_clob_depth_capture`
+  event-time-keying hedge, already correctly left as ordinary work not a doc-hygiene gap). Doc stays NA.

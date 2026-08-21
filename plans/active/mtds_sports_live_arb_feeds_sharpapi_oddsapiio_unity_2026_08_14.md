@@ -301,3 +301,6 @@ sports cell that we actually have a provider for.
   once the prerequisite doc resolves — 15 of 16 items are concrete build/port/test/deploy work with explicit DoDs, a
   strong future RECLASSIFY-whole-doc candidate at that point (item 14 keeps its normal [OPERATOR] VM-launch tag).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) — curated to the highest-value 6 (live-manifest-path codex anchor + build-target source paths + the prior WSFeedConnector gap issue) from the doc's original 8-entry source-only list; first scout pass.
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reconfirmed, gate prerequisite
+  (`venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`) re-verified still `status: active`, gate
+  genuinely still open. All 16 open items remain doc-level `gate_on_depends: true`-blocked. No drift.

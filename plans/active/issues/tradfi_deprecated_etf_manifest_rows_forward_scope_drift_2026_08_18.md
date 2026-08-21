@@ -129,3 +129,6 @@ recaptured on every subsequent run.
   multiple unresolved hypotheses) and 3 (fix + re-purge, gated on todo 1's unknown outcome) stay genuinely
   investigation/judgment work. Doc stays `assigned_vm: NA` — 2 of 3 todos remain genuinely NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Todos 1 (root-cause the forward capture path) and
+  3 (fix + re-purge, gated on todo 1) remain genuine open-ended investigation/execution work; todo 2's extraction to
+  `tradfi_satellite_ao_dispatch_batch18_2026_08_19.md` todo 1 stays current. `assigned_vm` unchanged.

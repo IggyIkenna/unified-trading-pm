@@ -104,6 +104,11 @@ is independently shippable, no need to clear all 925 in one pass.
 > shrinking the ratchet steadily, not perfection on the first pass.
 
 ## Progress log
+- **slot-8 2026-08-20 (continuation batch):** Removed 24 verified stale archived-plan `related:` pointers from five clean active plans after reviewing each archived target and confirming the referring document retained the durable evidence in its body. The live checker measured 606 citations (630 before this continuation), and `--update-baseline` lowered the ratchet from 608 to 606; the scoped archive-safety gate is clean and the corpus cleanup remains open.
+
+- **slot-8 2026-08-20 (ninth execution batch):** Removed 21 redundant archived-plan `related:` entries from four clean active plans after reviewing each archived target and confirming the referring document already retained the durable evidence or an existing codex/active replacement. The scoped gate is clean; live checker count and ratchet baseline are now 608 (629 → 608). The corpus cleanup remains open.
+
+- **slot-8 2026-08-20:** Batch 8 shipped in the satellite tracker: 22 archived-plan `related:` entries were removed or repointed across 10 active plans after direct target/status review; live checker and ratchet baseline are now 629, with the scoped gate clean. The corpus cleanup remains open.
 
 - 2026-08-17 (claude): rule sharpened in codex, ratchet built + wired into `quality-gates.sh` (`--only`-scoped, zero
   added cost on unrelated pushes), baseline seeded at 925. This doc filed as the tracked dispatch target — cleanup work

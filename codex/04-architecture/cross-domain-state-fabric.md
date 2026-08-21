@@ -412,6 +412,30 @@ of the mirror failure — code that exists, is tested, and is wired to nothing (
 `HealthFactorMonitor`, `OrderRecoveryEngine`, `PostgreSQLOrderPersistence`; plus `RedisStreamTransport`, which is real
 and has zero call sites).
 
+**`OrderRecoveryEngine` update (2026-08-20, later same day, `w_state_recovery_real_wiring_2026_08_20`):** its own
+two dependencies (`OrderBook`, `_VenueAdapter`) were themselves the stub layer that made wiring it in unsafe — real
+non-stub implementations shipped (`execution-service@458c70c48e`/`e856d72999`/`945d84d946`). It is STILL not wired
+into any live entry point, so it still belongs in this list, but the reason changed: it is no longer "fake
+dependencies would make wiring a false-success trap" but a real, deliberate, TRACKED prerequisite gap — nothing in
+the live order-submission path (`ExecutionOrchestrator`) durably persists order state anywhere, so
+`OrderRecoveryEngine`'s own `OrderBook` would be structurally empty at every real startup even though it is now
+genuinely correct code. See that plan's Phase 3 todo 1 + new Close-out prerequisite todo for the specifics; this is
+a `PostgreSQLOrderPersistence`-shaped gap one level up the stack, not resolved by this pass. The other three
+components in this list (`TransferCoordinator`, `HealthFactorMonitor`, `PostgreSQLOrderPersistence`) were outside
+this plan's scope and were not re-measured here.
+
+**Update (2026-08-21, `w_execution_orchestrator_oms_persistence_2026_08_20`):** the gap above is now a
+concretely-scoped, decided design, not an open question. Confirmed via full code read:
+`PostgreSQLOrderPersistence` (`execution_service/engine/live/persistence/postgresql.py`) already exists,
+already implements the `OrderPersistenceAdapter` protocol, and is already constructed by
+`_create_startup_order_recovery` — but every one of its 6 methods is a `NotImplementedError` stub. The write
+contract (which `OrderAdapter` calls write `create_order`/`update_order_status` and exactly where), the
+`oms_orders` Postgres schema, and the hot-path fail-open latency contract are all decided — see that plan's
+2026-08-21 Progress Log entry for the full spec. Implementation is tracked in a separate plan,
+`/plans/active/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md` — `OrderRecoveryEngine` stays on
+this mirror-failure list until that plan lands and confirms one shared `UnifiedOrderManager` instance backs
+both `OrderBook` (startup) and every live `ExecutionOrchestrator` (hot path).
+
 Three rules close it:
 
 - **R18 — gate-verified.** A declared capability with no reachable implementation FAILS the quality gate. On top, a

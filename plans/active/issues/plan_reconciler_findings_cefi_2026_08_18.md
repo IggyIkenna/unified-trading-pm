@@ -323,3 +323,6 @@ None — all 50 `parent_epic: cefi_master` docs were read in full (2 directly, 4
 
 - **2026-08-19 (plan_reconciler_dead_lock_sweep, automated)**: auto-cleared `locked_by:` — agent agt-421c89 confirmed reaped-stale, 28.5h old (>= 8.0h threshold). Dispatch `agt-421c89` confirmed `exit_reason="reaped-stale"` via AO's own AgentRow state (ruled 2026-08-15, `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` Option A). Cleared at 2026-08-19T06:46:33Z.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms 2026-08-19 verdict; sole open item (corpus-wide
+  epic-body regen, item 2 in Filed) stays a genuine coordination-timing judgment call (concurrent-session collision
+  risk), not worker-determinable today.

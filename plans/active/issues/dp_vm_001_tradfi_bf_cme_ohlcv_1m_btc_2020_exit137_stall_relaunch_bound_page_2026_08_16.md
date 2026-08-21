@@ -32,7 +32,7 @@ related:
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
-    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
+    /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md,
     /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
@@ -320,3 +320,7 @@ DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains gen
   remaining open todo (the `≤2/(vm-prefix,day)` relaunch-bound tightening policy question) is unchanged, genuinely
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
   operator-gated. `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open todo (the `≤2/(vm-prefix,day)`
+  relaunch-bound tightening policy question, converted from prose 2026-08-17) remains genuinely operator-gated; the
+  recurring `btc-2020` billing-block pages through 2026-08-18 are all already explained by the tracked P0 billing doc,
+  no new information. `assigned_vm` unchanged.

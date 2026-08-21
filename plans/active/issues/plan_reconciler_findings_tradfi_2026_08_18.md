@@ -447,3 +447,8 @@ this skill's. `assigned_vm` unchanged.
 
 - **2026-08-19 (plan_reconciler_dead_lock_sweep, automated)**: auto-cleared `locked_by:` — agent agt-15d58e confirmed reaped-stale, 8.0h old (>= 8.0h threshold). Dispatch `agt-15d58e` confirmed `exit_reason="reaped-stale"` via AO's own AgentRow state (ruled 2026-08-15, `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` Option A). Cleared at 2026-08-19T07:38:34Z.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. 0 checkbox todos on this doc itself (run-findings
+  artifact, not work-tracking). Note: one of the findings this doc's own Progress Log records (the
+  `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md` correction) has
+  since progressed further — that doc is now ARCHIVED (both todos closed, this pass), not just correction-marked.
+  `assigned_vm` unchanged.

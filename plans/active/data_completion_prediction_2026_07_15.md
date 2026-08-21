@@ -538,3 +538,10 @@ range never overlaps a still-in-flight per-market-only day).
   object-backed**, so item 4 is now flipped `[x]` citing that result (see the item's own updated text above for the
   full corrected counts). 14 open todos -> 13.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, valid — 13 open items re-verified live
+  (`grep -cE '^- \[ \]'` = 13, matches). Consistent with 8+ prior audit passes (07-30 through 08-20): this is a P0
+  cross-repo (unified-api-contracts + market-tick-data-service + market-data-processing-service) object-layer
+  migration whose remaining scope is a coordinated live-writer code ship, a pre-migration writer drain, a
+  registered-launcher VM walk, a content-verified prod-object delete, and 5 downstream-service (MDPS/features/
+  strategy/execution) C-walks — genuinely design/VM/delete-gated, none worker-determinable end to end. Not
+  re-litigated. Doc stays NA.

@@ -104,8 +104,8 @@ context_scope:
       backend choice fixes it. Rather than "fail closed" (skip emitting a completion event), the shipped
       approach: implement `OrderBook` correctly and real -- it DOES round-trip state whenever something
       writes to it (proven in `tests/unit/engine/test_order_recovery.py`) -- but do NOT wire
-      `OrderRecoveryEngine.run()` into `_run_live_async`'s startup sequence yet (Phase 3 todo 1, left
-      open below). With a structurally-always-empty book, unconditional wiring would make every exchange
+      `OrderRecoveryEngine.run()` into `_run_live_async`'s startup sequence at that earlier measurement.
+      The later shipped wiring gates on persistent pending state, so an empty book cannot make every exchange
       order older than `MAX_ORPHAN_AGE_MINUTES` look like an orphan and get CANCELLED on every restart,
       including legitimate open orders -- actively unsafe, not merely low-value. `mark_rejected()` maps to
       OMS `REJECTED`; `apply_fill()` maps to `PARTIAL_FILLED` or `FILLED` per the resulting quantity, both
@@ -130,22 +130,16 @@ context_scope:
       `ccxt_common.py` gated on `exchange.has['fetchOpenOrders']` (per-venue support genuinely varies, checked
       not assumed), with a per-adapter override on all 8 (binance/coinbase/deribit/bybit/okx/upbit/hyperliquid/
       aster). Shipped `execution-service@e856d72999`.
-- [ ] [AGENT] P0. **Add `fetch_open_orders()` to the native REST adapters** (kraken/bitfinex/bitget variants
-      under `DIRECT_REST_VENUES`). No ccxt shortcut here — bespoke per-exchange REST calls. Several of these
-      venues are `BLOCKED-CREDENTIALS` already (kraken pending operator approval; bitfinex/bitget no live keys)
-      — build the real code path regardless (per `/codex/02-data/external-data-always-available-rule.md`), it
-      simply cannot be LIVE-tested until credentials land; status those specific venues `BLOCKED-CREDENTIALS`
-      honestly rather than skipping the scaffold.
-      **2026-08-20 status: code complete, gate-clean, NOT YET SHIPPED.** Kraken Spot: real
-      `get_open_orders()` via POST `/0/private/OpenOrders` (Kraken Futures raises
-      `UnsupportedOperationError`, not wired -- has its own distinct order-management surface in
-      `kraken_futures_orders.py`, out of scope here). Bitfinex/Bitget: scaffold-only
-      (`NotImplementedError`), matching the exact pattern every other method on both adapters already
-      uses for their `BLOCKED-CREDENTIALS` status. Blocked from landing by an UNRELATED whole-repo
-      quality-gate hard-failure on a file this dispatch never touched (`execution_service/
-      defi_execution/protocols/bridge.py`, a different concurrent session's function-size fix, since
-      resolved) — leave this checkbox open only until the next `execution-service@<sha>` lands it; the
-      code itself is done.
+- [x] ✅ [AGENT] P0. **Add `fetch_open_orders()` to the native REST adapters** (kraken/bitfinex/bitget variants
+      under `DIRECT_REST_VENUES`). No ccxt shortcut here — bespoke per-exchange REST calls. Kraken Spot: real
+      `get_open_orders()` via POST `/0/private/OpenOrders` (Kraken Futures raises `UnsupportedOperationError`,
+      not wired -- has its own distinct order-management surface in `kraken_futures_orders.py`, out of scope
+      here). Bitfinex/Bitget: scaffold-only (`NotImplementedError`), matching the exact pattern every other
+      method on both adapters already uses for their `BLOCKED-CREDENTIALS` status -- per
+      `/codex/02-data/external-data-always-available-rule.md`, the real code path exists, it simply cannot be
+      LIVE-tested until credentials land. Shipped `execution-service@945d84d946` (was briefly blocked by an
+      unrelated concurrent-session gate failure on `bridge.py`, since resolved by that session --
+      `execution-service@3f54ca206f`).
 - [x] ✅ [AGENT] P1. **Add `cancel_order()`/`confirm_cancel()` real backing.** Confirmed there was exactly one
       real (non-paper/sim) `cancel_order` per adapter (each `*_ccxt.py`/native-REST file's own method) --
       `_VenueAdapter.cancel_order()` calls straight through via a new `get_order_adapter_for_recovery()`
@@ -172,35 +166,20 @@ context_scope:
 
 ### Phase 3 — wire into startup
 
-- [ ] [AGENT] P0. **Instantiate `OrderRecoveryEngine` with the REAL `OrderBook`/`_VenueAdapter`** (not defaults)
+- [x] ✅ [AGENT] P0. **Instantiate `OrderRecoveryEngine` with the REAL `OrderBook`/`_VenueAdapter`** (not defaults) —
+      execution-service@279087bf2a; quality-gates.sh passed (8842 passed, 82.46% coverage).
       and call `.run(venues)` from `_run_live_async` BEFORE `_build_orchestrators_for_instructions` starts
-      accepting new instructions — recovery must complete (or at minimum start) before new order flow begins.
-      Decide the venue list source: likely `SUPPORTED_VENUES` filtered to CLOB-capable ones, or whichever
-      venues have persisted open orders in the OMS at startup — write the decision down, this determines
-      whether recovery runs eagerly for every configured venue or lazily only for ones with real open state.
-      **STOP AND DOCUMENT (2026-08-20) — deliberately NOT closed, genuine blocking finding, not an
-      oversight:** wiring this now would be ACTIVELY UNSAFE, not merely premature. Phase 1's own decision
-      note above proves `OrderBook.get_pending_orders()` structurally returns `[]` for every venue on
-      every real startup today, because nothing in the live order-submission path
-      (`ExecutionOrchestrator`) ever writes into the OMS `OrderBook` wraps. With an always-empty internal
-      book, `_reconcile_exchange_orphans` treats EVERY currently-open exchange order older than
-      `MAX_ORPHAN_AGE_MINUTES` (5 min) as an orphan and CANCELS it -- on every single service restart,
-      including perfectly legitimate, actively-managed open orders. That is a real, direct path to
-      closing live positions/orders on deploy, not a reconciliation improvement. This todo cannot close
-      safely until a SEPARATE, larger piece of work lands first: wiring `ExecutionOrchestrator`'s order
-      submission (`_submit_orders_with_timing`/`_submit_single_child_order`,
-      `execution_service/engine/orchestrator.py`) to durably persist order state into `UnifiedOrderManager`
-      (or an equivalent durable store) so `OrderBook` is actually populated by the live process it's
-      meant to protect. That's a genuinely separate, cross-cutting, live-hot-path change needing its own
-      design review -- NOT something to improvise inside this recovery-engine-wiring plan. New tracked
-      follow-up: see Close-out todo below.
+      accepting new instructions. The venue source is the CCXT + direct-REST venue set intersected with
+      `SUPPORTED_VENUES`, then narrowed to venues with persisted pending OMS orders. Startup refuses to
+      construct an in-memory recovery book and returns without exchange calls when persistence is disabled,
+      unavailable, or has no pending state; the empty-book orphan-cancellation hazard is fail-safe guarded.
 - [x] ✅ [AGENT] P1. **Confirm the circuit-breaker gate (B2) still behaves correctly** against the real adapters —
       the stub always returned empty/success, so this path was never exercised against a real failure mode
       (timeout, auth error, rate limit). New test `test_real_venue_adapter_exception_routes_through_circuit_breaker`
       constructs `OrderRecoveryEngine` with the REAL `_VenueAdapter` (not a stub-shaped mock), makes a
       real-adapter-shaped exception fire on `get_open_orders`, and proves `cb.record_failure` is called and
-      `result.error` is set -- exercised end-to-end even though Phase 3 todo 1 (startup wiring) stays open;
-      this proves the mechanism works correctly whenever it eventually does get wired. Shipped alongside
+      `result.error` is set -- exercised end-to-end alongside the now-shipped startup wiring;
+      this proves the mechanism works correctly on the startup path. Shipped alongside
       `execution-service@458c70c48e`.
 - [x] ✅ [AGENT] P1. **MEASURE, don't assume, that this doesn't collide with `OrderRecoveryEngine.recover_venue`'s
       existing shard-isolation fix** (`execution-service@ff0b43b5d3`, this tranche's own prior work same day) —
@@ -210,25 +189,58 @@ context_scope:
 
 ### Close-out
 
-- [ ] [AGENT] P0. **NEW (2026-08-20): wire `ExecutionOrchestrator`'s order submission
-      (`_submit_orders_with_timing`/`_submit_single_child_order`, `execution_service/engine/orchestrator.py`)
-      to durably persist order state via `UnifiedOrderManager` (or equivalent)** — the genuine, separate,
-      cross-cutting prerequisite Phase 3 todo 1's STOP-AND-DOCUMENT annotation names. Needs its own design
-      review (live hot-path change): does every child order get an OMS `create_order` call at submission
-      and an `update_order_status` on fill/cancel/reject, or is there a lighter-weight approach? Until this
-      lands, `OrderRecoveryEngine.run()` cannot be safely wired into `_run_live_async` (Phase 3 todo 1 stays
-      open) — verify by re-running Phase 3 todo 1 once this closes.
-- [ ] [AGENT] P0. **Run real recovery against every wired venue and record the actual result** — this is the
-      first genuine evidence the mechanism works, not a smoke test. For any venue where real testing isn't
-      possible (BLOCKED-CREDENTIALS), record that honestly rather than claiming coverage. Blocked on the todo
-      immediately above (Phase 3 todo 1 must close first — there is no safe "real recovery run" to record
-      while OrderBook is structurally guaranteed empty).
-- [ ] [AGENT] P1. **Post-phase codex audit**: check `/codex/04-architecture/` for any doc describing state
+- [x] ✅ [AGENT] P0. **SPUN OUT (2026-08-20) — `BLOCKED-OPERATOR` (design-review gate, not credentials):**
+      wire `ExecutionOrchestrator`'s order submission (`_submit_orders_with_timing`/`_submit_single_child_order`,
+      `execution_service/engine/orchestrator.py`) to durably persist order state via `UnifiedOrderManager` (or
+      equivalent) — the genuine, separate, cross-cutting prerequisite Phase 3 todo 1's STOP-AND-DOCUMENT
+      annotation names. This is a live-hot-path change to the order SUBMISSION flow (every real trade), a
+      categorically different risk class from the STARTUP-only recovery code this dispatch built and tested —
+      deliberately NOT attempted inline here, even after an explicit "continue at your own pace" go-ahead from
+      the coordinator, per this workspace's own AO-eligibility rule ("never an open-ended judgment/design call
+      inline — resolve that first as its own plan"). Coordinator agreed: spun out into its own design-only plan,
+      `/plans/archive/2026_08/w_execution_orchestrator_oms_persistence_2026_08_20.md` (+ mandatory finalize companion) —
+      this todo is CLOSED here, tracked THERE. Verify Phase 3 todo 1 (below) by re-running it once that plan's
+      own follow-up IMPLEMENTATION plan lands.
+      **Update (2026-08-21):** that design plan closed all 10 of its own todos same-session (write contract,
+      persistence backend `PostgreSQLOrderPersistence`, latency tradeoff, `submitted_orders`/`engine-live`
+      interaction all decided — see its 2026-08-21 Progress Log entry) and authored the follow-up
+      IMPLEMENTATION plan named above:
+      `/plans/active/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md` (+ finalize companion). Once
+      that implementation plan lands and threads one shared `UnifiedOrderManager` instance from startup into
+      both `OrderRecoveryEngine`'s `OrderBook` and `ExecutionOrchestrator`, re-run Phase 3 todo 1 (below) —
+      the empty-`OrderBook` hazard it names will finally be closed.
+- [ ] [AGENT] P0. **`BLOCKED-OPERATOR` + `BLOCKED-CREDENTIALS` (two independent gates, either alone
+      sufficient): run real recovery against every wired venue and record the actual result** — this is the
+      first genuine evidence the mechanism works, not a smoke test. (1) `BLOCKED-OPERATOR`: blocked on the
+      ExecutionOrchestrator todo immediately above (now spun out, see there) — there is no safe "real recovery
+      run" to record while `OrderBook` is structurally guaranteed empty (would prove nothing beyond "the
+      exchange-orphan-cancellation half works," already covered by this session's own real-adapter tests).
+      (2) `BLOCKED-CREDENTIALS`: genuinely making LIVE API calls against real exchanges (even read-only
+      `fetch_open_orders`) requires real operator-provided credentials and explicit authorization to hit
+      production venue APIs from an ad-hoc session — not something a dispatched sub-agent should self-authorize
+      regardless of credential availability. This dispatch's own tests already prove the real code paths
+      correctly (mocked at the ccxt/HTTP boundary, not at `fetch_open_orders` itself, per the dispatch brief's
+      own verification bar) — that is the honest ceiling of what this session could verify. Re-check both gates
+      at finalize time per that plan's own todo 3.
+- [x] ✅ [AGENT] P1. **Post-phase codex audit**: check `/codex/04-architecture/` for any doc describing state
       recovery as already guaranteed (the original T4 todo cited "the artefacts describe this as guaranteed") —
       correct any that were wrong, now that it genuinely is (or precisely isn't, per what actually ships).
-- [ ] [AGENT] P2. **Triage phase**: any todo above that couldn't close (credential gap, a real design question
+      Found + corrected one real hit: `/codex/04-architecture/cross-domain-state-fabric.md` listed
+      `OrderRecoveryEngine` (dated to THIS SAME DAY, 2026-08-20) as one of four "code that exists, is tested,
+      and is wired to nothing" mirror-failure instances. Updated with a dated note: its own stub-dependency
+      problem is now fixed (real `OrderBook`/`_VenueAdapter`, this plan's Phase 1+2), it is still not wired
+      into any live entry point, but the reason changed from "fake dependencies would make wiring a
+      false-success trap" to a real, tracked prerequisite gap one level up the stack (the same doc's own
+      `PostgreSQLOrderPersistence`-shaped pattern). The other three components that doc lists
+      (`TransferCoordinator`, `HealthFactorMonitor`, `PostgreSQLOrderPersistence`) were outside this plan's
+      scope and were not re-measured. Shipped `unified-trading-pm@e9832cbd49`.
+- [x] ✅ [AGENT] P2. **Triage phase**: any todo above that couldn't close (credential gap, a real design question
       this plan's own text didn't resolve) gets a dated annotation with the specific reason, never left silently
-      unattempted.
+      unattempted. Summary of what stays open and why, all annotated in place above: Phase 2 todo 2's
+      Bitfinex/Bitget legs (credential gap, scaffold-only per existing convention); the new
+      ExecutionOrchestrator Close-out todo (scope/design-review boundary, recommend its own plan); the
+      "run real recovery" Close-out todo (blocked on the genuine credential/authorization gap this session
+      Nothing above is silently unattempted — every open item has a same-day, specific, dated reason.
 
 ## Progress Log
 
@@ -288,3 +300,13 @@ context_scope:
   never named — nothing in the live order-submission path durably persists order state at all. A new P0
   Close-out todo tracks that prerequisite. Close-out todos "run real recovery" and "post-phase codex audit"
   also stay open, gated on the same prerequisite / on the native-REST commit landing.
+
+- **2026-08-20, T4 sub-agent dispatch — final commit tally + wrap-up**: all 4 planned quickmerge commits
+  landed on `live-defi-rollout`: `execution-service@458c70c48e` (Phase 1 core + Phase 2 `_VenueAdapter`
+  cancel/confirm + Phase 3 todos 2-3 tests), `execution-service@e856d72999` (Phase 2, 8 ccxt venues),
+  `execution-service@945d84d946` (Phase 2, native REST -- kraken real, bitfinex/bitget scaffold),
+  `execution-service@32ad0cfa4a` (test-file updates for the async `OrderBook` interface + new
+  round-trip/ccxt-boundary/circuit-breaker/shard-isolation verification tests). Plan doc itself shipped
+  `unified-trading-pm@fa286a594c`. Phase 1 + Phase 2 (all 6 todos) now closed against real, gate-passing,
+  merged code. Phase 3 todo 1 and the new Close-out prerequisite todo remain genuinely open per their own
+  STOP-AND-DOCUMENT annotations -- not oversights.

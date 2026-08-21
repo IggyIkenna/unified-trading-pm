@@ -282,3 +282,5 @@ implementation todos on that check, since they're each independently reviewable 
 - **na-eligibility-audit 2026-08-17** [body-hash:2217935cc9688abd]: KEEP-NA, valid — Reaffirmed. Sole open item (Stage 2, schema v10 instrument_id_form) is DEPENDENCY_BLOCKED per the doc's own staged-rollout table ("Depends on: Stage 1 + the v2 dedup --apply"), reaffirmed across 5+ prior audit passes. Doc stays assigned_vm: NA.
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; sole open item (Stage 2, schema
+  v10 `instrument_id_form`) stays DEPENDENCY_BLOCKED per the doc's own staged-rollout table.

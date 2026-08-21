@@ -167,15 +167,17 @@ consumer wiring) has no overlap with the writer flip -- confirmed via full read,
 
 ## Phase 2 -- close the dependent verification (reference, do not duplicate)
 
-- [ ] [DATA] P2. `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md`'s census already ran (slot-29, same
+- [x] [DATA] P2. `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md`'s census already ran (slot-29, same
       day) and confirmed the IS-bucket mirror rows ARE fed by this same live writer (19,992 rows written in the last 7
       days as of that census) -- that issue's own `[OPERATOR]` VM-relabel todo is pre-drafted
       (`instruments-service/scripts/restamp_sports_is_bucket_trades_mirror_to_odds_2026_08_15.py`, locally validated,
       not yet run against prod) and explicitly notes it may need a re-run once this plan's Phase 0 lands. Once Phase 0
       ships: confirm with that issue's owner whether to execute its drafted relabel now or wait for this plan's flip to
       stop new `trades` rows first (running it before the flip means re-running it after); update that issue doc, do not
-      re-derive its census here. **Extracted 2026-08-17 to `sports_satellite_ao_dispatch_batch15_2026_08_17.md`**
-      (`assigned_vm: planning`) — Phase 0/1 are both landed, so this decision is now determinable.
+      re-derive its census here. **Extracted 2026-08-17 to `sports_satellite_ao_dispatch_batch15_2026_08_17.md` todo
+      at line ~139** (`assigned_vm: planning`, `status: active`, confirmed present 2026-08-21) — Phase 0/1 are both
+      landed, so this decision is now determinable. Checkbox here flips as a citation fix
+      (na-eligibility-audit 2026-08-21, KEEP-NA-STALE class): tracked live in batch15, not duplicated here.
 - [x] ✅ [DATA] P2. Once this plan's Phase 0/1 land, `sports_taxonomy_p2_migration_2026_08_08.md`'s own dangling
       Verification section (four-surface reconciliation, accepted-exception shrinkage, honest-coverage re-run) can
       finally run against a writer that has stopped re-accumulating `trades` -- flag that plan's owner (or pick it up
@@ -192,17 +194,21 @@ consumer wiring) has no overlap with the writer flip -- confirmed via full read,
 
 ## Phase 3 -- retire the orphaned old-path objects ([OPERATOR]-gated GCS delete)
 
-- [ ] [DATA] P2. Census every remaining `data_type=trades` GCS object in the sports raw-tick bucket as of Phase 1's
+- [x] [DATA] P2. Census every remaining `data_type=trades` GCS object in the sports raw-tick bucket as of Phase 1's
       completion, split into: (a) objects whose content was already copied to an `odds`-labeled twin by the 2026-08-12
       restamp (safe to delete -- a real, verified duplicate exists), vs (b) objects written between the 2026-08-12
       restamp and this plan's Phase 0 flip landing that were never relabeled (the re-accumulated ~362K-row population
       the P2 plan's own census found) -- these need restamping FIRST, not direct deletion. **Extracted 2026-08-17 to
-      `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm: planning`) — read-only census, no delete.
-- [ ] [SCRIPT] P2. Re-run `restamp_sports_trades_to_odds_2026_08_12.py` + `manifest_swap_trades_to_odds_2026_08_12.py`
+      `sports_satellite_ao_dispatch_batch15_2026_08_17.md` todo at line ~156** (`assigned_vm: planning`, confirmed
+      present 2026-08-21) — read-only census, no delete. Checkbox here flips as a citation fix
+      (na-eligibility-audit 2026-08-21, KEEP-NA-STALE class): tracked live in batch15, not duplicated here.
+- [x] [SCRIPT] P2. Re-run `restamp_sports_trades_to_odds_2026_08_12.py` + `manifest_swap_trades_to_odds_2026_08_12.py`
       (or updated copies, if their `--days-out` window needs extending to cover the gap) against population (b) from the
       census above, so 100% of remaining `trades`-labeled content has a verified `odds`-labeled twin before any deletion
-      proceeds. **Extracted 2026-08-17 to `sports_satellite_ao_dispatch_batch15_2026_08_17.md`** (`assigned_vm:
-      planning`) — creates verified twins only, does not delete source (same-doc-sequenced after the census item).
+      proceeds. **Extracted 2026-08-17 to `sports_satellite_ao_dispatch_batch15_2026_08_17.md` todo at line ~162**
+      (`assigned_vm: planning`, confirmed present 2026-08-21) — creates verified twins only, does not delete source
+      (same-doc-sequenced after the census item). Checkbox here flips as a citation fix
+      (na-eligibility-audit 2026-08-21, KEEP-NA-STALE class): tracked live in batch15, not duplicated here.
 
 ## Progress Log
 
@@ -569,6 +575,13 @@ handled. A separate, unrelated `consumer-qg-check` CI failure seen the same day 
 this bug -- it's a cross-repo candidate-UAC checkout hitting a stale/nonexistent ref (`repository not found`), pure
 CI infra noise, out of scope here.
 
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, stale-items closed — flipped 3 checkboxes (Phase 2 IS-mirror decision,
+  Phase 3 census, Phase 3 restamp) `[ ]` → `[x]` as citation fixes, each independently re-verified live in
+  `sports_satellite_ao_dispatch_batch15_2026_08_17.md` (`assigned_vm: planning`, `status: active`) rather than
+  trusted from the prior 2026-08-17 marker alone. The 2 remaining open items (Phase 3 physical GCS delete +
+  its dependent script-retirement follow-up) are correctly `[OPERATOR]`-tagged, cite
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, and depend on item 6 — genuinely operator-gated,
+  stay `assigned_vm: NA`. No new drift found beyond the citation staleness fixed here.
 - **context-scout 2026-08-17**: trimmed context_scope from 10 to 6 entries and fixed a dead path —
   `_source_priority_data.py` no longer exists (this doc's own 2026-08-15 text confirms it was split into
   `_source_priority_table.py`, confirmed on disk); swapped in the correct post-split path. Re-prioritized toward the

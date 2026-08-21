@@ -9,7 +9,7 @@ summary: >-
   --diff-base mode is disabled for the exact promote-PR/whole-branch context that's blocked.
   Operator ruled 2026-08-16: re-verify this is still the current state before acting on that
   recommendation — do not assume the finding is still fresh.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -23,7 +23,7 @@ parent_epic: agent_operating_framework_master
 priority: P2
 source: "agt-4d722f AO backlog finding, re-scoped by operator ruling 2026-08-16"
 assigned_vm: planning
-resolved_by:
+resolved_by: T5 tail-triage session, 2026-08-20 — live re-measurement (check_prosewrap_padding.sh, 0/0)
 locked_by:
 execution_scope: orchestrator-agent
 effort: max
@@ -43,22 +43,21 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-20 — RESOLVED** (status: resolved, 2/2 todos `[x]`, unlocked). Live re-measurement
+> confirmed the climbing-baseline problem is no longer current — `check_prosewrap_padding.sh` reports 0/0,
+> satisfying this doc's own stop condition.
+
 # Re-check whether the prosewrap-padding baseline is still climbing
 
 ## Todos
 
-- [ ] [DATA] P2. Re-run `check_prosewrap_padding.sh` fresh right now and compare the current violating-line count
-      against the last measured checkpoint (2324, per agt-4d722f). If the count has stabilized or dropped since that
-      finding (e.g. concurrent agent activity has quieted, or the non-idempotent prettier reflow bug has since been
-      fixed elsewhere), the climbing-baseline problem may no longer be current — say so and stop here, do not
-      hand-raise the baseline on stale evidence.
-- [ ] [DATA] P2. If the count is still climbing, investigate the root cause fresh: confirm it's still the
-      documented non-idempotent prettier reflow bug. Measure 2-3 checkpoints ~10-15 min apart to confirm climbing,
-      same method the original finding used (`prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md`) and not something new,
-      then decide between the worker's original recommendation (hand-raise the baseline with a dated justification,
-      given `--diff-base` mode is confirmed still disabled for promote-PR/whole-branch contexts) or a different fix,
-      based on what the fresh investigation finds. Report back before hand-raising anything — this todo authorizes
-      investigation, not the baseline change itself.
+- [x] ✅ [DATA] P2. **RESOLVED 2026-08-20** — re-ran `check_prosewrap_padding.sh` fresh (twice, once mid-session
+      catching+fixing a self-introduced violation, once clean after): `0 violating line(s) (baseline 0)`, down from
+      the 2324 checkpoint this todo cites. The climbing-baseline problem is no longer current — this satisfies the
+      todo's own stop condition ("say so and stop here, do not hand-raise the baseline on stale evidence") to the
+      letter.
+- [x] ✅ [DATA] P2. **MOOT 2026-08-20** — conditional on todo 1 finding the count still climbing; it is not (0/0).
+      No root-cause investigation or baseline hand-raise needed.
 
 ## Progress Log
 

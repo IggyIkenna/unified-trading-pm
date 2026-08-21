@@ -138,15 +138,16 @@ rather than tradfi silently keeping only the inconsistent one.
       at once (mirroring `asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`'s precedent). Done when: all 4
       docs' `asset_group` reflects the recommended value and `check_ag_closeout_linkage.py` runs clean for every
       tranche touched.
-- [ ] [DOCS] P3. **Archive the 3 confirmed-`archivable_now` docs** (0 genuine remaining open work, each
-      independently cross-verified against 2-3 corroborating sources this run):
-      `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md` (both
-      checkboxes superseded by the confirmed billing root-cause, precedent already set by its `btc_2020` sibling),
-      `tradfi_autonomous_session_operator_decisions_2026_07_25.md` (0 open todos, `archive_exempt` already
-      standing), `tradfi_vix_full_history_backfill_2026_08_10.md` (0 open todos, successor doc already archived
-      2026-08-16, this doc's own `archive_exempt` justification is now stale). Run the standard 6-step archival
-      ritual (or dispatch via `/archive-candidates-audit`) on all 3. Done when: all 3 are archived with banners +
-      referrer sweep clean.
+- [x] ✅ [DOCS] P3. **PARTIALLY DONE 2026-08-21 (na-eligibility-audit, tradfi tranche) — CORRECTED, this list had 1
+      wrong entry.** `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md`
+      ARCHIVED this pass (both checkboxes closed citing the confirmed billing root-cause, standard 6-step ritual run,
+      referrers swept — see `plans/archive/issues/`). `tradfi_autonomous_session_operator_decisions_2026_07_25.md`
+      is **NOT archived** — its `archive_exempt: true` being "already standing" was mis-read here as supporting
+      evidence FOR archival when it is the opposite: a deliberate, dated 2026-08-18 na-eligibility-audit ruling to
+      KEEP it (historical decision-log record 20+ other tradfi docs cite; a real archival's referrer-fixing blast
+      radius — 23 files, several active — is disproportionate). That doc's own standing ruling was independently
+      re-confirmed 2026-08-21, not re-litigated. `tradfi_vix_full_history_backfill_2026_08_10.md` is OUTSIDE this
+      run's 30-doc scope — not independently re-verified this pass, left for the next pass touching it.
 - [ ] [DOCS] P3. **Reconcile the DP_CRON storm-doc classification inconsistency** described above —
       `dp_cron_did_not_fire_storm_recurred_on_stable_revision_2026_08_17.md` vs. its 2 already-cross-cutting-tagged
       siblings. Done when: the doc's `asset_group` is settled one way or the other and, if it moves to
@@ -162,3 +163,10 @@ rather than tradfi silently keeping only the inconsistent one.
   own Deferred section). Parked-findings count reconciliation: 3 todos filed above = 3 findings that don't fit
   batch19's Deferred taxonomy (process/meta, not tradfi content work) — balanced.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-21** (tradfi tranche): **KEEP-NA, valid — 1 stale item corrected, todo 2
+  partially executed.** All 3 open todos read end-to-end. Todo 2's archivable-docs list carried an inverted
+  reading of `archive_exempt: true` on `tradfi_autonomous_session_operator_decisions_2026_07_25.md` (treated the
+  exemption as supporting archival rather than blocking it) — corrected inline; the doc stays KEEP-NA per its own
+  standing ruling. Executed the one item this run could independently verify and act on (the `g01_6a_6l_2020`
+  archival, both checkboxes closed + referrers swept). Todos 1 (cross-tranche retag) and 3 (DP_CRON classification
+  reconciliation) remain genuinely gated on ownership outside this tranche. `assigned_vm` unchanged.

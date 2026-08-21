@@ -177,3 +177,6 @@ guidance both point the same direction: stop and page.
   declaring it done — a checkbox-vs-prose gap. Flipped `[x]` citing the same evidence already recorded above; no new
   diagnosis performed, no code changed.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open todo (`[OPERATOR]` relaunch-vs-wait for
+  `mdps-tradfi-2026`) remains genuinely operator-gated; the diagnostic BACKEND todo closed 2026-08-17 stays closed.
+  `assigned_vm` unchanged.

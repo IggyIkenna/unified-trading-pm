@@ -84,3 +84,6 @@ would be destroyed with no real content-equivalence proof.
 - **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **KEEP-NA, valid.** Sole open item
   (todo 2, the `full`-mode launch decision) is an explicit, self-cited real prod-bucket delete gated per
   `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — textbook human-only. `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open item (todo 2, the `full`-mode
+  prod-bucket-delete launch decision) is an explicit, self-cited real delete gated per
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — human-only. `assigned_vm` unchanged.

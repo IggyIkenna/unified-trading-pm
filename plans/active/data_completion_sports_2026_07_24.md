@@ -959,3 +959,6 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
   parent, all still accurate.
 - **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — re-verified, 2 open todos unchanged since the 2026-08-17
+  marker (Transfermarkt PLAYER_VALUES relaunch, still `BLOCKED-UPSTREAM-OUTAGE`; API-Football quota-tier decision,
+  still an open operator question). No drift.
