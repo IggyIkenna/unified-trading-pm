@@ -31,7 +31,11 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch-logic, gate_on_depends, plan-discipline, recurring-bug, finalize-plan]
 related:
   [
-    /plans/active/ao_consolidated_closeout_2026_08_12.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/archive/issues/gate_on_depends_noop_on_local_only_upstream_2026_07_21.md,
+    /plans/archive/issues/gate_on_depends_noop_on_assigned_vm_na_upstream_2026_07_21.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-25"
 author: unknown

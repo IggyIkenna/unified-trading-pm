@@ -228,6 +228,3 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
   done (PACIFICA-SOLANA quarantine closed today 2026-08-09; writer-fix closed 2026-08-07). 2 remain: both prod-GCS
   split-brain MERGE operations, single-walk-discipline-sensitive.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; the 2 remaining items
-  (EXTENDED-STARKNET, LIGHTER-ZKSYNC prod-GCS pipeline_mode re-partition/MERGE operations against a live
-  split-brain) stay delete/move-safety-gated, single-walk-discipline-sensitive.

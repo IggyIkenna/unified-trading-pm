@@ -466,12 +466,6 @@ todos only to confirm they are data-movement, then leave it.
       SSOT and the map is its projection, so amending it is a codex change first. Filed as a `[FROM-T1]` P2
       question on T4's plan rather than guessed at. Evidence:
       `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
-### Walkthrough feedback 2026-08-21
-
-- [ ] [AGENT] P0. Execute the registry cluster of the 2026-08-21 walkthrough feedback, tracked in
-      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (todos live there — this plan is
-      over the line cap).
-
 ### W5 — venue registry completeness
 
 - [ ] BLOCKED-OPERATOR-DECISION [BACKEND] P0. Populate `VenueCapabilityV2.collateral_rules` / `MarginSpec` for

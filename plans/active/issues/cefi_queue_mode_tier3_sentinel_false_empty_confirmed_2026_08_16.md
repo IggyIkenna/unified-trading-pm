@@ -177,5 +177,3 @@ lines despite genuine fetch activity, which is what let this run silently for 17
   contingent and not itself extractable).
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries) — all existing entries still resolve (the sibling
   audit plan, the delete-safety SSOT, and the two MTDS sentinel/handler source paths).
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms 2026-08-19 verdict; sole open item (the
-  April-2026 gap watch-item, contingent, not currently actionable) unchanged.

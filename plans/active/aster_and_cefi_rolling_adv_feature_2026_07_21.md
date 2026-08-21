@@ -256,5 +256,3 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
   touches.
 - **context-scout 2026-08-19**: re-scouted; context_scope unchanged (3 entries), still accurate — sole remaining open
   item (Phase 3 `book_depth.py` stretch) unchanged since 2026-08-15.
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms 2026-08-16 verdict; sole open item (Phase-3
-  `[DATA] P3` `book_depth.py` stretch wiring) remains an undecided judgment call, not yet ruled either way.

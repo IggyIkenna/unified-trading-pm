@@ -89,9 +89,7 @@ this will recur on each one's own expiry unless fixed.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Operator decision RESOLVED 2026-08-19** (see Progress Log) and config APPLIED live —
-      remaining work is verification only (capture a "CredsEnvPoller started" log line / observe a real rotation
-      land), not a pending operator decision. Decide whether to enable `CredsEnvPoller` by setting `ORCHESTRATOR_CREDS_S3_BUCKET` (or
+- [ ] [OPERATOR] P2. Decide whether to enable `CredsEnvPoller` by setting `ORCHESTRATOR_CREDS_S3_BUCKET` (or
       `ORCHESTRATOR_CREDS_GCS_BUCKET`) on `orchestrator.service`'s systemd unit and restarting — this is a live
       service config change + restart, the same category of action
       `claude-cli-multi-account-headless-auth.md` already flags as needing operator confirmation before doing

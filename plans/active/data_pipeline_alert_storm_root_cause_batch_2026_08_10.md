@@ -996,5 +996,3 @@ through 2026-08-16 not cited back to this doc. Full finding detail:
       cannot proceed until the consolidator outage clears; re-launch once it does (the code-level fixes are already
       correct and in place).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms 2026-08-17 verdict; liquidations items stay
-  blocked on the live manifest-consolidator-stuck-lock incident (`manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md`).

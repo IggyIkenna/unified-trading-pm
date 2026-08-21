@@ -160,9 +160,3 @@ and is flagged, not diagnosed further, here.
   reads boundable — flipping `assigned_vm` here would misroute the work. Consistent with 3 prior passes. Doc stays
   NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).
-- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, valid — 3 open items re-confirmed: 2 explicitly
-  redirect to `cross_ag_live_capture_parity_2026_08_14.md` (mutual redirect re-verified — that plan's own item at
-  line 224 stays open specifically pending this doc's fix, so `KEEP_NA_STALE_DUPLICATE` does not apply) and 1
-  redirects to an instruments-service investigation blocked on trigger-log access this session doesn't have. A
-  redirect banner means the dispatch mechanism would be wrong even though the todo text reads boundable — flipping
-  `assigned_vm` here would misroute the work, per the never-re-litigate-a-redirect rule. Doc stays NA.

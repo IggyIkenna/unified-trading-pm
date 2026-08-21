@@ -382,8 +382,3 @@ here.
   required finding+fixing 9 distinct bugs across 2 repos) is the standing basis, not re-derived this pass.
   `assigned_vm` unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — established ruling not re-litigated (7th consecutive pass).
-  7 open todos re-read end-to-end; count reconciled. The 4 feature-pipeline items (delta-one full-range launch,
-  features-volatility launch, realized_vol CLI wiring, VIX sub-todo) and 3 P3 backtest items (gated on master Group-F
-  harness) remain genuine engineering/design-risk work on live-dispatch-adjacent ML machinery, not mis-defaulted NA.
-  `assigned_vm` unchanged.

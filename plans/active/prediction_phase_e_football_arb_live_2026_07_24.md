@@ -224,9 +224,3 @@ context_scope:
   3-way arb correctness guards) independently confirmed as genuine multi-file design/build work on live
   dispatch-critical arb-matching machinery — not RECLASSIFY-eligible even setting the gate aside. Doc stays NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
-- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, valid — double `depends_on:
-  [prediction_phase_ab_residuals_2026_07_24, prediction_phase_d_formal_smoke_and_backfill_2026_07_24]` +
-  `gate_on_depends: true` re-confirmed live still open (both prerequisites independently re-verified this same run:
-  4 and 5 open todos respectively). Both remaining items (E3 fixture-wiring for the 3rd/bookmaker-odds venue, 3-way
-  arb correctness guards) independently confirmed as genuine multi-file design/build work on live dispatch-critical
-  arb-matching machinery, not RECLASSIFY-eligible even setting the gate aside. Doc stays NA.

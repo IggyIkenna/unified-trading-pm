@@ -551,8 +551,3 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   function into an existing call site + add a regression test), AO-eligible on its own next dispatch.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. 4 open todos re-read end-to-end: todo 1 (CBOE/VX
-  mismatch) stays DEPENDENCY_BLOCKED; todo 2 (GCS/manifest measure-and-migrate) stays MISCLASSIFIED_LIKELY_AO_ELIGIBLE
-  but doc-level-gated by todos 1/3 per the whole-doc rule (extraction remains an `/ag-closeout-audit` recommendation,
-  not executed here); todo 3 stays OPERATOR_QUESTION; todo 4 (dead-code wiring fix) stays a bounded fix the doc's own
-  08-15 marker already confirmed is not blocking real MVP backfills. `assigned_vm` unchanged.

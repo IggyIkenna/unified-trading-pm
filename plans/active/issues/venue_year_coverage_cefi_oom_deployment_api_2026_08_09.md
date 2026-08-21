@@ -209,7 +209,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       promotion means a bare `is-ancestor` check reads NO), and cite fresh Cloud Logging evidence of a CLEAN window (no
       `Memory limit exceeded` / `terminated on signal 9`) same as this issue's original acceptance bar. Repo:
       deployment-api (+ verify unified-trading-library reached main).
-- [x] ✅ [BACKEND] P0. **NEW 2026-08-20 — `deployment-api@a69dad3`'s ThreadPoolExecutor parallelization did NOT close
+- [ ] [BACKEND] P0. **NEW 2026-08-20 — `deployment-api@a69dad3`'s ThreadPoolExecutor parallelization did NOT close
       the aggregate-budget gap; a FOURTH distinct abort site surfaced, inside `provenance_breakdown` itself.** Live
       repro against `uts-shared-deployment-api-00670-v6r` (created 2026-08-20T18:23:24Z, confirmed post-`a69dad3` —
       `git diff origin/main origin/live-defi-rollout -- manifest_source.py _live_coverage_venue_year.py
@@ -239,7 +239,6 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       the acceptance check once shipped. Repo: deployment-api. Evidence for this finding: revision
       `uts-shared-deployment-api-00670-v6r`, SIGABRT pid 21 @2026-08-20T19:47:06Z (Cloud Logging,
       `central-element-323112`).
-  **Resolution:** deployment-api@efd52b2b49 — removed redundant pandas full-frame allocations in `provenance_breakdown` (in-place derived columns and index reset). `quality-gates.sh` PASS (324s; existing baseline warnings only); quickmerge ancestry verified on `origin/live-defi-rollout`.
 - [x] ✅ [BACKEND] P0. **cefi `venue-year-coverage` still WORKER-TIMEOUTs (300s gunicorn limit) even with every
       shipped per-chunk vectorization fix live — an AGGREGATE wall-clock budget problem across 215+ row groups, not a
       single slow call.** Live repro 2026-08-19 (slot 32, infra re-verification) against deployed revision
@@ -720,5 +719,3 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   issue's own established discipline of confirming a fix locally before shipping, not shipping on log-read alone).
   **Not flipping the top-level INFRA todo** — the clean-window acceptance bar is still not met, now gated on this
   new finding rather than any previously-shipped fix (all four prior fixes confirmed live and holding).
-
-- **2026-08-20**: Closed the new provenance-breakdown abort site by shipping `deployment-api@efd52b2b49`. The implementation keeps one defensive copy and mutates derived columns in place, eliminating the duplicate `.assign()` allocations. Syntax/diff checks passed; full `quality-gates.sh` passed; quickmerge verified the SHA on `origin/live-defi-rollout`. Local pandas benchmarking was unavailable because this slot initially lacked an environment with pandas; the code path was validated by the repository test suite in the quality gate.

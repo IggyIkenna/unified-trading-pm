@@ -255,6 +255,3 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
   `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` remains accurate. Todo 2 stays sequenced behind it; todo 5
   stays GENUINE_WORK. Nothing to reclassify.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
-- **na-eligibility-audit 2026-08-21**: KEEP-NA-STALE (already-duplicated), reaffirmed. Todo 1's citation to
-  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` remains accurate; todo 2 stays sequenced behind it; todo 5
-  (standing health-check design question) remains GENUINE_WORK. `assigned_vm` unchanged.

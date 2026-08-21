@@ -307,8 +307,3 @@ cross-cutting (informational) + 4 archivable (informational, 1 correction applie
   see above). Reconciled prior dated parked docs first per the skill's 2026-08-15 rule — the 3 found
   (2026-08-06, 2026-08-10, 2026-08-10_r2) were all already archived, nothing to reconcile.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — standing 2026-08-19 parked-findings ledger/reference doc, no
-  open checkboxes of its own; content cross-verified against several of its cited docs during this pass (aster ADV,
-  cefi_residual_followups, crypto_alpha_research, instruments_cefi_g1_g5, per_venue_scope_key, deribit
-  dated-option, onchain_venues_mislabeled, cefi_tardis_date_serial_barrier) — all consistent with this doc's
-  classification, no drift found.

@@ -398,11 +398,3 @@ specs; mock/live contract parity restored on all 12 drifted endpoints; the SIGAB
   own already-`[x]` Todo (was stale open-tense prose). Also added `architecture_v2_drift_leg_specs_and_manifest_
   residue_2026_07_16.md` to Track 4 Sources — a genuine live ui-tranche orphan with zero prior Track citation.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21 (ui tranche)**: KEEP-NA, valid — reconfirmed. All 4 open `[REVIEW]` todos remain
-  self-declared verification-only rollups against work tracked in other docs (Track 1/2/3 close-out criteria against
-  their own Sources lists — Track 1/2 sources include `data_status_cell_grid_rearchitecture_2026_07_18.md` and
-  `artifact_pipeline_observability_2026_07_17.md`, both reclassified `assigned_vm: planning` this same pass, tracked
-  there now, not duplicated here) and 2 genuine per-doc-judgment audits (re-run `/ag-closeout-audit ui`; corpus-wide
-  `ui` retag audit — both need cross-tranche-ownership calls a mechanical worker can't resolve alone). 6th
-  consecutive audit pass reaching this verdict. No reclassification, no citation fix, no archival warranted
-  (4 of 5 Track todos still open).
