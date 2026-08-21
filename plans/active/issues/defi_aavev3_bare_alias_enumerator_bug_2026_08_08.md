@@ -186,7 +186,11 @@ defect (phantom-venue emission) without touching a registry other code may depen
       `unified-api-contracts` WIP (its prediction-domain migration breaks every consumer's QG/pre-flight;
       both commits are otherwise ready): (a) `deployment-service` watchdog prefix-threshold +
       launcher 64GB/KEEP_VM change (QG was green pre-block; content restored in slot-2 tree after one
-      contention sweep — recover ref `70cf3231` if swept again); (b) `instruments-service` streaming purge
+      contention sweep — recovery pinned on local branch `aavev3-watchdog-fix-backup` = `70cf3231`;
+      a 2nd QG re-run at 07:0x went red with 35 failures ALL in dep-sensitive data-status/turbo
+      suites, none touching the fix's two files — the mid-window quickmerge ancestor cascade pulled
+      newer UTL/UAC into the workspace, so treat that red as upstream drift, not this diff, and
+      re-gate once the peer's UAC migration lands); (b) `instruments-service` streaming purge
       script rewrite (the EXACT bytes that executed the purge — must land for provenance; IS QG is red
       solely on the peer's UAC breakage, re-gate once UAC lands). After (a) lands: relaunch the
       zombie-watchdog VM (kill `vm-zombie-watchdog-*` + re-run `launch-vm-zombie-watchdog.sh`) so the live
