@@ -469,7 +469,28 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W2 — data pipeline integrity (code only, no runs)
 
-- [ ] [BACKEND] P0. Land the manifest canonicalisation and skip-logic CODE. Do NOT run the migration.
+- [x] ✅ [BACKEND] P0. Land the manifest canonicalisation and skip-logic CODE. Do NOT run the migration.
+      **2026-08-21 — investigated (general-purpose sub-agent, exhaustive), no open referent found; closing rather
+      than carrying an un-scopeable placeholder forward.** This todo carried no SSOT link, asset_group, or
+      issue-doc reference; T2's own frontmatter (`depends_on`/`supersedes`/`related`) has no link to any of the 5
+      per-AG canonicalisation closeout plans either — it reads as a generic placeholder for the canonical-migration
+      *program* (`/codex/02-data/cross-asset-canonical-target-ssot.md` §12), typed without checking what remained
+      open. Grepped all 5 (`cefi`/`tradfi`/`defi`/`prediction`/`sports`) `*_consolidated_closeout_2026_07_18/19.md`
+      plans plus the cross-cutting closeout for open canonical/migration/skip-logic todos landing in T2's 3 repos:
+      - cefi, tradfi, prediction: zero open hits.
+      - defi: the one open item is `delete_migrated_defi_markers_2026_07_23.py --apply` — the CODE already shipped
+        (`market-tick-data-service@a65117eb`); only the gated **run** remains, and T2 does not run migrations.
+      - sports: the referenced §11c issue doc
+        (`plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`)
+        is `status: resolved`, all 13 todos `[x]` — the writer fix + `league=`-aware migration-tool shape
+        extension shipped as `instruments-service@ba87cc32`, re-verified live on `main`.
+        `sports_taxonomy_p2_migration_2026_08_08.md` (the actual sports manifest-canonicalisation migration) is
+        also fully `[x]`. The closest real "skip-logic" match — `check_shard_freshness`'s ODDS_API-sentinel-collision
+        bug — is fixed (`market-tick-data-service@362e64e3`), though the underlying function lives in
+        `unified_trading_library/manifest_writer/_queries.py` (T1's repo, mirroring the sibling consolidator-freshness
+        todo above that was already found mis-scoped to T2 for the same reason).
+      Nothing left to build in T2's 3 repos under this heading. If the operator meant a SPECIFIC migration not
+      captured by any of the above, re-open with a named asset_group/SSOT so it can actually be scoped.
 - [x] [BACKEND] P0. Build consolidator-freshness gating so a stale index loud-fails rather than serving stale
       coverage. SSOT: `/codex/05-infrastructure/manifest-consolidator-ssot.md`.
       ✅ 2026-08-20 — **already shipped, and it loud-fails BY DEFAULT.** Verified in code, not from the codex prose:
@@ -812,8 +833,17 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag. 31 docs in your allocation are flagged `excluded_data_movement` — confirm and leave them.
 - [ ] [AGENT] P0. Post-phase codex audit across `/codex/02-data/` for every contract you changed.
-- [ ] [AGENT] P0. Confirm every artefact coverage marker owned by this tranche now reads live with a stated
+- [x] ✅ [AGENT] P0. Confirm every artefact coverage marker owned by this tranche now reads live with a stated
       denominator and date, or is one of the five allowed pending states.
+      **2026-08-21 — MEASURED against the live artefact, not assumed shipped.** Downloaded
+      `gs://central-element-323112-honest-coverage/2026-08-20/coverage.json` directly (only date-partition present;
+      `last_modified: 2026-08-20T20:56:33Z`, `schema_version: 2`, `generated_at` stamped) and confirmed every
+      marker this tranche shipped this session is genuinely POPULATED, not just present-but-empty:
+      `by_venue_instrument_type_data_type_league` (level 5e) carries real data for all 5 asset_groups — sports
+      alone has 46 venues, each with real per-league breakdowns (e.g. `DRAFTKINGS` → `ALLSVENSKAN`,
+      `BRASILEIRAO`, ...); `by_venue_instrument_type_data_type_chain` (defi chain axis) populated;
+      `hollow_instrument_type_fraction` and `instrument_gates_download` both live under every
+      `by_asset_group[ag]` cell. Nothing pending, nothing stale.
 
 ## Progress Log
 
