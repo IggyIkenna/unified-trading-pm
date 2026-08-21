@@ -120,20 +120,17 @@ REUSES the frameworks that already exist rather than building new ones:
 
 ## Phase A — UAC schema (the axes everything else reads)
 
-- [ ] [BACKEND] P0. Add a per-venue websocket-protocol spec type (`VenueWsProtocolSpec`) to the UAC venue-capability
-      registry (sibling of `registry/capability_declarations/_{category}.py`, queried via the same typed facade —
-      `/codex/03-services/venue-capability-registry.md`, static-at-deploy). Fields — ping/pong interval + which side
-      initiates; application-level heartbeat channel if any; max connection lifetime before venue-forced disconnect;
-      auth/listen-key refresh cadence + mechanism; max subscriptions per connection; max connections per IP/key;
-      `duplicate_subscription_allowed` (make-before-break feasibility); resubscribe-after-reconnect semantics;
-      sequence/update-id gap-detection support; REST gap-backfill endpoint per feed type; connect-attempt rate
-      limit. Done-when — type + facade query + one fully-populated reference venue ship QG-green in
-      unified-api-contracts.
-- [ ] [BACKEND] P0. Add a per-venue error-code registry schema to UAC `canonical/crosscutting/errors/` — one row per
-      published code (venue, code, surface REST/ws/FIX, published meaning, classification into the existing
-      `classify_venue_error()` taxonomy, retryability, prescribed action), extending — never duplicating —
-      `VenueErrorClassification`. Done-when — `classify_venue_error(venue, code)` resolves any registered code from
-      the new tables; QG green.
+- [x] 1. ✅ [BACKEND] P0. Per-venue websocket-protocol spec type on the UAC venue-capability registry —
+      unified-api-contracts@2bebacf085 + full `quality-gates.sh --no-fix` green pre-commit. Shipped as
+      `WsProtocolSpec` (`registry/ws_protocol.py` — venue-scoping is the registry key, so the `Venue` prefix was
+      dropped) + `ws_protocol` field on `SourceCapability` + `resolve_ws_protocol()` facade + lazy-registry exports
+      + binance reference venue (facts seeded with an explicit `doc_retrieved=None` honest-provenance note — Phase-B
+      re-verification owed) + `tests/unit/test_ws_protocol_registry.py`. All the planned fields present incl.
+      `duplicate_subscription_allowed`, forced-disconnect window, auth cadence, gap detection, REST gap-backfill.
+- [x] 2. ✅ [BACKEND] P0. Per-venue error-code registry schema — unified-api-contracts@2bebacf085 + same green gate.
+      Extended `VenueErrorClassification` (never duplicated) with `surface` (rest/ws/fix) + `doc_url` provenance;
+      `ve()` helper passthrough; `classify_venue_error(venue, code)` verified resolving newly-registered codes with
+      doc_url at import (odds_api INVALID_STATUS check) + `tests/unit/test_venue_error_surface_fields.py`.
 
 ## Phase B — per-venue research from public API docs (bounded, promotable)
 
@@ -143,25 +140,49 @@ REUSES the frameworks that already exist rather than building new ones:
 > (`registry/venue_adapter_keys.py`, ~165 entries at authoring — pin the registry, not the count).
 
 - [ ] [BACKEND] P0. CeFi execution venues (every venue declared in `capability_declarations/_cefi.py` with an
-      execution adapter key) — populate `VenueWsProtocolSpec` + full error-code table per venue, sub-checkbox per
+      execution adapter key) — populate `WsProtocolSpec` + full error-code table per venue, sub-checkbox per
       venue as each lands. Done-when — every CeFi execution venue populated + cited, QG green.
+      Progress 2026-08-21 — binance shipped @2bebacf085; bybit/okx/coinbase/deribit/hyperliquid ws facts
+      doc-fetched into the session scratchpad (`cefi_ws_research_notes.md`), file application + error tables next
+      batch.
 - [ ] [BACKEND] P1. CeFi pricing-only venues — same treatment. Done-when — same bar.
 - [ ] [BACKEND] P1. TradFi venues (IBKR, CME, ICE) + Databento as the data vendor
       (`/codex/02-data/tradfi-databento-sourcing-ssot.md`) — same treatment; note TradFi surfaces include FIX/native
       protocols where websocket does not apply — record `no_websocket_surface` explicitly rather than omitting.
-      Done-when — same bar.
-- [ ] [BACKEND] P1. DeFi — per-chain WSS-RPC / subgraph subscription semantics into `VenueWsProtocolSpec`
+      Done-when — same bar. (2026-08-21 — research agent died on the session-limit with ZERO file output; tranche
+      fully open, resume after the 16:40 Europe/London quota reset.)
+- [ ] [BACKEND] P1. DeFi — per-chain WSS-RPC / subgraph subscription semantics into `WsProtocolSpec`
       equivalents, and extend the 35-code `DefiErrorCode` (`/codex/04-architecture/defi-execution-overview.md`) with
       per-protocol error surfaces from public docs. Done-when — every chain + DEX/lending/perp protocol in
       `capability_declarations/_defi.py` covered or explicitly marked absent.
+      Partial @2bebacf085 — all 6 `DEFI_CAPABILITIES` sources done (uniswap/curve/instadapp/mev honest-absence with
+      citations; aave 84-code `Errors.sol` table in `_defi_aave_codes.py`; versifi explicit-unverified);
+      `PROTOCOL_CAPABILITIES` NOT covered — see the dedicated todo below.
 - [ ] [BACKEND] P1. Sports + prediction venues and aggregators — same treatment over their declared venues.
       Done-when — same bar.
+      Partial @2bebacf085 — 14/14 `_sports.py` venues carry `ws_protocol`; exhaustive odds_api (33 named codes) +
+      polymarket CLOB (59 entries) tables shipped + wired into sports.py/prediction.py; error-table completeness for
+      the other 12 venues is UNVERIFIED (agent died on quota pre-report) — verify before flipping.
 - [ ] [BACKEND] P2. Data-only vendors (Tardis and peers) — ws protocol facts for capture feeds + vendor error codes.
       Done-when — same bar.
+      Partial @2bebacf085 — 12/12 `_altdata.py` vendors carry `ws_protocol` + the `_altdata_infra_codes.py` table is
+      wired; completeness UNVERIFIED (agent died pre-report); tardis/ccxt (declared in `_cefi.py`) still open.
+- [ ] [BACKEND] P1. DeFi `PROTOCOL_CAPABILITIES` streaming-facts coverage — the ~60-protocol dict in
+      `capability_declarations/_defi.py` is a distinct construct with NO `ws_protocol` field (found 2026-08-21);
+      extend it (or record per-protocol streaming facts at the `SourceCapability` layer) and populate per the
+      Phase-B bar. Done-when — every `PROTOCOL_CAPABILITIES` key covered or explicitly marked absent; QG green.
+- [ ] [BACKEND] P2. Curve REST error-code table — `api.curve.finance/v1/documentation` returns HTTP 403 to
+      automated fetch (2026-08-21); retrieve via a browser session or a mirror and transcribe. Done-when — curve
+      rows carry doc_url citations.
+- [ ] [OPERATOR] P2. Versifi public API docs — none discoverable (checked 2026-08-21; versifi.io has no developer
+      section) despite its declared `ws_trades` operation; supply a doc link or credentialed access. Its declaration
+      carries an explicit all-None unverified `WsProtocolSpec` until then.
 - [ ] [BACKEND] P1. Census closure — extend the `registry_census.py` drift checks so every venue in
       `VENUE_TO_ADAPTER_KEY` either carries a populated ws-protocol + error-code declaration OR an explicit honest
-      absence marker (`no_websocket_surface` / `no_published_error_codes`) — silent gaps impossible. Done-when —
-      census check green over the full registry and wired into UAC quality gates.
+      absence marker (`no_websocket_surface` / `no_published_error_codes`) — silent gaps impossible. Also dedupe the
+      pre-existing duplicate `(venue, code)` keys found 2026-08-21 in the kalshi/hyperliquid/polymarket maps
+      (duplicates are dead code under the linear-scan classify). Done-when — census check green over the full
+      registry and wired into UAC quality gates.
 
 ## Phase C — runtime rotation framework
 
@@ -225,3 +246,15 @@ REUSES the frameworks that already exist rather than building new ones:
 - **2026-08-21** — Plan authored (interactive session, slot 4) from operator ask + `/plan-brainstorm` gate.
   Corpus check confirmed — no active plan owns W14's error-code todo; no ws-protocol facts anywhere in UAC; no UTL
   reconnect primitive. Operator rulings captured under "Decisions recorded".
+- **2026-08-21 (batch 1 shipped)** — unified-api-contracts@2bebacf085 (full QG green pre-commit, quickmerge, LDR
+  ancestry verified). Phase A complete (todos 1-2 flipped above) PLUS the DeFi/sports/altdata research tranche
+  outputs (aave 84-code table; odds_api 42 / polymarket 68 merged codes; `classify_venue_error()` resolution
+  verified at import). Sub-agent fleet hit the account session limit (resets 16:40 Europe/London): the tradfi agent
+  died with ZERO file output (tranche fully open); sports + altdata agents died pre-report — their on-disk work was
+  inherited under the dead-claim rule, lint-fixed (15 E501 + 1 I001), and the two orphan sibling tables wired into
+  sports.py/prediction.py by this session. Phase C1 (UTL `WsSessionManager` + 5 unit tests + streaming exports) is
+  AUTHORED but not yet gated — UTL QG is the next gate. CeFi ws facts for bybit/okx/coinbase/deribit/hyperliquid
+  were doc-fetched into the session scratchpad (`cefi_ws_research_notes.md`) for the next UAC batch.
+  `provider_api_versions.yaml` decision — most venue doc sites are living pages publishing NO version identifier;
+  doc URLs + retrieval dates are recorded in the declaration files themselves, the yaml gets entries only where a
+  real version exists (none surfaced so far).
