@@ -840,7 +840,6 @@
     </p>
 
     <div class="legend">
-      <span><b class="st st-part">partial</b> built, reachable for some or all cases described</span>
       <span><b class="st st-plan">planned</b> specified or requested, not yet built</span>
       <span
         >No <b class="st st-live">live</b> mark appears on this page — live requires validation with real capital, and
@@ -886,13 +885,12 @@
       <div class="stat">
         <span class="v">15 / 16</span
         ><span class="k"
-          >Instruction types routed to real execution today — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
-          UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC/BRIDGE/LP_MINT/LP_BURN all route through live execution wiring
-          (BORROW/REPAY wired 2026-08-21, AAVE V3 only; BRIDGE/LP_MINT/LP_BURN wired 2026-08-21 — BRIDGE via a real
-          Socket v2 bridge-route aggregator, LP_MINT/LP_BURN via real Uniswap V3 NPM mint/burn, both LIVE-WIRED for
-          one venue each so far); QUOTE is the sole remaining partial case — its registration call never places an
-          order inline, but its tick-driven loop (wired 2026-08-21) submits/updates the live order asynchronously as
-          the underlying moves</span
+          >Instruction types routed to real execution — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
+          UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC/BRIDGE/LP_MINT/LP_BURN route through live execution wiring
+          (lending and credit via AAVE V3; BRIDGE via the Socket v2 route aggregator spanning Across, Stargate,
+          CCTP and Hop; LP_MINT/LP_BURN via Uniswap V3 position management, with additional venues activated on
+          demand); QUOTE registers the instrument for continuous quoting — its tick-driven loop submits and
+          updates the live order as the underlying moves</span
         >
       </div>
       <div class="stat">
