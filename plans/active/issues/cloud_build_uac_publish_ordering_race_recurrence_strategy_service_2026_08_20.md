@@ -219,6 +219,45 @@ slot for its entire duration, so moving it to the glue pool adds ONE bounded, se
 predictable footprint, not a fan-out of parallel runners. A quick sanity check on current glue-pool headroom before
 shipping is worth doing, but nothing found this session suggests a real contention risk.
 
+## ⛔ DESIGN DECISION 2026-08-21 (ci_reconciler, operator-reviewed) — poll-gate REJECTED, publisher fixed instead
+
+The operator asked for the cost implications, who should wait, and how long. Answer: **nobody waits — the wait was
+compensating for a publisher defect, and the defect is now fixed.** Shipped: the tag-trigger rollout +
+fail-closed guard recorded in
+[/plans/active/issues/publish_package_semver_tag_race_breaks_consumer_builds_2026_08_20.md](/plans/active/issues/publish_package_semver_tag_race_breaks_consumer_builds_2026_08_20.md)
+(`unified-trading-library@65d04d5d`, `instruments-service@56869f32`, `unified-trading-pm@c66f71e3d5`).
+
+**Why the `resolve-gate` AR-poll design (this doc's "Root-cause fix" + "Finalized implementation design") is not
+being implemented — three independent disqualifiers, all measured this session:**
+
+1. **It would wait for something that never arrives.** The premise was propagation lag. The reality: the tagged
+   release often has **no wheel at all**. `unified-api-contracts` v0.157.0/v0.158.0 → none in AR;
+   `unified-trading-library` → only `.devN` for 11 of its last 12 tags. A gate polling for the exact pinned version
+   would exhaust its full retry budget and page CRITICAL on every skipped release — new alert noise, plus every
+   fan-out delayed by the timeout.
+2. **It would amplify an active silent-loss defect.** `update-repo-version.yml` holds the fleet-global single-slot
+   `version-bump` concurrency group (`cancel-in-progress: false`; GitHub keeps ONE pending run). Measured: **40 runs
+   in 3h (~1 per 4.5 min), 8 of them already `cancelled`/evicted — 20%.** Holding that slot 5-20 min means ~3-5
+   dispatches arrive per gated run and all but one are evicted. Each evicted `version-bump` is a lost manifest
+   baseline — the "re-bump-loop fuel" DEFECT-1 class this workflow's own header comment documents from the
+   2026-06-10 incident. This is the "must not break current work" disqualifier.
+3. **Its cost analysis was inverted.** Q2/Q3 concluded that widening the wait costs real GH Actions spend. That was
+   written believing PM is private; the `CORRECTED 2026-08-20` note caught that PM is **public** but only drew the
+   security conclusion. Public repo + standard `ubuntu-latest` = **unmetered** — the same reasoning already recorded
+   in `unified-api-contracts@36de8ef7` ("revert to GitHub-hosted runners (public repo, GH Actions unmetered)"). So
+   the wait was never the cost problem. The real spend is the **failed Cloud Builds** it causes (~10 min of billed
+   `E2_HIGHCPU_8` each — the instruments-service failure burned 594s retrying — times ~10 repos per wave, plus
+   re-runs), which fixing the publisher removes outright.
+
+**Item 4(a) — `runs-on: ubuntu-latest` → `[self-hosted, glue]` — is struck, not merely deferred.** Beyond the
+security block already noted (PM public → fork-PR exposure, the 2026-08-07 revert), it is a **cost regression**: it
+moves work off a free runner onto the paid 24/7 glue pool. It should not ship even if PM is re-privatized without
+re-deriving the billing case.
+
+**Standing note for when PM goes private** (operator, 2026-08-21: PM is public today but will be converted): this
+decision does not change. The chosen fix adds **zero** polling/waiting anywhere, so it is unaffected by PM's
+visibility — which is exactly why it was preferred over any design whose economics depend on free minutes.
+
 ## Todos
 
 - [x] ✅ [CICD] P1. **Diagnose + verify resolved.** Root-caused to the publish-ordering race; re-ran the
@@ -231,24 +270,19 @@ shipping is worth doing, but nothing found this session suggests a real contenti
       mechanism is now identified, this is implementation work, not an open design question.
 - [x] ✅ [CICD] P2. **Finalize the implementation design** (runner choice, auth reuse, wait-budget scope) — done this
       session, see "Finalized implementation design" above. Pending operator review of this doc before shipping.
-- [ ] [CICD] P2. **Implement** (operator review pending — do not ship until reviewed):
-      (a) **BLOCKED-OPERATOR — do NOT ship while PM stays public** (see "CORRECTED 2026-08-20" note above):
-      `update-repo-version.yml`'s `update-manifest` job: `runs-on: ubuntu-latest` → `runs-on: [self-hosted, glue]`.
-      Either re-verify PM has been deliberately re-privatized before doing this, or drop this sub-item and keep the
-      job on `ubuntu-latest`;
-      (b) add a GCP auth step (WIF-first, SA-key fallback) mirroring the existing `digest-auth-wif`/`digest-auth-key`
-      steps already in this file, placed before `resolve-gate` — independent of (a), ships either way;
-      (c) extend `check_resolvable()` (~line 534-555) with a third check against Artifact Registry (`gcloud artifacts
-      versions list --repository=unified-libraries --location=asia-northeast1 --package=$REPO
-      --format="value(name)"`, compare against `$VERSION`), required alongside the existing git-tag/branch-pyproject
-      checks. Test against this incident's real timeline: a floor-bump for `unified-api-contracts=0.149.0` dispatched
-      before 11:14:57Z should have been held; after, allowed through immediately. Independent of (a), ships either way.
-- [ ] [CICD] P2. **Re-size the retry budget** for the combined build-time + propagation-lag wait (current: ~5 min ×
-      up to 3 `fanout_retry` retries ≈ 20 min total; today's real gap was ~12-20 min of propagation lag ALONE, before
-      adding producer build time on top — re-derive a real number, don't assume 20 min still covers it). Widen
-      `MAX_FANOUT_RETRY` or the per-attempt poll count as needed.
-- [ ] [CICD] P3. **Quick glue-pool headroom sanity check** before shipping (a); confirm adding one bounded, serialized
-      occupant doesn't meaningfully change current utilization.
+- [x] ⛔ [CICD] P2. **REJECTED 2026-08-21 (operator-reviewed) — not implementing; publisher fixed instead.** See the
+      "DESIGN DECISION 2026-08-21" section above for the three measured disqualifiers (waits for a wheel that never
+      arrives; amplifies the already-20%-evicting global `version-bump` single-slot group; its cost premise was
+      inverted — PM is public, so `ubuntu-latest` there is unmetered). Was: implement (a) self-hosted glue runner,
+      (b) GCP auth step before `resolve-gate`, (c) extend `check_resolvable()` with an Artifact Registry check.
+      **(a) is struck outright** as both a security exposure AND a cost regression (free runner → paid 24/7 pool).
+      Root cause is closed at the publisher: `unified-trading-library@65d04d5d`, `instruments-service@56869f32`,
+      `unified-trading-pm@c66f71e3d5`.
+- [x] ⛔ [CICD] P2. **MOOT 2026-08-21 — no retry budget to re-size; the poll gate was rejected.** The wait it would
+      have sized does not exist under the shipped design (zero polling anywhere). Was: re-size the combined
+      build-time + propagation-lag wait budget.
+- [x] ⛔ [CICD] P3. **MOOT 2026-08-21 — glue-pool move struck** (see above), so there is no new occupant to size for.
+      Was: glue-pool headroom sanity check before shipping (a).
 - [ ] [CICD] P3. **Longer-term option, not in scope for the initial fix**: sequence `semver-agent`'s `version-bump`
       dispatch behind `publish-package.yml`'s own AR-confirmation instead of racing them, eliminating the need for
       this gate's wait entirely. Bigger change (trigger-graph rewire across two workflows); track separately once the
