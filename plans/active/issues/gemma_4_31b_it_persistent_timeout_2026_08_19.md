@@ -19,7 +19,6 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, gemma, nvidia, nim, timeout, litellm, model-routing]
 related:
   [
-    /plans/active/kimi_gemma_provider_onboarding_2026_08_16.md,
     /plans/active/codex_mcp_tool_use_bridge_2026_08_18.md,
     /codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md,
   ]
@@ -39,7 +38,6 @@ source: >-
   credentials, real API calls throughout. Nothing here touched the live orchestrator VM or production accounts.
 context_scope:
   [
-    /plans/active/kimi_gemma_provider_onboarding_2026_08_16.md,
     agent-orchestrator/config/litellm/grok_gemini_proxy.yaml,
     agent-orchestrator/server/gemini_headroom.py,
     agent-orchestrator/server/nvidia_headroom.py,

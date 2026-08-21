@@ -33,9 +33,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch, round-robin, account-failover, overage, multi-provider, kimi, omniroute, openrouter, quality-gates]
 related:
   [
-    /plans/active/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md,
     /plans/active/issues/account_failover_ignores_overage_rejected_2026_08_18.md,
-    /plans/archive/issues/ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md,
     /plans/active/issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
@@ -518,6 +516,30 @@ events to accounts via each slot's most-recent account-carrying event, run direc
       `ao_satellite_ao_dispatch_batch25_2026_08_19.md:32,61`,
       `issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md:31`,
       `../audit/provider_smoke_test_registry_2026_08_18.md:29`.
+
+      **Referrer cleanup closed 2026-08-21 (interactive session, later)**: 5 of the 6 files above had
+      their dead `related:` entry removed this session while closing an unrelated todo in
+      `worker_slot_account_exhaustion_no_rotation_2026_08_19.md` (same class of dangling reference,
+      found opportunistically): `codex_mcp_tool_use_bridge_2026_08_18.md`,
+      `issues/gemma_4_31b_it_persistent_timeout_2026_08_19.md` (both citations),
+      `issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md`,
+      `../audit/provider_smoke_test_registry_2026_08_18.md`. The 6th listed file
+      (`multi_provider_model_capability_bakeoff_2026_08_19.md`) has itself since been archived, so its
+      own citation is now frozen historical record, out of scope by construction. **Not closed**:
+      `ao_satellite_ao_dispatch_batch25_2026_08_19.md` (found via a fresh grep, wasn't in this todo's
+      original file list) still cites `/plans/archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md`
+      in its `related:` block — repointed to the resolving archive path rather than removed, which
+      clears `check_reference_paths.py` but still violates `check_active_refs_archived_plans.py`'s
+      policy. Left unfixed (not part of this session's staged set); tracked as a real `- [ ]` todo below
+      this time, per the HARD RULE this very paragraph violated the first time around (a prose
+      follow-on with no tracked checkbox).
+- [ ] [SCRIPT] P3. **Found 2026-08-21 while closing out the todo above's referrer-cleanup follow-on.**
+      `ao_satellite_ao_dispatch_batch25_2026_08_19.md` (lines ~32, ~61) cites
+      `/plans/archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md` directly in its `related:`
+      frontmatter — resolves fine (`check_reference_paths.py` clean) but violates
+      `check_active_refs_archived_plans.py`'s policy (active docs must repoint at codex, never cite an
+      archive path directly). Fix: REMOVE both entries outright (or repoint to a codex doc if one now
+      covers what they referenced). Repo: unified-trading-pm.
 - [x] [BACKEND] P3. ✅ **DONE 2026-08-21.** Added a line to `SUB_AGENT_MANDATORY_RULES.md`'s per-slot-
       worktree section: "If YOUR prompt never named an absolute `.tabs/<N>/` path, STOP and ask — never
       default to the bare repo root." Also condensed the existing incident sentence to make room. File
