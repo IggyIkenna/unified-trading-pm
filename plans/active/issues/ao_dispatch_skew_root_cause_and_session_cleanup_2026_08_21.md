@@ -239,8 +239,78 @@ designed. They're session-process mistakes worth recording so they aren't repeat
    labels minus the two removed providers — not a mechanical auto-merge, needed a real read of both
    sides' intent.
 
+## Part 4 — bugs 4a/4b: bulk account-sweep pile-up + health-ring gap (SHIPPED)
+
+Found while checking on bugs 1-3's live impact: operator reported "more tasks are given to
+gemini models and some of them are dying or going stale". Live investigation (24h/60min
+`activity_log` breakdowns by account, same method as Part 1) found TWO more stacked bugs,
+distinct from bugs 1-3, both in the account-failover path rather than the fresh-dispatch path:
+
+**Bug 4a**: `rotate_all_slots_off_account()` (`server/server.py`) calls
+`select_account_for_spawn()` once per slot being swept off a dead/disabled account, in a tight
+loop with NO commit in between — the actual reassignment is deferred to background threads
+started only AFTER the whole loop finishes. Every call therefore sees the SAME stale
+`_active_slot_counts_by_account()` snapshot, so every slot in the sweep independently
+"discovers" the same single least-loaded account and piles onto it. Confirmed live: at
+2026-08-21 08:33:39 UTC an operator disabled `codex-luna` via the dashboard (`account_disabled`
+event, `slot_id=None` — a dashboard action, not this session); the resulting sweep dumped ~13
+slots onto ONE Gemini account (`gemini-3-5-flash-lite-proj1`) within 15 seconds
+(`account_rotation_triggered` timestamps 08:33:41-08:33:55, all `"to":
+"gemini-3-5-flash-lite-proj1"`), blowing past its real rate ceiling — all 13 sessions died
+together ~3 minutes later (8 `tmux_session_lost` rows at 08:36:19-21, empty
+`pane_dead_status`/`pane_pid`, elevated host load).
+
+**Bug 4b**: `autospawn._provider_health_ok`'s in-memory failure ring is fed ONLY by
+`record_spawn_outcome`, called ONLY at the initial tmux-spawn attempt (3 call sites, all in
+`autospawn.py`) — never when a session dies LATER (mid-conversation rate-limit exhaustion,
+tmux pane death). So the overloaded account from bug 4a never tripped the health gate and kept
+looking free: in the 60 minutes after the incident it absorbed 92 `gemini_request_selected`
+events while ALSO producing 12 `tmux_session_lost` + 13 `autospawn_failed` + 4
+`worker_polling_dead` events — nothing was suppressing further selection despite continuous,
+measurable failure. Real backlog work (a security audit, live-trading VM tasks, an execution
+OMS-persistence task) kept getting bounced and requeued.
+
+**Fix (both, one commit)**: `agent-orchestrator@98b9bf1183`.
+- 4a: generalized `_pick_headroom_account`'s existing single-id `exclude_id` to also accept an
+  `exclude_ids: frozenset[str]`, threaded through all 8 `_pick_headroom_account` call sites
+  inside `select_account_for_spawn` (additive, defaults to empty — no-op for every other
+  caller). `rotate_all_slots_off_account` now accumulates a local `sweep_picked: set[str]`,
+  passing it as `exclude_ids` on each iteration so slots spread across the live pool instead of
+  piling onto one; a round-reset (mirroring `_next_rotation_combo`'s own semantics) fires once
+  every live candidate has had a turn, so a single-account pool still gets every slot rather
+  than wrongly returning `None`. First implementation attempt had a real bug here (forgot to
+  clear the exclusion set on reset, collapsing back into pile-up after one round) — caught by
+  the regression test written for it before shipping, not by manual inspection.
+- 4b: `tmux_pruner.py`'s existing `death_class` classifier (`"unexplained"` vs
+  `"intentional_teardown"`) now calls `autospawn.record_spawn_outcome(slot.account_id,
+  ok=False)` for every `"unexplained"` death — intentional teardowns are excluded (not the
+  account's fault). Reuses the SAME `_provider_health_ok` gate already checked before every
+  free-provider pick, no new mechanism.
+- Immediate stopgap: `gemini-3-5-flash-lite-proj1` manually `disable_account`'d while the fix
+  shipped (fully reversible via `enable_account`) — the account had been actively, continuously
+  failing for over an hour, wasting real task attempts.
+- 4 new regression tests (`tests/test_account_rotation.py`,
+  `tests/test_tmux_pruner_death_class_signals.py`): bulk-sweep spreads N slots across M live
+  accounts; single-live-account sweep still serves every slot via round-reset; an unexplained
+  tmux death records a spawn failure for the bound account; an intentional-teardown death does
+  NOT. Full `quality-gates.sh`: 5280 passed / 4 skipped, coverage 86.06% (baseline 85.86%,
+  ratchet-clean).
+
+**Not yet done**: `gemini-3-5-flash-lite-proj1` is still paused — re-enabling it is an operator
+call (todo below), and there's no live-traffic proof yet that 4a/4b together prevent a RECURRENCE
+of the same pile-up under a fresh bulk-sweep trigger (the next time an account gets disabled
+with many bound slots).
+
 ## Todos
 
+- [ ] [OPERATOR] P2. Re-enable `gemini-3-5-flash-lite-proj1` (paused 2026-08-21 as bug 4a/4b's
+      immediate stopgap — see Part 4) once comfortable the fix prevents a recurrence, or leave
+      paused if the account has an independent problem worth investigating further first.
+- [ ] [DATA] P3. Re-check bug 4a/4b's live effectiveness a day or two out: does a fresh bulk
+      account-sweep (any account, not just Gemini) spread across multiple destinations instead
+      of piling onto one, and does a repeatedly-dying account's `free_provider_spawn_selected`
+      share drop off after a few `tmux_session_lost` events instead of staying flat. Repo:
+      agent-orchestrator.
 - [x] [SCRIPT] P3. **Found while verifying bug 1 post-ship.** The live (gitignored, per-VM)
       `data/config/accounts.json` on the planning VM still carried 3 dead Kimi entries
       (`kimi-k3`/`kimi-k2-6`/`kimi-k2-7-code`) — harmless (gracefully skipped) but not a true "removed
@@ -335,3 +405,13 @@ designed. They're session-process mistakes worth recording so they aren't repeat
   after reset) and re-shipped through normal quickmerge with a correct message. Not filed as a new issue
   since it's a known, documented, non-destructive safety net working as designed — flagging here in case
   it recurs with worse timing.
+- **2026-08-21 (slot 13, interactive, later same session)**: operator reported Gemini tasks "dying or
+  going stale" post-deploy and asked to check overall dispatch spread. Live investigation found bugs
+  4a/4b (Part 4) — root-caused, fixed, tested (4 new regression tests, one of which caught a real bug
+  in the first fix attempt before it shipped), full `quality-gates.sh` green (5280 passed/4 skipped,
+  86.06% coverage), shipped `agent-orchestrator@98b9bf1183`, live-verified via `orchestrator.service`
+  restart (09:42:32 UTC). Paused the one actively-failing Gemini account as an immediate stopgap
+  (reversible, todo above). Dispatch-spread check (the operator's second ask): selections ARE now
+  reaching multiple Gemini sub-accounts, both GLM accounts, and multiple Claude accounts, not just
+  `codex-luna` — bugs 1-3 are working as intended; the "dying/stale" symptom was entirely bugs 4a/4b,
+  not a shortfall in bugs 1-3's fix.
