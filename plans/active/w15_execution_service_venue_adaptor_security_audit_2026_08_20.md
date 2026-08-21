@@ -226,7 +226,7 @@ impression:
 - [ ] [BACKEND] P1. Add the missing ERC-20 approval before EigenLayer's `depositIntoStrategy()` and replace Karak's hardcoded low-confidence vault address with a validated/derived one; MEDIUM findings: checklist points 5 and 2 (`eigenlayer.py:200-208,379-411`; `karak.py:80-84,194-202`). (repo: execution-service)
 - [x] ✅ [BACKEND] P0. Harden the shared CCXT order boundary with explicit side/type/symbol/finite-positive amount/price validation before `create_*_order`; HIGH finding: checklist point 3 (`ccxt_common.py` plus each adapter's `_submit_ccxt_order`). — execution-service@3685010a0f + evidence: quality-gates.sh green (233s, sentinel matched committed HEAD; 8952 passed); shared `validate_ccxt_order_params()` in `ccxt_common.py` called from all 8 adapters' `_submit_ccxt_order()`; 42 new regression tests in `tests/trade_execution/unit/test_ccxt_order_validation.py`; see `w15_execution_service_venue_adaptor_security_audit_2026_08_20_progress_log_archive.md`'s 2026-08-21 slot-25 CCXT order-boundary input-validation fix entry.
 - [x] ✅ [BACKEND] P0. Add bounded execution semantics to every CCXT adapter: require a safe market-order price/slippage guard and a finite expiry (or venue-equivalent bounded time-in-force), rather than defaulting to unbounded market execution/GTC; HIGH finding: checklist point 4 (all eight adapters' `_submit_ccxt_order` paths). — execution-service@8b3d733a9c + evidence: quality-gates.sh green (162s, sentinel matched committed HEAD); new shared `ccxt_common.resolve_bounded_market_price()` converts every market order into a protective slippage-bounded (50bps default) IOC marketable-limit order instead of a raw `create_market_order` call, using the caller-supplied price when given or else CCXT's `fetch_ticker` (raises rather than proceeding unbounded if no reference price is resolvable); also fixed Coinbase (never threaded `time_in_force` into CCXT params at all) and Upbit (dropped `time_in_force` entirely at the live-call boundary); 10 new/updated tests across all 8 adapters' test files plus a new `test_ccxt_common.py`; merged alongside the concurrently-landed checklist point 3 fix above — both now compose in `_submit_ccxt_order` (validate params, then bound the market-order price).
-- [ ] [BACKEND] P0. Make CCXT order placement durable and retry-safe: require/persist one client-order id across ambiguous retries, use each venue's verified parameter name, and reconcile an uncertain submission before resubmitting; HIGH finding: checklist point 6 (all eight adapters, with Coinbase's `client_oid` deviation at `coinbase_ccxt.py:116-146`).
+- [x] ✅ [BACKEND] P0. Make CCXT order placement durable and retry-safe: require/persist one client-order id across ambiguous retries, use each venue's verified parameter name, and reconcile an uncertain submission before resubmitting; HIGH finding: checklist point 6 (all eight adapters, with Coinbase's `client_oid` deviation at `coinbase_ccxt.py:116-146`). — execution-service@77c4254543 + evidence: quality-gates.sh green (152s, sentinel matched committed HEAD; 8991 passed); new shared `ccxt_idempotency.py` (`require_client_order_id()` + `place_ccxt_order_idempotent()`) plus `ccxt_common.find_order_by_client_id()`/`reconcile_ccxt_order_by_client_id()`; wired into all 8 adapters' live order-placement paths with each venue's verified client-order-id param (`newClientOrderId`/`orderLinkId`/`client_oid`/`clientOrderId`); see Progress Log entry below.
 - [ ] [BACKEND] P0. Enforce fail-closed credential initialization and redacted error logging for the CCXT group; Coinbase currently constructs a real exchange without a missing-key guard (`coinbase_ccxt.py:44-52`), and all order error paths persist raw exception text (`*_ccxt.py` order handlers plus `ccxt_common.py:372-405`); HIGH/MEDIUM findings: checklist point 1.
 
 ### Close-out
@@ -393,3 +393,32 @@ section, checklist, and every checkbox (including the perp/CLOB and native-REST 
 mid-Progress-Log from an earlier concurrent-edit) are untouched. File size: 1000 → 374 lines, clearing
 the 500-line soft cap with real headroom, not just the 1000-line hard cap. No code was changed; no
 tests were run (pure doc restructuring).
+
+### 2026-08-21 — slot 1 CCXT client-order-id durable idempotency fix
+
+Fixed the tracked HIGH finding (checklist point 6): all 8 CCXT-wrapped adapters accepted an optional
+`client_order_id` with no durable idempotency record, so an ambiguous network result (timeout/connection
+error where the venue may or may not have received the order) could be retried as a brand-new order with
+no way to detect the duplicate.
+
+Added `execution_service/trade_execution/adapters/ccxt_idempotency.py`: `require_client_order_id()`
+generates one whenever the caller doesn't supply one (every live submission now always carries one), and
+`place_ccxt_order_idempotent()` wraps the venue submission -- a retry for the same `intent_key` (venue +
+client_order_id) first reconciles against the venue's own open/closed orders (new `ccxt_common.
+find_order_by_client_id()` / `reconcile_ccxt_order_by_client_id()` helpers) before ever resubmitting.
+Definite venue-side rejections (`InsufficientFunds`, `InvalidOrder`) clear the record since nothing durable
+was placed; ambiguous `NetworkError`/`BaseError` leave it `in_flight` so the next attempt reconciles first.
+Modeled on the already-established `bridge.py`/`aave_idempotency.py`/`staking_idempotency.py` durable
+idempotency pattern (injectable `TransferStateStore`, new namespace `"ccxt_order"`) -- each adapter's
+`__init__` gained an optional `config: dict[str, object] | None = None` param (mirrors `aave.py`'s
+`transfer_state_store` wiring) so a real store can be injected without breaking existing call sites.
+
+Wired into all 8 adapters using each venue's own verified client-order-id parameter name (confirmed against
+each adapter's existing `_build_order_params`/`_submit_ccxt_order`): Binance `newClientOrderId`, Bybit
+`orderLinkId`, Coinbase `client_oid`, Upbit/Deribit/OKX/Hyperliquid/Aster `clientOrderId`. Extracted the
+error-handling tail into the shared `place_ccxt_order_idempotent()` helper (rather than repeating a
+try/except per adapter) to keep every adapter's `_place_order_live`/`_execute_live_order` under the
+50-line method cap. — execution-service@77c4254543 + evidence: quality-gates.sh green (152s, sentinel
+matched committed HEAD post-rebase; 8991 passed, 0 regressions across the full existing CCXT adapter test
+suite -- the idempotency wrapper only triggers reconciliation on a genuine retry of the same intent_key,
+so every first-submission test path is unaffected); post-push ancestry independently verified.
