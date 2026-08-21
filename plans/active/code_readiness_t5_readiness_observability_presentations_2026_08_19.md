@@ -607,7 +607,7 @@ todos only to confirm they are data-movement, then leave it.
       human" note from prior audit passes; force-fixing them would mean guessing, which the prior passes correctly
       declined to do. One item WAS resolvable: the root `README.md` P2 finding had gone stale in the other
       direction — the 3 claims it named were already fixed by another session since 2026-08-02 — flipped with
-      evidence, `unified-trading-pm@<pending>`. Genuinely 2 `[OPERATOR]` decisions + ~11 human-judgment items
+      evidence, `unified-trading-pm@2d743a57d3`. Genuinely 2 `[OPERATOR]` decisions + ~11 human-judgment items
       remain; not a bounded mechanical pass.
 - [x] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
       `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`. — **Checked 2026-08-20**: the
@@ -629,14 +629,15 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Infrastructure defects that cost other agents time
 
-- [ ] [BACKEND] P1. Fix `git stash push/pop` silently dropping content under high branch velocity — this defect
+- [x] [BACKEND] P1. Fix `git stash push/pop` silently dropping content under high branch velocity — this defect
       costs every tranche real work. Evidence:
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`.
-      **Re-verified 2026-08-20: the bounded/mechanical portions are already extracted to
-      `/plans/active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` (`status: active`, AO-dispatch
-      eligible) — items 1-2 (repro + promote the confirmed `--rebase --autostash` fix into durable recovery docs)
-      still open there, not yet landed. Not duplicating that work here; this doc's own remaining items are P3
-      conditional-future ("if velocity recurs") or a P2 design-review call, neither blocking.**
+      **DONE 2026-08-21**: both extracted items in `/plans/active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`
+      landed — item 1 (repro of both the stale-pathspec and transient-empty-pathspec hypotheses, both confirmed)
+      at `unified-trading-pm@9e5e873988`, item 2 (promoted the confirmed `git pull --rebase --autostash` per-batch
+      fix into `/codex/05-infrastructure/per-tab-worktrees.md`) at `unified-trading-pm@e022d3f0e3`. This doc's own
+      remaining items are P3 conditional-future ("if velocity recurs") or a P2 design-review call, neither
+      blocking this tranche.
 - [x] [BACKEND] P1. Add the retry safety net for `main-backmerge-to-ldr` on non-PM repos. Evidence:
       `/plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md`.
       **Re-verified 2026-08-20: all three extracted fixes are landed and cited in the source issue —
