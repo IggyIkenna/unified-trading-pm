@@ -107,11 +107,9 @@ impression:
       failed/partial result when `_maybe_burn_nft()` catches a reverted burn instead of returning `success=True` with
       only `burn_error` (`uniswap.py:529-538,568-580`). — execution-service@124042b4 + evidence: QG passed (8,807 passed, 82.54% coverage); post-push ancestry verified.
 
-- [x] ✅ [BACKEND] P0. Add Jupiter quote/input validation, caller-controlled expiry, and idempotency/retry protection
+- [ ] [BACKEND] P0. Add Jupiter quote/input validation, caller-controlled expiry, and idempotency/retry protection
       around `/swap` plus Solana broadcast (`jupiter.py:120-199,205-224,261-279`). A retry after an ambiguous
-      `send_transaction()` result currently obtains and signs a fresh transaction. — execution-service@e1e1788d35
-      + evidence: quality-gates.sh green (155s, full unbroken run incl. STEP 5.83); post-push ancestry verified;
-      see Progress Log entry below. (repo: execution-service)
+      `send_transaction()` result currently obtains and signs a fresh transaction. (repo: execution-service)
 
 - [x] ✅ [BACKEND] P0. Replaced the Orca/Raydium placeholder liquidity instructions with validated protocol account
       metas and explicit positive amount/tick/range bounds; the current live paths serialize caller values and submit
@@ -204,9 +202,9 @@ impression:
 
 - [x] ✅ [BACKEND] P0. Add strict bridge request validation and fail-closed live credential handling (bridge.py); HIGH findings: checklist points 1, 3, and 4. — execution-service@fb50f729,116c5e2f + evidence: verified already-landed (see Progress Log 2026-08-21 slot-7 entry below); no new code required.
 - [x] ✅ [BACKEND] P0. Add CCTP amount/recipient validation and reject missing source wallet credentials before approve/burn (cctp.py); HIGH finding: checklist point 3. — execution-service@fa434b66a0 + evidence: verified already-landed in fb50f729 (see Progress Log entry below); added regression test coverage, no production code change required.
-- [x] ✅ [BACKEND] P0. Make CCTP transfer tracking durable and idempotent across retries; preserve source burn tx hash and prevent duplicate approve/burn submissions; HIGH finding: checklist point 6. — execution-service@f4391ac596 + evidence: see Progress Log 2026-08-21 slot-21 entry below.
+- [ ] [BACKEND] P0. Make CCTP transfer tracking durable and idempotent across retries; preserve source burn tx hash and prevent duplicate approve/burn submissions; HIGH finding: checklist point 6.
 - [x] ✅ [BACKEND] P0. Define and enforce caller slippage/deadline bounds for Socket bridge routes, including validation of aggregator-produced transaction targets and calldata; HIGH findings: checklist points 2 and 4. — execution-service@fb50f729,3f54ca20 + evidence: verified already-landed (see Progress Log 2026-08-21 slot-22 entry below); no new code required.
-- [x] ✅ [BACKEND] P0. Correct CCTP status lookup and enforce attestation timeout/terminal failure semantics; HIGH finding: checklist point 7. — execution-service@004bd5c15c + evidence: see Progress Log 2026-08-21 slot-21 CCTP attestation-timeout entry below.
+- [ ] [BACKEND] P0. Correct CCTP status lookup and enforce attestation timeout/terminal failure semantics; HIGH finding: checklist point 7.
 - [ ] [BACKEND] P0. Harden Aave lending writes: reject non-positive/non-integral amounts and invalid flash-loan vectors, fail closed instead of simulating success when live credentials/executor are absent, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3, 6, and 7 (`aave.py`, `aave_live.py`).
 - [ ] [BACKEND] P0. Harden Morpho Blue writes: validate amount/LLTV/market-id inputs, use configured loan-token decimals rather than unconditional 18-decimal conversion, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3 and 6 (`morpho.py`).
 - [ ] [BACKEND] P0. Validate Kamino transaction intent before signing: enforce positive amount and address/mint relationships, inspect/allowlist fee payer, programs, accounts, and token-approval scope in API-produced transactions, and add retry idempotency; HIGH findings: checklist points 2, 3, 5, and 6 (`kamino.py`).
@@ -508,122 +506,3 @@ Progress Log entries, none of which this session authored). Restored via `git re
 `origin/live-defi-rollout` HEAD before making any edit, per the "never delete another agent's already-landed content"
 rule — no content was lost since HEAD already had the correct state and nothing had been committed from the stale
 index.
-
-### 2026-08-21 — slot 21 CCTP idempotency fix (checklist point 6)
-
-Re-read `cctp.py` at current LDR HEAD against the 2026-08-20 slot-5 audit's point-6 finding ("`uuid4()` is generated
-for every call ... `_pending_burns` is process-local and retries repeat approval/burn"). A prior commit (`fb50f729`,
-already cited against the point-3 triage todo above) had since replaced the random UUID with a deterministic
-`uuid5(request_key)` and added a durable `_state_store`-backed idempotency check (`_existing_burn_as_record()`) —
-partial progress, but a real gap remained: `_approve_and_burn()` only persisted the burn record *after*
-`_extract_message_from_receipt()` succeeded. Any failure in that separate, fallible extraction step (a fresh
-`wait_for_transaction_receipt()` call) — including a process crash — left an already-confirmed on-chain burn with no
-durable trace, so a retry's idempotency check found nothing and re-ran the full approve+burn, double-burning the
-caller's USDC for one logical transfer request.
-
-Fix: `_approve_and_burn()` now persists a `_CCTPBurnRecord` (with `source_tx_hash`/`approve_tx_hash` set, empty
-`message_bytes`/`message_hash`) immediately once the burn transaction confirms, *before* attempting message-log
-extraction. Added `_recover_message()`, called from `_existing_burn_as_record()` whenever a found record has a
-`source_tx_hash` but no `message_hash` — it retries the read-only extraction (safe to repeat, unlike the burn itself)
-instead of falling through to a fresh `_approve_and_burn()`. Split the now-oversized `_approve_and_burn()` into a
-second helper (`_send_approve_and_burn_txs()`) to stay under the 50-line method cap.
-
-Added 3 regression tests to `test_cctp.py` (`TestCCTPBridgeIdempotency`): a same-connector retry never re-submits
-approve/burn; a message-extraction failure preserves the burn tx hash (verified against both the in-memory index and
-the injected durable state store) and a subsequent retry recovers without re-submitting; and durability survives a
-fresh connector instance sharing only the state store (no in-memory carryover).
-
-**Unrelated pre-existing repo-wide QG break found and fixed in the same session (blocked this todo's own ship path):**
-`quality-gates.sh`'s TEST step failed at collection time for the *entire* execution-service repo
-(`ModuleNotFoundError: unified_api_contracts.external.onexbet.schemas`), confirmed byte-identical on a stashed clean
-tree at LDR HEAD (not caused by this change). Root cause: `unified-api-contracts@cdb8ae88` ("complete the 6-bookmaker
-removal in canonical/domain/sports/") deleted `unified_api_contracts/external/onexbet/` *and*
-`canonical/domain/bookmaker_registry.py` entirely, but `code_readiness_t2_refdata_marketdata_2026_08_19.md`'s own
-already-open todo had explicitly flagged this as a STOP condition requiring the coordinated order "retire
-execution-service's dead `OneXBetAdapter` FIRST, then remove `onexbet` from the registry" — the registry side went
-ahead anyway. `OneXBetAdapter` was independently re-verified dead/unrouted here (`SportsHandler.BOOKMAKER_VENUES` is
-empty; only test-only and re-export references besides). Retired the adapter, its dedicated test file, and the
-dangling re-exports/comment (execution-service@f4391ac596, same push as the CCTP fix). Regenerated
-`unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml` via `--regenerate-baseline` (diffed before
-committing: only the deleted file's entry was removed, nothing else changed) since the file no longer exists. Full
-`quality-gates.sh` green (8880 passed, 0 failed, 155s) on the final commit. Updated the T2 plan's own todo to reflect
-current reality; see that plan for the remaining 5-token cleanup this did NOT touch.
-
-### 2026-08-21 — slot 7 Jupiter security fix (checklist points 3, 4, 6)
-
-Fixed the "Add Jupiter quote/input validation, caller-controlled expiry, and idempotency/retry protection..." P0
-todo, closing the three findings recorded in the 2026-08-20 slot-7 swap/DEX audit entry above (checklist points 3,
-4, 6). Added `_validate_quote_request()` (mint shape via base58 regex, `input_mint != output_mint`, positive
-amount, `0 <= slippage_bps <= 1000`) called before every `/quote` request. Added caller-controlled quote-age
-enforcement: `execute_swap()` now takes `max_quote_age_seconds` (default 30s) and rejects a stale or
-freshness-unverifiable quote before signing. Added idempotency/retry protection modeled on `bridge.py`/`cctp.py`'s
-precedent: a `_swap_intent_key()` fingerprint (mint pair + amount, stable across quote refreshes) tracks
-in-flight/completed attempts; a successful swap is cached and replayed byte-identical on retry (no second
-broadcast); an *ambiguous* outcome (an exception from `send_transaction()` itself, not a returned failure) fails
-closed and blocks resubmission until the caller explicitly calls the new `clear_ambiguous_swap_attempt()` escape
-hatch — the exact gap the todo named ("a retry after an ambiguous `send_transaction()` result currently obtains
-and signs a fresh transaction"). `execute_swap()` was decomposed into `_check_prior_swap_attempt()` /
-`_check_quote_freshness()` / `_broadcast_and_finalize()` to stay under the 50-line method cap. Added 8 new
-regression tests to `tests/defi_execution/unit/test_solana_connectors.py::TestJupiterConnector` covering each
-validation rejection, stale-quote rejection, successful-replay object-identity, and the
-ambiguous-outcome-blocks-resubmission-until-cleared path.
-
-**Unrelated pre-existing QG blocker fixed in the same session:** `execution_service/utils/market_hours.py:261`'s
-fallback `except Exception:` (dated 2026-05-21, unrelated to this todo) was the sole in-scope
-(`--source-dir execution_service`) site over the STEP 5.5 broad-except baseline — added `# noqa: broad-except`
-plus a one-line reason; verified pre-existing via `git blame` before touching it.
-
-**Duplicate-work discovery and correction** (full account in this repo's
-`plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md`): mid-session, the same
-`unified-api-contracts@cdb8ae88` → `onexbet.py` `ModuleNotFoundError` documented in the slot-21 entry above
-independently broke this session's own `quality-gates.sh` collection step too (confirmed byte-identical root
-cause). This session built its own fix (retire `OneXBetAdapter` + its test), originally committed locally as
-`1f4e1346`+`065fc9d0` — but a `git fetch` immediately before shipping showed slot-21 had already landed an
-equivalent retirement on `origin/live-defi-rollout` (`f4391ac5`+`0c81d755`), starting from the same shared
-ancestor (`e7d65703`). Rather than ship a duplicate/conflicting change on top of an already-published fix, this
-session ran `git rebase --onto origin/live-defi-rollout e7d65703 <jupiter-fix-commit>` to drop the two now-redundant
-local onexbet commits (never pushed, no longer exist anywhere) while replaying only the genuinely new Jupiter +
-market_hours commits on top of origin's current tip. **Lesson for future sessions:** a
-`git rev-list --count origin/<branch>..HEAD` ahead-only check (which this session ran first) does NOT surface a
-concurrent-slot conflict — only the bidirectional `git rev-list --left-right --count HEAD...origin/<branch>` catches
-it; run the bidirectional form before shipping whenever a fix touches code another slot could plausibly be fixing
-at the same time (a shared cross-repo break discovered via the same root-cause commit is exactly that signal).
-
-Full `quality-gates.sh` green end-to-end on the final rebased tree (155s, one unbroken run including STEP 5.83's
-adapter-contract-call regression ratchet, which needed `unified-trading-pm/scripts/quality_gates/
-adapter_contract_baseline.yaml` regenerated via `--regenerate-baseline` after `onexbet.py`'s deletion — diffed
-before trusting it, confirming only the deleted file's 2-line entry disappeared; a subsequent
-`git pull --rebase --autostash` in this repo picked up slot-21's own independent identical regen already on
-origin, so nothing further needed committing here). Shipped via quickmerge — execution-service@e1e1788d35;
-post-push ancestry verified.
-
-### 2026-08-21 — slot 21 CCTP attestation-timeout/terminal-failure fix (checklist point 7)
-
-Re-read `cctp.py` at current LDR HEAD against the "Correct CCTP status lookup and enforce attestation
-timeout/terminal failure semantics" P0 todo (2026-08-20 slot-5 audit finding: "`_pending_burns` is keyed by
-transfer ID... so a valid source tx hash remains `BRIDGING` indefinitely; receive failures are reported, but
-timeout/terminal semantics are incomplete").
-
-The status-lookup half was already fixed as a side effect of the earlier `fb50f729` security-state commit:
-`get_bridge_status()` now resolves via `_find_burn_by_tx_hash()`, which checks the tx-hash-keyed
-`_burns_by_source_tx` dict first — confirmed by tracing `_index_burn()`'s population of that dict against every
-call site; no lookup bug remains for a valid tx hash. No new code needed for that half.
-
-The remaining real gap: `get_bridge_status()` already returned `FAILED` once a burn waited past
-`_attestation_timeout` with no attestation, but `receive_on_dest()` never checked elapsed time at all — the
-identical underlying transfer could report `FAILED` from one entry point and `BRIDGING` forever from the other.
-Fix: extracted the check into a shared `_attestation_timed_out()` helper, used by both `get_bridge_status()` and
-`receive_on_dest()`. The timeout only gates the *wait for* the attestation — once `burn.attestation` is set,
-neither entry point re-checks elapsed time, so an already-attested transfer can still complete regardless of its
-total age (verified by a dedicated regression test).
-
-Left `get_bridge_status()`'s `burn is None → BRIDGING` behavior untouched: it is a separate, deliberately-tested
-contract (`TestCCTPGetBridgeStatusNoRecord.test_returns_bridging_for_unknown_tx_hash`), not part of this
-finding, and `TransferStatus` has no "unknown" value to report instead — changing it would be a different,
-riskier change outside this todo's scope.
-
-4 new regression tests added to `test_cctp.py` (`TestCCTPAttestationTimeout`): `get_bridge_status` FAILED after
-timeout, `receive_on_dest` FAILED after timeout (the actual fix), `receive_on_dest` still BRIDGING before
-timeout, and `receive_on_dest` ignores an old `created_at` once attestation is already present. Full
-`quality-gates.sh` green (156s); shipped via quickmerge — execution-service@004bd5c15c; post-push ancestry
-verified.

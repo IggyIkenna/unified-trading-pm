@@ -10,7 +10,7 @@ summary: >-
   unrelated via a clean-tree comparison (RULES.md §4b protocol). Two of the three are a DETERMINISTIC assertion
   mismatch (not the known socket/timeout flakiness the existing `fleet_wide_qg_self_hosted_runner_capacity_crisis_
   2026_07_27.md` doc already tracks for the third test) — a distinct, seemingly undiagnosed root cause.
-status: resolved
+status: open
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -113,17 +113,11 @@ unable to pass the FULL-suite gate to reach `origin/live-defi-rollout`).
       `tests/unit/test_route_deployments_inventory.py`, if the naming change was intentional) so
       `test_build_inventory_classifies_vms_and_jobs` and
       `test_build_inventory_launched_by_provenance_for_cloud_run_jobs` pass deterministically. Repo: deployment-api — deployment-service@a0005a55 + deployment-api@29c4e47 (root cause: manifest-consolidator `{kind}-{ag}` registry-stem mismatch, not a prefix-strip regression).
-- [x] ✅ [BACKEND] P2. Determine whether `test_inventory_route_live_path_mocks_registry_and_cloud_run`'s repeated
+- [ ] [BACKEND] P2. Determine whether `test_inventory_route_live_path_mocks_registry_and_cloud_run`'s repeated
       (3/3, not intermittent) blocked-socket failure is the same class as
       `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s entry for this test (a timeout there, an
       immediate blocked-connect here) or a distinct regression; fix or fold into that doc accordingly. Repo:
-      deployment-api — deployment-api@8a3897bb89 (distinct regression, not the tracked contention class: the
-      test's own docstring claimed AWS census was mocked but the mock was never wired in —
-      `test_inventory_route_live_path_mocks_registry_and_cloud_run` was missing a
-      `patch("deployment_api.routes.deployments_inventory._load_aws_items", return_value=([], {}))`, so it made a
-      real outbound connect that `pytest_socket` deterministically blocked, degrading the response to `items: []`
-      every run rather than intermittently timing out. Added the missing mock; fixed, not a duplicate of the
-      fleet-wide crisis doc's entry).
+      deployment-api.
 
 ## Progress Log
 
@@ -139,5 +133,3 @@ unable to pass the FULL-suite gate to reach `origin/live-defi-rollout`).
   `prd-manifest-consolidator-market-data-cefi`). Verified: both P1 tests + the full 113-test file pass (113 passed in
   7.63s). No code change needed; checkbox flipped.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **2026-08-21**: Closed P2 — `deployment-api@8a3897bb89` added the missing `_load_aws_items` mock; full
-  113-test file green. Both todos done — resolving + archiving.

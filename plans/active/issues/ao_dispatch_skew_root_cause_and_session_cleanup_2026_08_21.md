@@ -417,17 +417,8 @@ log content and check it isn't suspiciously short/absent before shipping on it.
 
 ## Codex SSOTs
 
-- `/codex/04-architecture/agent-orchestrator-autospawn.md` — **rewritten 2026-08-21**
-  (`unified-trading-pm@98d7642c05`) as the primary SSOT for this whole issue: its "Account-pick
-  rotation" section previously described a single-provider (Claude-only) picker with no mention of
-  the multi-provider blend, `free_provider_priority`, Phase 4 rotation, or `account_is_usable`'s real
-  semantics — completely silent on everything bugs 1-5 fixed. Now documents the full
-  `select_account_for_spawn` decision chain, the bulk-selection spreading mechanism, and the
-  health-failure ring. Also fixed a stale 95%→99% pct-ceiling default that had drifted from the code
-  across the whole doc (trigger-contract table, env-var table, anti-patterns section).
 - `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` — multi-account auth model this
-  bug lives in (per-account token/credential rotation — a distinct, correctly-scoped concern from the
-  multi-PROVIDER routing bugs 1-5 fixed; not touched by this pass).
+  bug lives in.
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — worker lifecycle/dispatch
   model the Phase-4 rotation plugs into.
 - `/codex/05-infrastructure/per-tab-worktrees.md` — the per-slot worktree contract Part 3 item 1
@@ -481,20 +472,3 @@ log content and check it isn't suspiciously short/absent before shipping on it.
   "pass" from a rotated-away scratchpad session directory, then a genuine QG failure masked by cwd
   drift — worth remembering: a background task's "completed, exit 0" notification is not itself proof
   of a real pass.
-- **2026-08-21 (slot 13, interactive, later same session)**: operator asked to update the codex docs
-  so the round-robin mechanism is documented correctly (post-phase codex audit, CLAUDE.md's own
-  standing rule after a major phase). Found `/codex/04-architecture/agent-orchestrator-autospawn.md`
-  — the doc `authoritative_for: agent-orchestrator AutoSpawn worker-spawn architecture` — completely
-  silent on the multi-provider blend this whole issue lives in: its "Account-pick rotation" section
-  described a single-provider Claude-only picker, no mention of `free_provider_priority`, Phase 4
-  rotation, or `account_is_usable`'s real (post-2026-08-18, post-bug-1) semantics; separately, a
-  95%→99% pct-ceiling default had drifted stale across the whole doc. Rewrote the section end to end
-  (decision chain, bulk-selection spreading, health-failure ring), fixed every stale ceiling
-  reference, fixed two other stale pointers found in passing (a dead "Overview pointer" section
-  reference, an archived-not-active plan path) — both per CLAUDE.md's "a doc/pointer that misled you
-  is a finding, fix it in the same turn" rule. Validated with the repo's own
-  `check_frontmatter_schema.py` (clean) and `check_reference_paths.py` (0 new dangling refs, ratchet
-  held at the existing baseline of 34) before shipping. Shipped `unified-trading-pm@98d7642c05`. The
-  multi-account AUTH doc (`claude-cli-multi-account-headless-auth.md`) was checked and correctly
-  left untouched — its scope (per-account credential/token rotation) is genuinely distinct from the
-  multi-PROVIDER routing this issue is about, confirmed via grep before deciding not to touch it.

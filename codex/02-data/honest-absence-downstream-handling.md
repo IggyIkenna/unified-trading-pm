@@ -338,18 +338,6 @@ writer.record_captured(row_key=..., df=df)
 
 ---
 
-### Related field-level silent-drop: InstrumentRecord extra="forbid" (2026-08-21)
-
-A sibling class, one level down from the manifest-row violations above: `InstrumentRecord` (UAC
-`internal/reference/instrument.py`) used to accept and silently DROP any undeclared pydantic kwarg an adapter
-passed it — a caller could pass a stale/misspelled field name and lose that data with zero error, the field-level
-equivalent of Class 1's missing manifest row. Fixed by flipping `model_config = ConfigDict(extra="forbid")`
-(plan `instrument_record_schema_completeness_extra_forbid_2026_07_18`) after every existing undeclared-kwarg
-caller was found and fixed first — an unknown field now raises `pydantic.ValidationError` at construction instead
-of vanishing. Evidence: unified-api-contracts@cdb8ae8806.
-
----
-
 ### Summary anti-pattern table (§6A additions)
 
 | Violation class              | Symptom                                                                                                  | Root cause pattern                                                                 | Required call site                                                                                                                            |
