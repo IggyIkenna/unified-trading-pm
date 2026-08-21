@@ -132,41 +132,40 @@ up serving it.
       assume an Anthropic-only tier hierarchy) — needs investigation before a fix is
       designed, not a mechanical swap-in of `effective_model_for_telemetry`.
 
-## In progress, NOT yet root-caused: Gemini accounts show no weekly usage limit
+## Fixed (shipped, verified) — Gemini accounts showed no weekly usage limit
 
-Separate report, same session (2026-08-21): operator says Gemini accounts show no
-weekly limit in some dashboard view, and suspects the panel is using a Claude-shaped
+- [x] [UI] P1. **Root-cause and fix the Gemini weekly-limit display gap.** — FIXED,
+      agent-orchestrator@df1fd805e3. See the writeup + evidence below.
+
+Root-caused and fixed same session (2026-08-21). Operator report: Gemini accounts show
+no weekly limit in the dashboard, and suspected the panel is using a Claude-shaped
 "5-hour + weekly" window that doesn't match how Gemini's real quota is actually
-designed.
+designed — correct suspicion.
 
-**Confirmed so far**: `server/gemini_headroom.py` + `dashboard/src/GeminiCapacityPanel.tsx`
-already exist and are ALREADY CORRECT — Gemini's real ceiling is RPM (requests/min) +
-RPD (requests/day) + TPM (tokens/min, informational-only, no live "used" count exists
-pre-dispatch since token counts are only known after a turn completes). The panel
-already polls every 30s via `GET /api/accounts/gemini/capacity` →
-`compute_gemini_capacity_snapshot`, already shows RPM/RPD/TPM, not a 5hr/weekly shape.
+**Root cause confirmed**: `server/gemini_headroom.py` + `dashboard/src/GeminiCapacityPanel.tsx`
+were already correct (RPM/RPD/TPM, not 5hr/weekly) — but the GENERIC per-account
+`AccountRow` component (`dashboard/src/layout.tsx`, the row every account renders
+through in the main "Accounts" panel) only special-cased `isDeepseek`; every other
+provider, including Gemini, fell through to the Claude-shaped "Weekly %"/"5-hour" bars.
+Gemini accounts never populate `weekly_pct`/`weekly_msg_limit`, so that bar always
+computed to a permanent, meaningless **0%** — read by the operator as "no weekly
+limit shown." The dedicated `GeminiCapacityPanel` was correct all along; the generic
+row the operator was actually looking at was not.
 
-**NOT yet found**: which OTHER component the operator is actually looking at that
-renders Gemini accounts through the WRONG (Claude 5-hour/weekly) shape, leaving weekly
-blank. Candidates identified via `grep -rl "5.hour\|weekly" dashboard/src/*.tsx` but not
-yet individually checked: `ClaudeWalletPanel.tsx`, `FlatRateBoostPanel.tsx`, `App.tsx`,
-`layout.tsx`. Hypothesis: the generic "Accounts" panel (or a shared per-account usage
-table component) renders EVERY account — including Gemini ones — through a template
-built around Claude's real 5-hour-rolling + weekly window shape, alongside (not
-instead of) the correct, separate `GeminiCapacityPanel`; the operator may be looking at
-that generic row, not the dedicated Gemini panel, and not know the correct one exists,
-or the generic one needs to stop attempting to render weekly/5hr fields for a
-non-Anthropic provider at all.
-
-- [ ] [UI] P1. **Root-cause and fix the Gemini weekly-limit display gap.** Read
-      `ClaudeWalletPanel.tsx`, `App.tsx`, `layout.tsx` for the generic per-account usage
-      table/component the operator is actually seeing Gemini rows in. Confirm whether
-      it's (a) rendering Gemini accounts through the Claude 5hr/weekly shape at all
-      (should skip or route to the RPM/RPD shape instead), or (b) something else
-      entirely. Fix so Gemini accounts either don't render through the Claude-shaped
-      table, or that table itself detects `provider === "gemini"` and shows the real
-      RPM/RPD/TPM figures (already computed by `gemini_headroom.py`, just needs
-      wiring into whichever component this turns out to be) instead of blank weekly
-      figures. Confirm the fixed numbers update on the same live-refresh cadence as
-      every other account (operator's explicit ask: "make sure... they are also
-      updated with every other accounts").
+**Fix, agent-orchestrator@df1fd805e3**: wired the real RPM/RPD/TPM numbers onto
+`AccountView` itself (5 new fields: `gemini_rpm_used`, `gemini_rpm_ceiling`,
+`gemini_rpd_used`, `gemini_rpd_ceiling`, `gemini_tpm_ceiling`), populated via a new
+`_gemini_capacity_for` helper (`server/routes/accounts.py`) reusing
+`compute_gemini_capacity_snapshot`'s own query logic — batched once per poll in
+`list_accounts()`, computed per-account at every mutation endpoint (enable/disable/
+report-usage/etc). `AccountRow` now branches `isGemini` to a new `GeminiCapacityLine`
+component instead of the Claude-shaped bars. Because this rides the SAME `AccountView`
+object and poll cycle as every other account field, it refreshes on the identical
+cadence as everything else — satisfying the operator's explicit "make sure... they are
+also updated with every other accounts" ask, with no separate fetch/poll to keep in
+sync. Verified: 5309 backend tests + 468 dashboard vitest tests green, dashboard `tsc`
+clean, new regression coverage (`tests/test_account_view_provider.py`'s
+`_gemini_capacity_for`/`_account_to_view` gemini-field tests; a new Playwright spec in
+`dashboard/tests/e2e/gemini-capacity.spec.ts` asserting the seeded Gemini account's
+Accounts-panel row shows real RPM/RPD/TPM and has zero `.acc-bars` elements — the exact
+shape of the bug being regressed).
