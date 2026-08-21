@@ -334,7 +334,7 @@ below don't need todo 5's code to have landed first): a new module
 
 ---
 
-- [ ] [BACKEND] P0. **Break the deployment-api to deployment-service Python dependency** (added 2026-08-21, provenance
+- [x] ✅ [BACKEND] P0. **Break the deployment-api to deployment-service Python dependency** (added 2026-08-21, provenance
       `/plans/active/cross_repo_duplication_cleanup_2026_08_21.md`). `deployment-api/pyproject.toml:47,69,128` declares
       `deployment-service` as an editable path dependency and **15 non-test files import it**, two at module level
       (`routes/deployments_inventory/_aggregation.py:22-23`, `routes/deployments_inventory/_classification.py:20-21`;
@@ -344,7 +344,7 @@ below don't need todo 5's code to have landed first): a new module
       the repos — `config_loader.py`, `metrics.py` and `storage_client.py` are deliberately slimmed independent
       reimplementations — and left the route-level registry imports behind. Fix: hoist `CLOUD_RUN_JOBS` and
       `deployment_classification` to UAC, re-point the routes, drop the path dependency. SSOT:
-      `/codex/04-architecture/tier-and-import-architecture.md`.
+      `/codex/04-architecture/tier-and-import-architecture.md`. Evidence: deployment-api@a9b88f253 + deployment-service@ecb0c156 + unified-api-contracts@e48adfa3; deployment-api QG 5,414 passed/11 skipped, deployment-service QG 3,655 passed/5 skipped, UAC QG passed.
 - [ ] [BACKEND] P2. **Deduplicate the two backend pairs in `deployment-service`** (same provenance). `backends/aws.py`
       vs `backends/aws_batch.py` measure 404 vs 411 lines with **21 differing** (254 shared 30-line blocks);
       `backends/cloud_run.py` vs `backends/gcp.py` share 164 blocks. Extract the common driver rather than keeping two
