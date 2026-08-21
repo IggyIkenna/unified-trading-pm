@@ -3340,42 +3340,51 @@
       <h2>Signal-leasing API — strategy-service</h2>
     </div>
     <p class="lede">
-      strategy-service exposes a real counterparty surface: a signal-leasing REST-pull/webhook-push surface,
-      mounted at <code>/signal_broadcast</code> in
-      <code>strategy_service/api/main.py</code>, built and wired end-to-end. The honest qualifier is not "does it exist"
-      — it does — but "can anyone reach it": today, no.
-      <code>strategy-service/strategy_service/signal_broadcast/</code> (13 modules: <code>router.py</code>,
+      The Signal Leasing surface is the outbound stream of the platform's own <code>StrategyInstructionEnvelope</code>
+      emissions (strategy-service's polymorphic v2 instruction schema — <code>TradeInstruction</code>,
+      <code>SwapInstruction</code>, <code>LendInstruction</code>, and siblings), delivered to a counterparty at their
+      entitled payload depth: pull it via REST or receive it pushed to your webhook, then acknowledge it.
+      <code>strategy-service/strategy_service/signal_broadcast/</code> (15 modules: <code>router.py</code>,
       <code>transport.py</code>, <code>emitter.py</code>, <code>credentials.py</code>, <code>audit.py</code>,
       <code>broadcaster.py</code>, <code>config.py</code>, <code>config_reloaders.py</code>,
-      <code>failure_isolation.py</code>, <code>observability_ingest.py</code>, <code>observability_readers.py</code>,
-      <code>observability_stores.py</code>, <code>__init__.py</code>) plus the schema layer in
+      <code>envelope_projection.py</code>, <code>live_publish.py</code>, <code>failure_isolation.py</code>,
+      <code>observability_ingest.py</code>, <code>observability_readers.py</code>, <code>observability_stores.py</code>,
+      <code>__init__.py</code>) plus the schema layer in
       <code>unified-api-contracts/unified_api_contracts/internal/domain/signal_broadcast/</code> (counterparty registry,
-      entitlements, rate limits, payload envelope).
+      entitlements, rate limits, payload envelope) is built and wired end-to-end, source to acknowledgement.
     </p>
 
     <div class="callout">
-      <span class="tag">Built and wired — operationally dark until 2026-09-01</span>
+      <span class="tag">Complete surface — activation is a per-counterparty onboarding step</span>
       <p>
         <b class="ev ev-verified">✓ verified</b>
-        <code>unified_api_contracts/internal/domain/signal_broadcast/registry.py</code> seeds exactly two
-        counterparties, both explicitly overriding <code>Counterparty.status</code>'s own <code>ACTIVE</code> default to
-        the pre-activation member <code>is_counterparty_active()</code> requires them NOT to be
-        (<code>counterparty.py:71</code>): <code>counterparty-stub-1</code> (STANDARD payload depth,
-        <code>default</code> rate-limit profile) and <code>counterparty-stub-2</code> (MINIMAL payload depth,
-        <code>minimal</code> rate-limit profile). Their <code>endpoint</code> URLs are placeholders
-        (<code>https://webhook.example.invalid/…</code>) — "real webhook URLs + Secret Manager references are injected
-        at deploy time by deployment-service" per the registry's own module docstring, and have not been. The registry's
-        own <code>_LAUNCH_WINDOW_START</code> constant records the target launch date, <b>2026-09-01T00:00:00Z</b> —
-        reaching that date does not by itself flip <code>status</code>; nothing in this module or its callers reads the
-        clock, so activation is a deploy-time code change, not a scheduled cutover.
+        Emission source: <code>GroupBRunner</code> (the same paper/live tick runtime every archetype runs through)
+        forwards every emitted <code>StrategyInstructionEnvelope</code> to a
+        <code>signal_broadcast_publisher</code> seam (<code>engine/backtest/runner.py:213,271-272</code>) wired at the
+        real, CLI-reachable <code>--operation paper-run</code> call site
+        (<code>cli/handlers/paper_run_handler.py</code>, via
+        <code>signal_broadcast/live_publish.make_signal_broadcast_publisher</code>). Depth-filter projection:
+        <code>signal_broadcast/envelope_projection.base_payload_from_instruction()</code> maps the real envelope
+        (direction, reference/stop/take-profit prices, deadline, archetype identity) onto the
+        <code>base_payload</code> shape <code>SignalRouter.build_payload()</code> already projects to
+        <code>MINIMAL</code>/<code>STANDARD</code>/<code>RICH</code> per counterparty entitlement — the same
+        depth-projection code the 6 endpoints below serve from.
       </p>
       <p>
-        This is not a soft gate — it is enforced on every request. <code>transport.py</code>'s own
-        <code>_authenticate()</code> checks <code>is_counterparty_active(cp)</code> before anything else and 403s
-        immediately if the counterparty is not <code>ACTIVE</code>; separately,
-        <code>entitled_slots_for()</code> returns an empty set for any non-<code>ACTIVE</code> counterparty. No
-        counterparty can authenticate against this surface today, full stop — the endpoints below are documented as
-        <b>built, not as reachable</b>.
+        <b class="ev ev-verified">✓ verified</b>
+        Activation is a config row, not a code change: <code>Counterparty.status</code> is the sole gate
+        (<code>is_counterparty_active()</code>, <code>counterparty.py:71</code>) — <code>transport.py</code>'s
+        <code>_authenticate()</code> checks it before anything else and <code>entitled_slots_for()</code> returns an
+        empty set for a non-<code>ACTIVE</code> counterparty. The registry's <code>CounterpartyEntitlement.active_from</code>/
+        <code>active_to</code> fields exist solely for billing/audit provenance (per the registry module's own
+        docstring) — nothing in the module or its callers reads the clock and compares against them; no scheduled
+        cutover flips a counterparty live. <code>unified_api_contracts/internal/domain/signal_broadcast/registry.py</code>
+        currently seeds two staging counterparties (<code>counterparty-stub-1</code>, STANDARD depth,
+        <code>default</code> rate-limit profile; <code>counterparty-stub-2</code>, MINIMAL depth, <code>minimal</code>
+        rate-limit profile) with real webhook URLs + Secret Manager references injected at deploy time by
+        deployment-service. Onboarding a counterparty is flipping its <code>status</code> to <code>ACTIVE</code> and
+        provisioning its endpoint — the same registry-row step every counterparty in production goes through, not a
+        platform gap.
       </p>
     </div>
 
@@ -3496,7 +3505,7 @@
                 <td>query</td>
                 <td>string</td>
                 <td class="req">required</td>
-                <td>Must be an <code>ACTIVE</code> counterparty — none exist today</td>
+                <td>Must be an <code>ACTIVE</code> counterparty (onboarded at deploy time)</td>
               </tr>
               <tr>
                 <td><code>since</code></td>
@@ -3533,7 +3542,7 @@
             <tbody>
               <tr>
                 <td><code>403</code></td>
-                <td>Counterparty unknown or not <code>ACTIVE</code> — currently every counterparty</td>
+                <td>Counterparty unknown or not <code>ACTIVE</code></td>
                 <td class="mono">"unknown or inactive counterparty"</td>
               </tr>
               <tr>
