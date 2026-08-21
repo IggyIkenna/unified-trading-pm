@@ -296,14 +296,9 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       confirms this was actioned: "at the operator's request: found and killed 3 confirmed-dead zombie tmux servers
       accumulated across today's incidents (2934337 — 7 dead sessions on the ambient socket including the split-brain
       slot 1; ...), each verified to have zero live `claude` child processes before touching anything."
-- [x] ✅ [OPERATOR] P2. **DONE 2026-08-21** — operator approved the flip. Verified first (not just taken on
-      faith): an 8-day dry-run pass (2026-08-13 -> 2026-08-21) showed zero `tmux_orphan_server_dry_run_found`
-      activity-log events and zero `TmuxPruner tick failed` errors in `journalctl` over the same window, and a live
-      `ps` check ground-truth-confirmed exactly one tmux server process alive on the host the entire time — the
-      split-brain bug that used to spawn extra servers was fixed the same day this detector shipped, so this
-      evidence means "nothing to judge yet", not "judged many real candidates correctly" like the sibling
-      per-claude-process sweep's own graduation above. Flipped `tuning.orphan_tmux_server_sweep_dry_run` to live —
-      `agent-orchestrator@c6fd119886`.
+- [ ] [OPERATOR] P2. Once `sweep_orphan_tmux_servers`'s dry-run logging shows zero false positives across a real
+      observation window on the live fleet (same graduation bar the existing per-claude-process sweep already cleared),
+      flip `tuning.orphan_tmux_server_sweep_dry_run` to live.
 - [x] ✅ [INFRA] P3. **DONE** — `unified-trading-pm@897067dc0b` widens the display grep to match the same
       classification vocabulary (in-code comment cites the fix explicitly). quickmerge's retry-regate has a real display bug (found 2026-08-13, not fixed this session): the
       failure-COUNT grep matches broad vocabulary (`❌|FAILED|ERROR|E `) but the failure-DISPLAY grep only matches
