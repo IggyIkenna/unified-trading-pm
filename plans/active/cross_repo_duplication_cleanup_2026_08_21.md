@@ -246,3 +246,29 @@ Three audit findings collide with plans that already own those files. Per the fi
 - **2026-08-21** — Plan created from the workspace-wide duplication audit. Scope narrowed after a conflict check found
   two `assigned_vm: planning` plans live in strategy-service, deployment-api and deployment-service, and one active
   plan already analysing both matching engines.
+
+### Corrections to this plan's own premises (measured during execution, 2026-08-21)
+
+- [x] ✅ **`ml_backup.py` is NOT a stray backup — the audit premise was WRONG and the P0 delete was correctly refused.**
+      It is live, load-bearing code: `internal/__init__.py`'s lazy map has 6 entries pointing at it,
+      `internal/ml/__init__.py` does `from ..ml_backup import *`, and real cross-repo importers exist in
+      `ml-service` (`cross_asset_training_pipeline.py`, `cross_venue_spread.py`) and
+      `unified-trading-library/unified_trading_library/ml/models.py`. Deleting it would have broken both repos.
+      The misleading NAME is the actual finding.
+- [ ] [AGENT] P2. **Rename `ml_backup.py` / finish the module split it defers.** Its own docstring says
+      "The file was too large to properly split within time constraints... TODO: Complete proper module split".
+      A file named `*_backup` that six lazy re-exports and two repos depend on is a navigability trap.
+- [x] ✅ **The "`features_sports/storage.py` has zero importers" claim was also WRONG** —
+      `tests/internal/unit/test_domain_new_modules.py` imported it. It was repointed to `internal/sports.py`
+      before the delete, not deleted blind.
+- [x] ✅ **A real bug was fixed in passing**: `canonical/domain/sports/bookmaker.py` used
+      `from ..bookmaker_registry import ...` (double-dot), silently reaching the top-level copy instead of the
+      canonical `sports/` one — contradicting its own docstring. Corrected to a single dot.
+- [ ] [AGENT] P3. **One file was excluded from the UI ship**: `context/pm/docs/Odum Research Ltd.pdf` is still
+      tracked. `quickmerge --files` word-splits on whitespace and the path contains a space, so it cannot be named;
+      `--agent` mandates `--files`, so the unscoped path is unavailable. Delete it in a follow-up, or fix
+      `quickmerge.sh` to accept a NUL-delimited file list.
+- [ ] [AGENT] P3. **`lib/types/api-generated.ts` is ~3 months stale** — 479 paths vs UAC's live spec at 628 paths
+      (last true regen 2026-05-16, reverted the same day in `91e45bdf`). The `uic-openapi-sync.yml` template fix has
+      landed but `rollout-workflow-templates.sh` was NOT run, so the live per-repo workflow still carries the old
+      fallback.
