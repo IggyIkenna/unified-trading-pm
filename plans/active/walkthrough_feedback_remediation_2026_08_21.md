@@ -183,10 +183,18 @@ drift_direction: advance-code
       contradiction resolved by explaining/fixing the strict all-or-nothing venue verdict vs volume-weighted
       percentage; prediction markets split by canonical groupings (CanonicalQuestionGroup, post-registry
       cleanup).
+- [ ] [BACKEND] P1. Build the archetype-readiness capability audit (operator feedback: "READINESS APPLIES TO
+      ARCHETYPES AS WELL AS VENUES" — specified, not built). Derive per-(archetype, venue, mode) readiness from
+      each archetype's declared FEATURE_REQUIRED_INPUTS against the venue's satisfiable inputs, across batch/
+      paper/live, so that axis stops reporting blanket unverified. Reuses the readiness-dump strategy-leg check;
+      output joins the per-venue 8-leg model.
 - [ ] [AGENT] P0. Re-audit: after all clusters land, re-run `venue_instrument_type_triples()`,
       `derive_readiness.py` and the coverage dump; confirm 0 unresolved pairs, 0 unbucketed venues, and refresh
       every number in the artefact from those runs. Get some venues to genuinely ready so the readiness tree is
-      not all "coming soon".
+      not all "coming soon". The re-audit is GATED on the two active data-side degraders the artefact names:
+      the path-canonicalisation CASING writer regression (grew 13x — T2 owns the canonicalisation code) and the
+      prediction-capture outage — confirm both fixed (or explicitly carve them out with a dated note) before
+      republishing coverage numbers.
 
 ## Sibling clusters (in-plan on their tranches — do not duplicate here)
 
