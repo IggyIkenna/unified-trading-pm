@@ -568,7 +568,7 @@ todos only to confirm they are data-movement, then leave it.
       `test_evm_lst_rows_queries_concurrently_not_sequentially` stubs `_query_rate` with a real `time.sleep(0.05)`
       and asserts wall-clock stays near ONE sleep rather than N — fails against the pre-fix sequential
       implementation by construction (11 tokens x 0.05s = 0.55s sequential vs the assertion's <0.275s bound).
-      59/59 tests passing (58 pre-existing + 1 new). Evidence: `market-tick-data-service@<pending-ship>`.
+      59/59 tests passing (58 pre-existing + 1 new). Evidence: `market-tick-data-service@894a942511`.
       **Still open**: `dex_swaps_handler.py` (needs a stage-module extraction first, file at its 900L cap — a
       distinct, larger refactor, not attempted this pass), `gas_fee_handler.py`/`vault_share_price_handler.py`
       (sync RPC-calling functions, needs async-ifying the call chain first — a separate design call per the
