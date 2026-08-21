@@ -90,6 +90,17 @@ STASH_WARN_COUNT="${STASH_WARN_COUNT:-15}"
 STASH_WARN_AGE_DAYS="${STASH_WARN_AGE_DAYS:-14}"
 STASH_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/stash-pile-detect.sh"
 
+# Bare-root (slot-0) dirty/untracked alert watchdog
+# (bare_root_repo_agent_writes_unenforced_2026_08_21.md). A checkout at
+# ${WORKSPACE_PATH}/<repo>/ is NEVER a worker's assigned slot (per-tab-worktrees.md: "a
+# bare <repo> path... is NEVER your slot") — any DIRTY/untracked state there is always a
+# routing mistake, unlike ordinary numbered-slot WIP. Before this watchdog, classify_repo's
+# slot-0 call site fed post_snapshot only (passive telemetry, no alert): three bare-root
+# repos sat dirty for up to ~20h before being found by hand. Reuses the SAME
+# dedup-per-episode ping pattern check_starvation_for_slot/check_stash_pile_for_slot
+# already use below. Toggle off with BARE_ROOT_DIRTY_WATCHDOG=0.
+BARE_ROOT_DIRTY_WATCHDOG="${BARE_ROOT_DIRTY_WATCHDOG:-1}"
+
 # Token-near-expiry early warning
 # (git_status_reporter_stale_public_url_token_expiry_2026_07_24.md option (a) —
 # the reporter already resolves the bearer token to build the Authorization
@@ -787,6 +798,43 @@ check_stash_pile_for_slot() {
     done
 }
 
+# Bare-root (slot-0) dirty/untracked alert watchdog
+# (bare_root_repo_agent_writes_unenforced_2026_08_21.md). Consumes the rows_tsv the slot-0
+# walk already built (the same classify_repo output post_snapshot sends) instead of
+# re-walking the repos or re-running git status — this is purely an alerting pass over data
+# already computed. A `dirty` verdict on ANY bare-root repo (classify_repo's own state
+# precedence already folds untracked-only files into "dirty" via its porcelain loop above,
+# so this single check covers both "dirty" and "untracked-files" per the issue's wording)
+# pings once per (slot-0, repo) episode via the same post_starve_ping + per-(slot,repo)
+# marker-file dedup pattern check_starvation_for_slot/check_stash_pile_for_slot use above,
+# and clears the marker once the repo goes clean again so a future episode re-pings.
+check_bare_root_dirty_for_slot0() {
+    local rows_tsv="$1"
+    [[ "${BARE_ROOT_DIRTY_WATCHDOG}" -eq 1 ]] || return 0
+    local token
+    token=$(resolve_token_for_slot "0") || return 0
+    mkdir -p "${STARVE_STATE_DIR}" 2>/dev/null || true
+
+    local repo_name state dirty_files dirty_sample_raw marker payload _ _rest
+    while IFS=$'\t' read -r repo_name _ state dirty_files _ _ _ _ _ _ dirty_sample_raw _rest; do
+        [[ -z "${repo_name}" ]] && continue
+        marker="${STARVE_STATE_DIR}/slot-0__${repo_name}.dirty-warn"
+        if [[ "${state}" == "dirty" ]]; then
+            if [[ ! -f "${marker}" ]]; then
+                payload="BARE-ROOT DIRTY — slot 0/${repo_name}: ${dirty_files} dirty/untracked file(s) in the un-slotted base checkout at ${WORKSPACE_PATH}/${repo_name}/ (this is NEVER a worker's assigned .tabs/<N>/ slot — investigate before it accumulates; see bare_root_repo_agent_writes_unenforced_2026_08_21.md). Sample: ${dirty_sample_raw//|/; }"
+                if post_starve_ping "0" "${repo_name}" "${payload}" "${token}" "bare-root-dirty"; then
+                    : > "${marker}" 2>/dev/null || true
+                fi
+            else
+                log_quiet "[bare-root-dirty-dup] slot 0/${repo_name} — already signalled this episode"
+            fi
+        else
+            # Clean again → clear any prior marker (a future dirty episode re-pings).
+            [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+        fi
+    done <<< "${rows_tsv}"
+}
+
 # Decode the `exp` (Unix epoch, UTC) claim from a JWT's second (payload) segment.
 # Prints the epoch on success; prints nothing and returns non-zero on any malformed/
 # undecodable input — callers MUST treat that as "can't tell, skip" rather than
@@ -967,6 +1015,7 @@ if slot_in_filter "0"; then
     done
     if [[ -n "${rows_tsv//[$'\n\t ']/}" ]]; then
         post_snapshot "0" "${rows_tsv}"
+        check_bare_root_dirty_for_slot0 "${rows_tsv}"
     else
         log_quiet "[skip:empty] slot 0 (main workspace) — no git repos found"
     fi
