@@ -233,16 +233,11 @@ impression:
 - [x] ✅ [BACKEND] P0. Make CCXT order placement durable and retry-safe: require/persist one client-order id across ambiguous retries, use each venue's verified parameter name, and reconcile an uncertain submission before resubmitting; HIGH finding: checklist point 6 (all eight adapters, with Coinbase's `client_oid` deviation at `coinbase_ccxt.py:116-146`). — execution-service@77c4254543 + evidence: quality-gates.sh green (152s, sentinel matched committed HEAD; 8991 passed); new shared `ccxt_idempotency.py` (`require_client_order_id()` + `place_ccxt_order_idempotent()`) plus `ccxt_common.find_order_by_client_id()`/`reconcile_ccxt_order_by_client_id()`; wired into all 8 adapters' live order-placement paths with each venue's verified client-order-id param (`newClientOrderId`/`orderLinkId`/`client_oid`/`clientOrderId`); see Progress Log entry below.
 - [x] ✅ [BACKEND] P0. Enforce fail-closed credential initialization and redacted error logging for the CCXT group; Coinbase currently constructs a real exchange without a missing-key guard (`coinbase_ccxt.py:44-52`), and all order error paths persist raw exception text (`*_ccxt.py` order handlers plus `ccxt_common.py:372-405`); HIGH/MEDIUM findings: checklist point 1. — execution-service@1e018eabf + evidence: `CoinbaseCCXTAdapter._get_exchange()` now raises `ValueError` when `mode=="real"` and `api_key`/`api_secret` are `None` (mirrors every other CCXT adapter's existing guard); added `redact_secret_text()` in `ccxt_common.py` and wired `api_key`/`api_secret` through the shared order-placement error path (`place_ccxt_order_idempotent`, `emit_adapter_fetch_failed`, `log_amend_failed`) so a live credential occurrence in a CCXT exception's text is redacted before it reaches a persisted `ORDER_FAILED`/`ADAPTER_FETCH_FAILED` event or a log line, across all 8 CCXT adapters; quality-gates.sh green (156s, sentinel matched committed HEAD); 24 new regression tests (`test_ccxt_common.py`'s redaction suite + new `test_coinbase_ccxt.py`); post-push ancestry verified.
 
-- [x] ✅ [BACKEND] P0. Betfair: add a customer-ref/idempotency key to the legacy `place_bet()` order-placement path
+- [ ] [BACKEND] P0. Betfair: add a customer-ref/idempotency key to the legacy `place_bet()` order-placement path
       (`betfair.py:398-421,491-508`) — the canonical `place_order()` path in `betfair_order_mapping.py:155` already
       threads `client_order_id` through as Betfair's `customerRef`, but `place_bet()` calls
       `_submit_place_orders()` with no customer_ref at all, so a retry after an ambiguous network failure on the
-      legacy path can double-place a bet; HIGH finding: checklist point 6. — execution-service@10e95008af +
-      evidence: quality-gates.sh green (167s, sentinel matched committed HEAD); `_submit_place_orders()` now takes
-      a `customer_ref` param and threads it into `place_orders`' `customer_ref` kwarg; `place_bet()` passes
-      `order.order_id[:32]` (Betfair's customerRef caps at 32 chars) as the ref; new regression test
-      `test_betfair_place_bet_threads_customer_ref` asserts the kwarg reaches the venue call. (repo:
-      execution-service)
+      legacy path can double-place a bet; HIGH finding: checklist point 6. (repo: execution-service)
 - [ ] [BACKEND] P0. Kalshi: make `_build_kalshi_headers()` fail closed on a signing error instead of silently
       substituting a raw SHA-256 digest for a valid RSA-PSS signature on any `ValueError` during key load/sign
       (`kalshi.py:116-128`); HIGH finding: checklist points 1 and 2 — a broken/misconfigured private key should

@@ -27,6 +27,7 @@ related:
     /plans/active/defi_satellite_ao_dispatch_batch18_2026_08_19.md,
     /plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md,
     /plans/active/issues/dp_fetch_009_defi_dex_pool_swaps_uniswap_v3_ethereum_stale_schema_validation_failed_2026_08_16.md,
+    /plans/active/issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]

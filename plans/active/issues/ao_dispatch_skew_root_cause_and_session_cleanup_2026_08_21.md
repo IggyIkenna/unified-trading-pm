@@ -34,6 +34,7 @@ tags: [agent-orchestrator, dispatch, round-robin, account-failover, overage, mul
 related:
   [
     /plans/active/issues/account_failover_ignores_overage_rejected_2026_08_18.md,
+    /plans/active/issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,

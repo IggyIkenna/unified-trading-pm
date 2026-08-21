@@ -693,12 +693,8 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       (main/harsh) between the todo's authoring and this pickup.
 - [x] ✅ [SCRIPT] P2. **instruments-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
       instruments-service) — instruments-service@9a1b9d58, verified HEAD ancestor-or-equal of `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml` declares `"pip>=26.2"`, `uv.lock` resolves `pip==26.2`, full `quality-gates.sh` green.
-- [x] ✅ [SCRIPT] P2. **DONE 2026-08-21 (slot-21).** **market-data-processing-service** — pip CVE-2026-13346 bump per
-      recipe above (was 26.1.2). `pyproject.toml` already declared `pip>=26.2` (landed separately, `df6ea0ed`), but
-      `uv.lock`'s own `requires-dist` metadata was stale (`>=26.1.2`) — regenerated via `uv lock` (resolved `pip==26.2`,
-      no other package changes), full `quality-gates.sh` green, shipped. (repo: market-data-processing-service) —
-      market-data-processing-service@e8233149ac, verified HEAD ancestor-or-equal of `origin/live-defi-rollout` via
-      `git merge-base --is-ancestor`.
+- [ ] [SCRIPT] P2. **market-data-processing-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      market-data-processing-service)
 - [ ] [SCRIPT] P2. **market-tick-data-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
       market-tick-data-service)
 - [ ] [SCRIPT] P2. **ml-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: ml-service)

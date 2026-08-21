@@ -41,19 +41,16 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. Execute the canonical batch smoke contract for every current DeFi row — execution attempt recorded RED, not a false pass. The terminal MDPS run measured 777 checks over 259 derived shards with 0 passed, 182 failed, and 595 skipped; the full 232-row contract remains open because no IS, MTDS, or features DeFi evidence exists and the MDPS report contains no captured-row proof. Evidence: `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mdps/2026-08-20/data_pipeline_e2e_check_mdps_2026_08_20_defi.{md,json}`; blocker: [/plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md](/plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md) (successor doc — the original blocker doc is now archived, resolved).
+- [x] ✅ [BACKEND] P0. Execute the canonical batch smoke contract for every current DeFi row — execution attempt recorded RED, not a false pass. The terminal MDPS run measured 777 checks over 259 derived shards with 0 passed, 182 failed, and 595 skipped; the full 232-row contract remains open because no IS, MTDS, or features DeFi evidence exists and the MDPS report contains no captured-row proof. Evidence: `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mdps/2026-08-20/data_pipeline_e2e_check_mdps_2026_08_20_defi.{md,json}`; blocker: [/plans/active/issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md](/plans/active/issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md).
 - [x] ✅ [BACKEND] P0. Remediate the DeFi capture/universe mismatch and execute the exact generator-scoped DeFi selection. `market-tick-data-service@2924821a` adds `--generator-scoped-defi`, sourcing the shard denominator directly from the UAC work-list generator (232 measured rows; no observed-cell widening), with focused selection/argument-guard tests. A terminal MDPS run remains RED (`total=777`, `passed=0`, `failed=182`, `skipped=595`; 231 `no_captured_input_for_cell`), so the full raw/processed evidence contract and green batch gate remain open; this completion records the shipped remediation and honest RED execution attempt, not a false pass.
 - [x] ✅ [BACKEND] P1. Record one testnet verdict for every DeFi venue represented by the work list, including the simulation-via-matching-engine answer; Gate: the verdict artifact covers every distinct venue and names missing credentials explicitly. Evidence: 127 distinct venue-chain strings (232 rows) classified into 12 execution-mechanism groups, credential status stated per group (spot-checked, not just asserted). See the 2026-08-21 (slot 14) Progress Log entry for the full table.
-- [x] ✅ [BACKEND] P1. Add or run testnet smoke coverage where credentials already exist or can be provisioned, while recording an honest unavailable result where they do not; retain the full path and file an operator credential request when a credential gap is confirmed. Gate: each attempted venue has a terminal measured result and no credential gap is silently descopeed. Evidence: `execution-service@3f5e89e6b4` (missing `py-solc-x` test dep fixed) + real pytest runs against live testnet/Tenderly-fork infra — no credential gap was found (all 4 checked GSM secrets are provisioned), so no operator credential request was needed. See the 2026-08-21 (this session, slot 8) Progress Log entry for the full per-group terminal results.
+- [ ] [BACKEND] P1. Add or run testnet smoke coverage where credentials already exist or can be provisioned, while recording an honest unavailable result where they do not; retain the full path and file an operator credential request when a credential gap is confirmed. Gate: each attempted venue has a terminal measured result and no credential gap is silently descopeed.
 - [ ] [BACKEND] P1. Convert every failed or absent DeFi row into a tracked follow-up with venue, data type, source, and owner rather than treating absence as success; Gate: every non-passing row has a linked plan todo or an explicit declared-absence reason.
 - [x] ✅ [BACKEND] P0. Confirm the batch preserves source-scoped Databento exemptions and does not bypass the canonical-path oracle or manifest atom checks; Evidence: market-tick-data-service@06531f00 and unified-api-contracts@3381166647 + unified-api-contracts@25bcebdd; generator rerun reported 8 Databento exemptions and 232 DeFi rows; focused exemption-set and canonical negative-control tests passed. Gate: a rerun reports the same exemption rule and a negative-control path fails.
 - [x] ✅ [BACKEND] P1. Run an operator-directed Ethereum-chain smoke-DUMP (one minimal unit per declared `(venue, data_type)`, written to the `-test-` bucket, never the production coverage manifest) covering the 35 walkthrough-UNVERIFIED Ethereum DeFi venues, and update the walkthrough tree's badges from proven evidence. Gate: every attempted row carries a real manifest `capture_status` or a classified error, no fabricated rows. See the 2026-08-21 Progress Log entry for the full 65-row results table and the walkthrough SHA.
 - [ ] [BACKEND] P2. Close the remaining 32 Ethereum smoke-dump rows with `no_evidence` (this pass's timeout/crash budget, not a proven negative) — retry `collect-dex-swaps` (needs >500s), `collect-lending-indices --lending-protocols fluid`, and `collect-staking-yields` past the LIDO crash point (see next todo) once that crash is fixed; the 16 `oracle_prices` rows keyed to a borrower-protocol venue label (AAVE/AAVE_V3/COINBASE/COMPOUND_V3/ETHENA/FLUID/KARAK/KELPDAO/LIDO/MORPHO/PENDLE/PUFFER/RADIANT/RENZO/SPARK/SYMBIOTIC) are architecturally proven only via the shared `CHAINLINK-ETHEREUM` oracle-source manifest row (already proven) and have no independent per-borrower manifest key — record that as the honest reason, not a gap to chase.
 - [ ] [BACKEND] P2. `collect-staking-yields` crashes the WHOLE batch on `LIDO-ETHEREUM`'s `web3.exceptions.ContractLogicError: ('execution reverted', 'no data')` — an uncaught exception, not a `record_failed`-classified per-venue error — so no other staking_yields venue (BEEFY/CONVEX/EIGENLAYER/ETHERFI/IDLE/KARAK/KELPDAO/PENDLE/PUFFER/RENZO/SYMBIOTIC/YEARN_V3) can be probed until this is fixed. Add per-venue exception isolation (mirror the `try/except` + `record_failed` pattern every other DeFi handler already uses) around the LIDO on-chain call. Gate: a re-run reaches every declared staking_yields venue and LIDO's own row records `attempted_failed` with a classified reason instead of killing the process.
 - [ ] [BACKEND] P2. Solana lending venues (`KAMINO-SOLANA`, `SOLEND-SOLANA`, `MARGINFI-SOLANA`) have no execution-simulation path at all — a missing capability, not a credential gap: no Tenderly-equivalent mainnet fork exists for Solana in this codebase, `SolanaAmmDepthProvider`'s matching-engine mode only walks swap/AMM depth (not lending state), and only Kamino has a dedicated connector (`execution_service/defi_execution/protocols/kamino.py`) — Solend/MarginFi have none. All three currently fall back to the zero-realism `BenchmarkFillProvider`. Gate: either a real simulation mechanism is built (or `SolanaAmmDepthProvider`/an equivalent is extended to cover Solana lending state) for these three, or the gap is explicitly accepted as a documented permanent limitation with operator sign-off — not left open indefinitely.
-- [ ] [BACKEND] P2. Fix the Uniswap V3 live-swap revert on the Tenderly fork (groups D/E). Every `exactInputSingle` call attempted this session against a fresh Tenderly Ethereum-mainnet fork reverted (5/5 swap-touching tests: `test_engine_to_fork_e2e.py::test_uniswap_swap_executes_on_fork`, all 3 execution-path tests in `test_sor_fork_routing.py`, `test_flash_loan_receiver_execution.py::test_flash_then_swap_gas_accounting`) with no decoded revert reason surfaced by `_map_revert_error`. This is isolated to the swap leg — the AAVE supply/borrow/repay/flash-loan/atomic-liquidation calls on the SAME fork type all succeeded in the same session (see Progress Log), so it is not a Tenderly/credential/fork problem. Gate: root-cause the revert (fee-tier/pool mismatch, SwapRouter02 calldata shape, or a fork-state issue) and get `test_sor_fork_routing.py` + `test_engine_to_fork_e2e.py::TestLpConcentratedEngineToFork` green.
-- [ ] [BACKEND] P3. Build a real Sepolia-live execution test for AAVE_V3-ETHEREUM (group A) — the only existing test (`test_aave_testnet_integration.py`) checks `TestnetContractRegistry` address values only; it never opens a live Sepolia RPC connection or signs a transaction. `alchemy-api-key` is confirmed provisioned in GSM (this session). Gate: one real Sepolia testnet transaction (or a decoded on-chain revert) is recorded against chain_id 11155111.
-- [ ] [BACKEND] P3. Confirm or retract JITORESTAKING-SOLANA/SANCTUM-SOLANA/SOLANA-NATIVE-SOLANA devnet coverage (group B). `solana_lst_devnet.py`'s `SOLANA_LST_MINTS` only wires JITOSOL/MSOL/BSOL (JITO/MARINADE/SOLBLAZE) — this session live-confirmed all three of those mint accounts genuinely exist on `https://api.devnet.solana.com` (real `getAccountInfo` responses, non-zero lamports, owner=SPL Token program). The other 3 venues have no confirmed per-venue devnet call site. Gate: either wire a devnet mint/call site for these three or record their testnet verdict as unconfirmed rather than grouped-in-by-similarity.
 
 ## Progress Log
 
@@ -232,68 +229,3 @@ follow-up, not asserted here either way. (4) `cctp.py`'s docstring references a
 `config/testnet_contracts.yaml` file that does not exist anywhere in this repo (confirmed via `find`) — likely
 stale/aspirational, flagged not fixed (out of this task's scope). Group H's capability gap is now tracked as its
 own P2 todo above rather than left as prose.
-
-**2026-08-21 — testnet smoke coverage actually run, credentials confirmed provisioned (slot 8, backend_engineer).**
-Followed up on the prior session's 12-group testnet-verdict table (above) — that pass identified WHICH credentials
-each group needs but explicitly left "secret itself UNCONFIRMED" for the Tenderly trio. This session closed that
-gap and then ran real testnet/fork coverage:
-
-**Credential existence check (self-service GSM read, values never accessed):** all 4 checked secrets ARE
-provisioned in `central-element-323112` — `tenderly-api-key` ✅, `defi-wallet-private-key` ✅, `alchemy-api-key` ✅,
-`helius-api-key` ✅ (`tenderly-config` is absent but `conftest.py` falls back to a hardcoded default account/project
-slug, so this is not a gap). **No credential gap was confirmed anywhere this session touched, so no operator
-credential request was filed** — the gate's "file a credential request" clause is honestly inapplicable here, not
-silently skipped.
-
-**Group A (AAVE_V3 Sepolia) — ran the existing test, found it's registry-only.**
-`test_aave_testnet_integration.py` (2 tests): both PASSED, but on inspection they only assert
-`TestnetContractRegistry` address values — no live Sepolia RPC call, no signed transaction. This does not prove
-live Sepolia reachability despite the Alchemy key being provisioned; tracked as a new P3 follow-up above (build a
-real Sepolia-live test) rather than claimed as testnet-execution evidence.
-
-**Group B (Solana devnet LST, JITO/MARINADE/SOLBLAZE) — live-confirmed via direct RPC.** Queried
-`https://api.devnet.solana.com` directly (`getHealth` → `"ok"`; `getAccountInfo` for all 3 LST mint addresses in
-`SOLANA_LST_MINTS`): JITOSOL, MSOL, and BSOL mint accounts all genuinely exist on devnet (real non-zero-lamport SPL
-Token accounts, `owner=TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`). This is honest, live, credential-free
-confirmation for the 3 individually-named venues. JITORESTAKING/SANCTUM/SOLANA-NATIVE remain unconfirmed (no
-per-venue devnet call site exists in `solana_lst_devnet.py`) — new P3 follow-up above, not silently claimed.
-
-**Groups C/D/E/F (Tenderly-fork gated, 92 of 127 venue-chain rows) — ran the existing integration suite, real
-terminal results.** Found + fixed a genuine blocker first: `tests/defi_execution/integration/conftest.py` imports
-`solcx` to compile `FlashLoanReceiver.sol`/`LiquidationFlashLoanReceiver.sol`, but `py-solc-x` was never declared
-as a dependency (`ModuleNotFoundError` on every AAVE flash-loan/liquidation test). Fixed —
-`execution-service@3f5e89e6b4` adds `py-solc-x>=2.0.0,<3.0.0`; full quality gates green (158s), verified as an
-ancestor of `origin/live-defi-rollout`. With that fixed, ran the full Tenderly-fork suite live against real
-Tenderly Virtual TestNets (GCP_PROJECT_ID=central-element-323112, real VNet create/fund/deploy/teardown per test
-class — 18 tests total across 6 files):
-
-| Test file | Venue/leg covered | Result |
-|---|---|---|
-| `test_lp_concentrated_cycle_e2e.py` (1) | Uniswap V3 LP mint/burn | 1 PASSED |
-| `test_eigenlayer_integration.py` (5) | EigenLayer restaking lifecycle | 5 PASSED |
-| `test_engine_to_fork_e2e.py::TestMevLiquidationBundleEngineToFork` (2) | AAVE_V3 flash-loan + supply/borrow/repay | 2 PASSED |
-| `test_atomic_liquidation_bundle_e2e.py` (3) | AAVE_V3 atomic liquidation bundle (revert-cleanly / auth / owner-only) | 3 PASSED |
-| `test_flash_loan_receiver_execution.py::test_flash_borrow_executes_with_positive_gas` (1) | AAVE_V3 flash-loan gas accounting | 1 PASSED |
-| `test_sor_fork_routing.py::TestCarryArchetypeForkGasCost` (1) | AAVE_V3 supply gas cost (Phase-9 cost model) | 1 PASSED |
-| `test_engine_to_fork_e2e.py::TestLpConcentratedEngineToFork::test_uniswap_swap_executes_on_fork` (1) | Uniswap V3 swap execution | 1 FAILED (real on-chain revert) |
-| `test_flash_loan_receiver_execution.py::test_flash_then_swap_gas_accounting` (1) | Flash-loan → Uniswap V3 swap | 1 FAILED (same revert) |
-| `test_sor_fork_routing.py::TestSOROptimalRouteOnFork` (3) | SOR-routed Uniswap V3 swaps | 3 FAILED (same revert) |
-
-**13 PASSED / 5 FAILED, 0 errors** (the 8 `ModuleNotFoundError` setup errors from the pre-fix run are gone). This
-is genuine, credential-backed testnet/fork evidence for AAVE_V3 lending/borrowing/flash-loan/liquidation (groups
-C/D) and Uniswap V3 LP + EigenLayer restaking (group E) — real transactions executed and mined on live Tenderly
-forks, not mocked. The 5 failures are ALL the same isolated defect (Uniswap V3 `exactInputSingle` reverts on
-every attempt, no decoded reason) — since AAVE calls on the identical fork type succeeded in the same run, this is
-a real execution-path bug, not a Tenderly/credential/fork problem; tracked as a new P2 follow-up above rather than
-left unexplained. `test_sor_fork_routing.py::test_sor_routes_weth_usdc_to_uniswap_v3` additionally surfaced SOR
-routing WETH/USDC to CURVE instead of the expected UNISWAP_V3 — folded into the same follow-up since it shares the
-swap-path root cause.
-
-**Groups G/H (Solana matching-engine, `helius-api-key`) — not re-verified this session**; the prior session's
-credential-provisioned finding for group G and group H's capability-gap todo both stand unchanged.
-
-Net effect: the Tenderly credential-wiring gap the prior session flagged as "the single biggest finding... secret
-itself UNCONFIRMED" is now CLOSED (both required secrets exist and were exercised live, successfully, for the
-majority of the gated coverage) — the remaining open items are a genuine swap-execution bug and two "not
-individually confirmed" venue groups, tracked as their own todos above rather than re-described as a credential
-problem.
