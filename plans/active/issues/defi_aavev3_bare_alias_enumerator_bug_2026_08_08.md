@@ -151,6 +151,14 @@ defect (phantom-venue emission) without touching a registry other code may depen
       doesn't run cleanly, this may need EITHER a longer external-reaper grace window for this launcher class OR
       a delivery path less dependent on a backgrounded-subshell's own GCS reliability (e.g. a Cloud Run Job
       instead of a raw VM) — an infra/design call, not a further code-guess.
+      **UPDATE 2026-08-21 — attempt #11, with EVERY known code-level fix live (`@74c3ad84f1`, `@3ed72199a5`,
+      `@f63eeed04d`, `@38f760e034`), failed identically (no `run.log`, ~17.5min self-delete). This is now the
+      decisive data point ruling out a further code fix from this session** — see Progress Log for full detail.
+      **Next step is an infra/operator judgment call, not another code guess**: either investigate this
+      GCP project/zone's network path to `storage.googleapis.com` directly, or switch this launcher to a
+      structurally different execution path (foreground `gcloud compute ssh` session, or a Cloud Run Job instead
+      of a raw VM) that doesn't depend on a backgrounded subshell's GCS reliability at all. Not attempting a 12th
+      blind relaunch.
       Twin-exists-collision precondition CONFIRMED SATISFIED 2026-08-09
       (see Progress Log) — full-population live-manifest check found 0 of the 46,300 bare cells lacking a
       correct-key `AAVE_V3`-ETHEREUM twin; "0 backing GCS objects" was independently established by the 2026-08-08
@@ -392,3 +400,28 @@ defect (phantom-venue emission) without touching a registry other code may depen
   `deployment-service@38f760e034`. This does not resolve the AAVEV3 dry-run's own unresolved mystery (attempt #9
   already had this exact fix live and still lost `run.log`) — it closes out the class of risk for every OTHER
   launcher that hadn't gotten it yet, on general reliability grounds established by this investigation.
+  **Attempt #11** (relaunched immediately after `@38f760e034` landed, confirmed via `git merge-base --is-ancestor`
+  before launching — every known code-level fix now live: `@74c3ad84f1`, `@3ed72199a5`, `@f63eeed04d`,
+  `@38f760e034`): `run.log` never appeared (0 bytes/absent the whole run, confirmed by reading the object directly
+  every ~25s, not just checking existence), `insert`→`delete` gap ~17.5min, delete again attributed to
+  `uts-prd-sa`. **This is the decisive data point**: every code-level explanation this investigation could find
+  and fix is now shipped and confirmed live on the exact VM that still failed identically. The remaining cause is
+  not in this launcher's code, not in the shared wrapper's code, and not in output buffering — it is external to
+  everything this session can change from a laptop. **Stopping here per this investigation's own retry-discipline
+  norm** (11 attempts across two sessions, the last 3 with progressively more of the fix surface shipped and
+  verified, no improvement in outcome) — not attempting a 12th launch.
+  **What's confirmed real and shipped** (all verified as ancestors of `origin/live-defi-rollout`, not just
+  claimed): the shell-side `run.log` fallback, the `python -u` fix (both the original launcher and all 48 fleet
+  siblings), and the diagnostic instrumentation — every one of these is a genuine improvement to shared VM infra
+  regardless of the AAVEV3 mystery, and will help diagnose or prevent the *next* occurrence of this class of
+  problem even if it doesn't resolve this one.
+  **What's still open, unchanged from before**: the dry-run has never been observed to complete in 11 attempts;
+  `--apply` was correctly never run (its precondition was never met); this doc's `[DATA] P1` todo stays open.
+  **Recommended next step for whoever picks this up**: this now reads as either (a) a genuine, still-unexplained
+  environment issue specific to this GCP project/zone/machine-type combination that needs operator-level
+  infrastructure investigation (network path, VPC/firewall egress to `storage.googleapis.com`, or a rate limit
+  specific to this bucket) rather than more application code changes, or (b) worth trying a structurally different
+  execution path that doesn't depend on a backgrounded shell subshell's GCS reliability at all — e.g. running the
+  purge script directly via `gcloud compute ssh` with a foreground, directly-observed session, or dispatching it
+  as a Cloud Run Job instead of a raw GCE VM. Neither of these is a code-level "fix another bug" step — both are
+  judgment calls for a human or a dedicated infra investigation.
