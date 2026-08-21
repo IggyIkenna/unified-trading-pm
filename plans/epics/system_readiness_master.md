@@ -565,8 +565,8 @@ strategy's `ExposureAggregator` rather than keeping a duplicate local exposure v
 
 ## W15 — Security
 
-- [ ] [BACKEND] P0. **Security audit of every venue adaptor for vulnerabilities, especially DeFi.** On-chain write
-      paths carry irreversible consequences; this is not a documentation exercise.
+- [x] ✅ [BACKEND] P0. **Security audit of every venue adaptor for vulnerabilities, especially DeFi.** On-chain write
+      paths carry irreversible consequences; this is not a documentation exercise. (Audited per `plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`)
 
 ## W16 — Triggers, latency and preflight
 
