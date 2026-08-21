@@ -139,16 +139,44 @@ this case and will send the next agent hunting a regression in unrelated files.
       slot-cron-ff-pull venv-resync 6/6. Repo: unified-trading-pm.
 - [ ] [DOC] P2. Correct the re-gate message: "this is a REAL failure, not a lost race" is asserted unconditionally, and
       it is wrong for load-induced flakes. Point at this issue from the BATS hard-fail line. Repo: unified-trading-pm.
-- [ ] [TEST] P2. The poll-until-detected fixes (todos 2-4 above) are NOT fully sufficient — reproduced 2026-08-21
-      (slot 14) with the SAME 3 `test_session_start_collision_check.bats` failures ("detects a live foreign
-      process...", "warning names the slot dir...", "falls back to plain-text output when jq is unavailable...")
-      plus 1 `test_slot_collision_detect_lsof_batching.bats` failure ("foreign_claude_pids still finds a live peer
-      through the batched path"), deterministically across 2 consecutive standalone runs, at `uptime` load average
-      ~10.1-10.3 — far below the 48-164 range this issue's "under host load" framing assumes — with `lsof`
-      (`/usr/bin/lsof`) and `/proc` both confirmed present and functional. Todos 2-4's "10/10 pass standalone" /
-      "4/4 pass" claims no longer hold in every environment. Re-investigate `_spawn_fake_peer`'s precondition-poll
-      (or the detector's own budget) for whatever this execution environment's actual bottleneck is — it is not
-      purely load-average-correlated as currently documented. Repo: unified-trading-pm.
+- [x] ✅ [TEST] P2. **ROOT CAUSE FOUND — this was never a load/timing race in an AO-spawned worker pane; it's a
+      guard-interaction bug.** Reproduced 2026-08-21 (slot 14) with the SAME 3 `test_session_start_collision_check.bats`
+      failures + 1 `test_slot_collision_detect_lsof_batching.bats` failure, deterministically across 2 consecutive
+      standalone runs at `uptime` load ~10.1-10.3 (far below the 48-164 range this issue's "under host load" framing
+      assumes), with `lsof`/`proc` confirmed present and functional — ruling out todos 2-4's timing-race diagnosis
+      for THIS environment. Direct reproduction outside bats isolated it: `scripts/hooks/pkill-guard.sh`'s
+      cross-slot-kill guard (RULES.md §1) is installed on every AO-spawned worker pane as a PATH-prepended
+      `scripts/hooks/pkill-guard-bin/pgrep` wrapper (not the sourced-shell-function form that file's own header
+      describes) — and `foreign_claude_pids()`'s `pgrep -f claude` call in
+      `cursor-configs/hooks/lib/slot-collision-detect.sh` has no slot-specific discriminator by DESIGN (its whole
+      job is finding peers in OTHER slots), so the guard REFUSES it outright. The refusal's stderr is swallowed by
+      the caller's `2>/dev/null`, so `foreign_claude_pids` silently returns zero candidates — indistinguishable
+      from "genuinely no peer". The guard's own header comment claims `command pgrep ...` bypasses it, but that is
+      only true for the sourced-shell-function form; a `command pgrep` call still resolves the PATH-prepended
+      wrapper script and gets refused identically (verified live). **Fix**: use `command -p pgrep` instead (POSIX
+      "force the default system PATH", skips the prepended guard dir under BOTH installation forms, is a no-op
+      when no guard is installed at all) — `cursor-configs/hooks/lib/slot-collision-detect.sh`'s one call site.
+      Verified: `test_session_start_collision_check.bats` 14/14 pass (was 3 failing),
+      `test_slot_collision_detect_lsof_batching.bats` 14/14 pass (was 1 failing),
+      `test_pretooluse_slot_collision_guard.bats` 17/17 pass CLEANLY (previously relied on the
+      `slot_collision_guard_bats_fails_open_under_host_load` skip fallback for its 6 BLOCK-expectation tests — see
+      `plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md` cross-ref, now moot
+      for this specific failure mode). Repo: unified-trading-pm@<pending>.
+- [ ] [CODE] P2. The same exposure pattern (bare `pgrep -f '<pattern>'` with no slot-specific discriminator, inside
+      PRODUCTION code that legitimately needs a host-wide scan) exists in two more call sites found via
+      `grep -rn 'pgrep ' cursor-configs/hooks/ scripts/dev/*.sh` while root-causing the todo above — NOT fixed here
+      (out of this session's scope; each needs its own read + verification, not a blind find-replace):
+      `scripts/dev/auto-reconcile-starved-repo.sh:129` (`pgrep -f 'pytest|quality-gates|basedpyright|prek|git commit'`)
+      and `scripts/dev/slot-cron-ff-pull.sh:494` + `:500` (`pgrep -f 'pytest|quality-gates|basedpyright'`, the second
+      site piped to `grep -qF "${PWD}"` — a guard refusal here fails CLOSED silently, i.e. `_gate_here` never gets
+      set even when a real matching process exists, since the refused wrapper emits nothing on stdout for the pipe
+      to filter). Apply the same `command -p pgrep` fix to each, with its own test-suite verification pass.
+      Repo: unified-trading-pm.
+- [ ] [DOC] P3. The guard's own header comment (`scripts/hooks/pkill-guard.sh` lines 19-26) claims sourcing +
+      `command pkill/pgrep` bypass — but the AO-spawned-worker-pane install is the PATH-wrapper form
+      (`pkill-guard-bin/{pgrep,pkill}`), for which `command` does NOT bypass (only `command -p` or an absolute path
+      does). Update the header comment to document both installation forms and their different bypass semantics, so
+      the next reader doesn't rediscover this the hard way. Repo: unified-trading-pm.
 
 ## Evidence
 
@@ -172,6 +200,14 @@ this case and will send the next agent hunting a regression in unrelated files.
   (reproduces at load ~10, not just under heavy load) since it shows the existing fix is incomplete, not just that
   the failure recurred. Declaring a `qg_red` repo-blocker per RULES.md §4b to unblock my own unrelated ship rather
   than working around the gate.
+- 2026-08-21, slot 14 (same session, continued): root-caused and fixed it — see the now-checked P2 todo above.
+  Not a load/timing race in this environment at all: `scripts/hooks/pkill-guard.sh`'s cross-slot-kill guard
+  (installed as a PATH-prepended wrapper on every AO-spawned worker pane) refuses `foreign_claude_pids()`'s
+  deliberately-unscoped `pgrep -f claude` call, and the refusal's stderr is swallowed, so it silently reads as
+  "no peer". Fixed with `command -p pgrep` at the one call site in `slot-collision-detect.sh`. Verified 3 full
+  test files green (14/14, 14/14, 17/17 — the last previously relying on this same issue's own skip fallback).
+  Two more exposed call sites found (not fixed — new P2 todo) + a doc-accuracy gap in the guard's own header
+  (new P3 todo). Shipping this fix + my original unrelated P1 together once Pass-1 QG is green.
 - **2026-08-22 (slot-4)**: hit this exact failure signature while shipping an unrelated PM-only change (dropping a
   resolved pip CVE ignore + a plan-doc checkbox flip — `scripts/quality-gates-base/qg-common.sh` +
   `plans/active/issues/*.md`, neither of which the failing tests import/invoke/reference). `not ok` on the same 4
@@ -192,3 +228,9 @@ this case and will send the next agent hunting a regression in unrelated files.
   change via a direct `git push` (rebase-reconciled, verified ancestor of origin) rather than blocking on this
   pre-existing red — same "PM pipeline-fix blocked behind a broken gate is a deadlock" reasoning already used
   elsewhere in `cve_affected_pinned_deps_remediation_2026_06_18.md`.
+
+**Note (slot-4's entry above still describes the pre-fix state)**: slot-4's 2026-08-22 repro predates this doc's
+`command -p pgrep` fix landing on `origin/live-defi-rollout` (rebase-reconciled here, 2026-08-22) — it is evidence
+the same underlying pkill-guard interaction was live and biting a second, independent worker in the window between
+the fix being committed locally and it actually reaching origin, not evidence the fix is insufficient. No new todo
+needed: the fix ships in this same push; a fresh red after that would be a new, real regression.

@@ -134,7 +134,20 @@ foreign_claude_pids() {
   command -v pgrep >/dev/null 2>&1 || return 0
   ancestors="$(_ancestor_pids)"
   slot_real="$(readlink -f "${slot_dir}" 2>/dev/null || echo "${slot_dir}")"
-  for pid in $(pgrep -f claude 2>/dev/null || true); do
+  # `command -p`, not bare `pgrep`: this call is DELIBERATELY unscoped (its whole job
+  # is to find peers in OTHER slots), so on a host with the AO-spawned-worker-pane form
+  # of scripts/hooks/pkill-guard.sh installed (a PATH-prepended pkill-guard-bin/pgrep
+  # wrapper script, not the sourced-shell-function form that file's own header
+  # documents) a bare `pgrep -f claude` is REFUSED outright -- silently returning zero
+  # candidates, which foreign_claude_pids's own contract reads as "no peer" rather than
+  # "couldn't check" (bare_root_repo_agent_writes_unenforced_2026_08_21.md Progress Log
+  # / slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md: reproduced
+  # deterministically, not just under load -- root cause isolated to this guard
+  # interaction, not host contention). `command pgrep` does NOT bypass a PATH-based
+  # wrapper (only a shell function); `command -p` forces the POSIX default PATH,
+  # skipping the prepended guard dir on BOTH the wrapper-script and shell-function
+  # installs, and is unaffected either way when no guard is installed at all.
+  for pid in $(command -p pgrep -f claude 2>/dev/null || true); do
     case "${ancestors}" in *" ${pid} "*) continue ;; esac
     candidates+=("${pid}")
   done
