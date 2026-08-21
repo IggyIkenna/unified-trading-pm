@@ -545,3 +545,22 @@ the 10th consecutive occurrence of this exact wall type diagnosed live and confi
 distinct bug) — `unified-api-contracts` converged during this session, `execution-service` remains a benign in-flight
 race at hand-off. Todos 1 (dedup-key, already `[x]`) and the swallowed-error P3 (already extracted to
 `ci_satellite_ao_dispatch_batch16_2026_08_21.md`) are unchanged — this occurrence did not exercise either.
+
+**cicd escalation agt-06ef7a, 2026-08-21 (re-dispatch citing `execution-service` 7 straight SIT-gate-blocked ticks,
+latest tick run `https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32480318469` — continuation of the
+same in-flight race the immediately-preceding `agt-a38708` entry handed off at streak 5): confirms `execution-service`
+already converged before this dispatch reached me — the same delayed-dispatch/stale-`CONTEXT` pattern this doc's
+Finding 2 correction and the 2026-08-18 entry already document. Live-checked, not assumed from `CONTEXT`:
+`sit_gate_stuck_detector.py --threshold 1 --lookback 10` shows `execution-service` no longer in the blocked list at
+all (only `market-tick-data-service` at 2 straight, below the 3-tick alert bar); `--threshold 3 --lookback 8` (default)
+reports `healthy`. Verified concretely via the actual fleet-promote run, not just inferred from the detector: run
+`32492468779` (14:30:04Z→14:32:24Z) logged `TIER A PASS execution-service: ci_status cached='MAIN_GREEN'
+live='MAIN_GREEN'`, `CONTENT GATE PASS`, `posted sit-gate/fleet-green=success on execution-service@e4e6b9623230`,
+`SIT GATE PASS execution-service: non-breaking delta`, opened promote PR
+`https://github.com/IggyIkenna/execution-service/pull/759`, and the same tick's summary lists `execution-service`
+under `Promoted (13)`. No orphaned/stale promote PR (`gh pr list --search "chore(promote)" --repo
+IggyIkenna/execution-service` → empty post-merge). No code fix needed, nothing to push — this occurrence resolved
+itself in the natural commit lull the prior entry predicted. This is the 11th consecutive occurrence of this exact
+wall type resolving to "self-converges, no code fix." Todos 1 (dedup-key, already `[x]`) and the swallowed-error P3
+(already extracted to `ci_satellite_ao_dispatch_batch16_2026_08_21.md`) are unchanged — this occurrence did not
+exercise either.
