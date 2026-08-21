@@ -57,7 +57,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-30
+last_updated: 2026-08-21
 context_scope:
   [
     scripts/quality-gates-base/qg-common.sh,
@@ -629,6 +629,54 @@ inline pin in place rather than adding a second, redundant `override-dependencie
       resolved cryptography 48.0.1 → 50.0.0. Full `quality-gates.sh` green (sentinel matched commit SHA).
       `system-integration-tests@64d09dd`, verified on `origin/live-defi-rollout`. (repo: system-integration-tests)
 
+## NEW 2026-08-21 — pip PYSEC-2026-3721/CVE-2026-13346 fleet sweep
+
+Surfaced by escalation `agt-614918` (`ldr_qg_failure`, unified-trading-pm quality-gates-v2 lint-codex/pip-audit red on
+`live-defi-rollout` HEAD `f9d8635c`). pip 26.1.2 — the version pinned fleet-wide (`workspace-constraints.toml` +
+`canonical-dependency-manifest.json`) as the FIX for the earlier PYSEC-2026-196 — is itself vulnerable (doubly-encoded
+index-URL path traversal; OSV: fixed in pip 26.2). `check-dependency-alignment.py` confirms `unified-trading-pm` and
+`unified-trading-api` are already source-ahead (`pip>=26.2` in pyproject.toml, uncommitted/unshipped for PM; already
+shipped for unified-trading-api), and 14 other repos are still at the vulnerable `pip>=26.1.2` floor. Immediate relief:
+`qg-common.sh@7e298f4807` (unified-trading-pm) added a TEMPORARY `--ignore-vuln PYSEC-2026-3721 --ignore-vuln
+CVE-2026-13346` to `QG_PIP_AUDIT_COMMON_IGNORES` — same recipe as every other entry in this doc. Real fix (same recipe
+as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `pyproject.toml`, `uv lock`, verify
+`quality-gates.sh` green, ship.
+
+- [ ] [SCRIPT] P2. **unified-trading-pm** — land the already-verified-locally `pip>=26.2` bump (pyproject.toml + uv.lock;
+      confirmed clean `quality-gates.sh` run during agt-614918's triage, reverted before shipping only because it
+      cascades into the canonical-alignment check below). (repo: unified-trading-pm)
+- [ ] [SCRIPT] P2. **alerting-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: alerting-service)
+- [ ] [SCRIPT] P2. **client-reporting-api** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      client-reporting-api)
+- [ ] [SCRIPT] P2. **deployment-api** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). NOTE: this repo also has
+      a pre-existing, unrelated `internal_in_manifest_not_pyproject` (dep: deployment-service) alignment gap surfaced by
+      the same `check-dependency-alignment.py` run — out of scope here, diagnose separately. (repo: deployment-api)
+- [ ] [SCRIPT] P2. **execution-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      execution-service)
+- [ ] [SCRIPT] P2. **features-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      features-service)
+- [ ] [SCRIPT] P2. **fund-administration-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      fund-administration-service)
+- [ ] [SCRIPT] P2. **ibkr-gateway-infra** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      ibkr-gateway-infra)
+- [ ] [SCRIPT] P2. **instruments-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      instruments-service)
+- [ ] [SCRIPT] P2. **market-data-processing-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      market-data-processing-service)
+- [ ] [SCRIPT] P2. **market-tick-data-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      market-tick-data-service)
+- [ ] [SCRIPT] P2. **ml-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: ml-service)
+- [ ] [SCRIPT] P2. **strategy-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: strategy-service)
+- [ ] [SCRIPT] P2. **system-integration-tests** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      system-integration-tests)
+- [ ] [SCRIPT] P2. **trading-agent-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      trading-agent-service)
+- [ ] [SCRIPT] P2. **(then) canonical + drop ignore.** Once every repo above is verified at `pip>=26.2`: edit
+      `workspace-constraints.toml`'s `pip` entry to `pip>=26.2`, regenerate `canonical-dependency-manifest.json` via
+      `generate_canonical_dependency_manifest.py`, re-run `check-dependency-alignment.py --json` fleet-wide to confirm
+      `"aligned": true`, then drop the `--ignore-vuln PYSEC-2026-3721 --ignore-vuln CVE-2026-13346` entry from
+      `QG_PIP_AUDIT_COMMON_IGNORES` in `qg-common.sh`. (repo: unified-trading-pm)
+
 ## Composes with
 
 - `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 1.5 (the uv work this is gated on)
@@ -657,3 +705,14 @@ inline pin in place rather than adding a second, redundant `override-dependencie
   one-by-one" sweep — actually depends on.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- **2026-08-21 (cicd agt-614918)**: unified-trading-pm's own `quality-gates-v2` went `ldr_qg_failure` red on
+  `live-defi-rollout` HEAD `f9d8635c` — root cause PYSEC-2026-3721/CVE-2026-13346 (pip 26.1.2, pinned fleet-wide as the
+  fix for the earlier PYSEC-2026-196, is itself vulnerable; fixed in pip 26.2). Verified locally: a real `pip>=26.2`
+  floor bump makes `quality-gates.sh` green (both pyproject.toml + uv.lock), but shipping it triggers
+  `check-dependency-alignment.py`'s canonical-vs-source check and reflags 14 other repos still on the old floor,
+  blocking PM's own quickmerge Stage 1.5 on unrelated repos — out of scope for a one-shot CI-wall fix. Landed a
+  TEMPORARY `--ignore-vuln PYSEC-2026-3721 --ignore-vuln CVE-2026-13346` in `qg-common.sh`'s
+  `QG_PIP_AUDIT_COMMON_IGNORES` instead (direct-pushed per CLAUDE.md's GATE-INFRA carve-out for
+  `scripts/quality-gates-base/**` — `unified-trading-pm@7e298f4807`, verified on `origin/live-defi-rollout`) and added
+  the "NEW 2026-08-21" todo section above tracking the real 15-repo fleet sweep + canonical bump + ignore-drop, same
+  shape as the cryptography sweep this doc already ran once.
