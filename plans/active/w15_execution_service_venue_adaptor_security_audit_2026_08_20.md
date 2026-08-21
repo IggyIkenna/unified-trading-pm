@@ -124,11 +124,8 @@ impression:
 
 ### DeFi by primitive — staking and restaking
 
-- [x] ✅ [BACKEND] P0. Audited the staking/restaking subset `lido.py`, `etherfi.py`, `rocket_pool.py`, and
-      `marinade.py` against the fixed seven-point checklist; findings and HIGH follow-ups are recorded in the
-      Progress Log and triage todos below. (repo: execution-service)
-
-- [ ] [BACKEND] P0. Audit the remaining staking/restaking group: `symbiotic.py`, `eigenlayer.py`, `karak.py`, `kelpdao.py`, `puffer.py`, `renzo.py`, `jito.py`,
+- [ ] [BACKEND] P0. Audit the staking/restaking group: `lido.py`, `etherfi.py`, `rocket_pool.py`, `marinade.py`,
+      `symbiotic.py`, `eigenlayer.py`, `karak.py`, `kelpdao.py`, `puffer.py`, `renzo.py`, `jito.py`,
       `jito_restaking.py`, `solblaze.py`. Checklist points 3 and 7 matter most here (unbonding/withdrawal request
       validation; honest reporting of a failed unstake, since a silently-swallowed unstake failure looks
       identical to "still staked" from the caller's side). Done-when: same evidence bar as above.
@@ -197,8 +194,6 @@ impression:
 - [ ] [BACKEND] P0. Harden Morpho Blue writes: validate amount/LLTV/market-id inputs, use configured loan-token decimals rather than unconditional 18-decimal conversion, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3 and 6 (`morpho.py`).
 - [ ] [BACKEND] P0. Validate Kamino transaction intent before signing: enforce positive amount and address/mint relationships, inspect/allowlist fee payer, programs, accounts, and token-approval scope in API-produced transactions, and add retry idempotency; HIGH findings: checklist points 2, 3, 5, and 6 (`kamino.py`).
 - [ ] [BACKEND] P0. Harden Idle vault writes: validate positive amounts, enforce caller minimum-output/deadline bounds for mint/redeem, fail closed instead of simulating success in incomplete live mode, and add durable idempotency across approval plus mint retries; HIGH findings: checklist points 3, 4, 6, and 7 (`idle.py`).
-- [ ] [BACKEND] P0. Harden Lido, EtherFi, and Rocket Pool writes: validate finite positive amounts before `to_wei()`, fail closed when `is_live` lacks loaded credentials instead of entering simulation, and add durable idempotency across approval-plus-wrap sequences and retries; HIGH findings: checklist points 3 and 6 (`lido.py:217-292,316-359,376-389`; `etherfi.py:211-325`; `rocket_pool.py:160-214`).
-- [ ] [BACKEND] P0. Replace Marinade's placeholder `Instruction(accounts=[])` writes with validated protocol account metas, enforce positive lamport-safe amounts, and add retry/idempotency protection around Solana broadcast; HIGH findings: checklist points 2, 3, and 6 (`marinade.py:176-202`).
 
 ### Close-out
 
@@ -245,17 +240,3 @@ Findings use the fixed seven-point checklist and cite exact implementation lines
 - `idle.py`: (1) PASS — credentials delegate to BaseConnector and private key is not logged (`idle.py:126-131`). (2) PASS — EVM signing and receipt handling delegate to the base connector. (3) HIGH — deposit/withdraw accept non-positive/fractional amounts and `to_wei()` truncates them (`idle.py:196-224,254-287,290-364`). (4) HIGH — `mintIdleToken()` and `redeemIdleToken()` have no caller minimum-output/share bound or transaction deadline despite a mutable vault share price (`idle.py:254-287,341-364`). (5) PASS — deposit approval is exact `amount_wei` (`idle.py:270-275`). (6) HIGH — approval then mint has no idempotency key or durable tx record (`idle.py:272-287`). (7) HIGH — incomplete live initialization falls through to simulated balance mutation and returns success (`idle.py:219-224,311-339`).
 
 No code was changed or tests run for this read-only audit; the explicit HIGH-finding follow-up todos above ensure findings are not prose-only.
-
-### 2026-08-21 — slot 7 staking/restaking audit (lido, etherfi, rocket_pool, marinade)
-
-Findings use the fixed seven-point checklist; these files have no swap price leg, so slippage/deadline is PASS/N-A.
-
-- `lido.py`: (1) PASS — injected BaseConnector credentials and public metadata-only logging (`lido.py:116-121`; `base.py:432-449`). (2) PASS — local base signing injects pending nonce/chain ID (`lido.py:250-259`; `base.py:492-535`). (3) HIGH — stake/unstake/wrap/unwrap accept unchecked Decimal amounts; `to_wei()` truncates without positivity, finiteness, or precision checks (`lido.py:217-232,316-324,376-389,422-432`; `_evm_generic.py:139-142`). (4) PASS/N-A — no price-bearing swap leg. (5) PASS — approvals are exact requested amounts (`lido.py:269-272,379-382`). (6) HIGH — submit → approve → wrap is retry-unsafe, with no idempotency key or durable sequence record (`lido.py:244-292`; `base.py:525-535`). (7) PASS — failures return unsuccessful results (`lido.py:259-292,351-359`).
-
-- `etherfi.py`: (1) PASS — injected credentials and public-address-only logging (`etherfi.py:118-123`). (2) PASS — shared EVM signer supplies nonce/chain ID (`etherfi.py:231-267`; `base.py:492-535`). (3) HIGH — stake/unstake forward unchecked Decimal values to truncating `to_wei()` (`etherfi.py:211-229,235-245,286-325`; `_evm_generic.py:139-142`). (4) PASS/N-A — no price-bearing leg. (5) PASS — eETH approval is exact `amount_wei` (`etherfi.py:250-253`). (6) HIGH — deposit → approve → wrap has no durable idempotency/retry record (`etherfi.py:231-267`). (7) PASS — failures are returned (`etherfi.py:246-267,305-325`).
-
-- `rocket_pool.py`: (1) PASS — injected wallet config and no secret logging (`rocket_pool.py:86-91`; `base.py:432-449`). (2) PASS — base signer injects pending nonce/chain ID (`rocket_pool.py:160-171,204-214`; `base.py:492-535`). (3) HIGH — stake/unstake pass unchecked amounts through `to_wei()` to `deposit`/`burn` (`rocket_pool.py:160-170,204-214`; `_evm_generic.py:139-142`). (4) PASS/N-A — not a swap path. (5) PASS/N-A — no approval path. (6) HIGH — retries create fresh transactions without an idempotency key or durable record (`rocket_pool.py:160-171,204-214`). (7) PASS — shared signer returns failures (`base.py:547-571`).
-
-- `marinade.py`: (1) PASS — key injection is centralized and logs only address/RPC metadata (`marinade.py:80-109`; `solana_base.py:109-124`). (2) HIGH — locally signed instruction uses fixed program ID but `accounts=[]`, so authority/pool/mint/recipient intent is not authenticated (`marinade.py:193-200`). (3) HIGH — amounts are unchecked and truncated to lamports; account/mint relationships are not validated (`marinade.py:176-198`). (4) PASS/N-A — no price-bearing leg. (5) PASS/N-A — no approval path. (6) HIGH — retries rebuild and broadcast a fresh transaction without idempotency (`marinade.py:193-200`; `solana_base.py:328-363`). (7) PASS — on-chain errors become `success=False` (`solana_base.py:345-363`; `marinade.py:225-245`).
-
-No code was changed or tests run for this read-only audit; every HIGH finding is represented by one of the two explicit P0 triage todos added above.

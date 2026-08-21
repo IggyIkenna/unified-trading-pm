@@ -81,14 +81,13 @@ context_scope:
       `update_order_status`=UPDATE with COALESCE on optional fields; the 3 `get_orders_by_*`=SELECT with the
       obvious WHERE. Done-when: `PostgreSQLOrderPersistence` has zero `NotImplementedError` bodies remaining and
       `quality-gates.sh` is green. Implements design plan todo 3.
-- [x] ✅ [BACKEND] P0. **Add `update_order_quantity_price(operation_id, *, quantity, price)`** to
+- [ ] [BACKEND] P0. **Add `update_order_quantity_price(operation_id, *, quantity, price)`** to
       `OrderPersistenceAdapter` (`engine/live/persistence/protocols.py`), `UnifiedOrderManager` (`orders/oms.py`
       — coordinate with whatever `orders/order_status.py` dedup landed by the time this runs, that refactor
       only moved `OrderStatus`/`is_legal_local_transition`, not the class's public method surface),
       `InMemoryOrderPersistence`, and the new `PostgreSQLOrderPersistence` body from the prior todo. Implements
       design plan todo 2's amend-order gap. Done-when: a round-trip test proves `get_order()` reflects the new
-      quantity/price after the call, against BOTH persistence backends. — execution-service@f1f3dfc3 + evidence:
-      quality-gates.sh passed (8,876 passed, 22 skipped, 1 xpassed).
+      quantity/price after the call, against BOTH persistence backends.
 - [ ] [BACKEND] P1. **Integration-test `PostgreSQLOrderPersistence` against a real (or test-container) Postgres**
       — decide the exact test-infra approach at implementation time (a local ephemeral container is the
       preferred shape; if the repo's existing test suite has no such pattern, mock only at the driver-call
