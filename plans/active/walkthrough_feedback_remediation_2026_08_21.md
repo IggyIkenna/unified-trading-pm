@@ -574,10 +574,20 @@ successor plan, the work remains tracked here as still-open todos, not lost).
 - [ ] [SCRIPT] P2. execution-service: `POST /external/instructions` CANCEL currently only supports
       `cancel_scope=SINGLE`; add an `ALL_FOR_STRATEGY_INSTANCE` lookup (index `order_tracker` by strategy-instance,
       not just `instruction_id`) so the doc's remaining "Coming soon" cancel-scope note can close. <1 day.
-- [ ] [SCRIPT] P2. execution-service: wire a live tick-ingestion loop calling
-      `QuoteMaintainer.on_underlying_tick` so a `QUOTE` instruction's armed repricing can actually reach a venue —
-      closes the doc's QUOTE "no live quote reaches a venue" caveat. Scope/estimate TBD, likely >1 day (needs a
-      tick-source decision) — flagged here as found, not claimed quick.
+- [ ] [SCRIPT] P2. **UPDATED 2026-08-21 (this session) — the premise above was stale.** The live tick-ingestion
+      loop was already built and wired BEFORE this session (`feature_tick_subscriber.py`,
+      execution-service@0be361333, started from the `api.main` lifespan) — "needs a tick-source decision" no
+      longer applies. This session read the real code, found the actual remaining gap
+      (`QuoteMaintainer.on_underlying_tick` resubmitted BUY/SELL orders to the venue on EVERY tick unconditionally,
+      even with zero price change — real order-spam churn), and built + tested the fix (no-churn order-state
+      memoization; 6 new tests). **Code complete, NOT YET SHIPPED** — blocked on an external `unified-api-contracts`
+      dependency conflict unrelated to this change; full evidence in the Progress Log entry below. Remaining work
+      is exactly: retry `bash scripts/quickmerge.sh "feat: QUOTE tick-ingestion reprice loop no-churn suppression
+      over EventTransport" --agent --isolated --files 'execution_service/engine/quote_maintenance.py
+      execution_service/engine/delta_proxy_repricer.py tests/unit/engine/test_quote_maintenance.py
+      tests/unit/engine/test_feature_tick_subscriber.py'` once `unified-api-contracts` is clean, flip this
+      checkbox with the resulting sha, then ship the already-drafted `platform-api-reference.html` QUOTE prose
+      update (4 spots, drafted this session, held back pending the code shipping) via `safe-doc-push.sh`.
 - [ ] [SCRIPT] P1. execution-service: `docs/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`
       names BORROW/REPAY as the last 2 DeFi action types on pure simulation — wiring them through the same
       `defi_live_dispatch` seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE just used would close the doc's last 2
@@ -693,3 +703,48 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   (the one literal "pending" substring left is inside "depending", not a disclosure).
   Shas: `market-tick-data-service@<pending-ship>`, `unified-trading-pm@<pending-ship>` — see checkboxes/commit
   trailer for the landed shas.
+
+- **2026-08-21 — execution-service QUOTE tick-ingestion no-churn completion (this session, sibling
+  execution-service scope: QUOTE/repricer tick path only — external_instruction_api.py/
+  external_instruction_defi.py/order_tracker left untouched per the file-coordination boundary)**: the QUOTE
+  follow-up todo above turned out to already be MOSTLY done before this session started —
+  `execution_service/engine/feature_tick_subscriber.py` (execution-service@0be361333) already reads the
+  `EventTransport` facade and drives `QuoteMaintainer.on_underlying_tick()` per tick, wired into the deployed
+  `api.main` lifespan — the todo's ">1 day, needs a tick-source decision" framing was stale. The real remaining
+  gap, found by reading the actual code: `on_underlying_tick` resubmitted fresh BUY/SELL LIMIT orders to the venue
+  on EVERY tick unconditionally, even when the underlying didn't move the quantized bid/ask/size — real
+  venue-order-spam churn, not the doc's "no live quote reaches a venue" framing. Built + tested: `QuoteMaintainer`
+  now tracks the last order state actually submitted per instrument and only republishes when it changes (6 new
+  tests: repeated-price suppression, resubmit-after-real-move, sustained-clamped/stale-move suppression, a new
+  `unregister_instrument` method clearing the memo, confirming `QuoteInstruction.refresh_cadence_ms` — the
+  STRATEGY-side cache cadence, a distinct concept per
+  `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` — has zero throttling effect
+  on this tick-driven loop, and an empty-shard no-op). Also fixed 2 stale docstring claims found while reading the
+  code (`delta_proxy_repricer.py`/`quote_maintenance.py` both said "no EventTransport tick subscriber exists" —
+  false; `quote_maintenance.py` also cited a dead `feedback_market_making_reference_price_model.md` memo,
+  confirmed via `find` not to exist anywhere in this repo). Drafted (held back, see below) 4 matching
+  `platform-api-reference.html` QUOTE prose corrections. Flipped 2 already-stale `- [ ]` todos in the delta-proxy
+  issue doc (both predate this session — the receipt-path + tick-loop wiring were already real, independently
+  verifiable against origin right now regardless of this session's own unshipped work).
+
+  **NOT SHIPPED this session — code complete, blocked on an external cross-repo dependency, not a defect in this
+  work**: `quality-gates.sh` in the non-isolated checkout failed on ONE pre-existing, unrelated test
+  (`tests/unit/test_external_instruction_api.py::test_non_trade_action_returns_501_not_a_silent_drop`, expected
+  501 for BORROW, got 200) — traced to the sibling execution-service session's own live, uncommitted BORROW/REPAY
+  wiring-in-progress (their scope, untouched here; 8892/8893 other tests passed, all this session's own new tests
+  included). Retried via `quickmerge.sh --agent --isolated` (evacuates named files into a clean worktree at HEAD,
+  immune to that foreign WIP) — that attempt instead hit STAGE 1's dependency-validation pre-flight:
+  `unified-api-contracts` DIFFERS from `origin/live-defi-rollout` (23 files dirty — `PredictionMarketCategory`-
+  deletion work, the SAME T1 registry-cluster session already named blocking `batch-live-reconciliation-service`'s
+  ship earlier in this plan's Progress Log). Per the AGENT path the blocked quickmerge itself printed ("do NOT use
+  --dep-branch — commit the dependency changes first, in the dep repo"), and per the multi-agent liveness gate
+  (recently-touched, genuinely live — not a dead claim to inherit), `unified-api-contracts` was left untouched and
+  watched for 25 minutes (60s-interval progress-metric watchdog on dirty-file count) with zero change — confirmed
+  not a fetch-staleness artifact (`unified-api-contracts` local HEAD == freshly-fetched `origin/live-defi-rollout`
+  HEAD, both `d44de9fb`). Work is intact, fully diffed and verified uncommitted in the `execution-service`
+  worktree at `.tabs/2/execution-service` (4 files: `execution_service/engine/quote_maintenance.py`,
+  `execution_service/engine/delta_proxy_repricer.py`, `tests/unit/engine/test_quote_maintenance.py`,
+  `tests/unit/engine/test_feature_tick_subscriber.py`) — ready to ship per the exact command in the todo above the
+  moment `unified-api-contracts` is clean. The drafted `platform-api-reference.html` QUOTE prose is held back
+  (not pushed) until that code todo actually ships, so the doc's "✓ verified 2026-08-21" claims cite code that is
+  actually on origin, not just locally staged.

@@ -569,12 +569,14 @@ POST_ONLY as two independently composable fields.
       above. Extend UAC's `QuoteInstruction` narrowly, or author the new asset-group-agnostic schema proposed in
       this doc — and decide whether it should literally extend `order_semantics.py`'s `VenueOrderSemantics` pattern
       rather than live as a separate module. Real design call, not mechanical — resolve locally first.
-- [ ] [BACKEND] P1. **Rebuild the strategy-side QUOTE-instruction receipt path.** Register directly against
-      `QuoteMaintainer.register_quote_instruction()` per its own docstring guidance, not a resurrected router. Lets
-      `MARKET_MAKING` archetypes populate `DeltaProxyParams` even before the schema extension lands.
-- [ ] [BACKEND] P1. **Build the live underlying-tick ingestion loop** via the standard `EventTransport` facade,
-      driving `QuoteMaintainer.on_underlying_tick()`. Wiring, not new data-access infrastructure — candidate feeds
-      already exist (`l2_depth_provider.py`, venue websockets).
+- [x] ✅ [BACKEND] P1. Rebuild the strategy-side QUOTE-instruction receipt path. **FOUND ALREADY DONE 2026-08-21**:
+      `_register_quote_instruction()` calls `get_quote_maintainer().register_quote_instruction(envelope)` on every
+      QUOTE receipt — execution-service@dc4fad8de7/980a6ad0e.
+- [x] ✅ [BACKEND] P1. Build the live underlying-tick ingestion loop. **DONE, execution-service@0be361333**
+      (predates this session) — `FeatureTickSubscriber` drives `on_underlying_tick()` per tick. **This session
+      closed the remaining gap** (no-churn order-state memoization). Code complete + tested, NOT YET shipped —
+      blocked on an unrelated dep conflict; see `/plans/active/walkthrough_feedback_remediation_2026_08_21.md`
+      Progress Log.
 - [ ] [BACKEND] P2. **Extend the contract with real distinct-underlying delta/gamma**, sourced from `greeks-service`
       (real Black-Scholes greeks, currently written to `LedgerRow.option_delta`/`gamma` and consumed by nothing).
       Depends on the design todo above.
