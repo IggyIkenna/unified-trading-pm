@@ -234,6 +234,12 @@ duplicated.
       normal orphan-reclaim or one-task-per-session recycle then can't find a working account to resume onto).
       Needs `claude setup-token` run on a browser machine for both accounts, per
       `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
+      **Mitigated 2026-08-21 (same session)**: both accounts DISABLED via `POST /api/accounts/{id}/disable`
+      (the existing operator-directed-pause endpoint — sticky, excludes the account from spawn/rotation and
+      immediately rotates any slot currently on it, until a matching `.../enable` call) — confirmed
+      `status: disabled` for both post-call. This stops the respawn-failure loop above from recurring; the
+      credential-provisioning ask itself is unchanged and still needs the operator. Re-enable each only after
+      its `~/.claude-accounts/<id>.env` exists and `claude setup-token` has been run.
 - [ ] [BACKEND] P2. **NEW, found 2026-08-21 while live-validating the day's fixes on slots 3/4/25**: a normal,
       already-correctly-tagged intentional teardown can still misclassify as "unexplained" if the IMMEDIATE
       respawn attempt that follows it fails/stalls long enough to push `tmux_pruner`'s actual detection past
@@ -285,3 +291,9 @@ duplicated.
   is untrustworthy, just that AO's OWN internal os.kill()-based reaping sub-step stays invisible to it).
   Reported findings directly in chat; converted both into tracked todos (the missing-credentials operator ask,
   the lookback-window timing gap) before this checkpoint per the workspace's own no-chat-only-findings rule.
+- 2026-08-21 (same session, continued): operator asked to pause the two credential-less Gemini accounts.
+  Confirmed both still existed live via `GET /api/accounts` (status `healthy` — the poller has no way to
+  detect a missing credential file until actual spawn time, so account-level status hadn't caught up to the
+  problem), then disabled both via `POST /api/accounts/{id}/disable` — confirmed `status: disabled` in the
+  response for each. Noted inline on the `[OPERATOR] P1` todo above rather than as a separate item, since it's
+  a mitigation of that same finding, not a new one.
