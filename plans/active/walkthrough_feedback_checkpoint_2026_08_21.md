@@ -61,7 +61,7 @@ Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-44
 
 ## Todos
 
-- [ ] [DOC] P0. **Operator content additions 2026-08-21 (both docs; light in api-reference, verbose in the
+- [x] ✅ [DOC] P0. **Operator content additions 2026-08-21 (both docs; light in api-reference, verbose in the
       walkthrough)** — reconciliation prominence; WebSocket rotations; the strategy↔execution POSITION HANDSHAKE;
       inter-service SLAs, disaster recovery, kill-switching, escalation paths incl. the agentic-DevOps workflow;
       CONTINUOUS T+1 BACKFILL keeping the pipeline current; INTRADAY REPLAY (in development — customers replay
@@ -71,7 +71,27 @@ Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-44
       HFT-grade execution, co-located or cross-region engines; local + exchange timestamps); CLOUD-AGNOSTIC
       framework (AWS + GCP today, IONOS integration in progress — cite the IONOS plan; Azure on request; regions
       near the client; cross-cloud same-region streaming into the client's own account to cut streaming cost).
-      Verify every claim's code/plan basis before writing.
+      All 9 items landed as surgical extensions of EXISTING sections (no renumbering, no new Contents-nav entries
+      needed — none of the 9 required a new top-level `<section>`): walkthrough §21 (recon_excluded landed —
+      verified real on origin via `batch-live-reconciliation-service` commit `1ba1a62`, daily_determinism_stage.py),
+      §06 (T+1 `cadence` manifest axis; WS reconnect/STALE-flagging + heartbeat watchdog + key-pool rotation, real
+      code in `_ws_window_helpers.py`/`websocket_runner.py`/`thegraph_base_client.py`; intraday replay — in
+      development, cites replay-subsystem.md + data_pipeline_completion_2026_08_21.md), §12 (position handshake +
+      fast-path repricing — design-stage, cites the delta-proxy issue + cross-domain-state-fabric.md; dual-timestamp
+      cites `unified_trading_library/domain_client/validation.py`'s `local_timestamp`/`timestamp` validation), §15
+      (agentic-DevOps escalation paragraph — this session is the cited evidence; new SLA/disaster-recovery h3 citing
+      the AWS DR-standby runbook; new cloud-agnostic h3 citing `resolve_bucket_name()` + the IONOS migration plan,
+      status draft, described as "in progress" per the operator's own phrasing, not overclaimed as shipped), and
+      engage §1 (SMA/fund-structure mirror of the api-reference capability-list bullet). API-reference got the LIGHT
+      mirror: one new paragraph each in About (SLA/DR/kill-switch/escalation/cloud-agnostic, compact), §03 Market
+      data (WS reconnect + T+1 + intraday replay), §04 Instructions (position handshake + fast-path repricing), §05
+      Client Reporting (recon_excluded). Marker discipline: zero new `st-`/`ev-` marker tags added (verified by
+      class-count diff before writing); `check_artefact_claim_ownership.py` reports 200 open markers post-edit
+      (baseline 247, DOWN not up — other lanes' concurrent edits this session also lowered it) and 0
+      ownership/owner-ref violations. Tag-balance sanity check clean on the walkthrough (div/details/p/h3/section
+      all balanced); the api-reference's pre-existing `<div>` count skew (23, unrelated to any tag I touched — my 4
+      edits added `<p>` blocks only, zero `<div>`) predates this change and is out of scope. Evidence: shipped via
+      `safe-doc-push.sh` immediately following this edit — see this doc's own commit history for the landing sha.
 - [x] [DOC] P0. **Operator content additions 2026-08-21, second tranche (both docs; compact in api-reference,
       fuller in the walkthrough) — About Us / engagement models / research-as-a-service / DART / security /
       DeFi LP** — About Odum Research (main site, who-we-are, tear sheet, the 1yr+ consultancy engagement, and
