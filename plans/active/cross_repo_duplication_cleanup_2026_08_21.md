@@ -296,3 +296,29 @@ function object.
 - [ ] [AGENT] P1. Apply the binding above to all 5 e2e-testing wrappers, then re-gate features-service. BLOCKED
       until the `docs/VM_BACKFILL_GUIDE.md` unmerged entry is resolved — git refuses to commit any path in that repo
       while it exists.
+
+### BLOCKER: unified-api-contracts cannot gate green — cause is NOT this plan's diff (2026-08-21)
+
+UAC's work is complete (-1,551 lines, shim removed, package imports verified with all 78 BOOKMAKER_REGISTRY
+entries) but `quality-gates.sh --no-fix` exits 1 on two violations, neither introduced by this plan:
+
+- [ ] [OPERATOR] P1. **STEP 5.96 blank-asset_group: 4 new violations, baseline 0, introduced by commit
+      `e48adfa3` "refactor: centralize deployment observability contracts"** — another session's hoist of
+      `cloud_run_job_registry.py` + `deployment_classification.py` into UAC (the same hoist this plan recommended
+      for the deployment-api import fix). **Three of the four are FALSE POSITIVES.**
+      `scripts/quality_gates/check_no_blank_asset_group.py:52` is
+      `_BLANK_PATTERN = re.compile(r'asset_group\s*=\s*(?:""|\'\')')` searched against `raw_line` (L118) with no
+      comment/docstring awareness, so it flags PROSE: `cloud_run_job_registry.py:24` (docstring),
+      `:122` (a `#` comment), `deployment_classification.py:150` (docstring). Only
+      `cloud_run_job_registry.py:70` (`asset_group="",`) is real code, and that one is a legitimate cross-asset
+      T+1 recon job that wants the documented `# noqa: blank-asset-group  <reason>` opt-out.
+      Two candidate fixes: (a) make the checker token-aware (skip COMMENT/STRING tokens via `tokenize`) — a
+      fleet-wide enforcement change, should be deliberate; (b) noqa the one real callsite and accept prose
+      false-positives. NOT done here: patching a shared gate checker unilaterally while other sessions gate
+      against it is not a safe autonomous act.
+- [ ] [OPERATOR] P2. **900-line cap**: `unified_api_contracts/internal/architecture_v2/__init__.py` is 1,423 lines,
+      from commit `d44de9fb` "feat(uac): add authorized control instructions". Also pre-existing to this plan.
+
+**Consequence**: UAC (-1,551) is unshippable, and because quickmerge's pre-flight refuses any repo whose path
+dependency is dirty, ml-service (-45) and execution-service (-4,378) are blocked behind it despite both being
+gate-verified.
