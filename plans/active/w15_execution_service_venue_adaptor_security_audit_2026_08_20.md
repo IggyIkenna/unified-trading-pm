@@ -159,9 +159,9 @@ impression:
 
 ### DeFi by primitive — yield/vault aggregators
 
-- [ ] [BACKEND] P1. Audit the yield-aggregator group: `beefy.py`, `convex.py`, `yearn.py`, `pendle.py`.
+- [x] ✅ [BACKEND] P1. Audit the yield-aggregator group: `beefy.py`, `convex.py`, `yearn.py`, `pendle.py`.
       Checklist point 5 (approval scope) and point 3 (vault-share/withdrawal input validation) matter most.
-      Done-when: same evidence bar as above.
+      Done-when: same evidence bar as above. — execution-service@audit-only + evidence: code review of Beefy, Convex, Yearn v3 ERC4626, and Pendle SY/YT wrappers; honest live-mode capability flags verified; no production code changed.
 
 ### CeFi/TradFi
 
@@ -177,11 +177,11 @@ impression:
       `kraken_ws_client.py`, `_native_base.py`, `_rate_limit.py`. Checklist point 2 (signing correctness) is the
       primary risk. Done-when: same evidence bar as the CCXT group above, full per-file checklist (no
       spot-check shortcut — these are exactly the higher-risk, hand-rolled implementations). — execution-service@audit-only + evidence: exact per-file checklist record in Progress Log; no production code changed.
-- [ ] [BACKEND] P1. Audit the TradFi gateway adapters: `cboe_adapter.py`, `cme_adapter.py`, `fx_adapter.py`,
+- [x] ✅ [BACKEND] P1. Audit the TradFi gateway adapters: `cboe_adapter.py`, `cme_adapter.py`, `fx_adapter.py`,
       `ibkr_tradfi.py`, `ice_adapter.py`, `nasdaq_adapter.py`, `nyse_adapter.py`. Different auth model than
       crypto venues (session/gateway auth, not API-key HMAC) — checklist point 2 needs re-reading for what
       "signing" means in this context (session token validity/renewal) before applying it literally.
-      Done-when: same evidence bar as above.
+      Done-when: same evidence bar as above. — execution-service@audit-only + evidence: base `IbkrTradFiAdapter` and 6 venue subclasses reviewed; structural mode guards and simulation routes verified; no production code changed.
 
 ### Sports / prediction
 
@@ -305,11 +305,19 @@ No code was changed or tests run for this read-only audit. The HIGH findings req
       retrying; do not discard invalid/missing IDs or allow a fresh retry to double-place an order; HIGH finding:
       checklist point 6 (bitfinex_native.py:337-368, bitget_native.py:274-318,
       kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143).
-- [ ] [BACKEND] P0. Make Kraken Spot/Futures response-envelope parsing fail closed and require a validated order
+- [x] ✅ [BACKEND] P0. Make Kraken Spot/Futures response-envelope parsing fail closed and require a validated order
       result before constructing NEW/CANCELLED/AMENDED success results; malformed or empty payloads must be reported
       as failures, not interpreted as success; HIGH finding: checklist point 7
       (kraken_rest_transport.py:107-130,177-199, kraken_rest_adapter.py:344-362,390-412,472-476,
-      kraken_futures_orders.py:123-143).
+      kraken_futures_orders.py:123-143). — execution-service@d34123b207 + evidence: new `_require_spot_txid`/
+      `_require_spot_cancel_count`/`_require_spot_amend_id`/`_require_futures_status` validators in
+      `kraken_rest_transport.py`, wired into Spot AddOrder/CancelOrder/AmendOrder and Futures sendorder/
+      cancelorder/editorder (the last of which previously never even inspected the transport result); removed the
+      client_order_id-as-order_id fallback on a missing txid/sendStatus; 6 new regression tests in
+      `test_kraken_adapter.py` (empty-result and rejected-status cases for both Spot and Futures) plus 1 pre-existing
+      testnet-routing test fixture updated to carry a valid `sendStatus.status` now that it's enforced;
+      quality-gates.sh green (196s, sentinel matched committed HEAD; 9009 passed, 0 failed); post-push ancestry
+      verified.
 - [ ] [BACKEND] P1. Remove credential-derived key prefixes from native rate-limit identity/error text, replace
       blocking sleeps in async adapter paths with a non-blocking mechanism, and surface callback failures through
       stream health state; MEDIUM findings (_rate_limit.py:91-92,136-138,185-205,
@@ -453,3 +461,104 @@ speculative claim added, every statement traced to a `grep`/file-read done this 
 
 No production code was changed (doc-only correction). Codex fix not yet shipped as of this entry — see the
 close-out todo above for the commit SHA once quickmerge lands.
+
+### 2026-08-21 — slot-7 perp/CLOB idempotency (checklist point 6) — IN PROGRESS, NOT YET SHIPPED
+
+Implemented but **NOT COMMITTED** when this session hit its context-compaction threshold mid-QG-verification.
+The next session picking up this todo (`- [ ] ... Add durable idempotency/client-order IDs...` at line 284) should
+resume from HERE, not re-derive the design — the implementation is believed complete; only the QG run (Pass 1, full
+`bash scripts/quality-gates.sh` from `execution-service/`) needs to finish, then commit/quickmerge/flip in the SAME
+session.
+
+**Design**: new `execution_service/defi_execution/protocols/_perp_idempotency.py` mirrors the already-established
+`staking_idempotency.py` pattern (injectable `TransferStateStore`, namespace `"perp_order"`, in-flight-lock +
+completed-result-cache, `PerpOrderInFlightError` on an ambiguous retry) rather than `ccxt_idempotency.py`'s
+venue-reconciliation pattern — Hyperliquid/Aster/Pacifica expose no client-order-id lookup this codebase can query,
+so an ambiguous retry cannot be reconciled against the venue and must fail closed instead. Async (unlike
+`execute_staking_op_idempotent`) because all three submit via `aiohttp`.
+
+**Root cause found + fixed in the SAME pass** (not just the missing idempotency lock): both `aster.py`'s
+`_place_order_live` and `pacifica.py`'s `_post_signed_order` had a broad `except Exception`/`except
+aiohttp.ClientError` that swallowed GENUINE transport-level ambiguous failures (timeout, connection reset) into a
+clean `success=False` result — meaning even with an idempotency lock added on top, an ambiguous outcome would never
+have reached it as a raised exception. Narrowed both to only catch a DEFINITE venue-side rejection (Aster: a parsed
+non-200 response; Pacifica: `aiohttp.ClientResponseError` specifically, not the parent `ClientError`) and let a
+genuine transport failure propagate.
+
+**Wired into all four connectors**:
+- `hyperliquid.py` `place_order()`: added `client_order_id` param; live branch wraps the nonce+EIP712-sign+POST+parse
+  sequence in `execute_perp_order_idempotent`.
+- `aster.py` `place_order()`: same wrapper around `_place_order_live()`.
+- `pacifica.py` `place_order()`: same wrapper around `_place_order_live()` — still structurally unreachable
+  (`supports_live=False`) but wired now per the connector's own "wire it now, not under future time pressure"
+  convention already used elsewhere in this file.
+- `bybit.py` `BybitPerpHedgeConnector.place_order()`: this one is NOT a hand-rolled signer (it wraps
+  `BybitCCXTAdapter`, which already has full idempotency via `ccxt_idempotency.py`) — the actual gap was that the
+  wrapper never threaded a `client_order_id` through at all, so the CCXT layer minted a fresh one every call and
+  could never recognize a retry. Fixed by resolving `require_client_order_id()` (the SAME function the CCXT layer
+  uses internally) in the wrapper and passing it through to `adapter.place_order(client_order_id=...)`; also fixed a
+  second swallowing bug found in the same spot — the wrapper's `except Exception` was catching
+  `OrderSubmissionInFlightError` (the CCXT layer's own ambiguous-retry guard) and converting it into an ordinary
+  failed-order result, silently defeating that protection too. Now re-raised explicitly.
+
+**Tests added** (not yet run to completion — QG was mid-TESTS-phase at compaction):
+`tests/defi_execution/unit/test_perp_idempotency.py` (the shared module, fully isolated — require/execute/replay/
+ambiguous-lock/clear/independent-keys), `tests/unit/defi_execution/test_hyperliquid_perp_idempotency.py` (live-path
+retry-does-not-resign, ambiguous-network-failure-blocks-retry, independent-orders-both-submit, using the repo's
+`tests/aiohttp_test_utils.patch_aiohttp_session` double), a new test in `test_aster_connector.py`
+(`test_aster_place_order_live_retry_same_client_order_id_does_not_resubmit`, using the existing `responses_lib`
+pattern already used by that file's other live-mode tests), and updates to `test_bybit_connector.py`'s existing
+`TestPlaceOrder` tests (now assert the `client_order_id` kwarg is passed) plus two new tests
+(`test_caller_supplied_client_order_id_is_threaded_through`,
+`test_ambiguous_in_flight_error_propagates_not_swallowed`). No dedicated Pacifica wiring test was added — that
+connector's own docstring already states its live path is "NOT independently verified" (structurally unreachable,
+`is_live=True` raises at construction), matching the existing test-coverage convention for this connector; the
+shared module's own tests already cover the underlying mechanism Pacifica reuses verbatim.
+
+**Files touched, all currently uncommitted** (`git status --porcelain` in `execution-service/` at compaction time):
+`execution_service/defi_execution/protocols/{_perp_idempotency.py (new), hyperliquid.py, aster.py, pacifica.py,
+bybit.py}`, `tests/defi_execution/unit/{test_perp_idempotency.py (new), test_aster_connector.py}`,
+`tests/unit/defi_execution/{test_hyperliquid_perp_idempotency.py (new), test_bybit_connector.py}`.
+
+**Next session — resume here**: `cd execution-service && git status --porcelain` to confirm the 9 files above are
+still present and unchanged (this is a shared multi-slot checkout — verify nothing else landed on top first, per
+CLAUDE.md's "stale local content" guard). If present: run `bash scripts/quality-gates.sh` (full, no flags) fresh; fix
+whatever it reports (most likely candidates given the design: a basedpyright complaint on the `cast()` calls added
+around the shared `dict[str, object]` return type, or a line-length violation — none of the logic is expected to be
+wrong, this was written carefully against the established `aave_idempotency.py`/`staking_idempotency.py` patterns and
+syntax-checked, but never run). Once green: commit (message: "fix(perp-order): durable idempotency + ambiguous-error
+propagation for hand-rolled connectors"), ship via `quickmerge --agent --files '<the 9 files>'`, then flip this
+todo (line 284) + this Progress Log entry's own header (drop "IN PROGRESS, NOT YET SHIPPED") in the SAME turn per the
+Commit+Push+Flip rule, citing the landed SHA. Two todos in this same "DeFi by primitive — perp / CLOB on-chain"
+section remain open after this one: the checklist-point-4 slippage/deadline-bounds todo (line 283) and the
+close-out epic-reflection todo near the end of this plan — pick point-4 next per the plan's own top-to-bottom
+ordering, it's the natural sibling (same four files, same audit phase).
+
+**UPDATE 2026-08-21 (slot 10) — the above WIP was never committed and is not recoverable from this checkout.**
+Verified in this slot's own `execution-service` clone: `git status --porcelain` is clean at `live-defi-rollout` HEAD,
+`execution_service/defi_execution/protocols/_perp_idempotency.py` does not exist, and no commit touching it appears
+in `git log`. The prior session's uncommitted WIP lived only in that other slot's local worktree and was lost when
+that session ended without shipping (a stash was never pushed either, per this plan's own git-discipline rules). The
+checklist-point-6 perp/CLOB idempotency todo (line 284) needs to be re-implemented from the design already recorded
+above, not assumed done. Checkbox left `[ ]`, matching reality.
+
+### 2026-08-21 — slot 10 close-out todo: epic W15 section confirmed + corrected
+
+Confirmed the epic's W15 section (`/plans/epics/system_readiness_master.md`) against this plan's actual live
+checkbox state (41 done / 13 open of 54 todos, counted directly from the file, not estimated) rather than trusting
+the epic's own prior summary. Found the epic line stale in two ways: it still listed CCXT order-idempotency +
+fail-closed-credential-init and the TradFi-gateway audit as open (both are `[x]` done — see the slot-1 CCXT
+idempotency and TradFi-gateway audit entries above/in the archive), and it undercounted completed audit phases
+(8/12 stated vs 10/12 actual — only the sports-exchange-adapter and sports-unity-subsystem phases haven't run).
+Corrected the epic line in place with the accurate breakdown: 3 open P0 fixes (perp/CLOB slippage/deadline bounds
+line 283; perp/CLOB idempotency line 284, re-opened per the UPDATE entry directly above; native-REST client-order-id
+idempotency line 304), 5 open P1 follow-ups (Orca/Raydium full account derivation line 126; Kamino market
+cross-check line 217; wiring the real on-chain calls behind the staking fail-closed guards line 224; EigenLayer
+approval + Karak vault line 226; native rate-limit/blocking-sleep hardening line 321), 2 open P2 dead-code fixes
+(Aave/Morpho typed-params decimals, lines 213/215), the 2 unstarted audit phases (sports exchange line 188, sports
+unity line 192), and this close-out todo itself.
+
+**This close-out todo's own done-when ("once every todo above is done or explicitly re-scoped") is NOT yet
+satisfied** — the 3 open P0s above are genuine unresolved HIGH findings, not re-scoped/deferred work, so the
+checkbox below stays `[ ]` rather than being falsely flipped. No production code was changed; this is a doc-accuracy
+fix only (epic doc + this Progress Log entry).

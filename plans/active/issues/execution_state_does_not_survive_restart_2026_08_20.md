@@ -122,6 +122,12 @@ which is worse than the others because a CLI flag and a docstring both actively 
       per-class verdict of genuinely declared-but-unwired vs. a false positive from dynamic construction (dispatch
       dict, `getattr`, DI, `.from_x()` classmethod) the AST call-site scan cannot see. Not done in the enumeration
       pass itself, which was scoped to report-only per its own source todo.
+- [ ] [DOCS] P3. **Fix the two doc-vs-code drifts found by the batch21 open-questions pass** (details in the
+      "Findings — the audit's own open questions closed" section below): (1) `engine/orphan_monitor.py:3-5` claims it
+      "Delegates core orphan detection and cancellation logic to the existing `engine.startup.order_recovery`
+      module" but imports nothing from it; (2) `trade_execution/adapters/_rate_limit.py:16-21` documents an optional
+      `fcntl.flock` file-lock (`file_lock_dir` param) that is unimplemented in code. Align the docstrings to the
+      code (implementing the lock would be separately scoped).
 - [x] ✅ [REVIEW] P2. **EXTRACTED 2026-08-21** — close the audit's own open questions (read `engine/orphan_monitor.py`,
       `venue_failover.py`, `venue_cascade_monitor.py`, `manual_pending_queue.py`, `order_rejection_tracker.py`,
       `utils/fidelity_selector.py`, `trade_execution/adapters/_rate_limit.py`,
@@ -335,6 +341,54 @@ discovery. The remaining ~155 rows are NOT yet triaged individually — that tri
 declared-but-unwired vs. false positives from dynamic construction) is follow-up work, not done in this pass per the
 source todo's own "report the full list; do not fix any findings, just enumerate" scope.
 
+## Findings — the audit's own open questions closed (2026-08-21)
+
+Batch21 item 3 (`cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`), source: this doc's "Close the audit's
+own open questions" todo. Pure read + report per that todo's scope — nothing below was fixed here. Each named file
+was read in full; verdicts are specifically for recovery-state-machine / fencing / reconciliation content.
+
+**Method**: full read of each file, corroborated by a vocabulary grep across all 8 for
+`epoch|fenc|lease|generation_id|instance_generation|reconcil|fcntl|flock|file_lock|order_recovery` — the only hits
+are docstring *text* (`orphan_monitor.py:1,4,132`; `_rate_limit.py:17-19`), zero code. This also extends this
+issue's own grep no-hit verdict (which covered `engine/`, `orders/`, `orchestration/`, `api/` only) to
+`trade_execution/` and `sports_execution/`.
+
+**Verdicts — 8/8 ABSENT:**
+
+1. `engine/orphan_monitor.py` — **ABSENT**. Runtime orphan cleanup only: in-memory `_MonitorRegistry`
+   (`dict[str, MonitoredOrder]`, `orphan_monitor.py:81`), per-order OPEN→CANCEL_PENDING→CANCELLED transitions
+   (`orphan_monitor.py:90-98`), cancel+confirm retry loop (`orphan_monitor.py:210-225`). Nothing survives or
+   replays across restart; no venue-vs-local reconciliation.
+2. `engine/venue_failover.py` — **ABSENT**. `select_venue()` routes purely on circuit-breaker availability state
+   (`venue_failover.py:39-80`); no recovery/fencing/reconciliation content.
+3. `engine/venue_cascade_monitor.py` — **ABSENT** for the three lenses. Arms scoped/firm-wide kill switches with
+   `auto_deactivate_after_minutes` timers (`venue_cascade_monitor.py:93-139`) — protective arming in the
+   autonomous-recovery-matrix vocabulary, not restart recovery, fencing, or reconciliation.
+4. `engine/manual_pending_queue.py` — **ABSENT**. In-process operator-approval queue; its own docstring:
+   "In-process queue … single-process asyncio; no locking needed" (`manual_pending_queue.py:53-58`) — state is
+   lost on restart.
+5. `engine/order_rejection_tracker.py` — **ABSENT**. Sliding-window ORDER_REJECTION_SPIKE alerting only (300s
+   window, >10/min fires).
+6. `utils/fidelity_selector.py` — **ABSENT**. Fidelity-tier→`BookType` selection plus a sub-candle VWAP ladder;
+   "fidelity" = data fidelity, unrelated to fencing/recovery.
+7. `trade_execution/adapters/_rate_limit.py` — **ABSENT; fencing-adjacency DENIED as implemented.** In-process
+   token bucket on a `threading.Lock` (`_rate_limit.py:102,128-139`) plus a process-local singleton registry
+   (`_rate_limit.py:166-205`); no `fcntl`/`flock`/file-based counter anywhere in the file.
+8. `sports_execution/monitoring/venue_health.py:23 VenueHealthStatus` — **ABSENT**. Plain health-snapshot DTO
+   (venue_name / is_healthy / last_check / consecutive_failures / avg_latency_ms / error_rate,
+   `venue_health.py:22-31`); availability telemetry only.
+
+**Side-findings (doc-vs-code drift, filed as the P3 todo above — not fixed here):**
+
+- `engine/orphan_monitor.py:3-5` — module docstring claims it delegates core orphan detection/cancellation to the
+  existing `engine.startup.order_recovery` module, but the file imports nothing from it (imports are
+  asyncio/logging/dataclasses/datetime/typing/UTL only). Also `get_execution_config()` at
+  `orphan_monitor.py:116-118` is a `raise NotImplementedError` placeholder.
+- `trade_execution/adapters/_rate_limit.py:16-21` — module docstring documents an optional cross-VM `fcntl.flock`
+  file-lock (`file_lock_dir` param, `<dir>/<venue>_<key_prefix>.lock`) that is unimplemented in code. Even as
+  documented it would be mutual-exclusion throttling, not epoch fencing — so the fencing-adjacency question this
+  todo asked about is DENIED either way.
+
 ## What was measured as PRESENT, so nobody re-audits it
 
 - **One matching kernel with declared fidelity levels** — `matching_engine/engine.py:701 MatchingEngine` routes by
@@ -362,3 +416,8 @@ or the code is stale.
   this doc's own "OrderRecoveryEngine has zero production call sites" table row — it is now stale, per a direct read
   of `cli/handlers/live_execution_handler.py:136,189-222` (`_create_startup_order_recovery` constructs it and is
   reachably called). Added one follow-up REVIEW P2 todo to triage the untriaged rows.
+- **2026-08-21 (batch21 item 3, slot 3, open-questions todo)**: read all 8 named files in full — 8/8 ABSENT for
+  recovery-state-machine/fencing/reconciliation content (full verdicts + one-line citations in the new "Findings —
+  the audit's own open questions closed (2026-08-21)" section); `_rate_limit.py` fencing-adjacency DENIED as
+  implemented. Two docstring-drift side-findings filed as a new P3 todo. Corroborating vocabulary grep extends the
+  issue's own no-hit scope to `trade_execution/` and `sports_execution/`.
