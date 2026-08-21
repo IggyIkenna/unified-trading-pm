@@ -203,6 +203,65 @@ bake-off data doesn't yet support that fine a cut; today's 2 capability-sensitiv
 review) cover the operator's explicit ask (CI-escalation dispatch) plus the other clearly judgment-
 heavy caller found during the audit.
 
+## Part 5 — mechanical bare-root-write guard (SHIPPED 2026-08-21)
+
+Investigation found the EXISTING `pretooluse-slot-collision-guard.py` (built for a
+related-but-different problem — a live PEER session in the SAME slot) explicitly treats "outside
+any `.tabs/<N>` slot" as zero collision surface: `slot_dir_for()` returns empty and the guard
+allows unconditionally the moment cwd isn't inside `.tabs/`. Also confirmed via direct grep that
+this guard isn't currently registered in `cursor-configs/settings.json` at all — a separate,
+pre-existing, unrelated gap (flagged below, not fixed here). Together this confirmed the bare-root
+case genuinely had zero mechanical coverage anywhere before this pass.
+
+Confirmed against Claude Code's own hook docs (via `claude-code-guide`, 2026-08-21): `PreToolUse`
+supports a non-blocking warning mode — exit 0 + `{"hookSpecificOutput": {"hookEventName":
+"PreToolUse", "permissionDecision": "allow", "additionalContext": "<msg>"}}` — the same
+allow-but-visible mechanism `session-start-collision-check.sh` already uses for the adjacent
+slot-collision warning. This resolves the todo's own "not obviously worth a hard block" hesitation
+completely: a warn-only guard structurally cannot wedge a legitimate operator-directed bare-root
+write (it never returns exit 2), so there is no real tradeoff left to weigh.
+
+**Implemented**:
+- `bare_root_repo_with_slot_sibling()` — new function in the EXISTING shared
+  `cursor-configs/hooks/lib/slot-collision-detect.sh` (the inverse of `slot_dir_for()`: given a
+  path with NO `.tabs` component, walk up to the nearest ancestor containing a `.tabs` dir, take
+  the repo-name segment, and check whether at least one `.tabs/*/<repo>` sibling exists). Purely
+  path-based — deliberately NOT keyed off `$CLAUDE_PROJECT_DIR`, which reflects wherever the
+  CALLING session itself is rooted (a slot, or the bare workspace), not necessarily the workspace
+  the TARGET file lives under.
+- `cursor-configs/hooks/pretooluse-bare-root-write-guard.py` — new `PreToolUse` hook, matcher
+  `Edit|Write`, registered in `cursor-configs/settings.json`. Fires only when a slot sibling
+  actually exists for the target repo, so a repo that has never used the slot model produces zero
+  noise.
+- Scoped to Edit/Write only, NOT Bash — deliberately. Reliably extracting an arbitrary shell
+  command's write target is a much harder, more false-positive-prone problem than reading
+  Edit/Write's own structured `file_path` field (matches `block_destructive_commands.py`'s own
+  restraint: match known-dangerous verbs, never try to infer a write target). The measured
+  incident this guard exists for was Edit calls specifically.
+- 13 new bats tests (`tests/test_pretooluse_bare_root_write_guard.bats`) — warn-vs-silent surface
+  plus fail-open on every malformed-input path. Full `quality-gates.sh` green (155s core gate,
+  confirmed via the saved log's own banner, not just the run's exit code).
+- **Shipped under the dirty-deps carve-out** (CLAUDE.md git-discipline HARD RULE #1) as a direct
+  push, not quickmerge — `unified-trading-pm`'s Stage 1.5 (Dependency Alignment) is fleet-blocked
+  right now by an unrelated, already-tracked, real issue
+  (`deployment_api_imports_deployment_service_tier_violation_2026_08_21.md` — a genuine tier-DAG
+  violation in a different repo that its own fixer correctly refuses to auto-resolve; that doc's
+  own text names this exact carve-out as the sanctioned path). Confirmed via
+  `check-dependency-alignment.py --json` that none of its 3 reported issues touch this change's 4
+  files. Evidence: **unified-trading-pm@7589ba943c**.
+
+**Deliberately NOT done, both flagged rather than silently skipped**:
+- A hard-block variant for `agent-orchestrator` specifically (the one repo with a measured, severe
+  consequence — a live self-pulling systemd service). `pretooluse-slot-collision-guard.py`'s own
+  narrow-scope-plus-escape-hatch pattern is the right template, but Edit/Write has no natural place
+  for a command-prefix escape hatch the way a Bash command string does, and a hard block changes
+  behavior for every session fleet-wide the instant it ships — real operator sign-off warranted
+  before going further than warn-only. Tracked as a new todo below, not decided here.
+- `pretooluse-slot-collision-guard.py` itself is not currently wired into `cursor-configs/
+  settings.json` anywhere (confirmed via grep — zero hits). Whether that's deliberate (paused
+  pending more testing) or an oversight is outside this todo's scope to judge — flagged as a new
+  todo below for whoever owns that guard, not fixed unilaterally.
+
 ## Todos
 
 - [x] [DATA] P1. ✅ **DONE 2026-08-21.** Re-verify CI-escalation single-account concentration claim —
@@ -228,18 +287,25 @@ heavy caller found during the audit.
       covering the mechanism, the 2 wired-in callers, the distinction from `equivalence_class`, and the
       `ensure_review_agents` bug fix. Frontmatter `related:`/`authoritative_for:`/`code_refs:` updated
       too. Repo: unified-trading-pm.
-- [ ] [BACKEND] P2. **Found during this session's live-checkout-write incident (Progress Log).**
-      Neither `SUB_AGENT_MANDATORY_RULES.md`'s guidance nor any tool enforces that a write actually
-      lands under `.tabs/<N>/` — today it's self-verification discipline only, and this incident shows
-      that's insufficient even for the main interactive session, not just a delegated sub-agent (the
-      class the existing `SUB_AGENT_MANDATORY_RULES.md` fix from
-      `ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md` targets). Investigate a mechanical guard
-      — e.g. a pre-commit/pre-write hook on the bare-root checkouts specifically that refuses a write
-      when a `.tabs/<N>/` sibling exists for the same repo and the caller isn't `ao-self-pull.sh`
-      itself, or a lighter periodic dirty-tree canary alert. Scope + design this as its own small
-      investigation before implementing — not obviously worth a hard block given legitimate direct
-      bare-root writes may exist (operator-driven, host-level ops). Repo: unified-trading-pm
-      (guidance) and/or agent-orchestrator (a guard script, if one is built).
+- [x] [BACKEND] P2. ✅ **DONE 2026-08-21 — see Part 5.** Investigated + implemented a warn-only
+      (never-block) `PreToolUse` guard for Edit/Write against bare-root checkout writes — the
+      existing `pretooluse-slot-collision-guard.py` confirmed to have zero coverage for this case.
+      Evidence: unified-trading-pm@7589ba943c (dirty-deps carve-out direct push). Repo:
+      unified-trading-pm.
+- [ ] [OPERATOR] P3. **Found during Part 5's investigation.** Decide whether `agent-orchestrator`
+      specifically (the one repo with a measured, severe live-service consequence — see this
+      session's own live-checkout-write incident, Progress Log) should ALSO get a hard-block
+      variant for the shared-index-mutation class of Bash command (mirroring
+      `pretooluse-slot-collision-guard.py`'s own narrow-scope-plus-escape-hatch pattern), on top of
+      the warn-only Edit/Write guard already shipped. Not decided here — a hard block changes
+      behavior fleet-wide the instant it ships, real sign-off warranted. Repo: unified-trading-pm.
+- [ ] [SCRIPT] P3. **Found during Part 5's investigation, unrelated to this doc's own scope.**
+      `pretooluse-slot-collision-guard.py` (a fully-built PreToolUse guard for the peer-collision
+      problem, complete with its own bats test suite) is not registered anywhere in
+      `cursor-configs/settings.json` — confirmed via grep, zero hits. Check with whoever built it
+      (`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`'s history)
+      whether this is deliberate (paused pending more testing) or an oversight; wire it in if the
+      latter. Repo: unified-trading-pm.
 - [x] [SCRIPT] P3. ✅ **DONE 2026-08-21.** Removed the dangling `related:` entry from both docs
       (`worker_slot_account_exhaustion_no_rotation_2026_08_19.md`,
       `nvidia_codex_exhaustion_observability_gap_2026_08_19.md`). While fixing the first, found its
