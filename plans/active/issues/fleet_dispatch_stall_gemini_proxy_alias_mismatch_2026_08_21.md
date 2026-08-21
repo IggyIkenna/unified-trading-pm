@@ -267,7 +267,7 @@ exercised different strings, so a green suite carried no signal about the live p
       provisioned or when the wasted-spawn-attempt cost becomes worth acting on sooner.
 - [x] [BACKEND] P1. **Mark an account unusable after a structural spawn failure** (missing
       env file, unregistered model alias) so the selector routes around it instead of
-      re-picking it every tick. — **DONE 2026-08-21 (slot 17), agent-orchestrator@<QM_SHA>.**
+      re-picking it every tick. — **DONE 2026-08-21 (slot 17), agent-orchestrator@32822b79d4.**
       Did what this todo asked first: confirmed against the shipped code that
       `account_is_usable()`/`capability_tier()` have NO concept of a credential file — the only
       check anywhere is in `_do_spawn`, at the very last step, after the pick has already

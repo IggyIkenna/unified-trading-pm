@@ -46,7 +46,7 @@ summary: >-
   `/plans/active/issues/fleet_wide_mid_task_death_root_cause_2026_08_21.md` and needs the
   kill-reason attribution fix listed below. Three further permanent-deadlock bugs found in
   the gate machinery while measuring, all fixed here. Five fixes shipped
-  agent-orchestrator@<pending>.
+  agent-orchestrator@32822b79d4.
 status: open
 resolved_by:
 nature: issue
@@ -84,6 +84,23 @@ execution_scope: local-only
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
+locked_by:
+context_scope:
+  [
+    agent-orchestrator/scripts/ao-self-pull.sh,
+    agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/server/worker_liveness_watchdog.py,
+    agent-orchestrator/server/dispatch.py,
+    agent-orchestrator/server/auto_park.py,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /plans/active/issues/fleet_wide_mid_task_death_root_cause_2026_08_21.md,
+    /plans/active/issues/fleet_dispatch_stall_gemini_proxy_alias_mismatch_2026_08_21.md,
+  ]
+source:
+  "slot-17, interactive session, 2026-08-21 — operator asked why normal plan tasks were not
+  dispatching to fleet workers given idle slots, account headroom and unblocked ready tasks,
+  and why some agents were dying mid-task while others were not"
 ---
 
 # Fleet dispatch stall + mid-task deaths — one upstream cause
@@ -166,7 +183,7 @@ tmux server death (1 event in 48h; `tmux_server_alive: true` on all 439 slot dea
 recorded it), and `tmpfs-disk-cleanup` (a promising 19:40 coincidence, falsified by the
 identical 20:10 sweep producing zero deaths).
 
-## Fixes shipped (agent-orchestrator@\<pending\>)
+## Fixes shipped (agent-orchestrator@32822b79d4)
 
 1. **`scripts/ao-self-pull.sh` — restart-relevance gate.** Restart only when the FF actually
    moved `server/`, `config/`, `pyproject.toml` or `uv.lock`. `scripts/orchestrator.service`
@@ -327,6 +344,28 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       `cefi_content_migration_fleet_44_complete`, `tardis-vm-slot-free-cefi-forward-poll`. None
       appears anywhere in the plan corpus and no code sets any of them. Either document what
       clears each, or `POST /api/prerequisites/{name} {"value": true}` and drop it.
+- [ ] [INFRA] P1. **An interactive session working in an AO-managed slot gets its WIP harvested
+      mid-session.** Hit live while writing this doc: every uncommitted change in slot 17 — 11
+      agent-orchestrator files and 8 unified-trading-pm files — was committed away and both
+      checkouts reset to `origin/live-defi-rollout` at 21:04:05Z, because AO's dirty-state
+      preserver found slot 17 dirty with no live `.agent-claim` and classified it as "inherited
+      WIP from predecessor". Nothing was lost — that is the design working: the commits were
+      pushed to `wip-preserve/orchestrator-slot-17-87b29a6d` (AO) and
+      `wip-preserve/orchestrator-slot-17-aeb2d92a88` (PM), and `git cherry-pick --no-commit
+      <sha>` restored both trees with zero conflicts. But it is a live hazard: CLAUDE.md tells
+      operators "an interactive session IS slot N", and an interactive session has no allocation
+      mechanism and therefore no claim, so long-running interactive work in any slot is
+      harvestable on the fleet's ~2-minute cadence. Needs a decision, not a unilateral fix:
+      (a) interactive sessions write a real `.agent-claim` — but a claim also reads as "slot
+      occupied" and would cost real fleet capacity, the opposite of what this doc is fixing;
+      (b) widen the preserver's mtime guard past the current 120s; (c) reserve an interactive
+      slot range excluded from spawn. Whichever is chosen, write the recovery recipe into
+      `/codex/05-infrastructure/per-tab-worktrees.md` — it is fast, safe, and non-obvious.
+- [ ] [INFRA] P2. **The same slot reset also deleted the repo `.venv`**, so the next
+      `quality-gates.sh` aborted with "no usable .venv/bin/python" and needed a full `uv sync`
+      before it could gate anything. Same class as the already-open
+      `/plans/active/issues/vm_disk_guard_wipes_active_slot_venvs_2026_08_20.md` — recording a
+      fresh 2026-08-21 occurrence rather than re-diagnosing it.
 - [ ] [DOC] P3. **`ORCHESTRATOR_FLEET_WORKER_CAP=40` is inert.** Every tick logs
       `configured=40 CLAMPED to 25 by slot arithmetic (configured_slots=32 - reserve=7
       [ci=3 + scheduled=4])`. The clamp is by design and already logged loudly, but the live
