@@ -77,15 +77,15 @@ source: >-
       own claimed 2760/2 — consistent with other work landing since), pip-audit cached. Also confirmed `43fc142` is a
       verified ancestor of `origin/live-defi-rollout`. Done-when satisfied: a test-simulated reproduction (independently
       re-executed, not just read) is cited above. Repo: unified-trading-pm.
-- [ ] [DOCS] P2. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
-      remain; add the archival banner + set `status: complete`; grep the corpus for
-      `one_shot_complete_session_ownership_desync_2026_08_08` and repoint every referrer; clear any lock if set. Then
-      physically move the parent doc under `plans/archive/issues/` (corrected 2026-08-19, plan_reconciler ao — the
-      parent is `doc_type: issue`, flat path per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`,
-      not the dated `plans/archive/2026_08/` form this todo previously named). **Done when**:
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows no
-      NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans for this
-      doc. Repo: unified-trading-pm.
+- [x] ✅ [DOCS] P2. **DONE 2026-08-21 (archival lane, chunk 4).** Confirmed zero open `- [ ]` todos remained on the
+      parent doc; added the archival banner + set `status: archived`; grepped the corpus for
+      `one_shot_complete_session_ownership_desync_2026_08_08` and confirmed every OTHER referrer's citation was
+      prose-only (historical narrative, not a structural `related:` pointer) — no repoint needed per
+      `plan-completion-and-archival-discipline.md`'s prose-citation carve-out; this doc's own `related:` + this
+      INDEX.md's own entry were the two structural pointers and both are updated in this same commit. Physically
+      moved the parent doc to `plans/archive/issues/one_shot_complete_session_ownership_desync_2026_08_08.md` (flat
+      path, `doc_type: issue`). This finalize plan itself now has 0 open todos and is archived alongside it (dated
+      `plans/archive/2026_08/`, `doc_type: plan`). Repo: unified-trading-pm.
 
 ## Codex SSOTs
 

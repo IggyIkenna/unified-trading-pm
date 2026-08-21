@@ -8,7 +8,7 @@ summary: >-
   agent's real work was already correctly shipped. Root cause confirmed in occurrence 2: idle-reap fires during a
   legitimate ScheduleWakeup gap, reassigns the slot's session identity server-side, and the original agent can no longer
   signal completion.
-status: open
+status: archived
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -23,7 +23,7 @@ execution_scope: orchestrator-agent
 priority: P1
 assigned_role: backend_engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: agent-orchestrator@43fc142
 locked_by:
 source: [direct instruction from main agent, BLK-dc3f8317 + BLK-af6cef6a]
 depends_on: []
@@ -35,6 +35,13 @@ context_scope:
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-21** — sole todo shipped (agent-orchestrator@43fc142): `tmux_pruner`'s `reaped-stale`
+> archive now snapshots `last_tmux_session` before nulling `tmux_session`; `_done_one_off` falls back to
+> `find_reaped_stale_agent_for_session` (or an explicit self-reported `agent_id`) and corrects `exit_reason` to
+> `lifecycle-complete`, never touching `SlotRow`. 6 new regression tests, full `quality-gates.sh` green. Reconciled
+> and closed out by the companion gated finalize,
+> `/plans/archive/2026_08/one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md`.
 
 # one_shot_complete session-ownership desync — idle-reap during async-wait
 
