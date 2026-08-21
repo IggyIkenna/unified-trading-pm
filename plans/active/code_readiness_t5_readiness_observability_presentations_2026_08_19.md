@@ -756,7 +756,9 @@ todos only to confirm they are data-movement, then leave it.
       already documented; reverted rather than force through the gate). Remaining open todos across the tail are
       genuinely open — operator-gated decisions, machine-`gate_on_depends`-blocked finalize plans awaiting a parent
       that isn't done, or real unstarted engineering/ops work — not a bookkeeping gap.
-- [ ] [AGENT] P3. Apply the 2 verified-but-unshipped fixes in
+- [x] [AGENT] P3. ✅ **DONE 2026-08-21**: line-cap block cleared (another session split the doc's history out to
+      `cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`, 1093→650 lines) — applied both fixes,
+      `unified-trading-pm@<pending>`. Apply the 2 verified-but-unshipped fixes in
       `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` once its pre-existing line-cap block clears (see
       that doc's own item 1 / `epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md` line 290 for the
       blocker — needs either a real split or a 5th operator-ruled `check_line_caps.sh` carve-out). Both verified
