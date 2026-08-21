@@ -852,3 +852,52 @@ license to skip verification — the RADIANT-has-no-pools and poolMeta-has-no-LT
 hitting the live API before writing code, not from assuming the DefiLlama pattern would generalize cleanly
 across all 7 protocols.
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 3 of the operator-slot-launched code-readiness series (same Launch-prompts mechanism). Remaining open items mix explicit `[OPERATOR]`-tagged re-triaged items, an operator decision already made 2026-08-20 requiring downstream build work, per-protocol DeFi feature-producer research explicitly requiring real governance-parameter data ('checked DefiLlama's real poolMeta field... it isn't there, so risk_params correctly stays AAVE-only pending real per-protocol governance-parameter research, not built on a guess'), and a large W-item build backlog (PnL surfaces, universal fail-closed startup check, canonical output paths). None clears the whole-doc RECLASSIFY bar; operator-slot dispatch design also precludes AO-backlog eligibility.
+
+## Progress Log — 2026-08-21 wave-1c (walkthrough feedback, strategy cluster)
+
+- **`staking_pnl` first-class dimension — done + shipped**, `strategy-service@21937bb2cf`. See flipped checkbox
+  above for detail; QG green, 2 new tests + 1 updated assertion.
+- **Strategy wizard external endpoint — built, tested, `quality-gates.sh` green, NOT YET SHIPPED (blocked on an
+  unrelated dirty dependency, see below)**. Built `deployment-api/deployment_api/routes/strategy_wizard.py`:
+  `POST /api/strategy/wizard/{create,validate,deploy}`, authenticated (`_authenticated_router` + `X-API-Key`/
+  Firebase bearer), `deploy` additionally gated on `Permission.DEPLOY_TRIGGER` (mirrors
+  `strategy_backtest_launch.py`'s existing RBAC pattern). Registered in `deployment_api/main.py`. Architecture:
+  deployment-api does NOT import strategy_service (no service->service dep, verified no prior import existed
+  either) — the integration seam is the GCS object strategy-service's `strategy_config_loader
+  .load_strategy_config_gcs` already reads (`gs://{strategy-store bucket}/configs/strategies/{strategy_id}.json`).
+  `create` returns a config-shape stub for a given `StrategyArchetype` (UAC enum, no strategy-service import
+  needed); `validate` structurally checks archetype-membership + JSON-well-formedness with no write; `deploy`
+  re-validates then `upload_bytes`s to that exact GCS path and returns the `config_uri`. Deep archetype-param
+  schema validation (`PARAM_SCHEMA_REGISTRY`, strategy-service-internal) deliberately stays strategy-service-side
+  on load via the existing `get_strategy_params`/`WizardParamPayloadError` seam — documented in the module
+  docstring, not duplicated here. Request/response examples are in every route's docstring (see file). **Hot
+  config reload documented alongside** (no new endpoint — it doesn't need one): the write-side contract is the
+  same GCS object; `strategy_service/config_reloaders.py`'s `DomainConfigReloader` polls `StrategyDomainConfig`
+  and atomic-swaps only `SAFE_STRATEGY_RELOAD_FIELDS` (`strategy_params`), rejecting (previous config stays
+  active) anything outside that allow-list via `UnsafeConfigChangeError` — this is the "request/response pattern"
+  for T5 to hand off: request = GCS write, response = next reload tick's accept/reject, observable via
+  strategy-service `log_event`. 9 new tests in `tests/unit/test_strategy_wizard.py` (create stub + 422,
+  validate valid/invalid/empty-id, deploy success/422-no-write/502-on-storage-failure) — all GCS calls mocked.
+  Also fixed 2 real gate violations found running the full-tree gate: STEP 5.12b hardcoded `gs://` literal in my
+  own docstrings/Field descriptions (reworded, no literal scheme string) and STEP 5.5 broad-except baseline drift
+  in `deployment_api/vm_utils.py:381` (pre-existing, unrelated to this todo, `# noqa: broad-except` with reason —
+  the site is a documented best-effort confirm-poll, not a new bug) — both needed for a green tree, `--files`
+  scoped to exactly these 4 touched files.
+  **Ship blocked**: `quickmerge.sh` pre-flight repeatedly failed on deployment-api's path-dependency
+  `unified-api-contracts` having uncommitted changes from another live concurrent session (confirmed live via
+  `.py` mtime <60s at time of check, then again minutes later on a DIFFERENT larger diff — a prediction-market
+  schema refactor touching 20+ files, still in flight as of this entry) — per workspace rules this is NOT mine to
+  touch (not my scoped repo, not my task, live-session WIP). Retried twice (once after `unified-api-contracts`
+  briefly cleared for the `strategy-service` ship, once after a `deployment-service` dirty-dep also cleared) —
+  blocked again both times by `unified-api-contracts` picking up new unrelated WIP. **Follow-up**: retry
+  `cd deployment-api && bash scripts/quickmerge.sh "feat(strategy-wizard): add authenticated wizard
+  create/validate/deploy API" --agent --files 'deployment_api/routes/strategy_wizard.py deployment_api/main.py
+  deployment_api/vm_utils.py tests/unit/test_strategy_wizard.py'` once `unified-api-contracts` is clean — code is
+  complete and gate-green, this is purely a dependency-repo contention wait, not remaining implementation work.
+
+- [ ] [BACKEND] P0. Ship the already-built, already-QG-green strategy wizard external endpoint
+      (`deployment-api/deployment_api/routes/strategy_wizard.py` + `main.py` + `vm_utils.py` noqa fix +
+      `tests/unit/test_strategy_wizard.py`, all uncommitted in the deployment-api working tree) — blocked only on
+      `unified-api-contracts` (a deployment-api path-dependency) being clean, not on any remaining code work. Run
+      the exact `quickmerge.sh` command in the Progress Log entry above once that dependency is clean, then flip
+      the walkthrough-feedback checkbox above with the landed sha.
