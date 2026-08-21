@@ -1359,7 +1359,7 @@
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       <b
         class="own"
-        title="plans/epics/execution_master.md — non-TRADE instruction actions (swap/lend/borrow/stake/...) return HTTP 501; strategy-service has no counterparty-facing surface yet"
+        title="plans/epics/execution_master.md — all 15 StrategyInstructionV2 action types route to real execution; strategy-service's signal-leasing API is built and wired, activated per counterparty at onboarding"
         >owner: execution_master</b
       >
     </div>
@@ -1433,16 +1433,16 @@
               <tr>
                 <td>Instructions</td>
                 <td><code>POST /external/instructions</code></td>
-                <td><b>TRADE and QUOTE</b> — the other 9 action types return HTTP 501</td>
+                <td><b>All 15 of 15</b> <code>StrategyInstructionV2</code> action types</td>
                 <td>One instruction envelope, any asset class</td>
               </tr>
               <tr>
                 <td>Strategy</td>
-                <td>— none —</td>
-                <td>No</td>
+                <td>— none of these six —</td>
+                <td>Out of this table's scope</td>
                 <td>
-                  No counterparty-facing surface yet — <b class="st st-plan">planned</b>, shape in
-                  <a href="#s25">§25</a>
+                  A real counterparty-facing surface exists — the signal-leasing API, built and wired, activated
+                  per counterparty at onboarding — indexed beyond these six in <a href="#s26">§26</a>
                 </td>
               </tr>
             </tbody>
@@ -1452,23 +1452,31 @@
       <div class="callout">
         <span class="tag">The honest state behind "you get the contract our own execution service gets"</span>
         <p>
-          That is true only for the endpoints marked reachable above. On instructions specifically:
-          <b>the TRADE action is live end-to-end</b> today, routed through the same
-          <code>ManualOperationHandler → LiveOrchestrator.execute_instruction()</code> path our own internal
-          manual-trade surface uses. <b>QUOTE is wired too, but not the same way</b> — it registers the instrument
-          for delta-proxy repricing (<code>QuoteMaintainer</code>) and answers <code>REGISTERED</code>, never
-          <code>SUBMITTED</code>: no order is placed, since nothing in execution-service drives the underlying-tick
-          loop that would trigger one yet. Every other action on the envelope — swap, lend, borrow, stake, unstake,
-          transfer, bridge, atomic, cancel — returns an honest HTTP 501: not a silent drop, but not yet the same
-          contract either. Strategy-service itself has no counterparty-facing surface at all yet; its real endpoints
-          today are admin-token-gated internal tooling (registry reads, a restriction-profile router, an
-          operational-mode flip).
+          That is true only for the endpoints marked reachable above. On instructions specifically: all 15 of the
+          15 <code>StrategyInstructionV2</code> action types route to real execution, no exceptions. <b>TRADE</b> is
+          routed through the same <code>ManualOperationHandler → LiveOrchestrator.execute_instruction()</code> path
+          our own internal manual-trade surface uses. <b>QUOTE</b> is a two-part contract: registration is
+          synchronous — it arms delta-proxy repricing (<code>QuoteMaintainer</code>) and answers
+          <code>REGISTERED</code> — and a live tick loop (<code>FeatureTickSubscriber</code>, started in
+          execution-service's own process lifespan) then drives resubmission: every feature tick reprices the
+          instrument, and a BUY@bid/SELL@ask LIMIT order reaches the venue whenever the priced state actually
+          changes, memoized so an unchanged tick is a no-op. <b>TRANSFER</b>, <b>BRIDGE</b>, <b>CANCEL</b> (both
+          scopes) and <b>ATOMIC</b> route through the same production wiring the internal surface uses.
+          <b>SWAP / LEND / BORROW / REPAY / WITHDRAW / STAKE / UNSTAKE / LP_MINT / LP_BURN</b> route through the
+          real DeFi live-execution wiring, live-wired today for a named subset of venues (Uniswap V3/V2, AAVE V3,
+          Lido) — a venue this dispatch seam does not yet map, or missing Secret Manager credentials, degrades to an
+          honest <code>FAILED</code> result, never a fabricated success. Strategy-service itself has a real
+          counterparty-facing surface — the signal-leasing API (<a href="#s26">§26</a>) — built and wired, activated
+          per counterparty at onboarding; its other endpoints are admin-token-gated internal tooling (registry
+          reads, a restriction-profile router, an operational-mode flip).
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Verified directly against <code>instruments-service/instruments_service/api/routers/external.py</code>,
-        <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code> and
-        <code>execution-service/execution_service/api/external_instruction_api.py</code>. Full parameters, request and
+        <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>,
+        <code>execution-service/execution_service/api/external_instruction_api.py</code>,
+        <code>execution-service/execution_service/api/external_instruction_defi.py</code> and
+        <code>execution-service/execution_service/engine/quote_maintenance.py</code>. Full parameters, request and
         response schemas, worked examples, the auth model and every error code are documented endpoint by endpoint in
         <a href="#s26">§26</a>. Rate limiting itself is not implemented on any of the three surfaces today — that gap
         is disclosed there rather than sketched here.
@@ -17909,9 +17917,11 @@ Content-Type: application/json
       >
     </div>
     <p class="lede">
-      §02 marked the Strategy surface "no counterparty-facing surface yet." This is the shape of closing that gap — not
-      a new integration pattern; the same instruction envelope and execution path already documented in
-      <a href="#s8">§08</a> and <a href="#s2">§02</a>, exposed outside our process boundary two different ways.
+      §02 documents strategy-service's real counterparty-facing surface — the signal-leasing API. This section is a
+      different gap: automating strategy's own trading decisions into execution instructions internally, without a
+      human or an external system relaying them by hand. Not a new integration pattern; the same instruction
+      envelope and execution path already documented in <a href="#s8">§08</a> and <a href="#s2">§02</a>, exposed
+      across a process boundary two different ways.
     </p>
     <details class="sec-body" open>
       <summary>Internal messaging, an external transport, and who hosts what</summary>
@@ -18532,24 +18542,27 @@ Content-Type: application/x-ndjson
       <p>
         A thin authenticated front door that translates a real, declared instruction envelope
         (<a href="#s8">§08</a>) into the internal shape and routes it through the SAME handler the internal
-        manual-trade surface uses — no parallel execution logic. Only the <code>TRADE</code> action is wired; every
-        other action on the envelope returns an honest HTTP 501, disclosed in full at <a href="#s2">§02</a>.
+        manual-trade surface uses — no parallel execution logic. All 15 of the 15 <code>StrategyInstructionV2</code>
+        action types are wired to real execution; the table below names exactly which production path each one
+        takes and what, per venue, is honestly disclosed rather than silently assumed.
       </p>
 
       <p style="font-size: 0.9rem; color: var(--ink-3)">
-        <code>QUOTE</code> is a third case, distinct from both TRADE and the thirteen 501s — worth stating precisely
-        rather than rounding it either way. It does not 501: <code>_register_quote_instruction()</code> is real and
-        runs (<code>external_instruction_api.py:133-171</code>), arming <code>DeltaProxyRepricer</code> with this
+        <code>QUOTE</code> is worth stating precisely rather than rounding it either way. Registration is
+        synchronous: <code>_register_quote_instruction()</code> runs on receipt
+        (<code>external_instruction_api.py:133-171</code>), arming <code>DeltaProxyRepricer</code> with this
         instrument's delta/gamma via <code>QuoteMaintainer.register_quote_instruction()</code> and returning
-        <code>status="REGISTERED"</code>. It does not place an order either: per the router's own docstring, "the
-        two-sided quote is only submitted when something calls
-        <code>QuoteMaintainer.on_underlying_tick</code>, and no live tick-ingestion loop exists in
-        execution-service yet." A <code>REGISTERED</code> response means repricing parameters are armed, not that a
-        quote is resting on any venue.
+        <code>status="REGISTERED"</code>. Submission is asynchronous and tick-driven: execution-service's own
+        process lifespan starts <code>FeatureTickSubscriber</code>, which reads the features facade and calls
+        <code>QuoteMaintainer.on_underlying_tick</code> per tick — every instrument tracking that underlying is
+        repriced, and a BUY@bid/SELL@ask LIMIT order reaches the venue whenever the resulting two-sided order state
+        actually changes from what was last submitted (a no-churn memo suppresses a repeated no-op tick). A
+        <code>REGISTERED</code> response means repricing parameters are armed; the venue order that follows is a
+        separate, later event driven by the tick loop, not by the registration call itself.
       </p>
 
       <div class="plate">
-        <div class="plate-head"><span class="label">Instruction type support</span><span class="note">All 15 members of the StrategyInstructionV2 union</span></div>
+        <div class="plate-head"><span class="label">Instruction type support</span><span class="note">All 15 members of the StrategyInstructionV2 union — 15 of 15 route to real execution</span></div>
         <div class="plate-body scroll-x">
           <table>
             <thead>
@@ -18563,94 +18576,110 @@ Content-Type: application/x-ndjson
               <tr>
                 <td><code>TRADE</code></td>
                 <td><code>TradeInstruction</code></td>
-                <td>Parses and executes, routed to <code>LiveOrchestrator</code></td>
+                <td>Routed to <code>LiveOrchestrator</code> — the same path the internal manual-trade surface uses</td>
               </tr>
               <tr>
                 <td><code>QUOTE</code></td>
                 <td><code>QuoteInstruction</code></td>
-                <td>Arms delta-proxy repricing (<code>status: "REGISTERED"</code>); no live quote reaches a venue,
-                  because the tick-ingestion loop that would submit one is not built</td>
-              </tr>
-              <tr>
-                <td><code>SWAP</code></td>
-                <td><code>SwapInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>LEND</code></td>
-                <td><code>LendInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>BORROW</code></td>
-                <td><code>BorrowInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>WITHDRAW</code></td>
-                <td><code>WithdrawInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>REPAY</code></td>
-                <td><code>RepayInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>STAKE</code></td>
-                <td><code>StakeInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>UNSTAKE</code></td>
-                <td><code>UnstakeInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
+                <td>Registers delta-proxy repricing synchronously (<code>status: "REGISTERED"</code>); the live
+                  tick loop then submits/replaces the venue order as priced state changes</td>
               </tr>
               <tr>
                 <td><code>TRANSFER</code></td>
                 <td><code>TransferInstructionV2</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
+                <td>Routed through the real production transfer wiring — DeFi-to-DeFi and 4 credentialed CEX venues
+                  (binance/deribit/bybit/aster) reach the live adapter; any other CEX_WITHDRAW venue returns an
+                  honest FAILED, never a fabricated CONFIRMED</td>
               </tr>
               <tr>
                 <td><code>BRIDGE</code></td>
                 <td><code>BridgeInstructionV2</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>ATOMIC</code></td>
-                <td><code>AtomicInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
+                <td>Routed through the same transfer wiring via <code>SocketBridgeConnector</code>; source-chain
+                  broadcast success returns PENDING, destination settlement is not confirmed synchronously</td>
               </tr>
               <tr>
                 <td><code>CANCEL</code></td>
                 <td><code>CancelInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
+                <td>Routed to the real per-venue <code>cancel_order()</code> path; both <code>SINGLE</code> and
+                  <code>ALL_FOR_STRATEGY_INSTANCE</code> scopes are wired</td>
+              </tr>
+              <tr>
+                <td><code>ATOMIC</code></td>
+                <td><code>AtomicInstruction</code></td>
+                <td>Routed through the shared multi-leg <code>InstructionRouter</code></td>
+              </tr>
+              <tr>
+                <td><code>SWAP</code></td>
+                <td><code>SwapInstruction</code></td>
+                <td>Routed through the real DeFi live-execution wiring — venue coverage noted below</td>
+              </tr>
+              <tr>
+                <td><code>LEND</code></td>
+                <td><code>LendInstruction</code></td>
+                <td>Routed through the real DeFi live-execution wiring — venue coverage noted below</td>
+              </tr>
+              <tr>
+                <td><code>BORROW</code></td>
+                <td><code>BorrowInstruction</code></td>
+                <td>Routed through the real DeFi live-execution wiring — venue coverage noted below</td>
+              </tr>
+              <tr>
+                <td><code>WITHDRAW</code></td>
+                <td><code>WithdrawInstruction</code></td>
+                <td>Routed through the real DeFi live-execution wiring — venue coverage noted below</td>
+              </tr>
+              <tr>
+                <td><code>REPAY</code></td>
+                <td><code>RepayInstruction</code></td>
+                <td>Routed through the real DeFi live-execution wiring — venue coverage noted below</td>
+              </tr>
+              <tr>
+                <td><code>STAKE</code></td>
+                <td><code>StakeInstruction</code></td>
+                <td>Routed through the real DeFi live-execution wiring — venue coverage noted below</td>
+              </tr>
+              <tr>
+                <td><code>UNSTAKE</code></td>
+                <td><code>UnstakeInstruction</code></td>
+                <td>Routed through the real DeFi live-execution wiring — venue coverage noted below</td>
               </tr>
               <tr>
                 <td><code>LP_MINT</code></td>
                 <td><code>LpMintInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
+                <td>Routed through the real DeFi live-execution wiring — venue coverage noted below</td>
               </tr>
               <tr>
                 <td><code>LP_BURN</code></td>
                 <td><code>LpBurnInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
+                <td>Routed through the real DeFi live-execution wiring — venue coverage noted below</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
       <p style="font-size: 0.9rem; color: var(--ink-3)">
+        Venue coverage for the nine DeFi-routed actions above: <code>Uniswap V3/V2</code> (<code>SWAP</code>),
+        <code>AAVE V3</code> (<code>LEND</code>/<code>WITHDRAW</code>/<code>BORROW</code>/<code>REPAY</code>),
+        <code>Lido</code> (<code>STAKE</code>/<code>UNSTAKE</code>), and <code>Uniswap V3</code>
+        (<code>LP_MINT</code>/<code>LP_BURN</code>) are live-wired today. In BACKTEST/PAPER operational mode, or
+        when Secret Manager DeFi wallet/RPC credentials are unavailable, these handlers fall back to their existing
+        pure-simulation behaviour, unchanged. A live-wired venue outside that named set honestly FAILS rather than
+        guessing at an unverified call shape — never a fabricated success.
+      </p>
+      <p style="font-size: 0.9rem; color: var(--ink-3)">
         Verified against <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>
-        (all 15 variants + the union) and <code>external_instruction_api.py:110-171</code> (the 501 branch and the
-        QUOTE registration branch).
+        (all 15 variants + the union), <code>external_instruction_api.py</code> and
+        <code>external_instruction_defi.py</code> (2026-08-21). Landed: execution-service@4e35a09b2 (BORROW/REPAY
+        live dispatch + CANCEL <code>ALL_FOR_STRATEGY_INSTANCE</code> scope), @0aa709f076 (BRIDGE/LP_MINT/LP_BURN),
+        @56d6e7480e (QUOTE tick-ingestion reprice loop, no-churn suppression).
       </p>
 
       <details class="ref">
         <summary><code>POST /external/instructions</code><span class="tag-ref">Endpoint</span></summary>
         <p>
           Body is one <code>StrategyInstructionV2</code> envelope member (<a href="#s8">§08</a> documents the full
-          family). For <code>TRADE</code> — the only action live today — these fields are load-bearing:
+          family). Field examples below use <code>TRADE</code>; the request/response envelope shape is the same for
+          all 15 action types, and the instruction type-support table above names each one's own production path.
         </p>
         <div class="plate">
           <div class="plate-head"><span class="label">Body fields</span><span class="note">TRADE action — JSON</span></div>
@@ -18669,7 +18698,8 @@ Content-Type: application/x-ndjson
                   <td><code>action</code></td>
                   <td>string</td>
                   <td>Yes</td>
-                  <td>Literal <code>"TRADE"</code> — every other value 501s</td>
+                  <td>One of the 15 <code>StrategyInstructionV2</code> action literals — the instruction
+                    type-support table above names the field set and production path each one carries</td>
                 </tr>
                 <tr>
                   <td><code>instruction_id</code></td>
@@ -18843,8 +18873,8 @@ Content-Type: application/json
               </tr>
               <tr>
                 <td><code>501</code></td>
-                <td>Any instruction action other than <code>TRADE</code> — SWAP, LEND, BORROW, WITHDRAW, REPAY,
-                  STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL</td>
+                <td>An action outside the <code>StrategyInstructionV2</code> union — none exist today; every
+                  declared action type routes to real execution</td>
                 <td>execution-service</td>
               </tr>
               <tr>
@@ -19032,20 +19062,20 @@ Content-Type: application/json
         </p>
       </div>
       <div class="callout">
-        <span class="tag">strategy-service signal-leasing API — built and wired, operationally dark until 2026-09-01</span>
+        <span class="tag">strategy-service signal-leasing API — built and wired, activated per counterparty at onboarding</span>
         <p>
           Mounted at <code>/signal_broadcast</code>, six endpoints (<code>GET /emissions</code>, <code>POST
           /acknowledge</code>, <code>GET /delivery-health</code>, <code>GET /backtest-paper-live</code>, <code>GET
           /pnl-attribution</code>, <code>POST /pnl-attribution</code>) — a real REST-pull/webhook-push surface for
           leasing strategy signals, distinct auth from the rest of this page: a per-counterparty HMAC secret via
-          <code>CounterpartyCredentialsManager</code>, hot-reloaded from Secret Manager every 300s.
-          <code>unified_api_contracts/internal/domain/signal_broadcast/registry.py</code> seeds exactly two
-          counterparties, both <code>CounterpartyStatus.SUSPENDED</code>, with placeholder endpoint URLs — no
-          counterparty can authenticate against this surface today (<code>transport.py</code>'s
-          <code>_authenticate()</code> 403s any non-<code>ACTIVE</code> counterparty before anything else). Launch
-          window: <b>2026-09-01T00:00:00Z</b>. Payload depth (<code>MINIMAL</code> / <code>STANDARD</code> /
-          <code>RICH</code>) and rate-limit profile (<code>default</code> 10 req/s, <code>minimal</code> 5 req/s,
-          <code>burst</code> 25 req/s) are both per-counterparty entitlements, not per-request choices.
+          <code>CounterpartyCredentialsManager</code>, hot-reloaded from Secret Manager every 300s. Access is
+          entitled per counterparty: <code>unified_api_contracts/internal/domain/signal_broadcast/registry.py</code>
+          holds the roster, and a counterparty authenticates only once its own status is activated
+          (<code>transport.py</code>'s <code>_authenticate()</code> checks this before anything else) — the two
+          counterparties provisioned today activate at the 2026-09-01 launch window. Payload depth
+          (<code>MINIMAL</code> / <code>STANDARD</code> / <code>RICH</code>) and rate-limit profile
+          (<code>default</code> 10 req/s, <code>minimal</code> 5 req/s, <code>burst</code> 25 req/s) are both
+          per-counterparty entitlements, not per-request choices.
         </p>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
           Full endpoint depth (parameters, example bodies, error tables):
