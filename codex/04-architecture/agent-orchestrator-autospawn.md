@@ -1,26 +1,34 @@
 ---
 doc_type: codex-ssot
 title: Agent Orchestrator — AutoSpawn Architecture
-summary:
-  AutoSpawnLoop — orchestrator background thread that wakes a worker on an idle slot when all 5 gates pass (queue
-  CLAIMABLE (not merely queued — R1 2026-07-16), no active worker, account headroom <95%, slot configured, not in
+summary: AutoSpawnLoop — orchestrator background thread that wakes a worker on an idle slot when all 5 gates pass (queue
+  CLAIMABLE (not merely queued — R1 2026-07-16), no active worker, account headroom <99%, slot configured, not in
   cooldown); per-slot spawn params from _spawn_param_plan (R2); model-tier-aware opus routing, anti-flap 1h backoff +
-  Slack alert.
+  Slack alert; multi-provider blended account-pick rotation (Claude/DeepSeek/Gemini/GLM/Codex/Ollama) via
+  select_account_for_spawn — quota-adaptive blend, free_provider_priority order, Phase 4 stratified rotation,
+  bulk-selection spreading, and the account_is_usable/health-failure-ring gates (rewritten 2026-08-21).
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: [orchestrator, self-healing, role-registry, model-tier, slack, infrastructure]
+tags:
+  [orchestrator, self-healing, role-registry, model-tier, slack, infrastructure, multi-provider, round-robin, dispatch]
 related:
   [
     /codex/04-architecture/agent-orchestrator-overview.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+    /plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md,
   ]
 created: 2026-05-30
-authoritative_for: [agent-orchestrator AutoSpawn worker-spawn architecture]
+authoritative_for:
+  [
+    agent-orchestrator AutoSpawn worker-spawn architecture,
+    agent-orchestrator multi-provider account-pick round-robin dispatch,
+  ]
 referenced_by:
   [
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
@@ -29,14 +37,23 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed: 2026-07-16
+last_reviewed: 2026-08-21
 code_refs:
+  [
+    agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/server/state_store/account_usage.py,
+    agent-orchestrator/server/config.py,
+    agent-orchestrator/server/tmux_pruner.py,
+    agent-orchestrator/server/server.py,
+  ]
 ---
 
 # Agent Orchestrator — AutoSpawn Architecture
 
-> **SSOT**: `agent-orchestrator/server/autospawn.py` **Plan**: `plans/active/autospawn_idle_vms_2026_05_30.md`
-> **Overview pointer**: `/codex/04-architecture/agent-orchestrator-overview.md` § "Auto-spawn lifecycle"
+> **SSOT**: `agent-orchestrator/server/autospawn.py` (+ `server/state_store/account_usage.py` for
+> `account_is_usable`, `server/server.py` for the account-failover sweep) **Plan (archived)**:
+> `plans/archive/2026_06/autospawn_idle_vms_2026_05_30.md` **Round-robin root cause + fixes**:
+> `plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`
 
 ## Problem statement
 
@@ -54,7 +71,7 @@ A worker is auto-spawned on slot N when **all 5 gates** are true on a given tick
 | ------------------ | ---------------------------------------------------------------------------- | --------------------- |
 | 1 Queue not empty  | `tasks WHERE status='queued' AND dispatched_to IS NULL` is non-empty         | `queue_empty`         |
 | 2 No active worker | `tmux has-session orch-slot-N` → false                                       | `worker_active`       |
-| 3 Account headroom | ≥1 usable account: `five_hour_pct < 95` AND `weekly_pct < 95` (null pct = 0) | `no_account_headroom` |
+| 3 Account headroom | ≥1 usable account: `five_hour_pct < 99` AND `weekly_pct < 99` (null pct = 0) | `no_account_headroom` |
 | 4 Slot configured  | `slots` row has `worktree` + `branch` + `operator`                           | `slot_not_configured` |
 | 5 Not in cooldown  | Last attempt for this slot > cooldown window ago                             | `cooldown`            |
 
@@ -125,19 +142,94 @@ spawn regardless of ordering — fairness only applies among slots that are othe
 
 ---
 
-## Account-pick rotation
+## Account-pick rotation — multi-provider blended dispatch (rewritten 2026-08-21)
 
-`_pick_headroom_account()` runs inside the tick for Gate 3:
+`select_account_for_spawn()` (`autospawn.py`) is the SINGLE decision point for every spawn/resume/
+rotation call site in the fleet (autospawn refill, resume, escalation, plan_health, main-agent
+keeper, the watchdog, the account-failover sweep) — it decides Claude vs. DeepSeek vs. Gemini vs.
+GLM vs. Codex vs. Ollama, not just which Claude account. Registered providers today:
+`anthropic, deepseek, gemini, groq, sambanova, glm, codex, nvidia, ollama` (`server/accounts.py`
+`AccountProvider`; kimi/grok/openrouter/omniroute removed 2026-08-21 as unused code debt — see
+`ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`).
 
-1. Load `accounts.json`.
-2. Filter: `account_is_usable(session, acc.id)` (not rate-limited, `status=healthy`).
-3. Filter: `five_hour_pct < five_hour_ceiling` AND `weekly_pct < weekly_ceiling`.
-4. Sort ascending by `(five_hour_pct, weekly_pct)` — spreads load to the least-used accounts first; weekly usage as a
-   tiebreaker.
-5. Return the first account, or `None` if no candidates.
+**Decision order** inside `select_account_for_spawn()`:
 
-The same `account_is_usable` source of truth used by the dispatcher's rotation logic ensures account health definitions
-are consistent across both spawn paths.
+1. `preferred_provider` (a resume staying on its prior provider) or `sequential_preferred_account_id`
+   (a `sequential: true` plan's later tasks) short-circuit to that provider first, degrading through
+   every other registered provider if it has zero usable accounts.
+2. Tier gate: `opus`/`fable` hard-pin to the Claude pool, no free-provider fallback (unless
+   `deepseek_opus_emergency_fallback` is on). Only `sonnet`-tier (or emergency-eligible `opus`)
+   reaches the policy below.
+3. **Quota-adaptive Claude/free blend** — `_quota_adaptive_fraction()` shades `deepseek_route_fraction`
+   (the configured free-pool share) toward Claude when `_anthropic_pool_headroom_pct()` shows spare
+   already-paid-for capacity, toward the free pool when Claude is scarce. Zero usable Claude accounts
+   short-circuits the fraction to `1.0` (100% free pool) — this is what an unconditional
+   `account_is_usable()` exclusion (bug 1 below) collapsed to for EVERY Claude account, forcing 100%
+   of dispatch off Claude regardless of real headroom, until fixed 2026-08-21.
+4. **`free_provider_priority`-ordered walk** across registered free providers, then any
+   registered-but-unlisted provider alphabetically as a safety net. Default as of 2026-08-21:
+   `[deepseek, gemini, glm, ollama, codex]` — codex LAST deliberately: it has no proactive quota/
+   rate-limit poller at all (`nvidia_codex_exhaustion_observability_gap_2026_08_19`, still open), so
+   it never fails a headroom check regardless of real usage; providers with an OBSERVABLE real signal
+   (Gemini RPM/RPD, GLM's `glm_quota_poller.py` pct fields) get first refusal. Previously
+   `["deepseek"]` with everything else alphabetical — `codex < gemini < glm` meant codex won the
+   waterfall almost unconditionally whenever DeepSeek was gated out, which was most of the time
+   (measured: 488/24h codex-luna selections vs. 0 for two healthy GLM accounts).
+5. **Phase 4 stratified rotation** (`_select_rotation_combo`, `deepseek_claude_blended_provider_
+routing_2026_07_28` Phase 4) — when the caller supplies a `BacklogTask` (today only
+   `autospawn_refill`'s per-slot pick does) AND 2+ free-provider accounts are currently LIVE
+   (`_live_free_combo_ids`), round-robins across the WHOLE live pool — difficulty/duration-stratified,
+   freshly shuffled each round — superseding step 4's priority walk for that one pick. Falls through
+   to step 4 unchanged whenever fewer than 2 combos are live.
+6. **`_pick_headroom_account()`** — the underlying per-provider picker every step above bottoms out
+   in: filter candidates to the requested `provider` (+ `variant` for DeepSeek pro/flash) that pass
+   `_account_meets_dispatch_headroom()` (below), then sort ascending by
+   `(five_hour_pct, weekly_pct, active_slot_count)` and return the first, or `None`.
+
+**`_account_meets_dispatch_headroom()`** — usable (`account_is_usable`, below) AND under BOTH pct
+ceilings (`five_hour_pct_ceiling()`/`weekly_pct_ceiling()`, default **99%** — see § Environment
+variables for the corrected default) AND, for Gemini specifically, under its real RPM/RPD ceiling
+(`gemini_account_has_rate_headroom`) AND, for NVIDIA, under its shared-key RPM ceiling (both
+NVIDIA accounts stay `account_status: disabled` today, so this branch is dormant-but-wired). Every
+OTHER free provider (DeepSeek, Codex) has no rate-limit signal populated, so this degrades to the
+plain pct-ceiling check for them.
+
+**`account_is_usable()`** (`server/state_store/account_usage.py`) — the base health gate every
+picker above composes, reused by 9+ call sites fleet-wide: `False` when rate-limited, in
+auth-failed cooldown, or `account_status == "disabled"`. `overage_status == "rejected"` blocks
+**only when the account is ALSO at/over the same pct ceiling** `_account_meets_dispatch_headroom`
+uses (fixed 2026-08-21 — was unconditional, treating "overage billing not provisioned on this
+sub-account" the same as "genuinely maxed out", which excluded all 8 Claude accounts including
+three at 0-8% weekly usage; the original 2026-08-18 protection for a genuinely near-cap account is
+preserved).
+
+**Bulk-selection spreading** (2026-08-21) — any caller that picks accounts for MANY slots inside
+ONE DB session before actually dispatching any of them (the account-failover sweep
+`server.rotate_all_slots_off_account`, the routine refill tick `_run_one_tick`, the resume pass
+`_resume_pass`) MUST thread a locally-accumulated exclusion set through
+`select_account_for_spawn`'s `exclude_ids` param (refill/resume go through the shared
+`select_account_with_tick_spread` helper, which also handles a round-reset once every live
+candidate has had a turn — mirrors step 5's rotation semantics). Without this, `_pick_headroom_
+account`'s step-6 sort sees the SAME stale `active_slot_count` snapshot on every pick within the
+loop (the real reassignment is deferred to a later concurrent dispatch phase for spawn-latency
+reasons), so every slot independently "discovers" the same least-loaded account and piles onto it.
+Confirmed live: ~13 slots landed on one Gemini account within 15 seconds when an operator-disabled
+account triggered the sweep, blowing past its real rate ceiling; all 13 sessions died together ~3
+minutes later.
+
+**Health-failure ring** (`_provider_health_ok`, `_free_provider_gate_reason`) — a free-provider
+account with `deepseek_health_failure_threshold` (default 3) recent FAILURES within
+`deepseek_health_window_seconds` (default 900s) is skipped. As of 2026-08-21 this also counts an
+"unexplained" tmux-session death (`tmux_pruner.py`'s `death_class` classifier calling
+`record_spawn_outcome(account_id, ok=False)`), not just an initial spawn-attempt failure —
+previously a session that spawned fine but died LATER (mid-conversation rate-limit exhaustion, tmux
+pane death) never tripped this gate, so a repeatedly-dying account kept looking healthy and kept
+absorbing new selections (measured: one account took 92 selections in 60 minutes alongside 12
+`tmux_session_lost` + 13 `autospawn_failed` events on itself). Intentional teardowns (a clean
+`/done`, an operator-directed kill) are excluded — not the account's fault.
+
+Full root-cause narrative + live evidence for all of the above:
+`plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`.
 
 ---
 
@@ -240,16 +332,16 @@ name, slot ID, and dashboard link.
 
 ## Environment variables
 
-| Variable                                       | Default | Purpose                                         |
-| ---------------------------------------------- | ------- | ----------------------------------------------- |
-| `ORCHESTRATOR_AUTOSPAWN_ENABLED`               | `false` | Master on/off switch — must be `true` to enable |
-| `ORCHESTRATOR_AUTOSPAWN_INTERVAL_SECONDS`      | `60`    | Tick cadence (seconds between full slot scans)  |
-| `ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`      | `300`   | Per-slot retry gap (5 min default)              |
-| `ORCHESTRATOR_AUTOSPAWN_FIVE_HOUR_PCT_CEILING` | `95`    | Skip if account `five_hour_pct` ≥ this (was 50) |
-| `ORCHESTRATOR_AUTOSPAWN_WEEKLY_PCT_CEILING`    | `95`    | Skip if account `weekly_pct` ≥ this (was 80)    |
-| `ORCHESTRATOR_AUTOSPAWN_FLAP_THRESHOLD`        | `3`     | Consecutive spawns before flap declared         |
-| `ORCHESTRATOR_AUTOSPAWN_FLAP_WINDOW_SECONDS`   | `600`   | Window for consecutive-spawn counting           |
-| `ORCHESTRATOR_AUTOSPAWN_FLAP_BACKOFF_SECONDS`  | `3600`  | Backoff duration on flap detection              |
+| Variable                                       | Default | Purpose                                                  |
+| ---------------------------------------------- | ------- | -------------------------------------------------------- |
+| `ORCHESTRATOR_AUTOSPAWN_ENABLED`               | `false` | Master on/off switch — must be `true` to enable          |
+| `ORCHESTRATOR_AUTOSPAWN_INTERVAL_SECONDS`      | `60`    | Tick cadence (seconds between full slot scans)           |
+| `ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`      | `300`   | Per-slot retry gap (5 min default)                       |
+| `ORCHESTRATOR_AUTOSPAWN_FIVE_HOUR_PCT_CEILING` | `99`    | Skip if account `five_hour_pct` ≥ this (was 95, then 50) |
+| `ORCHESTRATOR_AUTOSPAWN_WEEKLY_PCT_CEILING`    | `99`    | Skip if account `weekly_pct` ≥ this (was 95, then 80)    |
+| `ORCHESTRATOR_AUTOSPAWN_FLAP_THRESHOLD`        | `3`     | Consecutive spawns before flap declared                  |
+| `ORCHESTRATOR_AUTOSPAWN_FLAP_WINDOW_SECONDS`   | `600`   | Window for consecutive-spawn counting                    |
+| `ORCHESTRATOR_AUTOSPAWN_FLAP_BACKOFF_SECONDS`  | `3600`  | Backoff duration on flap detection                       |
 
 ---
 
@@ -291,7 +383,8 @@ Expected: `orch-slot-1` session recreated within 60–120 s of the kill.
 
 - **Do NOT spawn while a worker is active** — race condition; dispatcher may have just claimed but tmux `has-session`
   returns stale.
-- **Do NOT spawn at ≥ 80% weekly usage** — burning rate limits on a fleet rollout is worse than leaving a slot idle.
+- **Do NOT spawn at/above the pct ceiling (default 99% weekly/5h)** — burning rate limits on a fleet rollout is worse
+  than leaving a slot idle.
 - **Do NOT spawn more than once per cooldown per slot** — operator may have explicit reasons for an idle slot
   (maintenance, debug).
 - **Do NOT bypass `prompts.render()`** — baking a second boot-prompt template in the autospawner creates drift from the
@@ -301,9 +394,9 @@ Expected: `orch-slot-1` session recreated within 60–120 s of the kill.
 
 ## Relationship to related systems
 
-| System                                       | Interaction                                                                                                                                        |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `harsh_pc_dispatch_failover`                 | Handles HOST down (heartbeat > 10 min silent). AutoSpawn handles WORKER down on running host. Different triggers, both required for full autonomy. |
-| `agent_orchestrator_backlog_state_alignment` | Zombie cleanup prerequisite: without zombie cleanup, "queue not empty" fires on zombie rows and autospawn flaps.                                   |
-| Manual `/api/slots/<id>/spawn`               | Same code path (`tmux_spawn.spawn` + `prompts.render`). AutoSpawn is a scheduled wrapper; manual API is on-demand.                                 |
-| Account rotation dispatcher                  | Same `account_is_usable` source of truth. AutoSpawn's `_pick_headroom_account` adds the `five_hour_pct`/`weekly_pct` ceiling layer on top.         |
+| System                                                   | Interaction                                                                                                                                                                                                                                                                       |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `harsh_pc_dispatch_failover`                             | Handles HOST down (heartbeat > 10 min silent). AutoSpawn handles WORKER down on running host. Different triggers, both required for full autonomy.                                                                                                                                |
+| `agent_orchestrator_backlog_state_alignment`             | Zombie cleanup prerequisite: without zombie cleanup, "queue not empty" fires on zombie rows and autospawn flaps.                                                                                                                                                                  |
+| Manual `/api/slots/<id>/spawn`                           | Same code path (`tmux_spawn.spawn` + `prompts.render`). AutoSpawn is a scheduled wrapper; manual API is on-demand.                                                                                                                                                                |
+| Account rotation dispatcher / `select_account_for_spawn` | Same `select_account_for_spawn`/`account_is_usable` source of truth EVERY spawn path shares (fresh, resume, escalation, plan_health, main-agent keeper, the watchdog, the account-failover sweep) — see § Account-pick rotation above for the full multi-provider decision chain. |
