@@ -38,7 +38,6 @@ related:
     /plans/active/issues/ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md,
     /plans/active/issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
-    /plans/active/kimi_gemma_provider_onboarding_2026_08_16.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
@@ -475,13 +474,31 @@ events to accounts via each slot's most-recent account-carrying event, run direc
       check regardless of actual usage — providers with an observable real signal (Gemini RPM/RPD, GLM's
       `glm_quota_poller.py` pct fields) get first refusal instead. Operator: flag if a different order is
       wanted; the config default is a one-line change (`server/config.py` ~line 1600).
-- [ ] [SCRIPT] P3. Update the 3 plan docs the Kimi/OmniRoute/OpenRouter removal (Part 2) touches but
-      hasn't yet updated: `kimi_gemma_provider_onboarding_2026_08_16.md` (Kimi-specific todos/Progress
-      Log — leave Gemma untouched), the archived OmniRoute evaluation doc (closing Progress Log entry
-      noting the pilot code itself is now deleted, not just unused), and
-      `deepseek_claude_blended_provider_routing_2026_07_28.md` (short note that OpenRouter was
-      evaluated as a Phase-2 candidate provider and removed as unused code debt). Repo:
-      unified-trading-pm.
+- [x] [SCRIPT] P3. ✅ **DONE 2026-08-21.** Updated the 3 plan docs the Kimi/OmniRoute/OpenRouter removal
+      (Part 2) touched but hadn't yet updated: `kimi_gemma_provider_onboarding_2026_08_16.md` (Kimi
+      todos flipped SUPERSEDED, Gemma left untouched — Gemma succeeded, is `gemma-self-hosted` in prod),
+      the archived OmniRoute evaluation doc (closing Progress Log entry: the pilot code itself is now
+      deleted, not just unused), and `deepseek_claude_blended_provider_routing_2026_07_28.md` (note that
+      OpenRouter was a Phase-2 candidate, removed as unused code debt). Repo: unified-trading-pm.
+      **Follow-on, found while shipping**: `kimi_gemma_provider_onboarding_2026_08_16.md` hit 0 open
+      todos as a direct result — archived per the workspace's archive-immediately HARD RULE
+      (`status: complete`, `git mv`'d to `plans/archive/2026_08/`, `plans/epics/orchestrator_master.md`'s
+      2 structural links repointed). Not fixed in the same commit (deliberately out of scope — touching
+      8 unfamiliar, possibly-in-use active plans unilaterally is exactly what the multi-agent-safety
+      rules warn against): 8 OTHER active plans still cite the pre-archival active-path form of
+      `kimi_gemma_provider_onboarding_2026_08_16.md` in their own `related:` frontmatter and will dangle
+      once that path no longer resolves (`check_reference_paths.py`'s
+      corpus-wide sweep will flag these as new violations against its shrinking-ratchet baseline the
+      next time it runs unscoped, since my archival commit only ran the `--only`-scoped check against
+      files I staged). Fix: `check_active_refs_archived_plans.py` bans a `related:` field citing a
+      `/plans/archive/...` path too — so REMOVE each dead `related:` entry outright (or repoint to a
+      codex doc if one now covers what it referenced), never just swap in the new archive path. Files
+      (grepped 2026-08-21, may drift, all `plans/active/` unless noted):
+      `codex_mcp_tool_use_bridge_2026_08_18.md:19`, `multi_provider_model_capability_bakeoff_2026_08_19.md:22`,
+      `issues/gemma_4_31b_it_persistent_timeout_2026_08_19.md:22,42`,
+      `ao_satellite_ao_dispatch_batch25_2026_08_19.md:32,61`,
+      `issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md:31`,
+      `../audit/provider_smoke_test_registry_2026_08_18.md:29`.
 - [x] [BACKEND] P3. ✅ **DONE 2026-08-21.** Added a line to `SUB_AGENT_MANDATORY_RULES.md`'s per-slot-
       worktree section: "If YOUR prompt never named an absolute `.tabs/<N>/` path, STOP and ask — never
       default to the bare repo root." Also condensed the existing incident sentence to make room. File
