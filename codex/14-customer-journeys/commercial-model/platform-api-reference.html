@@ -1728,7 +1728,7 @@
       >
     </div>
     <p class="lede">
-      One instruction envelope, any asset class — but only one of its thirteen action types actually executes today.
+      One instruction envelope, any asset class — but only one of its fifteen action types actually executes today.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
     </p>
 
@@ -1737,7 +1737,7 @@
       <p>
         <b>Only <code>TRADE</code> is wired end-to-end.</b> The request body type, <code>StrategyInstructionV2</code>,
         is a 15-member discriminated union
-        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:373-385</code>). A
+        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
         internal DART manual-trade surface uses in production. The other fourteen variants — SWAP, LEND, BORROW,
