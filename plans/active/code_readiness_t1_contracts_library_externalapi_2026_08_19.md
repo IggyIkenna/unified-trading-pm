@@ -427,11 +427,11 @@ todos only to confirm they are data-movement, then leave it.
       formula from schema-carried values. Also documented `refresh_cadence_ms` as the STRATEGY-side cadence
       specifically — the issue is explicit that conflating it with execution's faster tick-driven loop is a design
       error. 5 tests incl. a JSON round-trip (the instruction crosses the EventTransport seam).
-- [ ] [BACKEND] P0. **UNBLOCKED 2026-08-21 — operator ruled Q12-Q16** (ruling recorded at the top of the source
-      issue's open-questions section): vector `references: list[InstrumentReferenceEntry]` is the ONE home;
-      per-entry full matrix (price, per-venue position, credit, bps-per-unit-risk, delta, gamma, optional theta);
-      venue nested per-instrument; per-entry credit/trigger/coefficient. Implement per the ruling, not the
-      superseded scalar text below. Add `reference_position` to `StrategyInstructionEnvelope`. **The shape this
+- [ ] [BACKEND] P0. **UNBLOCKED 2026-08-21 in DIRECTION, shape governed by the fabric SSOT**: operator answered the
+      legacy Q12-Q16 set (vector one home; per-entry matrix incl. optional theta; venue nested per-instrument;
+      per-entry credit/trigger/coefficient) — but Q12-Q16 were superseded by the factor-state model, so the
+      implementation shape is `/codex/04-architecture/cross-domain-state-fabric.md` (R1-R16 snapshot/factor
+      contract), with those answers as constraints. Position vectors are RESOLVED (fabric R22, reconfirmed by operator 2026-08-21); still open: the five Wave-0 rulings. Add `reference_position` to `StrategyInstructionEnvelope`. **The shape this
       todo names (`dict[venue, Decimal]`, "same shape as the existing price leg") is SUPERSEDED** — the source issue
       carries a dated correction banner from a later same-day operator revision ruling that shape incomplete: it
       solves the venue axis but not the INSTRUMENT axis, since a strategy instance holds a universe of instruments.
@@ -441,8 +441,8 @@ todos only to confirm they are data-movement, then leave it.
       literal text would ship the rejected shape; implementing the vector would answer five questions explicitly
       reserved for the operator. **Needs: a ruling on Q12-Q16**, then this becomes a bounded code task.
       Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
-- [ ] [BACKEND] P0. **UNBLOCKED 2026-08-21 — same Q12-Q16 ruling as above** (credit is per-entry, optional,
-      strategy-owned). Add the `credit` leg to `StrategyInstructionEnvelope`. Formerly same gate as
+- [ ] [BACKEND] P0. **UNBLOCKED 2026-08-21 in direction, same fabric-SSOT governance as above** (credit is per-entry,
+      optional, strategy-owned — consistent with the fabric contract's `c_i` term). Add the `credit` leg to `StrategyInstructionEnvelope`. Formerly same gate as
       `reference_position` above — Q14 asks whether `credit` varies per-entry or is one policy shared across the
       vector, which cannot be answered without first resolving Q12 (where the vector lives). Landing `credit` as a
       flat envelope field now would re-commit the exact scalar-shape regression the operator caught. Note the

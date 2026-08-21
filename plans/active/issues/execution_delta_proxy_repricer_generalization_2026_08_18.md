@@ -425,7 +425,14 @@ envelope. It is explicitly NOT the final word: which container this list lives o
 `QuoteInstruction.reference_price: Decimal` (currently REQUIRED — narrows the envelope's optional field, a
 single-instrument override that itself assumes a scalar) is unresolved.
 
-### OPERATOR RULING 2026-08-21 — Q12-Q16 RESOLVED (supersedes the open-questions block below; kept for context)
+### OPERATOR RULING 2026-08-21 — Q12-Q16 answered IN THE LEGACY FRAMING; implement THROUGH the factor-state model
+
+**Scope correction, same day**: Q12-Q16 were already superseded by the factor-state model (§11-16) and its codex
+SSOT `/codex/04-architecture/cross-domain-state-fabric.md` (R1-R16) before this ruling was recorded. The answers
+below are durable DIRECTIONAL signal — they refine, and are consistent with, the fabric contract — but the
+implementation shape is the fabric's snapshot/factor-state contract (per-instrument J_i/H_i/Theta_i against
+canonical factors, reference positions and the A-matrix in the versioned snapshot with watermarks), NOT literal
+scalar delta/gamma/theta fields on `StrategyInstructionEnvelope`. Q3 (position vectors) is RESOLVED as fabric R22 — three vectors, opt-in per archetype, q_worst venue-derived — reconfirmed by operator 2026-08-21. Genuinely-still-open: the five Wave-0 rulings, carried in the codex doc.
 
 - **Q12**: the vector `references: list[InstrumentReferenceEntry]` is the ONE home on
   `StrategyInstructionEnvelope`; N=1 is a list of one; no envelope-level scalar duplication. Each entry is the
