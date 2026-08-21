@@ -1728,7 +1728,7 @@
       >
     </div>
     <p class="lede">
-      One instruction envelope, any asset class — but only one of its thirteen action types actually executes today.
+      One instruction envelope, any asset class — but only one of its fifteen action types actually executes today.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
     </p>
 
@@ -1736,12 +1736,12 @@
       <span class="tag">Read this before anything else on this page</span>
       <p>
         <b>Only <code>TRADE</code> is wired end-to-end.</b> The request body type, <code>StrategyInstructionV2</code>,
-        is a 13-member discriminated union
-        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:373-385</code>). A
+        is a 15-member discriminated union
+        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
-        internal DART manual-trade surface uses in production. The other twelve variants — SWAP, LEND, BORROW, WITHDRAW, REPAY, STAKE,
-        UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL — parse successfully (they are real, valid members of the
+        internal DART manual-trade surface uses in production. The other fourteen variants — SWAP, LEND, BORROW, WITHDRAW, REPAY, STAKE,
+        UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL, LP_MINT, LP_BURN — parse successfully (they are real, valid members of the
         union) but return an honest <code>501</code>: not a silent drop, but not the same contract either
         (<code>external_instruction_api.py:129-136</code>).
       </p>
@@ -2139,7 +2139,7 @@
           <tr>
             <td><code>422</code></td>
             <td>
-              Request validation failed — bad enum value, or a body that matches none of the 13 instruction variants
+              Request validation failed — bad enum value, or a body that matches none of the 15 instruction variants
             </td>
             <td>Market-data (asset_group / topology / after), instructions POST</td>
           </tr>
@@ -2150,7 +2150,7 @@
           </tr>
           <tr>
             <td><code>501</code></td>
-            <td>Recognised but not wired for external submission — 12 of the 13 instruction types</td>
+            <td>Recognised but not wired for external submission — 14 of the 15 instruction types</td>
             <td>Instructions POST</td>
           </tr>
           <tr>
