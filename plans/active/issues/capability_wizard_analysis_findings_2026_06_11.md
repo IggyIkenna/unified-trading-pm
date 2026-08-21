@@ -29,7 +29,7 @@ archive_exempt: true
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-16
+last_updated: 2026-08-21
 context_scope:
   [
     /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
@@ -918,3 +918,9 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
   (already-archived) gap-discovery doc, not a bounded task list — new findings get appended here over time rather
   than this doc being a closeable unit of work. 0-open-todos is an expected transient state for a running log, not
   evidence of completion; archiving it would just get re-created the next time a wizard/manifest finding surfaces.
+
+**2026-08-21 — ruling D12 (CEX execution credentials)**: OPERATOR-RULED 2026-08-21 — 'check Secret Manager, we have
+these': VERIFIED in GSM (central-element-323112): binance-trade-api-key/-secret, bybit-trade-api-key (+bybit-api-secret;
+bybit-trade-api-secret ABSENT), exec-<client>-okx-api-key/-secret/-passphrase x9, deribit-testnet-write-*,
+bybit-testnet-trade-*. Now EXECUTABLE: wire place_order() + verify the withdraw path on testnet. Source:
+/plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
