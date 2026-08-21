@@ -146,17 +146,19 @@ vs. the two findings above.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Decide the generalization shape**: extend `venue_capabilities.py`'s existing pattern to
-      cover every family (grow `VENUE_COLLATERAL_MATRIX`/`COLLATERAL_REGISTRY` coverage, or build an equivalent
-      catalog-wide venue-capability lookup keyed by asset_group/venue/instrument_type), versus accepting hardcoded
-      catalog literals as a deliberate, lower-priority design choice for families where venue support changes
-      rarely. Not free either way — scope before committing.
-- [ ] [AGENT] P2. **If generalizing: audit every hardcoded venue literal above against the venue's actual current
-      capabilities** (does OKX/Bybit/Hyperliquid/CME/IBKR/etc. genuinely support what each catalog row assumes,
-      today) before building the lookup — the point of centralizing is catching drift, so start from a clean,
-      verified baseline rather than encoding today's possibly-stale assumptions into the new registry.
-- [ ] [AGENT] P3. **Add a regression check** once centralized: a catalog row whose venue lacks the assumed
-      capability should fail loudly at build/test time, not silently ship a slot that can't actually trade.
+- [x] [OPERATOR] P1. ✅ **RULED 2026-08-21 — see "OPERATOR RULING" section above, citing
+      `/codex/04-architecture/cross-domain-state-fabric.md` §12 (R17).** This todo went stale the
+      moment the ruling landed (same recurring class the workspace flags — retag in the same edit, never leave
+      it stale). ONE declarative capability-gated resolver, generalized to every family, fail-closed. Flipping
+      now; todo 3 below is the buildable next step.
+- [x] [AGENT] P2. ✅ **DONE 2026-08-21 — see "Venue-literal capability audit" section above.** pm@0fa40df01d.
+- [ ] [AGENT] P2. **Build the resolver per the ruling**: each archetype declares its venue requirements
+      (capability keys); one generic resolver checks them against the UAC venue capability registry
+      (`venue_capabilities.py`'s pattern, extended); fail closed on an undeclared/unsupported combination. Fix
+      the 2 real drift findings from the audit above (CME root-symbol confirmation, Phoenix's stale
+      spot/CLMM-venue listing) as part of building the registry's baseline, not as a separate pass.
+- [ ] [AGENT] P3. **Add a regression check**: a catalog row whose venue lacks the assumed capability should fail
+      loudly at build/test time, not silently ship a slot that can't actually trade.
 
 ## Progress Log
 

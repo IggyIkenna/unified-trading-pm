@@ -353,19 +353,24 @@ todos only to confirm they are data-movement, then leave it.
       needs a human design pass on features-service's per-candidate feature-naming before it can be broken into
       AO-dispatchable todos. Evidence:
       `/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`.
-- [ ] [OPERATOR] P1. **Re-triaged 2026-08-21 — this is operator-gated, not directly buildable.** The issue doc's
-      own "Recommendation" section (unresolved) asks the operator to decide scope FIRST: build now vs. later, all
-      19 archetypes vs. the 7 already-drivable ones, and separately whether to reconcile strategy-service's catalog
-      against UAC's `archetype_leg_spec_seeds` (recommended approach: (A) a diff/gate-fail script, NOT full
-      regeneration — ~0.5-1 AI-day once approved). The 3-layer design (dynamic ADV-based candidate discovery /
-      archetype-level allow-block-list / per-strategy-instance filter) is already fully sketched and
-      operator-specified verbatim — once scope is picked, this is a real, scoped, buildable task, just not one to
-      start without that pick. Evidence: `/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`.
-- [ ] [OPERATOR] P1. **Re-triaged 2026-08-21 — operator-gated.** Todo 1 of the issue doc is explicitly `[OPERATOR]`:
-      decide whether to generalize `venue_capabilities.py`'s pattern to the other 8 strategy families (grow the
-      registry) or accept hardcoded catalog literals as deliberate for families where venue support rarely
-      changes — a real, unresolved architecture call, not a default-yes. Todos 2-3 (audit + regression check) are
-      textually gated on that decision and correctly un-dispatchable until it lands. Evidence:
+- [x] ✅ [BACKEND] P1. **Corrected 2026-08-21 — the prior re-triage was stale, citing an OLD, superseded
+      "Recommendation" section.** Re-read the full issue doc: it has a `RESUME POINT 2026-07-23` addendum
+      (below the stale Recommendation section) recording the operator's verbatim-quoted 3-layer target
+      architecture AND an operator-approved build plan, "Build plan — 'complete the orphaned archetypes'
+      (operator-approved 2026-07-23, in progress)" — and every single todo in that build plan (Phases 0-5,
+      Layer-1 ADV-ranked candidate discovery, Layer-3 curtailment mechanism, both side-decisions) is `[x]`,
+      shipped 2026-07-23 through 2026-07-26, weeks before this plan existed. Grepped the whole doc for any
+      remaining `- [ ]` — zero. This item is fully done, not operator-gated; nothing to re-ask. Evidence:
+      `/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`. Follow-up: that
+      issue doc looks archival-eligible (every todo done, unlocked) — worth a dedicated archival pass, not done
+      here to stay scoped to this correction.
+- [x] ✅ [BACKEND] P1. **Corrected 2026-08-21 — the prior re-triage was stale.** The issue doc already carries an
+      `## OPERATOR RULING 2026-08-21` section (citing `/codex/04-architecture/cross-domain-state-fabric.md` §12,
+      R17 — ONE declarative capability-gated resolver, generalized to every
+      family, fail-closed) that closes exactly this decision — the todo just hadn't been retagged. Fixed
+      directly in the issue doc: todo 1 flipped `[x]` citing the ruling, the venue-literal audit (todo 2) is
+      also done (`pm@0fa40df01d`, 2 real drift findings — CME event root symbols, Phoenix stale listing), and
+      the resolver-build + regression-check todos are now `[AGENT]`-actionable, no longer blocked. Evidence:
       `/plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md`.
 
 - [ ] [BACKEND] P1. Delete entries from `clients_yaml_coverage.PENDING_CROSS_REPO_WAIVER` as T5 lands each
