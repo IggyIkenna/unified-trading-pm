@@ -152,3 +152,16 @@ exceptions:
       scope here.
     ssot: [plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md]
     added: "2026-08-04"
+
+  - repo: unified-trading-pm
+    package: pip
+    spec: "pip>=26.2"
+    justification: >
+      PYSEC-2026-3721/CVE-2026-13346 (pip 26.1.2 — the fleet canonical floor, pinned as the fix for the earlier
+      PYSEC-2026-196 — is itself vulnerable: doubly-encoded index-URL path traversal; fixed in pip 26.2). This is the
+      first of a 15-repo fleet sweep (same shape as the cryptography CVE-2026-69247 sweep above); NOT raising the
+      canonical floor yet because that would immediately reflag the other 14 not-yet-bumped repos via
+      check-dependency-alignment.py. Remove this exception once every repo in the sweep is bumped and the canonical
+      `pip` floor is raised to >=26.2 (the doc's own "(then) canonical + drop ignore" follow-up todo).
+    ssot: [plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md]
+    added: "2026-08-21"

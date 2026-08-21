@@ -41,7 +41,7 @@ def test_real_exceptions_file_loads_and_matches_prior_dict_shape() -> None:
     by the loader — this test's job is the SHAPE, not a frozen entry count)."""
     mod = _load_module()
     exceptions = mod._load_per_repo_exceptions(mod.EXCEPTIONS_YAML_PATH)
-    assert len(exceptions) == 12
+    assert len(exceptions) == 13
     for repo in (
         "ml-service",
         "unified-trading-library",
@@ -60,6 +60,10 @@ def test_real_exceptions_file_loads_and_matches_prior_dict_shape() -> None:
     assert exceptions[("unified-trading-library", "aiohttp")] == "aiohttp>=3.14.3,<4.0.0"
     assert exceptions[("market-tick-data-service", "aiohttp")] == "aiohttp>=3.14.3,<4.0.0"
     assert exceptions[("unified-trading-pm", "aiohttp")] == "aiohttp>=3.14.3,<4.0.0"
+
+    # PYSEC-2026-3721/CVE-2026-13346 pip fleet sweep (2026-08-21): unified-trading-pm bumps first,
+    # ahead of the not-yet-touched canonical floor, pending the rest of the 15-repo sweep.
+    assert exceptions[("unified-trading-pm", "pip")] == "pip>=26.2"
 
 
 def test_missing_file_returns_empty_dict(tmp_path: Path) -> None:
