@@ -162,11 +162,13 @@ list detects that state.
       lack thereof), separate from the failover-trigger fix above (a trigger fix stops sessions
       dying on an already-bad account; a pool-exclusion fix stops rotation assigning a bad account
       in the first place). Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 8 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
-- [ ] [BACKEND] P3. **Check whether the review role's persistent loop burns through its assigned
+- [x] N. ✅ [BACKEND] P3. **Check whether the review role's persistent loop burns through its assigned
       account's overage budget faster than rotation replenishes it** — alternate/complementary
       hypothesis to the pool-exclusion one above; review agent agt-8de6ec flagged this as
       unconfirmed. If review's long-running loop pattern is a meaningfully higher burn rate than
       other roles, it may need its own rotation cadence rather than sharing the general pool logic.
+      Extracted to `plans/active/ao_satellite_ao_dispatch_batch1_2026_08_21.md` item 1 (na-eligibility-audit
+      2026-08-21, ao tranche, RECLASSIFY per-todo split).
 - [x] N. ✅ [BACKEND] P3. **Classify this failure shape instead of leaving it `death_class: unexplained`**
       — when a killed slot's `account_snapshot.overage_status == "rejected"` at kill time, the
       death classifier should label it something diagnosable (e.g. `account_overage_exhausted`)
@@ -232,3 +234,10 @@ either way.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:cf5ec6b8ba855a80]: RECLASSIFY (per-todo split) — 3 of 4 remaining todos (add the 5th failover trigger, investigate rotation-pool exclusion, classify the failure shape) extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` items 7-9. Doc stays NA for the sole remaining item ([OPERATOR] immediate remediation decision: top up vs. accept unusable until weekly reset 2026-08-23).
 - **context-scout 2026-08-19**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: RECLASSIFY (per-todo split), correcting an undercount in the
+  2026-08-19 verdict — that pass's "sole remaining item" framing missed a genuine 4th open checkbox (the review-role
+  overage-burn-rate investigation), which had neither been extracted nor discussed. Read end to end: this 4th item
+  is a bounded measurement task (pull real activity-log data, compare burn rates, state a verdict either way) of the
+  same shape as the 3 siblings already extracted on 2026-08-19 — conflict-checked clear and extracted to
+  `plans/active/ao_satellite_ao_dispatch_batch1_2026_08_21.md` item 1. Doc now stays NA for genuinely only ONE
+  remaining item: the `[OPERATOR]` immediate-remediation decision.

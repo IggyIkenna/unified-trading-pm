@@ -353,3 +353,7 @@ template, minus the third-party dependency).
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:942b6b6f4f957795]: KEEP-NA, valid — redirect-banner class: ag_closeout_audit_ao_parked_2026_08_16.md L198-199 explicitly excludes this whole doc from AO-dispatch (operator handling elsewhere, 2026-08-14), independently corroborated by ao_satellite_ao_dispatch_batch23_2026_08_17.md L~100-104 declining the same extraction for the same reason. Todos individually read bounded, but the dispatch mechanism itself is wrong per the redirect.
 - **context-scout 2026-08-19**: re-verified context_scope, no change needed (6 entries) — all 6 paths still resolve; the 2026-08-18 edit since the last scout (Grok mention removed from the Why section) did not touch the build target files.
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. `last_updated: 2026-08-18`, no
+  content change since the 2026-08-19 redirect-banner verdict. `ag_closeout_audit_ao_parked_2026_08_16.md` still
+  explicitly excludes this whole doc from AO-dispatch (operator handling elsewhere, 2026-08-14). Doc stays
+  `assigned_vm: NA`.

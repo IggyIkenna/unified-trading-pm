@@ -933,3 +933,9 @@ investigation confirmed are both achievable with existing primitives:
   **Remaining open work, confirmed accurate**: Harsh's task-cycle (blocked on live backlog state) and Harsh's
   per-tab visibility (waits on tab-scoped sessions) — both self-resolve once their real-world precondition clears,
   neither is a code or doc gap.
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. All 3 open todos remain either
+  physically laptop-scoped (Harsh's per-tab visibility, needs him working from `.tabs/N` windows) or blocked on
+  live backlog state (Ikenna's and Harsh's "run one real task" todos — both re-checked as recently as 2026-08-20
+  and still 0 unblocked-of-706 queued tasks). No new facts since the 2026-08-19 per-todo-split verdict; the one
+  item that RECLASSIFIED then (Fleet-table role-badge exclusion) is already extracted and tracked in
+  `ao_satellite_ao_dispatch_batch25_2026_08_19.md`. Doc stays `assigned_vm: NA`.

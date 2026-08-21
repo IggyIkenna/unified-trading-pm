@@ -998,3 +998,9 @@ plan's `select_account_for_spawn()`/stratified-rotation mechanism as their integ
   `total_cost_usd: $0.0491` (a computed equivalent, not a real Zhipu bill — Lite is subscription/credit-based, not
   $-metered).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. Read every open todo's current
+  context: all 9 remain either `[REVIEW]`/`[DATA]` real-account-headroom-gated pilots and measurements (blended-pool
+  A/B comparison, flash-vs-pro split investigation, GLM ceiling live-verification, post-launch quality/cost
+  measurement) or an explicit `[OPERATOR]` GLM tier-upgrade decision — none are mechanically bounded absent live
+  fleet data or an operator call. Heavily-shipped live billing/credential/routing infra doc, repeatedly KEEP-NA
+  verified across 10+ prior audit rounds. Doc stays `assigned_vm: NA`.

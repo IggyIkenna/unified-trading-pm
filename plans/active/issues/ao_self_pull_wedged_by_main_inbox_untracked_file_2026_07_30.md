@@ -288,3 +288,7 @@ follows correctly — only the webhook config is missing).
   dead-end names. (Cross-linked: `ao_creds_env_poller_disabled_no_live_token_rotation_2026_08_18.md`'s same-session
   entry records the same finding — that doc's OWN restart, for the unrelated creds-bucket var, succeeded.)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. Sole open todo is explicitly tagged
+  `[BLOCKED-CREDENTIALS]`: the 2026-08-19 live attempt confirmed both documented secret names resolve to nothing
+  under the expected GCP project, genuinely blocked on locating the correct secret name/project rather than a
+  routine operator-run-a-script action. 8 prior audit rounds agree. Doc stays `assigned_vm: NA`.
