@@ -820,7 +820,7 @@ delta/gamma repricing infra; generalizes beyond MEV to market-making and arb-leg
 the self-inflicted-conflict guard repeatedly) · `unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17` (P1) ·
 `git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17` (P3) ·
 `ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17` (P2) ·
-`ao_watchdog_scheduled_timer_wiring_2026_08_17` (P2) · `ao_dashboard_activity_log_role_vocabulary_gap_2026_08_18` (P2) ·
+`ao_dashboard_activity_log_role_vocabulary_gap_2026_08_18` (P2) ·
 `na_eligibility_*` (3) · `docs_reconcile_findings_2026_08_17` (P2) ·
 `plan_reconciler_findings_{cefi,tradfi}_2026_08_18` · `sit_stamp_dispatch_503_false_positive_2026_08_17` (P3) ·
 `promote_pr_non_supersession_after_greeks_service_fix_2026_08_18` (P3) ·
