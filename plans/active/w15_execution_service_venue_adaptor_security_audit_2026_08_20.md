@@ -19,7 +19,7 @@ related:
     /plans/epics/system_readiness_master.md,
     /plans/active/code_readiness_t4_execution_settlement_2026_08_19.md,
     /plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20_progress_log_archive.md,
-    /plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md,
+    /plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md,
   ]
 created: 2026-08-20
 last_updated: 2026-08-21
@@ -425,7 +425,7 @@ execution-service@6a509338f9 (post-push ancestry independently verified).
 
 ### 2026-08-21 — slot 25 Progress Log split (line-cap headroom)
 
-Per `plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`'s "Recommended decision": this
+Per `plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`'s "Recommended decision": this
 doc was sitting at exactly the 1000-line hard cap with zero headroom, actively blocking the next slot
 to land a fix/evidence entry against any of the still-open todos below. Relocated the 17 Progress Log
 entries whose corresponding todo(s) were already fully `[x]`-checked and which carried no bearing on
@@ -710,7 +710,7 @@ flipped. No production code was changed — this is a doc-accuracy confirmation 
 
 ### 2026-08-21 — slot 19 sports exchange adapter audit + close-out gate re-check
 
-Dispatched from `plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`'s close-out gate-check todo
+Dispatched from `plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`'s close-out gate-check todo
 ("once the 11 items are all done or explicitly re-scoped, re-run the gate-check"). Re-derived the current open-item
 list first (`grep -n "^- \[ \]"`, not trusted from the issue doc's now-stale 2026-08-21 snapshot): 5 of the original
 11 items were already done or explicitly re-scoped by prior sessions (Orca/Raydium partial-fix re-scope, Aave/Morpho
@@ -780,7 +780,7 @@ phase flipped above.
 `sports_execution/adapters/unity/`) remains genuinely unstarted, not deferred/re-scoped, so this todo's own
 done-when ("every todo above is done or explicitly re-scoped") is not yet satisfied. The close-out checkboxes
 (this section, and the sibling checkbox in
-`plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`) stay `[ ]` — flipping them now would be a
+`plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`) stay `[ ]` — flipping them now would be a
 false-progress claim. Remaining blockers as of this entry: the 4 new triage todos just added above, plus the
 sports-unity audit phase (line 192) — 5 items, down from 11 at the issue doc's original count.
 

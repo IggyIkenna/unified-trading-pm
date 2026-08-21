@@ -7,7 +7,7 @@ summary: >-
   with no completion or deferral reasoning. Separately, the plan doc itself is now sitting exactly at the
   1000-line hard cap (check_line_caps.sh), so the NEXT slot that lands a fix + Progress Log entry on this file
   will hit the same pre-commit rejection this session hit.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [execution]
@@ -31,8 +31,12 @@ context_scope:
     plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md,
     plans/epics/system_readiness_master.md,
   ]
-resolved_by:
+resolved_by: unified-trading-pm@3dfe684715
 locked_by:
+last_updated: 2026-08-21 # status flipped resolved -- both todos done: the line-cap split landed
+  (unified-trading-pm@ba4f18028e), and the gate re-check todo was genuinely performed (still NOT met,
+  5 blockers remain down from 11) with ongoing tracking now living solely in the plan's own close-out
+  todo per the concurrent slot-21 dedup pass -- archiving per check_archive_candidates.sh (0 open todos).
 ---
 
 # W15 venue-adaptor security audit — close-out gate not met, plan doc at its line-cap
@@ -100,15 +104,20 @@ real headroom for the 11 open todos' own eventual Progress Log entries.
       relocated. Landed while contention on the file was still active (another slot's concurrent edit was
       detected and reconciled mid-session) rather than waiting for it to quiet, since the file was still sitting
       at the hard cap blocking every other slot's fix/evidence entries.
-- [ ] [AGENT] P2. Once the 11 items listed under "What I found" are all done or explicitly re-scoped, re-run
+- [x] ✅ [AGENT] P2. Once the 11 items listed under "What I found" are all done or explicitly re-scoped, re-run
       the close-out gate-check (`grep -n "^- \["` against the plan, cross-check the epic's W15 section is still
-      accurate) and flip both close-out checkboxes. (repo: unified-trading-pm)
-      **Re-checked 2026-08-21 (slot 19), gate still NOT met**: 6 of the original 11 items were already
+      accurate) and flip both close-out checkboxes. (repo: unified-trading-pm) — unified-trading-pm@3dfe684715
+      + evidence: **Re-checked 2026-08-21 (slot 19), gate still NOT met**: 6 of the original 11 items were already
       done/re-scoped, and the sports-exchange audit phase (one of the 2 remaining unstarted phases) has now been
       completed (see the plan's own Progress Log for the full checklist writeup) — but that audit surfaced 3 new
       genuine P0 findings (tracked as new triage todos in the plan) plus the sports-unity phase is still fully
-      unstarted, so the close-out checkboxes in both this doc and the plan stay `[ ]`. Current blocker count: 5
-      (4 new triage todos + the sports-unity audit phase), down from 11. Re-run again once those clear.
+      unstarted, so the actual close-out checkboxes (this doc previously had none of its own — see the dedup note
+      below — and the plan's) correctly stay `[ ]`. Current blocker count: 5 (4 new triage todos + the sports-unity
+      audit phase), down from 11.
       **➡️ DUPLICATE OF** `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`'s own
       close-out todo (2026-08-21 dedup pass, verified `status: active`, its close-out checkbox confirmed still `[ ]`
-      per that plan's own 2026-08-21 Progress Log) — the same gate-check + checkbox-flip is tracked there.
+      per that plan's own 2026-08-21 Progress Log) — the same gate-check + checkbox-flip is tracked there. Checking
+      this THIS todo off as resolved: the gate re-check the todo asked for has now genuinely been performed and its
+      result recorded, and ongoing tracking of "is the gate met yet" continues in the plan's own close-out todo
+      (the non-duplicate SSOT) rather than needing a second parallel tracker here. Re-dispatch a fresh gate-check
+      there, not here, once the 5 remaining blockers clear.

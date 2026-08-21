@@ -5,7 +5,7 @@ summary: >-
   Sibling archive for /plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md's
   Progress Log. Holds every dated entry whose corresponding todo(s) are fully resolved (checked) and
   carry no bearing on any currently-open todo, split out per
-  /plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md's "Recommended decision" so the
+  /plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md's "Recommended decision" so the
   main plan doc has real headroom under the 500-line soft cap for its remaining open todos' own
   eventual Progress Log entries. No todos live here — this doc is not dispatchable. The main plan doc
   remains the sole source of record for open/actionable work and for any entry with bearing on it.
@@ -20,7 +20,7 @@ related:
   [
     /plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md,
     /plans/epics/system_readiness_master.md,
-    /plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md,
+    /plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md,
   ]
 created: 2026-08-21
 last_updated: 2026-08-21
@@ -34,7 +34,7 @@ estimate_calibrated_ai_days: 0.1
 context_scope:
   [
     /plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md,
-    /plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md,
+    /plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md,
   ]
 depends_on:
 supersedes:
@@ -44,7 +44,7 @@ locked_since:
 source: >-
   Split from /plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md, which was
   sitting at the 1000-line hard cap with zero headroom
-  (/plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md).
+  (/plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md).
 ---
 
 # W15 venue-adaptor security audit — Progress Log archive
