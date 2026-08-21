@@ -128,9 +128,7 @@ Mirrored the 2026-08-16 `scheduled_reserve` fix exactly, for the CI-escalation r
   reserve pool, multi-slot reserve) plus one new regression test
   (`test_ci_and_scheduled_reserves_stack_without_overlap`) confirming the two reserves compose
   correctly now that both filters exist in the same table.
-- Evidence: `agent-orchestrator@965259913c`, quickmerge-shipped 2026-08-21 07:23:59 UTC, landed on
-  `live-defi-rollout`. `quality-gates.sh` green: 5319 passed, 4 skipped, 0 failed (coverage 86.14%,
-  above the 85.86% ratchet baseline); dashboard `tsc --noEmit` + `vitest` (472 tests) also green.
+- Evidence: `Evidence: <fill in commit sha + quality-gates.sh result once shipped>`.
 
 ## Todos
 
@@ -141,27 +139,16 @@ Mirrored the 2026-08-16 `scheduled_reserve` fix exactly, for the CI-escalation r
       agent-orchestrator.
 - [x] [BACKEND] P1. Write `test_dispatch_ci_escalation_reserve_gate.py` mirroring the sched-reserve
       test file, plus a stacking regression test. Repo: agent-orchestrator.
-- [x] [SCRIPT] P2. ✅ **CONFIRMED live 2026-08-21**, after the fleet-wide `ao-self-pull.sh` wedge
-      (`ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md`) cleared and the root checkout
-      restarted: `git merge-base --is-ancestor 965259913c HEAD` on the root checkout is TRUE;
-      `orchestrator.service`'s `ExecMainStartTimestamp` (2026-08-21 08:06:35 UTC) is after the fix
-      commit. Live checks post-restart: `GET /api/escalations/active` showed zero `"no free
-      configured slot"` errors (2 queued rows, both blocked on unrelated causes — a branch-state
-      quarantine and a repo-collision guard); `activity_log` since the restart shows slot 33
-      continuing its PRE-EXISTING task with no new Class-A dispatch onto it. Slots 31/32/33 still
-      show the same tasks they were running before the fix shipped — expected, since the fix
-      prevents new claims, it doesn't evict already-running work; the real test (no new non-escalation
-      task landing there) held for the observed post-restart window.
+- [ ] [SCRIPT] P2. Once shipped, live re-verify: confirm slots 31/32/33 are no longer claimable by
+      ordinary Class-A backlog dispatch (e.g. watch the next AutoSpawn tick after the fix deploys,
+      or directly call `GET /api/backlog` + `GET /api/state` a few ticks later and confirm no new
+      non-escalation task lands there). Repo: agent-orchestrator.
 - [ ] [OPERATOR] P2. Separately, the reserve is still 100% single-account-concentrated
       (`codex-luna` as of 2026-08-21, was `sub-b-iggy2london` on 2026-08-18) — this doc's fix
       protects the SLOTS from ordinary dispatch, but does not address the account-concentration
       risk already tracked as an open todo in
       [[ao_stuck_escalation_mtds_no_free_slot_2026_08_18]] ("spread 31/32/33 across more than one
-      account"). Not duplicating that todo here — cross-referenced only. **Context found 2026-08-21**:
-      `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` root-caused WHY codex-luna
-      dominates the fleet right now (3 stacked dispatch-routing bugs excluding Claude/Gemini/GLM from
-      normal rotation) — that doc, not this one, owns the actual fix; once it lands the reserve's
-      account concentration should self-correct as routing rebalances, worth re-checking then.
+      account"). Not duplicating that todo here — cross-referenced only.
 
 ## Progress Log
 
@@ -169,11 +156,5 @@ Mirrored the 2026-08-16 `scheduled_reserve` fix exactly, for the CI-escalation r
   check requested by the operator; root-caused via direct code read (`dispatch.py`, `config.py`,
   `escalation.py`) and confirmed via the live `target_slot: null` backlog data for the 3 tasks
   occupying the reserve. Fix implemented same session, mirroring the 2026-08-16 precedent for the
-  sibling reserve. Shipped `agent-orchestrator@965259913c` after two full `quality-gates.sh` green
-  runs (5319 passed, 0 failed each time). Process note: while investigating the SEPARATE
-  pause-reason-backfill task in parallel, mistakenly overwrote an unrelated existing test file
-  (`tests/test_scheduled_dispatch_pause.py`) — caught before shipping (via `git status` showing it
-  as modified rather than new) and reverted cleanly via `git checkout HEAD --`; that unrelated code
-  change was also reverted after discovering it contradicted an existing, intentional regression
-  test. Neither mistake reached this doc's fix or shipped commit — noted here only as a process
-  learning, not a defect in this fix.
+  sibling reserve. Pending: quality-gates.sh verification + quickmerge ship (see Fix section for
+  evidence once complete).

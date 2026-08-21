@@ -3,11 +3,11 @@
 # Lifecycle: permanent
 # Delete-when: NA
 """Enum-drift checker: validates artefact-quoted enum COUNTS against the real UAC enum
-they claim to describe, across the client artefacts under
+they claim to describe, across the six client artefacts under
 codex/14-customer-journeys/commercial-model/*.html.
 
 Root cause (client_artefact_remediation_2026_08_18.md § E, operator ruling): enum
-contents are hand-transcribed into client HTMLs, so one concern (does the artefact
+contents are hand-transcribed into six client HTMLs, so one concern (does the artefact
 still agree with the UAC source) lives in seven places. Proven to recur, not
 hypothetical -- both tracked targets below are real, independently re-verified 2026-08-18
 drifts:
@@ -161,10 +161,6 @@ def _line_of(text: str, pos: int) -> int:
 
 
 OTHER_PREFIX_RE = re.compile(r"\bother\b\s*$", re.IGNORECASE)
-SUBSET_STATUS_RE = re.compile(
-    r"\b(?:still\s+)?(?:coming\s+soon|not\s+(?:yet\s+)?wired|unsupported)\b",
-    re.IGNORECASE,
-)
 
 
 def _claims_near_anchor(text: str, target: dict) -> list[tuple[int, int]]:
@@ -187,8 +183,6 @@ def _claims_near_anchor(text: str, target: dict) -> list[tuple[int, int]]:
             if not any(word.startswith(cw) for cw in target["count_words"]):
                 continue
             if OTHER_PREFIX_RE.search(window_text[: m.start(1)]):
-                continue
-            if SUBSET_STATUS_RE.search(window_text[m.end(2) :]):
                 continue
             claims.append((lo + m.start(), int(m.group(1))))
     return claims

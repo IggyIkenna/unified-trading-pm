@@ -37,13 +37,13 @@ summary: >-
   infrastructure, not a translation shim — explicitly out of scope for the dispatched task ("pure translation, no
   new execution logic").
 
-  RESOLVED (fully, all 7 named action types) 2026-08-21. SWAP/LEND/WITHDRAW/STAKE/UNSTAKE resolved first — see the
+  RESOLVED (partial) 2026-08-21 for 5 of the 7 named action types — SWAP/LEND/WITHDRAW/STAKE/UNSTAKE. See the
   "Resolution 2026-08-21" section below for the real design (a `defi_adapter=` injection seam on
   SwapHandler/LendHandler/StakeHandler, mirroring TransferHandler's existing `adapter=` pattern — NOT the
   originally-scoped "wire through DeFiAdapter.execute_instruction() directly" approach, which turned out to have
   its own fabricated-success gap; see `/plans/active/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md`).
-  BORROW/REPAY (`BorrowHandler`) closed same-day (execution-service@4e35a09b2) via the identical seam, once the
-  pattern was proven 5x — see "Resolution 2026-08-21 (BORROW/REPAY)" below.
+  BORROW/REPAY (`BorrowHandler`) remain open — explicitly out of scope for that change (operator instruction: do not
+  expand scope to BorrowHandler without stopping to report first).
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -162,29 +162,6 @@ Shipped: `execution-service@4af3715497`. Real design, NOT what this issue's own 
   `TestTransferInstructionPath`, including the "no live credentials -> honest FAILED, never fabricated" landmine
   test for each). Evidence: `bash scripts/quality-gates.sh --no-fix` green — `8872 passed, 22 skipped, 1 xpassed, 89 warnings in 237.24s; sentinel=4af371549778653f8240e1f3ca5ebb32a37e44f6`.
 
-## Resolution 2026-08-21 (BORROW/REPAY)
-
-Shipped: `execution-service@4e35a09b2`, same day as the SWAP/LEND/WITHDRAW/STAKE/UNSTAKE resolution above, once
-that dispatch pattern was proven 5x. Identical design, no new pattern invented:
-
-- **`dispatch_borrow_live()` added to `execution_service/engine/handlers/defi_live_dispatch.py`** — calls
-  `AAVEConnector.borrow()`/`.repay()` (the real, already-live-capable connector methods this issue's own
-  Follow-up already named), through the SAME `_resolve_live_connector` credential/connection-check seam
-  SWAP/LEND/STAKE use.
-- **`BorrowHandler` now accepts `defi_adapter: DeFiAdapter | None`**, mirroring
-  `SwapHandler`/`LendHandler`/`StakeHandler`'s exact constructor pattern; `defi_adapter=None` (default) preserves
-  existing pure-simulation behavior byte-for-byte.
-- **`HandlerRegistry._DEFI_LIVE_DISPATCH_OPERATIONS`** extended to include `BORROW`/`REPAY`.
-- **`external_instruction_defi.py`/`external_instruction_api.py`** gained `_build_execution_instruction_from_
-  {borrow,repay}` + `BorrowInstruction`/`RepayInstruction` dispatch — `POST /external/instructions` now wires 12
-  of 15 action types (was 10; the union grew from 13 to 15 members with `LP_MINT`/`LP_BURN` since this issue was
-  filed).
-- Tests: `tests/unit/test_defi_live_dispatch.py::TestDispatchBorrowLive`,
-  `tests/unit/test_external_instruction_api.py::TestBorrowRepayInstructionPath`,
-  `tests/unit/test_handler_registry.py` (extended `TestHandlerRegistryDefiAdapterWiring` loop). Evidence:
-  `bash scripts/quality-gates.sh --no-fix` green — 8915 passed, cov 82.53%.
-- `platform-api-reference.html` BORROW/REPAY rows updated to match — `unified-trading-pm@185e266a0e`.
-
 ## The real live-authoritative path (already documented, just not wired to this endpoint)
 
 `execution_service.adapters.defi_adapter.DeFiAdapter`, constructed via
@@ -203,10 +180,11 @@ no live connector construction at all (tracked: `/plans/archive/2026_08/defi_ven
    already existed; `build_defi_execution_wiring()` is the HTTP-surface-facing caller of it).
 2. ~~Wire `SWAP`/`LEND`/`WITHDRAW`/`STAKE`/`UNSTAKE` on `POST /external/instructions`~~ — DONE, see Resolution
    above.
-3. ~~Wire `BORROW`/`REPAY` (`BorrowHandler`)~~ — DONE same-day 2026-08-21, see "Resolution 2026-08-21
-   (BORROW/REPAY)" above. This closes the issue's ORIGINAL scope in full (all 7 named action types); the two
-   Follow-ups below (Morpho/EtherFi coverage extension, matching_engine permanent-question) are separate,
-   lower-priority, genuinely still open.
+3. Wire `BORROW`/`REPAY` (`BorrowHandler`) — the ONE remaining piece of this issue's original scope. Deliberately
+   NOT done in the 2026-08-21 change (explicit operator instruction: do not expand scope to BorrowHandler without
+   stopping to report first — it shares the exact same `_get_engine()`/`set_matching_engine()` simulation-only
+   defect class as SWAP/LEND/STAKE did, so the fix shape should be directly analogous, but needs its own
+   dispatch-seam work + tests, not a drive-by extension of this change).
 
 ## Follow-ups
 
@@ -217,9 +195,10 @@ no live connector construction at all (tracked: `/plans/archive/2026_08/defi_ven
       `POST /external/instructions`, mirroring `_build_execution_instruction_from_transfer`'s translation-shim
       pattern — DONE 2026-08-21 (BORROW/REPAY explicitly excluded from this todo's original wording; tracked as
       its own item below).
-- [x] [BACKEND] P1. Wire `BORROW`/`REPAY` on `POST /external/instructions` through an analogous
-      `defi_adapter=`-injection seam on `BorrowHandler` — DONE 2026-08-21, see "Resolution 2026-08-21
-      (BORROW/REPAY)" above. `execution-service@4e35a09b2`.
+- [ ] [BACKEND] P1. Wire `BORROW`/`REPAY` on `POST /external/instructions` through an analogous
+      `defi_adapter=`-injection seam on `BorrowHandler` — deliberately deferred from the 2026-08-21 change (out of
+      its explicit scope). `AAVEConnector.borrow()`/`repay()` are the real, already-live-capable connector methods
+      to call (same connector `defi_live_dispatch.py` already resolves for LEND/WITHDRAW).
 - [ ] [BACKEND] P2. Extend `defi_live_dispatch`'s connector coverage to Morpho (LEND/WITHDRAW) and EtherFi
       (STAKE/UNSTAKE) — both are real, live-capable `DeFiAdapter` connectors already, just missing a call-shape
       mapping in the new seam (see the Resolution section's "Coverage" note).

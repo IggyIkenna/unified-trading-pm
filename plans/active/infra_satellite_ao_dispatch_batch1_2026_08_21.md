@@ -88,10 +88,8 @@ context_scope:
       **Conflict-check (this pass, 2026-08-21)**: grepped every active `assigned_vm: planning` doc for
       `check_line_caps.sh`'s `TARGETS`/full-corpus-glob content — only the source doc itself and its sibling
       `check_line_caps_sh_whitespace_only_exemption_false_positive_2026_08_19.md` (a DIFFERENT bug in the same file —
-      SCOPED-mode's whitespace-diff logic, not the full-corpus glob) touch this file. **Correction (ag-closeout-audit
-      2026-08-21)**: the sibling doc's `assigned_vm` was verified still `NA` at the time of this correction — the
-      "independently RECLASSIFIED to `assigned_vm: planning`" claim above did not land (or was never applied); treat
-      that sibling as still NA pending its own na-eligibility-audit pass, not as already-dispatched. **Same-file caution**:
+      SCOPED-mode's whitespace-diff logic, not the full-corpus glob; that sibling doc was independently RECLASSIFIED
+      to `assigned_vm: planning` this same audit pass, see its own frontmatter) touch this file. **Same-file caution**:
       a worker picking up this todo should first check whether the whitespace-exemption fix has already landed
       (`git log -- scripts/plan-hygiene/check_line_caps.sh`) to avoid a stale-base merge conflict — both touch
       different, non-overlapping sections of the same script (this todo: the full-corpus `TARGETS` array around

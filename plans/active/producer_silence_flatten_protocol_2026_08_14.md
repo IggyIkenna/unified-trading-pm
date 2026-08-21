@@ -110,10 +110,7 @@ measurement that justified the number.
 - [ ] [CODE] P0. Define what execution-service must ALREADY hold to flatten without strategy-service. At the moment of
       the trigger the producer is unreachable, so every input has to have been published ahead of time: per-strategy
       flatten aggressiveness, the strategy's own notion of which legs are hedges vs directional, and the underlying each
-      instrument maps to. Write it as a UAC contract, not per-service structs. **Decided 2026-08-21 (same
-      pass as the SLA number below)**: the flatten ACTION must be a per-strategy-slot/id CHOICE, not one behavior
-      for everyone — model it as an enum (e.g. `FULL_FLATTEN` / `GRADUAL_REDUCE` / `DELTA_ONLY_FLATTEN`), not a
-      scalar aggressiveness knob alone; each strategy config declares which action it wants. Repo: unified-api-contracts.
+      instrument maps to. Write it as a UAC contract, not per-service structs. Repo: unified-api-contracts.
 - [ ] [CODE] P0. Publish that contract from strategy-service on every instruction, so the last-known value is always
       available. Repo: strategy-service.
 - [ ] [TEST] P0. A test proving the flatten path needs NO call to strategy-service — construct the flatten decision with
@@ -151,17 +148,9 @@ measurement that justified the number.
 
 - [ ] [CODE] P0. Reconciliation-down escalation with retries and waits BEFORE any flatten: restart, resource bump, per
       the runbook. Flattening only after the escalation path is exhausted. Repo: batch-live-reconciliation-service.
-- [x] ✅ [OPERATOR] P0. **RULED 2026-08-21 — down-timeout = 15 minutes.** Measured 2026-08-21 via
-      `gcloud run revisions describe`/`gcloud builds describe` (real Cloud Run revision history,
-      execution-service + strategy-service, `asia-northeast1`): longest observed routine rollout-to-ready
-      window was 78s (execution-service); the ~10.5min Cloud Build image-build phase does NOT cause producer
-      silence since the old revision keeps serving traffic throughout. 15min is ~11.5x the largest observed
-      rollout, well clear of any routine deploy/restart (sample thin, n=2-3 revisions per service — revisit if
-      more revision history accumulates). **Same answer, second decision**: the flatten ACTION
-      itself (not just the SLA) must be configurable per strategy slot/id — full flatten vs. gradual reduction
-      vs. delta-only flatten, since strategies differ. This refines, not replaces, Phase 1's first todo below
-      ("per-strategy flatten aggressiveness") — that UAC contract must model the action CHOICE as an enum, not
-      just an aggressiveness scalar.
+- [ ] [OPERATOR] P0. Set the SLA numbers, and record the measurement behind them: the down-timeout must exceed observed
+      rolling-restart and deploy durations with margin, so routine operations never trigger a flatten. Every threshold
+      in this plan inherits from this decision.
 - [ ] [TEST] P0. A restart-does-not-flatten test: bounce strategy-service for a normal restart duration and assert no
       flatten is triggered. This is the regression guard for the operator's standing instruction.
 

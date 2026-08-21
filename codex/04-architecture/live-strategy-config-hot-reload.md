@@ -6,10 +6,8 @@ summary:
   DomainConfigReloader family, same shape as ApiKeyReloader), emitting CONFIG_CHANGED / INSTRUMENT_UNIVERSE_CHANGED on
   atomic swap. The strategies-domain safe-field allow-list (SAFE_STRATEGY_RELOAD_FIELDS) and UnsafeConfigChangeError are
   now IMPLEMENTED (2026-08-14): strategy_params changes hot-reload, enabled_strategies changes are rejected (previous
-  config stays active). The instruments domain has the SAME shape of guard (2026-08-14, SAFE_INSTRUMENT_RELOAD_FIELDS
-  / UnsafeConfigChangeError): subscription_list membership (add/remove) hot-swaps live, any other field change
-  (an existing instrument's definition) is rejected and requires a restart. Batch and live share the same config
-  object."
+  config stays active). The instrument universe is still hot-swapped unconditionally — that contradiction is unresolved
+  and out of this guard's scope. Batch and live share the same config object."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -34,7 +32,7 @@ referenced_by:
     /codex/04-architecture/ml-lifecycle.md,
   ]
 owner:
-last_reviewed: 2026-08-21
+last_reviewed: 2026-09-26
 code_refs:
 ---
 
@@ -75,40 +73,35 @@ event**; that name appears nowhere in the workspace.
 
 ## What can hot-reload safely
 
-> **✅ Enforced for BOTH the strategies and instruments domains (both landed 2026-08-14, same commit family).**
-> `config_reloaders.py` carries `SAFE_STRATEGY_RELOAD_FIELDS = frozenset({"strategy_params"})` for strategies and
-> `SAFE_INSTRUMENT_RELOAD_FIELDS` (subscription_list membership only) for instruments, both backed by
-> `UnsafeConfigChangeError`. `_on_strategies_reload` diffs the incoming `StrategyDomainConfig` field-by-field
-> (skipping the first-ever load, which has no baseline to diff against); a change to `strategy_params` swaps
-> atomically as before, a change to `enabled_strategies` raises `UnsafeConfigChangeError` and the previously active
-> config stays in effect. `_on_instruments_reload` calls `_reject_unsafe_instrument_change()` the same way: an
-> add/remove of `instrument_id`s in `subscription_list` hot-swaps live as before, but a change to any OTHER field —
-> i.e. the DEFINITION of an instrument that stays in the universe — raises `UnsafeConfigChangeError` and the
-> previous config stays active. In both cases the reloader base's `FieldFilteredCallbackRegistry.notify` catches the
-> `RuntimeError` subclass and logs it — the process does not crash and no restart is forced automatically; an
-> operator still has to actually perform the restart to apply the rejected change.
+> **✅ Enforced for the strategies domain (2026-08-14).** `config_reloaders.py` now carries
+> `SAFE_STRATEGY_RELOAD_FIELDS = frozenset({"strategy_params"})` and `UnsafeConfigChangeError`. `_on_strategies_reload`
+> diffs the incoming `StrategyDomainConfig` against the currently active one field-by-field (skipping the first-ever
+> load, which has no baseline to diff against); a change to `strategy_params` swaps atomically as before, a change to
+> `enabled_strategies` raises `UnsafeConfigChangeError` and the previously active config stays in effect (the reloader
+> base's `FieldFilteredCallbackRegistry.notify` catches the `RuntimeError` subclass and logs it — the process does not
+> crash and no restart is forced automatically; an operator still has to actually perform the restart to apply the
+> archetype change). The instruments-domain row below remains **unenforced** — this guard is strategies-only, per the
+> operator-confirmed 2026-08-12 scoping in
+> `/plans/archive/2026_08/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`.
 
-| Field class                                | Hot-reload safe?  | Notes                                                                                                                           |
-| ------------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Sizing (notional, weights)                 | Yes               | `strategy_params` — applies to next signal; existing orders untouched                                                           |
-| Risk caps (per-position max)               | Yes               | `strategy_params` — cap drops trigger an immediate halt of orders that exceed                                                   |
-| Venue-routing weights                      | Yes               | `strategy_params` — applies to next signal                                                                                      |
-| Signal-filter thresholds                   | Yes               | `strategy_params` — applies to next signal                                                                                      |
-| Kill-switch flags                          | Yes               | `strategy_params` — immediate; in-flight orders paused                                                                          |
-| Strategy archetype family                  | **NO — enforced** | `enabled_strategies` change raises `UnsafeConfigChangeError`; restart required                                                  |
-| Underlying instruments — add/remove        | **Yes**           | `subscription_list` membership change hot-swaps live (`_on_instruments_reload()` delta + `INSTRUMENT_UNIVERSE_CHANGED` fan-out) |
-| Underlying instruments — definition change | **NO — enforced** | any other field on an existing instrument raises `UnsafeConfigChangeError`; restart required                                    |
+| Field class                  | Hot-reload safe?            | Notes                                                                                                                                                                                       |
+| ---------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sizing (notional, weights)   | Yes                         | `strategy_params` — applies to next signal; existing orders untouched                                                                                                                       |
+| Risk caps (per-position max) | Yes                         | `strategy_params` — cap drops trigger an immediate halt of orders that exceed                                                                                                               |
+| Venue-routing weights        | Yes                         | `strategy_params` — applies to next signal                                                                                                                                                  |
+| Signal-filter thresholds     | Yes                         | `strategy_params` — applies to next signal                                                                                                                                                  |
+| Kill-switch flags            | Yes                         | `strategy_params` — immediate; in-flight orders paused                                                                                                                                      |
+| Strategy archetype family    | **NO — enforced**           | `enabled_strategies` change raises `UnsafeConfigChangeError`; restart required                                                                                                              |
+| Underlying instruments       | Yes — ruled safe 2026-08-21 | `instruments` domain reloader hot-swaps the universe live (`_on_instruments_reload()` delta + `INSTRUMENT_UNIVERSE_CHANGED` fan-out); operator ruled the live hot-swap intentional and safe |
 
-**RESOLVED 2026-08-21 — corrected from an earlier stale "option B, unconditional" framing.** An intermediate version
-of this doc briefly said the operator ruled the live hot-swap unconditional and intentional for ALL instrument-domain
-changes ("option B"). That was imprecise — the actual ruling (confirmed directly by the operator, and matching what
-the code has done since 2026-08-14) is: **hot-swap applies to `subscription_list` membership only (adding/removing
-instrument_ids); changing the DEFINITION of an existing instrument requires a restart and is rejected, not silently
-applied.** This is exactly what `_reject_unsafe_instrument_change()` in `config_reloaders.py` already enforces
-(shipped strategy-service `48bd37175989be9031eccc1b5dca0c7ab387abb3`, 2026-08-14) — the guard was in place before the
-"option B" text was written, so no code change was needed here, only this doc's framing. See
-`/plans/archive/2026_08/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md` for the
-archived judgment-call history and `/codex/04-architecture/cross-domain-state-fabric.md` §14 for the cross-reference.
+**Resolved 2026-08-21 — operator ruled option B: the live hot-swap IS the intended behaviour** (the old "NO — restart required" row was obsolete design text). Historical context of the contradiction, kept for the audit trail: `_on_instruments_reload()` atomically swaps
+`_active_instruments`, computes the added/removed delta, and notifies strategy engines via `INSTRUMENT_UNIVERSE_CHANGED`
+— i.e. an instrument-universe change is hot-applied today, with no restart and no error raised. Either the code is doing
+something the design considers unsafe for position-state continuity, or the design row is obsolete. Resolve before
+relying on either statement:
+`/plans/archive/2026_08/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md` (split off 2026-08-14
+from the now-archived `/plans/archive/2026_08/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`, which
+only closed the strategy-config half of this concern).
 
 ## Live = batch
 
@@ -116,9 +109,8 @@ Backtest replays consume the same config object. A config change in batch is jus
 hot-reload. **Caveat (2026-08-14, updated):** the strategies-domain reload path now has a validation gate
 (`SAFE_STRATEGY_RELOAD_FIELDS` / `UnsafeConfigChangeError`) — an `enabled_strategies` change is rejected on the live
 side. Batch has no equivalent gate (a batch run just picks up whatever config it's given), so this is not yet "the SAME
-validation rules apply both paths", only a live-side-only guard against one specific unsafe field. The instruments
-reload path has the SAME class of guard as of 2026-08-14 (see above); the clients reload path still applies an
-unconditional atomic swap with no validation gate.
+validation rules apply both paths", only a live-side-only guard against one specific unsafe field. The instruments and
+clients reload paths still apply an unconditional atomic swap with no validation gate.
 
 ## Cross-references
 

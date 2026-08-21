@@ -27,7 +27,7 @@ summary:
   pricing may have Drift-specific numeric assumptions, not just a venue string to delete) that was out of scope for a
   UI-registry cleanup task. UPDATE 2026-07-16: the UAC-source portion was resolved by a follow-up dispatch — see the
   "UPDATE" section in the body below.'
-status: resolved
+status: open
 nature: process
 asset_group: [ui]
 stage: [meta]
@@ -59,15 +59,11 @@ depends_on:
 source:
   Drift orphan-cleanup task, 2026-07-16 — discovered via `rg -n -i 'drift|pacifica'
   unified_api_contracts/internal/architecture_v2/` while tracing why UI's `venue_set_variants` still lists Drift.
-resolved_by: unified-trading-system-ui@0d9a31e1b7 (this session, 2026-08-21)
+resolved_by:
 context_scope: [/plans/active/defi_consolidated_closeout_2026_07_18.md, /plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md, unified-api-contracts/unified_api_contracts/internal/architecture_v2/, unified-trading-system-ui/lib/registry/ui-reference-data.json, unified-api-contracts/scripts/generate_ui_reference_data.py, unified-trading-system-ui/lib/architecture-v2/lifecycle.ts]
 ---
 
 # architecture_v2 strategy-archetype subsystem still has live DRIFT venue references
-
-> **ARCHIVED 2026-08-21** — both sub-parts of the sole open todo resolved: the dead E2E fixture id fixed, and the
-> generator/UI structural-skew investigation completed with a definitive finding (generate_ui_reference_data.py does
-> not touch the sections this doc cares about). See Todos below for full detail.
 
 ## Facts
 
@@ -225,32 +221,14 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
 
 ## Todos
 
-- [x] ✅ [ENGINEER] P1. **Fix the E2E fixture + the generator/UI structural skew** (STRUCK the ui-reference-data.json
+- [ ] [ENGINEER] P1. **Fix the E2E fixture + the generator/UI structural skew** (STRUCK the ui-reference-data.json
       resync sub-claim 2026-08-17, na-eligibility-audit — STALE, already shipped: commits `80bb6a9c` (2026-07-26) +
       `88422902` (2026-08-16) removed all drift-venue residue from that file; live-verified 2026-08-17, zero matches
-      remain). Two sub-parts:
-      (1) **Fixed** — `tests/e2e/_shared/strategy-registry.ts:158`'s dead `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod`
-      instance ID replaced with the real, live `CARRY_STAKED_BASIS@jito-kamino-bybit-sol-usdt-prod` (confirmed the
-      correct current id via 4 independent live sources: UAC's own `archetype_capability_manifest.json`,
-      `archetype_leg_spec_seeds.py`'s SSOT comment, the checked-in `ui-reference-data.json`, and
-      `lib/architecture-v2/coverage.ts` — all four already agree on this exact string). —
-      unified-trading-system-ui@0d9a31e1b7.
-      (2) **Investigated and resolved, definitively — the doc's own premise for this sub-part was factually wrong.**
-      Ran `generate_ui_reference_data.py` fresh (via UAC's `.venv`) and diffed its output against the checked-in
-      `ui-reference-data.json`: only `_meta` overlaps between the two — the generator emits 15 top-level registry
-      keys (`capability_declarations`, `venue_rate_limits`, `risk_taxonomy`, `defi_protocol_registry`, etc., all
-      confirmed real via `_serialize_*`/`_build_*` functions in the script, not a bug/stub), and the checked-in file
-      carries a COMPLETELY DIFFERENT 22-key set including every section this doc cares about
-      (`venue_set_variants`, `archetype_capability_registry`, `strategy_instance_catalogue`, `strategy_registry`).
-      **`generate_ui_reference_data.py` does not generate, and never touched, the sections this doc's Recommended-
-      next-steps item 3 assumed it would resync** — running it would not "resync" those sections, it would silently
-      DELETE them (they'd vanish from the regenerated file entirely) while adding 15 unrelated ones. Whatever
-      mechanism actually produced/maintains `venue_set_variants` etc. (hand-edit, per the 80bb6a9c/88422902 commits
-      cited above, or a different not-yet-identified generator) is a SEPARATE, still-unidentified pipeline — but
-      since those sections are independently confirmed clean (zero live Drift residue, verified 2026-08-17 per the
-      struck sub-claim above), there is no live risk to chase further; recorded as a one-line breadcrumb (not a new
-      plan — this doc's own scope was "investigate the skew," which is now answered) for whoever next needs to
-      programmatically regenerate those specific sections: `generate_ui_reference_data.py` is NOT that tool.
+      remain). Two sub-parts genuinely still open: (1) `tests/e2e/_shared/strategy-registry.ts:158` still has the dead
+      `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod` instance ID (grep-confirmed, no fixing commit in that
+      file's history); (2) the sync generator/UI structural-skew investigation (see "Recommended next steps" items 2-4
+      above) — unverified either way (re-running `generate_ui_reference_data.py` to check needs the repo `.venv`,
+      ambient `python3` lacks `pydantic`).
 
 ## Progress Log
 

@@ -201,7 +201,7 @@ Two independent causes, both now fixed:
       (`sportradar_credential_ask_2026_08_09.md`, unrelated file, baseline drift predating this task) — no new orphan
       from this retag, and the doc is `plans/archive/**` (closed record, outside the gated/linkage corpus per
       `doc-frontmatter-schema.md` §1) so no closeout-family `related:` link is needed.
-- [x] ✅ [DOCS] P3. **Retag `/plans/archive/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`**
+- [x] ✅ [DOCS] P3. **Retag `/plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`**
       from `[defi]` to `[ui]` or `[cross-cutting]` by content — its `repos:` is
       `[unified-api-contracts, unified-trading-system-ui]` and the content is strategy-archetype DRIFT venue cleanup,
       not defi-specific. Carried unactioned since 2026-08-07. **Done when**: retagged, reasoning in the Progress Log. —
