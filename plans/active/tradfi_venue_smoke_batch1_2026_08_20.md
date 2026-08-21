@@ -42,7 +42,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 - [ ] [BACKEND] P1. Record one testnet verdict for every TradFi venue, distinguishing non-Databento sourcing from the exempt cells; Gate: every distinct venue has a written verdict.
 - [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; file an operator credential request when a credential gap is confirmed. Gate: no venue is silently omitted because it is TradFi.
 - [ ] [BACKEND] P1. Track every failed or absent TradFi row with its resolved source and data type; Gate: a declared Databento exemption is never used to hide a non-Databento failure.
-- [ ] [BACKEND] P0. Re-run the source resolver and prove the eight exemption cells are exactly CBOE/CME/NASDAQ/NYSE ohlcv_1m/ohlcv_1s; Gate: a non-exempt negative control fails.
+- [x] ✅ [BACKEND] P0. Re-run the source resolver and prove the eight exemption cells are exactly CBOE/CME/NASDAQ/NYSE ohlcv_1m/ohlcv_1s; Gate: a non-exempt negative control fails. — unified-api-contracts@b84bc7df + runtime resolver evidence below.
 
 ## Progress Log
 
@@ -50,3 +50,5 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 asset-group shortcut.
 
 **2026-08-20 - execution evidence (slot-14):** Resolver output was 364 declared pairs, 8 exact Databento exemptions, and 356 in-scope rows (8 TradFi rows: CBOE/ohlcv_24h, FRED/ohlcv_1d, FRED/yield_curve, FX/ohlcv_24h, ICE/ohlcv_24h, KRX/ohlcv_24h, NASDAQ/ohlcv_1h, NYSE/ohlcv_1h). Direct real batch runs on 2026-08-19 produced 5 CBOE, 20 FRED, 11 FX, and 1 ICE canonical objects; filtered manifest evidence is `captured` for FRED/FX/ICE, while KRX/NASDAQ/NYSE are `empty_confirmed` with zero objects. CBOE objects are present but its manifest finalize emitted a malformed unrelated Databento shard warning, so it remains an explicit follow-up rather than a false pass. The source-gate fix landed as market-tick-data-service@b89f288c06; quality gates passed with 11096 tests passed, 28 skipped, and 1 xpassed.
+
+**2026-08-21 — source resolver re-run (slot-4):** `generate_venue_smoke_test_work_list.py` reported 364 declared pairs, 8 Databento exemptions, and 356 in-scope rows. The exemption set was exactly CBOE/CME/NASDAQ/NYSE × `ohlcv_1m`/`ohlcv_1s`; exact-set assertion passed. Negative control `CBOE/ohlcv_24h` resolved to `yahoo`, remained in the in-scope smoke rows, and was absent from the exemption set. The source-scoping regression is shipped in `unified-api-contracts@b84bc7df`.
