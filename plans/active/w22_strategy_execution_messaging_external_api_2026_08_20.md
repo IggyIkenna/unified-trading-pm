@@ -127,8 +127,8 @@ context_scope:
 - [ ] [BACKEND] P0. Sink every strategy-emitted instruction consumed by the new subscriber to GCS, one record at
       a time, via the EXISTING event-log shard pipeline (reuse, do not invent a parallel writer) — queryable via
       the same BigQuery external-table pattern other shard types already use. Distinct from market-tick-data
-      aggregation (a separate axis). Done-when: one consumed instruction produces one queryable GCS row with a
-      manifest entry, verified via a real read-back, not just a written-file check. The `atomic_instruction`
+      aggregation (a separate axis). Done-when: one consumed instruction produces one queryable GCS row with the
+      canonical event-log sink entry, verified via a real read-back, not just a written-file check. The `atomic_instruction`
       `SINK_MATRIX` entry already exists; this todo adds the matching Pub/Sub topic, warm-GCS subscription, and
       BigQuery external table so the canonical envelope published by strategy-service is durably queryable. —
       **PARTIAL 2026-08-21**: `unified-api-contracts@96ce5bdd6e` adds focused SINK_MATRIX coverage;
