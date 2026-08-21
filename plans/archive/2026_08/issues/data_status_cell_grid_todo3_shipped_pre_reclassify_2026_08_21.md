@@ -15,7 +15,7 @@ summary: >-
   assigned_vm NA -> planning). Per the inherited-dirty-WIP liveness rule this doc could not be safely edited
   directly. Filing this separately so the shipped evidence is durable and, critically, so an AO worker picking up
   the now-`assigned_vm: planning` doc does not redispatch/redo todo 3's already-shipped work.
-status: open
+status: complete
 nature: issue
 asset_group: [ui]
 stage: [execution]
@@ -39,7 +39,7 @@ depends_on: []
 context_scope:
   [/plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md]
 locked_by:
-resolved_by:
+resolved_by: deployment-api@777f1fa531
 supersedes:
 superseded_by:
 ---
@@ -121,14 +121,14 @@ directly instead of re-verifying or re-implementing.
 
 ## Todos
 
-- [ ] [DOC] P1. **Once `data_status_cell_grid_rearchitecture_2026_07_18.md` is no longer under live edit
+- [x] ✅ [DOC] P1. **Once `data_status_cell_grid_rearchitecture_2026_07_18.md` is no longer under live edit
       (`git status --porcelain` clean on that path), flip its todo 3 checkbox to `[x]` citing
       `deployment-api@777f1fa531` and this issue doc**, then flip this doc's own todos and archive it (small,
       single-fact doc -- fold into the standard archival pass, no separate ritual needed beyond the checkbox flip
-      + a `resolved_by` pointer to the flip commit).
-- [ ] [REVIEW] P3. **If an AO worker is dispatched against this plan's todo 3 before the flip above lands, verify
+      + a `resolved_by` pointer to the flip commit). — unified-trading-pm@6d00e86e0e
+- [x] ✅ [REVIEW] P3. **If an AO worker is dispatched against this plan's todo 3 before the flip above lands, verify
       it detects the already-shipped SHA (e.g. via a pre-dispatch content check) rather than re-implementing** --
-      no evidence either way yet; only actionable if/when it's observed to happen.
+      N/A: the source-plan checkbox was flipped before this issue was archived, so the stated pre-flip condition no longer exists; no dispatch evidence was observed in this issue's lifetime. — unified-trading-pm@6d00e86e0e
 
 ## Progress Log
 

@@ -96,12 +96,13 @@ real fix is to never load the whole manifest per request.
       record the decision + the projection schema. This is the design gate. Decision: **BOUND** (date_window
       pushdown), extended to the on-demand live-build fallback path. Full evidence + exact implementation spec in the
       2026-08-20 Progress Log entry. — unified-trading-pm (design doc only, no code repo touched by this decision)
-- [ ] [BACKEND] P1. **Implement the bounded read** — the API cell-grid endpoint reads ONLY the requested window from the
+- [x] ✅ [BACKEND] P1. **Implement the bounded read** — the API cell-grid endpoint reads ONLY the requested window from the
       manifest (or the precomputed projection), never the whole corpus; column-pruned + TTL-cached. **READY TO APPLY —
       exact edit spec in the 2026-08-20 Progress Log entry** (the 6-file change list, all additive optional-kwarg,
       default `None` = byte-identical prior behavior). Done-when: all 6 files edited per spec, `deployment-api`
       quality-gates green (incl. `test_manifest_status_dual_scope.py` / `test_data_status_service.py::TestReadIndexCached`
-      / `test_coverage_summary_dual_scope.py`), no new whole-corpus walk introduced.
+      / `test_coverage_summary_dual_scope.py`), no new whole-corpus walk introduced. — deployment-api@777f1fa531;
+      evidence and implementation mapping: /plans/archive/2026_08/issues/data_status_cell_grid_todo3_shipped_pre_reclassify_2026_08_21.md
 - [x] ✅ [BACKEND] P2. **Precompute projection (if chosen)** — N/A, not chosen. The `uts-prod-data-status-rollup`
       Cloud Run job + `full.json.gz`-per-service blob (`_manifest_status_rollup_fast_path` in
       `deployment_api/services/data_status/manifest.py`) already IS a working precompute projection and already
