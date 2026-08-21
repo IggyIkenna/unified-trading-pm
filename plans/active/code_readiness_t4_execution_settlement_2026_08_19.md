@@ -981,7 +981,7 @@ checkboxes above, not duplicated here)
 | execution-policy/fill-model-gaps (own doc) | 7/13 closed | remaining 6 are real design gaps or out-of-repo-scope, see the doc directly |
 | Per-venue scope-key provisioning | open P2 | checked exhaustively, genuinely unbounded, no new action found |
 | Transfer netting + custody routing | open P1 | two independent blockers: netting decision is strategy-service-owned; custody-ROUTING itself is done (TransferHandler reaches Ceffu correctly, corrected 2026-08-21) — only ceffu.py's REST impl shares the Ceffu-spec gap |
-| AccountInstruction RBAC | CLOSED — mechanism done | both halves shipped (`execution-service@d162dd6793` audit, `@b4de8e1035` authorization); WITHDRAW enforces real 2-of-3 CFO/CEO/BizDev-Lead; operator-owned remainder (GSM secrets + other 8 actions' roles) tracked in `/codex/04-architecture/account-instructions.md` |
+| AccountInstruction RBAC | open P2, audit half done | audit shipped `execution-service@d162dd6793`; authorization half needs a role registry neither this repo nor UAC define |
 | State recovery | spun to dedicated plan | `w_state_recovery_real_wiring_2026_08_20` — Phase 1+2 shipped real, Phase 3 correctly blocked behind a new design-only plan (`w_execution_orchestrator_oms_persistence_2026_08_20`) rather than wired unsafely |
 | W14 exchange-version pinning | spun to dedicated plan | `w14_execution_service_exchange_version_pinning_and_cassette_drift_2026_08_20` |
 | W15 venue-adaptor security audit | spun to dedicated plan | `w15_execution_service_venue_adaptor_security_audit_2026_08_20` |
