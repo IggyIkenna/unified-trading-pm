@@ -197,3 +197,25 @@ drift_direction: advance-code
   2 RUNNING (purge worker, background jobs with wake-loops). Todo 1 writer fix code-complete, QG queued behind the
   saturated host-wide QG governor (Monitor armed). Todo 7 projection VM: first launch attempt FAILED, launcher fix in
   QG, relaunch pending (worker driving).
+- **2026-08-21 ~14:40 London — SESSION-LIMIT interruption (resets 16:40 London). RESUME STATE (lossless):** the purge
+  and VM sub-agents were API-terminated mid-flight; verified NO orphaned process is mutating the manifest (ps clean;
+  the only heavy host processes are a slot-2 peer quickmerge shipping adjacent DeFi handler fixes — it also skip-marks
+  `test_defi_prefix_parser_handles_multi_hyphen_protocol_keys`, a pre-existing UAC `parse_defi_venue` multi-hyphen
+  failure directly adjacent to this plan's glued-venue scope; see
+  `/plans/active/issues/mtds_defi_prefix_parser_multi_hyphen_solana_native_2026_08_21.md`). Per-todo resume state,
+  scratch evidence in the session scratchpad: **Todo 3** — dry-run + full-reverify done (`task3_purge_dryrun.log`,
+  `task3_full_reverify.log`); forward-apply NOT completed (216-byte `task3_forward_apply.log`): the worker found a
+  REAL bug in its pyarrow mask before applying — `pc.equal(chain, "")` on a NULL chain yields null and non-Kleene
+  `pc.or_`/`pc.and_` propagate it through the mask; the fix was unverified at termination. Re-verify the mask
+  (null-safe: use `pc.is_null` OR Kleene logic) against the dry-run counts BEFORE any apply. **Todo 4** — no evidence
+  of execution; not started. **Todo 5** — SOLBLAZE-SOLANA confirmed PHANTOM (absence re-verified across writer
+  vocabularies, `task5_solblaze_reverify.log`/`task5_solblaze_absent.csv` → purge rows with todo 3); copy pass 1 done
+  (`task5_copy.log`, plan `task5_copy_plan.csv` 142KB), pass 2 started (`task5_copy_pass2.log` 313B) — re-verify copy
+  completeness against the plan CSV, then manifest re-key, then retention-qualified legacy deletes. **Todo 1** —
+  writer-fix worker ALIVE at interruption: QG queued ~57min behind the saturated host governor (host cap 7, peer-slot
+  runs), Monitor armed on the QG log terminal marker; ship + report pending. **Todo 6** — UAC half SHIPPED
+  (@4b06013aea); IS half code-complete in the IS working tree, quickmerge dep-gate blocked on peer WIP in UAC
+  (`venue_instrument_type_axis.py` et al.) + UTL (`ledger/run_writer.py`) — re-attempt when peers land. **Todo 7** —
+  VM NOT launched; launcher fix was in QG at ~98% when the worker was terminated; deployment-service working tree
+  holds the fix — verify QG, quickmerge, launch, then todo 8 sequencing (apply only after todos 3-5 mutations land +
+  drain gate green).
