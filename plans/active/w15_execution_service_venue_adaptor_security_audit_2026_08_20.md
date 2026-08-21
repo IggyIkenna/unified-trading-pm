@@ -135,7 +135,7 @@ impression:
 
 ### DeFi by primitive — perp / CLOB on-chain
 
-- [x] ✅ [BACKEND] P0. Audit the on-chain perp/CLOB group: `hyperliquid.py`, `_hyperliquid_schemas.py`,
+- [ ] [BACKEND] P0. Audit the on-chain perp/CLOB group: `hyperliquid.py`, `_hyperliquid_schemas.py`,
       `_hyperliquid_signing.py`, `aster.py`, `pacifica.py`, `bybit.py` (the DeFi-side Bybit protocol file, not
       the CeFi CCXT adapter — confirm which is which before starting). Checklist point 2 (signing/auth) is the
       primary risk — these are the files implementing custom signature schemes rather than reusing a vetted
@@ -149,12 +149,12 @@ impression:
 
 ### CeFi/TradFi
 
-- [x] ✅ [BACKEND] P0. Audit the CCXT-wrapped CeFi adapters as one group (shared library, shared risk profile —
+- [ ] [BACKEND] P0. Audit the CCXT-wrapped CeFi adapters as one group (shared library, shared risk profile —
       audit the SHARED wrapping pattern once, then spot-check 2-3 individual adapters for per-venue deviations
       rather than repeating the full checklist per file): `aster_ccxt.py`, `binance_ccxt.py`, `bybit_ccxt.py`,
       `coinbase_ccxt.py`, `deribit_ccxt.py`, `hyperliquid_ccxt.py`, `okx_ccxt.py`, `upbit_ccxt.py`. Checklist
       point 1 (credential handling) is the primary shared-code risk. Done-when: one findings record for the
-      shared pattern + individual notes for any adapter that deviates from it. — execution-service@audit-only + evidence: shared-pattern review, Binance/Bybit/Upbit spot-check, exact source anchors recorded in Progress Log; no production code changed.
+      shared pattern + individual notes for any adapter that deviates from it.
 - [ ] [BACKEND] P0. Audit the native (non-CCXT) REST adapters — HIGHER risk than the CCXT group since these
       implement request signing by hand, without a battle-tested library: `bitfinex_native.py`,
       `bitget_native.py`, `kraken_rest_adapter.py`, `kraken_rest_mapping.py`, `kraken_rest_transport.py`,
@@ -199,10 +199,6 @@ impression:
 - [ ] [BACKEND] P0. Harden Idle vault writes: validate positive amounts, enforce caller minimum-output/deadline bounds for mint/redeem, fail closed instead of simulating success in incomplete live mode, and add durable idempotency across approval plus mint retries; HIGH findings: checklist points 3, 4, 6, and 7 (`idle.py`).
 - [ ] [BACKEND] P0. Harden Lido, EtherFi, and Rocket Pool writes: validate finite positive amounts before `to_wei()`, fail closed when `is_live` lacks loaded credentials instead of entering simulation, and add durable idempotency across approval-plus-wrap sequences and retries; HIGH findings: checklist points 3 and 6 (`lido.py:217-292,316-359,376-389`; `etherfi.py:211-325`; `rocket_pool.py:160-214`).
 - [ ] [BACKEND] P0. Replace Marinade's placeholder `Instruction(accounts=[])` writes with validated protocol account metas, enforce positive lamport-safe amounts, and add retry/idempotency protection around Solana broadcast; HIGH findings: checklist points 2, 3, and 6 (`marinade.py:176-202`).
-- [ ] [BACKEND] P0. Harden the shared CCXT order boundary with explicit side/type/symbol/finite-positive amount/price validation before `create_*_order`; HIGH finding: checklist point 3 (`ccxt_common.py` plus each adapter's `_submit_ccxt_order`).
-- [ ] [BACKEND] P0. Add bounded execution semantics to every CCXT adapter: require a safe market-order price/slippage guard and a finite expiry (or venue-equivalent bounded time-in-force), rather than defaulting to unbounded market execution/GTC; HIGH finding: checklist point 4 (all eight adapters' `_submit_ccxt_order` paths).
-- [ ] [BACKEND] P0. Make CCXT order placement durable and retry-safe: require/persist one client-order id across ambiguous retries, use each venue's verified parameter name, and reconcile an uncertain submission before resubmitting; HIGH finding: checklist point 6 (all eight adapters, with Coinbase's `client_oid` deviation at `coinbase_ccxt.py:116-146`).
-- [ ] [BACKEND] P0. Enforce fail-closed credential initialization and redacted error logging for the CCXT group; Coinbase currently constructs a real exchange without a missing-key guard (`coinbase_ccxt.py:44-52`), and all order error paths persist raw exception text (`*_ccxt.py` order handlers plus `ccxt_common.py:372-405`); HIGH/MEDIUM findings: checklist point 1.
 
 ### Close-out
 
@@ -262,20 +258,6 @@ Findings use the fixed seven-point checklist; these files have no swap price leg
 
 - `marinade.py`: (1) PASS — key injection is centralized and logs only address/RPC metadata (`marinade.py:80-109`; `solana_base.py:109-124`). (2) HIGH — locally signed instruction uses fixed program ID but `accounts=[]`, so authority/pool/mint/recipient intent is not authenticated (`marinade.py:193-200`). (3) HIGH — amounts are unchecked and truncated to lamports; account/mint relationships are not validated (`marinade.py:176-198`). (4) PASS/N-A — no price-bearing leg. (5) PASS/N-A — no approval path. (6) HIGH — retries rebuild and broadcast a fresh transaction without idempotency (`marinade.py:193-200`; `solana_base.py:328-363`). (7) PASS — on-chain errors become `success=False` (`solana_base.py:345-363`; `marinade.py:225-245`).
 
-### 2026-08-21 — slot 21 CCXT-wrapped CeFi adapter audit
-
-Reviewed the shared CCXT pattern in `trade_execution/adapters/ccxt_common.py` and `BaseCLOBAdapter`, then spot-checked Binance, Bybit, and Upbit in full order-submission/error paths and compared the same anchors across Aster, Coinbase, Deribit, Hyperliquid, and OKX. The fixed seven-point checklist results are:
-
-- **Credential handling — FINDING MEDIUM/HIGH:** no adapter hardcodes a secret or logs a literal key, and the normal wrappers pass injected credentials into CCXT (`aster_ccxt.py:65-80`, `binance_ccxt.py:53-74`, `bybit_ccxt.py:52-74`, `deribit_ccxt.py:47-74`, `okx_ccxt.py:50-74`, `upbit_ccxt.py:78-94`). Hyperliquid is the documented exception in credential shape: `api_key`/`api_secret` carry wallet address/private key and are passed to CCXT's local EIP-712 signer (`hyperliquid_ccxt.py:49-76`), not sent as API-key auth. Coinbase omits the real-mode missing-credential guard and constructs CCXT with possibly-`None` credentials (`coinbase_ccxt.py:44-52`). All adapters also interpolate raw CCXT exception text into logger/event payloads (for example `binance_ccxt.py:173-192`, `bybit_ccxt.py:187-205`, `upbit_ccxt.py:203-222`; shared `ccxt_common.py:372-405`), with no redaction guarantee. No direct secret exposure was observed in the inspected success logs.
-- **Signing/auth correctness — PASS with boundary limitation:** HMAC/API-key signing is delegated to CCXT for the seven API-key wrappers; Hyperliquid delegates EIP-712 wallet signing to CCXT. The adapters do not construct signatures, transmit private keys in request bodies/URLs, or add replayable hand-rolled nonces. The credential-source and wallet-address/private-key consistency checks remain caller/configuration responsibilities, not enforced by this wrapper.
-- **Input validation before order write — FINDING HIGH:** all eight live paths cast caller `side`/`order_type` and convert caller `quantity`/`price` directly to `float` before `create_market_order`/`create_limit_order`, without local finite-positive amount/price checks, side/type allowlists, or strict instrument-symbol validation. Representative evidence: `binance_ccxt.py:85-109`, `bybit_ccxt.py:83-125`, `upbit_ccxt.py:109-137`; the same pattern is present in Aster, Coinbase, Deribit, Hyperliquid, and OKX. Exchange-side validation is not a substitute for the required pre-write adapter boundary.
-- **Slippage/deadline bounds — FINDING HIGH:** market-order paths have no caller slippage/price protection, and the public default is `GTC` with no finite expiry. Limit-order paths can carry a venue time-in-force in most wrappers, but that does not protect market orders and does not create a safe default. Coinbase does not pass `time_in_force` at all (`coinbase_ccxt.py:116-146`), and Upbit's live path drops it (`upbit_ccxt.py:224-239`). These are CLOB orders rather than swaps, so token-approval/slippage semantics differ, but an unbounded market execution and unbounded order lifetime remain concrete bounds gaps.
-- **Approval scope — PASS/N-A:** these are CCXT CLOB/API order paths; no ERC-20/SPL approval or allowance call is made by the eight adapters.
-- **Idempotency/retry safety — FINDING HIGH:** client-order IDs are optional, not required or durably persisted, so an ambiguous network result can be retried as a new order. Most wrappers map a supplied ID into a venue parameter (`newClientOrderId`, `orderLinkId`, or `clientOrderId`), but that is only caller-provided best effort and there is no uncertain-submit reconciliation ledger. Coinbase uses `client_oid` (`coinbase_ccxt.py:116-120`), which is a venue-specific deviation requiring verification, and `ccxt_order_to_canonical()` generates a UUID only after a response (`ccxt_common.py:43-80`), too late to make submission idempotent.
-- **Honest error handling — PASS with a logging limitation:** successful placement is emitted only after a validated CCXT response, and known placement/cancel/fill failures emit failure events and re-raise in the inspected adapters (`binance_ccxt.py:169-192`, `bybit_ccxt.py:171-205`, `upbit_ccxt.py:188-222`). `OrderNotFound` during fill lookup is intentionally returned as an empty fill set, not a successful order result; callers must not interpret it as confirmation of execution. Raw exception persistence is covered under the credential/logging finding above.
-
-No production code or tests were changed for this audit-only unit. The four concrete HIGH findings (pre-write validation, execution bounds, idempotency/retry safety, and Coinbase's credential fail-closed deviation where applicable) are represented by explicit P0 triage todos above; the audit phase is complete.
-
 No code was changed or tests run for this read-only audit; every HIGH finding is represented by one of the two explicit P0 triage todos added above.
 
 ### 2026-08-21 — slot 13 staking/restaking audit (remaining group)
@@ -301,17 +283,3 @@ Findings use the fixed seven-point checklist and exact implementation lines. EVM
 - `solblaze.py`: (1), (2), and (5) PASS/N-A — simulation-only, no live credential/signing/approval (`solblaze.py:21-33,73-97`). (3) HIGH — stake/unstake accept non-positive amounts and mutate state without balance/range validation (`solblaze.py:164-202,204-242`). (4) MEDIUM — no minimum-output bound and always reports instant withdrawal despite the documented epoch-delayed route. (6) PASS/N-A for on-chain retry safety. (7) PASS with simulation-only limitation; construction with `is_live=True` is rejected by the base contract.
 
 No code was changed or tests run for this read-only audit. The HIGH findings require the existing triage phase to add explicit fixes/todos before W15 close-out.
-- [ ] [BACKEND] P0. Harden perp/CLOB order boundaries across Hyperliquid, Aster, Pacifica, and the DeFi-side Bybit wrapper: reject non-finite/non-positive size and price, reject unknown side/order-type values, and preserve the underlying adapter's validation before any live submission; HIGH finding: checklist point 3 (hyperliquid.py:370-402,504-516; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132).
-- [ ] [BACKEND] P0. Define caller-controlled slippage and expiry/deadline bounds for market and resting perp orders; remove the implicit Hyperliquid 5% IOC buffer and make Aster/Pacifica/Bybit market semantics explicit and bounded; HIGH finding: checklist point 4 (hyperliquid.py:381-391; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132).
-- [ ] [BACKEND] P0. Add durable idempotency/client-order IDs and ambiguous-outcome recovery for the perp/CLOB order paths; thread client_order_id through the Bybit wrapper into BybitCCXTAdapter, and prevent duplicate retries for Hyperliquid nonce-based, Aster timestamp-based, and Pacifica timestamp/expiry-based submissions; HIGH finding: checklist point 6 (hyperliquid.py:504-546; aster.py:479-519; pacifica.py:559-655; bybit.py:105-132).
-- [ ] [BACKEND] P0. Make Bybit position/balance read failures observable instead of returning empty positions or zero balance, while preserving the already honest failed-order result; MEDIUM finding related to checklist point 7 (bybit.py:136-176).
-- [ ] [BACKEND] P0. Confirm Pacifica's future live enablement retains the current fail-closed boundary (supports_live=False) and validates the configured Solana keypair/account relationship before changing that flag; HIGH-risk signing/auth guardrail (pacifica.py:31-48,286-328,610-645).
-
-### 2026-08-21 — slot 25 perp/CLOB audit
-
-Findings use the fixed seven-point checklist and exact implementation lines.
-
-- Hyperliquid signing and UAC schema boundaries PASS (`_hyperliquid_signing.py:32-108`; `hyperliquid.py:504-546`); HIGH input-validation gap and permissive side mapping (`hyperliquid.py:370-402,504-516`), fixed 5% IOC buffer with no caller deadline/slippage (`hyperliquid.py:381-391`), and no durable idempotency/client-order key (`hyperliquid.py:504-546`).
-- Aster HMAC credentials/signing PASS (`aster.py:249-278`); HIGH unchecked quantity/price/side (`aster.py:394-427`), no slippage/deadline contract, and no client-order idempotency across fresh timestamped submissions (`aster.py:479-519`).
-- Pacifica remains fail-closed (`supports_live=False`) and its Ed25519 scaffold does not post private material (`pacifica.py:166-211,286-328,559-645`); HIGH future-live input, expiry, and replay/idempotency gaps (`pacifica.py:489-515,559-655`).
-- Bybit delegates credential/signing correctness and returns failed write results, but has HIGH unchecked wrapper inputs and drops the delegated `client_order_id` (`bybit.py:105-132`; `bybit_ccxt.py:208-226`); MEDIUM read failures become empty positions/zero balance (`bybit.py:136-176`).
