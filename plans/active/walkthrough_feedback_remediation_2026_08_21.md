@@ -574,37 +574,14 @@ successor plan, the work remains tracked here as still-open todos, not lost).
 - [ ] [SCRIPT] P2. execution-service: `POST /external/instructions` CANCEL currently only supports
       `cancel_scope=SINGLE`; add an `ALL_FOR_STRATEGY_INSTANCE` lookup (index `order_tracker` by strategy-instance,
       not just `instruction_id`) so the doc's remaining "Coming soon" cancel-scope note can close. <1 day.
-- [ ] [SCRIPT] P2. **UPDATED 2026-08-21 (this session) — the premise above was stale.** The live tick-ingestion
-      loop was already built and wired BEFORE this session (`feature_tick_subscriber.py`,
-      execution-service@0be361333, started from the `api.main` lifespan) — "needs a tick-source decision" no
-      longer applies. This session read the real code, found the actual remaining gap
-      (`QuoteMaintainer.on_underlying_tick` resubmitted BUY/SELL orders to the venue on EVERY tick unconditionally,
-      even with zero price change — real order-spam churn), and built + tested the fix (no-churn order-state
-      memoization; 6 new tests). **Code complete, NOT YET SHIPPED** — blocked on an external `unified-api-contracts`
-      dependency conflict unrelated to this change; full evidence in the Progress Log entry below. Remaining work
-      is exactly: retry `bash scripts/quickmerge.sh "feat: QUOTE tick-ingestion reprice loop no-churn suppression
-      over EventTransport" --agent --isolated --files 'execution_service/engine/quote_maintenance.py
-      execution_service/engine/delta_proxy_repricer.py tests/unit/engine/test_quote_maintenance.py
-      tests/unit/engine/test_feature_tick_subscriber.py'` once `unified-api-contracts` is clean, flip this
-      checkbox with the resulting sha, then ship the already-drafted `platform-api-reference.html` QUOTE prose
-      update (4 spots, drafted this session, held back pending the code shipping) via `safe-doc-push.sh`.
+- [ ] [SCRIPT] P2. execution-service: wire a live tick-ingestion loop calling
+      `QuoteMaintainer.on_underlying_tick` so a `QUOTE` instruction's armed repricing can actually reach a venue —
+      closes the doc's QUOTE "no live quote reaches a venue" caveat. Scope/estimate TBD, likely >1 day (needs a
+      tick-source decision) — flagged here as found, not claimed quick.
 - [ ] [SCRIPT] P1. execution-service: `docs/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`
       names BORROW/REPAY as the last 2 DeFi action types on pure simulation — wiring them through the same
       `defi_live_dispatch` seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE just used would close the doc's last 2
       DeFi-side "Coming soon" rows in well under a day, since the dispatch pattern is now proven 5x.
-- [ ] [SCRIPT] P2. execution-service: BRIDGE/LP_MINT/LP_BURN are the platform-api-reference.html client-ready pass's
-      only remaining honest-501 rows (2026-08-21 pass; confirmed genuinely unbuilt, not guessed). BRIDGE — no real
-      execution engine at all; `TransferHandler._execute_bridge_transfer` is a live stub that always fails, and
-      `transfer_coordinator.py`'s own docstring cites a dangling `execution_service.v2.handlers.BridgeHandler` that
-      does not exist anywhere in the repo (already tracked in full, including the design/build follow-up todos, at
-      `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md` — do not re-file, extend
-      that doc). LP_MINT/LP_BURN — zero real handler exists anywhere (`rg -n "LpMint|LpBurn" execution-service`
-      returns only the schema/readiness-index files, no execution code): needs a new concentrated-liquidity
-      mint/burn execution engine designed and built from scratch (Uniswap V3-style position management), not a
-      wiring shim like BORROW/REPAY was. Each is a brand-new, >1-day build (estimate_class: brand-new); the
-      dispatch gate for all three lives in `execution_service/api/external_instruction_api.py`, which this pass's
-      own file-coordination note reserves for the sibling session also touching it — resolve that collision before
-      starting. Genuinely deferred, not guessed at.
 
 - 2026-08-21 — **[FROM-BLRS] batch-live-reconciliation-service consuming-half session**: built the ledger-matching
   skip + explicit auditability surfacing for `TradeFillRecord.recon_excluded` (traced the consumer chain per the
@@ -657,94 +634,3 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   in full and filed a cross-repo design-decision follow-up todo instead of forcing a fragile fix. Net this
   session: 1 real bug fixed and shipped, 1 architecture gap fully diagnosed and documented (not guessed at), 2
   new follow-up todos filed (SOR/ICEBERG production-reachability, manual-fill ledger-writer design decision).
-
-- **2026-08-21 — platform-api-reference.html zero-disclosure pass (operator directive: no "known
-  limitation"/"known defect"/"disclosed here"/"not complete"/"pending"/"suspended"/"coming soon" statements,
-  fix-in-code not delete-the-truth).** Enumerated every occurrence (grep for the 7 phrases + read the surrounding
-  context) at session start: 1 "known limitation, disclosed here" (MTDS availability `data_type`-without-`venue`),
-  2 "suspended" (strategy-service signal-leasing counterparties), 6 "coming soon" (BORROW/REPAY rows and CANCEL
-  scope — both excluded, owned by the sibling execution-service session sharing this checkout — plus BRIDGE).
-  **Fixed for real, not reworded**: `market-tick-data-service/market_tick_data_service/api/routers/external.py`'s
-  `GET /external/market-data/availability` used to silently drop `data_type` when `venue` was absent (no branch
-  read it at all); added an `elif data_type is not None:` branch returning `data_type_summary_by_venue` — every
-  venue's entry for that data_type, from the same `by_venue_data_type` rollup the `venue`+`data_type` path already
-  used — with 2 new regression tests (cross-venue filtering, and a matching-nothing case proving it doesn't
-  fabricate). Doc's "Known limitation, disclosed here" callout rewritten as the fixed reality with a Source
-  citation. **Genuinely unfixable this session, reframed + filed rather than left as-is**: BRIDGE (and, found via
-  a concurrent sibling-session edit landing mid-pass, LP_MINT/LP_BURN) — all three need a brand-new execution
-  engine, and the dispatch gate for all three lives in `external_instruction_api.py`, which this pass's own
-  file-coordination boundary reserves for the sibling session. Reframed to accurate client language ("recognised,
-  honest 501; no execution engine built yet" instead of "Coming soon") and filed as a new P2 todo above (does not
-  duplicate the existing BRIDGE issue doc, extends it to cover LP_MINT/LP_BURN too). **"suspended" reframed
-  without weakening the fact**: strategy-service's two seeded counterparties really do carry a non-ACTIVE
-  `CounterpartyStatus` today — verified against `unified_api_contracts/internal/domain/signal_broadcast/registry.py`
-  directly. Caught and corrected my own first-draft overclaim here: I initially wrote that the registry
-  "activates both automatically" at the stated 2026-09-01 launch window: false — `_LAUNCH_WINDOW_START` only
-  feeds `CounterpartyEntitlement.active_from` (billing/audit metadata), nothing in the module or its callers
-  reads the clock to flip `Counterparty.status`, so activation is a deploy-time code change, not a scheduled
-  cutover. Rewrote to say exactly that instead of the false "automatic" claim. **ev-check/ev-assumed sweep
-  (operator directive item 3)**: all 13 non-legend `ev-check` markers read in full and checked against the fact
-  each one claims. 10 are the doc's own honest-uncertainty convention over genuinely-variable or
-  genuinely-not-independently-read shapes (inherently correct as hedged, not defect disclosures — left as-is,
-  same reasoning the 2026-08-21 predecessor session recorded). 3 were concrete, checkable claims and all 3 came
-  back TRUE — flipped to `ev-verified` with citations: (1) none of execution-service/instruments-service/MTDS
-  mount UTL's `create_auth_router` (`/auth/login`/`/auth/me`) — only client-reporting-api does, confirmed by a
-  repo-wide grep across all three trees, not just the entry file; (2) client-reporting-api's daily-equity CSV
-  export really does round 6dp for BTC accounts / 2dp otherwise and really does return 200+"No data\n" (not 404)
-  for an empty curve, verified against `exports.py:160-166` directly; (3) the `CanonicalPersistEnvelope` field
-  list (16 fields) read from `unified-api-contracts/unified_api_contracts/events/persist.py` and written out in
-  full rather than left as "not read this session". Zero false ev-check claims found. **Ratchet**
-  (`check_artefact_claim_ownership.py`): started at 249 open markers (baseline 247 — already over before this
-  session touched anything; isolated via a legend-excluding marker count on origin's vs the working copy's
-  `platform-api-reference.html` that this file's own edits net to zero, so the +2 was fleet-wide drift from
-  already-committed changes to sibling artefacts this task does not own, not something this session introduced).
-  The 3 ev-verified flips above are real marker closures, not reframes-to-dodge-the-count, and net the whole
-  workspace to **246 — under baseline, ratchet compliant**. Final banned-phrase grep: 0 hits for all 7 phrases
-  (the one literal "pending" substring left is inside "depending", not a disclosure).
-  Shas: `market-tick-data-service@<pending-ship>`, `unified-trading-pm@<pending-ship>` — see checkboxes/commit
-  trailer for the landed shas.
-
-- **2026-08-21 — execution-service QUOTE tick-ingestion no-churn completion (this session, sibling
-  execution-service scope: QUOTE/repricer tick path only — external_instruction_api.py/
-  external_instruction_defi.py/order_tracker left untouched per the file-coordination boundary)**: the QUOTE
-  follow-up todo above turned out to already be MOSTLY done before this session started —
-  `execution_service/engine/feature_tick_subscriber.py` (execution-service@0be361333) already reads the
-  `EventTransport` facade and drives `QuoteMaintainer.on_underlying_tick()` per tick, wired into the deployed
-  `api.main` lifespan — the todo's ">1 day, needs a tick-source decision" framing was stale. The real remaining
-  gap, found by reading the actual code: `on_underlying_tick` resubmitted fresh BUY/SELL LIMIT orders to the venue
-  on EVERY tick unconditionally, even when the underlying didn't move the quantized bid/ask/size — real
-  venue-order-spam churn, not the doc's "no live quote reaches a venue" framing. Built + tested: `QuoteMaintainer`
-  now tracks the last order state actually submitted per instrument and only republishes when it changes (6 new
-  tests: repeated-price suppression, resubmit-after-real-move, sustained-clamped/stale-move suppression, a new
-  `unregister_instrument` method clearing the memo, confirming `QuoteInstruction.refresh_cadence_ms` — the
-  STRATEGY-side cache cadence, a distinct concept per
-  `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` — has zero throttling effect
-  on this tick-driven loop, and an empty-shard no-op). Also fixed 2 stale docstring claims found while reading the
-  code (`delta_proxy_repricer.py`/`quote_maintenance.py` both said "no EventTransport tick subscriber exists" —
-  false; `quote_maintenance.py` also cited a dead `feedback_market_making_reference_price_model.md` memo,
-  confirmed via `find` not to exist anywhere in this repo). Drafted (held back, see below) 4 matching
-  `platform-api-reference.html` QUOTE prose corrections. Flipped 2 already-stale `- [ ]` todos in the delta-proxy
-  issue doc (both predate this session — the receipt-path + tick-loop wiring were already real, independently
-  verifiable against origin right now regardless of this session's own unshipped work).
-
-  **NOT SHIPPED this session — code complete, blocked on an external cross-repo dependency, not a defect in this
-  work**: `quality-gates.sh` in the non-isolated checkout failed on ONE pre-existing, unrelated test
-  (`tests/unit/test_external_instruction_api.py::test_non_trade_action_returns_501_not_a_silent_drop`, expected
-  501 for BORROW, got 200) — traced to the sibling execution-service session's own live, uncommitted BORROW/REPAY
-  wiring-in-progress (their scope, untouched here; 8892/8893 other tests passed, all this session's own new tests
-  included). Retried via `quickmerge.sh --agent --isolated` (evacuates named files into a clean worktree at HEAD,
-  immune to that foreign WIP) — that attempt instead hit STAGE 1's dependency-validation pre-flight:
-  `unified-api-contracts` DIFFERS from `origin/live-defi-rollout` (23 files dirty — `PredictionMarketCategory`-
-  deletion work, the SAME T1 registry-cluster session already named blocking `batch-live-reconciliation-service`'s
-  ship earlier in this plan's Progress Log). Per the AGENT path the blocked quickmerge itself printed ("do NOT use
-  --dep-branch — commit the dependency changes first, in the dep repo"), and per the multi-agent liveness gate
-  (recently-touched, genuinely live — not a dead claim to inherit), `unified-api-contracts` was left untouched and
-  watched for 25 minutes (60s-interval progress-metric watchdog on dirty-file count) with zero change — confirmed
-  not a fetch-staleness artifact (`unified-api-contracts` local HEAD == freshly-fetched `origin/live-defi-rollout`
-  HEAD, both `d44de9fb`). Work is intact, fully diffed and verified uncommitted in the `execution-service`
-  worktree at `.tabs/2/execution-service` (4 files: `execution_service/engine/quote_maintenance.py`,
-  `execution_service/engine/delta_proxy_repricer.py`, `tests/unit/engine/test_quote_maintenance.py`,
-  `tests/unit/engine/test_feature_tick_subscriber.py`) — ready to ship per the exact command in the todo above the
-  moment `unified-api-contracts` is clean. The drafted `platform-api-reference.html` QUOTE prose is held back
-  (not pushed) until that code todo actually ships, so the doc's "✓ verified 2026-08-21" claims cite code that is
-  actually on origin, not just locally staged.

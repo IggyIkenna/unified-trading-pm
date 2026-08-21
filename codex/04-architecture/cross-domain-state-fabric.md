@@ -424,14 +424,17 @@ a `PostgreSQLOrderPersistence`-shaped gap one level up the stack, not resolved b
 components in this list (`TransferCoordinator`, `HealthFactorMonitor`, `PostgreSQLOrderPersistence`) were outside
 this plan's scope and were not re-measured here.
 
-**Update (2026-08-21, `w_execution_orchestrator_oms_persistence_2026_08_20`):** the previously open gap is
-closed for the shipped execution path. `PostgreSQLOrderPersistence` now implements all six persistence methods,
-and `live_execution_handler._run_live_async` constructs one `UnifiedOrderManager` and threads it through startup
-recovery and every live `ExecutionOrchestrator`; `OrderAdapter` lifecycle writes are fail-open around venue calls.
-The implementation landed as
-`execution-service@bc2edc16874a3b0828ef692682b69174ddcab4bf` (an ancestor of `origin/live-defi-rollout`). The
-remaining real-Postgres integration test is tracked separately in that plan and does not weaken this statement
-about the production implementation and shared wiring.
+**Update (2026-08-21, `w_execution_orchestrator_oms_persistence_2026_08_20`):** the gap above is now a
+concretely-scoped, decided design, not an open question. Confirmed via full code read:
+`PostgreSQLOrderPersistence` (`execution_service/engine/live/persistence/postgresql.py`) already exists,
+already implements the `OrderPersistenceAdapter` protocol, and is already constructed by
+`_create_startup_order_recovery` — but every one of its 6 methods is a `NotImplementedError` stub. The write
+contract (which `OrderAdapter` calls write `create_order`/`update_order_status` and exactly where), the
+`oms_orders` Postgres schema, and the hot-path fail-open latency contract are all decided — see that plan's
+2026-08-21 Progress Log entry for the full spec. Implementation is tracked in a separate plan,
+`/plans/active/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md` — `OrderRecoveryEngine` stays on
+this mirror-failure list until that plan lands and confirms one shared `UnifiedOrderManager` instance backs
+both `OrderBook` (startup) and every live `ExecutionOrchestrator` (hot path).
 
 Three rules close it:
 

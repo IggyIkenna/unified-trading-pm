@@ -128,9 +128,7 @@ Mirrored the 2026-08-16 `scheduled_reserve` fix exactly, for the CI-escalation r
   reserve pool, multi-slot reserve) plus one new regression test
   (`test_ci_and_scheduled_reserves_stack_without_overlap`) confirming the two reserves compose
   correctly now that both filters exist in the same table.
-- Evidence: `agent-orchestrator@965259913c`, quickmerge-shipped 2026-08-21 07:23:59 UTC, landed on
-  `live-defi-rollout`. `quality-gates.sh` green: 5319 passed, 4 skipped, 0 failed (coverage 86.14%,
-  above the 85.86% ratchet baseline); dashboard `tsc --noEmit` + `vitest` (472 tests) also green.
+- Evidence: `Evidence: <fill in commit sha + quality-gates.sh result once shipped>`.
 
 ## Todos
 
@@ -158,11 +156,5 @@ Mirrored the 2026-08-16 `scheduled_reserve` fix exactly, for the CI-escalation r
   check requested by the operator; root-caused via direct code read (`dispatch.py`, `config.py`,
   `escalation.py`) and confirmed via the live `target_slot: null` backlog data for the 3 tasks
   occupying the reserve. Fix implemented same session, mirroring the 2026-08-16 precedent for the
-  sibling reserve. Shipped `agent-orchestrator@965259913c` after two full `quality-gates.sh` green
-  runs (5319 passed, 0 failed each time). Process note: while investigating the SEPARATE
-  pause-reason-backfill task in parallel, mistakenly overwrote an unrelated existing test file
-  (`tests/test_scheduled_dispatch_pause.py`) — caught before shipping (via `git status` showing it
-  as modified rather than new) and reverted cleanly via `git checkout HEAD --`; that unrelated code
-  change was also reverted after discovering it contradicted an existing, intentional regression
-  test. Neither mistake reached this doc's fix or shipped commit — noted here only as a process
-  learning, not a defect in this fix.
+  sibling reserve. Pending: quality-gates.sh verification + quickmerge ship (see Fix section for
+  evidence once complete).
