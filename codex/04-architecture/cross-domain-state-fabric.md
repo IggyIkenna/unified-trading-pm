@@ -39,7 +39,7 @@ authoritative_for:
   ]
 referenced_by:
 owner:
-last_reviewed: 2026-08-20
+last_reviewed: 2026-08-21
 code_refs:
 ---
 
@@ -491,7 +491,13 @@ machinery for its own sake.
   relay/builder capability, gas-policy IO, inclusion/finality feedback) are to be **defined, not implemented** — R13.
 - Parts II-V of the restructured specification: the per-profile detail, archetype manifests and per-profile
   certification. Only Part I (this doc) exists.
-- The five Wave-0 rulings tracked in the delta-proxy issue doc section 15.
+- ~~The five Wave-0 rulings tracked in the delta-proxy issue doc section 15.~~ **RESOLVED 2026-08-21** — see
+  `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` section 15 item 5. Of note: the
+  hot-swap ruling is **not** the "option B, blessed" placeholder that circulated briefly — the actual ruling is
+  hot-swap applies only to `subscription_list` membership (add/remove instrument_ids); changing the DEFINITION of an
+  existing instrument is rejected and requires a restart. Already shipped in strategy-service
+  `48bd37175989be9031eccc1b5dca0c7ab387abb3` (2026-08-14) via `_reject_unsafe_instrument_change()` in
+  `config_reloaders.py`. See `/codex/04-architecture/live-strategy-config-hot-reload.md` for the full row.
 - **Dust avoidance ownership** (section 11) — hypothesis only; a single-token search is not a measurement.
 - **Epoch fencing on the order path** — measured absent 2026-08-20; nothing prevents a superseded instance from
   continuing to submit orders. Not yet ruled.

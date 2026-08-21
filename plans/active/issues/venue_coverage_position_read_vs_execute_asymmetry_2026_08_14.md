@@ -523,6 +523,24 @@ Kamino/Jupiter conflated the two.
       credentialed integrations for sports betting, retail brokerage and prediction markets — nothing to do with a DeFi
       mandate. They are inert unless a venue is configured, so shipping them costs nothing operationally. Purely a
       question of what we disclose. Record the decision in the Elysium plan § E.
+- [x] ✅ [AGENT] P2. **SHIPPED 2026-08-21 — `execution-service@<pending-shipment-sha>`.** Adapter reconciliation +
+      paper-mode matching proof for `polymarket`, closing the gap this doc's out-of-mandate line implied ("working
+      credentialed integration") without ever verifying order-matching against real market structure.
+      **Reconciliation finding: NOT a duplicate** (verified by reading both in full, not file-size assumption) —
+      `sports_execution/adapters/exchanges/polymarket_clob.py` is the sole HMAC-auth/order-construction
+      implementation; `trade_execution/adapters/polymarket_adapter.py` is a thin delegating facade (same pattern as
+      Betfair/Pinnacle) that `get_order_adapter("POLYMARKET")` actually returns, wired into `account_orchestrator.py`
+      + `live_execution_handler.py` + `matching_engine.py` with its own test suite — deleting it breaks every live
+      caller for zero duplication removed, so no deletion made.
+      **Proof: PASSED, live-verified 2026-08-21** against real Polymarket CLOB `GET /book` (no auth) for an
+      actively-traded market — added `simulate_order_fill()` + `PolymarketCLOBAdapter.paper_place_order()` (builds
+      the real order payload, matches against a real `PolymarketOrderBook`, never calls `_post_json`/signs/submits).
+      7 deterministic unit tests vs. a frozen real snapshot (`test_polymarket_paper_matching.py`, green in QG) + 1
+      `integration`-marked live-fetch test (`test_polymarket_paper_matching_live_integration.py`, ran manually this
+      session, passed).
+      **Remaining — pending real wallet-key provisioning, human-only, operator to handle separately**: real
+      HMAC+EIP-712 signing/submission (`place_order`/`cancel_order`) is unchanged and still needs L1 wallet-key
+      derivation; this task never generated/requested/handled key material (wallet-key HARD RULE).
 - [x] [OPERATOR] P2. ✅ **RESOLVED 2026-08-15 — build the batch/live/paper axis first.** Research 2026-08-14 (session 3)
       found `position_interface/factory.py::get_position_adapter()` has exactly one boolean per venue — no code anywhere
       distinguishes batch/live/paper position reading (the only mode-like switch is a service-level `mock_mode` flag,

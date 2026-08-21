@@ -241,11 +241,21 @@ designed. They're session-process mistakes worth recording so they aren't repeat
 
 ## Todos
 
+- [ ] [SCRIPT] P3. **Found while verifying bug 1 post-ship.** The live (gitignored, per-VM)
+      `data/config/accounts.json` on the planning VM still carries 3 dead Kimi entries
+      (`kimi-k3`/`kimi-k2-6`/`kimi-k2-7-code`) — `load_accounts()` now gracefully skips them (logged,
+      not fatal, since `"kimi"` is no longer a valid `AccountProvider` literal post-removal), so this
+      is harmless today, but it isn't a true "removed from the accounts list" the way the operator
+      asked for. Delete the 3 entries from the live JSON file directly (not git-tracked, no PR/ship
+      needed — a plain edit on the planning VM). Repo: agent-orchestrator, host-level config only.
 - [ ] [BACKEND] P1. Fix bug 1 — make the `overage_status == "rejected"` exclusion proportional to
       actual usage (only block when the account is also near its included-quota ceiling), so Claude
       accounts with real headroom re-enter `_anthropic_pool_headroom_pct`/`_quota_adaptive_fraction`.
       Read current `account_is_usable()` call sites first (6+ per its own docstring) before deciding
-      whether to change it directly or add a parallel check. Repo: agent-orchestrator.
+      whether to change it directly or add a parallel check. Verify with
+      `scripts/orchestrator/claude_headroom_exclusion_readout.py` (new, this session — run from the
+      LIVE checkout per its own docstring, not a per-slot worktree) — re-confirmed 2026-08-21 post-ship
+      that bug 1 is still live (all 8 Claude accounts still `usable=False`). Repo: agent-orchestrator.
 - [ ] [BACKEND] P1. Fix bug 2 — wire `_live_free_combo_ids()` to `_account_meets_dispatch_headroom()`
       (or the specific per-provider checks it composes) so Gemini/GLM/etc. are only rotated into the
       Phase-4 pool when they can actually serve the request. Repo: agent-orchestrator.
