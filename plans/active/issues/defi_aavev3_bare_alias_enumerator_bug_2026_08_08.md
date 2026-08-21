@@ -175,9 +175,13 @@ defect (phantom-venue emission) without touching a registry other code may depen
       `market-data-tick-defi-prd-*`: confirm `venue=AAVEV3` count in the live
       `_index/availability_index.parquet` is STILL 0 (one filtered pyarrow read, no corpus walk). The purge
       removed the rows from the CONSOLIDATED index only; if any `_index/per_vm/*.parquet` shard from the
-      2026-08-05 enumerator run still carries bare rows, an incremental consolidation could resurrect them —
-      nobody has checked the per-VM-shard side. If resurrected: locate + purge the shard source, citing this
-      doc's existing delete-safety proof (same population).
+      2026-08-05 enumerator run still carries bare rows, an incremental consolidation could resurrect them.
+      **Per-VM-shard side CHECKED 2026-08-21 (post-purge listing)**: exactly 2 shards exist —
+      `_legacy_seed.parquet` (created 2026-06-24, PREDATES the 2026-08-05 enumerator write, cannot carry
+      its rows) and `mdps-defi-2025-20260817-000343.parquet` (created 2026-08-21 06:50 by the live MDPS
+      backfill, unrelated) — so resurrection risk is measured-low and this re-check is cheap
+      belt-and-braces, not an open hazard. If somehow resurrected anyway: locate + purge the shard
+      source, citing this doc's existing delete-safety proof (same population).
 - [ ] [SHIP] P1. Land the two fix commits currently blocked by a PEER session's in-flight
       `unified-api-contracts` WIP (its prediction-domain migration breaks every consumer's QG/pre-flight;
       both commits are otherwise ready): (a) `deployment-service` watchdog prefix-threshold +
