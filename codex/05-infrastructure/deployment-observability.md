@@ -514,6 +514,23 @@ refuses or serves-stale before attempting a build sized to blow the container; (
 still runs inside a `resource.setrlimit(RLIMIT_AS, ...)`-bounded child process, so an underestimate raises a catchable
 error in the child instead of OOM-killing the parent worker (and therefore every other in-flight request on it).
 
+**Bounded date-window read on the live-build fallback** (`deployment-api@777f1fa531`, plan
+`data_status_cell_grid_rearchitecture_2026_07_18` todo 3) — the OOM guard above stops a build from taking down the
+container, but the on-demand live-build path itself still read the FULL multi-year manifest unconditionally before
+this change (measured 18GB IS / 81GB MTDS / 56GB MDPS full-history). `_read_index_cached` (and every caller reaching
+it — `_read_defi_merged_index` / `_resolve_category_bucket_and_index` / `_build_manifest_category(_dual_scope)` /
+`_read_upstream_venue_dates` / `_scan_category_manifest`) now accepts an optional `date_window: (start, end)` that
+takes the same pyarrow row-group predicate-pushdown path `/coverage-grid`'s `_coverage_grid.py` already proved
+(`manifest_source.read_manifest_index`), bounding peak memory to roughly the requested window instead of the full
+corpus for any request that carries a real date range. Additive-only — `date_window=None` (the default) is
+byte-identical to the pre-change behaviour, and `coverage.py`/`coverage_dual_scope.py` (`GET /coverage-summary`, no
+date-range param by design) were deliberately left unchanged. **This does NOT retire the OOM guard above** — pyarrow
+row-group pushdown only skips groups entirely outside the window, and cefi/MTDS-scale manifest row groups span
+2-2.5 calendar years each, so a genuinely full-history request still overlaps virtually every row group (~0
+reduction). The guard remains the only protection for that worst case until a row-group-_streamed_ aggregation
+(the pattern `_live_coverage_venue_year.py` already proves for the venue-year-coverage endpoint) extends to this
+path — tracked as that plan's own todo 8, not yet shipped.
+
 **`/api/vm-deployments` SWR snapshot** (`deployment-api@3f1fc66`) — this endpoint was the single worst offender (94s
 avg, uncached, a full GCS registry + per-VM Compute API walk on every poll). Given the same 45s stale-while-revalidate
 single-flight pattern already proven on the inventory/umbrella endpoints: instant-after-first-load instead of a 94s
