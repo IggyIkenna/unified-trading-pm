@@ -249,7 +249,7 @@ Critical AccountInstructions require operator authorization:
 Auto-recovery flows pre-authorize specific actions per the
 [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md).
 
-**(This table is the DESIGN TARGET, not what ships today — verified 2026-08-20.**
+**(This table is the DESIGN TARGET, not what ships today — verified 2026-08-20.
 `AccountInstructionOrchestrator.dispatch()` checks only that `authorization_id` is a non-empty string; it does not
 look up who authorized it, what role they hold, or whether the action-specific requirement above (e.g. "Compliance
 
@@ -268,7 +268,7 @@ Every AccountInstruction is audit-logged with:
 
 Retention: permanent per compliance.
 
-**(DESIGN TARGET — verified 2026-08-20.** The shipped path logs two `log_event` calls
+**(DESIGN TARGET — verified 2026-08-20. The shipped path logs two `log_event` calls
 (`ACCOUNT_INSTRUCTION_RECEIVED`/`ACCOUNT_INSTRUCTION_RESULT`) carrying `instruction_id`/`org_id`/`action`/`venue`/
 `account_id`/`accepted`/`reason` — no post-state snapshot, no dedicated permanent-audit-log store beyond whatever
 the `log_event` sink itself retains. Only `CLOSE_ALL` has a real venue-facing runner today
