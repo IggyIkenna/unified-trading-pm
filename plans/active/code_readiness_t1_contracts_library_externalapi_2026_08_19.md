@@ -474,15 +474,9 @@ todos only to confirm they are data-movement, then leave it.
       2026-08-21, resolved).
 ### Walkthrough feedback 2026-08-21
 
-- [ ] BLOCKED-OPERATOR-DECISION [AGENT] P0. Execute the registry cluster of the 2026-08-21 walkthrough feedback,
-      tracked in `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (todos live there — this plan is
-      over the line cap). **2026-08-21: all T1-actionable items in that cluster now closed** — the 12 unresolved
-      venue/data_type pairs (`unified-api-contracts@f79cd936`, a concurrent session's fix, independently verified
-      0 unresolved of 683 triples), the DeFi venue-set dedup, and the CeFi instrument_type roster over-fan are all
-      shipped (no longer in that plan's open-todo list). **One item remains, genuinely operator-gated, not
-      T1-forceable**: bucketing the 23 declared-but-unbucketed DeFi venues requires an operator ruling on which of
-      20 `pipeline`-phase venues are actually IS-producible/ready to flip to `live` — a readiness call, not a
-      registry-hygiene fix. See that plan's own todo for detail.
+- [ ] [AGENT] P0. Execute the registry cluster of the 2026-08-21 walkthrough feedback, tracked in
+      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (todos live there — this plan is
+      over the line cap).
 
 ### W5 — venue registry completeness
 

@@ -11,7 +11,7 @@ status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [unified-api-contracts, execution-service, strategy-service, unified-trading-pm, unified-trading-library]
+repos: [unified-api-contracts, execution-service, strategy-service, unified-trading-pm]
 scope: [engineer]
 tags: [code-readiness, walkthrough, client-artefact, feedback, registry, execution, presentation]
 related:
@@ -306,13 +306,16 @@ drift_direction: advance-code
       `account_id`/`asset_group`/`quote_currency` context for a manual trade, which the batch writer currently
       gets from the run/backtest context, not from a single live fill?) — not a mechanical field-thread. See the
       new follow-up todo directly below.
-- [x] [BACKEND] P2. **BUILT + SHIPPED 2026-08-21** (operator ruling 2026-08-21,
-      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md`) — `execution-service@ee694cf46b` +
-      `unified-trading-library@707020ff7b`. New `manual_instruction_ledger.py` builds one `TradeFillRecord` per
-      manual fill via the SAME `write_run_ledger` batch/paper path, wired into EXECUTE + RECORD_ONLY;
-      `account_id`=`wallet_id>counterparty>venue` (no real registry exists), `quote_currency`=inferred from
-      `instrument_id`, `run_id`=`instruction_id`. Companion UTL fix stamps `recon_excluded` into the JSONL row
-      (was dropped) — round-trip confirmed via new tests both repos; `quality-gates.sh --no-fix` green.
+- [ ] [BACKEND] P2. **New, found 2026-08-21 during this todo's tracing (see todo above).** Manual-trade fills
+      are never represented in the real GCS InstructionLedger at all today — `recon_excluded` is therefore
+      currently a no-op with respect to `batch-live-reconciliation-service`'s ledger-matching skip (the skip
+      logic is real and tested, but nothing ever writes a manual fill's `LedgerRow` for it to skip). Needs an
+      operator/design decision on where a live manual-trade ledger-writer path should live (a parallel
+      event-driven writer alongside `unified_trading_library/ledger/run_writer.py`'s batch/paper writer, vs.
+      extending `strategy-service/strategy_service/position/core/fill_event_consumer.py`'s existing
+      `FILL_COMPLETED` subscription, vs. something else) before implementation — not a self-served UAC/UTL
+      addition. Cross-repo: execution-service (fill origin) + unified-trading-library (ledger schema/writer) +
+      possibly strategy-service (current sole live `FILL_COMPLETED` consumer).
 - [x] [BACKEND] P2. **New, found 2026-08-21 during todo 4's investigation.** `manual_instruction_helpers
       .py::_SUPPORTED_ALGOS` (and `execution_service.algorithms.selector.MANUAL_ONLY_ALGOS`) advertise
       `"BEST_PRICE"` as a valid manual-trade algorithm via `GET /manual/instruction/supported-algos`, but
@@ -995,6 +998,3 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   §14's dead `transfer_coordinator.py` citation to `transfer_handler.py`. **Lost-and-redone**: the first 5 edits were silently reverted by a concurrent write between two edit batches
   (Edit tool's drift warning + `git diff` caught it, the `walkthrough_file_shared_checkout_repeated_content_loss_
   2026_08_20.md` mode) — redone before this ship. **Checkpoint 2/2**: swept remaining narration outside the skip lanes. Markers: 204 (was 205, baseline 247).
-
-- 2026-08-21 — **Manual-trade-fill InstructionLedger gap closed**: `execution-service@ee694cf46b` +
-  `unified-trading-library@707020ff7b` — full evidence in the flipped todos above ("BUILT + SHIPPED 2026-08-21").

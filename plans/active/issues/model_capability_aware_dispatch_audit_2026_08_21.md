@@ -240,30 +240,15 @@ heavy caller found during the audit.
       investigation before implementing — not obviously worth a hard block given legitimate direct
       bare-root writes may exist (operator-driven, host-level ops). Repo: unified-trading-pm
       (guidance) and/or agent-orchestrator (a guard script, if one is built).
-- [x] [SCRIPT] P3. ✅ **DONE 2026-08-21.** Removed the dangling `related:` entry from both docs
-      (`worker_slot_account_exhaustion_no_rotation_2026_08_19.md`,
-      `nvidia_codex_exhaustion_observability_gap_2026_08_19.md`). While fixing the first, found its
-      OWN sole remaining open todo (todo 7) was `BLOCKED-ON` this doc's Part 2 synthesis, which had
-      since landed — resolved it (see that doc's todo 7 for the full accounting) and, since that was
-      its last open item, archived it per the archive-immediately HARD RULE. That archival's own
-      referrer fixups (2 more active docs citing its pre-archival path) done in the same pass:
-      `idle_lingering_session_reclaim_not_firing_2026_08_19.md`,
-      `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`. **New follow-up found while
-      resolving todo 7**: `capability_tier()`'s `codex` → UNVERIFIED classification is sourced from
-      the bake-off's pre-fix 0/6 result (the codex-bridge streaming bug, fixed
-      `agent-orchestrator@39604c9ced` 2026-08-20, postdates the bake-off run) — live post-fix
-      production traffic shows codex-luna handling real dispatch at ~8.9% failure rate (488
-      selections/41 failures/24h, `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`
-      Part 1). Tracked as a new todo below rather than re-derived here. Repo: unified-trading-pm.
-- [ ] [DATA] P3. **Found while closing the todo above.** Re-evaluate whether `codex` still belongs in
-      `model_tier.CAPABILITY_TIER_UNVERIFIED` now that the codex-bridge streaming bug
-      (`agent-orchestrator@39604c9ced`, 2026-08-20) is fixed — the bake-off's 0/6 result that
-      classification is sourced from predates the fix and reflects a broken bridge, not the model's
-      real capability. Once enough POST-FIX production data accumulates, re-check via live
-      `activity_log` selection/failure/death counts for `codex-luna` (the same method
-      `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` Part 6 used), not the pre-fix
-      bake-off numbers and not a fresh benchmark. If it holds up, promote it out of UNVERIFIED. Repo:
-      agent-orchestrator.
+- [ ] [SCRIPT] P3. **Found while archiving the bake-off plan** (its own last 2 todos closed above, hit
+      0 open todos, archived per the HARD RULE). 2 OTHER active docs still cite its pre-archival
+      active-path form of `multi_provider_model_capability_bakeoff_2026_08_19.md` in their own
+      `related:` frontmatter and will dangle: `worker_slot_account_exhaustion_no_rotation_2026_08_19.md`,
+      `nvidia_codex_exhaustion_observability_gap_2026_08_19.md`. Same class as the earlier
+      `kimi_gemma_provider_onboarding_2026_08_16` archival's dangling-referrer todo — not fixed here
+      for the same reason (touching unfamiliar active docs unilaterally). Fix: REMOVE each dead
+      `related:` entry (never repoint at the new `/plans/archive/2026_08/...` path —
+      `check_active_refs_archived_plans.py` bans that too). Repo: unified-trading-pm.
 
 ## Progress Log
 

@@ -13,8 +13,8 @@ summary: >-
   weekly_pct=95, five_hour_pct=4, overage_status=rejected — genuinely near its weekly ceiling by the
   richer signal, but invisible to the failover mechanism's narrower check. Confirmed zero
   worker_account_unusable_killed activity_log rows have ever fired.
-status: resolved # (was: open) 2026-08-21 — todo 7 (last open item) resolved via model_capability_aware_dispatch_audit_2026_08_21.md's capability_tier() mechanism; archived.
-resolved_by: agent-orchestrator@36d56d8638
+status: open
+resolved_by:
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -24,8 +24,10 @@ tags: [agent-orchestrator, autospawn, account-failover, fleet-capacity]
 related:
   [
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
+    /plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md,
     /plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md,
   ]
 created: "2026-08-19"
 last_updated: "2026-08-19"
@@ -335,22 +337,11 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
       the original (opus/fable) model string — now spawns at the tier actually confirmed. Tests:
       `tests/test_autospawn.py` (2 new + 10 fixed for the `_spawn_param_plan` tuple-arity change),
       `tests/test_account_failover_resume.py` (2 new). Repo: agent-orchestrator.
-- [x] [DATA] P3. ✅ **DONE 2026-08-21 — answered by a narrower mechanism than this todo envisioned.**
-      The bake-off's synthesis landed (`model_capability_aware_dispatch_audit_2026_08_21.md` Part 2),
-      but its real tiering data was deliberately NOT folded into `model_tier.equivalence_class()`/
-      `models_are_substitutable()` itself — that stays the flat "all-but-haiku" placeholder, since
-      widening it would alter `model_strict` substitution behavior for EVERY caller uniformly (fresh
-      dispatch, resume, scheduled jobs, escalation), a bigger blast radius than the bake-off's signal
-      strength (one clean Hard-tier PASS, thin Easy/Medium coverage on 2 more models) justifies today.
-      Instead, a new `model_tier.capability_tier()` (STRONG/WEAK-VERIFIED/UNVERIFIED, sourced from the
-      bake-off table) is wired as a dispatch PREFERENCE — not a substitution-eligibility change — into
-      the two judgment-heavy callers this fleet has: `escalation.escalate()` and
-      `autospawn.ensure_review_agents()`. Fresh/resume/scheduled-job substitution stays
-      capability-agnostic by design (matches this doc's own todo 6 finding: routine work doesn't need
-      the bias). Full mechanism + a new follow-up (codex-luna's UNVERIFIED tier pre-dates its
-      2026-08-20 streaming-bug fix, may now be stale) tracked in
-      `model_capability_aware_dispatch_audit_2026_08_21.md` Part 4 and its Todos, not duplicated here.
-      Evidence: agent-orchestrator@36d56d8638. Repo: agent-orchestrator.
+- [ ] [DATA] P3. BLOCKED-ON:multi_provider_model_capability_bakeoff_2026_08_19 — **once that doc's
+      synthesis todo lands** (its per-(model, complexity-tier) summary table), replace this doc's
+      flat "all-but-haiku" equivalence-class placeholder with the real tiering data it produces —
+      update the equivalence-class registry built above, not a fresh benchmark. Repo:
+      agent-orchestrator.
 - [x] [OPERATOR] P3. **Future eval-benchmark plan — found 2026-08-19, already exists and is
       active**: `/plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md` (slot-1).
       Superseded this todo's original "not yet scoped" framing — see the todo directly above for
@@ -371,10 +362,6 @@ shipped cleanly at `cc38229b57` on the first retry. The generator issue itself i
 doc and remains tracked only in its own issue doc above — no action needed here.
 
 ## Resumption notes (2026-08-19, updated after implementation)
-
-> **✅ CLOSED 2026-08-21** — todo 7 (the last open item) resolved; doc archived. Kept as accurate
-> historical record of the implementation journey; the "what to do on resume" list below no longer
-> applies.
 
 This doc is the sole, self-contained tracking surface for this initiative — no sibling plan exists
 or is planned (see Process note above). The `related:` plans (bake-off, billing-reconciliation,
@@ -451,10 +438,3 @@ uncommitted pending QG), see that todo for status. Todo 7 remains externally blo
   the flat "all-but-haiku" equivalence-class placeholder with real tiering data) is explicitly `BLOCKED-ON:
   multi_provider_model_capability_bakeoff_2026_08_19` — that doc's own synthesis todo is confirmed still open
   (per this batch's own read of that doc). Genuinely blocked, not yet actionable.
-- **interactive session (slot 13) 2026-08-21**: closed the sole remaining open item (todo 7) — see
-  its resolution text above. This issue doc now has 0 open todos; archived per the workspace's
-  archive-immediately HARD RULE. `related:`/referrer cleanup done in the same pass:
-  `idle_lingering_session_reclaim_not_firing_2026_08_19.md` and
-  `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` (both active, cited this doc's
-  pre-archival path in their own `related:`) had that entry removed rather than repointed at the new
-  archive path, per `check_active_refs_archived_plans.py`'s policy.
