@@ -814,7 +814,7 @@
         >
       </div>
       <div class="stat">
-        <span class="v">12 / 15</span
+        <span class="v">12 / 16</span
         ><span class="k"
           >Instruction types routed to real execution today — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
           UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC route through live execution wiring (BORROW/REPAY wired
@@ -1779,7 +1779,7 @@
       <span class="tag">Read this before anything else on this page</span>
       <p>
         <b>Twelve action types are wired to real execution paths today.</b> The request body type,
-        <code>StrategyInstructionV2</code>, is a 15-member discriminated union
+        <code>StrategyInstructionV2</code>, is a 16-member discriminated union
         (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
@@ -1928,9 +1928,9 @@
       </table>
     </div>
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
-      <b class="ev ev-verified">✓ verified</b> schemas.py (all 15 variants + the union); execution-service
+      <b class="ev ev-verified">✓ verified</b> schemas.py (all 16 variants + the union); execution-service
       <code>execution_service/api/external_instruction_api.py</code> +
-      <code>execution_service/api/external_instruction_defi.py</code> (12 of 15 action types routed to real execution
+      <code>execution_service/api/external_instruction_defi.py</code> (12 of 16 action types routed to real execution
       wiring; BRIDGE/LP_MINT/LP_BURN are the honest 501s)
     </p>
 
@@ -2154,7 +2154,7 @@
               <tr>
                 <td><code>422</code></td>
                 <td>
-                  Body doesn't match any of the 15 <code>StrategyInstructionV2</code> variants (e.g. an
+                  Body doesn't match any of the 16 <code>StrategyInstructionV2</code> variants (e.g. an
                   <code>action</code> value like <code>CONVERT_DUST</code> that exists on
                   <code>InstructionActionV2</code> but has no envelope in the union at all)
                 </td>
@@ -2168,7 +2168,7 @@
                 </td>
                 <td class="mono">
                   "action='BRIDGE' is not yet wired for external submission. TRADE/QUOTE/TRANSFER/CANCEL/SWAP/LEND/
-                  WITHDRAW/STAKE/UNSTAKE/BORROW/REPAY/ATOMIC are the 12 of 15 StrategyInstructionV2 action types
+                  WITHDRAW/STAKE/UNSTAKE/BORROW/REPAY/ATOMIC are the 12 of 16 StrategyInstructionV2 action types
                   wired today."
                 </td>
               </tr>
@@ -3560,7 +3560,7 @@
           <tr>
             <td><code>501</code></td>
             <td>
-              Recognised but not wired for external submission — 13 of the 15 instruction types (TRADE executes; QUOTE
+              Recognised but not wired for external submission — 13 of the 16 instruction types (TRADE executes; QUOTE
               registers without submitting an order and does not 501 — see §04)
             </td>
             <td>Instructions POST</td>
