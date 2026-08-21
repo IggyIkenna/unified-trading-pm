@@ -135,26 +135,10 @@ measurement that justified the number.
 
 ### Phase 3 — the trigger, and the branch that refuses to act
 
-- [x] ✅ [CODE] P0. Producer-liveness detection for strategy-service: a last-complete-instruction clock per
+- [ ] [CODE] P0. Producer-liveness detection for strategy-service: a last-complete-instruction clock per
       strategy/client, checked where `assert_market_data_fresh()` is checked. Note the distinction that made this
       necessary — the existing gate checks INPUT age, and a silent producer emits no record to age. Repo:
-      execution-service. — `execution-service@fca9b729fa` (2026-08-21). Built
-      `execution_service/validation/producer_liveness_gate.py`: a per-`(strategy_instance_id, client_id)`
-      last-seen clock (`record_instruction_received()` / `is_producer_stale()`), using the 15-minute SLA ruled
-      above in Phase 4. Wired as the 6th armed kill-switch condition: `strategy_instruction_subscriber.py`
-      records the clock on every successfully-processed real instruction and sweeps
-      `check_all_producers_liveness()` every poll cycle (independent of whether that cycle found anything — a
-      silent producer produces no envelope for `poll_once()` to see, so the sweep has to run on the timer, not
-      on arrival). A stale producer arms `kill_switch.activate()` (blocks new orders via the same
-      `_route_kill_switch_guard()` every other condition gates through) and emits the existing `FEED_UNHEALTHY`
-      alert (reused, not a new AlertCode — no UAC change needed). Deliberately does NOT build this todo's
-      sibling two (branch on reconciliation health, dedicated Slack copy) or the flatten/reduce machinery in
-      Phases 1-2/5a — this is the detection piece only, scoped narrowly per
-      `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md`. Tests:
-      `tests/validation/test_producer_liveness_gate.py` — fresh producer doesn't trigger, never-seen producer
-      isn't stale, a stale producer (mocked clock) arms the kill switch + alerts once per silence episode and
-      is proven (via `InstructionRouter._route_kill_switch_guard`) to place no order, and recovery clears the
-      alert marker for the next episode.
+      execution-service.
 - [ ] [CODE] P0. Branch on reconciliation health: UP → flatten; DOWN → alert only, act on nothing. The DOWN branch must
       be structurally incapable of placing an order. Repo: execution-service.
 - [ ] [CODE] P0. Slack alert for the DOWN branch naming what the operator must do — log into the venues, read the real
@@ -227,12 +211,6 @@ measurement that justified the number.
 
 ## Progress Log
 
-- **2026-08-21**: Shipped Phase 3's producer-liveness-detection todo only (`execution-service@fca9b729fa`) — the
-  narrow detection clock this plan's Phase 3 scopes, closing the bounded piece of
-  `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md` that a dedicated task covered. The
-  other 22 todos (flatten/reduce logic, branch-on-reconciliation-health, dedicated Slack alert, exposure-reduction
-  unification) are untouched and remain open — this was a deliberately scoped slice, not a claim on the rest of the
-  plan.
 - **na-eligibility-audit 2026-08-17** [body-hash:9e6046fe7dd8ae5a]: KEEP-NA, valid -- source: frontmatter + body blockquote confirm this is the operator's own dated risk decision (2026-08-14), verbatim requirements captured. All 23 open todos (Phases 1-5a/5) are live-trading risk-management design+build spanning execution-service/strategy-service/batch-live-reconciliation-service/alerting-service/UAC -- nature:design, effort:xhigh, P0. Exactly the "multi-file, multi-day, live-dispatch-critical-path" class the bounded-outcome bar excludes even where individual todos read as one clean line. Cross-cutting tranche audit.
 - **na-eligibility-audit 2026-08-17** [body-hash:d111b57d45b48364]: KEEP-NA, valid -- Operator risk-decision doc (2026-08-14) recording the producer-silence flatten protocol; the source field and intro blockquote explicitly cite the operator's own dated ruling as the doc's basis (NEVER-RE-LITIGATE criterion a). All 23 open todos are live-trading risk-management design+build work spanning execution-service/strategy-service/batch-live-reconciliation-service/alerting-service (net-delta calculators, post-trade-leverage trade selection, producer-liveness detection, the exposure-reduction unification per the cited /codex/04-architecture/exposure-reduction-unification.md design SSOT) -- genuine judgment-heavy work on live-dispatch-critical-path machinery, not mechanically bounded. One item is explicitly [OPERATOR]-tagged (SLA numbers); one downstream test depends on that SLA existing first.
 - **context-scout 2026-08-17**: refreshed context_scope (6 entries) — added the Phase 5a Design SSOT

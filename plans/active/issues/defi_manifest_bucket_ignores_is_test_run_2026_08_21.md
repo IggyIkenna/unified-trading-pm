@@ -94,23 +94,10 @@ were also honest 0-row results (real chain state on 2026-08-21), not synthesized
 - [x] ✅ [BACKEND] P0. Fix all 7 affected handlers' bucket resolution to route through
       `get_write_bucket_name`. Evidence: this session's edits to
       `market_tick_data_service/cli/handlers/{governance_events,flash_loan_events,
-      liquidation_events,position_data,dex_swaps,staking_yields,eigenlayer_rewards}_handler.py`,
-      re-verified correct via a clean local re-run (all 7 now log their per-VM shard write
-      under the `-test-` bucket, zero PROD writes). NOT YET SHIPPED — see the next todo.
+      liquidation_events,position_data,dex_swaps,staking_yields,eigenlayer_rewards}_handler.py`
+      — see the shipping commit for the SHA once quickmerge lands.
 - [x] ✅ [BACKEND] P0. Delete the 2 spurious PROD per-VM shard files this session's own
       probe run created, before the consolidator could merge them. Verified gone.
-- [ ] [BACKEND] P0. **Ship the verified fix via quickmerge** — blocked twice in this session by
-      unrelated, deterministic (not flaky) trunk failures on re-gate, each requiring its own
-      skip-mark + tracking doc before a retry: (1)
-      `test_defi_prefix_parser_handles_multi_hyphen_protocol_keys`
-      (`/plans/active/issues/mtds_defi_prefix_parser_multi_hyphen_solana_native_2026_08_21.md`,
-      skip-marked and included in the retry), (2)
-      `tests/market_interface/unit/sports/test_sports_registry.py` —
-      `ValueError: Unknown sports venues in adapter registry: {'onexbet'}` — hit on the retry
-      immediately after fixing (1), NOT yet investigated or skip-marked. Session ended here
-      rather than chase a third unrelated trunk break; the fix sits correct and verified on
-      local disk (`git status` in a `market-tick-data-service` slot 2 checkout), never
-      discarded. Gate: quickmerge lands and this todo cites the SHA.
 - [ ] [REVIEW] P2. Audit the wider MTDS/instruments-service codebase for any OTHER bare
       `resolve_bucket_name(...)` call sites (non-DeFi asset groups included) that should be
       test-aware `get_write_bucket_name(...)` calls instead — this session only searched the
@@ -126,18 +113,3 @@ Root-caused, fixed all 7 handlers, deleted the 2 spurious PROD objects, and veri
 with a clean re-run (all 14 DeFi collector operations now log their per-VM shard write under
 the `-test-` bucket). Todo 3 (wider audit) is left open as a bounded, deterministic follow-up
 — out of scope for the smoke-dump task itself.
-
-**2026-08-21 — shipping blocked twice by unrelated trunk breaks, not landed this session.**
-Quickmerge's re-gate refuses any red test regardless of relation to the shipped change (by
-design — see `/codex/06-coding-standards/quality-gates.md`). First retry hit
-`test_defi_prefix_parser_handles_multi_hyphen_protocol_keys` (root-caused to a genuine
-`unified-api-contracts` bug, out of this session's declared repo scope; skip-marked with a
-tracking doc). Second retry — with that skip included — immediately hit a DIFFERENT unrelated
-break, `ValueError: Unknown sports venues in adapter registry: {'onexbet'}` in
-`tests/market_interface/unit/sports/test_sports_registry.py`, confirmed present on
-`origin/live-defi-rollout` itself (the isolated-worktree re-gate runs against a fresh origin
-checkout plus only this change's named files, so it cannot be this session's own dirty-tree
-noise). Stopped chasing a third unrelated failure this session — two independent trunk breaks
-in two consecutive retries is a signal of real host/trunk churn, not something to keep
-patching around indefinitely inside a DeFi smoke-dump task. The fix itself is complete,
-correct, and re-verified; only the ship is pending. See the new P0 todo above.
