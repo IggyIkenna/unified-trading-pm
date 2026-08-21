@@ -290,20 +290,47 @@ Full findings, root cause, and evidence for every todo below live in the three s
       route in production today (see the finding above) — low urgency, but worth closing since a
       declared, seemingly-real endpoint that always 404s is a real trap for the next person who
       wires a Layer-4 caller assuming it works.
-- [ ] [BACKEND] P1. **NEW 2026-08-18 — Build the real live perp-margin sourcing adapter for `staked_basis.py`'s LST_AS_MARGIN gate.** Surfaced while shipping the P0 switch-over above: `staked_basis.py`'s health gate is
-      correctly wired to `get_current_margin_health(client_id, perp_venue, ...)` but nothing feeds that scope —
-      `perp_venue` (Deribit/Bybit) is a CeFi/perp-margin position, not a DeFi lending position, so
-      `AavePositionAdapter`/the DeFi wallet poller don't apply. Build a per-instance perp-margin read (posted LST
-      value + used margin at `perp_venue` for THIS archetype's own wallet/account — `CefiVenueBalanceReader`
-      (`venue_balance_tracker.py`) is the closest existing shape but is scoped to PBM's shared reconciliation-loop
-      account, not a specific archetype instance's wallet) that calls
-      `record_margin_health(client_id, perp_venue, ...)` via `unified_trading_library.margin_and_liquidation`'s
-      generic `MarginModelProtocol.compute()` (MMR-mode), analogous to `emit_margin_event_for_cefi()`. Real
-      prerequisite this surfaces: `MarginModel`/`LIQUIDATION_PARAMS_REGISTRY`/`CEFI_PERP_MARGIN_MODELS` (UAC +
-      `venue_balance_tracker.py`) has no `DERIBIT` entry today, even though it's one of `staked_basis.py`'s two
-      live perp venues (Deribit, Bybit) — add it (a UAC registry change + a strategy-service consumer bump).
+- [x] [BACKEND] P1. **NEW 2026-08-18 — Build the real live perp-margin sourcing adapter for `staked_basis.py`'s
+      LST_AS_MARGIN gate.** ✅ 2026-08-21 — **DERIBIT `MarginModel` registry gap CLOSED** —
+      unified-api-contracts@af14eee25f (`MarginModel.DERIBIT` + `LIQUIDATION_PARAMS_REGISTRY[DERIBIT]`,
+      mmr_warning/critical=70/85 placeholder — Deribit support docs confirm liquidation triggers at MM-ratio=100%
+      but publish no separate early-warning band, so this mirrors the same Bybit/OKX/dYdX/Hyperliquid placeholder
+      pending real Deribit-specific banding data), unified-trading-library@6d7f801273 (`DeribitMarginModel` class +
+      `_MODEL_REGISTRY` entry, parallel test case in `test_margin_and_liquidation.py`), strategy-service@5d3bd5a3b0
+      (`CEFI_PERP_MARGIN_MODELS`/`CEFI_PERP_VENUES` now carry `"deribit"`, parallel test case in
+      `test_cefi_margin_traceability.py`). `cefi_margin_tiers.py` already had `("deribit", "BTC"/"ETH")` tier data —
+      no change needed there.
+      **CORRECTION to this todo's own premise** (found while implementing, not assumed): `staked_basis.py`'s
+      consumer-side gate was **already fully wired** before this session — `get_current_margin_health(self.identity.client_id, config.perp_venue, now_utc=now_utc)`
+      exists at `staked_basis.py:836` (fail-closed on `None`/stale, matching this file's existing style) — the
+      "nothing feeds that scope" framing was accurate for the SCOPE, not for the consumer call site, which was not
+      new. The producer side is ALSO already-existing generic infra, not something built from scratch this
+      session: `venue_balance_tracker.py::emit_live_cefi_margin_events()` iterates `CEFI_PERP_VENUES` (now
+      including deribit) via `CefiVenueBalanceReader`/`AccountQueryClient`, which already routes to a real
+      `DeribitPositionAdapter` (`position/position_interface/adapters/deribit.py`, live via
+      `routing.py`/`factory.py`/`capabilities.py` — confirmed by grep, not assumed) — the ONLY blocker was the
+      missing `MarginModel.DERIBIT`/registry entries, now fixed. `record_margin_health`'s `_key()` lowercases
+      `scope`, so the `"DERIBIT"` (uppercase, from `catalog_staked_basis.py`'s `perp_venue` literal) vs `"deribit"`
+      (lowercase, from `CEFI_PERP_VENUES`) casing difference collides to the same cache key — no casing bug.
+      **Genuinely remaining gap (separate, NOT Deribit-specific, left open)**: `position/cli/handlers/monitor_handler.py`'s
+      reconciliation loop defaults `active_venues` to `["binance"]` and calls `emit_live_cefi_margin_events` with no
+      explicit `client_id` (defaults to `"default"`) — so in production this generic CeFi margin-emission loop
+      still needs per-client config naming the real client_id + venue list (incl. `"deribit"`/`"bybit"`) before the
+      cache is actually populated for a specific `LST_AS_MARGIN` archetype instance's own account. This affects
+      every CeFi venue equally (not something this todo introduced or was scoped to fix) — tracked as a new
+      follow-up below.
       Done-when: `get_current_margin_health(client_id, perp_venue)` returns a real reading for a live
-      `LST_AS_MARGIN` slot, and DERIBIT has a registered `MarginModel`.
+      `LST_AS_MARGIN` slot, and DERIBIT has a registered `MarginModel`. **DERIBIT registration is done; the
+      end-to-end live reading still depends on the monitor-loop config gap above.**
+- [ ] [BACKEND] P2. **NEW 2026-08-21 — Configure `monitor_handler.py`'s CeFi reconciliation loop with the real
+      per-client `client_id` + full `active_venues` list (incl. `deribit`, `bybit`).** Surfaced closing the todo
+      above: `_run_reconciliation_cycle` calls `emit_live_cefi_margin_events(account_query_client=account_client,
+      venues=venues)` with no `client_id` kwarg (silently defaults to `"default"`) and `venues` defaults to
+      `["binance"]` unless `active_venues` is threaded in from service config — so even with DERIBIT now a
+      registered `MarginModel`, `record_margin_health(client_id, "deribit", ...)` never actually fires in
+      production until this is wired per-client. Not Deribit-specific (Bybit has the same gap today). Done-when:
+      the live monitor loop populates `get_current_margin_health(<real client_id>, "deribit")` for at least one
+      running `LST_AS_MARGIN` instance.
 - [x] [BACKEND] P2. ✅ SHIPPED 2026-08-21 — `strategy-service@f56af3b94e`. **Corrected premise**: no
       `unhealthy_account_` feature key exists anywhere in `features-service` (confirmed by a full-repo grep before
       building — this todo's "likely sourced from features-onchain-service" guess did not pan out), and no
