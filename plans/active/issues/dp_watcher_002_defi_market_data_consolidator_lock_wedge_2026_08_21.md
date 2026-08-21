@@ -241,3 +241,22 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
   canonical index advanced past `06:38:39Z`. Todo 1 flipped done (corrected); todo 2 updated in-place with this
   finding rather than duplicated; added todo 3 (P3, docs-only) so the `gcloud builds list`-needs-`--region`
   false-negative doesn't recur for the next worker who runs the same sanity check.
+- **2026-08-21T19:35Z (data_pipeline_failure escalation worker, slot 31, agt-401353) — session-end handoff**:
+  the bounded background monitor (18min cap, 36×30s polls) expired with `p6hrc` STILL running (`Unknown /
+  Waiting for execution to complete`) — no terminal state reached this session. **No destructive action was
+  taken**; nothing here needs a restamp yet since the merge may still complete on its own (this asset_group's
+  chunked-incremental unprovable-merge path is unproven either way, so a premature marker-restore would be a
+  guess, not a confirmed fix — out of scope per this role's `does_not: guess at an ambiguous fix`). Per
+  `p6hrc`'s `startTime=2026-08-21T18:57:05Z` and the Cloud Run Job's 7200s task timeout, its terminal state
+  (success or SIGKILL) will land by **~2026-08-21T20:57:05Z** at the latest. **Next responder** (whether a fresh
+  DP-WATCHER-002 fire, a scheduled reconciler sweep, or an operator check): first check
+  `gcloud run jobs executions describe uts-prod-manifest-consolidator-market-data-defi-p6hrc --region=
+  asia-northeast1 --project=central-element-323112` (note: always pass `--region` — see todo 3) for a terminal
+  `status.conditions[0].status`. If `True`/succeeded, verify the canonical
+  `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` blob's
+  `generation`/`last_modified` advanced past `2026-08-21T06:38:39Z` and close todo 1. If it was SIGKILLed
+  (7200s timeout), todo 1's documented cefi-mirrored marker-restore recovery applies — determine the correct
+  restamp timestamp from Cloud Logging `phase=shards_listed` lines before touching anything, per that
+  recovery's own data-loss warning. This session did not babysit the remaining ~1h22m to the timeout boundary
+  (one-shot escalation contract; the cefi doc's own precedent is "do not babysit hourly"). No code shipped this
+  session — doc-only, via `safe-doc-push.sh` (commit `f2c25abb51`, verified on origin).
