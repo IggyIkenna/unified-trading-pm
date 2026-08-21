@@ -108,3 +108,16 @@ needs the CROSS-REPO consumer sweep (4f25d5f0 missed four downstream consumers).
 agent's FOUNDING prompt with verify-then-write discipline — mid-flight messages get refused as unverifiable. Seed
 claim-ownership baselines against FULL artefacts or the escalation path deletes content (cef0bcfa8e). Condensing a
 Progress Log entry that EMBEDS todos trips todo-regression — split history, never delete todo lines.
+
+**2026-08-21 (operator directive)**: Deleted walkthrough §14 "Readiness: batch, paper, live" entirely (nav entry +
+all 9 cross-refs fixed/repointed to §16); its batch/paper/live same-code-path symmetry content relocated into §16
+Integration path. Swept every literal `unverified` outside the DeFi coverage trees to real state (KALSHI-PERP/
+POLYMARKET-PERP/PACIFICA-SOLANA → "coming soon (venue-side onboarding)"; 8 Unity child books → confirmed
+NO_ADAPTER_YET; BETOPENLY/NOVIG/ONEXBET/PROPHETX → retired per 2026-08-21 ruling, `unified-api-contracts@710db834`);
+re-homed the 3 non-DeFi "Unclassified" nodes (BINANCE-FUTURES, BYBIT, DERIBIT + FRED) per
+`unified-api-contracts@f79cd936`. Marker check 200/247 (down from 202, deletions lowering it as expected). Evidence:
+`unified-trading-pm@6c2b779de8`, confirmed ancestor of origin. Residual (not done here, flagged for the voice/
+parity lane): CeFi/Sports header ready/not-ready/unverified tallies (25/39 totals) are the 2026-08-19 measured
+snapshot and now read stale against today's per-cell wording/registry changes — needs a fresh `derive_readiness.py`
+run, not a doc-text fix; BETMGM/BETWAY nodes still show real historical rows despite being in the same 6-venue
+retirement ruling (their disposition is explicitly still operator-pending per this doc's own lane table).
