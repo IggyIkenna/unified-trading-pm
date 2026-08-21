@@ -365,7 +365,10 @@ same tick. That is the difference between an implementation that works and one t
       name collision (its own docstring cites this issue doc). Four live config-loading entry points remain,
       verified against current code:
       - `config.py:361` `load_strategy_config()` — local YAML only, hardcoded "Pure Lending" fallback at line 390.
-        `config.py:579` `load_config()` is a dead alias — zero callers found anywhere in the tree.
+        `config.py:579` `load_config()` — **corrected 2026-08-21**: NOT a dead alias. Grepped
+        `tests/` (this pass only checked production code) and found 6 files / 25+ real call sites
+        using it as fixture setup, plus a dedicated integration test validating
+        `load_strategy_config()` loads every real default template end-to-end. Do not delete.
       - `engine/core/config_loader.py:310` `ConfigLoader.load_config()` / `load_config_from_path()` — GCS,
         `configs/{strategy_id}.json`, with caching + risk-block validation.
       - `engine/core/strategy_config_loader.py:44,88` `load_strategy_config_gcs()` / `load_strategy_config_by_type()`

@@ -314,12 +314,25 @@ Full findings, root cause, and evidence for every todo below live in the three s
       per-client config. Until this lands both archetypes correctly never fire (fail-closed), which is honest but
       means neither is live-functional yet. Done-when: a live scanner populates
       `get_current_margin_health(subject=<address>, scope=<protocol>)` for at least one discovered candidate.
-- [ ] [BACKEND] P2. Unify the two divergent GCS config-loader path conventions —
-      `ConfigLoader.load_config`'s `configs/{strategy_id}.json` vs. `load_strategy_config_gcs`'s
-      `configs/strategies/{strategy_id}.json` — behind one loader, building on `get_strategy_params()`'s existing
-      resolution seam. Delete the dead local-YAML `config.py::load_strategy_config` path and its unused
-      `load_config` alias. Details:
-      [per_client_config_surface_keying_and_missing_axes_2026_08_12](/plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md).
+- [ ] [BACKEND] P2. **Corrected 2026-08-21 — the "delete dead" half of this todo is WRONG, the
+      source issue doc's claim needs its own fix.** `strategy_service/config.py::load_config`/
+      `load_strategy_config` are NOT dead: grepped `tests/` fresh and found 6 files with real,
+      substantial fixture usage (`test_order_batch_storage_expanded.py`,
+      `test_risk_monitor_edge_cases.py`, `test_order_batch_storage_load.py`,
+      `test_risk_monitor_expanded.py`, `test_utility_manager_expanded.py`,
+      `test_order_batch_storage.py` — 25+ call sites total) plus a dedicated
+      `test_default_templates_integration.py` that end-to-end validates
+      `load_strategy_config()` loading every real default template. Deleting either function
+      would break all of it. `per_client_config_surface_keying_and_missing_axes_2026_08_12.md`'s
+      own "zero callers found anywhere in the tree" claim (line 368) was wrong — did not grep
+      `tests/`, only production code. **Genuinely remaining scope**: unify `ConfigLoader.load_config`'s
+      `configs/{strategy_id}.json` vs. `load_strategy_config_gcs`'s
+      `configs/strategies/{strategy_id}.json` behind one loader building on
+      `get_strategy_params()`'s existing resolution seam — that half is still real and
+      unaddressed, `load_config`/`load_strategy_config` just are not part of the deletable set
+      alongside it. Details:
+      [per_client_config_surface_keying_and_missing_axes_2026_08_12](/plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md)
+      (needs its own line-368 correction — not done here, flag for the next pass on that doc).
 - [ ] [BACKEND] P2. Audit every hardcoded venue literal in `catalog_trading.py`/`catalog_directional.py` against
       each named venue's actual current capabilities (does OKX/Bybit/Hyperliquid/CME/IBKR/etc. genuinely support
       what each row assumes, today) — record findings as a new dated section in
