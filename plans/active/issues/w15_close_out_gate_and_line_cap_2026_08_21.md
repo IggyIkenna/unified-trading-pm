@@ -86,9 +86,20 @@ real headroom for the 11 open todos' own eventual Progress Log entries.
 
 ## Todos
 
-- [ ] [AGENT] P1. Split `w15_execution_service_venue_adaptor_security_audit_2026_08_20.md` per the "Recommended
+- [x] ✅ [AGENT] P1. Split `w15_execution_service_venue_adaptor_security_audit_2026_08_20.md` per the "Recommended
       decision" above once its open-todo count drops (fewer concurrent editors), or immediately if another slot
-      hits the same `check_line_caps.sh` rejection first. (repo: unified-trading-pm)
+      hits the same `check_line_caps.sh` rejection first. (repo: unified-trading-pm) — unified-trading-pm@ba4f18028e
+      + evidence: relocated the 17 Progress Log entries whose todo(s) were fully `[x]`-checked and had no bearing
+      on any open todo, verbatim (mechanical `sed` line-range extraction), to new sibling
+      `w15_execution_service_venue_adaptor_security_audit_2026_08_20_progress_log_archive.md` (cross-linked via
+      `related:` both ways); kept every entry still load-bearing for one of the 11 open todos (CCXT-CeFi audit,
+      staking-remaining-group audit, perp/CLOB audit, native-REST audit, the slot-24 triage-sweep note, and the
+      Orca/Raydium partial-fix entry); fixed all 12 dangling "see Progress Log entry below" pointers on checked
+      todos whose target entry moved. Main plan doc: 1000 → 395 lines (well under the 500-line soft cap, not
+      just the 1000-line hard cap); zero checkboxes lost (54 before and after); zero content deleted, only
+      relocated. Landed while contention on the file was still active (another slot's concurrent edit was
+      detected and reconciled mid-session) rather than waiting for it to quiet, since the file was still sitting
+      at the hard cap blocking every other slot's fix/evidence entries.
 - [ ] [AGENT] P2. Once the 11 items listed under "What I found" are all done or explicitly re-scoped, re-run
       the close-out gate-check (`grep -n "^- \["` against the plan, cross-check the epic's W15 section is still
       accurate) and flip both close-out checkboxes. (repo: unified-trading-pm)
