@@ -46,6 +46,9 @@ supersedes:
 superseded_by:
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true # 0-open-todos 2026-08-21 (both todos resolved same session) — full 6-step archival (8 corpus
+  # referrers to repoint) deferred to a dedicated hygiene pass, tracked as a real todo in the T3 plan's Close-out
+  # section rather than left prose. Intentional bridge, not a permanent exemption.
 ---
 
 # features-service calendar domain writes outside the honest-coverage manifest
@@ -91,12 +94,14 @@ than silently worked around, per findings-triage (outside every currently-open p
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Decide whether calendar data_types belong in the Layer-1 EXPECTED universe at all** — they're
-      structurally different from every other tracked data_type (event-driven, not per-venue-per-instrument). A
-      "yes" answer needs a shard-atom definition for the calendar domain before `record_captured` calls make sense.
-- [ ] [AGENT] P2. **If yes: wire `record_captured` (or the calendar-appropriate equivalent) into
-      `corporate_actions_handler.py`, `economic_results_handler.py`, `forexfactory_handler.py`, and the
-      `calendar_orchestrator.py` dispatch path.**
+- [x] ✅ [REVIEW] P2. **RULED 2026-08-20 (operator, T3 session): YES, calendar belongs in Layer-1.** The
+      event-driven shape doesn't disqualify it; the shard-atom is `feature_group` (the calendar sub-domain name)
+      + `feature_family="calendar"`, not per-venue-per-instrument.
+- [x] ✅ [AGENT] P2. **SHIPPED 2026-08-21, `features-service@b2851c442e`.** Re-verified against current code
+      (this doc's original "checked directly, no handler has it" claim was stale by the time of this pass):
+      `economic_results_handler.py`, `forexfactory_handler.py`, and `calendar_orchestrator.py` ALREADY had this
+      wiring (landed independently, sometime after 2026-08-18, without this doc being updated). Only
+      `corporate_actions_handler.py` was actually missing it — fixed, mirroring the siblings' exact pattern.
 - [x] ✅ [DOC] P3. **EXTRACTED 2026-08-18 (na-eligibility-audit, tradfi tranche, dispatch agt-31bfcb) →
       `tradfi_satellite_ao_dispatch_batch17_2026_08_18.md` todo 2.** Add a one-line note to `batch_handler.py` on
       why calendar has no distinct paper mode (reuses batch output directly, or is genuinely unbuilt — state which,
@@ -120,3 +125,8 @@ confirmation across 4 handler files, not a corpus-wide sweep of every features-s
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Both open todos (the Layer-1 EXPECTED-universe
   design question and its contingent `record_captured` wiring) remain genuine architectural judgment work, unchanged
   since the 08-19 pass. `assigned_vm` unchanged.
+- **2026-08-21 (T3 session)**: ruling landed + wiring shipped in the same session (race with the audit pass above —
+  harmless, both landed). Todo 1 ruled YES; todo 2 shipped `features-service@b2851c442e` — 3 of 4 handlers turned
+  out to already have this wiring (landed independently after 2026-08-18, this doc never updated to reflect it),
+  only `corporate_actions_handler.py` genuinely needed the fix. Zero open todos remain in this doc; leaving
+  `status: open` for a follow-on archival pass rather than doing the full 6-step archive ritual inline here.
