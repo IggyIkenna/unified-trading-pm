@@ -333,15 +333,18 @@ Full findings, root cause, and evidence for every todo below live in the three s
       alongside it. Details:
       [per_client_config_surface_keying_and_missing_axes_2026_08_12](/plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md)
       (needs its own line-368 correction — not done here, flag for the next pass on that doc).
-- [ ] [BACKEND] P2. Audit every hardcoded venue literal in `catalog_trading.py`/`catalog_directional.py` against
-      each named venue's actual current capabilities (does OKX/Bybit/Hyperliquid/CME/IBKR/etc. genuinely support
-      what each row assumes, today) — record findings as a new dated section in
-      [venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16](/plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md),
-      correcting any drift found. Useful regardless of the next todo's outcome.
+- [x] [BACKEND] P2. Audit every hardcoded venue literal in `catalog_trading.py`/`catalog_directional.py` against
+      each named venue's actual current capabilities — pm@0fa40df01d. Findings recorded in
+      [venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16](/plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md):
+      2 real drift findings (CME event-contract root symbols `ECES`/`ECBTC` unconfirmed against CME's live symbol
+      directory; Phoenix listed as a live spot/CLMM venue is stale — Phoenix Legacy deprecated, Phoenix Perpetuals
+      is private-beta only). Everything else checked (Deribit, Hyperliquid, dYdX, CME futures, Camelot,
+      Kalshi/Polymarket) confirmed accurate.
 - [ ] [OPERATOR] P2. Decide the venue-eligibility generalization shape — extend `venue_capabilities.py` to every
-      strategy family, or accept the hardcoded catalog literals (now verified accurate by the prior todo) as
-      deliberate. If generalizing, add a regression check so a catalog row whose venue lacks the assumed capability
-      fails loudly at build/test time rather than shipping a slot that can't actually trade.
+      strategy family, or accept the hardcoded catalog literals as deliberate. **Not fully clean**: the prior
+      todo found 2 real drift items (CME event root symbols, Phoenix) needing a fix either way, independent of
+      this decision. If generalizing, add a regression check so a catalog row whose venue lacks the assumed
+      capability fails loudly at build/test time rather than shipping a slot that can't actually trade.
 - [ ] [OPERATOR] P2. Design the mode-aware dispatch (batch / live / paper-testnet / paper-live) for the
       centralized DeFi position-risk read, once the earlier routing/switch todos land.
 - [ ] [BACKEND] P3. Update
