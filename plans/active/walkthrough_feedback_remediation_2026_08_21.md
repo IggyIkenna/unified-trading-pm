@@ -613,7 +613,7 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       (unified-api-contracts@4f25d5f0); full blocked-then-unblocked evidence in the Progress Log entry below.
       `platform-api-reference.html`'s QUOTE prose (drafted this session) ships next, same turn, via
       `safe-doc-push.sh`.
-- [x] [SCRIPT] P1. execution-service: `docs/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`
+- [x] [SCRIPT] P1. execution-service: `docs/plans/archive/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`
       names BORROW/REPAY as the last 2 DeFi action types on pure simulation — wiring them through the same
       `defi_live_dispatch` seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE just used would close the doc's last 2
       DeFi-side "Coming soon" rows in well under a day, since the dispatch pattern is now proven 5x. —
