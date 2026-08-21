@@ -103,13 +103,30 @@ drift_direction: advance-code
       docstring to `VENUE_CHAIN_MAP` and `SHARED_WALLET_GROUPS` in `venue_constants.py` stating it is a
       deliberately-curated wallet-grouping subset, NOT a chain-coverage inventory, and pointing consumers at
       `ALL_DEFI_VENUES`/`ChainKind` instead. No behavior change (dict contents untouched); QG-gated.
-- [ ] [BACKEND] P1. Delete the deprecated third prediction grouping axis: migrate `PredictionMarketCategory`
+- [x] [BACKEND] P1. Delete the deprecated third prediction grouping axis: migrate `PredictionMarketCategory`
       consumers (`_mvp_scope_rules.py`, `predictions/cross_venue_mapping.py`,
       `internal/schemas/_prediction_market_taxonomy.py`) onto `CanonicalQuestionGroup` +
       `two_axis.PredictionUnderlying`, then delete the legacy singular `canonical/domain/prediction/` package
-      and its re-exports. Manifest supersession flagged to T2 (no-migration scope here).
-      **DEFERRED — not attempted this pass**: 3-consumer migration + legacy package deletion + whole-repo grep
-      for other consumers needs its own focused pass; budget did not extend to it.
+      and its re-exports. Manifest supersession flagged to T2 (no-migration scope here). —
+      unified-api-contracts@4f25d5f0da + evidence: `_mvp_scope_rules.py`'s `market_groups` field was already a
+      bare `frozenset[str]` (only docstring/comment referenced the enum — reworded, no code change);
+      `cross_venue_mapping.py`'s `PredictionMarketCrossVenueMapping` schema (formerly imported from the deleted
+      package) is now DEFINED in this module with `category: PredictionUnderlying` (was
+      `PredictionMarketCategory`, populated via the real Axis-1 `underlying` instead of the deleted
+      `_category_for_underlying`/`category_for_group` helpers, both removed); `_prediction_market_taxonomy.py`
+      only referenced the deleted enum in its module docstring (reworded to `PredictionUnderlying`) — its own
+      `PredictionShardCategory` enum is unrelated and untouched. Deleted
+      `canonical/domain/prediction/{__init__.py,prediction_mapping.py}` (incl. the unused legacy
+      `CanonicalPredictionMarket`/`PredictionMarketMapper`/`MappingRule`/`OrphanDetector`/
+      `PREDICTION_MARKETS_CONFIG_*` config-versioning surface — no production consumer, only its own now-deleted
+      test file) + `unified_api_contracts/prediction.py` facade + every re-export in `unified_api_contracts/`,
+      `canonical/domain/`, and `predictions/__init__.py`. `rg 'PredictionMarketCategory|canonical/domain/prediction[^s]'`
+      is zero in live code (only historical-migration-note prose in docstrings/comments remains). QG-gated
+      (`quality-gates.sh --no-fix` green): also fixed 2 pre-existing, unrelated repo-wide QG blockers hit along
+      the way — `internal/architecture_v2/__init__.py` missing from the `SIZE_EXTRA_EXCLUDES` `__init__.py`-facade
+      allowlist (900-line hard gate), and 4 blank-`asset_group` false/true positives in
+      `cloud_run_job_registry.py`/`deployment_classification.py` (STEP 5.96 ratchet, baseline=0) — both predate
+      this session (confirmed via `git show HEAD`/`git status`), neither touches prediction code.
 - [ ] [BACKEND] P0. Resolve ALL 12 unresolved (venue, data_type) pairs from `venue_instrument_type_triples()`
       (enumerated live 2026-08-21; 678 triples total now, walkthrough says 660/12): AAVE-PLASMA/lending_indices,
       BINANCE-FUTURES/futures_chain, BYBIT/futures_chain, COINBASE-ETHEREUM/oracle_prices,
@@ -649,6 +666,23 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       environment. CTO handoff correction "Some reporting endpoints always return fixtures" (Integrity/P0) — no
       owning plan/issue found by grep. Disclosed in full in the doc's §05 "real vs fixture" callout already; this
       todo is the code-side fix.
+- [ ] [SCRIPT] P2. client-reporting-api: side-discovery from the P2 fixture-honesty fix above — DocuSign envelope
+      status (`GET /api/v1/documents/{document_id}/signature-status`) was checked and found ALREADY honest
+      (`docusign.py`: `MOCK_ENVELOPES` only under `CLOUD_MOCK_MODE=true`, live-mode returns an honest `404` rather
+      than the fixture), so no code change was needed there — noted here only so the CTO handoff's list isn't
+      silently dropped. `reporting/investor_relations_archive.py`'s data source
+      (`data/investor_relations_archive_metadata.json`, sibling to the route module) does not exist in this repo at
+      all — it is caught by the repo-wide `.gitignore` `data/` pattern (meant for repo-local scratch data, not this
+      route's actual source of truth) and was never committed, so the route 500s (`FileNotFoundError`) on every
+      fresh checkout / live deployment, independent of the entitlement fix landed alongside this todo. Needs either
+      a `.gitignore` negation for this specific path plus committing real content, or relocating the data out of a
+      gitignored directory.
+- [ ] [SCRIPT] P3. client-reporting-api: `exports.py`'s real-mode `GET /api/v1/exports/trades` (2026-08-21 P2
+      fixture-honesty fix) covers the two most common cases — canonical ledger fills, falling back to backfilled
+      history — the same primary/fallback sources `trades.py::get_trade_history` uses. The rarer case of a client
+      with neither ledger fills nor backfilled history but with live-collector-only state isn't covered yet (that
+      route's third fallback, `get_collector().get_client_trades(...)`, wasn't reused to keep the fix scoped). Low
+      priority: affects only clients with no ledger run and no backfill history.
 - [ ] [DOC] P2. platform-api-reference.html §04: `ControlInstruction` (action ∈ `{KILL_SWITCH, FLATTEN_POSITION}`,
       `unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:457-468`) is a real,
       already-committed 16th `StrategyInstructionV2` union member — confirmed wired at
