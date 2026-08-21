@@ -301,10 +301,21 @@ No code was changed or tests run for this read-only audit. The HIGH findings req
       points 3 and 4 (bitfinex_native.py:337-365, bitget_native.py:274-315,
       kraken_rest_adapter.py:230-344,437-472, kraken_futures_orders.py:49-123,163-177). — execution-service@a57d7fba93
       + evidence: shared validators in _native_base.py, wired pre-body-build into all 4 files; QG green.
-- [ ] [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
+- [x] ✅ [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
       retrying; do not discard invalid/missing IDs or allow a fresh retry to double-place an order; HIGH finding:
       checklist point 6 (bitfinex_native.py:337-368, bitget_native.py:274-318,
-      kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143).
+      kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143). — execution-service@df1ef85ffd + evidence:
+      new native_idempotency.py (mirrors _perp_idempotency.py's no-venue-side-lookup pattern -- Kraken's own order
+      parser doesn't capture a client-order-id field either, so there is nothing to reconcile against): Bitfinex
+      and Bitget now always require/generate a client_order_id (require_client_order_id) instead of leaving it
+      optional, and Bitfinex's numeric `cid` is derived deterministically from it (client_order_id_to_bitfinex_cid)
+      instead of silently discarded to None on a non-digit id; Kraken Spot's `_place_order_spot` and Futures'
+      `_place_order_futures` (the only two of the four that make a real HTTP round trip today) are wrapped in
+      execute_native_order_idempotent, so a retry for the same client_order_id replays the cached result and an
+      ambiguous prior attempt (an exception mid-submit) fails closed with NativeOrderInFlightError rather than
+      resubmitting. quality-gates.sh green (152s, 9051 passed, sentinel matched committed HEAD); 23 new regression
+      tests across test_native_idempotency.py/test_kraken_order_idempotency.py plus 2 added to the existing
+      Bitfinex/Bitget adapter test files; post-push ancestry verified by quickmerge.
 - [x] ✅ [BACKEND] P0. Make Kraken Spot/Futures response-envelope parsing fail closed and require a validated order
       result before constructing NEW/CANCELLED/AMENDED success results; malformed or empty payloads must be reported
       as failures, not interpreted as success; HIGH finding: checklist point 7
