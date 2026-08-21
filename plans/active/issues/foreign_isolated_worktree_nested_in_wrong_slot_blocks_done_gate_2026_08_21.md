@@ -90,14 +90,34 @@ orphaned and the check short-circuited; the pattern is otherwise a real, recurri
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Confirm whether `oms-wt.oc3YkB` is genuinely a quickmerge `--isolated` worktree** — grep
-      `deployment-service`/`agent-orchestrator`/PM `scripts/quickmerge.sh`'s isolated-worktree creation path (search
-      for `--isolated`, `mktemp`, worktree-add invocations) to see how the worktree's parent directory is chosen, and
-      whether it can resolve to a DIFFERENT slot's `.tabs/<N>/` than the invoking session's own. If confirmed, this is
-      a path-resolution bug in the isolated-worktree feature, not a done-gate bug.
-- [ ] [SCRIPT] P2. **If confirmed as a path-resolution bug**: fix the isolated-worktree creation to always nest under
-      the INVOKING session's own slot directory (or a slot-independent shared location the done-gate dirty-check
-      explicitly excludes), so it can never land inside a different slot's `.tabs/<N>/` tree.
+- [x] [SCRIPT] P2. **Confirm whether `oms-wt.oc3YkB` is genuinely a quickmerge `--isolated` worktree** — **PARTIALLY
+      ANSWERED, 2026-08-21 (slot-16): NO, evidence says it is NOT `scripts/quickmerge.sh --isolated`.** Read
+      `scripts/quickmerge.sh`'s isolated-worktree path (lines ~879-920): it names the parent
+      `${TMPDIR:-/tmp}/qm-iso-$$` (a **`/tmp`-rooted** path, never inside the real `.tabs/<N>/` checkout tree), then
+      nests `<parent>/.tabs/<CALLER'S OWN slot-N>/<repo_name>` under it, where `<repo_name>` is the basename of the
+      caller's own repo toplevel — so the isolated worktree can only ever land under the INVOKING session's own slot
+      segment (by construction, via `slot_identity_resolve` on the caller's own cwd), and always inside `/tmp`, never
+      literally inside another checkout's `.tabs/16/` directory. `oms-wt.oc3YkB` sits directly at
+      `.tabs/16/oms-wt.oc3YkB` (flat `<tag>-wt.<6-char-suffix>` naming, no `/tmp` prefix, no `qm-iso-$$` segment) —
+      structurally a different mechanism. Grepped `oms-wt`/`oms_wt`/`OMS_WT` and `mktemp.*wt\.` across every repo's
+      `scripts/`, top-level `*.sh`/`*.py`, and `unified-trading-ci`'s `.github/workflows/` under `.tabs/16/` (23
+      repos): **zero hits** — the actual creator is not in any committed script this session could find. No
+      self-hosted `actions-runner` found on this host either, so the `github-actions[bot]`-authored HEAD (see
+      Progress Log) most likely reflects a routine LDR pull/rebase picking up an upstream bot commit, not a runner
+      executing locally. **Net effect**: this REFUTES the "quickmerge `--isolated` path-resolution bug" hypothesis as
+      originally framed (todos 2 below no longer apply to quickmerge.sh specifically) — the true creator remains
+      unidentified, likely a peer's personal/laptop-local tool never committed to any checked-out repo (consistent
+      with `--isolated`-adjacent tooling being described as "laptop-only" in CLAUDE.md, but this is evidently a
+      DIFFERENT, unlocated tool, not quickmerge.sh itself). Not investigated further this session — deeper forensics
+      (e.g. asking the peer directly, or inspecting shell history/rc files) is out of scope for an unattended AO
+      worker and risks an unbounded search.
+- [ ] [SCRIPT] P2. **NARROWED 2026-08-21**: since `scripts/quickmerge.sh --isolated` is now evidenced NOT to be the
+      creator (see todo 1 above), this todo is no longer "fix quickmerge.sh's path resolution" — it is instead
+      **locate the actual tool that creates `<tag>-wt.<random>`-style directories flat inside `.tabs/<N>/`** (grepped
+      clean across every repo's `scripts/`+top-level `*.sh`/`*.py`+`unified-trading-ci`'s workflows — try the peer
+      directly, or a broader host-wide search e.g. `find / -newer <ref> -iname '*-wt.??????'` type approaches an
+      AO worker shouldn't run unbounded) before any fix can be scoped. Once located: same original intent — make it
+      nest under the INVOKING session's own slot directory or a done-gate-excluded shared location.
 - [ ] [SCRIPT] P2. **Alternatively/additionally**: harden `/api/slots/<N>/done`'s dirty-check to recognize and skip a
       nested `oms-wt.*`/other-slot-owned worktree (distinguishable via its own commit author identity not matching
       slot N's own configured identity) rather than treating it as slot N's own WIP — this closes the symptom even if
