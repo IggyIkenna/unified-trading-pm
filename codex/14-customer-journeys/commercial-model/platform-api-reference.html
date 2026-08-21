@@ -1185,6 +1185,59 @@
         </p>
       </div>
       <div class="callout">
+        <span class="tag">Rate limiting — a per-tier token bucket, keyed off subscription_tier, built on both routers</span>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> Every endpoint on instruments-service's and market-tick-data-service's
+          external routers now calls <code>enforce_rate_limit(auth)</code> before its own entitlement check. Mechanics
+          mirror strategy-service's signal-leasing <code>RateLimiter</code> (<a href="#s26">§26</a>) — a lazy,
+          wall-clock-refilled token bucket, one token consumed per allowed call, never raising — but each service ships
+          its OWN local implementation (no service→service import). The bucket is keyed per <code>org_id</code>, sized
+          by the caller's CURRENT <code>subscription_tier</code> resolved fresh on every call (a tier change takes
+          effect on the next request, no restart). Internal/S2S callers (<code>auth.is_internal</code>) bypass
+          entirely — same precedent as the entitlement seams above. An exhausted bucket responds
+          <code>429</code> with a <code>Retry-After</code> header (whole seconds, a conservative estimate of when the
+          next token is available) rather than a bare rejection.
+        </p>
+        <div class="scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Tier</th>
+                <th>Requests / second</th>
+                <th>Burst capacity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>enterprise</code></td>
+                <td>50</td>
+                <td>100</td>
+              </tr>
+              <tr>
+                <td><code>data-pro</code></td>
+                <td>20</td>
+                <td>40</td>
+              </tr>
+              <tr>
+                <td><code>data-basic</code></td>
+                <td>5</td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td><code>free</code> (also the fallback for an unset/unrecognised tier)</td>
+                <td>1</td>
+                <td>5</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">
+          Identical defaults on both services today — a single config table, editable independently per service.
+          <b>Source:</b> <code>instruments-service/instruments_service/api/rate_limit.py</code>,
+          <code>market-tick-data-service/market_tick_data_service/api/rate_limit.py</code>.
+        </p>
+      </div>
+      <div class="callout">
         <span class="tag">execution-service binds the caller's org to the instruction's client_id</span>
         <p>
           <b class="ev ev-verified">✓ verified</b> <code>POST /external/instructions</code> rejects, HTTP
@@ -1277,7 +1330,17 @@
                 <td>query</td>
                 <td>integer</td>
                 <td class="opt">optional</td>
-                <td>Row cap, default <code>2000</code>, min <code>1</code>, max <code>20000</code></td>
+                <td>Row cap per page, default <code>2000</code>, min <code>1</code>, max <code>20000</code> — unchanged
+                  by pagination below; use <code>/bulk</code> for the complete corpus rather than paging</td>
+              </tr>
+              <tr>
+                <td><code>cursor</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>Opaque continuation token from a prior page's <code>next_cursor</code> — resumes the walk beyond
+                  <code>limit</code> rows on the same <code>asset_group</code>/<code>venue</code>/<code>instrument_type</code>
+                  and the day it was minted for</td>
               </tr>
             </tbody>
           </table>
@@ -1295,6 +1358,25 @@
           "instrument_id": "BINANCE-SPOT:SPOT_PAIR:ETHUSDT", "venue": "BINANCE-SPOT", "instrument_type": "SPOT_PAIR" } ]
           }
         </div>
+        <div class="code-label">Example response — 200, truncated at limit (pagination)</div>
+        <div class="code">
+          { "asset_group": "cefi", "day": "2026-08-18", "venue": "BINANCE-SPOT", "instrument_type": "SPOT_PAIR",
+          "venues_scanned": 1, "row_count": 5, "truncated": true, "instruments": [ "&lt;5 rows&gt;" ], "next_cursor":
+          "eyJhc3NldF9ncm91cCI6ImNlZmkiLi4ufQ" }
+        </div>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">
+          <b class="ev ev-verified">✓ verified</b> <code>next_cursor</code> is present only when <code>truncated</code>
+          is <code>true</code> — an opaque base64 token (asset_group/venue/instrument_type/day/offset, JSON-encoded);
+          pass it back verbatim as <code>cursor</code> to fetch the next page. Row order is stable for a given (day,
+          asset_group, venue, instrument_type) — the underlying shards are already-written, immutable parquet files —
+          so a fixed-day walk never skips or duplicates a row across pages. A <code>cursor</code> minted for different
+          query params, or paired with an explicit <code>day</code> that conflicts with the cursor's pinned day, 400s
+          rather than silently resolving the wrong page.
+          <b>Source:</b>
+          <code>instruments-service/instruments_service/api/routers/external.py</code> (<code>_encode_cursor</code> /
+          <code>_decode_cursor</code>), <code>instruments-service/instruments_service/engine/orchestrator/catalogue_query.py</code>
+          (offset walk, <code>limit + 1</code> peek for an honest <code>truncated</code>).
+        </p>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           <b class="ev ev-check">? check</b>
           <b class="own" title="Reference-data completeness for the canonical instrument/venue registry.">owner: instruments_master</b>
@@ -1320,15 +1402,22 @@
             <tbody>
               <tr>
                 <td><code>400</code></td>
-                <td>Unknown <code>asset_group</code>, or bucket resolution failed</td>
+                <td>Unknown <code>asset_group</code>, bucket resolution failed, or an invalid/mismatched
+                  <code>cursor</code></td>
                 <td class="mono">
-                  "Unknown asset_group 'xyz' — expected one of ['cefi', 'defi', 'prediction', 'sports', 'tradfi']"
+                  "Unknown asset_group 'xyz' — expected one of ['cefi', 'defi', 'prediction', 'sports', 'tradfi']" or
+                  "invalid cursor" or "cursor does not match the requested asset_group/venue/instrument_type"
                 </td>
               </tr>
               <tr>
                 <td><code>401</code> / <code>403</code></td>
                 <td>Auth — see <a href="#s1">§01</a></td>
                 <td>—</td>
+              </tr>
+              <tr>
+                <td><code>429</code></td>
+                <td>Per-tier rate limit exhausted — see <a href="#s1">§01</a></td>
+                <td class="mono">"Rate limit exceeded for subscription_tier='…'" + <code>Retry-After</code> header</td>
               </tr>
               <tr>
                 <td><code>500</code></td>
@@ -1420,6 +1509,11 @@
                 <td><code>401</code> / <code>403</code></td>
                 <td>Auth — see <a href="#s1">§01</a></td>
                 <td>—</td>
+              </tr>
+              <tr>
+                <td><code>429</code></td>
+                <td>Per-tier rate limit exhausted — see <a href="#s1">§01</a></td>
+                <td class="mono">"Rate limit exceeded for subscription_tier='…'" + <code>Retry-After</code> header</td>
               </tr>
               <tr>
                 <td><code>404</code></td>
@@ -1585,6 +1679,11 @@
                 <td>—</td>
               </tr>
               <tr>
+                <td><code>429</code></td>
+                <td>Per-tier rate limit exhausted — see <a href="#s1">§01</a></td>
+                <td class="mono">"Rate limit exceeded for subscription_tier='…'" + <code>Retry-After</code> header</td>
+              </tr>
+              <tr>
                 <td><code>422</code></td>
                 <td>Unknown <code>asset_group</code></td>
                 <td class="mono">"asset_group must be one of [...], got '…'"</td>
@@ -1671,6 +1770,16 @@
                   Exact object path from a prior listing call — set to stream that object's bytes instead of listing
                 </td>
               </tr>
+              <tr>
+                <td><code>cursor</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>
+                  Opaque continuation token from a prior page's <code>next_cursor</code> — resumes a listing truncated
+                  past the object-count cap. Ignored when <code>file</code> is set.
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1686,6 +1795,25 @@
           "&lt;resolved tick-data bucket&gt;", "objects": [ { "file": "&lt;opaque internal object path — round-trip
           verbatim, do not parse&gt;", "size": 4831201 } ], "truncated": false }
         </div>
+        <div class="code-label">Response — 200, truncated (more objects than fit one page)</div>
+        <div class="code">
+          { "asset_group": "cefi", "venue": "BINANCE-FUTURES", "data_type": "trades", "date": "2026-08-17", "bucket":
+          "&lt;resolved tick-data bucket&gt;", "objects": [ "&lt;up to 200 entries&gt;" ], "truncated": true,
+          "next_cursor": "cmF3X3RpY2tfZGF0YS9ieV9kYXRlLi4u" }
+        </div>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">
+          <b class="ev ev-verified">✓ verified</b> <code>next_cursor</code> is present only when <code>truncated</code>
+          is <code>true</code> — base64 of the last-returned object's name (padding stripped). Pass it back as
+          <code>cursor</code> to resume a lexicographically-ordered walk from that boundary (GCS
+          <code>start_offset</code> semantics under the hood — inclusive; the boundary object itself is skipped on
+          the next page since it was already returned). <code>truncated</code> now also fires when the raw-scan bound
+          is hit before the 200-object match cap, not only the match cap itself — a listing that previously reported
+          <code>truncated: false</code> after scanning 4,000 non-matching objects without reaching 200 matches now
+          correctly reports <code>true</code>. A <code>cursor</code> that fails to decode, or does not itself look
+          like an object name for the requested asset_group/venue/data_type/date shard, 400s.
+          <b>Source:</b> <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>
+          (<code>_encode_cursor</code> / <code>_decode_cursor</code> / <code>_list_matching_objects</code>).
+        </p>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           <code>file</code> is an internal object path and not part of the documented contract — its structure may
           change without notice. Treat it as an opaque token: pass it back exactly as received in step 2, never parse or
@@ -1720,14 +1848,22 @@
                 <td>—</td>
               </tr>
               <tr>
+                <td><code>429</code></td>
+                <td>Per-tier rate limit exhausted — see <a href="#s1">§01</a></td>
+                <td class="mono">"Rate limit exceeded for subscription_tier='…'" + <code>Retry-After</code> header</td>
+              </tr>
+              <tr>
                 <td><code>422</code></td>
                 <td>Unknown <code>asset_group</code></td>
                 <td class="mono">Same shape as availability above</td>
               </tr>
               <tr>
                 <td><code>400</code></td>
-                <td><code>file</code> does not belong to the requested shard</td>
-                <td class="mono">"file does not belong to the requested asset_group/venue/data_type/date shard"</td>
+                <td><code>file</code> does not belong to the requested shard, or an invalid/mismatched <code>cursor</code></td>
+                <td class="mono">
+                  "file does not belong to the requested asset_group/venue/data_type/date shard" or "invalid cursor" or
+                  "cursor does not match the requested asset_group/venue/data_type/date shard"
+                </td>
               </tr>
               <tr>
                 <td><code>404</code></td>
@@ -1842,6 +1978,11 @@
                 <td>—</td>
               </tr>
               <tr>
+                <td><code>429</code></td>
+                <td>Per-tier rate limit exhausted — see <a href="#s1">§01</a></td>
+                <td class="mono">"Rate limit exceeded for subscription_tier='…'" + <code>Retry-After</code> header</td>
+              </tr>
+              <tr>
                 <td><code>422</code></td>
                 <td>
                   Unknown <code>asset_group</code>, bad <code>after</code> timestamp, or bad <code>topology</code>
@@ -1925,16 +2066,15 @@
       <h2>Instructions API — execution-service</h2>
     </div>
     <p class="lede">
-      One instruction envelope, any asset class — fifteen of its sixteen <code>StrategyInstructionV2</code> action
-      types execute for real through this endpoint today; the sixteenth (<code>ControlInstruction</code>) already
-      has a built handler that is not yet dispatched from this endpoint — see the table and the callout below.
+      One instruction envelope, any asset class — all sixteen of its <code>StrategyInstructionV2</code> action
+      types execute for real through this endpoint today.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
     </p>
 
     <div class="callout">
       <span class="tag">Read this before anything else on this page</span>
       <p>
-        <b>Fifteen of sixteen <code>StrategyInstructionV2</code> action types execute for real through this
+        <b>All sixteen of sixteen <code>StrategyInstructionV2</code> action types execute for real through this
         endpoint (2026-08-21).</b> The request body type is a 16-member discriminated union
         (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
@@ -1960,14 +2100,16 @@
       </p>
       <p>
         The sixteenth member, <code>ControlInstruction</code> (action ∈
-        <code>{KILL_SWITCH, FLATTEN_POSITION}</code>), is not yet dispatched from this endpoint. Its handler is
-        already built — <code>KILL_SWITCH</code> activates the durable kill switch directly,
-        <code>FLATTEN_POSITION</code> delegates to the existing authorized
-        <code>AccountInstructionOrchestrator.CLOSE_ALL</code> path — but
-        <code>submit_external_instruction</code>'s dispatch chain does not yet route to it, so a
-        <code>ControlInstruction</code> body submitted here returns <code>501</code> today. <b>Source:</b>
-        <code>execution_service/api/external_instruction_api.py</code>, <code>_submit_control_instruction()</code>
-        (built, not yet called from the route).
+        <code>{KILL_SWITCH, FLATTEN_POSITION}</code>), now dispatches too (2026-08-21).
+        <code>KILL_SWITCH</code> activates the durable kill switch directly — protective arming only; there is no
+        resume/unkill path reachable from this or any external endpoint, that stays an internal, human-gated
+        operation. <code>FLATTEN_POSITION</code> delegates to the existing authorized
+        <code>AccountInstructionOrchestrator.CLOSE_ALL</code> path, the same role-authorization gate every
+        internal account instruction goes through, not a bypass. Both actions require a non-empty
+        <code>authorization_id</code>, rejected otherwise. <b>Source:</b>
+        <code>execution_service/api/external_instruction_api.py</code>, <code>_submit_control_instruction()</code>,
+        wired into <code>submit_external_instruction</code>'s dispatch chain —
+        <code>execution-service@b49a3f1a96</code>.
       </p>
       <p>
         <b class="ev ev-verified">✓ verified</b> A live tick-ingestion loop is wired:
@@ -2102,8 +2244,8 @@
             <td><code>KILL_SWITCH</code> / <code>FLATTEN_POSITION</code></td>
             <td><code>ControlInstruction</code></td>
             <td>
-              Handler built (<code>_submit_control_instruction()</code>) but not yet dispatched from this endpoint
-              — returns <code>501</code> today; see the callout above
+              Activates the durable kill switch (protective arming only) or delegates to the existing authorized
+              <code>AccountInstructionOrchestrator.CLOSE_ALL</code> path — see the callout above
             </td>
           </tr>
         </tbody>
@@ -2112,8 +2254,8 @@
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
       <b class="ev ev-verified">✓ verified</b> schemas.py (all 16 variants + the union); execution-service
       <code>execution_service/api/external_instruction_api.py</code> +
-      <code>execution_service/api/external_instruction_defi.py</code> (15 of 16 action types routed to real
-      execution through this endpoint; <code>ControlInstruction</code> is the one exception — see the callout above)
+      <code>execution_service/api/external_instruction_defi.py</code> (all 16 of 16 action types routed to real
+      execution through this endpoint)
     </p>
 
     <details class="ep">
@@ -3766,9 +3908,9 @@
           <tr>
             <td><code>501</code></td>
             <td>
-              Recognised but not yet dispatched for external submission — <code>ControlInstruction</code>
-              (<code>KILL_SWITCH</code> / <code>FLATTEN_POSITION</code>), the one <code>StrategyInstructionV2</code>
-              member this endpoint does not yet route to its already-built handler (see §04)
+              Not currently reachable — every <code>StrategyInstructionV2</code> member dispatches for real as of
+              2026-08-21; kept as a defensive fallback for any future unmapped action, never a silently-dropped
+              instruction (see §04)
             </td>
             <td>Instructions POST</td>
           </tr>
