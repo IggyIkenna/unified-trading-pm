@@ -396,3 +396,7 @@ restated here.
   per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, and the real next step lives in the already-
   AO-dispatched doc above, not a re-run of this doc's own literal dispatch shape. `assigned_vm` unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open todo (the 3-bucket legacy-twin DELETE)
+  remains a real prod-bucket delete gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`; the real
+  next step (a fresh twin-coverage walk) lives in `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`
+  (`assigned_vm: planning`), not a re-run of this doc's own stale dispatch-shape text. `assigned_vm` unchanged.

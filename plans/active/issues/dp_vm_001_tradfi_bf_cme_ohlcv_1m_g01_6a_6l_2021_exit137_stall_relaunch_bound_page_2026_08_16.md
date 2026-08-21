@@ -35,7 +35,7 @@ related:
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
-    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
+    /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
@@ -167,3 +167,6 @@ same-shard VM noted above.
   operator via `/blocked` per the escalation's explicit instruction. No code changed this session.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open todo (`[OPERATOR]` relaunch-vs-wait for
+  the already-running `g01-6a-6l-2021-20260816-220230` replacement VM) remains genuinely operator-gated. `assigned_vm`
+  unchanged.

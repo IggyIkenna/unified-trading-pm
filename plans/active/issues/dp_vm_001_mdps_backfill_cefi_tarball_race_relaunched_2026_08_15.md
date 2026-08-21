@@ -265,3 +265,14 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
 - **na-eligibility-audit 2026-08-16** [body-hash:5e1df6c0e9a5d4cc]: KEEP-NA, valid — Doc read end-to-end (frontmatter, root-cause narrative, todos, 4 Progress Log entries 2026-08-15→2026-08-16).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-20 (interactive T2 session, observation only — not a new diagnosis)**: hit transient "stale tarball"
+  errors 3 separate times this session across `unified-api-contracts`, `market-tick-data-service`, and
+  `deployment-service` itself (during CeFi itype-casing relaunch + AAVEV3 purge launcher work), each self-resolving
+  on a clean retry — consistent with either (a) the captured-SHA fix above (`@fb55e8ac35`) working as designed
+  (detect stale → auto-republish → succeed) with no bug involved, or (b) a residual race this session did not
+  rigorously isolate. **Self-correction**: this session's own real-time notes at the time described the mechanism as
+  "compares against a stale CACHED pre-build variable instead of re-reading HEAD fresh" — that gets the fix
+  backwards; the actual shipped fix is the opposite (compare against the CAPTURED pre-republish SHA, never a
+  freshly-re-read HEAD, per the root-cause narrative above). Not confident enough in this session's own logs to
+  substantiate a residual-bug claim, so not filing one — flagging only as a data point for whoever next hits this,
+  should the retry-then-succeed pattern ever fail to self-resolve.

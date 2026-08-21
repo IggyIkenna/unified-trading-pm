@@ -811,3 +811,6 @@ complete, self-sustaining (odds VM keeps running/relaunching on its own pattern)
   sit in this same checkout from another active session — left untouched per the liveness-gating rule; only
   `ahead=0` + a clean-of-MY-changes tree was verified, not a fully clean `git status`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reconfirmed, sole open item (WEATHER entity-type scanner
+  undercount, `[SCRIPT] P2`) unchanged since the 2026-08-18 marker: GENUINE_WORK, a VM-launch action with no stated
+  safe-idempotency citation, live/frequently-multi-touched ops-journal character unchanged.

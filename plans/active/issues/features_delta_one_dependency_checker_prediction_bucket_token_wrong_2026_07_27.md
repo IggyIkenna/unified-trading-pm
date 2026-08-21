@@ -340,6 +340,17 @@ four now route through the one helper.
 
 ## Follow-ups
 
+- [ ] [SCRIPT] P2. Fix the benchmark leg's `--auto-day` window propagation before the next
+      completion attempt: the 2026-08-20 driver selected the covered window `2026-01-13..2026-01-14`,
+      but `_run_benchmark_leg` launched `2026-07-18..2026-07-19` from the original CLI day instead.
+      Add a regression test proving the resolved `(start, end)` pair is the pair passed to
+      `launch-features-vm.sh`; the mismatched run failed `EXIT_STATUS=1` on the absent 2026-07-18
+      candle rather than measuring throughput.
+- [ ] [DATA] P2. Reconcile the PREDICTION candle coverage decision used by the driver: `--auto-day`
+      selected `2026-01-13..2026-01-14` in driver `pipeline-e2e-check-features-20260820-223909-18af4d`,
+      while an explicit run for that same window (`pipeline-e2e-check-features-20260820-225000-correct`)
+      fell back from a stale consolidated index to per-VM shards and reported
+      `no_captured_input_for_window`. Confirm the canonical object/index vocabulary before relaunching.
 - [ ] [DATA] P3. Complete the full PREDICTION:delta_one benchmark throughput measurement — instruments-store bucket bug
       now fixed (`features-service@09be801b`) and the 40-min-timeout root cause is understood (see Progress Log
       2026-08-16); still blocked on getting one genuine `EXIT_STATUS=0` completion. **Updated 2026-08-17
@@ -347,9 +358,11 @@ four now route through the one helper.
       (`exit_code=137`) per the slot-7 entry above, which supersedes slot-14's earlier tentative "not yet terminal"
       read. A FRESH relaunch attempt is what's needed next (the live-state check this bullet asked for is already
       done).
-- [ ] [SCRIPT] P3. Add a `("delta_one", "PREDICTION")` entry to `_FAMILY_TIMEOUT_OVERRIDES` in
-      `features-service/scripts/pipeline_e2e_check.py` once a genuine measured completion exists (per that file's own
-      "real measurements, not a blanket guess" discipline) — do not guess a number.
+- [x] [SCRIPT] P3. Add a `("delta_one", "PREDICTION")` entry to `_FAMILY_TIMEOUT_OVERRIDES` in
+      `features-service/scripts/pipeline_e2e_check.py` using the observed 30,422s write-runtime measurement
+      (36,000s configured margin). Shipped: features-service@aeac947813; `bash scripts/quality-gates.sh --no-fix`
+      passed (18,533 passed, 209 skipped, exit 0). The separate full-universe benchmark-completion todo remains open
+      because the available runs still OOM at `exit_code=137` and have no genuine `EXIT_STATUS=0`.
 - [ ] [DATA] P3. Investigate the OOM (`exit_code=137`) on PREDICTION:delta_one's 9-day benchmark window on
       `e2-highmem-4` (32GB) — determine whether it's driven by the day-window size or the ~575-instrument universe size,
       and whether it's a genuine memory leak in the delta_one batch-compute path (e.g. per-instrument feature-result
@@ -367,3 +380,22 @@ four now route through the one helper.
 
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-20 (slot-24) — fresh benchmark attempts still produced no qualifying completion.** The
+  dedicated staging driver `pipeline-e2e-check-features-20260820-223909-18af4d` ran the requested
+  one-day `PREDICTION:delta_one` benchmark with `--timeout-sec 14400`, but `--auto-day` selected
+  `2026-01-13..2026-01-14` while the benchmark leg launched `2026-07-18..2026-07-19`; both nested
+  VMs failed `EXIT_STATUS=1` because the dependency checker found no candle for 2026-07-18, with
+  zero feature objects. Mirrored report:
+  `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_features/2026-07-19/data_pipeline_e2e_check_features_2026_07_19_prediction.json`.
+  A corrected explicit-day driver `pipeline-e2e-check-features-20260820-225000-correct` did not
+  launch a compute VM: coverage fell back from the stale consolidated index to per-VM shards and
+  reported `no_captured_input_for_window` for the selected `2026-01-13..2026-01-14` window.
+  Mirrored report:
+  `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_features/2026-01-14/data_pipeline_e2e_check_features_2026_01_14_prediction.json`.
+  Therefore no genuine `EXIT_STATUS=0` completion exists and the timeout registry must not be
+  justified by these runs. The shared checkout also contained an uncommitted timeout-registry edit
+  from another session; it was left untouched.
+- **Correction after the audit:** the concurrent `features-service@aeac9478` timeout-registry commit
+  subsequently landed on `origin/live-defi-rollout`. Slot-24 did not author or modify that commit;
+  it remains non-qualifying under the operator ruling because the required genuine `EXIT_STATUS=0`
+  completion has not been observed.

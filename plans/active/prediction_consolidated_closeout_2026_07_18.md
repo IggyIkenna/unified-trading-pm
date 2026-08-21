@@ -803,3 +803,7 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   decision-338, which answered a different question). Still the live index for its 4 Phase A-E children (all still
   open). Doc stays NA, not archive-eligible.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, valid — 0 native open checkboxes re-confirmed
+  live (`grep -cE '^- \[ \]'` = 0; coordination hub by design, `archive_exempt: true`, `gate_on_depends: false`).
+  Consistent with 10+ prior audit passes. Still the live index for its 4 Phase A-E children (all still open under
+  their own docs). Doc stays NA, not archive-eligible.

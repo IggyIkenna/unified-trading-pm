@@ -105,3 +105,6 @@ completion" in any live sense.
   (`macro_micro_econ_data_capture_audit_2026_06_05.md:515`) — a citation improvement, not new work. `assigned_vm`
   unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Both todos remain open-ended root-cause
+  investigations (Finding 1's forward-capture accrual, Finding 2's backfill-completeness contradiction), unchanged
+  since the 08-18 pass. `assigned_vm` unchanged.

@@ -167,3 +167,8 @@ context_scope:
   per the 2026-08-17 na-eligibility-audit finding directly above.
 - **na-eligibility-audit 2026-08-18** [body-hash:201325ea5c74f377]: KEEP-NA, valid -- depends_on+gate_on_depends:true on prediction_phase_ab_residuals_2026_07_24 re-confirmed live still open (status:active, 4 open todos). Doc stays NA on the citation alone, per the never-re-litigate rule.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, valid — `depends_on:
+  [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` re-confirmed live still open (that doc
+  independently re-verified this same run: 4 open todos, P0 migration item still unchecked). Both open items here
+  (RE-ADD dimensions-enumeration UI view, honest-coverage green verification) reduce to that same unfinished gate.
+  Doc stays NA.

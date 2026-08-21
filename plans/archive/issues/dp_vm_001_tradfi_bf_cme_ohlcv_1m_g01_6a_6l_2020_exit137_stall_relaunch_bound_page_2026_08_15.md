@@ -19,7 +19,7 @@ summary: >-
   fleet — consistent with a terminated/self-deleted VM. This worker did NOT relaunch and did NOT pull `run.log` content
   to diagnose the in-container stall root cause this session — it files this doc and pages the operator per the
   escalation's explicit instruction.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
@@ -124,17 +124,24 @@ this could be a systemic issue in the launcher/capture path rather than two unre
 > the family's normal backfill-completion sweep will pick it up, not urgent to track separately here (same
 > disposition as the sibling `btc-2020`/`es-2020` docs already record).
 
-- [ ] [OPERATOR] P1. Decide relaunch-vs-wait for `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260815-200147`'s shard
-      (tradfi/CME/g01-6a-6l/2020 1m OHLCV) per the recommended decision above; the `tradfi-bf-cme-ohlcv-1m-` family
-      relaunch bound is already exhausted for today (2/2, per this escalation's own context). **SUPERSEDED — see
-      correction above: billing-caused, no separate decision needed.**
-- [ ] [BACKEND] P2. Pull + read `run.log` for both `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216` and
+- [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-21 (na-eligibility-audit, tradfi tranche) — moot, per the 2026-08-18 correction
+      above.** Decide relaunch-vs-wait for `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260815-200147`'s shard
+      (tradfi/CME/g01-6a-6l/2020 1m OHLCV); the `tradfi-bf-cme-ohlcv-1m-` family relaunch bound is already exhausted for
+      today (2/2, per this escalation's own context). SUPERSEDED — see correction above: the root cause is the
+      already-tracked Databento CME billing block
+      (`dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`,
+      `tradfi_databento_account_billing_suspended_2026_08_09.md`), not an independent per-shard relaunch decision; once
+      billing clears, the family's normal backfill-completion sweep picks this shard up, no separate operator action
+      needed here.
+- [x] ✅ [BACKEND] P2. **CLOSED 2026-08-21 (na-eligibility-audit, tradfi tranche) — moot, per the 2026-08-18 correction
+      above.** Pull + read `run.log` for both `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216` and
       `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260815-200147` via
       `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess),
-      compare failure signatures, and fix at the root if it's a shared code defect (bound the offending call with
-      `asyncio.wait_for` at the per-shard level per the shard-isolation SSOT). Cross-reference the sibling doc's
-      identical todo rather than duplicating the investigation. **SUPERSEDED — see correction above: billing-caused,
-      not a code defect.**
+      compare failure signatures, and fix at the root if it's a shared code defect. SUPERSEDED — see correction above:
+      the `g01-6a-6l-2020` shard's failure signature is confirmed billing-caused (402 `account_delinquent_invoice`),
+      not a shared code defect needing an `asyncio.wait_for` bound; the sibling `es-2020` shard's own run.log pull was
+      separately consolidated into `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 2 (confirmed genuine
+      `WORKER_STALLED`, unrelated cause) — no further diagnostic action needed on either shard from this doc.
 
 ## Progress Log
 
@@ -155,3 +162,8 @@ this could be a systemic issue in the launcher/capture path rather than two unre
   correctly left unflipped pending the family's normal relaunch sweep once billing clears (not a fresh RECLASSIFY
   candidate; nothing dispatchable right now). `assigned_vm` unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21** (tradfi tranche): **ARCHIVE.** Both todos closed above (moot, per the
+  2026-08-18 plan_reconciler correction — this shard's failure is the already-tracked Databento CME billing block,
+  fully covered elsewhere; the sibling `es-2020` run.log pull already landed via batch15). 0 open todos, unlocked
+  (`locked_by:` empty). Matches `ag_closeout_audit_tradfi_parked_2026_08_19.md`'s independent `archivable_now`
+  classification. `status: resolved`; archived to `plans/archive/issues/` this pass, referrers swept.
