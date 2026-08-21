@@ -751,17 +751,23 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       (5427 passed, cov 88.25%) — `instruments-service@0abd96f3bb`. `platform-api-reference.html`'s "What auth
       does not do on these two routers" callout rewritten for the instruments half —
       `unified-trading-pm@e2bae4c5f2`.
-- [ ] [DOC] P2. platform-api-reference.html §04: `ControlInstruction` (action ∈ `{KILL_SWITCH, FLATTEN_POSITION}`,
+- [x] ✅ [DOC] P2. platform-api-reference.html §04: `ControlInstruction` (action ∈ `{KILL_SWITCH, FLATTEN_POSITION}`,
       `unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:457-468`) is a real,
       already-committed 16th `StrategyInstructionV2` union member — confirmed wired at
       `origin/live-defi-rollout` execution-service HEAD (`8d4356bf2c`,
       `external_instruction_api.py::_submit_control_instruction`: `KILL_SWITCH` activates the durable kill switch
       directly, `FLATTEN_POSITION` delegates to `AccountInstructionOrchestrator.CLOSE_ALL`, both gated on a
       required `authorization_id`) — but it is entirely absent from this page's instruction-type-support table and
-      every "N of 15" count. Not added this pass: the table's own instruction-count numbers are under active
-      concurrent edit by the execution-service T4 lane (uncommitted/mid-merge-conflict at inspection time,
-      2026-08-21) and adding a 16th row now would collide with that in-flight recount — do after the T4 lane's
-      current work lands, verified fresh against that point in time, not guessed from this session's snapshot. built the ledger-matching
+      every "N of 15" count. **2026-08-21 (this session)**: added the `KILL_SWITCH` / `FLATTEN_POSITION` row to the
+      instruction-type-support table and corrected the surrounding count framing — re-reading
+      `submit_external_instruction`'s dispatch chain directly (execution-service HEAD `959c045e9`) showed the
+      page's prior "QUOTE is the missing one" framing was itself wrong: QUOTE is fully dispatched (one of the
+      fifteen), `ControlInstruction` is the genuine, sole undispatched 16th member — `_submit_control_instruction()`
+      exists and is correct but `submit_external_instruction`'s isinstance chain never calls it, so a
+      `ControlInstruction` body still 501s today. Disclosed plainly with a Source citation, no hedge language.
+      `unified-trading-pm` (this ship).
+
+- 2026-08-21 — built the ledger-matching
   skip + explicit auditability surfacing for `TradeFillRecord.recon_excluded` (traced the consumer chain per the
   P2 follow-up todo above under "Todos — execution/transfer cluster"). `_exclude_recon_excluded()` in
   `engine/daily_determinism_stage.py` (already shipped at `batch-live-reconciliation-service@1ba1a6260c` per this
@@ -928,45 +934,17 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   stat predates §06 (signal-leasing) being added to the page — recounted `class="ep"` blocks directly (`grep -c`)
   and corrected to 14, with a breakdown. Fixed §07's "All six endpoints" (500 row) to "Every endpoint on this
   page", matching the style already used in the 401 row, so it stops needing a hand-maintained count.
-  **Verified re: task's "already-done" baseline** — all confirmed still true against current HEAD: MTDS
-  availability `data_type`-without-`venue` fix (market-tick-data-service, §03's callout, already landed and
-  disclosed with a real Source citation); the ev-check/ev-verified markers throughout are the prior session's
-  already-completed sweep, no false claims found; `check_artefact_claim_ownership.py` — 246 open markers, baseline
-  247, ratchet-compliant, unchanged by this session's edits (no new `st-plan`/`st-part`/`ev-check` spans added —
-  every new sentence is plain prose or reuses the doc's existing marker vocabulary as-is).
-  **Task item 3 (re-verify instruction-table rows against execution-service commits since `d7ef159405`)**:
-  `d7ef159405` resolved to a `unified-trading-pm` commit (2026-08-21 07:44:52+01:00, not an execution-service sha —
-  the task's own phrasing was ambiguous, resolved by checking both repos). `git -C execution-service log --oneline
-  --since=<that timestamp>` returns zero commits — nothing has landed in execution-service since. **Important
-  caveat found, not fixed by this session (T4/execution-service's own lane, actively in flight — do not
-  duplicate)**: the doc's current instruction-table content (BORROW/REPAY "wired 2026-08-21", `cancel_scope=
-  ALL_FOR_STRATEGY_INSTANCE` "wired 2026-08-21", the 12/15 split) describes code that is **uncommitted and
-  mid-merge-conflict** in the local execution-service worktree at inspection time (`git status --short` showed
-  `UU execution_service/api/external_instruction_api.py` plus several `M` files; `git blame` on the new dispatch
-  branch showed "Not Committed Yet"). Direct confirmation against `origin/live-defi-rollout` HEAD (`8d4356bf2c`,
-  which equals local HEAD — not behind, so this is live in-progress work, not a stale pull): `cancel_scope=
-  ALL_FOR_STRATEGY_INSTANCE` is still an honest 501 there (`"is not supported — no ..."`), and
-  `external_instruction_defi.py` at that ref has no BORROW/REPAY entry in `_ACTION_BUILDERS`. The module
-  docstring at that same ref states the real current baseline plainly: "10 of the 13 StrategyInstructionV2 action
-  types are wired." This session left the doc's 12/15 content untouched (a concurrent T4 session is visibly mid-
-  flight on exactly this, per this same plan's own held-back QUOTE-todo note above) rather than reverting it —
-  reverting now would just be overwritten again within minutes and risks a real edit-conflict on the same file.
-  Flagged here for whichever session next re-verifies the instruction table once the concurrent merge resolves.
-  **New finding, filed as a todo above, not guess-fixed**: `ControlInstruction` (`KILL_SWITCH`/`FLATTEN_POSITION`)
-  is a real, already-*committed* 16th union member with working dispatch at `origin/live-defi-rollout` HEAD, and
-  is completely undocumented on this page — did not add a row for it this session since the table's own counts
-  are mid-recount by the concurrent T4 lane; safer to add once that settles than to hand-patch a count that will
-  change again within the hour.
-  **New follow-up todos filed** (checked first that none were already owned by an in-flight lane — grepped
-  `plans/active/*.md` + `plans/active/issues/*.md` for each, zero hits): execution-service client_id↔org_id
-  binding (Security/P0), client-reporting-api's unauthenticated global report stream (Security/P0),
-  client-reporting-api's 13 no-entitlement-check routes (Security/P1), client-reporting-api's unconditional-
-  fixture reporting routes (Integrity/P2), and the `ControlInstruction` documentation gap above (P2, gated on the
-  T4 recount landing first). All five are genuine handoff corrections not yet true in code; each is disclosed
-  honestly in the doc already (§01/§05 callouts) — these todos are the code-side (or, for `ControlInstruction`,
-  doc-side) fix, not a re-disclosure.
-  Checker: `check_artefact_claim_ownership.py` — 246 open markers, baseline 247 (unchanged by this session).
-  Shipped via `scripts/dev/safe-doc-push.sh` — sha recorded in the commit trailer.
+  **Verified re: task's "already-done" baseline** — confirmed still true against current HEAD: MTDS availability
+  `data_type`-without-`venue` fix (§03's callout, already landed + disclosed); ev-check/ev-verified markers are the
+  prior session's completed sweep, no false claims found; checker unchanged by this session's edits.
+  **Task item 3**: at the time, BORROW/REPAY/`cancel_scope=ALL_FOR_STRATEGY_INSTANCE`/`ControlInstruction` were
+  still mid-flight on a concurrent T4 execution-service lane — left untouched rather than reverted (see the
+  `- 2026-08-21 — BRIDGE/LP_MINT/LP_BURN wired` entry and the completion-pass entry above for how each of these
+  landed/resolved). New follow-up todos filed that session: execution-service client_id↔org_id binding
+  (Security/P0), client-reporting-api's unauthenticated global report stream (Security/P0), its 13
+  no-entitlement-check routes (Security/P1), its unconditional-fixture reporting routes (Integrity/P2) — all since
+  resolved, see later entries. Checker at the time: 246 open markers, baseline 247.
+  Shipped via `scripts/dev/safe-doc-push.sh`.
 
 - 2026-08-21 — BRIDGE/LP_MINT/LP_BURN wired to real execution (last 3 of 16 `StrategyInstructionV2` action
   types) + the client_id↔org_id binding P0 todo, inherited from stale dead WIP in the same file — full detail in
@@ -981,3 +959,22 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   `PredictionMarketCrossVenueMapping` fixtures via the deleted `PredictionMarketCategory` enum — migrated to
   `PredictionUnderlying` (`.BTC`/`.SPORTS_EPL`); no production code read `.category` (grep-confirmed).
   quality-gates.sh --no-fix green (18540 passed). `features-service@1fb32923a8`.
+
+- 2026-08-21 — **platform-api-reference.html completion pass (operator directive)**: every remaining `st-part` row
+  verified against current LDR code, flipped to plain complete prose or honestly disclosed where code doesn't
+  support the claim. Removed all 20 `st-part` spans (6 section-head, 14 endpoint) across §01/§02/§03/§05/§06 —
+  verified against instruments-service, market-tick-data-service, client-reporting-api, strategy-service HEADs
+  pulled fresh (§06 kept its honest "dark until 2026-09-01" framing — business-scheduled, not a code gap). §04:
+  rewrote all 14 instruction-table rows to plain prose after re-reading `external_instruction_api.py` (HEAD
+  `959c045e9`) — found and fixed a real inaccuracy: "QUOTE is the missing 16th" was wrong (QUOTE dispatches fine);
+  the genuine sole undispatched member is `ControlInstruction` — `_submit_control_instruction()` is real but never
+  called from the dispatch chain (grepped every caller: zero). Added the missing row + Source citation (todo
+  checked off above), fixed the matching stale "13 of 16" line in §07. Resolved 5 "not independently
+  read"/"? check" hedges into facts or a scoped `owner:` tag (3 permanent "dynamic field" disclosures). Removed
+  narration voice in §05/§06 ledes+callouts. `check_artefact_claim_ownership.py`: markers 245→206 (baseline 247);
+  0 untagged; 0 unresolved refs. **Not flipped**: none — the one genuine gap (`ControlInstruction`) was disclosed,
+  not hidden. **Out of scope**: §01's excluded "What auth does not do" callout (two sibling lanes landed real
+  rewrites this session, `unified-trading-pm@e2bae4c5f2`+`instruments-service@0abd96f3bb`); operator's separate
+  "Security, audit and client isolation" directive doesn't apply — that string only exists in other artefacts, left
+  for their owning session. Also split a text-merge artifact next to the `ControlInstruction` todo (two paragraphs
+  concatenated on one line) — no content altered.
