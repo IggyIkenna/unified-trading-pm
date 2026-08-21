@@ -442,7 +442,13 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       fixed and independently verified — do not re-enable on just one. Currently `account_status=disabled` (set
       2026-08-21, see Progress Log entry below), sticky, fleet-wide, via the existing operator-disable mechanism
       (`server/state_store/account_usage.py::disable_account`) — no auto-clear path exists, so this requires an
-      explicit action, not a passive wait.
+      explicit action, not a passive wait. **Both are now live-verified, 2026-08-21, zero fleet spend** — see
+      `pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md`'s closing Progress Log entry: sysctl confirmed
+      still 0, a real `unshare`/`codex exec --sandbox` reproduced the exact previously-failing operation now
+      succeeding end-to-end, the shipped `2fe498b30f` context-window export confirmed live on the running server with
+      the correct SSOT value, and `CLAUDE_CODE_MAX_CONTEXT_TOKENS` confirmed to be a real string the installed Claude
+      Code CLI binary references. The only thing not yet observed is a real spawn through AO's own dispatch path —
+      that requires this todo. Ready pending operator go-ahead.
 - [x] ✅ [INVESTIGATE] P1. **DeepSeek's dominant mid-task death mechanism — ROOT-CAUSED 2026-08-21 via a 26-agent
       transcript-level Workflow investigation** (32-death population, 14-day DB lookback confirmed ALL fall inside
       one bounded cluster, 2026-08-19 23:45:28 -> 2026-08-20 15:46:01, none before or since). Two distinct causes,
