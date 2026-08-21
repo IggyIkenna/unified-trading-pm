@@ -256,6 +256,25 @@ todos only to confirm they are data-movement, then leave it.
       CODE so the "Unattributed" bucket disappears from client-facing surfaces (migration run itself stays out
       of tranche scope). Chains without data (e.g. bitcoin mother-chain): get the connectors in and prove data
       acquisition so the chain appears canonically, per operator feedback.
+      **BLOCKED 2026-08-21 — plan-conflict found, not shipped as code.** `/plans/active/state_fabric_artefacts_2026_08_20.md`
+      § "T2 — the 24 unattributed tokens (investigation complete)" already investigated this exact 24-token set
+      same-week and reached a **contrary verdict**: all 24 are real, well-formed `PROTOCOL-CHAIN` DeFi venues in
+      genuine `DEFI_VENUE_PHASE == "pipeline"` status (none malformed/duplicate/manifest-artifact);
+      `VENUES_BY_ASSET_GROUP["defi"]` is deliberately live-phase-only by design. That doc's own prescribed fix is
+      explicit and DOC-only: relabel the bucket "DeFi — pipeline phase, not yet live" and **do NOT add these 24 to
+      `VENUES_BY_ASSET_GROUP["defi"]`** — new attribution/canonicalisation CODE here would directly produce the
+      "misrepresent pipeline venues as backfilled" outcome that doc warns against. Not force-shipped without
+      reconciling the two docs first (findings-triage HARD RULE: outside-plan ambiguous → diagnose both sides,
+      don't silently pick one). Bitcoin mother-chain connector sub-item is a genuine net-new adapter build,
+      untouched this pass — split out below.
+      - [ ] [BACKEND] P2. Reconcile this todo against `state_fabric_artefacts_2026_08_20.md`'s T2 finding before
+            either doc's box flips again — either the DOC-relabel there supersedes this CODE ask, or an operator
+            ruling says client-facing surfaces additionally need a resolver-side fallback into the phase-aware
+            DeFi venue registry (not a manifest rewrite).
+      - [ ] [BACKEND] P2. Bitcoin mother-chain connector: build the connector(s) and prove real data acquisition
+            so `bitcoin` appears canonically on the chain axis (currently a chain-without-data gap per operator
+            feedback) — instruments-service and/or market-tick-data-service, whichever owns chain-connector
+            registration for BTC.
 
 ### W3 — granularity and the shard denominator
 
@@ -923,3 +942,37 @@ todos only to confirm they are data-movement, then leave it.
   change to the catalogue read-side venue split, in the correcting direction.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 2 of the operator-slot-launched code-readiness series (same Launch-prompts mechanism as the coordinator/T1). Remaining open items include multiple BLOCKED-UPSTREAM(T1/UAC or T1/UTL) items, a BLOCKED-OPERATOR multi-instrument candle bundle write-race fix, an explicit operator-decision-needed denominator-semantics question (level-4 vs level-5 fully-retired-key disagreement, deliberately not silently edited per W3's 'never a silent edit' rule), a sports-bookmaker roster classification for the operator, and a large atomic MDPS adapter-protocol/polars-seam migration across 18 files. None clears the whole-doc RECLASSIFY bar; the doc's own structural design (operator-slot dispatch) also precludes AO-backlog eligibility.
+- **wave-1d walkthrough-feedback remediation pass 2026-08-21** (instruments-service / market-tick-data-service scope
+  only) — three assigned items, all resolved without a code ship this session:
+  1. **Kalshi perp repoint — NOT touched, correctly BLOCKED-OPERATOR.** The plan's own text (line 224, dated
+     2026-08-21) already carries an explicit operator ruling: a successful RSA-PSS auth PROBE against the margin
+     host is not proof the account holds perps trading rights — Kalshi's perps product rolls out member-by-member.
+     `_REPOINT_PENDING` stays `True`, `kalshi_perp.py` untouched, no RSA-PSS wiring added, no funding-rates subpath
+     probed. This todo's own task summary (asking for a repoint) conflicted with the plan section, which is ground
+     truth per the dispatch instructions — no code change was the correct outcome, not a shortfall.
+  2. **Sports bookmaker roster classification — already delivered by a prior session, verified not re-done.** The
+     checkbox above was already `[x]` with a full table cited in
+     `/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md`. Reproduced here for the record:
+
+     | Group | Count | Venues / disposition |
+     |---|---|---|
+     | (a) odds-api, live fetch scope | 25 | Actively in `REQUESTED_ODDS_API_BOOKMAKERS`, confirmed captured in coverage.json |
+     | (a)-key-only, never fetched | 6 | BETMGM, BETOPENLY, BETWAY, NOVIG, ONEXBET, PROPHETX |
+     | (b) Unity-covered | 9 | MATCHBOOK (dual a+b) + 8 net-new Unity child books (3ET, BROKER5, CROWN, SBO, SHARPBET, VX, BETDEX, IBC) — subscription pending, zero-capture, forward-looking, not leftovers |
+     | (c) neither — HIGH-confidence removal candidates | 4 | BETOPENLY, NOVIG, ONEXBET, PROPHETX — canonical token + odds_api key exist, never wired into live fetch scope, zero manifest presence, no Unity coverage; arbitrage-research vintage |
+     | (c) neither — LOW-MEDIUM confidence flags | 2 | BETMGM (captured=1,591), BETWAY (captured=1,803) — same unwired pattern but real historical rows; operator judgment call, not proposed for removal |
+
+     Removal of the 4 HIGH-confidence candidates and the BETMGM/BETWAY judgment call both stay `[OPERATOR]`-gated
+     in the issue doc's own todos — nothing removed this session, per the dispatch instructions ("removal itself
+     stays operator-gated — do NOT remove anything").
+  3. **24 unattributed manifest tokens — plan-conflict found, no code shipped.** Investigated before writing any
+     attribution code and found `/plans/active/state_fabric_artefacts_2026_08_20.md` already ran the identical
+     investigation same-week with a contrary, DOC-only prescribed fix (see that todo's own edit above for detail).
+     Shipping new manifest-side attribution CODE without reconciling the two docs first risks contradicting a
+     completed, evidenced investigation — held per the findings-triage HARD RULE (ambiguous → diagnose both sides,
+     don't silently pick one) and split into two tracked follow-up todos instead. Bitcoin mother-chain connector
+     build is untouched — genuine net-new adapter work, not attempted this pass.
+
+  No `instruments-service`/`market-tick-data-service` commits this session — every assigned item resolved to
+  either "already done," "correctly blocked by the plan's own ground truth," or "needs doc reconciliation before
+  code, tracked as a follow-up," so nothing met the QG-green-tree-then-quickmerge bar.
