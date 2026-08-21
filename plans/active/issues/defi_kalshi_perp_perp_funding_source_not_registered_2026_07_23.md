@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-07-23
 author: unknown
-last_updated: "2026-08-02"
+last_updated: "2026-08-21"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
@@ -210,4 +210,12 @@ concrete, currently-failing symptom; the classification question is the census a
 > decision is genuine NA judgment work).
 - **na-eligibility-audit 2026-08-16** [body-hash:0faa56d9ca7a1d04]: KEEP-NA-STALE (already-duplicated), re-confirmed -- sole open todo (re-emit 567 GCS-present/manifest-absent KALSHI_PERP/POLYMARKET_PERP rows) is an exact duplicate of an already-dispatched, still-open todo in defi_satellite_ao_dispatch_batch2_2026_07_26.md:307 (live-verified today still unchecked, correct Source: citation back to this doc). This docs own in-place 2026-08-07 Duplicate-claim note already warns against reclassifying. No action needed.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
-- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — unchanged, still accurate
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-21**: Attempted the `[DATA] P1` re-emit todo above (via its duplicate in
+  `defi_satellite_ao_dispatch_batch2_2026_07_26.md:307`). Confirmed the 567-row scope live-accurate on a sample day
+  and designed + dry-run-validated a migration script, then found the live CEFI manifest's real
+  `(venue=KALSHI-PERP, data_type=perp_funding)` rows all carry `chain=""` while the current code enforces a
+  non-blank `chain="KALSHI_PERP"` workaround (raises `BlankChainError` otherwise) — an unresolved contradiction
+  between code and live data for this exact shard family. Paused before writing anything to production. Filed
+  `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md` with the full investigation.
+  This doc's `[DATA] P1` re-emit todo stays open, now blocked on that new issue doc's resolution. — unchanged, still accurate
