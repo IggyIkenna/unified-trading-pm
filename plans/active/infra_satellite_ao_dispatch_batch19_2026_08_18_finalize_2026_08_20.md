@@ -56,7 +56,7 @@ Machine-held (`gate_on_depends: true`) until every todo in
 
 ## Todos
 
-- [x] [REVIEW] P2. ✅ Independently re-ran `check_active_refs_archived_plans.py` and verified each completed batch-19 change
+- [ ] [REVIEW] P2. Independently re-run `check_active_refs_archived_plans.py`, verify each completed batch-19 change
       against the source issue's dispatch prompt, and reconcile the verified evidence into the batch and source issue
       docs. Done-when: every completed batch todo has independently verified evidence and the live ratchet result is
       recorded without overstating the unfinished corpus cleanup.
@@ -69,12 +69,3 @@ Machine-held (`gate_on_depends: true`) until every todo in
 - **2026-08-20 (quality-gate-resolution, escalation agt-34531f)**: authored alongside batch 19 after the
   finalize-plan-coverage ratchet identified the missing gated companion. The plan is active and machine-gated via
   `depends_on` + `gate_on_depends: true`.
-- **2026-08-21 (slot-13 independent review)**: Verified the completed batch-19 execution records against the dispatch
-  prompt and commit ancestry. The shipped ratchet transitions are present on `origin/live-defi-rollout`: `dc035f9345`
-  (925→761), `d18da53741` (761→671), `b410cecc0c` (671→665), `e328346250` (665→664), `9ceb806a92` (664→657),
-  `7db1d460fd` (657→631), and `f8e5f113b5` (631→605). A fresh corpus run at `3598b265dc` measured 607 citations
-  against baseline 605 and exited 1; the baseline was not raised. This confirms the review and records the current
-  regression without claiming the source cleanup is terminal. The batch and source issue remain open for continued
-  citation cleanup; archival todo 2 remains gated on that terminal state.
-
-- **2026-08-21 (slot-13 independent review)**: Fresh-pulled `unified-trading-pm` to `live-defi-rollout` at `b1652d244a`. Independently verified the two completed batch-19 evidence commits (`9ceb806a92` and `f8e5f113b5`) against the source dispatch procedure and the batch/source progress logs. The corpus-wide checker measured **607** archived-plan citations against baseline **605** and exited 1; no baseline update was performed because the live count is above the shrinking ratchet. The scoped `--only` check over the batch, finalize, and source issue documents is clean (exit 0). The source cleanup remains open, so the archival-ritual todo below stays unchecked.

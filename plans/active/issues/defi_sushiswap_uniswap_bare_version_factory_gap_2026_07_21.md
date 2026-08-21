@@ -247,4 +247,3 @@ original audit and this measurement, not a discrepancy in method; both counts de
   (`[SCRIPT] P1`, active). Updated the todo's pointer to cite batch11 directly as the live dispatch path. Doc stays
   `assigned_vm: NA`.
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries)
-- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA-STALE (already-duplicated), re-confirmed — sole open item's execution still tracked at `defi_satellite_ao_dispatch_batch11_2026_08_09.md`'s follow-up `[SCRIPT] P1` todo (`assigned_vm: planning`, active); citation current. No action needed.

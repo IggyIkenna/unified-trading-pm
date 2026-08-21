@@ -498,10 +498,3 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
 consider whether... warrants a standing guard" — a priority/design call on whether to build it at all, not a spec a
 worker can execute. `assigned_vm: NA` correct.
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries)
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — unchanged since the 2026-08-18 verdict
-(8th consecutive confirmation). `grep -c '^- \[ \]'` confirms exactly 1 open todo (todo 10, stretch/optional
-branch-protection visibility-change alert) — still self-described as "genuinely optional... consider whether...
-warrants a standing guard," a priority/design call on whether to build it at all, not a spec a worker can execute.
-`ag_closeout_audit_ci_parked_2026_08_16.md` already filed the operator-ruling ask for this exact doc rather than let
-it be reconfirmed indefinitely with no decision — not duplicating that escalation here. No `assigned_vm` change.

@@ -196,4 +196,3 @@ them"), but the instruction is not being followed in practice, at least in this 
   a genuine design fork. Items 1-2 already correctly executed + closed via
   `ao_satellite_ao_dispatch_batch7_2026_08_06.md`.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item ("consider a soft turn-count circuit breaker") is an unscoped design fork with no committed threshold/mechanism, unchanged since 2026-08-10.

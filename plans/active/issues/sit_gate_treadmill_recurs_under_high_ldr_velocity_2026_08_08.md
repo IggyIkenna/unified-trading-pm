@@ -474,17 +474,3 @@ orphaned PR left. Bounded background poll of the detector (every 3 min, 40-min c
 `sit-gate stuck detector: healthy` at 22:04Z. Open todos unchanged — this occurrence exercised neither the P3
 swallowed-error gap nor a stale PR.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): **RECLASSIFY, extraction.** The 2026-08-18 pass tagged the
-sole open todo (line ~176, `[SCRIPT] P3`, `ldr_to_main_fleet_promote.sh:638`'s swallowed-error `gh api` fallback)
-`MISCLASSIFIED_LIKELY_AO_ELIGIBLE` but deliberately did not extract it, citing this doc's high edit-velocity as a
-live incident tracker (7 dated cicd-escalation entries at the time) and collision risk. Re-checked this pass: no new
-cicd-escalation entry has landed on this doc since 2026-08-19 (~21:45Z, the `agt-4a1594` self-converged-treadmill
-entry) — 2 calendar days quiet, a reasonable "calmer day" per that pass's own stated bar. Conflict-checked (grep
-across `plans/active/*.md` — zero prior hits on this mechanism) then extracted into
-`ci_satellite_ao_dispatch_batch16_2026_08_21.md` (todo 2) — small, precisely-scoped (echo captured stderr/status
-before the `|| echo '{}'` fallback; check the sibling `ldr_to_staging_promote.sh` call site too), no design call.
-Doc stays `assigned_vm: NA` (this is an extraction, not a whole-doc reclassify — the doc itself remains the live
-incident-tracking record for future treadmill occurrences). The `archive_exempt: true` frontmatter note (flagged
-stale-but-harmless since 2026-08-18) is unchanged by this extraction — still moot rather than load-bearing, since
-this todo remains genuinely open until the batch ships it.

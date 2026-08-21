@@ -209,4 +209,3 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   violating the instruction itself.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:f91ba0117fea57b5]: KEEP-NA, valid — sole remaining todo is a standing opportunistic-retag instruction under an explicit 2026-08-06 operator ruling against batching it; never-relitigate case (a)/(c) applies directly.
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item is the standing §2 opportunistic-retag instruction, explicitly barred from batching by the 2026-08-06 operator ruling; re-affirms 8 prior audit passes.

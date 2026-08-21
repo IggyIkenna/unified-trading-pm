@@ -178,9 +178,3 @@ context_scope:
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **na-eligibility-audit 2026-08-16** [body-hash:e4af03c8ebd9199d]: KEEP-NA, valid — Full 172-line doc read end-to-end (matches wc -l; grep -nE '^[[:space:]]*[-*] \[ \]' confirms exactly 1 open todo, matching Phase-0's count).
 - **na-eligibility-audit 2026-08-17** [body-hash:b91f375a5b2986a2]: KEEP-NA, valid — Reaffirmed. Sole open item (mass-flip finalization across cefi/defi/tradfi/prediction/sports) remains citation-hold class (a): 2026-08-12/08-16 plan_reconciler annotations redirect it to a not-yet-created cross-cutting close+archive pass; 6+ prior na-eligibility-audit rounds independently concur, citing a real prior safety incident behind the gating. Doc stays assigned_vm: NA.
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. Checked directly whether the
-  recommended dedicated cross-cutting close+archive pass has since been created: `ls plans/active/*cross_cutting*`
-  shows only the pre-existing `cross_cutting_consolidated_closeout_2026_07_25.md` and its satellite batches — no new
-  dedicated close+archive pass exists as of this date. The sole open item's real-world blocker (a not-yet-created
-  cross-cutting pass, operator-gated per the safety incident already on record) is unchanged. Doc stays
-  `assigned_vm: NA`.

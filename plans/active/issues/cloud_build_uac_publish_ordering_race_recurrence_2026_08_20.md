@@ -118,8 +118,3 @@ ordering) vs. accept-and-re-alert — is a fleet-level judgment call, tracked as
   fresh `:latest` digest `sha256:039c738098...`. No code change shipped. Recurrence of the 07-29 race class with a
   gap exceeding the retry budget for the 2nd time.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2, first audit pass — doc filed 2026-08-20): KEEP-NA, valid.
-Sole open todo is an explicit fleet-level policy decision (widen the ~45s retry budget across 8 Dockerfiles vs. add
-a release-ordering guarantee vs. accept-and-track) — the doc's own Disposition section frames this as a judgment
-call for "operator / future /ci-reconcile pass," not a mechanical fix. No `assigned_vm` change.

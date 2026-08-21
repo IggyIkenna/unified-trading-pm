@@ -28,10 +28,9 @@ related:
 created: "2026-08-20"
 last_updated: "2026-08-20"
 parent_epic: orchestrator_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P1
-assigned_role: infra
 resolved_by:
 locked_by:
 depends_on: []
@@ -84,13 +83,3 @@ probe rather than a bare unauthenticated hit) but not confirmed either way — f
 
 - **2026-08-20**: doc authored during pre-compact checkpoint, capturing two residual findings from the day's
   incident-response + Grok-removal sessions that hadn't been tracked as todos yet.
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: RECLASSIFY (whole-doc) — first audit pass for this doc. Both open
-  todos are fully bounded/deterministic: (1) design + implement an external liveness check for
-  `orchestrator.service` — the mechanism is already named (a systemd `OnFailure=` unit or a separate cron polling
-  `/api/healthz`, bypassing the orchestrator's own notification path), the channel/dedup convention is already
-  cited (`/codex/04-architecture/agent-orchestrator-alerting.md`), no open design fork; (2) confirm whether the
-  LiteLLM proxy's `/health` 500 is expected or a real problem — a bounded investigation (check service logs, run a
-  real completion) with a stated done-when. Conflict-check: grepped `plans/active/` for "OnFailure="/"external
-  liveness check for" — zero hits outside this doc. Flipped `assigned_vm: NA → planning`,
-  `execution_scope: local-only → orchestrator-agent`; added missing `assigned_role: infra` (matching both todos'
-  `[INFRA]` tags).

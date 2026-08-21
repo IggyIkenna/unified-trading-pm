@@ -230,4 +230,3 @@ the parent plan's Track 7 culled-venue ruling.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17**: KEEP-NA, valid — reverified live: parent defi_consolidated_closeout_2026_07_18.md's depends_on+gate_on_depends:true still holds (10 open todos today), genuine prerequisite not stale. 3 open todos, all DEPENDENCY_BLOCKED on the same parent gate. Doc stays assigned_vm: NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-verified live: parent `defi_consolidated_closeout_2026_07_18.md`'s `depends_on`+`gate_on_depends: true` still holds (open todos present today), genuine prerequisite not stale. Doc stays `assigned_vm: NA`.

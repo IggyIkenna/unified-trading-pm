@@ -235,16 +235,11 @@ chat-ephemeral, home" rule regardless.
       `meta_plan_corpus_hygiene_ao_dispatch_batchN`) rather than waiting on `ci`/`ao`/`infra` to each individually
       notice it again. Done when: tag reflects one specific tranche (or a deliberate `cross-cutting` call), re-verified
       via `check_ag_closeout_linkage.py`.
-- [x] ✅ [DOCS] P3. **Extract `ci_alert_failure_resolution_linkage_2026_08_16.md`'s todo 1** (extend `streak_start_sha`
+- [ ] [DOCS] P3. **Extract `ci_alert_failure_resolution_linkage_2026_08_16.md`'s todo 1** (extend `streak_start_sha`
       failure-resolution linkage to `ldr-to-main-promote.yml`'s drain-bot "closed as superseded" INFO messages) into
       the next `ci_satellite_ao_dispatch_batchN` once `batch15`'s 23 remaining todos have meaningfully drained —
       conflict-checked clear this run, ready to extract without further triage. Done when: extracted into a batch
-      todo citing this doc as Source, or the operator explicitly asks for it sooner. **DONE 2026-08-21
-      (na-eligibility-audit, ci tranche wave 2)** — `batch15` re-checked: 11 open / 14 done (meaningfully drained
-      from the 23-open count at this todo's filing). Extracted into `ci_satellite_ao_dispatch_batch16_2026_08_21.md`
-      todo 3, citing this doc's conflict-check per this todo's own instruction. Note: the target doc numbers this
-      item "todo 2" in its own body (a `[x]`-closed todo 1 precedes it, shipped 2026-08-16) — same content either
-      way, extracted correctly by text match, not by number.
+      todo citing this doc as Source, or the operator explicitly asks for it sooner.
 
 ## Progress Log
 
@@ -271,11 +266,3 @@ balanced.**
   (2 [OPERATOR], 2 [DOC] cross-tranche retags not this tranche's to execute, 1 [DOCS] extraction still gated on
   batch15 draining) are unchanged and correctly still open.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — 5 open items re-read end-to-end. Item
-(extract ci_alert linkage) executed this pass, closed above with citation to `ci_satellite_ao_dispatch_batch16_
-2026_08_21.md`. The 2 `[OPERATOR]` P3 items (rule on `workflow_template_drift_repeated...`'s 2 open design
-questions; the concurrent-sharded-worker retag items) remain genuinely operator-gated/cross-tranche-not-mine-to-
-execute per their own explicit text. The 2 `[DOC]` cross-tranche retags stay correctly un-executed by this tranche
-(concurrent-sharded-worker safety rule — `infra` tranche owns one, a corpus-hygiene sweep owns the other). No
-`assigned_vm` change.

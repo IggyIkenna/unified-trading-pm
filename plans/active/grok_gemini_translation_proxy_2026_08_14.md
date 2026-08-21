@@ -836,8 +836,3 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. All 3 open todos remain live-account-
-  or live-dispatch-gated: usage-capture verification and the resume/sequential-preference check both need real
-  Gemini credentials/orchestrator-VM mechanics this dev checkout structurally cannot provide (confirmed live by the
-  2026-08-18 session's own attempt), and the post-launch quality/consumption-rate comparison needs 1-2 weeks of real
-  traffic. Same governing 2026-08-16 operator "shipped but paused" ruling still holds. Doc stays `assigned_vm: NA`.

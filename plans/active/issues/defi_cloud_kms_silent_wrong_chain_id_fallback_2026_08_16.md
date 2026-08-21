@@ -108,17 +108,18 @@ worst case, a transaction that is valid on the wrong chain.
 
 ## Todos
 
-- [x] ✅ [OPERATOR] P0. **RESOLVED BY MEASUREMENT 2026-08-21 (operator-authorized inspection).** The live
-      `wallet_provisioning.json` / `wallet_mapping.json` DO NOT EXIST: probed every resolvable prod GCP bucket
-      kind (all 26 from `resolve_bucket_name`, via UTL `get_storage_client().list_blobs` — no subprocess CLI)
-      for a `wallet-config/` prefix — zero hits; `config-store-prd` carries only `instruments-service*/`
-      prefixes and `execution-store-prd` only `_index/`+`cefi/`. No wallet was ever provisioned through this
-      config path, so nothing could have been signed against the wrong chain while the fallback existed — the
-      exposure window is EMPTY.
-- [ ] [BACKEND] P3. Residual from the 2026-08-21 measurement above: probe the AWS-side buckets for a
-      `wallet-config/` prefix the same way (UTL `list_blobs`, `resolve_bucket_name(cloud="aws")`, needs
-      AWS_ACCOUNT_ID) and confirm the same absence — the custody loader path is GCP-first so this is
-      completeness, not a live risk. Owned by T4's tranche run.
+- [ ] [OPERATOR] P0. **Check live `wallet_provisioning.json` content for any wallet with
+      `signing_surface=CLOUD_KMS_ENCRYPTED` that could plausibly touch LINEA.** Exact GCS path found (2026-08-16,
+      via `unified_api_contracts/internal/domain/defi/wallet_config.py:638`):
+      `wallet-config/{chain_env}/{client_id}/wallet_mapping.json` is the sibling `WalletMappingConfig` path; the
+      `WalletProvisioningConfig` docstring (`wallet_config.py:211`) cites the analogous
+      `wallet-config/{chain_env}/wallet_provisioning.json` — bucket name resolves via `resolve_bucket_name(...)`
+      per this workspace's storage convention, not hardcoded in this file. **Not completed this session** — this
+      is live production custody/wallet configuration (which real wallets are assigned to which signing surface),
+      genuinely operator-territory to query directly rather than an interactive session guessing at GCS
+      credentials for a file this sensitive. Tagged `[OPERATOR]` rather than left as a generic `[BACKEND]` todo.
+      Done-when: a cited, evidence-backed answer — this determines whether the fix below is urgent-before-any-
+      LINEA-op or can follow normal priority.
 - [x] ✅ [BACKEND] P0. **Wire `cloud_kms.py` and `local_key.py` to call UAC's canonical `resolve_chain_id()` — done
       2026-08-16.** SHIPPED — `execution-service@33bd57a6fc`. Both files' `_resolve_chain_id()` now delegate to
       UAC's `resolve_chain_id()` for every chain name outside a narrow 3-entry local alias

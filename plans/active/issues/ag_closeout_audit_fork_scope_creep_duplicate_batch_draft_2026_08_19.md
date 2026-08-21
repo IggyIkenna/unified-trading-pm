@@ -137,8 +137,3 @@ Candidate directions (not evaluated in depth, listed for whoever picks this up):
   tracked follow-up per the workspace's "every deferral is a `- [ ]` todo, never prose" rule — this finding had
   only existed as narrative in the parked-findings doc before this entry.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — first verdict for this doc. Both open todos are
-  explicit judgment/design calls per the doc's own text: todo 1 is a stated "genuine judgment call" between
-  building a prevention mechanism vs. accepting the observed after-the-fact recovery as sufficient; todo 2 is
-  gated on todo 1's outcome (nothing to implement until a direction is ruled). Not mechanically bounded. Doc stays
-  `assigned_vm: NA`.
