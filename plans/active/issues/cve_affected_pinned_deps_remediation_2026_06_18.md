@@ -687,8 +687,8 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       ancestor-or-equal of `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml` declares
       `"pip>=26.2"`, `uv.lock` resolves `pip==26.2.1`, working tree clean. No new code required — landed directly
       (main/harsh) between the todo's authoring and this pickup.
-- [ ] [SCRIPT] P2. **instruments-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
-      instruments-service)
+- [x] ✅ [SCRIPT] P2. **instruments-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      instruments-service) — instruments-service@9a1b9d58, verified HEAD ancestor-or-equal of `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml` declares `"pip>=26.2"`, `uv.lock` resolves `pip==26.2`, full `quality-gates.sh` green.
 - [ ] [SCRIPT] P2. **market-data-processing-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
       market-data-processing-service)
 - [ ] [SCRIPT] P2. **market-tick-data-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
