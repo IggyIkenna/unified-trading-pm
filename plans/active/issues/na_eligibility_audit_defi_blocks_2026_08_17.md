@@ -162,9 +162,3 @@ carried on this list was itself stale. Closed off the list, not re-carried.
   items surfaced this pass. Ratchet checked at run end (see this run's `/done` evidence).
 - **context-scout 2026-08-17**: refreshed context_scope (2 entries).
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries)
-- **2026-08-21 (dedup verification pass)**: attempted to formalize the doc's own prose `SUPERSEDED 2026-08-18` banner
-  into `status: superseded` frontmatter — reverted: `check_terminal_status_archived.py` (pre-commit `plan-hygiene`
-  hook) treats `status: superseded` as unconditionally TERMINAL for an issue doc and requires it already `git mv`'d to
-  `plans/archive/`, which contradicts this doc's own banner (archival deliberately deferred). No open `- [ ]` todos
-  exist either way. Flagging for archive instead: content-superseded, 0 open todos, successor confirmed present and
-  `status: open` (active).

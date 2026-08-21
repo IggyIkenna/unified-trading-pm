@@ -19,7 +19,7 @@ related:
     /plans/epics/system_readiness_master.md,
     /plans/active/code_readiness_t4_execution_settlement_2026_08_19.md,
     /plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20_progress_log_archive.md,
-    /plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md,
+    /plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md,
   ]
 created: 2026-08-20
 last_updated: 2026-08-21
@@ -185,14 +185,10 @@ impression:
 
 ### Sports / prediction
 
-- [x] ✅ [BACKEND] P1. Audit the sports exchange adapters: `betfair.py`, `betfair_order_mapping.py`, `kalshi.py`,
+- [ ] [BACKEND] P1. Audit the sports exchange adapters: `betfair.py`, `betfair_order_mapping.py`, `kalshi.py`,
       `matchbook.py`, `polymarket_clob.py` (`sports_execution/adapters/exchanges/`), plus
       `polymarket_adapter.py`/`sports_adapter.py` (`trade_execution/adapters/`) and the bookmaker-API group
-      (`api_football.py`, `onexbet.py`, `odds_api.py`). Done-when: same evidence bar as above. — audit-only, no
-      code changes; findings recorded in the Progress Log, HIGH items tracked in 4 new triage todos below.
-      **Stale file reference found and corrected**: `onexbet.py` no longer exists — confirmed retired 2026-08-21 as
-      dead code (see `sports_handler.py`'s own comment + `sports_bookmaker_roster_classification_2026_08_21.md`);
-      nothing to audit there.
+      (`api_football.py`, `onexbet.py`, `odds_api.py`). Done-when: same evidence bar as above.
 - [ ] [BACKEND] P2. Audit the sports "unity" subsystem as its own group — it is a distinct sub-architecture, not
       simple per-venue adapters: `bridge.py`, `fill_reports.py`, `mock_feed_connector.py`, `multiplex.py`,
       `protocol.py`, `rollover_tracker.py`, `sidecar.py`, `turnover_tracker.py`
@@ -233,38 +229,13 @@ impression:
 - [x] ✅ [BACKEND] P0. Make CCXT order placement durable and retry-safe: require/persist one client-order id across ambiguous retries, use each venue's verified parameter name, and reconcile an uncertain submission before resubmitting; HIGH finding: checklist point 6 (all eight adapters, with Coinbase's `client_oid` deviation at `coinbase_ccxt.py:116-146`). — execution-service@77c4254543 + evidence: quality-gates.sh green (152s, sentinel matched committed HEAD; 8991 passed); new shared `ccxt_idempotency.py` (`require_client_order_id()` + `place_ccxt_order_idempotent()`) plus `ccxt_common.find_order_by_client_id()`/`reconcile_ccxt_order_by_client_id()`; wired into all 8 adapters' live order-placement paths with each venue's verified client-order-id param (`newClientOrderId`/`orderLinkId`/`client_oid`/`clientOrderId`); see Progress Log entry below.
 - [x] ✅ [BACKEND] P0. Enforce fail-closed credential initialization and redacted error logging for the CCXT group; Coinbase currently constructs a real exchange without a missing-key guard (`coinbase_ccxt.py:44-52`), and all order error paths persist raw exception text (`*_ccxt.py` order handlers plus `ccxt_common.py:372-405`); HIGH/MEDIUM findings: checklist point 1. — execution-service@1e018eabf + evidence: `CoinbaseCCXTAdapter._get_exchange()` now raises `ValueError` when `mode=="real"` and `api_key`/`api_secret` are `None` (mirrors every other CCXT adapter's existing guard); added `redact_secret_text()` in `ccxt_common.py` and wired `api_key`/`api_secret` through the shared order-placement error path (`place_ccxt_order_idempotent`, `emit_adapter_fetch_failed`, `log_amend_failed`) so a live credential occurrence in a CCXT exception's text is redacted before it reaches a persisted `ORDER_FAILED`/`ADAPTER_FETCH_FAILED` event or a log line, across all 8 CCXT adapters; quality-gates.sh green (156s, sentinel matched committed HEAD); 24 new regression tests (`test_ccxt_common.py`'s redaction suite + new `test_coinbase_ccxt.py`); post-push ancestry verified.
 
-- [ ] [BACKEND] P0. Betfair: add a customer-ref/idempotency key to the legacy `place_bet()` order-placement path
-      (`betfair.py:398-421,491-508`) — the canonical `place_order()` path in `betfair_order_mapping.py:155` already
-      threads `client_order_id` through as Betfair's `customerRef`, but `place_bet()` calls
-      `_submit_place_orders()` with no customer_ref at all, so a retry after an ambiguous network failure on the
-      legacy path can double-place a bet; HIGH finding: checklist point 6. (repo: execution-service)
-- [ ] [BACKEND] P0. Kalshi: make `_build_kalshi_headers()` fail closed on a signing error instead of silently
-      substituting a raw SHA-256 digest for a valid RSA-PSS signature on any `ValueError` during key load/sign
-      (`kalshi.py:116-128`); HIGH finding: checklist points 1 and 2 — a broken/misconfigured private key should
-      raise, not construct and send a fabricated "signature". (repo: execution-service)
-- [ ] [BACKEND] P0. Add durable client-order-id idempotency across Kalshi, Matchbook, and Polymarket CLOB order
-      placement: Kalshi generates a fresh UUID on every call unless the caller explicitly supplies one (no
-      retry-safe reuse across an ambiguous-outcome retry), Matchbook has no client-order-id mechanism at all, and
-      Polymarket CLOB accepts a `client_order_id` param but never sends it to the venue or reconciles a retry
-      against it; HIGH finding: checklist point 6 (`kalshi.py:402-447`; `matchbook.py:399-422`;
-      `polymarket_clob.py:556-577`). Mirror the established `ccxt_idempotency.py`/`native_idempotency.py` durable
-      idempotency pattern already used elsewhere in this plan. (repo: execution-service)
-- [ ] [BACKEND] P1. Enforce finite-positive amount/price validation, plus a strict side/action allowlist, before
-      order submission across Betfair, Kalshi, Matchbook, and Polymarket CLOB — all four cast caller
-      stake/price/size directly to float/int with no bounds check, and Betfair's canonical `place_order()` silently
-      maps any non-"BACK" side string to "L" (lay) instead of rejecting an invalid value; HIGH finding: checklist
-      point 3 (`betfair.py:452-468`; `betfair_order_mapping.py:113-160`; `kalshi.py:238-248,436-447`;
-      `matchbook.py:399-410`; `polymarket_clob.py:409-420,556-577`). (repo: execution-service)
-
 ### Close-out
 
 - [x] ✅ [AGENT] P0. Post-phase codex audit — check whether any codex doc under `/codex/04-architecture/` or
       `/codex/06-coding-standards/` makes a claim this audit's findings contradict (e.g. a doc claiming a
       pattern is "always" applied that a finding shows isn't); correct in place. — unified-trading-pm@9031553091
       + evidence: see Progress Log entry below.
-- [ ] [AGENT] P0. **Reopened 2026-08-21 (slot 19)** — see the "Reopening note" in the Progress Log below; 3 new
-      P0 findings from the sports-exchange audit mean this is no longer done, despite slot 21's earlier same-day
-      confirmation. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
+- [ ] [AGENT] P0. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
       plan's real landed state once every todo above is done or explicitly re-scoped.
 
 ## Progress Log
@@ -309,7 +280,7 @@ Findings use the fixed seven-point checklist and exact implementation lines. EVM
 
 No code was changed or tests run for this read-only audit. The HIGH findings require the existing triage phase to add explicit fixes/todos before W15 close-out.
 - [x] ✅ [BACKEND] P0. Harden perp/CLOB order boundaries across Hyperliquid, Aster, Pacifica, and the DeFi-side Bybit wrapper: reject non-finite/non-positive size and price, reject unknown side/order-type values, and preserve the underlying adapter's validation before any live submission; HIGH finding: checklist point 3 (hyperliquid.py:370-402,504-516; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132). — execution-service@e7481a0d13 + evidence: new shared `validate_perp_order_params()` in `_perp_order_validation.py` (mirrors `ccxt_common.validate_ccxt_order_params`), called from each connector's `place_order`/`_build_order_params` before dispatch to sim or live; 14 new regression tests in `tests/defi_execution/unit/test_perp_clob_order_validation.py`; quality-gates.sh green (293s, sentinel matched committed HEAD); post-push ancestry verified.
-- [x] ✅ [BACKEND] P0. Define a caller-controlled expiry/deadline bound for perp order requests -- checklist point 4 now fully closed (slippage half execution-service@fc7835b13e; this deadline half execution-service@d4876e394e). Hyperliquid's `expiresAfter` request deadline is now wired into `place_order()`, folded into the signed action hash exactly per the official SDK's byte construction (verified via `gh api` against `hyperliquid-dex/hyperliquid-python-sdk`). Aster/Pacifica/Bybit confirmed (WebFetch) to expose no equivalent mechanism. See Progress Log for the full research + a real EIP-712 chainId bug found and fixed along the way.
+- [ ] [BACKEND] P0. Define caller-controlled slippage and expiry/deadline bounds for market and resting perp orders; remove the implicit Hyperliquid 5% IOC buffer and make Aster/Pacifica/Bybit market semantics explicit and bounded; HIGH finding: checklist point 4 (hyperliquid.py:381-391; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132).
 - [x] ✅ [BACKEND] P0. Add durable idempotency/client-order IDs and ambiguous-outcome recovery for the perp/CLOB order paths; thread client_order_id through the Bybit wrapper into BybitCCXTAdapter, and prevent duplicate retries for Hyperliquid nonce-based, Aster timestamp-based, and Pacifica timestamp/expiry-based submissions; HIGH finding: checklist point 6 (hyperliquid.py:504-546; aster.py:479-519; pacifica.py:559-655; bybit.py:105-132). — execution-service@2d1766ef96 + evidence: quality-gates.sh green (186s, sentinel matched committed HEAD exactly); see Progress Log entry below.
 - [x] ✅ [BACKEND] P0. Make Bybit position/balance read failures observable instead of returning empty positions or zero balance, while preserving the already honest failed-order result; MEDIUM finding related to checklist point 7 (bybit.py:136-176). — execution-service@f1565e8a5e + evidence: `fetch_positions()`/`fetch_balance()` now log at ERROR and re-raise instead of swallowing adapter-init/CCXT read failures into `[]`/`Decimal("0")`; consistent with existing callers (`bybit_deposit.py`'s poll loop already try/excepts around `fetch_balance`, `perp_hedge_wiring.py`'s HL-side readers already let real errors propagate); 2 tests updated to assert the raise instead of the old silent fallback; quality-gates.sh green (292s, sentinel matched committed HEAD).
 - [x] ✅ [BACKEND] P0. Confirm Pacifica's future live enablement retains the current fail-closed boundary (supports_live=False) and validates the configured Solana keypair/account relationship before changing that flag; HIGH-risk signing/auth guardrail (pacifica.py:31-48,286-328,610-645). — execution-service@9d0753d6ff + evidence: `supports_live` confirmed still `BaseConnector`'s fail-closed `False` default, no override (`base.py:312,330-336`). Real gap found + fixed: `sign_pacifica_payload` always set `account` to the signing keypair's own pubkey with no `agent_wallet` header — silently wrong for Pacifica's documented delegated "Agent Key" mode (verified via WebFetch of `docs.pacifica.fi/api-documentation/api/signing/api-agent-keys.md`: "Still use the original wallet's public key for `account`" + a required `agent_wallet` header). Added optional `wallet_account_address` config + `account_address`/`_signing_headers()`; `supports_live` itself untouched. 8 new regression tests; `quality-gates.sh` green (354s, sentinel matched committed HEAD `3ae00b8a`); post-push ancestry independently verified after a quickmerge push-race rebase.
@@ -330,21 +301,10 @@ No code was changed or tests run for this read-only audit. The HIGH findings req
       points 3 and 4 (bitfinex_native.py:337-365, bitget_native.py:274-315,
       kraken_rest_adapter.py:230-344,437-472, kraken_futures_orders.py:49-123,163-177). — execution-service@a57d7fba93
       + evidence: shared validators in _native_base.py, wired pre-body-build into all 4 files; QG green.
-- [x] ✅ [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
+- [ ] [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
       retrying; do not discard invalid/missing IDs or allow a fresh retry to double-place an order; HIGH finding:
       checklist point 6 (bitfinex_native.py:337-368, bitget_native.py:274-318,
-      kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143). — execution-service@df1ef85ffd + evidence:
-      new native_idempotency.py (mirrors _perp_idempotency.py's no-venue-side-lookup pattern -- Kraken's own order
-      parser doesn't capture a client-order-id field either, so there is nothing to reconcile against): Bitfinex
-      and Bitget now always require/generate a client_order_id (require_client_order_id) instead of leaving it
-      optional, and Bitfinex's numeric `cid` is derived deterministically from it (client_order_id_to_bitfinex_cid)
-      instead of silently discarded to None on a non-digit id; Kraken Spot's `_place_order_spot` and Futures'
-      `_place_order_futures` (the only two of the four that make a real HTTP round trip today) are wrapped in
-      execute_native_order_idempotent, so a retry for the same client_order_id replays the cached result and an
-      ambiguous prior attempt (an exception mid-submit) fails closed with NativeOrderInFlightError rather than
-      resubmitting. quality-gates.sh green (152s, 9051 passed, sentinel matched committed HEAD); 23 new regression
-      tests across test_native_idempotency.py/test_kraken_order_idempotency.py plus 2 added to the existing
-      Bitfinex/Bitget adapter test files; post-push ancestry verified by quickmerge.
+      kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143).
 - [x] ✅ [BACKEND] P0. Make Kraken Spot/Futures response-envelope parsing fail closed and require a validated order
       result before constructing NEW/CANCELLED/AMENDED success results; malformed or empty payloads must be reported
       as failures, not interpreted as success; HIGH finding: checklist point 7
@@ -425,7 +385,7 @@ execution-service@6a509338f9 (post-push ancestry independently verified).
 
 ### 2026-08-21 — slot 25 Progress Log split (line-cap headroom)
 
-Per `plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`'s "Recommended decision": this
+Per `plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`'s "Recommended decision": this
 doc was sitting at exactly the 1000-line hard cap with zero headroom, actively blocking the next slot
 to land a fix/evidence entry against any of the still-open todos below. Relocated the 17 Progress Log
 entries whose corresponding todo(s) were already fully `[x]`-checked and which carried no bearing on
@@ -585,65 +545,6 @@ approval + Karak vault line 226; native rate-limit/blocking-sleep hardening line
 (Aave/Morpho typed-params decimals, lines 213/215), the 2 unstarted audit phases (sports exchange line 188, sports
 unity line 192), and this close-out todo itself.
 
-### 2026-08-21 — slot-7 perp/CLOB slippage bounds (checklist point 4, slippage half) — SHIPPED
-
-Landed as `execution-service@fc7835b13e`, post-push ancestry verified against `origin/live-defi-rollout`. Covers
-ONLY the slippage-bound half of checklist point 4 -- the expiry/deadline-bound half is deliberately deferred to a
-narrowed line-283 todo above (not silently dropped).
-
-**Design**: new `execution_service/defi_execution/protocols/_perp_order_bounds.py` (`resolve_max_slippage_bps`,
-`compute_bounded_limit_price`, `slippage_bps_to_percent_str`; default 5%, capped 20%). Per-venue mechanics verified
-against each venue's own docs before implementing (WebFetch + `gh api` against `asterdex/api-docs`,
-`docs.pacifica.fi`, `hyperliquid.gitbook.io`):
-- **Pacifica** has a NATIVE required `slippage_percent` field on its market-order endpoint -- threaded through
-  directly, no reference price needed (the venue bounds against its own mark price). Previously entirely absent from
-  this connector's (structurally-unreachable, `supports_live=False`) live request shape.
-- **Hyperliquid and Aster** have no native market-order price-protection field; both now use the "marketable IOC
-  limit" technique (a limit order priced past the reference by the bound, `tif=Ioc`/`timeInForce=IOC`) -- Hyperliquid
-  already did this for its old fixed-5%-hardcoded case, generalized here and applied the same way to Aster (verified
-  Aster's `timeInForce` enum is GTC/IOC/FOK/GTX/HIDDEN only, no native slippage field).
-- **Bybit**'s perp-hedge wrapper (`BybitPerpHedgeConnector`) now threads an optional `price` through to the same
-  IOC-limit technique via the already-live-tested `BybitCCXTAdapter.place_order()` (`order_type`/`price`/
-  `time_in_force` already supported), instead of its previous unconditional unbounded `order_type="market"`.
-
-**Real bug fixed alongside the missing bound**: Hyperliquid's market-order reference price previously fell back to a
-hardcoded `Decimal("100")` when the caller supplied none -- wrong for essentially every real asset (e.g. BTC), which
-silently produced a nonsensical IOC limit price. Now fetches a REAL live mark price via a new `/info
-type=metaAndAssetCtxs` call (mirrors the existing `/info` call pattern already used for `meta`/`clearinghouseState`)
-when no caller reference price is given.
-
-**Backward compatible**: the only real caller today, `perp_hedge_consumer.py` (`connector.place_order(...)` for both
-Hyperliquid and Bybit venues), never supplies a reference `price` -- so Aster/Pacifica/Bybit's behavior is
-byte-for-byte unchanged for it (still an unbounded venue-native market order); Hyperliquid gets a strictly-better
-live-mark-price-based IOC fill in place of the dangerous `$100` fallback, with no interface break.
-
-**Deliberately deferred (see the narrowed line-283 todo above)**: a resting-order or per-request expiry/deadline
-bound. Verified none of the four venues expose a per-order good-til-date: Hyperliquid's order schema has only
-ALO/IOC/GTC time-in-force; Aster's `timeInForce` enum is GTC/IOC/FOK/GTX/HIDDEN; Pacifica's `tif` enum is
-GTC/IOC/ALO/TOB; all three venues' only expiry-shaped field is a request-SIGNATURE freshness window (Pacifica's
-`expiry_window`, already handled by `_perp_idempotency.py`), unrelated to how long a resting order stays open.
-Hyperliquid's exchange action DOES support a request-processing deadline (`expiresAfter`, verified via WebFetch:
-top-level POST field alongside `action`/`nonce`/`signature`, rejects the whole action if not processed in time) --
-NOT wired in this pass because `_hyperliquid_signing.sign_l1_action` has no existing plumbing for it and the docs are
-ambiguous on whether it factors into the signed msgpack hash; getting that wrong risks a signature that's silently
-NOT enforcing the deadline while looking correct locally -- a worse outcome than deferring cleanly with the research
-already recorded here.
-
-**Tests added**: `tests/defi_execution/unit/test_perp_order_bounds.py` (the shared module, fully isolated -- resolve/
-reject/ceiling, bounded-price math both directions, bps-to-percent conversion); two new live-mode tests in
-`tests/defi_execution/integration/test_hyperliquid_mock.py` (reference-price-given bounds into IOC without an extra
-`/info` call; no-price-given triggers the live mark-price fetch and bounds around THAT); two new tests in
-`test_aster_connector.py` (market-with-price converts to LIMIT+IOC; market-without-price stays unbounded MARKET,
-unchanged); two new tests in `test_pacifica_connector.py` (`_build_order_params` carries `slippage_percent` for
-market, omits it for limit); two new tests in `test_bybit_connector.py` (reference-price bounds into limit+IOC;
-an absurd `max_slippage_bps` above the 20% ceiling is rejected before reaching the adapter).
-
-**Also fixed in the same pass** (stale doc pointer, per the "misled you = fix it" rule): `aster.py`'s module
-docstring cited a dead docs URL (`asterdex/api-docs/blob/master/aster-finance-api.md`, 404 -- the file moved under
-`V3(Recommended)/EN/aster-finance-futures-api-v3.md` in a repo restructure); corrected in place.
-
-`quality-gates.sh` green (270s, 9022 passed, sentinel matched committed HEAD exactly).
-
 **This close-out todo's own done-when ("once every todo above is done or explicitly re-scoped") is NOT yet
 satisfied** — the 3 open P0s above are genuine unresolved HIGH findings, not re-scoped/deferred work, so the
 checkbox below stays `[ ]` rather than being falsely flipped. No production code was changed; this is a doc-accuracy
@@ -656,136 +557,6 @@ in this same Progress Log, and the flipped checkbox at line 284). The close-out 
 stale by one: 2 open P0 fixes remain, not 3 — perp/CLOB slippage/deadline bounds (line 283) and native-REST
 client-order-id idempotency (line 304). The close-out todo's own checkbox stays `[ ]` (still 2 genuine open P0s plus
 the 2 unstarted audit phases), but its epic-doc correction should be re-run once those clear rather than trusted as
-current. **Update (2026-08-21, slot-7): checklist point 4 (line 283) is now done — see the two Progress Log entries
-below.** Only one todo remains open in this "DeFi by primitive — perp / CLOB on-chain" section: the close-out
-epic-reflection todo above, whose own epic-doc correction should be re-run now that both P0s it counted are closed.
-
-### 2026-08-21 — slot-7 Hyperliquid request deadline (checklist point 4, remainder) + EIP-712 chainId fix — SHIPPED
-
-Landed as `execution-service@d4876e394e` (rebased during push onto 2 upstream commits; full QG re-ran green
-post-rebase, 269s), post-push ancestry verified. Closes checklist point 4 in full — see the slippage-half entry
-above (`execution-service@fc7835b13e`) for that half's design.
-
-**Resolved the deferred uncertainty**: pulled `hyperliquid-dex/hyperliquid-python-sdk`'s `utils/signing.py` via
-`gh api` (the authoritative reference, not a doc page) and confirmed `expires_after`/`expiresAfter` IS part of the
-signed hash -- `action_hash()` appends `b"\x00" + expires_after.to_bytes(8, "big")` AFTER the vault marker, only
-when not `None`. Implemented `_hyperliquid_signing.sign_l1_action(..., expires_after_ms=...)` matching this exactly;
-`hyperliquid.py`'s `place_order()` gained a `deadline: int | None` param (absolute unix seconds, matching this
-codebase's existing AMM-swap deadline convention), validated in-range (future, ≤300s ahead) before the idempotency
-lock, converted to ms, folded into the signature, and added to the POST body's top-level `expiresAfter` field.
-
-**Real bug found + fixed in the same pass**: `_hyperliquid_signing.py`'s EIP-712 domain `chainId` varied by
-`testnet_mode` (1337 mainnet / 421614 testnet) -- the official SDK's `l1_payload()` confirms it's ALWAYS 1337 for L1
-actions regardless of network; only the phantom-agent `source` field ("a"/"b") distinguishes mainnet/testnet. The
-prior behavior would have produced an EIP-712 domain hash Hyperliquid's testnet endpoint could never verify --
-every testnet order/cancel would have failed signature verification. `testnet_mode` is a real, live-wired config
-option (used at both `place_order()` and `cancel_order()` call sites), so this had real (if perhaps not yet
-exercised) blast radius, not a theoretical gap. Fixed by removing the `is_mainnet`-conditional chainId branch
-entirely; `source` still varies as before.
-
-**Tests added**: new `tests/unit/defi_execution/test_hyperliquid_signing.py` -- domain chainId asserted 1337 for
-BOTH `is_mainnet=True` and `False` (regression for the bug above, via patching `eth_account.messages.
-encode_typed_data` to capture the full EIP-712 message), plus an independent byte-for-byte reconstruction of the
-`expires_after`-folded hash (not trusting the production code's own math) compared against the actual signature
-output. Four new tests in `test_hyperliquid_mock.py`: deadline threads into the POST body's `expiresAfter` (ms);
-omitted when not supplied (unchanged prior behavior); a past deadline is rejected before any network call; a
-deadline further than 300s ahead is rejected. `quality-gates.sh` green (9028 passed, sentinel matched committed HEAD
-before the push-time rebase; QG re-ran and stayed green after).
-
-### 2026-08-21 — slot 21 close-out todo: epic W15 section re-confirmed (all P0 clear)
-
-Re-ran slot 10's confirmation now that the 2 P0s slot-7 flagged as still-open at the time (perp/CLOB
-slippage/deadline bounds line 283; native-REST client-order-id idempotency line 304) have both since landed —
-verified directly via `grep -c '^- \[x\]'`/`'^- \[ \]'` against this file: 44 done / 10 open of 54 todos. Listed
-every remaining `- [ ]` by line: 126 (P1 Orca/Raydium full account derivation), 188 (P1 sports-exchange audit,
-unrun), 192 (P2 sports-unity audit, unrun), 213 (P2 Aave typed-params dead-code decimals), 215 (P2 Morpho
-typed-params dead-code decimals), 217 (P1 Kamino market cross-check), 224 (P1 wire real on-chain calls behind the
-staking fail-closed guards), 226 (P1 EigenLayer approval + Karak vault address), 332 (P1 native rate-limit/
-blocking-sleep hardening), and this close-out todo itself. **Zero open P0s** — every remaining item is P1/P2 and
-each already carries its own explicit scope + deferral rationale in its todo text (dead code confirmed via grep,
-needs a vendored SDK/on-chain account fetch not yet available, etc.), satisfying this todo's own done-when ("done
-or explicitly re-scoped"). Corrected the epic's W15 section in place with this accurate zero-P0 breakdown
-(previously stale at "3 P0 fixes... blocking close-out", written before slot-7's two P0 fixes landed). Checkbox
-flipped. No production code was changed — this is a doc-accuracy confirmation only.
-
-### 2026-08-21 — slot 19 sports exchange adapter audit + close-out gate re-check
-
-Dispatched from `plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`'s close-out gate-check todo
-("once the 11 items are all done or explicitly re-scoped, re-run the gate-check"). Re-derived the current open-item
-list first (`grep -n "^- \[ \]"`, not trusted from the issue doc's now-stale 2026-08-21 snapshot): 5 of the original
-11 items were already done or explicitly re-scoped by prior sessions (Orca/Raydium partial-fix re-scope, Aave/Morpho
-dead-code P2 deferrals, Kamino cross-check deferral, wire-real-on-chain-calls deferral, EigenLayer/Karak MEDIUM
-follow-up, native rate-limit MEDIUM follow-up — 6 total, all carrying their own documented deferral reasoning), and
-the CCXT/perp-CLOB/native-REST P0 groups the issue doc listed as open were also already fully landed. The two
-**genuinely open, non-deferred** items were the sports-exchange and sports-unity audit phases — full security
-reviews that had simply not started yet, not deferred-with-reasoning work.
-
-Audited the sports-exchange group per the fixed seven-point checklist: `betfair.py`, `betfair_order_mapping.py`
-(`_BetfairCanonicalOrderMixin`), `kalshi.py`, `matchbook.py`, `polymarket_clob.py`
-(`sports_execution/adapters/exchanges/`), plus the thin delegating wrappers `polymarket_adapter.py` and
-`sports_adapter.py` (`trade_execution/adapters/`) and the bookmaker-API group `api_football.py`/`odds_api.py`
-(`bookmaker_api/`, `aggregator/`). `onexbet.py` no longer exists in the repo (only a stale `.pyc` remains) —
-confirmed via `sports_handler.py`'s own comment and `sports_bookmaker_roster_classification_2026_08_21.md` that it
-was retired as dead code the same day this plan's issue doc was filed; the plan's file list is stale on this one
-name, corrected in place on the checkbox above.
-
-- **Credential handling — PASS with one FINDING HIGH:** Betfair/Kalshi/Matchbook/Polymarket all inject credentials
-  at construction and never log secret material. Kalshi's `_build_kalshi_headers()` has a real fail-open bug: on
-  ANY `ValueError` while loading/signing with the RSA private key, it silently substitutes a raw SHA-256 digest of
-  the message as the "signature" instead of raising (`kalshi.py:116-128`) — a broken/misconfigured key degrades
-  into sending a fabricated signature rather than failing closed.
-- **Signing/auth correctness — PASS:** Kalshi RSA-PSS, Polymarket L2 HMAC-SHA256 (timestamp+nonce present, replay
-  window venue-side), Betfair/Matchbook session-token REST auth all match each venue's documented scheme; no
-  private key/session token is transmitted in a body/URL beyond the documented header contract. (The Kalshi
-  fallback above is a credential/correctness finding, not a scheme-correctness one — the primary RSA-PSS path
-  itself is correct.)
-- **Input validation before order write — FINDING HIGH (all four exchanges):** Betfair (`place_bet`,
-  `place_order`), Kalshi (`place_bet`, `place_order`), Matchbook (`_submit_offer`), and Polymarket CLOB
-  (`place_order`, `_submit_clob_order`) all cast caller stake/price/size directly to `float`/`int` before building
-  the order payload with no local finite-positive or side/action allowlist check — the exact same finding class
-  already fixed for the CCXT/perp-CLOB/native-REST groups elsewhere in this plan. Betfair additionally silently
-  maps any non-"BACK" side string to "L" (lay) rather than rejecting it (`betfair_order_mapping.py:143`) — a wrong
-  caller value flips the bet direction instead of erroring.
-- **Slippage/deadline bounds — PASS/N-A:** all four are LIMIT-order exchanges/CLOBs where the caller-supplied price
-  IS the bound (no unbounded-market-order path exists in this group, unlike the CeFi/perp CCXT group). One MEDIUM
-  note: Polymarket's CLOB supports a GTD (good-til-date) time-in-force per its own docs, but this adapter only ever
-  passes GTC/FOK/IOC through — a caller has no way to bound an order's resting lifetime. No todo added for this
-  MEDIUM-only gap (consistent with how other MEDIUM-only findings were handled elsewhere in this plan).
-- **Approval scope — PASS/N-A:** fiat/USDC.e wagering and CLOB order placement; no ERC-20/SPL token-approval path
-  exists in this adapter group.
-- **Idempotency/retry safety — FINDING HIGH (3 of 4 exchanges, Betfair split):** Betfair's canonical
-  `place_order()` path (`betfair_order_mapping.py:155`) DOES thread `client_order_id` through as Betfair's own
-  `customerRef` (venue-side dedup), but the older, still-live `place_bet()` legacy path (`betfair.py:398-421`)
-  calls `_submit_place_orders()` with no customer_ref at all — zero idempotency on that path. Kalshi mints a fresh
-  UUID every call unless the caller explicitly supplies one (a caller-level retry after a timeout doesn't reuse the
-  same id, defeating Kalshi's own dedup). Matchbook has no client-order-id concept anywhere. Polymarket CLOB accepts
-  a `client_order_id` parameter but never sends it to the venue or uses it to reconcile a retry — pure dead
-  plumbing today.
-- **Honest error handling — PASS:** all four raise `BetRejectedError`/`BookmakerUnavailableError` on a non-success
-  response rather than fabricating success; unexpected exceptions are logged via `UNKNOWN_VENUE_ERROR_RECEIVED` and
-  re-raised, never swallowed.
-
-`api_football.py` and `odds_api.py` are read-only market-data adapters (get_odds only) that are, per their own
-docstrings and the prior 2026-08-01 dead-code audit, not wired into any live execution path — checklist points 2-6
-are N/A by construction (no write surface); points 1 and 7 PASS (credentials not logged; non-200 raises a real
-error). No new finding recorded for either.
-
-No production code or tests were changed for this audit-only unit (matches this plan's established pattern for
-every prior audit phase). Four new P0/P1 triage todos added immediately after the existing Triage section todos,
-above, covering the 4 distinct HIGH-finding groups found (Betfair legacy idempotency; Kalshi fail-open signing;
-cross-venue client-order-id idempotency; cross-venue input validation). Checkbox for the sports-exchange audit
-phase flipped above.
-
-**Close-out gate re-check result: still NOT met.** The sports-unity audit phase (line 192, P2 —
-`sports_execution/adapters/unity/`) remains genuinely unstarted, not deferred/re-scoped, so this todo's own
-done-when ("every todo above is done or explicitly re-scoped") is not yet satisfied. The close-out checkboxes
-(this section, and the sibling checkbox in
-`plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`) stay `[ ]` — flipping them now would be a
-false-progress claim. Remaining blockers as of this entry: the 4 new triage todos just added above, plus the
-sports-unity audit phase (line 192) — 5 items, down from 11 at the issue doc's original count.
-
-**Reopening note**: this session landed concurrently with slot 21's close-out confirmation directly above, which
-flipped this plan's close-out checkbox to `[x]` on a "zero open P0s" basis — accurate at the moment slot 21 wrote
-it (before this session's sports-exchange audit existed), but no longer accurate now that the audit above found 3
-new P0 findings. Reverted the close-out checkbox back to `[ ]` in the same edit as this entry; slot 21's entry
-above is left untouched as an accurate record of what was true at the time it was written.
+current. Two todos remain open in this "DeFi by primitive — perp / CLOB on-chain" section: the checklist-point-4
+slippage/deadline-bounds todo (line 283) and the close-out epic-reflection todo above — pick point-4 next per the
+plan's own top-to-bottom ordering, it's the natural sibling (same four files, same audit phase).

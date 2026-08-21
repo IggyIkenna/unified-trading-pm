@@ -133,19 +133,13 @@ known — see the "Findings triage" note in `CLAUDE.md` if this needs its own tr
       8-core box during these runs (other slots' concurrent QG/test activity) — consistent with genuine CPU contention
       from booting 12 processes at once, not a worker-chat.spec.ts code defect. This is now filed as its own todo since
       it's a suite-wide architectural property (global `webServer` coupling), not specific to this spec.
-      **DUPLICATE OF**: reconciliation into `[x]` is owned by `plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`'s
-      open todo 1 (status: active) — not independently flipped here, per this doc's own governance rule.
 - [ ] [TEST] P3. **Root-cause `backlog-collision.spec.ts`'s intermittent "click Fix" failure** — check for an
       async-completion race in the remint→confirm sequence.
-      **DUPLICATE OF**: reconciliation into `[x]` is owned by `plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`'s
-      open todo 1 (status: active) — not independently flipped here, per this doc's own governance rule.
 - [ ] [DOC] P3. **Once root-caused, note the fix pattern in `/codex/06-coding-standards/ui-testing-layers.md`** if a
       general "async-poller-vs-test" convention emerges, so future specs avoid the same class of flake. Should also
       cover the `PlanRegenLoop`-in-mock-mode class from todo 2 (a "background loop with no interval=0 env-gate can still
       corrupt state deterministically inherited from the launching shell's env" pattern), not just async-poller-vs-test
       races.
-      **DUPLICATE OF**: reconciliation into `[x]` is owned by `plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`'s
-      open todo 1 (status: active) — not independently flipped here, per this doc's own governance rule.
 - [ ] [INFRA] P3. **Investigate whether Playwright's `webServer` config (an array, applied globally regardless of
       `--project` filtering) should be split so a single-project e2e run doesn't boot all 6 backend+dashboard pairs.**
       Discovered while verifying todo 2's fix: running `worker-chat.spec.ts` against the real `playwright.config.ts`
@@ -157,9 +151,6 @@ known — see the "Findings triage" note in `CLAUDE.md` if this needs its own tr
       determines which spec(s) time out. This is a DESIGN CALL (split into per-project config files invoked separately
       in CI vs. accept the coupling and raise timeouts vs. something else) — operator-ask before implementing, not a
       mechanical fix.
-      **DUPLICATE OF**: reconciliation into `[x]` is owned by `plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`'s
-      open todo 1 (status: active) — not independently flipped here, per this doc's own governance rule; the design call
-      itself was already shipped (`agent-orchestrator@9cd1fa0`, see Progress Log).
 
 ## Why this wasn't chased further this session
 
@@ -326,9 +317,3 @@ shipped independently or these findings would still be sitting entirely undocume
   checked `ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`: still `status: active`, still not yet run its
   own reconciliation pass, so this doc's checkboxes correctly stay unflipped pending that finalize plan per its own
   governance rule. Not reclassifying.
-- **dedup pass 2026-08-21 (COVERED_ELSEWHERE queue processing)**: added inline `**DUPLICATE OF**` annotations to all
-  4 open checkboxes (todos 2-5), each pointing at `plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`
-  (verified `status: active`) — this is purely a `count_open_tasks.py` dedup-marker addition (checkboxes themselves
-  left `[ ]`, no evidence altered), so `scripts/plan-hygiene/count_open_tasks.py`'s cross-corpus dedup now correctly
-  excludes all 4 from the deduped open-task count; verified via `--json` that `covered_detail` picks up all 4 with
-  no dangling markers. Not reclassifying `assigned_vm` (flipping stays the finalize plan's job).

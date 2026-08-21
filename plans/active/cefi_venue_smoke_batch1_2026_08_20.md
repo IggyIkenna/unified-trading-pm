@@ -42,59 +42,11 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 - [x] [BACKEND] P0. **Execution attempt complete — gate RED, not a false pass.** The final staging CeFi report measured `total=294`, `passed=7`, `failed=79`, `skipped=208`; the staging catalogue and terminal VM evidence are retained, while `no_parquet_under`, self-deleted-VM/no-exit-status, and canonical-object failures remain tracked in [/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md]. The no-zero-row-success contract is therefore not yet satisfied. — Evidence: retained terminal VM log/report and open blocker issue; this checkbox records the RED execution attempt, not a green smoke-gate result.
 - [x] [BACKEND] P1. ✅ Record one testnet verdict for every CeFi venue, including simulation where no venue testnet exists; Gate: every distinct venue in the live work list has a verdict. — Evidence: full 24-venue verdict table in the Progress Log entry below (17 real testnet/demo/sandbox, 7 require simulation via our own matching engine).
 - [x] [BACKEND] P1. ✅ Add or run testnet smoke coverage where credentials are available or provisionable and record an honest unavailable result for the remainder; file an operator credential request when a credential gap is confirmed. Gate: every attempted path has a measured terminal result. — Evidence: live per-venue smoke run in the Progress Log entry below; `execution-service@a5b248491d` (`scripts/run_cefi_testnet_connectivity_smoke.py`), `unified-api-contracts@b2f54822b3` (Aster dead-DNS registry fix found while running it).
-- [x] [BACKEND] P1. ✅ Track every failed or absent CeFi row with its source and data type; Gate: no failure is hidden behind a declared-absence or expected-unattempted status. — Evidence: `market-tick-data-service@27f4087273` (verified ancestor of `origin/live-defi-rollout`); see Progress Log entry below for the full reconciliation.
+- [ ] [BACKEND] P1. Track every failed or absent CeFi row with its source and data type; Gate: no failure is hidden behind a declared-absence or expected-unattempted status.
 - [ ] [BACKEND] P2. Register `bitfinex`, `okx_swap`, and `coinbase_cde` as their own `SourceCapability` entries in `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_cefi.py` (domains/operations/base_urls derived from the real adapters, e.g. `bitfinex_native.py` for Bitfinex — not fabricated); `supports_testnet` per the 2026-08-21 verdict table below (Bitfinex: False; OKX-SWAP: True, same demo-trading infra as `okx`; Coinbase-CDE: True, certification/UAT environment provisioned on request, not self-serve). (repo: unified-api-contracts)
 - [x] [BACKEND] P0. ✅ Verified source-scoped exemptions and canonical oracle/manifest checks with negative controls. UAC `03c79c82` resolves source per `(venue, data_type)` and excludes only source-first Databento cells; its quality-gate tests passed. MTDS `f90bf09a` routes CEFI/DEFI object paths through `canonical_path_violations(..., require_pipeline_mode=True)` and its tests reject missing `pipeline_mode`, raw wire-symbol filenames, and missing captures. — Evidence: `unified-api-contracts` QG `tests` slice passed; `market-tick-data-service` QG `tests` slice passed (`11113 passed, 28 skipped, 1 xpassed`).
 
 ## Progress Log
-
-**2026-08-21 — slot 4 reconciliation flip (todo #4, failed/absent row tracking + anti-hiding gate).**
-Verified — did not re-run the smoke driver — that this todo's underlying work was already shipped by a
-peer session against the sibling blocker issue
-[/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md]'s matching P1 todo,
-whose wording ("classify every `no_captured_data_for_cell`/`tardis_guard_busy` result against the production source
-listing... no row may remain represented only by a skipped aggregate result") is the same work this plan's todo
-names. Verification performed this session (not trusted from the issue doc's own copy of the evidence):
-- `market-tick-data-service@27f4087273` confirmed a live ancestor of `origin/live-defi-rollout` via
-  `git merge-base --is-ancestor`, and its diff read in full: it adds
-  `market_tick_data_service/scripts/classify_cefi_skips_against_source_listing_2026_08_21.py` +
-  `tests/unit/scripts/test_classify_cefi_skips_against_source_listing_2026_08_21.py`.
-- The script's `classify_pair()` checks every (venue, data_type) pair behind a `no_captured_data_for_cell`/
-  `tardis_guard_busy` row against the vendor's REAL production listing (Tardis's public
-  `GET /v1/exchanges/{exchange}` dataset-types, or the on-chain-perp launcher's fixed
-  trades/book_snapshot_5/derivative_ticker triple for the 5 native-REST venues) — never guesses: a fetch failure or
-  unmapped venue/data_type resolves `unresolved_source_check`, not a fabricated verdict. 87 distinct pairs classified:
-  31 `confirmed_absent_at_source`, 45 `confirmed_available_needs_capture` (real gaps, left untouched — not converted
-  to a declared absence), 11 `unresolved_source_check`.
-- `apply_reclass()` is the gate this todo names: it only ever moves a pair's PROD manifest `attempted_failed` rows to
-  `empty_confirmed/EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` when that pair is in the confirmed-absent set, gated on a
-  row-count-preserving / captured-count-invariant / delta-consistent check (`gate_ok`) computed via DuckDB
-  out-of-core (never a full-frame pandas decode of the ~30.8M-row PROD manifest). Unit tests
-  (`test_apply_reclass_dry_run_computes_gate_without_writing`,
-  `test_apply_reclass_apply_writes_snapshot_and_reclassed_manifest`) prove both the dry-run gate math and that an
-  untouched (non-absent) pair's `attempted_failed` row survives a real apply run unchanged. The issue doc's own
-  Progress Log records the live `--apply` result against the PROD cefi manifest: `gate_ok=true`, `reclassed=0`,
-  `applied=false` — none of the 31 confirmed-absent pairs currently sit in `attempted_failed`, i.e. no failure is
-  presently hidden behind a declared absence for the classified pairs.
-- Independently checked (not assumed) whether this todo's Gate also needs to cover the OTHER failure reasons seen in
-  the terminal reports above (`canonical_no_matching_objects_in_test_bucket`, `vm_self_deleted_no_exit_status`,
-  `no_parquet_under`): read `market-tick-data-service/scripts/pipeline_e2e_check.py` directly. These are
-  driver-report-level diagnostic strings explaining why the SMOKE CHECK itself failed (canonical path mismatch, VM
-  teardown, no object under the test-bucket prefix) — the driver only READS manifest `capture_status` (via
-  `read_prod_capture_status`/`verify_manifest_row`) to decide its own pass/fail/skip verdict, it never writes it, so
-  these reasons cannot themselves cause a manifest-level hide-behind-absence. The driver already carries a general
-  "honest-empty pass" branch (`pipeline_e2e_check.py` ~line 1888): a manifest row that is genuinely
-  `empty_confirmed[EXPECTED_*]` is treated as PASS, while an unexplained zero-row result (`SOURCE_RETURNED_ZERO`)
-  deliberately stays FAIL for force legs — the exact anti-hiding behavior this todo's Gate requires, already
-  structural for every data_type/reason, not just the classified subset.
-- Every failed/absent row remains traceable to its `data_type` (the driver's `shard_label` is
-  `asset_group:venue:data_type`) and its source: either the manifest's own `source` column (schema v9,
-  write-stamped by the capturing adapter) for rows that were actually attempted, or the classify script's
-  `verdict.detail` naming the checked vendor/listing for the 87 skip-reason pairs.
-
-Scope note for the next reader: the 45 `confirmed_available_needs_capture` pairs and the 3 venues still
-`unresolved_source_check` are real open follow-up, already tracked as their own todos in the linked issue doc — not
-duplicated here, per this doc's `related:` cross-reference.
 
 **2026-08-21 — slot 3 regression evidence.** Preserved the peer’s completed P0 checkbox and added explicit source-scoped and missing-capture regression coverage.
 `unified-api-contracts@b84bc7dfc` asserts a Databento exemption for `CBOE/ohlcv_1m` does not exempt the Yahoo-sourced `CBOE/ohlcv_24h` cell; `market-tick-data-service@a1b1f21ad` asserts a successful VM with no parquet/manifest atom fails, and a parquet write without its manifest atom fails.

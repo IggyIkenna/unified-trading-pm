@@ -41,8 +41,7 @@ summary: >-
   "Resolution 2026-08-21" section below for the real design (a `defi_adapter=` injection seam on
   SwapHandler/LendHandler/StakeHandler, mirroring TransferHandler's existing `adapter=` pattern — NOT the
   originally-scoped "wire through DeFiAdapter.execute_instruction() directly" approach, which turned out to have
-  its own fabricated-success gap; see `/plans/archive/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md`
-  (RESOLVED + ARCHIVED 2026-08-21).
+  its own fabricated-success gap; see `/plans/active/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md`).
   BORROW/REPAY (`BorrowHandler`) closed same-day (execution-service@4e35a09b2) via the identical seam, once the
   pattern was proven 5x — see "Resolution 2026-08-21 (BORROW/REPAY)" below.
 status: resolved
@@ -56,7 +55,7 @@ related:
   [
     /plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md,
     /plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md,
-    /plans/archive/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md,
+    /plans/active/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md,
   ]
 created: 2026-08-20
 source: >-
@@ -155,7 +154,7 @@ Shipped: `execution-service@4af3715497`. Real design, NOT what this issue's own 
   "route through DeFiAdapter's execute_instruction()"**: direct code reading of `DeFiAdapter._execute_swap`/
   `_execute_lending`/per-protocol staking helpers found they do not check the connector result's own `success`
   field before reporting `"status": "COMPLETED"` — a real, separate fabricated/degraded-success gap, filed as
-  `/plans/archive/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md` (NOT fixed there, to avoid
+  `/plans/active/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md` (NOT fixed here, to avoid
   widening this change's blast radius onto `DeFiAdapter`'s already-shipped internal-manual-API consumer). The new
   `defi_live_dispatch` module reuses `DeFiAdapter` ONLY as a connector container (Secret Manager credential
   resolution / Web3 signing / `is_live` wiring — the real, hard, already-correct part) and does its own connector

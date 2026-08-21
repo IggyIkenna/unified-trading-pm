@@ -150,9 +150,3 @@ or an equivalent is promoted); this run's job was classification + duplicate-avo
   hit but not followed up by reading. No corpus content lost: this doc had been blind-`Write`-overwritten by the
   second worker's own duplicate draft and is restored here to its original, correct 2026-08-18 content verbatim.
 - **context-scout 2026-08-20**: refreshed context_scope (2 entries)
-- **2026-08-21 (dedup verification pass)**: attempted to formalize the doc's own prose `SUPERSEDED 2026-08-19` banner
-  into `status: superseded` frontmatter — reverted: `check_terminal_status_archived.py` (pre-commit `plan-hygiene`
-  hook) treats `status: superseded` as unconditionally TERMINAL for an issue doc and requires it already `git mv`'d to
-  `plans/archive/`, which contradicts this doc's own banner (archival deliberately deferred). No open `- [ ]` todos
-  exist either way. Flagging for archive instead: content-superseded, 0 open todos, successor confirmed present and
-  `status: open` (active, not itself further superseded as of this check).

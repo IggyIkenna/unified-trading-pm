@@ -360,12 +360,6 @@ cause via the individual checker scripts (`check_reference_paths.py`, `check_ag_
       pre-existing, scattered across `plans/ai/`, `plans/prompts/`, `plans/audit/results/archive/`, and several
       `codex/` docs — none prediction-tranche. Not fixed here (tradfi-tranche scope, out of this run's bounds — risk
       of collision with that tranche's own active work).
-
-      **DUPLICATE OF `plans/active/issues/plan_reconciler_findings_tradfi_2026_08_18.md` item 7 (verified 2026-08-21
-      dedup pass)**: that doc's own Phase -1 table marks this exact +4 regression **RESOLVED (done-but-unchecked)** —
-      both refs already repoint to the archived path, confirmed via a fresh `grep -n 'batch7_2026_08_06'` in that
-      doc's own evidence. Covering doc confirmed `status: open` (active, not archived/draft). Not independently
-      re-verified here beyond reading that doc's cited grep output.
 - [ ] [REVIEW] P2. **AG-closeout linkage — 1 new orphan vs baseline 0**:
       `plans/active/issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md` (`asset_group=[tradfi]`). Not a
       prediction doc, not fixed here — routed to the tradfi tranche.

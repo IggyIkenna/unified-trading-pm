@@ -286,9 +286,7 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       todos: `/plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`. **This todo stays
       open** — matches this doc's own established precedent (CF-8 todos above marked "diagnosed, not GREEN" rather than
       falsely checked off) — real completion needs the write-path fix + phantom-row cleanup that new issue doc tracks,
-      then a re-attempt of this exact backfill. **DUPLICATE OF `sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`**
-      (status: open, `/plans/active/issues/`) — the re-attempt of this exact backfill is that doc's own tracked work,
-      not independent scope here.
+      then a re-attempt of this exact backfill.
 - [x] ✅ [DATA] P3. Add a per-AG exception to `cf_manifest_audit.py::_check_era_b` so tradfi's already-adjudicated
       bundle-grain `data_type in {options_chain,futures_chain}` captured rows stop reading RED on every audit run
       (currently 107,296 rows, CME+ICE only, all historical — see the Era-B todo above for the full evidence chain).

@@ -9,7 +9,7 @@ summary: >-
   larger/different-shaped population than the single-day precedent (Finding 8/10's HYPERLIQUID/ASTER 6-date pattern) —
   it looks like an ongoing, ~2-month ranging dual-write (both wire-form and canonical-form objects being written for the
   same day/symbol slot), not a one-off transitional artifact. Zero mutation occurred (script correctly refused).
-status: resolved
+status: open
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -34,6 +34,12 @@ resolved_by:
 locked_by:
 assigned_vm: planning
 assigned_role: data_engineering
+archive_exempt: true # 2026-08-19 (na-eligibility-audit) — justification supplied (was flagged missing 2026-08-18
+  # by plan_reconciler): doc is functionally COMPLETE (all 5 todos [x], "Recommended NEXT item: none" per its own
+  # 2026-08-11 Progress Log entry) and genuinely archivable, not exemption-worthy on the merits — a full 6-step
+  # archival ritual (referrer sweep) was explicitly deferred by plan_reconciler's 2026-08-15 pass pending "the
+  # next toucher with archival authority." This comment documents WHY the exemption is still sitting unresolved,
+  # not a substantive reason to keep it open — flagging for a dedicated archival pass.
 code_refs:
   [
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,
@@ -52,11 +58,6 @@ context_scope:
 ---
 
 # CeFi LIGHTER-ZKSYNC systemic wire/canonical dual-write collision
-
-> **ARCHIVED 2026-08-21** — all 5 todos [x]; Range-2 apply completed 2026-08-11 (EXIT_STATUS=0, 0 unhandled
-> collisions); the sole residual (BTC 2026-05-01 leave-both) is operator-decided final, no action pending. The
-> `archive_exempt` bridge (set 2026-08-19, explicitly awaiting "the next toucher with archival authority") is
-> dropped by this pass. Moved to `plans/archive/issues/`.
 
 ## What I found
 

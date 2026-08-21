@@ -222,9 +222,6 @@ Close Layer 1 (make the gate fire) AND Layer 2 (give it teeth when it does):
       `unified-api-contracts`'s main ruleset (or fold it into the `ldr_main` MVP gate set alongside
       `sit-gate/fleet-green`), so a candidate that fails consumer QG actually blocks the PR merge button instead of only
       failing its own workflow run. (repo: unified-trading-pm)
-      **EXTRACTED** 2026-08-21 (na-eligibility-audit, ci tranche wave 2) → `plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md`
-      (status: active) P3 todo, "Wire the `consumer-qg-gate` job into `pin_branch_protection_rulesets.py`'s
-      required-status-check set" — confirmed still open there; not duplicating the dispatch here.
 - [x] ✅ [DOCS] P2. Once landed, update the breaking-differ section of `/codex/08-workflows/ci-cd-flow.md` to document
       registry-data-constant tracking (remove the implicit "only exports/enums/routes/annotations" mental model). (repo:
       unified-trading-pm) — shipped `unified-trading-pm@5607023a2`. **Citation corrected 2026-07-31** — see note above.
@@ -307,10 +304,3 @@ the merge button") — a full 5 days before this pass, but no prior na-eligibili
 recorded the citation here. Not reclassifying this doc's `assigned_vm` — batch15 activation is the operator's/AO's
 call, and flipping here too risks a duplicate dispatch. Verified batch15's todo is still open (not yet shipped) via
 direct grep before citing.
-
-- **dedup pass 2026-08-21 (COVERED_ELSEWHERE queue processing)**: the 2026-08-21 citation above lived only in this
-  Progress Log, outside the sole open checkbox's own block, so `count_open_tasks.py`'s marker scan (which only reads
-  each checkbox's own block) did not pick it up. Added an inline `**EXTRACTED**` annotation directly under the open
-  checkbox itself (line ~219) pointing at `plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md` (verified
-  `status: active`, matching P3 todo still open). Verified via `--json` that this checkbox now appears in
-  `covered_detail` with no dangling marker.

@@ -157,9 +157,6 @@ treat the table above as a starting point, not current truth.
       `unpark_task` call or an on-demand reconcile pass, not the automatic one. Not filing a
       separate issue for this — it's a narrow edge case with no live impact, noted here for
       whoever next touches `auto_park_reconcile.py`.
-      **SUPERSEDED — see the RE-TRIAGE section below (2026-08-21, slot 17).** Both "confirmed
-      not a new bug" side-findings above are fingerprints of a real `unpark_task` defect, not
-      the benign causes assumed here.
 - [ ] [SCRIPT] P3. If (b) or (c) above turns out to be the common case rather than the
       exception, consider whether `claimable_queued_task_ids`/the dashboard's "blocked"
       annotation should visually separate "durable park" from ordinary gate/prereq blocking
@@ -175,76 +172,6 @@ treat the table above as a starting point, not current truth.
       needs a human" from ordinary gate/prereq blocking with NO new backend logic, just a UI
       change consuming a field that already exists. Left open as a genuine but small UI todo,
       not mine to implement unasked.
-
-## RE-TRIAGE 2026-08-21 (later, slot 17) — todo 1's verdict was wrong, and there IS a bug
-
-Todo 1 concluded "(b) does not apply to any of the 12 — there is no auto-clearing setter for
-any of them to be buggy". The premise is right (durable park is by design cleared externally,
-not automatically) but the conclusion drawn from it is not: the bug is not a broken
-auto-clearing setter, it is that **`unpark_task` never clears the DB half of the park**, so
-the three OPERATOR clear paths silently fail.
-
-`_prereqs_met` (`dispatch.py`) gates a park on TWO things:
-
-```python
-park_cond in task.prereqs.prerequisites or prerequisites.get(park_cond, True)
-```
-
-the backlog.yaml prereq list **and** a DB-only backstop. `_park_task` sets both;
-`unpark_task` removed only the yaml entry and never called
-`set_prerequisite(condition, True)`. That is harmless for `AutoParkReconciler` (it only calls
-in AFTER observing the condition already true) but wrong for `/unpark`,
-`/park/redispatch` ("Dispatch now") and `/park/mark-done`, all of which call it with the
-condition still False. After such a call the task is *more* stuck, not less: the yaml entry
-is gone so the generic reason loop no longer names it, the DB backstop still blocks it (it
-now renders as `(durable park, DB-only)`), and `mark_unparked` has cleared `parked_condition`
-so `parked_rows()` no longer returns it — the reconciler can never revisit it and both
-dashboard routes 404 on it.
-
-**This doc's two "confirmed not a new bug" side-findings are the fingerprints of exactly
-that.** `unpark_task` sets `priority_override = False` when it removes the last prereq → "10
-of the 12 show `priority_override: false`" is that call having run, not the documented
-backlog.yaml drift limitation. `mark_unparked` clears `parked_condition` → "3 of the 12 have
-NO row in `/api/backlog/parked`" is that call having run, not `AutoParkReconciler`'s scan set
-being cooldown-row-keyed.
-
-**Honest limit on that attribution**: the code defect is proven by reading the source; tying
-these *specific* tasks to it is inference from those two fingerprints. The `activity_log`
-retention window is too short to replay the actual calls, so this is stated as the most
-likely explanation, not a measured one. The defect itself is not in doubt.
-
-**Population is growing, not draining**: 60 queued tasks carried an `auto_unpark__*` prereq
-when re-measured on 2026-08-21 (55 with it as their SOLE blocker), aged up to 23.2 days,
-median 5.5 — up from the 12 this doc recorded earlier the same day. Strictly monotonic:
-`maybe_auto_park`'s self-repair for a dropped recipe only re-fires when a worker declines the
-task *again*, which requires the dispatch the park prevents, so the repair path is
-structurally unreachable.
-
-Fixed in `server/auto_park.py` — `unpark_task` now calls
-`ss.set_prerequisite(session, condition_name, True, set_by=f"unpark:{source}")` **before**
-mutating the yaml/cooldown state, with two new tests in `tests/test_auto_park.py`.
-
-Why the existing suite never caught it, precisely: the two pre-existing `unpark_task` tests
-assert `priority_override` and the yaml prereq list — both of which the buggy version already
-got right — and never assert the task became dispatchable. A separate existing test,
-`test_prereqs_met_gates_on_db_condition_even_when_yaml_prereq_absent`, DOES cover the DB-only
-gate itself, but it drives the condition with a direct `set_prerequisite` call rather than
-through `unpark_task`. So both halves were tested and the seam between them was not.
-Root-cause detail: `/plans/active/issues/fleet_dispatch_stall_root_cause_2026_08_21.md`.
-
-Todo 2 below is annotated in place: its stated premise ("(b)/(c) do NOT apply") is false.
-
-- [ ] [DATA] P3. **Recover the already-leaked parks.** The fix above prevents new ones; it does
-      not retroactively clear a condition left False by a pre-fix `unpark_task` call. For each
-      task still blocked on `auto_unpark__<id>` that an operator intended to release, one
-      `POST /api/prerequisites/auto_unpark__<id> {"value": true}` frees it (works regardless of
-      whether a cooldown row survives). Decide per task rather than in bulk — some of the 60 are
-      legitimately parked and re-parking them would just burn dispatches.
-- [ ] [BACKEND] P3. **Make `AutoParkReconciler`'s scan set condition-keyed.** It currently scans
-      `parked_rows()` (cooldown-row-keyed), so a cleared `parked_condition` orphans a live park
-      from the reconciler permanently — the mechanism behind this doc's "3 of 12 have no parked
-      row" observation. Scanning `auto_unpark__*` rows in `PrerequisiteRow` instead makes the
-      reconciler self-healing against any future path that drops the cooldown row first.
 
 ## Progress Log
 

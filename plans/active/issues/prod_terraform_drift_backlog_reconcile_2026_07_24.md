@@ -288,12 +288,6 @@ None of the 71 resources classified as stale/abandoned/conflicting.
       stale/conflicting. A blocking bug (`paper_determinism_workflow.tf` bad output reference) had to be fixed first
       just to get a plan to run at all — see `deployment-service@fd35a67f14`. Phase 2 (`tofu apply`) remains gated on a
       human reviewing this section; not actioned in this pass.
-
-      **DUPLICATE OF the next todo below, 2026-08-21 (dedup verification pass)**: per this doc's own Progress Log,
-      Phase 2 was subsequently executed the same day (`deployment-service@47442e0e73` + the bucket-lifecycle batch) —
-      every resource in this item's scope is now applied except the 3 `google_monitoring_alert_policy.cloud_run_service_crash_loop`
-      instances, which is exactly the next todo's scope. Not independently re-tracked here — see that todo's own
-      `DUPLICATE OF` marker.
 - [x] [INFRA] P1. ✅ **DONE 2026-07-27** — **downgraded from `[OPERATOR]` per
       `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` § "The rule"**: a permission gap on
       `unified-trading-sa`'s own identity is self-fixable, not an operator escalation (the earlier gating pass predates
@@ -366,10 +360,6 @@ None of the 71 resources classified as stale/abandoned/conflicting.
       `uts-prod-data-status-rollup-svc` of the 3 is real) — the memory-high + instance-zero policies for those 2 have
       been silently monitoring nothing since they were created, a materially bigger gap than the crash-loop metric
       alone. Tracking continues there, not here — see that doc for the live todo set.
-
-      **DUPLICATE OF `plans/active/issues/cloud_run_crash_loop_alert_policy_invalid_metric_2026_08_20.md`**
-      (re-verified 2026-08-21 dedup pass: `status: open`, `assigned_vm: planning` — active, not archived/draft). The
-      full remaining fix + addendum scope lives there; this checkbox stays open only as a local pointer.
 
 ## Progress Log
 

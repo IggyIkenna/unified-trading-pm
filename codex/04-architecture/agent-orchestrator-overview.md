@@ -304,15 +304,10 @@ the daily digest, they never page; a standing condition pages once on the false�
 | ------------------------ | ------------------------------------------------------------------- |
 | Central VM bootstrap     | `agent-orchestrator/scripts/bootstrap_vm.sh` (CLOUD_PROVIDER aware) |
 | Central VM systemd unit  | `agent-orchestrator/scripts/install-orchestrator-service.sh`        |
-| Continuous deploy (code) | `agent-orchestrator/scripts/ao-self-pull.sh` (root cron — read the crontab for the interval) |
+| Continuous deploy (code) | `agent-orchestrator/scripts/ao-self-pull.sh` (root cron `*/15`)     |
 
 **Deploy currency**: `ao-self-pull.sh` FF-pulls `origin/live-defi-rollout` (ff-only) and `systemctl restart`s the
-orchestrator only when HEAD moved **and the move touched a restart-relevant path** (`RESTART_RELEVANT_PATHS` =
-`server/ config/ pyproject.toml uv.lock`), or when the running process predates the newest restart-relevant commit.
-The relevance gate is a HARD RULE, not a tuning preference — restarting on any HEAD move made the fleet restart itself
-on its own commits and each restart mass-disrupts live workers; see
-`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Deploy currency" and
-`/plans/active/issues/fleet_dispatch_stall_root_cause_2026_08_21.md`. Three deduped Slack alert
+orchestrator only when HEAD moved, or when the running process predates the checkout HEAD. Three deduped Slack alert
 conditions, each with its own dedup statefile so none suppresses the others: (1) `_alert_wedge` fires when the pull is
 wedged (dirty/diverged) AND the clone is `≥AO_DRIFT_ALERT_COMMITS` (10) commits behind — a COMMIT-DISTANCE gate; (2)
 `_track_stale_process`/`_STALE_TICKS_STATE` fires after `AO_STALE_PROCESS_ALERT_TICKS` (3) consecutive ticks where the
@@ -320,7 +315,7 @@ checkout is current but the RUNNING PROCESS still predates HEAD (the self-heal r
 older "current-checkout-but-stale-process" gap this note used to flag as open; (3) `_track_dirty_tick`/
 `_DIRTY_TICKS_STATE` (added 2026-07-30,
 `/plans/archive/issues/ao_self_pull_stalled_by_untracked_backup_files_2026_07_29.md`) fires after `AO_DIRTY_ALERT_TICKS`
-(4) consecutive dirty-skip ticks regardless of how many commits LDR moved meanwhile — closes
+(4, ~1h at the `*/15` cadence) consecutive dirty-skip ticks regardless of how many commits LDR moved meanwhile — closes
 the blind spot where `_alert_wedge`'s commit-distance gate never trips during a quiet LDR window even though the tree
 has been silently stuck dirty for hours (the incident that doc found: 2+ hours, 10 consecutive ticks, never alerted).
 **`launch-epic-vm*.sh` REMOVED 2026-07-24** (operator ruling: per-epic VMs are deprecated and unused since the
@@ -331,15 +326,12 @@ header comment for the current recovery procedure.
 
 ### What a self-pull ACTUALLY deploys — the generator-inert boundary (HARD RULE)
 
-The core of `ao-self-pull.sh` is `git merge --ff-only` plus a RELEVANCE-GATED `systemctl restart orchestrator`. It
-runs a few self-heal steps around that (memory-cap rescale, worktree realign, `uv sync` on a lock move, and
-`install-orchestrator-service.sh` unconditionally so a unit-file-only commit cannot sit unapplied), but **it re-runs
-no OTHER installer** — this section's "generator-inert" boundary is about those. So a fix only reaches the live VM if
-it lives in a file the running process reads directly:
+`ao-self-pull.sh` does exactly two things: `git merge --ff-only` and `systemctl restart orchestrator`. **It never
+re-runs an installer.** So a fix only reaches the live VM if it lives in a file the running process reads directly:
 
 | Change lands in…                                       | Live after a self-pull?                                                                                   |
 | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| `server/**.py`                                         | **YES — but ONLY via the restart.** The unit's `--reload` was removed 2026-07-30 (`ee98ccb`); the live process runs plain `uvicorn server.server:app`. `server/` is in `RESTART_RELEVANT_PATHS` precisely so this stays true |
+| `server/**.py`                                         | **YES** — unit runs `uvicorn --reload --reload-dir server`, so it reloads even without the restart        |
 | Other in-repo Python/data the process imports at start | **YES** — on the restart                                                                                  |
 | `scripts/install-*.sh`, `scripts/bootstrap_vm.sh`      | **NO** — generator scripts; inert until re-run on that host                                               |
 | `/etc/systemd/system/orchestrator.service`             | **NO** — the installed unit is a rendered COPY; needs `install-orchestrator-service.sh` + `daemon-reload` |
