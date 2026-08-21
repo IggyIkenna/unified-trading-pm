@@ -155,6 +155,15 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    consolidator — full evidence chain + next steps in
    `/plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`.
    Still open; do not re-attempt a plain re-run without first reading that doc.
+- [x] ✅ [DATA] P1. **DONE 2026-08-21 (slot-24, data_engineering)** — diagnosed the 2026-08-21 "PROVED NOTHING"
+      recurrence at the root (4 shipped diagnostic rounds, each QG-green and re-verified live on a fresh driver VM),
+      ruling out OOM / chain-axis composition / streamed-read `service_name` filtering as the cause, and filed the
+      new deeper blocker as a tracked, actionable issue doc rather than leaving it as a chat/pane finding:
+      `/plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`
+      (3 tracked follow-up todos). Also fixed an unrelated pre-existing pip-audit CVE (`PYSEC-2026-3721`) that was
+      blocking shipment in unified-trading-library. **Evidence: market-data-processing-service@47a51b1287,
+      market-data-processing-service@907ff58912, unified-trading-library@3095f35151.** The actual re-run goal
+      (item above) remains open — this item closes the diagnosis/documentation unit of work, not the re-run itself.
 5. `[DATA] P1.` NEW finding 2026-08-17 (slot-3, data_engineering). The 00:53 UTC DEFI re-run (`c59390`) died
    silently mid-run: `run.log` goes dead at `2026-08-17 01:18:49Z` (last line, no error/traceback), `EXIT_STATUS`
    never advanced past `RUNNING`, and the VM is **absent entirely** from `gcloud compute instances list` (not
