@@ -191,7 +191,16 @@ defect (phantom-venue emission) without touching a registry other code may depen
       backfill}.py, 5 test files, 2 consumer scripts), 5 more watchdog threshold entries, and the
       KEEP_VM generalization in lib/launcher_common.sh — ship as one reviewed unit (QG was green
       pre-block on the original pair; the full batch's QG verdict is in the pattern-debt doc's log;
-      earlier recovery branch `aavev3-watchdog-fix-backup` = `70cf3231` covers only the original pair;
+      earlier recovery branch `aavev3-watchdog-fix-backup` = `70cf3231` covers only the original pair —
+      SUPERSEDED for recovery purposes by local branch `aavev3-hardening-batch-backup` = `1f8aca65bc`
+      (a stash-create commit pinning the FULL 16-file batch at its QG-GREEN state, 2026-08-21: the
+      deployment-service full gate ran QG-EXIT=0 — 3,655+ passed, 0 failures — after the peer's UAC
+      migration landed; two same-hour ship attempts then failed only because the peer RE-dirtied UAC
+      mid-window. RETRY RECIPE for the next session: confirm `git -C ../unified-api-contracts status
+      --porcelain` is empty, then quickmerge deployment-service with `--agent --files '<the 16 files —
+      exact list = git show --stat aavev3-hardening-batch-backup>'`; if the working tree was swept
+      meanwhile, `git cherry-pick -n aavev3-hardening-batch-backup` restores it. No re-gate needed
+      unless the tree content changed after the green run;
       a 2nd QG re-run at 07:0x went red with 35 failures ALL in dep-sensitive data-status/turbo
       suites, none touching the fix's two files — the mid-window quickmerge ancestor cascade pulled
       newer UTL/UAC into the workspace, so treat that red as upstream drift, not this diff, and
