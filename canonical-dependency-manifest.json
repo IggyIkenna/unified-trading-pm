@@ -249,7 +249,7 @@
     },
     {
       "name": "pip",
-      "versionRange": "pip>=26.1.2"
+      "versionRange": "pip>=26.2"
     },
     {
       "name": "pip_audit",
