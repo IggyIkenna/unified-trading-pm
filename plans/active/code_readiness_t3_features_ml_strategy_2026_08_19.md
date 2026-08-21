@@ -736,7 +736,7 @@ todos only to confirm they are data-movement, then leave it.
       shard-atom pattern — dividends+splits combine into one `corporate_actions` manifest row (shared GCS path
       prefix), `earnings_results` gets its own row. 6 new/updated tests
       (`tests/calendar/unit/test_corporate_actions_handler.py`), full `quality-gates.sh` green. Evidence:
-      `/plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md` (its own todo 1/2
+      `/plans/archive/2026_08/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md` (its own todo 1/2
       should be re-flagged stale/closed by a future pass — not done in this edit, out of scope for a plan-checkbox
       flip).
 - [x] ✅ [BACKEND] P1. Fix the `delta_one` dependency checker resolving the wrong PREDICTION bucket token —
@@ -767,7 +767,7 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Close-out
 
-- [ ] [AGENT] P3. Full 6-step archival of `/plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md`
+- [ ] [AGENT] P3. Full 6-step archival of `/plans/archive/2026_08/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md`
       (0 open todos as of 2026-08-21, currently bridged via `archive_exempt: true`) — repoint its 8 corpus referrers
       (`plans/audit/results/code_completion_scope_2026_08_19.md`, both `tradfi_satellite_ao_dispatch_batch17/19`
       docs + `_finalize`, `nick_ai_platform_readiness_remediation_2026_08_16.md`, `ag_closeout_audit_cross_cutting_parked_2026_08_19.md`,

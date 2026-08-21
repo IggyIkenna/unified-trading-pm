@@ -39,7 +39,7 @@ context_scope:
   [
     /plans/active/tradfi_satellite_ao_dispatch_batch17_2026_08_18.md,
     /plans/active/issues/features_service_corporate_actions_polygon_io_banned_vendor_2026_08_18.md,
-    /plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md,
+    /plans/archive/2026_08/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md,
   ]
 source: "na-eligibility-audit, tradfi tranche, dispatch agt-31bfcb, 2026-08-18"
 resolved_by:

@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [tradfi, ao-dispatch, satellite-batch, na-eligibility-audit, features-service, compliance]
 related:
   [
-    /plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md,
+    /plans/archive/2026_08/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md,
     /plans/active/issues/features_service_corporate_actions_polygon_io_banned_vendor_2026_08_18.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
@@ -41,7 +41,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md,
+    /plans/archive/2026_08/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md,
     /plans/active/issues/features_service_corporate_actions_polygon_io_banned_vendor_2026_08_18.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,

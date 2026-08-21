@@ -7,7 +7,7 @@ summary: >-
   {date}/{file}.parquet`, documented per-handler) but none of it calls `record_captured` or otherwise registers with
   the honest-coverage manifest/capture_status system — coverage.json has zero visibility into whether this data is
   actually being captured, how completely, or when it last ran.
-status: open
+status: ARCHIVED 2026-08-21 — both todos done, no open scope remaining
 nature: process
 asset_group: [tradfi] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [tradfi, cross-cutting]; macro/calendar data is tradfi-only per the corpus's own prior cross-cutting audit precedent, not multi-AG
 stage: [features]
@@ -46,7 +46,6 @@ supersedes:
 superseded_by:
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # 0-open-todos 2026-08-21 (both todos resolved same session) — full 6-step archival (8 corpus
   # referrers to repoint) deferred to a dedicated hygiene pass, tracked as a real todo in the T3 plan's Close-out
   # section rather than left prose. Intentional bridge, not a permanent exemption.
 ---
