@@ -826,8 +826,9 @@
           UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC/BRIDGE/LP_MINT/LP_BURN all route through live execution wiring
           (BORROW/REPAY wired 2026-08-21, AAVE V3 only; BRIDGE/LP_MINT/LP_BURN wired 2026-08-21 — BRIDGE via a real
           Socket v2 bridge-route aggregator, LP_MINT/LP_BURN via real Uniswap V3 NPM mint/burn, both LIVE-WIRED for
-          one venue each so far); QUOTE is the sole remaining partial case — it arms repricing without submitting an
-          order</span
+          one venue each so far); QUOTE is the sole remaining partial case — its registration call never places an
+          order inline, but its tick-driven loop (wired 2026-08-21) submits/updates the live order asynchronously as
+          the underlying moves</span
         >
       </div>
       <div class="stat">
@@ -1860,7 +1861,8 @@
     </div>
     <p class="lede">
       One instruction envelope, any asset class — fifteen of its sixteen action types are wired to real execution
-      paths today, and the last one (QUOTE) arms repricing without submitting an order.
+      paths today, and the last one (QUOTE) arms repricing and reaches the venue asynchronously through its own
+      tick-driven loop, never inline in its own response.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
     </p>
 
@@ -1896,10 +1898,21 @@
         way. It does not 501: <code>_register_quote_instruction()</code> is real and runs
         (<code>external_instruction_api.py:133-171</code>), arming <code>DeltaProxyRepricer</code> with this
         instrument's delta/gamma via <code>QuoteMaintainer.register_quote_instruction()</code> and returning
-        <code>status="REGISTERED"</code>. But it does not place an order either: by the router's own docstring, "the
-        two-sided quote is only submitted when something calls <code>QuoteMaintainer.on_underlying_tick</code>, and no
-        live tick-ingestion loop exists in execution-service yet." A <code>REGISTERED</code> response means repricing
-        parameters are armed, not that a quote is resting on any venue.
+        <code>status="REGISTERED"</code> immediately — the response itself never carries an order, by design (it is
+        a synchronous registration call, not a placement call).
+      </p>
+      <p>
+        <b class="ev ev-verified">✓ verified</b> A live tick-ingestion loop is wired:
+        <code>FeatureTickSubscriber</code> (execution-service@0be361333), started from the <code>api.main</code>
+        lifespan, reads the standard <code>EventTransport</code> facade and calls
+        <code>QuoteMaintainer.on_underlying_tick()</code> on every subscribed tick. That method reprices every armed
+        instrument tracking the ticked underlying and submits BUY@bid / SELL@ask LIMIT orders to the venue — as of
+        2026-08-21 (execution-service@56d6e7480e), <b>only when the resulting bid/ask/size order state actually
+        differs</b> from what was last submitted, so a tick that doesn't move the quantized price is a no-op rather
+        than a duplicate order. A cached quote can genuinely reach a venue without a new strategy instruction; the
+        still-open gap is upstream of this loop — distinct-underlying quotes (options hedged against a different
+        instrument) reprice correctly only when the emitting strategy already supplies its own delta/gamma, since no
+        greeks-service producer feeds that value yet.
       </p>
     </div>
 
@@ -1979,8 +1992,10 @@
             <td><code>QUOTE</code></td>
             <td><code>QuoteInstruction</code></td>
             <td>
-              <b class="st st-part">partial</b> — arms delta-proxy repricing (<code>status: "REGISTERED"</code>); no
-              live quote reaches a venue, because the tick-ingestion loop that would submit one is not built
+              <b class="st st-part">partial</b> — arms delta-proxy repricing (<code>status: "REGISTERED"</code>); the
+              registration call is synchronous-only, but a wired tick-ingestion loop
+              (<code>feature_tick_subscriber.py</code>, see §04) asynchronously submits/updates the live order as the
+              underlying moves, publishing only when the desired order state changes
             </td>
           </tr>
           <tr>
@@ -2039,7 +2054,8 @@
       <b class="ev ev-verified">✓ verified</b> schemas.py (all 16 variants + the union); execution-service
       <code>execution_service/api/external_instruction_api.py</code> +
       <code>execution_service/api/external_instruction_defi.py</code> (15 of 16 action types routed to real execution
-      wiring as of 2026-08-21; QUOTE arms repricing without submitting an order — see above)
+      wiring as of 2026-08-21; QUOTE arms repricing synchronously, its tick-driven loop submits/updates the live
+      order asynchronously — see above)
     </p>
 
     <details class="ep">
@@ -3714,8 +3730,9 @@
           <tr>
             <td><code>501</code></td>
             <td>
-              Recognised but not wired for external submission — 13 of the 16 instruction types (TRADE executes; QUOTE
-              registers without submitting an order and does not 501 — see §04)
+              Recognised but not wired for external submission — 13 of the 16 instruction types (TRADE executes;
+              QUOTE registers synchronously and its tick-driven loop asynchronously submits/updates live orders as
+              the underlying moves — see §04; it does not 501)
             </td>
             <td>Instructions POST</td>
           </tr>
