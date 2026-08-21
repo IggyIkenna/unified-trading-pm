@@ -140,7 +140,7 @@ source: >-
       arrival fallback, 11 pure arrival-time, 2 mixed-path needing code-owner input, 15 BLOCKED-* scaffolds with no
       live emission yet). Full table + methodology filed in
       `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new "Findings — full connector
-      timestamp-semantics audit (2026-08-21)" section. Evidence: unified-trading-pm@\<pending\>.
+      timestamp-semantics audit (2026-08-21)" section. Evidence: unified-trading-pm@c81b5881d8.
 - [ ] [REVIEW] P1. **Close or supersede `resolve_mtds_ts_event_timestamp_naming_collision`** — this exact
       timestamp collision was already identified and named in-code (referenced in `symbol_rules.py` comments) but
       never closed. Find the reference, establish whether that prior work was descoped, forgotten, or partially
