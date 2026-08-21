@@ -148,17 +148,11 @@ captured shard, schema renders without picking a day.
 
 ## Todos
 
-- [ ] [INFRA] P1. Stop the deployment-api OOM. STOPGAP DONE 2026-08-21 (~14:0xZ): live service bumped
-      16Gi/4cpu -> 32Gi/8cpu (revision `uts-shared-deployment-api-00688-8jv`, serving 100%; gen2 needs
-      8 CPU above 24Gi), and the repo sizing literal landed as `deployment-service@6ef5ba27c2`
-      (deploy-shared.sh — whose misleading "must match cloudbuild.yaml" comment was corrected: measured
-      2026-08-21, the deployment-api-main-deploy trigger overrides only `_SERVICE_NAME` and promoted
-      revisions persist the service's live resources, so the deploy-shared literal is the sizing SSOT).
-      REMAINING (box stays open for it): confirm top per-request RSS offenders via the existing
-      `log_rss_delta` instrumentation (read its emission format first) and land the real fix —
-      column-projected / row-group-streamed reads for the 8 index-reading modules listed in Part 1 +
-      the 302MB catalogue load. Verify: zero `Memory limit` log lines for 24h; Prediction catalogue
-      loads.
+- [ ] [INFRA] P1. Stop the deployment-api OOM: confirm top per-request RSS offenders via the existing
+      `log_rss_delta` instrumentation (read its emission format first), apply the stopgap memory-limit
+      bump if user-facing failures continue meanwhile, and land the real fix — column-projected /
+      row-group-streamed reads for the 8 index-reading modules listed in Part 1 + the 302MB catalogue
+      load. Verify: zero `Memory limit` log lines for 24h; Prediction catalogue loads.
 - [ ] [CODE] P1. Census addendum on the sibling pattern-debt issue: extend the whole-index census to
       the `deployment_api` package (and any other SERVER packages — the original sweep was
       `*/scripts` only); fold the 8 files above into its remediation todos.

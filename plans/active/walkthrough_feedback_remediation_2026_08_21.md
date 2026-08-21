@@ -88,11 +88,14 @@ drift_direction: advance-code
       operator ruling on which of the 20 are actually ready, or this todo is mis-scoped and should be re-pointed
       at the honest-coverage denominator story instead. Left unflipped pending that ruling. The ALCHEMY-ONCHAIN
       re-home sub-item is separately scoped and equally not started in this pass (same blocker: budget).
-- [x] [BACKEND] P1. Converge the three DeFi venue sets to one coherent story: dedup `ALL_DEFI_VENUES`
+- [ ] [BACKEND] P1. Converge the three DeFi venue sets to one coherent story: dedup `ALL_DEFI_VENUES`
       (`defi_venues.py:32` — 174 entries, 35 exact duplicates, 139 unique) and prune-or-capability the 18
       identities with no capability row (incl. the deliberately-cefi-reclassified CLOBs — annotate as
       cross-referenced, not missing). Target: 139/121/103 becomes explainable in one sentence per set, or the
-      sets converge. — unified-api-contracts@34bca04335: dedup'd 174->139 (redundant 35-dupe `.extend()` removed); classified all 18 no-capability-row identities into 4 buckets cited above `ALL_DEFI_VENUES` (cefi cross-refs, direct-route mirrors incl. a real bug found+documented, ALCHEMY phantoms, pipeline gaps). Sets now 139/124/103. QG green.
+      sets converge.
+      **DEFERRED — not attempted this pass**: budget did not extend to a safe multi-file dedup + capability
+      audit across `ALL_DEFI_VENUES`/`VENUE_DATA_TYPE_CAPABILITIES`/capability declarations; needs its own
+      focused pass.
 - [x] [BACKEND] P2. `VENUE_CHAIN_MAP` (`venue_constants.py:907`) — verified 2026-08-21: zero consumers outside
       UAC itself (wallet-grouping only, derives `SHARED_WALLET_GROUPS`). Either complete it for every DeFi venue
       with a shared-wallet chain or rename/docstring it so it can never be mistaken for chain-coverage truth. —
@@ -145,12 +148,14 @@ drift_direction: advance-code
       COINBASE-ETHEREUM/oracle_prices, FRAX/MORPHOVAULTS vault_share_price, JUPITER-SOLANA/dex_pool_swaps, SOLANA-NATIVE-SOLANA/lst_rates, AAVE-PLASMA/lending_indices — real declared capabilities missing/misrouted `PROTOCOL_CAPABILITIES` entries; registered `frax`/`morphovaults`/`jupiter`/`solana_native` + a venue-specific slug-override table in `venue_instrument_type_axis.py` (AAVE-PLASMA→aave_v3, mirrors `venue_adapter_keys.py` precedent).
       FRED/ohlcv_1d+yield_curve — venue-scoped `VALID_DATA_TYPES_VENUE_ADDITIONS` rows. QG green (13441 passed) after updating the one regression test the fix deliberately invalidated (now `{CBOE,DERIBIT,FRED}`).
       **Cross-repo consumer sweep lesson (same class as 4f25d5f0)**: the DERIBIT self-admission broke instruments-service's `scripts/enumerate_expected_universe.py::_row_data_types` (assumed the matrix already narrowed chain grains to `{trades}`; the new self-referential token leaked into expected CeFi data_types, 7 test failures) — fixed same-session, instruments-service@3dcee8d602, excludes the bundle instrument_type's own name from cefi `row_dts` (Era-B restated: CAPTURED data_type is `trades`, the token exists only so the denominator triple classifies). `scripts/expected_universe.py` checked and found NOT affected (different carve-out ordering already excludes it) — locked in via a new regression test, not a redundant patch. Lesson: a UAC registry semantics change is never DONE at the UAC commit alone — sweep known live downstream consumers first.
-- [x] [BACKEND] P1. Fix the CeFi instrument_type roster over-fan: ASTER (perp-only per the registry's own
+- [ ] [BACKEND] P1. Fix the CeFi instrument_type roster over-fan: ASTER (perp-only per the registry's own
       comment at `market_data_categories.py:2114`) shows Futures-chain/Options-chain buckets in the artefact
       because `venue_instrument_type_axis.py`'s CeFi path probes the full asset-group roster with no venue-level
       chain exclusion (the module docstring names exactly this failure mode; DeFi/sports already have the
       narrowing). Add the chain-instrument_type gate restricting futures_chain/options_chain candidacy to real
-      chain-bundle venues (DERIBIT for cefi; CME/ICE/CBOE for tradfi). — unified-api-contracts@949ec34124: added `_CHAIN_BUNDLE_VENUES_BY_ASSET_GROUP` (cefi `{DERIBIT}`, tradfi `{CME,ICE,CBOE}`, wiring in the pre-existing `TRADFI_VENUE_INSTRUMENT_TYPES` grain this module never consulted); strips the chain types elsewhere. Over-fan was wider than ASTER alone (also BYBIT, BINANCE-FUTURES, OKX-*, NASDAQ) — all fixed; DERIBIT/CME/CBOE unaffected. Unresolved stays 0 (683->633 triples). QG green.
+      chain-bundle venues (DERIBIT for cefi; CME/ICE/CBOE for tradfi).
+      **DEFERRED — not attempted this pass**: needs the DeFi/sports narrowing pattern located and mirrored in
+      `venue_instrument_type_axis.py`'s CeFi path; budget did not extend to it.
 - [x] [BACKEND] P0. Fix `unified_api_contracts.execution.get_venue_asset_group()` silently returning "cefi" for
       every venue its lookup misses (P0 issue filed 2026-08-19) — fail loud or resolve via
       `VENUES_BY_ASSET_GROUP`. — unified-api-contracts@HEAD (no code change needed) + evidence: already fixed.
@@ -453,7 +458,6 @@ drift_direction: advance-code
       each archetype's declared FEATURE_REQUIRED_INPUTS against the venue's satisfiable inputs, across batch/
       paper/live, so that axis stops reporting blanket unverified. Reuses the readiness-dump strategy-leg check;
       output joins the per-venue 8-leg model.
-      **BUILT+TESTED 2026-08-21, ship-blocked**: local-only `unified-trading-pm@6fbf3538a1` — 2 unrelated blockers, issue `unified_trading_pm_quickmerge_blocked_two_preexisting_gates_2026_08_21.md`.
 - [ ] [AGENT] P0. Re-audit: after all clusters land, re-run `venue_instrument_type_triples()`,
       `derive_readiness.py` and the coverage dump; confirm 0 unresolved pairs, 0 unbucketed venues, and refresh
       every number in the artefact from those runs. Get some venues to genuinely ready so the readiness tree is
@@ -587,11 +591,6 @@ successor plan, the work remains tracked here as still-open todos, not lost).
 
 ### API-reference client-ready follow-ups
 
-- [x] [SCRIPT] P1. market-tick-data-service: org-scoped entitlement seam on external market-data router (§01's
-      "auth is a gate, not a scope" fixed) — new `api/entitlement.py` mirrors client-reporting-api's
-      `enforce_entitlement` for org → `{asset_groups, venues}`: explicit out-of-scope → 403, aggregate listing
-      silently narrows, internal/no-record unrestricted. Tests `TestEntitlement` x8, §01 rewritten. —
-      `market-tick-data-service@746ad763b`, `unified-trading-pm@<pending-ship>`.
 - [x] [SCRIPT] P2. execution-service: `POST /external/instructions` CANCEL currently only supports
       `cancel_scope=SINGLE`; add an `ALL_FOR_STRATEGY_INSTANCE` lookup (index `order_tracker` by strategy-instance,
       not just `instruction_id`) so the doc's remaining "Coming soon" cancel-scope note can close. <1 day. —

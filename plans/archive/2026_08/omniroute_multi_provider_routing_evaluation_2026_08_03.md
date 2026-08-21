@@ -775,10 +775,3 @@ here rather than forced through.
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **fixed 2026-08-06 (/plan-reconcile ao)**: frontmatter `last_updated` was `2026-06-27`, predating this doc's own
   `created: 2026-08-03` — impossible given the real edit history through today. Corrected to `"2026-08-06"`.
-- **2026-08-21**: the evaluation/pilot CODE ITSELF (the `agent-orchestrator/scripts/orchestrator/omniroute-eval/`
-  directory this doc's harness lived in) has now been physically deleted from the codebase, not merely left
-  unused/paused as the 2026-08-06 SUPERSEDED banner above described. Part of the same session's broader
-  Kimi/OmniRoute/OpenRouter dead-code cleanup — operator direction: "grok and kimi are not being used right now so
-  please remove them... same for omniroute/openrouter if unused." Shipped `agent-orchestrator@055bd037b7`. Full
-  details: `/plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` Part 2. This is a
-  Progress Log append only — the doc's own archival/decommission todos above are unaffected by this note.

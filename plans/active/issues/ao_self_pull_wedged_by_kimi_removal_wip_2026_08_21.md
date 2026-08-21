@@ -159,16 +159,16 @@ of the silence unchanged the whole time.
       doc's still-open `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` secret-lookup todo (currently held on the missing
       credential), since it has now masked two separate live deploy-freeze incidents (07-30, and this one — both
       ran 50min+ fully unpaged). Cross-referenced only, not duplicated here. Repo: agent-orchestrator, host-level.
-- [x] [BACKEND] P2. ✅ **DONE 2026-08-21.** Root cause of the mis-location itself: an interactive session's own
-      delegated sub-agent was given a `WorkingDirectory`-style path
+- [ ] [BACKEND] P2. **NEW FOLLOW-UP, found while resolving this doc.** Root cause of the mis-location itself: an
+      interactive session's own delegated sub-agent was given a `WorkingDirectory`-style path
       (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator` — the root clone, and coincidentally also
       `orchestrator.service`'s live `WorkingDirectory`) instead of its assigned per-slot checkout. No code fix
       needed — this is an authoring-discipline gap (the delegating prompt named the wrong path), not a bug in
       `ao-self-pull.sh`/the guardrail hook, both of which behaved correctly (wedge-and-alert, block `reset --hard`).
-      Fixed by adding a line to `SUB_AGENT_MANDATORY_RULES.md`'s per-slot-worktree section: "If YOUR prompt never
-      named an absolute `.tabs/<N>/` path, STOP and ask — never default to the bare repo root." File now 10,119 B,
-      under the 10,240 B hard cap. Same edit also flipped todo in
-      `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`.
+      Add a line to `SUB_AGENT_MANDATORY_RULES.md`'s per-slot-worktree section making it explicit that a
+      delegation prompt to a sub-agent must name the operator's assigned slot path, never the bare `<repo>/`
+      root, before spawning any `Agent`/`Task` call that will edit files. Done when: the line is added and stays
+      inside the file's 10KB size budget (condense elsewhere if needed, never raise the cap).
 
 - [x] [OPERATOR] P3. ✅ **RESOLVED same session, 2026-08-21 (slot 1, pre-compact audit) — a SEPARATE, narrow residual
       of this same landing, found then fixed since it was live-blocking the quality gate.** Slot 1's own

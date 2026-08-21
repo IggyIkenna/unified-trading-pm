@@ -340,13 +340,12 @@ four now route through the one helper.
 
 ## Follow-ups
 
-- [x] [SCRIPT] P2. ✅ Fix the benchmark leg's `--auto-day` window propagation —
-      `features-service@5178b9b56`. Root cause: `_run_benchmark_leg` received the
-      original CLI `--day` instead of the auto-day-resolved `end`, so its internal
-      `_window(day, benchmark_days)` anchored on the wrong date. One-word fix:
-      pass `end` (resolved) instead of `day` (original). Regression test in
-      `test_pipeline_e2e_check_benchmark_reason_threading.py` asserts `_build_launch_argv`
-      receives the resolved window dates.
+- [ ] [SCRIPT] P2. Fix the benchmark leg's `--auto-day` window propagation before the next
+      completion attempt: the 2026-08-20 driver selected the covered window `2026-01-13..2026-01-14`,
+      but `_run_benchmark_leg` launched `2026-07-18..2026-07-19` from the original CLI day instead.
+      Add a regression test proving the resolved `(start, end)` pair is the pair passed to
+      `launch-features-vm.sh`; the mismatched run failed `EXIT_STATUS=1` on the absent 2026-07-18
+      candle rather than measuring throughput.
 - [ ] [DATA] P2. Reconcile the PREDICTION candle coverage decision used by the driver: `--auto-day`
       selected `2026-01-13..2026-01-14` in driver `pipeline-e2e-check-features-20260820-223909-18af4d`,
       while an explicit run for that same window (`pipeline-e2e-check-features-20260820-225000-correct`)
