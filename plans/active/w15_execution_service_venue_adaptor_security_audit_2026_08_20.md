@@ -155,12 +155,12 @@ impression:
       `coinbase_ccxt.py`, `deribit_ccxt.py`, `hyperliquid_ccxt.py`, `okx_ccxt.py`, `upbit_ccxt.py`. Checklist
       point 1 (credential handling) is the primary shared-code risk. Done-when: one findings record for the
       shared pattern + individual notes for any adapter that deviates from it. — execution-service@audit-only + evidence: shared-pattern review, Binance/Bybit/Upbit spot-check, exact source anchors recorded in Progress Log; no production code changed.
-- [ ] [BACKEND] P0. Audit the native (non-CCXT) REST adapters — HIGHER risk than the CCXT group since these
+- [x] ✅ [BACKEND] P0. Audit the native (non-CCXT) REST adapters — HIGHER risk than the CCXT group since these
       implement request signing by hand, without a battle-tested library: `bitfinex_native.py`,
       `bitget_native.py`, `kraken_rest_adapter.py`, `kraken_rest_mapping.py`, `kraken_rest_transport.py`,
       `kraken_ws_client.py`, `_native_base.py`, `_rate_limit.py`. Checklist point 2 (signing correctness) is the
       primary risk. Done-when: same evidence bar as the CCXT group above, full per-file checklist (no
-      spot-check shortcut — these are exactly the higher-risk, hand-rolled implementations).
+      spot-check shortcut — these are exactly the higher-risk, hand-rolled implementations). — execution-service@audit-only + evidence: exact per-file checklist record in Progress Log; no production code changed.
 - [ ] [BACKEND] P1. Audit the TradFi gateway adapters: `cboe_adapter.py`, `cme_adapter.py`, `fx_adapter.py`,
       `ibkr_tradfi.py`, `ice_adapter.py`, `nasdaq_adapter.py`, `nyse_adapter.py`. Different auth model than
       crypto venues (session/gateway auth, not API-key HMAC) — checklist point 2 needs re-reading for what
@@ -203,6 +203,11 @@ impression:
 - [ ] [BACKEND] P0. Add bounded execution semantics to every CCXT adapter: require a safe market-order price/slippage guard and a finite expiry (or venue-equivalent bounded time-in-force), rather than defaulting to unbounded market execution/GTC; HIGH finding: checklist point 4 (all eight adapters' `_submit_ccxt_order` paths).
 - [ ] [BACKEND] P0. Make CCXT order placement durable and retry-safe: require/persist one client-order id across ambiguous retries, use each venue's verified parameter name, and reconcile an uncertain submission before resubmitting; HIGH finding: checklist point 6 (all eight adapters, with Coinbase's `client_oid` deviation at `coinbase_ccxt.py:116-146`).
 - [ ] [BACKEND] P0. Enforce fail-closed credential initialization and redacted error logging for the CCXT group; Coinbase currently constructs a real exchange without a missing-key guard (`coinbase_ccxt.py:44-52`), and all order error paths persist raw exception text (`*_ccxt.py` order handlers plus `ccxt_common.py:372-405`); HIGH/MEDIUM findings: checklist point 1.
+
+- [ ] [BACKEND] P0. Add strict finite-positive validation and bounded execution semantics to the native Bitfinex, Bitget, and Kraken order boundaries; reject unknown side/type/symbol values, reject invalid quantities/prices, and require a finite market-order protection / expiry instead of unbounded GTC; HIGH findings: checklist points 3 and 4 (bitfinex_native.py:337-365; bitget_native.py:274-315; kraken_rest_adapter.py:230-344,437-472).
+- [ ] [BACKEND] P0. Make native REST authentication replay-safe under concurrency: use a process/key-scoped monotonic nonce or timestamp allocator for Bitfinex, Bitget, and Kraken; HIGH/MEDIUM finding: checklist point 2 (bitfinex_native.py:179-199; bitget_native.py:145-166; kraken_rest_transport.py:132-167,199-239,308-310; _native_base.py:75-82).
+- [ ] [BACKEND] P0. Add durable client-order idempotency and ambiguous-submit reconciliation to native REST writes; require/persist one client ID across retries, preserve Bitfinex non-numeric IDs, and fail closed when Kraken returns an empty/malformed success envelope instead of constructing NEW/CANCELLED/AMENDED results; HIGH findings: checklist points 6 and 7 (bitfinex_native.py:361-368; bitget_native.py:312-318; kraken_rest_transport.py:107-130,177-197; kraken_rest_adapter.py:344-362,390-412,472-476).
+- [ ] [BACKEND] P1. Harden native adapter support paths and observability: surface downstream execution-callback failures, replace the _rate_limit.py eight-character key-prefix registry/file-lock mismatch, and avoid blocking async callers in shared rate-limit helpers; MEDIUM findings (kraken_ws_client.py:474-485; _rate_limit.py:16-21,166-205; _native_base.py:90-105).
 
 ### Close-out
 
@@ -306,6 +311,28 @@ No code was changed or tests run for this read-only audit. The HIGH findings req
 - [ ] [BACKEND] P0. Add durable idempotency/client-order IDs and ambiguous-outcome recovery for the perp/CLOB order paths; thread client_order_id through the Bybit wrapper into BybitCCXTAdapter, and prevent duplicate retries for Hyperliquid nonce-based, Aster timestamp-based, and Pacifica timestamp/expiry-based submissions; HIGH finding: checklist point 6 (hyperliquid.py:504-546; aster.py:479-519; pacifica.py:559-655; bybit.py:105-132).
 - [ ] [BACKEND] P0. Make Bybit position/balance read failures observable instead of returning empty positions or zero balance, while preserving the already honest failed-order result; MEDIUM finding related to checklist point 7 (bybit.py:136-176).
 - [ ] [BACKEND] P0. Confirm Pacifica's future live enablement retains the current fail-closed boundary (supports_live=False) and validates the configured Solana keypair/account relationship before changing that flag; HIGH-risk signing/auth guardrail (pacifica.py:31-48,286-328,610-645).
+
+- [ ] [BACKEND] P0. Add a process/key-scoped monotonic nonce allocator for Bitfinex, Bitget, and Kraken native
+      signing, including concurrency protection and reuse across adapter instances; HIGH finding: checklist point 2
+      (bitfinex_native.py:179-199, bitget_native.py:145-166, kraken_rest_transport.py:308-310,
+      _native_base.py:75-82).
+- [ ] [BACKEND] P0. Enforce finite-positive quantity/price, strict side/order-type/symbol, and bounded
+      market-order expiry/slippage semantics at every native order and amend boundary; HIGH findings: checklist
+      points 3 and 4 (bitfinex_native.py:337-365, bitget_native.py:274-315,
+      kraken_rest_adapter.py:230-344,437-472, kraken_futures_orders.py:49-123,163-177).
+- [ ] [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
+      retrying; do not discard invalid/missing IDs or allow a fresh retry to double-place an order; HIGH finding:
+      checklist point 6 (bitfinex_native.py:337-368, bitget_native.py:274-318,
+      kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143).
+- [ ] [BACKEND] P0. Make Kraken Spot/Futures response-envelope parsing fail closed and require a validated order
+      result before constructing NEW/CANCELLED/AMENDED success results; malformed or empty payloads must be reported
+      as failures, not interpreted as success; HIGH finding: checklist point 7
+      (kraken_rest_transport.py:107-130,177-199, kraken_rest_adapter.py:344-362,390-412,472-476,
+      kraken_futures_orders.py:123-143).
+- [ ] [BACKEND] P1. Remove credential-derived key prefixes from native rate-limit identity/error text, replace
+      blocking sleeps in async adapter paths with a non-blocking mechanism, and surface callback failures through
+      stream health state; MEDIUM findings (_rate_limit.py:91-92,136-138,185-205,
+      _native_base.py:90-105, kraken_ws_client.py:474-485,687-697).
 
 ### 2026-08-21 — slot 25 perp/CLOB audit
 
