@@ -83,7 +83,46 @@ reachable tag). `0.149.0` published to AR. Then re-triggered `instruments-servic
 - **`Evidence: cloudbuild=a29956a9-06de-4d65-a6cc-3c4fa6693167` — SUCCESS** (2026-08-20T11:26:32Z), docker step 5
   (the `uv pip install -e .` that previously failed on `unified-api-contracts>=0.149.0`) cleared.
 
-## Recommended root-cause fix (recurrence — not yet done)
+## ✅ SHIPPED 2026-08-21 (ci_reconciler) — fleet rollout + fail-closed guard
+
+The recommended fix below is **done fleet-wide**, plus a second defect found while verifying it.
+
+**Rollout of the tag trigger** (the fix this doc recommended). Only `unified-api-contracts` had it, landed
+`42e319f5` at 12:43:21Z today; the other two wheel-publishing repos were still exposed:
+
+| repo | commit | note |
+| --- | --- | --- |
+| unified-api-contracts | `42e319f5` | pre-existing (12:43Z today) |
+| unified-trading-library | `65d04d5d` | **Tier-0 — was the worst affected** |
+| instruments-service | `56869f32` | |
+
+(`unified-trading-pm`'s `publish-package.yml` is the dispatch RECEIVER, not a per-repo stub — correctly has no tag
+trigger.)
+
+**Proof the fix works, and measured blast radius before it.** UAC's publish stub run history shows the FIRST
+tag-triggered run is `v0.159.1` at 12:52Z — minutes after `42e319f5` landed — and every tag from that point on
+(`v0.159.1`, `v0.159.2`, `v0.160.0`, `v0.161.0-3`) has a clean wheel in AR. The two tags minted BEFORE it,
+`v0.157.0` and `v0.158.0`, have **no wheel in AR at all** (it went `0.157.1.dev1` → `0.158.1.dev1` → `0.159.0`).
+`unified-trading-library` was far worse: **11 of its last 12 tags** published only `.devN` — `v0.95.0`, `v0.94.0`,
+`v0.93.3/.2/.1`, `v0.92.3/.2` … with `v0.92.4` the lone clean release. As a Tier-0 dependency of nearly every
+service that is a fleet-wide consumer-build breaker, and it explains the repeated cloud-build alerts far better
+than "AR propagation lag" did.
+
+**Second defect, fixed same pass — the silent-failure valve** (`unified-trading-pm@c66f71e3d5`). PM's receiver
+`::warning::`d on EVERY payload-vs-built version mismatch and published the mislabelled wheel regardless, so a lost
+release was invisible until a consumer's Cloud Build failed hours later. Now split: a `.devN`/unknown payload (the
+ordinary commit-push run, firing before the tag exists) stays a warning; a **clean-release payload that fails to
+build its matching wheel now FAILS**, and this workflow already pages `#ci-failures` on failure.
+
+**Why no wait/poll gate was added.** The sibling doc
+[/plans/active/issues/cloud_build_uac_publish_ordering_race_recurrence_strategy_service_2026_08_20.md](/plans/active/issues/cloud_build_uac_publish_ordering_race_recurrence_strategy_service_2026_08_20.md)
+proposed gating the fan-out on an Artifact-Registry poll inside `update-repo-version.yml`'s `resolve-gate`. That was
+**rejected on evidence** (see that doc's own dated entry): it would wait on a wheel that in these cases *never
+arrives*, and `update-repo-version.yml` holds a fleet-global single-slot concurrency group (`version-bump`) that is
+**already evicting 20% of its runs** (measured: 8 cancelled of 40 in 3h, ~1 dispatch/4.5min) — a 5-20 min hold there
+would multiply that silent loss. Fixing the publisher removes the thing being waited for, at zero added runner cost.
+
+## Recommended root-cause fix (recurrence — SUPERSEDED by the shipped rollout above)
 
 Make the release wheel publish deterministically follow the tag mint, rather than race it. Lowest-touch option: add the
 tag push to the per-repo `publish-package.yml` trigger so the tag push re-fires publish with the now-correct version:

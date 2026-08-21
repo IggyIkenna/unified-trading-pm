@@ -566,14 +566,19 @@ strategy's `ExposureAggregator` rather than keeping a duplicate local exposure v
 ## W15 — Security
 
 - [ ] [BACKEND] P0. **Security audit of every venue adaptor for vulnerabilities, especially DeFi.** On-chain write
-      paths carry irreversible consequences; this is not a documentation exercise. **Status 2026-08-21**: dedicated
-      plan `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md` — 8 of 12 audit phases
-      complete, most CRITICAL/HIGH findings already fixed and shipped (bridge/CCTP, lending, both staking/restaking
-      groups, Uniswap/Jupiter/Orca/Raydium swap paths, CCXT order-boundary validation). **Still open, blocking
-      close-out**: CCXT order idempotency + fail-closed credential init (2 todos), perp/CLOB hardening for
-      Hyperliquid/Aster/Pacifica/Bybit (4 todos), native-REST hardening for Bitfinex/Bitget/Kraken (4 todos), the
-      TradFi-gateway and sports-adapter audit phases (not yet started), and the plan's own close-out phase. NOT yet
-      done — see that plan's live Todos section, not this line, for current status.
+      paths carry irreversible consequences; this is not a documentation exercise. **Status 2026-08-21 (re-verified
+      against the plan's live checkbox state, not the prior summary)**: dedicated plan
+      `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md` — 10 of 12 audit phases
+      complete (only the sports-exchange-adapter and sports-unity-subsystem phases haven't run yet); the CCXT
+      order-idempotency/fail-closed-credential-init and TradFi-gateway work this line previously listed as open has
+      since landed. **Still open, blocking close-out**: 3 P0 fixes (perp/CLOB slippage/deadline bounds +
+      idempotency for Hyperliquid/Aster/Pacifica/Bybit — a prior attempt at the idempotency fix was implemented but
+      never committed and is not present in any checkout; native-REST client-order-id idempotency for
+      Bitfinex/Bitget/Kraken), 5 P1 follow-ups (full Orca/Raydium Whirlpool/CLMM account derivation; Kamino
+      on-chain market cross-check; wiring the real on-chain calls behind the staking/restaking fail-closed guards;
+      EigenLayer pre-deposit approval + Karak vault address; native rate-limit/blocking-sleep hardening), 2 P2
+      dead-code fixes (Aave/Morpho typed-params decimals), the 2 unstarted audit phases above, and the plan's own
+      close-out phase. NOT yet done — see that plan's live Todos section, not this line, for current status.
 
 ## W16 — Triggers, latency and preflight
 
