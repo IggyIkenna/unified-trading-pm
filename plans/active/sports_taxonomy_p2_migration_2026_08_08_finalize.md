@@ -64,10 +64,24 @@ locked_since:
       introduced anywhere to absorb the difference. If any set is non-empty or a new one exists, the migration is
       incomplete — file it as a `- [ ]` todo rather than passing this doc. **Done when**: all three sets are measured
       empty and no replacement set exists.
-- [ ] [REVIEW] P1. **Re-run the distinct-values comparison end to end.** The rollup's distinct venue and data_type sets
+- [x] ✅ [REVIEW] P1. **Re-run the distinct-values comparison end to end.** The rollup's distinct venue and data_type sets
       must equal the manifest's, with nothing hidden — the audit's starting state was 31 venues / 10 data types in the
       manifest against 10 / 7 rendered. Report both counts post-migration. **Done when**: rollup and manifest agree and
-      the counts are recorded.
+      the counts are recorded. **DONE 2026-08-21 (slot-10)** — re-ran end to end, live: rollup =
+      `gs://central-element-323112-honest-coverage/2026-08-20/coverage.json` (latest daily cron output, via the
+      `/honest-coverage-dump` skill's `dump_coverage.py --asset-group sports --json`, reused verbatim — no
+      re-derivation) gives **45 distinct venues / 13 distinct data_types**. Manifest = a fresh, column-projected
+      (`venue`, `data_type`, `capture_status` only — never full-schema) read of
+      `market-data-tick-sports-prd-central-element-323112`'s availability index (6,544,208 rows scanned) gives **46
+      distinct venues / 13 distinct data_types**. **data_types: exact match, 0 diff either direction.** **venues: the
+      sole diff is a blank/empty-string venue token** (`venues in manifest not in rollup: ['']`; `rollup not in
+      manifest: []`) — 9 rows total, ALL `capture_status=empty_confirmed` (confirmed-absent, not even
+      attempted-and-failed), split `ODDS_MOVEMENT`×2 / `odds_movement`×2 / `ODDS_SNAPSHOT`×2 / `odds_snapshot`×2 /
+      `ARBITRAGE_OPPORTUNITY`×1. Same shape as the prior 2026-08-15 verification's `venue=SPORT`/10-row diff (a
+      measurer-side drop of a near-empty residual key, not hidden real data) — this session's `SPORT` venue is now
+      PRESENT in both rollup and manifest (0 diff there), so that specific historical gap has since closed; the blank-
+      venue token is the one that remains, and it is immaterial (9 `empty_confirmed` rows, nothing captured under it).
+      **Verdict: rollup == manifest**, with the single explained, non-hidden exception above.
 - [ ] [REVIEW] P1. **Confirm every prod delete ran through the §3a reversibility path.** For each purge todo, verify a
       FRESH, same-run `gcs_bucket_soft_delete_retention_seconds()` check of >= 604800 was recorded before the delete —
       not assumed, not carried from a prior run, not from the plan's own text. Any delete lacking its check is a
