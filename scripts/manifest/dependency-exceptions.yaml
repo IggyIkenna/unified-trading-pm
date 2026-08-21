@@ -152,3 +152,16 @@ exceptions:
       scope here.
     ssot: [plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md]
     added: "2026-08-04"
+
+  - repo: unified-trading-pm
+    package: pip
+    spec: "pip>=26.2"
+    justification: >
+      PYSEC-2026-3721/CVE-2026-13346: pip 26.1.2 (the fleet canonical floor, itself pinned as the fix for the earlier
+      PYSEC-2026-196) is doubly-encoded-index-URL path-traversal vulnerable; fixed in pip 26.2. Verified locally
+      (agt-614918 triage): a real pip>=26.2 bump makes quality-gates.sh green. NOT raising the canonical floor to
+      match yet: 14 other repos still declare pip>=26.1.2 and haven't adopted 26.2 — tracked as the same doc's
+      "NEW 2026-08-21" fleet-sweep section; the canonical bump + this exception's removal is that section's final
+      todo, once every repo lands.
+    ssot: [plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md]
+    added: "2026-08-21"
