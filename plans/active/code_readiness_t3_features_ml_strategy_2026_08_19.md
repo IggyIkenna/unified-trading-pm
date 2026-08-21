@@ -260,10 +260,16 @@ todos only to confirm they are data-movement, then leave it.
       sides (`strategy_service/config_reloaders.py` + per-domain reloaders; `execution_service/
       config_reloaders.py`, `v2/policy_reloader.py`) — expose/document its request-response pattern alongside,
       hand examples to T5.
-- [ ] [BACKEND] P1. Add `staking_pnl` as a first-class dimension in `_PNL_DIMENSIONS`
-      (`position/core/pnl_attribution_aggregator.py:13` — today staking folds into carry/residual). Existing
-      set (delta/gamma/theta/vega/rho, funding, basis, interest_rate, carry, fx, residual) is the real list —
-      hand to T5 so the PnL-attribution section enumerates actual dimensions.
+- [x] [BACKEND] P1. Add `staking_pnl` as a first-class dimension in `_PNL_DIMENSIONS` — **done**,
+      `strategy-service@21937bb2cf`. `_PNL_DIMENSIONS` grew from 11 to 12 (`staking_pnl` added); it is
+      accumulated as its own dimension (no longer silently mixed into whichever of carry/residual a caller
+      happened to pick) and, since UAC's `PortfolioPnLAttribution` has no dedicated `staking_pnl` field yet
+      (a cross-repo unified-api-contracts schema change, out of this wave's scope), deterministically folded
+      into `carry_pnl` on construction via a new `_UAC_FOLD_TARGET` map — documented in-code so the fold-in is
+      dropped once UAC ships the field. 2 new tests: `test_staking_pnl_is_first_class_dimension_folded_into_carry`,
+      `test_staking_pnl_defaults_to_zero_when_unspecified`; existing `test_all_11_dimensions_sum` updated to
+      assert `len(_PNL_DIMENSIONS) == 12`. Real list for T5's PnL-attribution section: delta/gamma/theta/vega/rho,
+      funding, basis, interest_rate, carry, fx, residual, staking (staking folds into carry pending UAC field).
 
 ### Archetype code completeness — the headline number
 
