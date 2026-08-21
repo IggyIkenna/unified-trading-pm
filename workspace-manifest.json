@@ -2254,8 +2254,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.154.1.dev1+gc29967277",
-      "published_at": "2026-08-21T00:54:47Z",
+      "version": "0.155.1.dev1+g28ca325ca",
+      "published_at": "2026-08-21T02:44:00Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
