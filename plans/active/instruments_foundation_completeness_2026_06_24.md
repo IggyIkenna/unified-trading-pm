@@ -343,7 +343,13 @@ code" detail + the tradfi historical progress log; `depends_on` the Phase-0 chil
       the same 17 rows (none `captured` — the script hard-aborts if any matched row carries `captured`, as a
       safety net), `--apply` succeeded via CAS write (`if_generation_match`, no race — new generation
       returned), resumed the consolidator, then a FRESH read (new generation, not cached) confirmed 0 matching
-      rows remain out of 14,475,101 total tradfi manifest rows. Evidence:
+      rows remain out of 14,475,101 total tradfi manifest rows. **The production purge is complete and verified
+      — the script's own COMMIT is separately blocked**: `deployment-service`'s QG is currently red repo-wide
+      from an unrelated, in-progress peer refactor of `scripts/migrations/lib/templates/` (a genuinely broken
+      `template_canonicalize.py` missing `download_bytes`, 6 real test failures — not something to fix myself,
+      not mine, actively being worked on). The purge script sits untracked (safe from the pull-overwrite pattern
+      that hit two OTHER items this session, since `git pull` never touches a genuinely untracked file) awaiting
+      that peer's fix to land before it can ship. Evidence once shipped:
       `deployment-service@<pending-ship>`. This closes CBOE's remaining gap on the retirement-completeness
       DoD's "manifest rows" leg — real VX futures data (`instrument_type=FUTURE`, `futures_chain` bundle,
       24,504 `captured` rows) is untouched, exactly as it must be. `/data-status` UI surface and `cefi`-domain
