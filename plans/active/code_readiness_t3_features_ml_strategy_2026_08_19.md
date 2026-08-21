@@ -492,8 +492,32 @@ todos only to confirm they are data-movement, then leave it.
 
 - [ ] [BACKEND] P0. Build the universal fail-closed startup readiness check — a strategy missing a required input
       fails REGISTRATION, not a live run. Missing or stale data fails closed by default (RULED).
-- [ ] [BACKEND] P0. Land canonical output paths for strategy-service (W18), coordinating with T1's `PATH_REGISTRY`
-      `mode=` fix so batch/paper/live no longer collide.
+- [x] ✅ [BACKEND] P0. **Partially shipped 2026-08-21 — `unified-trading-library@78f7e269c2` +
+      `strategy-service@42fedf7966`.** W18 (epic line 601-605) asks for one grammar across
+      strategy-service's 5 emission datasets (`positions`/`pnl_attribution`/`risk_metrics`/
+      `strategy_orders`/`strategy_instructions`). Audited all 5: `strategy_instructions` already
+      had the full reference shape (`client_id`/`strategy_id`/`day`/`mode`); `positions` correctly
+      uses a different axis (`account_key`/`snapshot_type`, no strategy identity — genuinely not a
+      dialect gap); the other 3 (`strategy_orders`, `pnl_attribution`, `risk_metrics`) had NO
+      `client_id=` segment at all — fixed to match the reference shape, dropping the redundant
+      `by_date/` literal in the process for full consistency. Grepped every repo for real callers
+      before changing anything: `strategy_orders` has zero fleet-wide callers (dead code, safe);
+      `pnl_attribution` has exactly one real writer (`pnl/cli/main.py`'s cross-strategy batch,
+      updated to `client_id="all"` matching its own existing `strategy_id="all"` convention) and 3
+      readers (UTL `strategy.py`/`pnl.py`/`risk.py` domain clients, all updated with a `"*"`
+      wildcard default); `risk_metrics` has a real READER (`RiskDomainClient.get_risk_metrics()`)
+      but **no writer anywhere in the workspace** — flagged as its own separate finding, not fixed
+      here (out of scope for a path-grammar change). Also corrected a stale docstring in UTL's
+      `strategy.py` claiming `write_instructions` bypasses `PATH_REGISTRY` — fixed earlier this
+      session (`strategy-service@8a7f80e8`), the comment was never updated. Both repos'
+      `quality-gates.sh --no-fix` green (UTL: 0 failures; strategy-service: full whole-tree codex
+      compliance clean — an earlier attempt hit 3 failures in files this change never touched,
+      traced to a race with a concurrent quickmerge push, not a real blocker, confirmed by the
+      clean retry). **Remaining W18 scope, not done here**: the `risk_metrics`-has-no-writer gap
+      (needs its own scoping — is risk_metrics meant to be computed live, or was a writer just
+      never built?), and confirming no OTHER strategy-service emission type exists outside these 5
+      PATH_REGISTRY entries (e.g. account balances, once W9 lands, will need the same grammar
+      applied from the start rather than retrofitted).
 - [ ] [BACKEND] P1. Build trigger, latency-tracing and staleness-SLA mechanisms (W16) — "specified, not built".
 
 ### Position adapters and venue coverage
