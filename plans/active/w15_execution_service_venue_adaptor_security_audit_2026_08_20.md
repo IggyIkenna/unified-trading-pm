@@ -343,7 +343,6 @@ Findings use the fixed seven-point checklist and exact implementation lines.
 - Pacifica remains fail-closed (`supports_live=False`) and its Ed25519 scaffold does not post private material (`pacifica.py:166-211,286-328,559-645`); HIGH future-live input, expiry, and replay/idempotency gaps (`pacifica.py:489-515,559-655`).
 - Bybit delegates credential/signing correctness and returns failed write results, but has HIGH unchecked wrapper inputs and drops the delegated `client_order_id` (`bybit.py:105-132`; `bybit_ccxt.py:208-226`); MEDIUM read failures become empty positions/zero balance (`bybit.py:136-176`).
 
-
 ### 2026-08-21 — slot 4 native REST adapter audit
 
 Reviewed every file named by the native-adapter phase against all seven checklist points; no production code or tests were changed.
