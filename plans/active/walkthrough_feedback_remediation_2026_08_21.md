@@ -249,33 +249,107 @@ drift_direction: advance-code
       `ExecutionInstruction` field carrying an explicit `BusTransferType`/purpose override (a UAC schema change
       with wide blast radius — every other handler consumes this type). Genuinely ambiguous design question,
       deliberately not guessed at — needs an operator/design decision, not a self-served UAC addition.
-- [ ] [BACKEND] P2. **New, found 2026-08-21 during todo 3's implementation.** The manual-trade
+- [x] [BACKEND] P2. **New, found 2026-08-21 during todo 3's implementation.** The manual-trade
       `recon_excluded` flag (todo 3) is threaded end-to-end through `ManualInstructionRequest` →
       `ManualInstruction`/`ManualInstructionAuditLog` (FCA audit trail, real) → `TradeFillRecord`/`LedgerRow`
-      schema fields (real) → `batch-live-reconciliation-service` ledger-matching skip (real, tested). The ONE
-      missing link: execution-service never constructs `LedgerRow` objects directly (confirmed — zero
-      `LedgerRow(` call sites in `execution_service`); the actual GCS instruction-ledger row for a trade fill is
-      written by `unified-trading-library`'s generic event/ledger-writer facade, triggered by a `log_event()`
-      call this session did not trace. Until that UTL-side writer is confirmed to read/thread `recon_excluded`
-      from the originating instruction, a flagged manual trade's fill row in the REAL ledger will default to
-      `recon_excluded=False` and still be reconciled — the flag only takes effect once this last link is closed.
-      Out of this session's named-repo scope (UTL wasn't authorized); needs its own UTL-touching investigation.
-- [ ] [BACKEND] P2. **New, found 2026-08-21 during todo 4's investigation.** `manual_instruction_helpers
-      .py::_SUPPORTED_ALGOS` (and UAC's `MANUAL_ONLY_ALGOS`) advertise `"BEST_PRICE"` as a valid manual-trade
-      algorithm via `GET /manual/instruction/supported-algos`, but `execution_service/engine/orchestrator.py
-      ::DefaultAlgorithmFactory` (the concrete factory `ExecutionOrchestrator.execute_instruction` — the class a
-      manual submission's `_orchestrator.execute_instruction()` call reaches — actually uses) only registers
+      schema fields (real) → `batch-live-reconciliation-service` ledger-matching skip (real, tested). **Traced
+      to completion 2026-08-21 (follow-up session) — this is NOT a mechanical field-threading fix; it's a real
+      architecture gap, documented rather than forced.** Confirmed via code read (not just grep) that
+      `unified_trading_library/ledger/run_writer.py::write_run_ledger` (→ `instruction_ledger_jsonl` →
+      `fill_to_ledger_jsonl_obj` → `unified_trading_library/ledger/materialize.py::ledger_row_from_trade_fill`)
+      is the ONLY code that constructs `LedgerRow` objects and writes the GCS InstructionLedger
+      (`{ledger_root}/ledger_type=instruction/{run_id}.jsonl`). Its only non-test callers are
+      `strategy-service`'s `batch_rerun.py` / `engine/backtest/ledger_emit.py` (explicit batch-rerun/paper CLI
+      invocations) — `execution-service` has ZERO calls into this writer. The premise that a `log_event()` call
+      from execution-service triggers a UTL "generic ledger-writer facade" is FALSE: `execution-service`
+      publishes `FILL_COMPLETED` via `log_event()` (`engine/orchestrator.py:141`); its only live/event-driven
+      consumer is `strategy-service/strategy_service/position/core/fill_event_consumer.py` (Pub/Sub), which
+      calls `position_store.save_fill_from_message(...)` / dispatches to a position tracker — it never
+      constructs a `TradeFillRecord` and never reaches `write_run_ledger` (verified by reading the file, zero
+      `TradeFillRecord`/`write_run_ledger`/`ledger_row_from_trade_fill` references in it). A manually-submitted
+      trade fill is therefore represented ONLY in the `audit-records` GCS bucket
+      (`execution_service/utils/audit_log.py::persist_audit_log`, called from
+      `manual_instruction_submit.py::_execute_via_orchestrator` right after `execute_instruction` — this DOES
+      carry `recon_excluded` in its payload) and in strategy-service's position store — it is **never**
+      converted into a `TradeFillRecord`/`LedgerRow` in the InstructionLedger `batch-live-reconciliation-service`
+      reads for ledger-matching at all, for ANY manual trade, flagged or not (consistent with, and confirming,
+      the same open item the concurrent BLRS consuming-half session above independently flagged as unresolved).
+      Closing this gap needs a real design decision (does a manual live fill get its own event-driven
+      ledger-writer path parallel to the batch/paper CLI writer? does it get folded into
+      `fill_event_consumer.py`'s existing subscription? what constructs the `TradeFillRecord`'s
+      `account_id`/`asset_group`/`quote_currency` context for a manual trade, which the batch writer currently
+      gets from the run/backtest context, not from a single live fill?) — not a mechanical field-thread. See the
+      new follow-up todo directly below.
+- [ ] [BACKEND] P2. **New, found 2026-08-21 during this todo's tracing (see todo above).** Manual-trade fills
+      are never represented in the real GCS InstructionLedger at all today — `recon_excluded` is therefore
+      currently a no-op with respect to `batch-live-reconciliation-service`'s ledger-matching skip (the skip
+      logic is real and tested, but nothing ever writes a manual fill's `LedgerRow` for it to skip). Needs an
+      operator/design decision on where a live manual-trade ledger-writer path should live (a parallel
+      event-driven writer alongside `unified_trading_library/ledger/run_writer.py`'s batch/paper writer, vs.
+      extending `strategy-service/strategy_service/position/core/fill_event_consumer.py`'s existing
+      `FILL_COMPLETED` subscription, vs. something else) before implementation — not a self-served UAC/UTL
+      addition. Cross-repo: execution-service (fill origin) + unified-trading-library (ledger schema/writer) +
+      possibly strategy-service (current sole live `FILL_COMPLETED` consumer).
+- [x] [BACKEND] P2. **New, found 2026-08-21 during todo 4's investigation.** `manual_instruction_helpers
+      .py::_SUPPORTED_ALGOS` (and `execution_service.algorithms.selector.MANUAL_ONLY_ALGOS`) advertise
+      `"BEST_PRICE"` as a valid manual-trade algorithm via `GET /manual/instruction/supported-algos`, but
+      `execution_service/engine/orchestrator.py::DefaultAlgorithmFactory` (the concrete factory
+      `ExecutionOrchestrator.execute_instruction` — the class a manual submission's
+      `_orchestrator.execute_instruction()` call reaches — actually uses) only registers
       `MARKET`/`TWAP`/`VWAP`/`ADAPTIVE_TWAP`. `DefaultAlgorithmFactory.get_algorithm("BEST_PRICE")` returns
       `None`, and `execute_instruction` then raises `ValueError("Unknown algorithm: BEST_PRICE")` — a real
-      "looks selectable, fails at runtime" mismatch (confirmed via code read, `orchestrator.py:165-258`). NOT
-      fixed this session: which concrete orchestrator class actually handles a PRODUCTION manual submission
-      (`_orchestrator` is set at runtime via `set_orchestrator()`; this file's own docstring already flags a
-      prior StrategyInstruction-vs-Instruction type-mismatch bug in exactly this area,
-      `execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`) was not conclusively
-      traced in the time available — implementing a fix without that confirmation risks guessing at the wrong
-      layer. Options once traced: implement a real `BEST_PRICE` `ExecutionAlgorithm` in `DefaultAlgorithmFactory`
-      (semantics ambiguous — limit-at-best-bid/ask vs. IOC vs. MARKET-equivalent, not guessed at), or remove
-      `BEST_PRICE` from the manual-menu discovery list to match reality.
+      "looks selectable, fails at runtime" mismatch (confirmed via code read, `orchestrator.py:165-258`).
+      **Confirmed 2026-08-21 (follow-up session) which concrete orchestrator class handles PRODUCTION manual
+      submissions**, resolving the prior session's open question: `manual_instruction_api.LiveOrchestrator` is
+      a `Protocol` whose own docstring already states `ExecutionOrchestrator` is "the only one that exists";
+      `live_execution_handler.py::_build_orchestrators_for_instructions` →
+      `_create_orchestrator_for_venue` constructs `ExecutionOrchestrator(data_source=..., data_sink=...,
+      matching_engine=...)` with NO `algorithm_factory` arg (→ defaults to `DefaultAlgorithmFactory()`) and
+      registers it via `manual_instruction_api.set_orchestrator(orch)`; `manual_instruction_submit.py
+      ::_execute_via_orchestrator` unconditionally calls `_core._orchestrator.execute_instruction(instruction)`
+      for every manual submission (no separate sports/prediction routing in the manual path — that routing
+      only exists in the auto-loaded-strategy-instruction dispatch loop, not manual submit). So the bug is
+      confirmed real for the actual production path, not a guess. **Fix shipped**: removed `"BEST_PRICE"` from
+      both `_SUPPORTED_ALGOS` (`execution_service/api/manual_instruction_helpers.py`) and `MANUAL_ONLY_ALGOS`
+      (`execution_service/algorithms/selector.py`) — the smaller, honest fix (semantics for a real `BEST_PRICE`
+      `ExecAlgorithm` are ambiguous — limit-at-best-bid/ask vs. IOC vs. MARKET-equivalent — and no
+      implementation exists anywhere in `algo_library/`; selector.py's own separate automated-path
+      `ALGORITHMS_BY_INSTRUCTION_TYPE` already flags it "GHOST — no implementation class" for that unrelated
+      path). Updated the one test asserting the old 7-entry list
+      (`tests/unit/test_dynamic_venues.py::test_supported_algos_list`) to the corrected 6-entry list.
+      — execution-service@16d372d22d (verified ancestor of origin/live-defi-rollout via
+      `git merge-base --is-ancestor`), `quality-gates.sh` full green (ALL QUALITY GATES PASSED).
+      **NOTE (found during this fix, out of scope, tracked separately — and a correction to the sibling
+      investigation directly above).** `ICEBERG` and `SOR` are ALSO in both allow-lists. The sibling "3 of the 4
+      named ghosts" todo above claims ICEBERG "remains fully available for manual/live real-fill trading" via
+      `adapters/algorithm_factory.py::AlgorithmFactory` (confirmed real: that class does have `"iceberg" ->
+      IcebergAlgorithm` and `"sor" -> SORAlgorithm` in its `_ALGO_MAP`). **But that claim does not hold for the
+      PRODUCTION manual-submit path traced in this todo**: `adapters/algorithm_factory.AlgorithmFactory` is a
+      completely separate class from `engine/orchestrator.DefaultAlgorithmFactory` (confusingly-similar names,
+      different registries), and `live_execution_handler.py::_create_orchestrator_for_venue` — the ONLY place
+      that constructs the `ExecutionOrchestrator` instance manual submissions actually run through — passes NO
+      `algorithm_factory` argument, so it always gets `DefaultAlgorithmFactory()` (MARKET/TWAP/VWAP/
+      ADAPTIVE_TWAP only). Grepped `execution_service/operations/manual.py` (`ManualOperationHandler`, the
+      `_manual_handler` fallback path) for any `AlgorithmFactory`/`ExecutionOrchestrator(` construction — zero
+      hits, it never builds its own orchestrator either. So on the evidence gathered this session, ICEBERG and
+      SOR most likely hit the SAME "advertised but ValueError at runtime" mismatch BEST_PRICE just had — the
+      sibling todo's "not a ghost" verdict for ICEBERG appears to be about implementation existence, not
+      production reachability. NOT fixed here (out of this todo's own BEST_PRICE-only scope, and this needs its
+      own confirmation pass before touching either allow-list). See new follow-up todo below.
+- [ ] [BACKEND] P2. **New, found 2026-08-21 during the BEST_PRICE fix above (partially corrects the sibling
+      "3 of the 4 named ghosts" todo's ICEBERG verdict).** Confirm whether `ICEBERG` and `SOR` (still in
+      `manual_instruction_helpers._SUPPORTED_ALGOS` and `selector.MANUAL_ONLY_ALGOS`) are actually reachable
+      from the PRODUCTION manual-submit orchestrator (`live_execution_handler.py::_create_orchestrator_for_venue`
+      → `ExecutionOrchestrator` with no `algorithm_factory` arg → `DefaultAlgorithmFactory`, which has neither) —
+      this session found `adapters/algorithm_factory.AlgorithmFactory` (a differently-named, separate class) DOES
+      have real `IcebergAlgorithm`/`SORAlgorithm` entries, but found no code path that ever wires that factory
+      into the production `ExecutionOrchestrator`, contradicting the sibling todo's "ICEBERG fully available for
+      manual/live real-fill trading" claim. Needs a real trace (not assumption either way) before acting: either
+      (a) `DefaultAlgorithmFactory` should be extended to include ICEBERG/SOR (or constructed with
+      `adapters.algorithm_factory.AlgorithmFactory` instead), closing a real production gap, or (b) some other
+      wiring this session missed already makes them reachable, in which case no code change is needed — just
+      update the sibling todo's evidence. If (a), remove them from the allow-lists like `BEST_PRICE` was, or wire
+      them in — same "don't guess" treatment as `BEST_PRICE` got.
 
 ## Todos — presentation cluster (T5 scope: the artefact itself; run AFTER the clusters above land)
 
@@ -536,3 +610,27 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   through from `execution-service`'s `log_event()` call — same open item as the P2 follow-up todo above; this
   session's BLRS-side change consumes whatever `recon_excluded` value the ledger reader ultimately sees, it does
   not change how that value gets there.
+
+- 2026-08-21 — **Follow-up session on the 2 new P2 todos filed by the T4 wave-1b session** (execution/transfer
+  cluster, "recon_excluded → real ledger link" + "BEST_PRICE manual-algo mismatch"; the 3rd, REBALANCE producer
+  signal, was explicitly out of scope, left untouched). **BEST_PRICE: fixed and shipped**
+  (`execution-service@16d372d22d`, verified ancestor of `origin/live-defi-rollout`). Confirmed via code read
+  which orchestrator handles production manual submissions (`ExecutionOrchestrator`, constructed with no custom
+  `algorithm_factory` by `live_execution_handler.py::_create_orchestrator_for_venue` → defaults to
+  `DefaultAlgorithmFactory`, MARKET/TWAP/VWAP/ADAPTIVE_TWAP only) — resolving the prior session's open question.
+  Removed `BEST_PRICE` from `_SUPPORTED_ALGOS`/`MANUAL_ONLY_ALGOS`, updated the one affected test, full
+  `quality-gates.sh` green. While confirming this, found ICEBERG/SOR likely have the SAME production-unreachable
+  problem, contradicting the sibling "3 of 4 ghosts" todo's ICEBERG verdict — corrected that todo's note in place
+  and filed a new follow-up rather than silently leaving the misleading claim. **recon_excluded→ledger link:
+  traced to completion, found genuinely NOT a mechanical fix.** Confirmed (via reading the actual consumer code,
+  not just grepping) that `unified_trading_library/ledger/run_writer.py::write_run_ledger` is the only
+  `LedgerRow`-constructing GCS writer, and its only callers are strategy-service's batch-rerun/paper CLI paths —
+  execution-service has zero calls into it, and the one live/event-driven consumer of execution-service's
+  `FILL_COMPLETED` event (`strategy-service`'s `fill_event_consumer.py`) only touches the position store, never
+  builds a `TradeFillRecord`. A manual trade fill is therefore never represented in the real InstructionLedger at
+  all today (flagged or not) — `recon_excluded`'s ledger-matching skip in `batch-live-reconciliation-service` is
+  correct and tested, but currently has nothing to act on for manual trades. This confirms/matches the open item
+  the concurrent BLRS consuming-half session (above) independently flagged as unresolved. Documented the finding
+  in full and filed a cross-repo design-decision follow-up todo instead of forcing a fragile fix. Net this
+  session: 1 real bug fixed and shipped, 1 architecture gap fully diagnosed and documented (not guessed at), 2
+  new follow-up todos filed (SOR/ICEBERG production-reachability, manual-fill ledger-writer design decision).
