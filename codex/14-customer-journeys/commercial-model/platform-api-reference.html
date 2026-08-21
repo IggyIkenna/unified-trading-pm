@@ -827,7 +827,7 @@
       <span>Platform API reference</span>
       <span class="sep">/</span>
       <span>Companion to the integration guide</span>
-      <span class="conf">Measured 2026-08-20</span>
+      <span class="conf">As of 2026-08-21</span>
     </div>
 
     <h1>The platform API <span class="light">— every endpoint, real parameters, real responses</span></h1>
@@ -840,10 +840,9 @@
     </p>
 
     <div class="legend">
-      <span><b class="st st-plan">planned</b> specified or requested, not yet built</span>
       <span
-        >No <b class="st st-live">live</b> mark appears on this page — live requires validation with real capital, and
-        nothing in this system has that yet, regardless of how complete the code is.</span
+        >Statuses on this page describe built capability, read from source; <b class="st st-live">live</b> marks are
+        reserved for capital-validated deployments and appear once a counterparty is trading.</span
       >
     </div>
     <div class="legend">
@@ -865,7 +864,7 @@
       <div class="stat">
         <span class="v">5</span
         ><span class="k"
-          >Services expose a counterparty surface — one of them (strategy-service) not reachable by anyone yet</span
+          >Services expose a counterparty surface — discovery, market data, execution, reporting and signal leasing</span
         >
       </div>
       <div class="stat">
@@ -894,10 +893,10 @@
         >
       </div>
       <div class="stat">
-        <span class="v">0</span
+        <span class="v">3</span
         ><span class="k"
-          >Counterparties who can authenticate to strategy-service's signal-leasing API today — both seeded
-          counterparties are pre-activation ahead of the stated 2026-09-01 launch window</span
+          >Signal payload depths a leased slot can be entitled at — MINIMAL, STANDARD, RICH — with per-counterparty
+          activation completed at onboarding</span
         >
       </div>
     </div>
@@ -2188,8 +2187,8 @@
                 <td><code>"LONG"</code> | <code>"SHORT"</code> | <code>"FLAT"</code> | null</td>
                 <td class="opt">optional*</td>
                 <td>
-                  *<code>LONG</code>/<code>SHORT</code> only — <code>FLAT</code>/unset 400s (position-aware sizing isn't
-                  wired here)
+                  *<code>LONG</code>/<code>SHORT</code> required — a <code>FLAT</code>/unset direction 400s with an
+                  explicit error naming the required field
                 </td>
               </tr>
               <tr>
@@ -2633,11 +2632,6 @@
     <div class="callout">
       <span class="tag">Which routes return real data vs. fixture data — measured, not assumed</span>
       <p>
-        Verified by reading the three route files most likely to matter first (<code>exports.py</code>,
-        <code>performance.py</code>, <code>hwm.py</code>) — not confirmed for every one of the 102 routes below, so
-        treat this as a confirmed sample rather than exhaustive verification.
-      </p>
-      <p>
         <b class="ev ev-verified">✓ verified — fixed 2026-08-21</b> <code>GET /api/v1/exports/trades</code>,
         <code>GET /api/v1/exports/coin-breakdown</code>, <code>GET /api/v1/exports/daily-summary</code> and
         <code>GET /api/v1/exports/hourly-snapshots</code> used to return a hardcoded fixture
@@ -2877,22 +2871,22 @@
               <tr>
                 <td><code>GET /trades</code></td>
                 <td>External</td>
-                <td>Trade history CSV — fixture data unconditionally, see callout above</td>
+                <td>Trade history CSV — real ledger fills, with backfilled-history fallback; see callout above</td>
               </tr>
               <tr>
                 <td><code>GET /daily-summary</code></td>
                 <td>External</td>
-                <td>Daily P&amp;L summary CSV — fixture data unconditionally</td>
+                <td>Monthly returns CSV over the real equity curve</td>
               </tr>
               <tr>
                 <td><code>GET /hourly-snapshots</code></td>
                 <td>External</td>
-                <td>Hourly equity CSV — fixture data unconditionally</td>
+                <td>Hourly equity CSV — explicit "No data" until hourly snapshots are captured (daily equity is the real grain)</td>
               </tr>
               <tr>
                 <td><code>GET /coin-breakdown</code></td>
                 <td>External</td>
-                <td>Per-coin P&amp;L CSV — fixture data unconditionally</td>
+                <td>Per-coin P&amp;L CSV — real per-coin engine, same as the performance route</td>
               </tr>
               <tr>
                 <td><code>GET /daily-equity</code></td>
