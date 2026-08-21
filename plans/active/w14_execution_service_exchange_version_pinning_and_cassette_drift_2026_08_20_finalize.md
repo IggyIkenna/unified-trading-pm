@@ -61,6 +61,10 @@ context_scope:
 - [ ] [AGENT] P1. Check whether any `BLOCKED-CREDENTIALS` follow-ups the parent plan filed (per-venue stale
       cassettes needing re-record access) are still genuinely blocked, or whether credentials have since become
       available — retag if resolved, per the "the moment an OPERATOR tag resolves, retag in the same edit" rule.
-- [ ] [AGENT] P1. Run the archival ritual once every parent-plan todo is done and unlocked: confirm zero open
-      items (or explicit `BLOCKED-*` tags on the remainder), move both this plan and the parent to
-      `plans/archive/2026_08/`, and update any doc that still points at the active path.
+- [ ] [AGENT] P1. Run the standard 6-step archival ritual once every parent-plan todo is genuinely `- [x]` and
+      `locked_by` is unset — per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, the
+      authoritative rule has NO `BLOCKED-*`-tag carve-out (a corrected wording: an earlier draft of this exact
+      todo said "confirm zero open items or explicit BLOCKED-* tags," which is looser than the codex SSOT and was
+      caught by a dispatched sub-agent correctly declining to archive against it — see
+      `w_state_recovery_real_wiring_2026_08_20_finalize.md` for the full incident). Move both this plan and the
+      parent to `plans/archive/2026_08/`, and update any doc that still points at the active path.

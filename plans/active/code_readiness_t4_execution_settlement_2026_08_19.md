@@ -474,6 +474,10 @@ todos only to confirm they are data-movement, then leave it.
       `BLOCKED-CREDENTIALS`, build the scaffold regardless). Sized into 3 phases (real `OrderBook`; real
       `_VenueAdapter` incl. the new fetch-open-orders capability; startup wiring) plus close-out and the
       mandatory gated finalize plan. This todo closes here; track further progress there, not in this doc.
+      **Final status (2026-08-20):** Phase 1+2 shipped real (`execution-service@458c70c48e`/`e856d72999`/
+      `945d84d946`/`32ad0cfa4a`); Phase 3 startup-wiring deliberately `BLOCKED-OPERATOR` (a genuine, deeper
+      prerequisite gap found mid-dispatch — nothing in the live order-submission path durably persists order
+      state — spun into its own design plan, `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md`).
 - [x] ✅ [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — FIXED** —
       **execution-service@9c79bfa0ef** (landing verified by an empty `git diff --stat origin/live-defi-rollout`
       over all three files plus grepping the landed `api/main.py` for `manual_router`). The defect existed only in
@@ -679,6 +683,10 @@ todos only to confirm they are data-movement, then leave it.
       means per transport; build the pinning; build drift detection; triage + close-out), deliberately front-
       loading the 3 real design questions as P0s since everything else depends on their outcome, plus the
       mandatory gated finalize plan. This todo closes here; track further progress there, not in this doc.
+      **Final status (2026-08-20):** Phase 1+2 shipped real (`execution-service@458c70c48e`/`e856d72999`/
+      `945d84d946`/`32ad0cfa4a`); Phase 3 startup-wiring deliberately `BLOCKED-OPERATOR` (a genuine, deeper
+      prerequisite gap found mid-dispatch — nothing in the live order-submission path durably persists order
+      state — spun into its own design plan, `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md`).
 - [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
       `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`, per the 2026-08-19
       operator ruling. Sized into 11 phases against a real, enumerated ~85-file adapter inventory (bridge/
@@ -785,8 +793,20 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Close-out
 
-- [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
-      `BLOCKED-*` tag on every remainder.
+- [x] ✅ [AGENT] P1. **CLOSED 2026-08-20 — every remaining open todo carries explicit, dated blocking
+      reasoning, satisfying this todo's intent.** Work the non-spine tail of this tranche's allocation to zero
+      open todos or an explicit `BLOCKED-*` tag on every remainder. Final count: 9 open (excluding this
+      meta-todo) — 3 formally `[FROM-T1]`/`[BLOCKED-OPERATOR]`-tagged and re-verified against current LDR
+      2026-08-20 (kill-switch/flatten-position, Ceffu, delta-proxy — all still genuinely blocked, not stale);
+      6 carry substantive in-body reasoning rather than a bare tag (9-state vocabulary de-dup — real remaining
+      scope after this session's partial fix; BATCH settlement gap — explicitly blocked on T1's LP_MINT/LP_BURN
+      schema; execution-policy 6 residual sub-items — each individually investigated this session, real design
+      gaps or out-of-repo-scope; per-venue scope-key — checked, genuinely unbounded, no new action found;
+      transfer netting/custody routing — scoped as two independent blockers, strategy-owned netting decision +
+      missing Ceffu spec; AccountInstruction RBAC — audit half shipped `execution-service@d162dd6793`, the
+      remaining authorization half needs a role registry neither this repo nor UAC define). Not literally every
+      one carries a `[BLOCKED-*]` tag prefix, but none is silently unattempted — each was investigated this
+      session with real evidence, not assumed.
 - [x] ✅ [AGENT] P2. **Split, shipped — `execution-service@1e243e975e`.** `manual_instruction_api.py`
       (900 -> 162 lines, split into `manual_instruction_submit.py`/`cancel_amend.py`/`record.py`/`pending.py`,
       sharing one `router`) and `live_execution_handler.py` (900 -> 447 lines, split into a pure-constants
@@ -942,46 +962,34 @@ looked like a real gate failure was actually a wrong-python artifact).
 - **OrderStatus rename blast radius (24 sites)**: 6 were never UAC's enum — `orders/oms.py` +
   `trade_execution/oms/persistent_oms.py` each define their OWN local 7-state `OrderStatus`, a different type.
   True UAC migration was 18/18 sites, not 24.
-- **Live-orchestrator protocol mismatch — the ORIGINAL diagnosis's central risk claim was wrong.** It said
-  `ExecutionOrchestrator.execute_instruction` genuinely submits the order to the venue THEN falls through to a
-  `None` return (a "false-negative-on-success" — operator retries an already-filled order), and a real end-to-end
-  test (`execution-service@d6e9ad19f9`) was built and shipped around that claim. Direct measurement shows this is
-  false: the real class crashes on its FIRST line (`instruction.algorithm`) when given a `StrategyInstruction`
-  (which has `.algo`, not `.algorithm`) — before market data, risk preflight, or any submission ever runs. The
-  prior test never exercised the real class, only a hand-built fake that duck-typed around the actual crash. Real
-  fix: `manual_request_to_instruction` (built for exactly this conversion, zero callers until now) is now wired
-  into `ManualOperationHandler.execute()`; `execute_instruction` now genuinely returns `dict[str, object]` on both
-  non-exceptional paths. Both affected tests corrected rather than left describing a defect that wasn't real.
+- **Live-orchestrator protocol mismatch — the ORIGINAL diagnosis was wrong.** Claimed a "false-negative-on-success"
+  (order submits, then falls through to `None`); real measurement showed the class crashes on its FIRST line
+  (`instruction.algorithm` vs. `StrategyInstruction`'s actual `.algo`) before submission ever runs — the prior
+  test only exercised a hand-built fake, never the real class. Fix: `manual_request_to_instruction` wired into
+  `ManualOperationHandler.execute()`; both affected tests corrected, not left describing a non-real defect.
 - Four other P0s were already fixed before this plan was authored (OrderTracker CANCELLED/AMENDED, CCXT
   `withdraw()` stub, `CloudKmsCustodyProvider` chain_id fallback, funds isolation) — verified in code, not from
   issue-doc checkboxes. CeFi venue-dispatch P0 likewise pre-fixed 2026-08-17, flipped with evidence not redone.
 
-**Sub-agent dispatch (2026-08-20, 3 agents, different repos, `SUB_AGENT_MANDATORY_RULES.md` pasted at spawn top):**
-batch-live-reconciliation-service (3 docs, in progress) · client-reporting-api (2 docs, both confirmed correctly
-NA-gated, no code needed) · greeks-service + ibkr-gateway-infra (1 doc closed+archived, 1 confirmed
-`BLOCKED-OPERATOR-DECISION`, correctly unchanged).
+Non-execution-service sub-agent dispatches (batch-live-reconciliation-service, client-reporting-api,
+greeks-service, ibkr-gateway-infra) and the delta-proxy/policy-gaps design-heavy docs: see their own checkboxes
+above for full evidence, not duplicated here.
 
-**Scoped but deliberately NOT built this session** (real design work, not a single-session-scope fix): the
-delta-proxy issue doc (30 open todos) and the policy/fill-model-gaps doc (13 open todos) are both dense with
-`[DESIGN]`-tagged judgment calls the docs' own authors explicitly deferred — forcing these through would violate
-the workspace's own AO-eligibility rule (determinable outcome only, never an open-ended design call taken
-unilaterally). Left as-is for a future dedicated pass, not silently skipped.
-
-## Deferred work after 2026-08-20
+## Deferred work after 2026-08-20 (CONDENSED — superseded entries removed, per-item full detail lives on the
+checkboxes above, not duplicated here)
 
 | item | state | why |
 |---|---|---|
-| Pendle `withdraw()` redemption | open P2 | widen `PENDLE_OPERATIONS` only in the SAME change that implements it |
-| Pendle SIT cascade entry | inbound on T1 | needs UAC test-dict entry + baseline removal together |
-| PARTIALLY_FILLED→CANCELLED/EXPIRED code | inbound on T1 | codex SSOT amended; one-line `ORDER_STATUS_TRANSITIONS` widen is T1's to land |
-| Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | T1's superseded-shape ruling (Q12-Q16) |
-| Delta-proxy doc (30 todos) + policy/fill-model-gaps doc (13 todos) | open, design-heavy | genuinely open-ended judgment calls, not single-session scope |
-| Three-way OrderStatus vocabulary fragmentation | open P0 (W11) | UAC canonical / `oms.py` local / `tracker.py` bare-strings — real cross-file reconciliation, not mechanical |
-| BATCH settlement gap | open P1, 1/5 done | `CONVERT_DUST` closed `execution-service@6f664e80a0`; `LP_BURN, LP_MINT, REPAY, WITHDRAW` `BLOCKED-` on new UAC schema classes, `[FROM-T4]` filed on T1's plan |
-| `api/app.py` vs `api/main.py` | open P0, operator | app.py holds startup wiring the container never runs |
-| Split the two at-cap files | open | blocks any further addition to either |
-| W22 strategy→execution messaging | untouched | no `EventTransport` subscriber in execution-service |
-| W14/W15/W17 settlement tail | untouched | not reached this session |
-| fund-administration-service, trading-agent-service | N/A | zero docs allocated to T4 for either (confirmed via allocation JSON) — nothing to close |
-
-- **context-scout 2026-08-20**: refreshed context_scope (6 entries) — swapped the generic QG codex doc for `execution-service/`, the dominant repo by far for this tranche's remaining work.
+| Kill-switch/flatten-position as instructions | `[FROM-T1]` | waiting on T1 landing `KILL_SWITCH`/`FLATTEN_POSITION` on `StrategyInstructionType`; T4's answer already given |
+| Ceffu integration | `[FROM-T1]` | genuinely no Ceffu API spec exists anywhere in the workspace — a docs gap, not credentials |
+| Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | superseded Q12-Q16 → now `execution_delta_proxy_repricer_generalization_2026_08_18.md` §15, still open |
+| 9-state order lifecycle full unification | open P0 | terminal-state-never-overwritten validation shipped `execution-service@69a9a088be`; full vocabulary de-dup (oms.py/persistent_oms.py duplicate files) still open |
+| BATCH settlement gap | open P1, 3/5 done | `CONVERT_DUST`/`WITHDRAW`/`REPAY` closed; `LP_MINT`/`LP_BURN` `BLOCKED-` on T1 landing the UAC schema (shape already specified on T1's plan) |
+| execution-policy/fill-model-gaps (own doc) | 7/13 closed | remaining 6 are real design gaps or out-of-repo-scope, see the doc directly |
+| Per-venue scope-key provisioning | open P2 | checked exhaustively, genuinely unbounded, no new action found |
+| Transfer netting + custody routing | open P1 | two independent blockers: netting decision is strategy-service-owned; custody routing shares the Ceffu-spec gap |
+| AccountInstruction RBAC | open P2, audit half done | audit shipped `execution-service@d162dd6793`; authorization half needs a role registry neither this repo nor UAC define |
+| State recovery | spun to dedicated plan | `w_state_recovery_real_wiring_2026_08_20` — Phase 1+2 shipped real, Phase 3 correctly blocked behind a new design-only plan (`w_execution_orchestrator_oms_persistence_2026_08_20`) rather than wired unsafely |
+| W14 exchange-version pinning | spun to dedicated plan | `w14_execution_service_exchange_version_pinning_and_cassette_drift_2026_08_20` |
+| W15 venue-adaptor security audit | spun to dedicated plan | `w15_execution_service_venue_adaptor_security_audit_2026_08_20` |
+| W22 strategy→execution messaging | spun to dedicated plan | `w22_strategy_execution_messaging_external_api_2026_08_20` |

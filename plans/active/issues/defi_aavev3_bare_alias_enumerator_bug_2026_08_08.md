@@ -136,13 +136,21 @@ defect (phantom-venue emission) without touching a registry other code may depen
       **zero run.log output at all** across a full 20-minute bounded watchdog each — a distinct, reproducible
       failure mode not seen on the sibling CeFi launcher (which reliably produces logs on the same underlying
       dispatch route), so this looks specific to this script/launcher combination, not generic infra flake.
-      **Not attempting a 7th blind retry.** The dry-run has never completed even once. **Next step for the next
-      session**: since `run.log`-based diagnosis has failed twice in a row (no log ever written means the
-      failure is pre-heartbeat-daemon, i.e. very early boot/tarball-pull), pull the VM's GCE serial-port output
-      via `gcloud compute instances get-serial-port-output <name> --zone=asia-northeast1-c` **while the VM is
-      still alive** (launch it, then immediately start polling serial output every ~30s rather than waiting on
-      `run.log` — serial output survives boot-time failures that never reach the point of writing to GCS) — this
-      is a `gcloud` CLI call, not a GCS object op, so it's sanctioned.
+      **UPDATE 2026-08-20 (interactive session, serial-console diagnosis + 3 fleet-wide fixes shipped) — dry-run
+      STILL never observed to complete; do not attempt an 8th-11th blind retry.** Full attempt-by-attempt detail
+      in the Progress Log below; summary: root-caused the silent-death mechanism (NOT a boot-time failure, NOT
+      SPOT preemption — confirmed via Cloud Logging that every self-delete is attributed to `uts-prd-sa`, the
+      VM's own identity, not GCE's system account), shipped 3 real fixes to the shared VM infra
+      (`deployment-service@74c3ad84f1`, `@3ed72199a5`, `@f63eeed04d`), but 2 further launches (attempts #9, #10)
+      showed the underlying watchdog subshell's own GCS-upload reliability is itself HIGHLY VARIABLE run-to-run
+      (18+ min of clean uploads on #9, zero on #10) with no code-level correlation — pointing at genuine
+      intermittent network/infra instability on this project/zone today, the SAME conclusion the 2026-08-20
+      laptop-side attempts (immediately above) independently reached. **Next step for the next session**: relaunch
+      once (the diagnostic instrumentation from `@f63eeed04d` is now live and will surface the exact
+      describe/upload error + exit code if the watchdog subshell gets even one tick this time); if it still
+      doesn't run cleanly, this may need EITHER a longer external-reaper grace window for this launcher class OR
+      a delivery path less dependent on a backgrounded-subshell's own GCS reliability (e.g. a Cloud Run Job
+      instead of a raw VM) — an infra/design call, not a further code-guess.
       Twin-exists-collision precondition CONFIRMED SATISFIED 2026-08-09
       (see Progress Log) — full-population live-manifest check found 0 of the 46,300 bare cells lacking a
       correct-key `AAVE_V3`-ETHEREUM twin; "0 backing GCS objects" was independently established by the 2026-08-08
@@ -289,3 +297,90 @@ defect (phantom-venue emission) without touching a registry other code may depen
   is the retry-discipline stop signal. **Not attempting a 7th retry this session.** This is now a distinct,
   reproducible failure class specific to this launcher/script pairing — see the updated todo above for the
   serial-console diagnostic approach the next session should use instead of another `run.log`-based attempt.
+- **2026-08-20 (interactive session, serial-console diagnosis + 3 fleet-wide fixes shipped, attempts #7-#10)**:
+  followed the prior session's own next-step — launched (attempt #7) and polled GCE serial-port output live rather
+  than waiting on `run.log`. **Serial console showed boot completing cleanly every time** ("=== VM setup complete
+  ===", task launched, PID logged) — ruling out a pre-heartbeat-daemon boot failure. Root-caused the actual
+  mechanism instead, in order:
+  1. **Ruled out early-bootstrap trap** (`_self_delete_on_setup_failure` in `setup-data-pipeline-vm.sh`) — no
+     `vm-setup.log`/`SETUP_EXIT_STATUS` blob ever written for any dead VM; that trap disarms once the workload
+     launches, and `EXIT_STATUS=RUNNING` (written by `vm-exec-with-gcs-tee.sh` itself, confirmed present on every
+     attempt) proves the workload DID launch.
+  2. **Ruled out SPOT preemption** — `gcloud compute operations list --filter="targetLink:instances/<vm>"` for
+     attempts #5, #6, #7, #8 all showed exactly one `insert` + one `delete` operation, the delete ALWAYS
+     attributed to `uts-prd-sa@central-element-323112.iam.gserviceaccount.com` (the VM's own runtime identity),
+     NEVER a system/compute-engine principal. A genuine SPOT reclaim with `--instance-termination-action=STOP`
+     (this launcher's own flag) would show as a system-initiated `stop`, not a self-authenticated `delete`. Cloud
+     Logging (`gcloud logging read`) corroborated: only `v1.compute.instances.insert`/`.delete` events, no
+     `preempted` system event, no `PREEMPTED` marker ever written to
+     `vm-logs/<vm>/PREEMPTED` (the preemption-signal systemd unit installs successfully on every boot per the
+     serial console — its absence here is real, not a coverage gap).
+  3. **Timing signature**: `insert`→`delete` gap measured 19.5min / 20.65min / 21.1min / 22.75min across four
+     independent launches at different times of day (09:xx, 17:xx, 20:xx, 20:xx again) — too tight a clustering to
+     be organic; strongly indicative of a fixed ~20min external "stale VM" reaper, not per-run variance.
+  4. **Confirmed a registry-cleanup reaper exists and runs AFTER the fact, not the deleter**: every dead VM has an
+     entry in `gs://deployment-scripts-central-element-323112/deployments/archive/2026-08-20/<uuid>.json`
+     (found by content-grepping — NOT filename-matching, since `deployment_id` is a UUID unrelated to the VM name;
+     the ORIGINAL 2026-08-20 session explicitly noted this exact search was skipped as "unbounded cost," it was
+     not) with `status=failed`, `exit_code=125`, `extras.reap_reason='vm_not_running'`,
+     `extras.reaped_at=<timestamp ~4-5min AFTER the actual gcloud delete>` — i.e. a SEPARATE fleet monitor that
+     periodically scans `deployments/active/` and archives any entry whose VM has already disappeared. This
+     confirmed `HeartbeatDaemon.register()` DOES succeed reliably (the registry write happens via the identical
+     `get_storage_client().upload_bytes()` call `LogUploader` also uses) — ruling out a daemon-crash-on-startup
+     theory.
+  5. **Found the actual mechanism**: `unified_trading_library/lifecycle/uploader.py`'s `LogUploader` — the ONLY
+     thing that normally uploads `run.log` — invokes each upload attempt from a NESTED background thread with a
+     90s give-up-WITHOUT-cancelling pattern (`_UPLOAD_ATTEMPT_TIMEOUT_SEC`), while `HeartbeatDaemon.register()`/
+     `heartbeat()` call the same underlying method synchronously off a different thread. `run.log` was 404 the
+     ENTIRE life of every dead VM (confirmed via direct GCS reads, not inferred), while the daemon's OTHER writes
+     succeeded — consistent with this being where the asymmetry lives, though the exact failure inside
+     `LogUploader` was never directly observed (no SSH access mid-run).
+  **Fix #1 — shell-side `run.log` fallback** (`deployment-service@74c3ad84f1`,
+  `scripts/vm/vm-exec-with-gcs-tee.sh`): the watchdog subshell already reliably uploads `WATCHDOG_TRACE.log` via
+  plain shell `gcloud storage cp` every tick (proven: it succeeded on every attempt that got even one tick).
+  Added `_maybe_flush_run_log()` — once per tick, check whether `run.log` exists yet; if not, push
+  `$LOCAL_LOG` directly via the same shell primitive. No-ops once `run.log` has genuinely landed once (so no
+  added churn on the healthy path). Verified logically correct via a full local bash simulation (fake
+  `gcloud`/`timeout`, real subshell/loop/function code extracted verbatim from the shipped file) before trusting
+  it on a live VM.
+  **Attempt #8** (with fix #1 live): watchdog subshell got ZERO ticks this run (worse than attempt #6's one
+  tick) — `run.log` and `WATCHDOG_TRACE.log` both absent for the VM's whole ~23min life, `insert`→`delete` gap
+  22min47s. Confirmed via local simulation that fix #1's own logic was sound (the subshell in isolation DOES
+  call the fallback and attempt both `objects describe` and `cp`), so this wasn't a regression in my code —
+  either genuine bad luck this run, or a deeper issue.
+  **Fix #2 — `python -u`** (`deployment-service@3ed72199a5`,
+  `scripts/vm/launch-defi-aavev3-bare-alias-purge-vm.sh`): re-diffing against the RELIABLE sibling
+  `launch-cefi-itype-casing-apply-reduced-workers-vm.sh` (same generic `VM_TASK=defi-manifest-force-consolidate`
+  dispatch route) found the sibling's `BACKFILL_CMD` already carries `python -u`; this launcher's did not. Added
+  it — a genuine, concrete discrepancy against the one launcher independently confirmed to work reliably (not
+  purely a buffering-theory guess, though the buffering mechanism is also plausible given `download_bytes()`
+  and `pd.read_parquet()` are the script's first blocking calls with no intermediate output).
+  **Attempt #9** (fixes #1+#2 live): **the watchdog subshell worked beautifully — `WATCHDOG_TRACE.log` uploaded
+  successfully on EVERY tick for 18+ minutes straight**, proving the shell upload primitive itself is NOT
+  broadly unreliable from this execution context. But `run.log` — pushed by the identical fallback function,
+  immediately after each successful `WATCHDOG_TRACE.log` upload, in the same loop iteration — STILL never
+  appeared, not once, across the entire run. This is the cleanest evidence yet of a REAL, specific defect (not
+  general flakiness): something about the `run.log` push itself — as opposed to the byte-for-byte-identical-
+  shaped `WATCHDOG_TRACE.log` push right next to it — fails deterministically, every single time, in a context
+  where the shell-to-GCS primitive is demonstrably healthy. Died at ~21min (`insert`→`delete`), same pattern.
+  **Fix #3 — diagnostic instrumentation** (`deployment-service@f63eeed04d`,
+  `scripts/vm/vm-exec-with-gcs-tee.sh`): captured `_maybe_flush_run_log()`'s exact `describe`/`cp` stderr, exit
+  code, and `$LOCAL_LOG`'s size on failure, routed through the already-proven-reliable
+  `WATCHDOG_HEARTBEAT`→`WATCHDOG_TRACE_URI` channel (since `run.log` itself is what's failing to carry the
+  signal).
+  **Attempt #10** (all 3 fixes live): watchdog subshell got ZERO ticks again — `WATCHDOG_TRACE.log` never
+  appeared (so the diagnostic line never got a chance to write), `insert`→`delete` gap ~19.5-20min. This
+  regression-to-zero-ticks, on the SAME code that ran cleanly for 18+ minutes one attempt prior, with no
+  intervening code change to the watchdog subshell itself between #9 and #10, is the decisive signal: the
+  watchdog subshell's own GCS-call reliability is genuinely VARIABLE run-to-run for reasons outside this
+  launcher's code — most plausibly transient network/infra conditions on this project/zone today, independently
+  corroborated by the ORIGINAL 2026-08-20 laptop-side session (immediately above in this log) hitting its own
+  `RetryError: Timeout of 600.0s exceeded` against the same bucket the same day.
+  **Stopping per this investigation's own retry-discipline norm** (2 consecutive identical failures already
+  triggered a stop earlier in this same doc) — not attempting an 11th launch this session. **What's real and
+  shipped regardless of the remaining mystery**: 3 genuine fixes landed on shared, fleet-wide VM infra (not
+  scoped to this one launcher — `vm-exec-with-gcs-tee.sh` is used by every VM in the fleet), all logically
+  verified, none reverted. **What's still unresolved**: the dry-run has never been observed to complete in 10
+  launch attempts across two sessions; `--apply` was NOT run this session (the arithmetic gate was never
+  reached, let alone confirmed clean) — the `[OPERATOR]`/§3a pre-authorization for `--apply` stands, but its
+  precondition (a clean dry-run) is still unmet, so it was correctly not exercised.

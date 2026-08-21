@@ -139,9 +139,16 @@ context_scope:
       (mirrors `_build_strategy_instruction_from_trade()`'s existing TRADE-conversion pattern in
       `external_instruction_api.py`). Done-when: each of the 5 actions produces a real (non-mock) settlement
       result over HTTP in paper mode, not a 501.
-- [x] [BACKEND] P0. Wire `TRANSFER`/`CANCEL` on the same surface — execution-service@instruction_router.py+
-      external_instruction_api.py (2026-08-20, ready to ship, blocked only on an unrelated pre-existing function-size QG gate on
-      bridge.py/cctp.py, tracked separately). `CANCEL`
+- [x] [BACKEND] P0. Wire `TRANSFER`/`CANCEL` on the same surface — **shipped execution-service@3af76e1a01**
+      (2026-08-20, `instruction_router.py`/`external_instruction_api.py`/`transfer_handler.py`/`deribit.py`/
+      `run_phase3c.py`/`tests/unit/test_external_instruction_api.py`, verified ancestor of
+      `origin/live-defi-rollout`, full `quality-gates.sh` green: 8841 passed). The unrelated pre-existing
+      bridge.py/cctp.py function-size QG gate that blocked the first several ship attempts was independently
+      resolved by the domain owner (`execution-service@8b87a17a5`/`3f54ca206`) mid-session — reconciled via two
+      `git pull --ff-only` + conflict-resolution rounds (always deferring to the domain owner's landed version
+      over this session's own stopgap fixes in bridge.py/cctp.py/capture_golden_swaps.py/validate_uniswap_fills.py/
+      test_order_recovery.py, per the "defer to the real owner's context" pattern this session applied
+      throughout). `CANCEL`
       reuses the existing `order_tracker`-based cancel path `/manual/cancel` already established — done, tested
       (`TestCancelInstructionPath`). `TRANSFER` routes through the real `build_transfer_wiring()` ->
       `HandlerRegistry`/`InstructionRouter` -> `TransferHandler` chain (NOT `TransferCoordinator` as originally
