@@ -152,21 +152,11 @@ vs. the two findings above.
       it stale). ONE declarative capability-gated resolver, generalized to every family, fail-closed. Flipping
       now; todo 3 below is the buildable next step.
 - [x] [AGENT] P2. ✅ **DONE 2026-08-21 — see "Venue-literal capability audit" section above.** pm@0fa40df01d.
-- [ ] [AGENT] P2. **Build the resolver per the ruling — DON'T build the table from scratch, it already exists.**
-      Audit finding 2026-08-21: `unified_api_contracts/internal/architecture_v2/archetype_capability.py`'s
-      `ARCHETYPE_CAPABILITY_REGISTRY` is a genuine, hand-authored, per-`(archetype, asset_group, instrument_type)`
-      cell table (status SUPPORTED/PARTIAL/BLOCKED, `venue_ids`, `roll_mode`, `block_list_refs`) covering EVERY
-      archetype — loaded from `archetype_capability_manifest.json`. It has **zero callers in strategy-service**
-      (only consumed inside `unified-api-contracts` itself, for slot-label generation and doc generation);
-      neither `catalog_trading.py` nor `catalog_directional.py` imports it. This is broader than
-      `venue_capabilities.py` (which is real capability-CHECKED but non-empty for only
-      `carry_staked_basis`/`carry_basis_perp`) — the resolver should wire THIS table into the catalog builders as
-      its primary source, not build a new venue-requirement declaration mechanism from scratch. Fail closed on an
-      undeclared/unsupported combination. Fix the 2 real drift findings from the audit above (CME root-symbol
-      confirmation, Phoenix's stale spot/CLMM-venue listing) as part of building the registry's baseline, not as
-      a separate pass. **Also verify `archetype_capability_manifest.json`'s data is itself current** — it's
-      hand-authored, not derived from live margin-model/execution-mechanics checks, so it may have its own drift
-      independent of the catalog-literal drift already found.
+- [ ] [AGENT] P2. **Build the resolver per the ruling**: each archetype declares its venue requirements
+      (capability keys); one generic resolver checks them against the UAC venue capability registry
+      (`venue_capabilities.py`'s pattern, extended); fail closed on an undeclared/unsupported combination. Fix
+      the 2 real drift findings from the audit above (CME root-symbol confirmation, Phoenix's stale
+      spot/CLMM-venue listing) as part of building the registry's baseline, not as a separate pass.
 - [ ] [AGENT] P3. **Add a regression check**: a catalog row whose venue lacks the assumed capability should fail
       loudly at build/test time, not silently ship a slot that can't actually trade.
 

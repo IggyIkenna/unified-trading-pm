@@ -117,11 +117,11 @@ Three audit findings collide with plans that already own those files. Per the fi
 
 ### features-service
 
-- [x] ✅ [AGENT] P1. SHIPPED features-service@67c006fb. Original: Adopt UTL `ConfigReloaderBase` across the 8 feature-family `config_reloaders.py` copies. The calendar
+- [ ] [AGENT] P1. Adopt UTL `ConfigReloaderBase` across the 8 feature-family `config_reloaders.py` copies. The calendar
       and commodity copies differ by 3 lines out of 147; UTL's base class docstring already states it replaces this
       boilerplate.
-- [x] ✅ [AGENT] P1. SHIPPED features-service@67c006fb (8 copies to 1, verified on origin). Original: Collapse the 8 byte-identical `features_service/*/auth_s2s.py` copies into one shared module.
-- [x] ✅ [AGENT] P2. SHIPPED features-service@67c006fb. Original: Deduplicate `tests` smoke `test_shard_combinatorics.py` across the 4 feature families (57-82 shared
+- [ ] [AGENT] P1. Collapse the 8 byte-identical `features_service/*/auth_s2s.py` copies into one shared module.
+- [ ] [AGENT] P2. Deduplicate `tests/*/smoke/test_shard_combinatorics.py` across the 4 feature families (57-82 shared
       blocks pairwise) into one parameterised suite.
 - [ ] [AGENT] P3. Deduplicate `tests/{onchain,volatility}/unit/test_library_deps_integration.py`.
 
@@ -155,7 +155,7 @@ Three audit findings collide with plans that already own those files. Per the fi
 
 - [x] ✅ [AGENT] P1. SHIPPED ml-service@cfc2540d5e (net -45; gate GATE_EXIT=0, sentinel==HEAD). Original: ml-service — collapse `ml_service/{inference,training}/auth_s2s.py` and adopt UTL
       `ConfigReloaderBase` for both `config_reloaders.py` copies (16 differing lines out of 112).
-- [x] ✅ [AGENT] P1. SHIPPED e2e-testing@fe274a5. Original: e2e-testing — collapse the 5 `scripts/*/smoke_matrix.py` copies (52-127 shared blocks pairwise) into
+- [ ] [AGENT] P1. e2e-testing — collapse the 5 `scripts/*/smoke_matrix.py` copies (52-127 shared blocks pairwise) into
       one parameterised module driven by a domain table.
 - [ ] [AGENT] P3. ml-service / features-service — deduplicate the `test_shard_combinatorics.py` copies that cross the
       two repos (56 shared blocks each) by hoisting the shared harness rather than cross-importing.
@@ -207,7 +207,7 @@ Three audit findings collide with plans that already own those files. Per the fi
       features-service tests assert on are no longer in the wrapper namespace (hence `test_submodule_reexport` failing).
       Fix: have each wrapper re-export the shared symbols so the loaded module's namespace is unchanged. Do NOT land the
       e2e-testing change before this, or features-service goes red.
-- [x] ✅ [OPERATOR-RESOLVED AUTONOMOUSLY] P1. RESOLVED — diff3 conflict where both sides made the identical path relocation; resolved to upstream, content-survival verified. Original: **e2e-testing cannot commit — a pre-existing `git stash pop` conflict blocks it.**
+- [ ] [OPERATOR] P1. **e2e-testing cannot commit — a pre-existing `git stash pop` conflict blocks it.**
       `e2e-testing/docs/VM_BACKFILL_GUIDE.md` is `UU` carrying a live git conflict-marker pair
       markers, predating this session and owned by whoever holds that stash. Git refuses to commit ANY path while an
       unmerged entry exists, so this plan's e2e-testing work (-987 lines, gate green) is complete but unshippable.
@@ -293,7 +293,7 @@ CONFIG (e.g. `functools.partial(_shared._viable_cells, CONFIG)`) and define `SUP
 `mock.patch` targets still resolve after binding — several tests patch `_invoke_cli`, and a `partial` is not a
 function object.
 
-- [x] ✅ [AGENT] P1. DONE — shipped e2e-testing@fe274a5 + features-service@67c006fb; 42/42 previously-failing tests pass, 117/117 across all 8 families, all 5 production smoke.py import clean. Original: Apply the binding above to all 5 e2e-testing wrappers, then re-gate features-service. BLOCKED
+- [ ] [AGENT] P1. Apply the binding above to all 5 e2e-testing wrappers, then re-gate features-service. BLOCKED
       until the `docs/VM_BACKFILL_GUIDE.md` unmerged entry is resolved — git refuses to commit any path in that repo
       while it exists.
 
@@ -353,61 +353,3 @@ gate-verified.
 - **Decision (rule 2, no operator ask)**: kept the coupling working rather than reverting the consolidation. The
   coupling itself stays tracked as the P0 architectural item — the right long-term fix is hoisting a shared harness
   into `unified_trading_library/testing/` (legal: UTL is a library, not a service).
-
-## FINAL REPORT (rule 9) — 2026-08-21
-
-**Success criteria met. All six repos shipped and verified on `origin/live-defi-rollout` by CONTENT, not exit code.**
-
-| Repo                      | Commit             | Net lines |
-| ------------------------- | ------------------ | --------- |
-| unified-trading-system-ui | `0019ca5a9c`       | -210,663  |
-| execution-service         | `959c045e9`        | -4,378    |
-| unified-api-contracts     | `e9bc03a915`       | -1,551    |
-| features-service          | `67c006fb`         | -1,068    |
-| e2e-testing               | `fe274a5`          | -987      |
-| ml-service                | `cfc2540d5e`       | -45       |
-| **TOTAL**                 |                    | **-218,692** |
-
-Plus `unified-trading-pm@35d8e81d2c` (regenerated adapter-contract baseline).
-
-**Honest composition**: ~51,200 lines of CODE and ~167,500 lines of stale vendored docs/data (the `context/` mirror:
-63,008 `.md`, 67,438 `.json`, 42,900 `.py`, 23,958 `.yaml`, a 6,246-line CSV). Quoting the headline as "lines of
-code" would overstate it.
-
-### Forced-tradeoff decisions made under rule 1/2 (no operator ask)
-
-1. **Kept the features-service <-> e2e-testing coupling working rather than reverting the consolidation.** Bound each
-   domain's CONFIG into the wrapper surface. The coupling itself stays a tracked P0 architectural item; the correct
-   long-term fix is a shared harness in `unified_trading_library/testing/` (legal - UTL is a library, not a service).
-2. **Resolved the foreign `docs/VM_BACKFILL_GUIDE.md` stash conflict** rather than leaving it for its owner. Both
-   sides carried the identical path relocation; resolved to upstream + content-survival verified per rule 4.
-3. **Upgraded pip 26.1.2 -> 26.2.1** (via `uv`, never bare pip) to clear PYSEC-2026-3721. Environment fix, not a code
-   change - it does NOT propagate through any commit.
-4. **Used `--skip-preflight`** on the last four ships. Documented as a multi-agent safety check, not a QG gate, and
-   explicitly permitted in `--agent` mode. Necessary because peer sessions held `_tradfi.py`, `strategy-service` and
-   `execution-service` sports work dirty in this shared checkout throughout.
-5. **Deleted rather than shimmed** the duplicate `bookmaker_registry.py` - the no-backward-compat-shims gate rejected
-   the shim, and the file had zero importers once its double-dot import bug was fixed.
-
-### Audit premises that were WRONG (corrected, evidence in-plan)
-
-- `ml_backup.py` is NOT a stray backup - load-bearing across ml-service and UTL. The P0 delete was correctly refused.
-- `features_sports/storage.py` "zero importers" was false - a test imported it; repointed before deleting.
-- "Two venue tables have conflicting values" - withdrawn; they answer different questions.
-- `execution_service/venues/` is 2,030 LOC, not the 3,825 first reported.
-
-### Correctness fixes that fell out of the dedup
-
-- `execution-service`: the deleted `instruction_validator.py` still returned legacy `"swaps"`; UAC's own tests ban
-  that alias. Keeping the right copy was a correctness call.
-- `unified-api-contracts`: `sports/bookmaker.py` had a double-dot relative import silently resolving to the wrong
-  module, contradicting its own docstring.
-
-### Environment findings (NOT fixed by any commit - will recur)
-
-- [ ] [OPERATOR] P1. **PYSEC-2026-3721 (pip 26.1.2) will fail EVERY repo's gate as `pip-audit` caches expire.**
-      UAC's run showed `pip-audit: cached (deps unchanged, age 8h)` - that cache is the only reason the other five
-      repos passed. Fix per-venv with `uv pip install --python .venv/bin/python --upgrade pip` (>= 26.2.1), or pin it
-      fleet-wide.
-- [ ] [AGENT] P2. **`test_cassette_orphan_checker.py` (~183s) exceeds the gate's `--timeout=150`** - phantom red on any
-      loaded host. Measured: failed at load 94, passed clean at load 27.

@@ -7,10 +7,7 @@ summary:
   until task-routing logic exists). Kimi (Moonshot AI — k2.5/k2.6/k3) and Gemma (via NVIDIA's free hosted NIM
   OpenAI-compatible endpoint, not self-hosted Ollama) are explicitly a hedge against a DeepSeek price rise, not an
   immediate dispatch target — task routing (which model for which job) is deliberately out of scope here.
-  **CLOSED 2026-08-21**: Gemma onboarded successfully (now `gemma-self-hosted`, live/healthy in production); Kimi
-  was later removed from the codebase entirely (operator direction, unrelated session) — see closing Progress Log
-  entry.
-status: complete
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -113,13 +110,7 @@ had already run. Treat every todo below as net-new work, not a resume.
 
 ## Todos
 
-- [x] [OPERATOR] P0. ✅ **SUPERSEDED 2026-08-21 — moot, Kimi is now fully removed from the codebase** (not merely
-      paused/blocked — see the closing Progress Log entry at the end of this doc and
-      `/plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` Part 2, shipped
-      `agent-orchestrator@055bd037b7`). Original todo text preserved below for context, not re-derived — this
-      reconciliation question no longer has an integration left to reconcile against.
-
-      Reconcile the Kimi re-add against the 2026-08-03/08-06 rejection ruling above — narrowed by the
+- [ ] [OPERATOR] P0. Reconcile the Kimi re-add against the 2026-08-03/08-06 rejection ruling above — narrowed by the
       operator's direct answer (2026-08-16, see Why): the basis is Moonshot's flat-rate "max plan" capacity, not
       per-token price parity. The archived doc's own per-token numbers (2026-08-06, cite before trusting stale):
       Kimi K3 $3/$15 per 1M in/out (dominated by Claude Sonnet 5's $2/$10 intro); Kimi K2.6 $0.95/$4.00 per 1M
@@ -178,13 +169,7 @@ had already run. Treat every todo below as net-new work, not a resume.
       isn't documented publicly anywhere found. Still needs either direct Moonshot support contact or the waitlist
       tier activating so it can be tested empirically, per the todo below.
 
-- [x] [OPERATOR] P3. ✅ **SUPERSEDED 2026-08-21 — moot, Kimi is now fully removed from the codebase**, so tracking
-      the Moonshot waitlist no longer serves a purpose (there is no integration left to boost). See the closing
-      Progress Log entry at the end of this doc and
-      `/plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` Part 2, shipped
-      `agent-orchestrator@055bd037b7`. Original todo text preserved below for context, not re-derived.
-
-      **New, operator 2026-08-16**: track the Moonshot membership-plan waitlist the operator joined
+- [ ] [OPERATOR] P3. **New, operator 2026-08-16**: track the Moonshot membership-plan waitlist the operator joined
       (a "10-30x boost" tier over pay-as-you-go, per the operator). ETA unknown — this is a waitlist, not a
       purchase. When it activates: (1) get its real terms (price, what the boost actually means — rate-limit
       multiplier? token quota? concurrency?), (2) critically, confirm whether it actually grants API access, given
@@ -966,29 +951,3 @@ work.
   (`[OPERATOR] P0` Kimi re-add reconciliation, `[OPERATOR] P3` Moonshot waitlist tracking) are both genuinely
   operator-gated per the doc's own 2026-08-20 Progress Log entry explicitly declining to close todo 1 on inference
   alone. No bounded worker-determinable item found.
-
-- **2026-08-21 (slot 13, interactive) — Kimi provider REMOVED from the codebase entirely, superseding the
-  2026-08-20 routing-block entry above.** Operator direction, same session as
-  `/plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`'s round-robin
-  investigation: "Grok and Kimi are unused, remove... same for omniroute/openrouter if unused." This goes further
-  than the 2026-08-20 entry above (`_ROUTING_BLOCKED_PROVIDERS`, code-level block while financial/wallet
-  infrastructure stayed intact) — the wallet infrastructure itself is now gone too. Shipped
-  `agent-orchestrator@055bd037b7` (73 files, -4074/+199 lines): `KimiWalletPanel.tsx`, `server/kimi_balance.py`,
-  `server/kimi_balance_poller.py`, `tests/test_kimi_balance.py`, `tests/test_kimi_balance_poller.py`,
-  `tests/test_kimi_wallet_reconciliation.py`, `dashboard/tests/e2e/kimi-wallet-reconciliation.spec.ts`, and every
-  remaining `AccountProvider`-literal/routing/pricing/wallet-reconciliation reference across `server/accounts.py`,
-  `autospawn.py`, `config.py`, `model_pricing.py`, `routes/accounts.py` — all deleted. Full details, rationale, and
-  QG evidence (5262 tests passed / 4 skipped, 86.04% coverage, no regression) in the issue doc's Part 2.
-
-  **This supersedes, not merely closes, the two remaining open Kimi todos above** (both flipped `[x]` SUPERSEDED
-  in this same edit) — the re-add-economics reconciliation and the membership-waitlist tracking both presupposed a
-  still-live (paused or blocked) Kimi integration that no longer exists to reconcile or track.
-
-  **Also resolves the "Open item, NOT resolved unilaterally" balance-polling question from the 2026-08-20 entry
-  above** (whether to pause the Kimi balance-polling job now that Kimi was "not used for now"): moot —
-  `kimi_balance_poller.py` no longer exists, so there is nothing left to poll or decide about pausing.
-
-  **Gemma is explicitly untouched and unaffected by this removal.** `gemma-self-hosted` (the Ollama-backed
-  account this same plan onboarded 2026-08-19, replacing the earlier NVIDIA-hosted Gemma accounts) remains a
-  live, healthy, actively-dispatched production account — nothing in this entry or the shipped commit changes any
-  Gemma-related code, account, or todo in this doc. Every other todo/section above stays exactly as it was.

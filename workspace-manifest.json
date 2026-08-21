@@ -69,24 +69,24 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.52.12",
     "deployment-api": "0.96.1",
-    "deployment-service": "0.156.4",
+    "deployment-service": "0.156.3",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.101.0",
-    "features-service": "0.94.9",
+    "execution-service": "0.100.0",
+    "features-service": "0.94.8",
     "fund-administration-service": "0.12.8",
     "ibkr-gateway-infra": "0.5.3",
     "instruments-service": "0.106.0",
     "market-tick-data-service": "0.148.10",
     "system-integration-tests": "0.15.6",
-    "unified-api-contracts": "0.161.1",
-    "unified-trading-library": "0.93.3",
+    "unified-api-contracts": "0.159.2",
+    "unified-trading-library": "0.93.2",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.32.6",
-    "e2e-testing": "0.41.45",
-    "agent-orchestrator": "0.100.53",
+    "e2e-testing": "0.41.44",
+    "agent-orchestrator": "0.100.52",
     "greeks-service": "0.18.77",
     "trading-agent-service": "0.13.23",
-    "strategy-service": "0.86.0",
+    "strategy-service": "0.85.0",
     "ml-service": "0.58.59",
     "alerting-service": "0.66.19",
     "unified-trading-api": "0.4.2",
@@ -152,7 +152,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "671e663a368ab447473cd8bc17fd8da87e0e7f3b"
+      "ldr_ci_status_sha": "1ad55e3c3b51348210a6a163f4360a07e25cd8e3"
     },
     "batch-live-reconciliation-service": {
       "promotion_model": "ldr_main",
@@ -214,7 +214,7 @@
         "large_file_count": 0,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "c69422067170db61bf2ea3f2a46bfd0eff49438f"
+      "ldr_ci_status_sha": "a4a40aba13c4da9086a32e81bedd9829332ef073"
     },
     "client-reporting-api": {
       "promotion_model": "ldr_main",
@@ -281,7 +281,7 @@
         "large_file_count": 0,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "90be06a169999f793ac7d81e524b143de809c482"
+      "ldr_ci_status_sha": "10209fb750e1b02acbdc618f262b5fa1a230d91d"
     },
     "deployment-api": {
       "promotion_model": "ldr_main",
@@ -350,7 +350,7 @@
         "coverage_pct": null,
         "warn_file_count": 17
       },
-      "ldr_ci_status_sha": "83b15015eb044e7ed5dbe333d3c75a7152739a9f"
+      "ldr_ci_status_sha": "a3091dd064e3202a78b7259afdfe01f7e6922f94"
     },
     "deployment-service": {
       "promotion_model": "ldr_main",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "b2d9a7b68e1090e6abcb23499cb2171f23ab4b6c"
+      "ldr_ci_status_sha": "8b1b2284c236369a16733a84b27c5c7537e75ac2"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "9f105c6a7aa85d4ee5316e704f930a58e128ad0f"
+      "ldr_ci_status_sha": "b49a3f1a96830ee819571cb85da18fb2bd1c6412"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -544,7 +544,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "1f8e08bfe0df1738312a00f6ec2d5e3fbd38086a"
+      "ldr_ci_status_sha": "e90e52983291601a665582da7cd51c1f98dfce2a"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -608,7 +608,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "25ef00509f02cc77aed6b034d697515e487adeb6"
+      "ldr_ci_status_sha": "e9f072db69dde963b8b7651a3922d5311909526c"
     },
     "greeks-service": {
       "promotion_model": "ldr_main",
@@ -670,7 +670,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "914af8d778bd73ed264c2ab04aa1b223303aff30"
+      "ldr_ci_status_sha": "9f216e7f17d57d307adeed37c0d85162e3103357"
     },
     "ibkr-gateway-infra": {
       "promotion_model": "ldr_main",
@@ -773,14 +773,14 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "large_file_count": 8,
         "qg_red_reason": null,
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "c8c9c58b760ec1003cea6b9c28e1c987f883e3a6"
+      "ldr_ci_status_sha": "e29699d27bcafad2aab58b2dbd404dfc6fe20ca4"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -843,7 +843,7 @@
         "large_file_count": 7
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "17da4ca5bf7757a57e76d28f9b872911d02bf9ad"
+      "ldr_ci_status_sha": "c00e21dff0bb4c885a99cd31a4fc2dc9f302985f"
     },
     "market-tick-data-service": {
       "promotion_model": "ldr_main",
@@ -974,7 +974,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "981c22acefdc83e5db90baebeeb74cd6ff3fc446"
+      "ldr_ci_status_sha": "6f6852264bf05765847923704ee3037879a5c6f9"
     },
     "strategy-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "a7be4db662987df127c0f9d58215319881816f4f"
+      "ldr_ci_status_sha": "22983797311fa18ec529d5e0c09d23590ba9faac"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1196,7 +1196,7 @@
         "large_file_count": 0
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "a8185d919ac9a329a7eed561c4883ac4a4be62a4"
+      "ldr_ci_status_sha": "87315c65bd29b44ff2991bc9871d5727168fccfd"
     },
     "unified-api-contracts": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "4b06013aeadd99881275b1066eeb8638d5f7bef4"
+      "ldr_ci_status_sha": "f79cd93632a08085c412d99ab88897e1cdd28fb6"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1297,7 +1297,7 @@
         "qg_red_reason": null,
         "large_file_count": 7
       },
-      "ldr_ci_status_sha": "1552ede4813487f7019a5d42fa6017f8c9598231"
+      "ldr_ci_status_sha": "3136bf34a010bf6154646444f7f1dc8df152e708"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "95f053aa13fe4428e6e083d28f7d67a1d8074a15"
+      "ldr_ci_status_sha": "8786df7147d27d6294d0ce214a1b65c2920c7d00"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1381,8 +1381,8 @@
         "coverage_pct": 80.97,
         "qg_red_reason": null
       },
-      "ldr_ci_status": "GREEN",
-      "ldr_ci_status_sha": "4f2d6aa9e510ecef8878b8024c5d7dfe5aca901a"
+      "ldr_ci_status": "RED",
+      "ldr_ci_status_sha": "cdfc81bb688005a2e86bf798d3c4278fe4366fa7"
     },
     "unified-trading-system-ui": {
       "promotion_model": "ldr_main",
@@ -1519,7 +1519,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests",
-      "ldr_ci_status_sha": "a4700be45ed2c51b01c73e36482cb04e7deee0c1"
+      "ldr_ci_status_sha": "80b2f69ef751255a667c5d9f175e4b8dc7749dfe"
     },
     "agent-orchestrator": {
       "promotion_model": "ldr_main",
@@ -2249,13 +2249,13 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.93.3.dev2+g50044dd17",
-      "published_at": "2026-08-21T14:22:14Z",
+      "version": "0.93.3.dev1+gcf686f7b9",
+      "published_at": "2026-08-21T12:54:14Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.161.1",
-      "published_at": "2026-08-21T14:22:14Z",
+      "version": "0.159.2",
+      "published_at": "2026-08-21T13:37:06Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
