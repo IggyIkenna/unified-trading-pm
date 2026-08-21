@@ -11,7 +11,7 @@ summary: >-
   runner currently treats an empty coarse control buffer as a real shard, which
   creates misleading empty manifest cells and triggers DP-LIVE-004. The fix must
   suppress only healthy fan-out control empties and retain failure recording.
-status: open
+status: resolved
 nature: process
 asset_group: [sports]
 stage: [live, data]
@@ -34,9 +34,8 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: slot-10 (data_engineering), 2026-08-21
 last_updated: 2026-08-21
-archive_exempt: true
 locked_since:
 context_scope:
   [
@@ -53,6 +52,8 @@ source: >-
 ---
 
 # DP-LIVE-004: live Odds API fan-out control buffer is mistaken for a data shard
+
+> **🟢 RESOLVED / ARCHIVED 2026-08-21 (slot-10, data_engineering).** The targeted MTDS fix is shipped at `market-tick-data-service@9097603c86`; the production DP-LIVE-004 dry-run against the named RUNNING shard observed fresh bookmaker fan-out captures and returned `FIRED=[]`. Both todos are complete and no successor work remains.
 
 ## What I found
 
@@ -100,5 +101,3 @@ pass is asserted.
 `deployment-service` DP-LIVE-004 reader in dry-run mode against the named shard. It resolved the running VM and its
 per-VM parquet shard, observed fresh captured bookmaker fan-out rows (including the `ODDS_API/odds` source group), and
 returned `FIRED=[]` with exit code 0. No new false `empty_confirmed` candidate was emitted.
-
-> Archive follow-up is intentionally separate from this cross-repo checkbox flip; archive after the active-path commit lands.
