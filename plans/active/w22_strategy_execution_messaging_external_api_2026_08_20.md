@@ -211,10 +211,7 @@ context_scope:
       translation-shim wiring task like TRANSFER/CANCEL. Full evidence + done-when:
       /plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md. Blocked on:
       bridge-protocol selection.
-- [ ] [BACKEND] P0. Wire `ATOMIC` on the same surface, routing through the existing multi-leg dispatch
-      (`AtomicInstruction`'s handling already exists in `backtest_v2/action_handlers.py::resolve_settlement` for
-      BATCH — reuse the same leg-iteration logic for the live path, do not reimplement). Done-when: a 2-leg
-      atomic instruction produces real per-leg results over HTTP, not a 501.
+- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — Wire `ATOMIC` through the existing `InstructionRouter.route_signal()` multi-leg dispatch; `execution-service@1636abd22e` translates each leg into the shared execution contract and returns per-leg results. Evidence: `bash scripts/quality-gates.sh --no-fix` (ALL QUALITY GATES PASSED, 934s); direct HTTP verification returned `200 COMPLETED_SUCCESS` with 2 per-leg results. The real venue-side atomic/compensation engine remains tracked in `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md`.
 - [ ] [BACKEND] P0. Add `KILL_SWITCH`/`FLATTEN_POSITION` as `InstructionActionV2` members — **coordinate with
       T1** (owns `unified-api-contracts`) for the schema addition; this tranche does not add UAC members
       directly. Each instruction carries an authorization field mirroring `AccountInstruction.authorization_id`.

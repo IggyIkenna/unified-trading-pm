@@ -1,14 +1,13 @@
 ---
 doc_type: issue
 title: >-
-  `POST /external/instructions` (execution-service) — BRIDGE and ATOMIC stay HTTP 501 on purpose: both need real,
-  unbuilt execution engineering, not a translation shim
+  `POST /external/instructions` (execution-service) — BRIDGE stays HTTP 501; ATOMIC now routes through the shared multi-leg signal path, while real venue-side atomic compensation remains open
 summary: >-
   Filed while wiring 2 of the remaining 9 `StrategyInstructionV2` action types (TRANSFER, CANCEL) onto
   `execution-service/execution_service/api/external_instruction_api.py`'s external HTTP front door (the other 7 —
   SWAP/LEND/WITHDRAW/BORROW/REPAY/STAKE/UNSTAKE — are a SEPARATE gap, tracked in
   `external_instruction_defi_handlers_simulation_only_2026_08_20.md`; do not conflate the two). BRIDGE and ATOMIC are
-  deliberately NOT wired in that same change, verified from the live code (not guessed):
+  deliberately NOT wired in the prior change; ATOMIC was subsequently wired through the shared router, verified from the live code (not guessed):
 
   **BRIDGE** — `execution_service/engine/handlers/transfer_handler.py`'s own module docstring lists
   `BRIDGE: stub (cross-chain bridge execution is complex)`, and `TransferHandler._execute_bridge_transfer` is a
@@ -19,27 +18,9 @@ summary: >-
   execution-service returns nothing); the docstring's own routing table is dangling. Two independent subsystems
   (`TransferHandler`'s dispatch table and `TransferCoordinator`'s docstring) both point at BRIDGE as unimplemented —
   neither has a real target to route to.
-  **ATOMIC** — there is no `OperationType.ATOMIC` in `unified_api_contracts.internal.domain.execution_service.types
-  .OperationType` and no atomic/multi-leg handler of any kind in `execution_service/engine/handlers/` or
-  `execution_service/engine/routing/handler_registry.py::HandlerRegistry.DEFAULT_HANDLERS`. The only place
-  `AtomicInstruction`/`InstructionActionV2.ATOMIC` is handled at all is
-  `execution_service/backtest_v2/action_handlers.py::resolve_settlement` — and that function is BATCH-BACKTEST
-  BENCHMARK SETTLEMENT ONLY (per its own module docstring, "the SMART-MATCHING layer batch must run" for the
-  paper==batch-rerun determinism spine): it computes a deterministic `(reference_price, fill_size)` pair for
-  execution-alpha measurement against a REPLAYED historical instruction, never places a real order and never touches
-  a live venue. Reusing it for the live/external HTTP path (as `plans/active/w22_strategy_execution_messaging_
-  external_api_2026_08_20.md`'s own P0 todo currently suggests — "routing through the existing multi-leg dispatch...
-  reuse the same leg-iteration logic for the live path") would NOT be pure translation: it requires designing and
-  building a genuinely new live multi-leg execution engine (real per-leg order placement, partial-fill/leg-failure
-  handling, `AtomicExecutionMode`/`leader_leg`/`hedge_deadline_ms`/`compensation_policy` semantics), which is real,
-  unbuilt engineering out of scope for a translation shim.
+  **ATOMIC**: there is no `OperationType.ATOMIC` handler; the external API now uses the existing multi-leg `DeFiSignal`/`InstructionRouter.route_signal()` path. The translation is covered by the shipped two-leg HTTP test and returns structured per-leg results. The underlying venue-side atomic engine still does not honor `AtomicExecutionMode`/`leader_leg`/`hedge_deadline_ms`/`compensation_policy`; that live execution follow-up remains open and is not represented as complete by this issue.
 
-  Cross-reference: `plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`'s own unchecked P0
-  todo ("Wire TRANSFER/BRIDGE/CANCEL on the same surface... TRANSFER/BRIDGE route through TransferCoordinator" and
-  "Wire ATOMIC... routing through the existing multi-leg dispatch... reuse the same leg-iteration logic for the live
-  path") assumes both are readier than they are — see that plan's Progress Log / this issue for the correction. This
-  doc is the honest record so the module docstring's BRIDGE/ATOMIC 501 claim in `external_instruction_api.py` stays
-  traceable to real evidence rather than going stale the way the doc it replaced did.
+  Cross-reference: `plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md` now records the completed HTTP/router P0 todo. BRIDGE remains unimplemented, and the venue-side ATOMIC engine plus compensation semantics remain open under the follow-ups below. This issue is the durable record of that boundary.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -78,7 +59,11 @@ context_scope:
 drift_direction: advance-code
 ---
 
-# BRIDGE and ATOMIC stay 501 on `POST /external/instructions` — both need real execution engineering
+# BRIDGE remains 501; ATOMIC now reaches the shared multi-leg router
+
+## Resolution (2026-08-21)
+
+The external API now accepts `InstructionActionV2.ATOMIC`, translates each `AtomicLeg` into the shared `ExecutionInstruction` contract, and submits the resulting `DeFiSignal` through `InstructionRouter.route_signal()`. A two-leg HTTP verification returned `200 COMPLETED_SUCCESS` with two per-leg results. This proves the paper/router path required by the parent plan; it does not claim a venue-side atomic engine, compensation semantics, or real multi-leg live execution. BRIDGE remains an honest 501 because its execution handler is still unimplemented.
 
 ## What was checked (2026-08-20, direct code read)
 
@@ -86,28 +71,16 @@ drift_direction: advance-code
    is a real, honest stub — logs and returns a failure result, never attempts a bridge. `transfer_coordinator.py`'s
    own docstring cites `execution_service.v2.handlers.BridgeHandler` as the BRIDGE target; that class does not
    exist anywhere in the repo.
-2. **ATOMIC**: no `OperationType.ATOMIC`, no handler in `HandlerRegistry.DEFAULT_HANDLERS`. The only ATOMIC-aware
-   code is `backtest_v2/action_handlers.py::resolve_settlement`, which is a batch-backtest benchmark-settlement
-   function (computes a reference price/fill size for a REPLAYED historical instruction to measure execution alpha)
-   — not a live execution path, and not reusable as one without new engineering.
+2. **ATOMIC**: no `OperationType.ATOMIC` handler exists in the live handler registry. The external API now translates `AtomicInstruction` legs into `DeFiSignal` instructions and routes them through `InstructionRouter.route_signal()`, verified by the shipped two-leg HTTP test. The existing `backtest_v2/action_handlers.py::resolve_settlement` remains benchmark settlement only; venue-side atomic execution and compensation semantics are still open.
 
 ## Why this matters for the plan that assumed otherwise
 
-`plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`'s "Instruction action vocabulary" section
-has an unchecked P0 todo assuming BRIDGE routes through `TransferCoordinator` and ATOMIC reuses the backtest
-leg-iteration logic "for the live path." Both assumptions do not hold under direct code verification — see the
-summary above for the specific evidence. Whoever picks up that todo next should read this issue first rather than
-re-discovering the same dead ends.
+The parent plan originally assumed BRIDGE and ATOMIC were both ready for the same translation-shim pass. The HTTP/router portion of ATOMIC is now complete; BRIDGE remains unimplemented, and the venue-side ATOMIC engine plus compensation semantics remain open follow-ups. Read this issue before extending either path.
 
 ## What real work would close this
 
-- **BRIDGE**: needs a real `BridgeHandler` (or equivalent) implementing actual cross-chain bridge execution
-  (route selection, source-chain lock/burn, destination-chain mint/unlock, confirmation tracking) — multi-step,
-  multi-chain, genuinely complex per the existing stub's own docstring.
-- **ATOMIC**: needs (a) a new `OperationType.ATOMIC` (or equivalent multi-leg operation concept) in UAC, (b) a real
-  live multi-leg execution engine honoring `AtomicExecutionMode`/`leader_leg`/`hedge_deadline_ms`/
-  `compensation_policy` — per-leg real order placement with partial-fill and leg-failure/compensation handling, not
-  a benchmark-price simulation.
+- **BRIDGE**: needs a real `BridgeHandler` or equivalent implementing actual cross-chain bridge execution (route selection, source-chain lock/burn, destination-chain mint/unlock, and confirmation tracking).
+- **ATOMIC**: needs a real venue-side multi-leg execution engine honoring `AtomicExecutionMode`, `leader_leg`, `hedge_deadline_ms`, and `compensation_policy`, including per-leg order placement and partial-fill or leg-failure compensation.
 
 ## Follow-ups
 
