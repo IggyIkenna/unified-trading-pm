@@ -212,15 +212,12 @@ context_scope:
       /plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md. Blocked on:
       bridge-protocol selection.
 - [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — Wire `ATOMIC` through the existing `InstructionRouter.route_signal()` multi-leg dispatch; `execution-service@1636abd22e` translates each leg into the shared execution contract and returns per-leg results. Evidence: `bash scripts/quality-gates.sh --no-fix` (ALL QUALITY GATES PASSED, 934s); direct HTTP verification returned `200 COMPLETED_SUCCESS` with 2 per-leg results. The real venue-side atomic/compensation engine remains tracked in `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md`.
-- [ ] [BACKEND] P0. Add `KILL_SWITCH`/`FLATTEN_POSITION` as `InstructionActionV2` members — **coordinate with
-      T1** (owns `unified-api-contracts`) for the schema addition; this tranche does not add UAC members
-      directly. Each instruction carries an authorization field mirroring `AccountInstruction.authorization_id`.
-      Once the schema lands, wire the execution-service handler as a THIN translation into the existing
-      `kill_switch.py`/`AccountInstructionOrchestrator.CLOSE_ALL` machinery — never a second, independently-
-      authorized implementation of the same capability. Done-when: an authorized external KILL_SWITCH/
-      FLATTEN_POSITION instruction produces the identical effect as the existing internal
-      `POST /kill-switch/activate` / `POST /account/instruction` (CLOSE_ALL) calls, verified by a test asserting
-      both paths converge on the same underlying call.
+- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — Add `KILL_SWITCH`/`FLATTEN_POSITION` as coordinated `InstructionActionV2`
+      members in unified-api-contracts and route authorized external controls through the existing kill-switch and
+      `AccountInstructionOrchestrator.CLOSE_ALL` primitives. Evidence: unified-api-contracts@d44de9fb21,
+      execution-service@bc2edc1687; `bash scripts/quality-gates.sh --no-fix` passed (execution-service: 8896 passed,
+      22 skipped, 1 xpassed; UAC isolated gate: ALL QUALITY GATES PASSED, 0 type errors). Regression coverage:
+      `tests/unit/api/test_external_control_instruction.py` and UAC control-instruction contract tests.
 
 ### Deployment topology and external hosting
 
