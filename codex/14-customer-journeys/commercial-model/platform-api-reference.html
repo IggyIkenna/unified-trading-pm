@@ -665,7 +665,77 @@
       display: none;
     }
   }
+
+  /* Sticky left-hand TOC sidebar — wide viewports only; page body itself never scrolls horizontally,
+     this panel scrolls only its own contents. Mirrors nav.contents (in-flow), does not replace it. */
+  .toc-sidebar {
+    position: fixed;
+    left: max(14px, calc((100vw - var(--shell)) / 2 - 226px));
+    top: 88px;
+    width: 208px;
+    max-height: calc(100vh - 132px);
+    overflow-y: auto;
+    display: none;
+    z-index: 30;
+    border-left: 1px solid var(--rule);
+    padding-left: 15px;
+  }
+  @media (min-width: 1360px) {
+    .toc-sidebar {
+      display: block;
+    }
+  }
+  @media (min-width: 1360px) and (max-width: 1679px) {
+    .shell {
+      margin-left: 252px;
+      margin-right: auto;
+      max-width: min(var(--shell), calc(100vw - 280px));
+    }
+  }
+  .toc-sidebar h2 {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 12px;
+  }
+  .toc-sidebar ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+  }
+  .toc-sidebar li {
+    margin: 0;
+  }
+  .toc-sidebar a {
+    display: block;
+    padding: 3.5px 0 3.5px 11px;
+    margin-left: -12px;
+    border-left: 2px solid transparent;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: var(--ink-3);
+    text-decoration: none;
+  }
+  .toc-sidebar a:hover {
+    color: var(--accent);
+  }
+  .toc-sidebar a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
 </style>
+
+<aside class="toc-sidebar" id="tocSidebar" aria-label="Section navigation">
+  <h2>Contents</h2>
+  <nav><ol id="tocSidebarList"></ol></nav>
+</aside>
+
 <style>
   /* Status marks + evidence tier + owner mark — identical vocabulary and tokens to
      platform-external-api-walkthrough.html, so the two read as one family. */
@@ -4057,3 +4127,63 @@
     </p>
   </footer>
 </div>
+
+<script>
+  (function () {
+    // Populate the sticky sidebar from the existing in-flow Contents nav — one source of section
+    // links, no duplicated titles to drift. Scroll-spy highlights whichever section is nearest the
+    // top of the viewport; click-to-jump comes for free from the anchors themselves.
+    var list = document.getElementById("tocSidebarList");
+    var sourceLinks = document.querySelectorAll("nav.contents > ol > li > a");
+    if (!list || !sourceLinks.length) return;
+
+    var entries = [];
+    sourceLinks.forEach(function (a) {
+      var href = a.getAttribute("href") || "";
+      var id = href.slice(1);
+      var target = id ? document.getElementById(id) : null;
+      if (!target) return;
+      var num = a.querySelector(".num");
+      var ttl = a.querySelector(".ttl");
+      var li = document.createElement("li");
+      var link = document.createElement("a");
+      link.href = href;
+      link.textContent = (num ? num.textContent + " " : "") + (ttl ? ttl.textContent : a.textContent);
+      li.appendChild(link);
+      list.appendChild(li);
+      entries.push({ id: id, link: link });
+    });
+
+    var active = null;
+    function setActive(link) {
+      if (active === link) return;
+      if (active) active.classList.remove("active");
+      if (link) link.classList.add("active");
+      active = link;
+    }
+
+    if (!("IntersectionObserver" in window) || !entries.length) return;
+    var linkById = {};
+    entries.forEach(function (e) {
+      linkById[e.id] = e.link;
+    });
+    var observer = new IntersectionObserver(
+      function (observed) {
+        var best = null;
+        var bestTop = Infinity;
+        observed.forEach(function (item) {
+          if (item.isIntersecting && item.boundingClientRect.top < bestTop) {
+            bestTop = item.boundingClientRect.top;
+            best = item.target.id;
+          }
+        });
+        if (best) setActive(linkById[best]);
+      },
+      { rootMargin: "-8% 0px -75% 0px", threshold: 0 }
+    );
+    entries.forEach(function (e) {
+      var el = document.getElementById(e.id);
+      if (el) observer.observe(el);
+    });
+  })();
+</script>

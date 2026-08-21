@@ -277,9 +277,16 @@
     border-left: 1px solid var(--rule);
     padding-left: 15px;
   }
-  @media (min-width: 1680px) {
+  @media (min-width: 1360px) {
     .toc-sidebar {
       display: block;
+    }
+  }
+  @media (min-width: 1360px) and (max-width: 1679px) {
+    .shell {
+      margin-left: 252px;
+      margin-right: auto;
+      max-width: min(var(--shell), calc(100vw - 280px));
     }
   }
   .toc-sidebar h2 {
