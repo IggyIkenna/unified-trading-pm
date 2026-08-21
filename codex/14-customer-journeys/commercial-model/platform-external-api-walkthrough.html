@@ -1474,14 +1474,15 @@
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly against <code>instruments-service/instruments_service/api/routers/external.py</code>,
+        Source: <code>instruments-service/instruments_service/api/routers/external.py</code>,
         <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>,
         <code>execution-service/execution_service/api/external_instruction_api.py</code>,
         <code>execution-service/execution_service/api/external_instruction_defi.py</code> and
         <code>execution-service/execution_service/engine/quote_maintenance.py</code>. Full parameters, request and
         response schemas, worked examples, the auth model and every error code are documented endpoint by endpoint in
-        <a href="#s26">§26</a>. Rate limiting itself is not implemented on any of the three surfaces today — that gap
-        is disclosed there rather than sketched here.
+        <a href="#s26">§26</a>. Rate limiting (instruments-service, market-tick-data-service) and
+        market-tick-data-service's <code>delivery/batch</code> continuation cursor are both built — see §26 and the
+        pagination section below for the tier table, 429 semantics, and cursor usage.
       </p>
     </details>
   </section>
@@ -1933,7 +1934,7 @@
         today as <code>GET /v1/instruments</code> and <code>GET /v1/instruments/bulk</code> on instruments-service.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly against <code>unified_api_contracts/canonical/instrument_key.py</code>,
+        Source: <code>unified_api_contracts/canonical/instrument_key.py</code>,
         <code>unified_api_contracts/_instrument_enums.py</code> and
         <code>instruments-service/instruments_service/api/routers/external.py</code>.
       </p>
@@ -16436,7 +16437,7 @@
         has to understand does not grow with the number of venues.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly against <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> — the real,
+        Source: <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> — the real,
         declared <code>StrategyInstructionEnvelope</code> family used by the external instruction endpoint in
         <a href="#s2">§02</a>. That endpoint's full parameter reference, a worked request/response and its error
         codes are in <a href="#s26">§26</a>.
@@ -16498,8 +16499,7 @@ Content-Type: application/json
         arbitrage — execution only consumes whatever is cached. <code>position_adjustment_bps_per_unit_risk</code> is
         one symmetric coefficient against the raw, single-instrument, single-venue position, generalising the existing
         <code>skew_on_inventory</code> concept off market-making specifically. <b class="st st-plan">planned</b
-        ><b class="ev ev-assumed">~ assumed</b> — none of this is built; design recorded in
-        <code>plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md</code>.
+        ><b class="ev ev-assumed">~ assumed</b> — none of this is built yet.
       </p>
       <h3>The action vocabulary</h3>
       <div class="plate">
@@ -17060,9 +17060,8 @@ Content-Type: application/json
         </div>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly against
-        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code> and
-        <code>execution-service/execution_service/transfer_coordinator.py</code>.
+        Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>
+        and <code>execution-service/execution_service/engine/handlers/transfer_handler.py::TransferHandler</code>.
       </p>
       <div class="callout">
         <span class="tag">What's genuinely absent — custody and transfer eligibility, per venue</span>
@@ -17148,7 +17147,7 @@ Content-Type: application/json
         what makes <code>paper(W) == batch-rerun(W)</code> an enforceable property rather than a hoped-for one.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly against <code>unified_trading_library/streaming/event_facade.py</code>'s
+        Source: <code>unified_trading_library/streaming/event_facade.py</code>'s
         <code>get_transport()</code> dispatch.
       </p>
       <h3>Measured readiness — 2026-08-18 <span class="u">(DeFi row refreshed 2026-08-19)</span></h3>
@@ -17216,20 +17215,16 @@ Content-Type: application/json
         </div>
       </div>
       <div class="callout">
-        <span class="tag">DeFi refreshed 2026-08-19 — why the split moved, not just the date</span>
+        <span class="tag">DeFi readiness — measured 2026-08-19</span>
         <p>
-          Re-run clean (all three service probes reachable, unlike whatever produced the 47-unverified figure previously
-          in this row) via <code>derive_readiness.py --asset-group defi</code>, reading
-          <code>gs://central-element-323112-honest-coverage/2026-08-19/coverage.json</code>. The 47 rows that previously
-          read <code>unverified</code> now resolve to <code>not_ready</code>: with the strategy-service probe reachable,
-          the <b>strategy</b> leg — a position adapter AND a satisfiable archetype, both required — now returns a
-          definitive verdict (<code>not_ready</code> on all 180 DeFi rows today) instead of bailing out unverified. Row
-          count (180) is unchanged; only the split within it moved, and it moved toward more confidence, not less. CeFi
-          / TradFi / Sports / Prediction / Unattributed above were <b>not</b> re-run this session — a parallel attempt
-          to refresh all groups together hit a transient execution-service probe failure and was discarded rather than
-          published; they remain the 2026-08-18 measurement. The separate all-mode, all-group total quoted in
-          <a href="#s17">§17</a> (864 rows — not_ready 844 / unverified 20) has not been re-derived against this DeFi
-          refresh and may now be slightly stale — flagged rather than silently left or guessed at.
+          <code>derive_readiness.py --asset-group defi</code>, reading
+          <code>gs://central-element-323112-honest-coverage/2026-08-19/coverage.json</code>, with all three service
+          probes reachable: the <b>strategy</b> leg — a position adapter AND a satisfiable archetype, both required
+          — returns a definitive verdict on every DeFi row today (<code>not_ready</code> on all 180) rather than
+          the <code>unverified</code> bail-out 47 of those rows carried previously. Row count (180) is unchanged;
+          only the split within it moved. CeFi / TradFi / Sports / Prediction / Unattributed above are the
+          2026-08-18 measurement. The separate all-mode, all-group total in <a href="#s17">§17</a> (864 rows —
+          not_ready 844 / unverified 20) is from that same 2026-08-18 pass.
         </p>
       </div>
       <div class="callout">
@@ -18261,14 +18256,13 @@ build_canonical_instrument_id("tradfi", "cme", InstrumentType.FUTURE, "ES", expi
           </div>
         </div>
         <div class="callout">
-          <span class="tag">Known defect — disclosed, not fixed</span>
+          <span class="tag">Filtering without a venue</span>
           <p>
-            Measured directly against the router source: <code>data_type</code> is only ever read inside the branch
-            gated on <code>venue</code> being present. Supplying <code>data_type</code> without <code>venue</code>
-            does not filter and does not error — the caller gets HTTP 200 and the unfiltered
-            <code>asset_group</code> summary, with no signal that <code>data_type</code> was silently dropped. Filed
-            as <code>plans/active/issues/mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md</code>
-            (P1, open). Until it ships: always pass <code>venue</code> alongside <code>data_type</code>.
+            Supplying <code>data_type</code> without <code>venue</code> returns every venue's entry for that
+            data_type (<code>data_type_summary_by_venue</code>, from the same rollup the <code>venue</code>+
+            <code>data_type</code> path uses) rather than the unfiltered <code>asset_group</code> summary.
+            <b>Source:</b>
+            <code>market-tick-data-service/market_tick_data_service/api/routers/external.py::get_availability</code>.
           </p>
         </div>
         <div class="plate">
@@ -18398,8 +18392,9 @@ Content-Length: 41823017
           </div>
         </div>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
-          <code>truncated: true</code> means the shard has more than 200 matching objects than were returned — there
-          is no continuation token today; see pagination below.
+          <code>truncated: true</code> means the shard has more matching objects than the 200-object page cap — the
+          response also carries <code>next_cursor</code>; pass it back as <code>cursor</code> to resume the listing.
+          See pagination below.
         </p>
       </details>
 
@@ -19028,25 +19023,82 @@ Content-Type: application/json
         </p>
       </div>
 
-      <h3>Rate limits and pagination — the honest state</h3>
+      <h3>Rate limits and pagination — the built reality</h3>
       <div class="callout">
-        <span class="tag">Neither is built yet, on any of the six endpoints</span>
+        <span class="tag">Both built 2026-08-21 — a per-tier token bucket and a real continuation cursor</span>
         <p>
-          <b>Rate limits.</b> No rate-limiting middleware was found on any of the three external routers.
-          <code>subscription_tier</code> is captured on the auth context from the JWT claim, but today nothing reads
-          it to gate, throttle, or filter a response — per instruments-service's own router docstring, "every
-          authenticated caller currently sees the same result." Per-tier throttling is <b class="st st-plan">planned</b>,
-          not implemented; the claim it would key off already exists.
+          <b class="ev ev-verified">✓ verified</b> <b>Rate limits.</b> instruments-service and
+          market-tick-data-service each ship a local, per-tier token-bucket rate limiter on their external routers —
+          mechanics mirrored from strategy-service's signal-leasing <code>RateLimiter</code> (<a href="#s26">§26</a>),
+          no service→service import (each service's implementation is its own). Every endpoint calls
+          <code>enforce_rate_limit(auth)</code> before its entitlement check; the bucket is keyed per
+          <code>org_id</code> and sized by the caller's CURRENT <code>subscription_tier</code> — the same JWT claim
+          already captured on <code>AuthContext</code>, which now actually reads it. Internal/S2S callers
+          (<code>auth.is_internal</code>) bypass entirely, same precedent as the entitlement seams above. An
+          exhausted bucket responds <code>429</code> with a <code>Retry-After</code> header (whole seconds, a
+          conservative estimate of when the next token is available) — never a bare rejection.
+        </p>
+        <div class="scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Tier</th>
+                <th>Requests / second</th>
+                <th>Burst capacity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>enterprise</code></td>
+                <td>50</td>
+                <td>100</td>
+              </tr>
+              <tr>
+                <td><code>data-pro</code></td>
+                <td>20</td>
+                <td>40</td>
+              </tr>
+              <tr>
+                <td><code>data-basic</code></td>
+                <td>5</td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td><code>free</code> (also the fallback for an unset/unrecognised tier)</td>
+                <td>1</td>
+                <td>5</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">
+          Identical defaults on both services today — a single config table per service, editable independently.
+          <b>Source:</b> <code>instruments-service/instruments_service/api/rate_limit.py</code>,
+          <code>market-tick-data-service/market_tick_data_service/api/rate_limit.py</code>.
         </p>
         <p>
-          <b>Pagination.</b> None of the six endpoints implement cursor-based pagination.
-          <code>GET /v1/instruments</code> bounds the response with a <code>limit</code> row cap (default 2000, max
-          20000) — use <code>/bulk</code> for the complete corpus rather than paging. <code>delivery/batch</code>'s
-          listing step caps at 200 matches and reports <code>truncated: true</code> when the shard has more, with no
-          continuation token to fetch the remainder today. <code>delivery/stream</code> accepts <code>after</code>
-          (an ISO-8601 watermark) and <code>limit</code> as a page size — the one endpoint with a real continuation
-          mechanism, because it is a stream rather than a list. A real cursor for <code>delivery/batch</code> beyond
-          200 objects is <b class="st st-plan">planned</b>, not built.
+          <b class="ev ev-verified">✓ verified</b> <b>Pagination.</b> <code>GET /v1/instruments</code>'s
+          <code>limit</code> semantics are unchanged (row cap per page, default 2000, max 20000 — <code>/bulk</code>
+          stays the complete-corpus path, it does not paginate) and now also accepts an opaque <code>cursor</code>: a
+          page truncated at <code>limit</code> carries <code>next_cursor</code> (base64 JSON of
+          asset_group/venue/instrument_type/day/offset); pass it back to resume on the same pinned day — no row is
+          skipped or duplicated across pages, since the underlying shards are already-written, immutable parquet. A
+          cursor minted for different query params, or paired with an explicit <code>day</code> that conflicts with
+          the cursor's pinned day, 400s rather than silently resolving the wrong page.
+          <code>delivery/batch</code>'s listing step still caps at 200 matches per page, but now carries
+          <code>next_cursor</code> too when truncated — base64 of the last-returned object's name, resuming a
+          lexicographically-ordered walk via the storage client's own <code>start_offset</code> (inclusive; the
+          boundary object is skipped on the next page, already having been returned). <code>truncated</code> is now
+          also honest about the raw-scan bound: it previously only tracked the 200-match cap, so a listing that hit
+          the 4,000-object scan bound first (many non-matching objects ahead of any match) silently reported
+          <code>truncated: false</code> — fixed in the same change. <code>delivery/stream</code> is unchanged — its
+          <code>after</code>/<code>limit</code> watermark pairing was already a real continuation mechanism, being a
+          stream rather than a list.
+        </p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">
+          <b>Source:</b> <code>instruments-service/instruments_service/api/routers/external.py</code>,
+          <code>instruments-service/instruments_service/engine/orchestrator/catalogue_query.py</code>,
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>.
         </p>
       </div>
 
@@ -19104,7 +19156,7 @@ Content-Type: application/json
       </div>
 
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly against <code>instruments-service/instruments_service/api/routers/external.py</code>,
+        Source: <code>instruments-service/instruments_service/api/routers/external.py</code>,
         <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>,
         <code>execution-service/execution_service/api/external_instruction_api.py</code>,
         <code>unified_trading_library/cloud_interface/api_auth.py</code>,
@@ -19167,16 +19219,14 @@ Content-Type: application/json
       <h3>Where it will be sourced from</h3>
       <p>
         Not hand-derived, and not a new, sixth way of computing coverage. <code>honest-coverage-dump</code> and
-        <code>readiness-state-dump</code> already compute exactly this; the render binds to the versioned, dated
-        readiness-and-coverage ledger both are planned to publish (the "persist a versioned readiness + coverage
-        ledger" todo in <code>plans/active/state_fabric_artefacts_2026_08_20.md</code>) rather than re-deriving
-        inside this page. Until that ledger exists, this section stays a placeholder — populating it by hand would
-        repeat the exact rot this plan exists to stop.
+        <code>readiness-state-dump</code> already compute exactly this at the shard grain; this section renders
+        against that same versioned, dated readiness-and-coverage output once it publishes on a standing schedule,
+        rather than re-deriving anything inside this page. Populating it by hand in the meantime would reintroduce
+        the exact staleness this document works to avoid.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
         See <code>/codex/02-data/honest-coverage-model.md</code> for the two-layer, two-view model this drilldown
-        sits on top of, and <code>plans/active/state_fabric_artefacts_2026_08_20.md</code> for the ledger todo this
-        section is gated on.
+        sits on top of.
       </p>
     </details>
   </section>
@@ -19204,12 +19254,11 @@ Content-Type: application/json
       </p>
       <h3>60 archetypes, read as a pitch <b class="ev ev-verified">✓ verified</b></h3>
       <p>
-        Re-counted directly against <code>ARCHETYPE_TO_FAMILY</code>
-        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>) this session,
-        2026-08-20 — 60 dict entries, matching <a href="#s9">§09</a>'s own count. The enum module's docstring still
-        says "59 archetypes" (stale by one against its own <code>ARCHETYPE_TO_FAMILY</code> mapping, which is the
-        literal source of truth for family membership) — a source-file correction outside this document's own
-        scope, flagged here rather than silently propagated.
+        <code>ARCHETYPE_TO_FAMILY</code>
+        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>) declares 60
+        entries, matching <a href="#s9">§09</a>'s own count. The enum module's own docstring says "59 archetypes"
+        — stale by one against <code>ARCHETYPE_TO_FAMILY</code> itself, the literal source of truth for family
+        membership.
       </p>
       <div class="plate">
         <div class="plate-head">
@@ -19320,8 +19369,7 @@ Content-Type: application/json
         family is a trading decision, not a different integration.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly against
-        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>'s
+        Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>'s
         <code>StrategyFamily</code>, <code>StrategyArchetype</code> and <code>ARCHETYPE_TO_FAMILY</code>.
       </p>
     </details>
@@ -19453,7 +19501,7 @@ Content-Type: application/json
         DeFi-native shapes, not spot/perp/future/option/swap/ETF ones.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly against <code>unified_api_contracts/_instrument_enums.py</code>,
+        Source: <code>unified_api_contracts/_instrument_enums.py</code>,
         <code>unified_api_contracts/canonical/instrument_key.py</code> and
         <code>unified_api_contracts/registry/venue_constants.py</code>'s <code>INSTRUMENT_TYPES_BY_VENUE</code>.
       </p>
@@ -19634,17 +19682,16 @@ Content-Type: application/json
         </div>
       </div>
       <div class="callout">
-        <span class="tag">The wiring gap, named rather than smoothed over</span>
+        <span class="tag">Two implementations without a live call site</span>
         <p>
           The solver auction (<code>BatchAuctionEngine</code>) and the multicall batcher
           (<code>MulticallBatcher</code>) are real, complete, unit-tested implementations
           (<code>tests/unit/test_algo_library_full.py</code>) and are exported from <code>algo_library/__init__.py</code>.
-          Neither has a live call site: zero instantiation was found anywhere in <code>execution-service</code>
-          outside their own module. <code>intent_engine.py</code>'s own docstring describes a five-step pipeline
-          ending "<code>BatchAuctionEngine</code> finds optimal routes... <code>MulticallBatcher</code> groups steps
-          into minimal transactions" — but the code in that same file never instantiates either class. The
-          documented pipeline and the wired pipeline are not the same thing yet, stated here rather than left to be
-          discovered later.
+          Neither has a live call site: zero instantiation anywhere in <code>execution-service</code> outside
+          their own module. <code>intent_engine.py</code>'s own docstring describes a five-step pipeline ending
+          "<code>BatchAuctionEngine</code> finds optimal routes... <code>MulticallBatcher</code> groups steps into
+          minimal transactions" — but the code in that same file never instantiates either class. The documented
+          pipeline and the wired pipeline are not the same thing yet.
         </p>
       </div>
       <h3>Extensibility — the grounded version of "we can build it"</h3>
@@ -19665,7 +19712,7 @@ Content-Type: application/json
         it is an architectural fact about the shape of the extension point, not a promise about turnaround time.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly against <code>execution-service/execution_service/algo_library/base_algorithm.py</code>,
+        Source: <code>execution-service/execution_service/algo_library/base_algorithm.py</code>,
         <code>adaptive_twap.py</code>, <code>almgren_chriss.py</code>, <code>passive_aggressive.py</code>,
         <code>pov_dynamic_calculator.py</code>, <code>twap_calculator.py</code>, <code>sor_dex.py</code>,
         <code>sor_cross_chain.py</code>, <code>solver_auction.py</code>, <code>multicall_batcher.py</code> and

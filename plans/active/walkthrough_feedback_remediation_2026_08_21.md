@@ -997,4 +997,4 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   fixed §09's Control row (was "not yet expressible" — false; the gap is dispatch, not the schema); repointed
   §14's dead `transfer_coordinator.py` citation to `transfer_handler.py`. **Lost-and-redone**: the first 5 edits were silently reverted by a concurrent write between two edit batches
   (Edit tool's drift warning + `git diff` caught it, the `walkthrough_file_shared_checkout_repeated_content_loss_
-  2026_08_20.md` failure mode) — redone + grep-verified before this ship. Checkpoint 2/2 follows this session.
+  2026_08_20.md` mode) — redone before this ship. **Checkpoint 2/2**: swept remaining narration outside the skip lanes. Markers: 204 (was 205, baseline 247).
