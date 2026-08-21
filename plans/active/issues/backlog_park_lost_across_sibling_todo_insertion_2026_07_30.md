@@ -31,6 +31,7 @@ related:
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
+last_updated: "2026-08-21"
 author: unknown
 priority: P2
 parent_epic: orchestrator_master
@@ -102,10 +103,12 @@ not the dispatch-tooling gap). Suggested next steps:
       carry-forward on content-hash only (matching how the checkbox-text-edit trap was already fixed for the SAME todo,
       per this doc's `related` link). Add a regression test: park todo A in a 2-todo plan, append a new todo B, regen,
       assert A's id/priority/prereqs survive unchanged. (repo: agent-orchestrator) — agent-orchestrator@727dab3
-- [ ] [BACKEND] P3. Consider whether the park mechanism should emit a warning/alert when a parked task's id changes
-      across a regen tick (the hand-tune becoming orphaned on the OLD id) — this would make future occurrences
-      self-diagnosing instead of requiring a worker to notice the priority/prereqs are missing after the fact. (repo:
-      agent-orchestrator)
+- [ ] [BACKEND] P3. Per D22 ruling (2026-08-21, autonomous-dispatch authority): build a warning/alert in AO's regen
+      path (`agent-orchestrator/server/regen_backlog_from_plan.py`) that fires when a parked task's id changes
+      across a regen tick (the hand-tune becoming orphaned on the OLD id) — build it there (not a separate
+      hygiene-sweep script), since that catches the drift closest to its source. Repo: agent-orchestrator. Done when:
+      a regression test proves the alert fires when a parked task's id changes across a regen tick, and
+      quality-gates.sh is green.
 
 ## Progress Log
 
@@ -176,3 +179,8 @@ not the dispatch-tooling gap). Suggested next steps:
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item ("consider whether the park mechanism should emit a warning/alert on id-change") is an undecided design question with no stated done-when; unchanged since 2026-08-10.
+
+**2026-08-21 — ruling D22 (Backlog park-drift alert)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+AUTONOMOUS_AGENT_RULES rule 2): Build in AO's regen path — cheap, catches the drift closest to its source, and
+closes a silent-thrash class already documented twice. Source:
+/plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

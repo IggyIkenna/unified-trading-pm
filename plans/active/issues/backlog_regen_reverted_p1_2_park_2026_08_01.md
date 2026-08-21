@@ -35,6 +35,7 @@ related:
     /plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
   ]
 created: "2026-08-01"
+last_updated: "2026-08-21"
 author: unknown
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -124,10 +125,11 @@ re-applied by hand again.
       `backlog_regen_drops_handtuned_prereqs`-class regression. **This is a one-time process gap (an intended edit that
       didn't happen), not a code defect** — no fix or regression test is warranted; the code path is sound. See that
       doc's own Progress Log for the full evidence trail.
-- [ ] [SCRIPT] P2. Consider a standing assertion (hygiene sweep or a lightweight periodic check) that flags any backlog
-      entry whose plan-todo text starts with "**⏸ PARKED" but whose live `priority` != 999 or `priority_override` !=
-      true — this exact drift is otherwise silent until a worker happens to notice and file a doc like this one (repo:
-      agent-orchestrator or unified-trading-pm, whichever owns the hygiene-sweep surface for this check).
+- [ ] [SCRIPT] P2. Per D22 ruling (2026-08-21, autonomous-dispatch authority): build this check in AO's regen path
+      (`agent-orchestrator/server/regen_backlog_from_plan.py`), not a hygiene-sweep script or periodic check — flag
+      any backlog entry whose plan-todo text starts with "**⏸ PARKED" but whose live `priority` != 999 or
+      `priority_override` != true, at regen time. Repo: agent-orchestrator. Done when: a regression test proves the
+      check fires on a drifted park, and quality-gates.sh is green.
 
 ## Progress Log
 
@@ -199,3 +201,8 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:086d99f24bbc2f5b]: KEEP-NA, valid — sole remaining item is an unscoped design fork (repo ownership + mechanism undecided), independently re-verified across 5 prior audit passes.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item (a standing park-drift hygiene assertion) remains an unscoped design fork (repo ownership + mechanism both undecided); unchanged since 2026-08-17.
+
+**2026-08-21 — ruling D22 (Backlog park-drift alert)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+AUTONOMOUS_AGENT_RULES rule 2): Build in AO's regen path — cheap, catches the drift closest to its source, and
+closes a silent-thrash class already documented twice. Source:
+/plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
