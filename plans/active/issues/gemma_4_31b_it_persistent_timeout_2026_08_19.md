@@ -21,6 +21,7 @@ related:
   [
     /plans/active/codex_mcp_tool_use_bridge_2026_08_18.md,
     /codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
 created: "2026-08-19"
 parent_epic: orchestrator_master
