@@ -219,6 +219,27 @@ todos only to confirm they are data-movement, then leave it.
 
 ## Todos
 
+### Walkthrough feedback 2026-08-21 — refdata/coverage cluster (operator feedback on platform-external-api-walkthrough.html)
+
+- [ ] [BACKEND] P1. Kalshi perp: verified 2026-08-21 — ZERO adapter code anywhere (only an aspirational comment
+      in `market_data_categories.py:1509`). Build the adapter scaffold (MTDS + IS + UAC capability rows) per the
+      external-data-always-available rule; access itself is an application-gated credential ask —
+      once the scaffold lands, retag the remaining access work with the credentials-blocked marker. Artefact presents it as "Coming Soon". Same treatment for the
+      market-perp venue whose API is in beta (note: not officially launched; added when they launch).
+- [ ] [AGENT] P1. Classify the sports bookmaker roster for the operator (NOT for the artefact): for each of the
+      27 kept books, is it (a) an odds-api bookmaker, (b) covered by the Unity central-wallet integration
+      (enumeration lives in sports_master.md / mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md
+      / e2e docs — the 2026-08-21 verification pass could not find one clean list, so build it), or (c) neither
+      — legacy arbitrage-research leftovers. Deliver the (c) list as a removal proposal; removal itself is
+      operator-gated. Artefact side (T5): sports data types are odds, arbitrage_opportunity,
+      odds_horizon_bucket, trades, trades_inplay; execution = Unity integration central-wallet, "coming soon —
+      available faster on demand".
+- [ ] [BACKEND] P2. Unattributed manifest tokens (24 in the 2026-08-19 manifest, incl. 76 pre-canonical
+      bare-protocol DeFi tokens in the wider decomposition): land the manifest-side attribution/canonicalisation
+      CODE so the "Unattributed" bucket disappears from client-facing surfaces (migration run itself stays out
+      of tranche scope). Chains without data (e.g. bitcoin mother-chain): get the connectors in and prove data
+      acquisition so the chain appears canonically, per operator feedback.
+
 ### W3 — granularity and the shard denominator
 
 - [x] [BACKEND] P0. Reconcile the shipped 3,960-shard denominator against the operator's deepest-grain ruling. The

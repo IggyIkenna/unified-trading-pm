@@ -322,6 +322,9 @@ todos only to confirm they are data-movement, then leave it.
 
 ## Todos
 
+- [ ] [AGENT] P0. Execute the execution/transfer cluster of the 2026-08-21 walkthrough feedback, tracked in
+      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (moved: line cap).
+
 ### W22 — strategy to execution messaging and the external instruction API
 
 - [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
