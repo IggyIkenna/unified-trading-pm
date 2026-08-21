@@ -1,7 +1,15 @@
 ---
 doc_type: plan
 title: shard-dimension-naming-asset-group-ssot-2026-04-25
-summary:
+summary: 'Coordinated, multi-repo pass to align **service shard configuration** and **all consumers** on the dimension name
+
+  `asset_group` (trading venue axis) where the legacy name was `category`, without renaming GCS `category=` path
+
+  segments until an explicit object-store migration exists. Complements the accepted API decision in
+
+  `/codex/11-project-management/decisions/adr-2026-04-25-category-and-asset-group-field-naming.md` and
+
+  `venue_axis_asset_group_vocabulary_2026_04_25.plan.md`.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,18 +19,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-25"
-overview: "Coordinated, multi-repo pass to align **service shard configuration** and **all consumers** on the dimension
-  name
-
-  `asset_group` (trading venue axis) where the legacy name was `category`, without renaming GCS `category=` path
-
-  segments until an explicit object-store migration exists. Complements the accepted API decision in
-
-  `/codex/11-project-management/decisions/adr-2026-04-25-category-and-asset-group-field-naming.md` and
-
-  `venue_axis_asset_group_vocabulary_2026_04_25.plan.md`.
-
-  "
 type: mixed
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: D2, business: none }

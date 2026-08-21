@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: unified-admin-ui-creation-2026-03-09
-summary:
+summary: Create unified-admin-ui as an npm workspace monorepo with packages/core; migrate auth and API client patterns from
+  11 existing UI repos into the shared core package.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-03-09
-overview: Create unified-admin-ui as an npm workspace monorepo with packages/core; migrate auth and API client patterns from 11 existing UI repos into the shared core package.
 type: code
 epic: epic-code-completion
 updated: 2026-03-11

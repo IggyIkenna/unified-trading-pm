@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: carry-tracer-phase-9-catalog-paired-dispersion-2026-05-06
-summary:
+summary: Catalog spec additions + paired_price_dispersion calculator + UAC LST_TOKEN_TO_PROTOCOL_ASSET SSOT — closes the
+  Layer 1 follow-ups behind the Layer 2 tracer adapter shipped 2026-05-06.
 status: complete
 nature: record
 asset_group: defi
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-06
-overview: Catalog spec additions + paired_price_dispersion calculator + UAC LST_TOKEN_TO_PROTOCOL_ASSET SSOT — closes the Layer 1 follow-ups behind the Layer 2 tracer adapter shipped 2026-05-06.
 type: code
 owner: ikenna
 locked_by: live-defi-rollout

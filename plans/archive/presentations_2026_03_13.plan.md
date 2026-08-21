@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: presentations-2026-03-13
-summary:
+summary: 'Consolidates all presentation and business plans: 10 existing board presentations updated with latest system state,
+  3 new presentations created (analytics, financials, status quo), Elysium DeFi partnership presentation, and GCP credits
+  application. Hard deadlines: Rehearsal 2 March 18, Board meeting March 31.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
-overview: 'Consolidates all presentation and business plans: 10 existing board presentations updated with latest system state, 3 new presentations created (analytics, financials, status quo), Elysium DeFi partnership presentation, and GCP credits application. Hard deadlines: Rehearsal 2 March 18, Board meeting March 31.
-
-  '
 type: business
 epic: epic-business
 completion_gates: {code: none, deployment: none, business: B6}
@@ -65,4 +64,3 @@ todos:
   status: pending
   depends_on: [presentations-gcp-credits]
 ---
-

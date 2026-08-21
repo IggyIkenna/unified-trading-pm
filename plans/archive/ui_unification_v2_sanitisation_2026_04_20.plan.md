@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: ui-unification-v2-sanitisation-2026-04-20
-summary:
+summary: Kill v1 StrategyFamily + old backtest, fold user-management-ui into admin, wire questionnaire→persona→filter cascade,
+  deorphan all unreachable pages under lifecycle nav, add Family/Archetype dropdowns platform-wide, canonicalise strategy
+  naming.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,10 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-20"
-overview:
-  Kill v1 StrategyFamily + old backtest, fold user-management-ui into admin, wire questionnaire→persona→filter cascade,
-  deorphan all unreachable pages under lifecycle nav, add Family/Archetype dropdowns platform-wide, canonicalise
-  strategy naming.
 type: mixed
 epic: epic-code-completion
 locked_by: live-defi-rollout

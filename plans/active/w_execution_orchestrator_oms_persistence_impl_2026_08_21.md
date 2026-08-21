@@ -70,7 +70,7 @@ context_scope:
 
 ### Phase A — persistence backend (blocks everything after; single highest-leverage change)
 
-- [ ] [BACKEND] P0. **Implement `PostgreSQLOrderPersistence`'s 6 stub methods**
+- [x] ✅ [BACKEND] P0. **Implement `PostgreSQLOrderPersistence`'s 6 stub methods**
       (`execution_service/engine/live/persistence/postgresql.py`) against the exact `oms_orders` schema in
       the design plan's Progress Log (operation_id PK, canonical_id, venue, venue_type, side, quantity NUMERIC,
       price NUMERIC, strategy_id, status, venue_order_id, fills JSONB, created_at/updated_at TIMESTAMPTZ, plus
@@ -103,26 +103,26 @@ context_scope:
       (`engine/orchestrator.py`), defaulting to a fresh `UnifiedOrderManager(InMemoryOrderPersistence())` when
       not supplied — mirrors `OrderBook.__init__`'s own existing default-constructible pattern
       (`engine/startup/order_recovery.py`). Implements design plan todo 7 (test strategy). — execution-service@f4cb199b48 + evidence: quality-gates.sh passed; quickmerge ancestry verified.
-- [ ] [BACKEND] P0. **Wire `oms.create_order()`/`update_order_status()` calls into `OrderAdapter.submit_order()`**
+- [x] ✅ [BACKEND] P0. **Wire `oms.create_order()`/`update_order_status()` calls into `OrderAdapter.submit_order()`**
       at the exact points the design plan's Progress Log names — `create_order` immediately before the
       existing `_log_order_created()` call, `update_order_status` immediately after `_log_post_submit_audit`'s
       existing status branch (FILLED/REJECTED/else-SUBMITTED). Wrap both in the fail-open
       `try/except (ConnectionError, OSError, RuntimeError, TimeoutError)` contract from design plan todo 4 —
       `logger.error` + `log_event("OMS_WRITE_FAILED", ...)`, no re-raise, venue call proceeds regardless.
-      Implements design plan todos 2 and 4.
-- [ ] [BACKEND] P0. **Wire `oms.update_order_status(order_id, "CANCELLED")` into `OrderAdapter.cancel_order()`
+      Implements design plan todos 2 and 4. — execution-service@4e915b637a + evidence: full quality-gates.sh passed (8,892 passed, 22 skipped, 1 xpassed); gitleaks passed.
+- [x] ✅ [BACKEND] P0. **Wire `oms.update_order_status(order_id, "CANCELLED")` into `OrderAdapter.cancel_order()`
       AFTER `self.venue_client.cancel_order(...)` returns, never before** — the in-flight-vs-confirmed fix
       named in the design plan's Progress Log (distinct from, and does not touch, the existing pre-confirmation
       GCS audit-log write, which stays as-is per that same entry). Same fail-open wrapping as the prior todo.
-      Implements design plan todo 2.
-- [ ] [BACKEND] P1. **Wire `oms.update_order_quantity_price(...)` into `OrderAdapter.amend_order()` AFTER venue
+      Implements design plan todo 2. — execution-service@4e915b637a + evidence: full quality-gates.sh passed (8,892 passed, 22 skipped, 1 xpassed); gitleaks passed.
+- [x] ✅ [BACKEND] P1. **Wire `oms.update_order_quantity_price(...)` into `OrderAdapter.amend_order()` AFTER venue
       confirmation** (matches that method's existing "audit log after, not before" convention). Depends on
       Phase A todo 2 landing first (same-file, sequential within this plan — see `sequential` note below applies
-      only within this phase; Phase A/B are otherwise independent files). Implements design plan todo 2.
+      only within this phase; Phase A/B are otherwise independent files). Implements design plan todo 2. — execution-service@4e915b637a + evidence: full quality-gates.sh passed (8,892 passed, 22 skipped, 1 xpassed); gitleaks passed.
 
 ### Phase C — thread one shared OMS instance from startup
 
-- [ ] [BACKEND] P0. **Build the `UnifiedOrderManager` ONCE per process in `_run_live_async`**
+- [x] ✅ [BACKEND] P0. **Build the `UnifiedOrderManager` ONCE per process in `_run_live_async`**
       (`cli/handlers/live_execution_handler.py`), backed by `PostgreSQLOrderPersistence` when
       `config.use_database and config.database_url` else `InMemoryOrderPersistence` (dev/test fallback) —
       thread that SAME instance into both `_create_startup_order_recovery` (replacing its own private
@@ -135,23 +135,23 @@ context_scope:
 
 ### Phase D — tests (extends, does not break, the existing suite)
 
-- [ ] [BACKEND] P1. **Add `OrderAdapter`-level tests** (new module, e.g.
+- [x] ✅ [BACKEND] P1. **Add `OrderAdapter`-level tests** (new module, e.g.
       `tests/unit/adapters/test_order_adapter_oms_writes.py`) covering: create-before-venue-call,
       status-update-after-venue-call for each of FILLED/REJECTED/else-SUBMITTED, cancel-only-after-confirm
       (regression-shaped, proving Phase B's fix), and fail-open-on-OMS-outage (an OMS write raising must not
       prevent the venue call). Implements design plan todo 7.
-- [ ] [BACKEND] P1. **Extend `tests/unit/engine/test_order_recovery.py` with one new integration test** proving
+- [x] ✅ [BACKEND] P1. **Extend `tests/unit/engine/test_order_recovery.py` with one new integration test** proving
       an order written via the new `OrderAdapter` path (Phase B) is visible to `OrderBook.get_pending_orders()`
       when both share one `UnifiedOrderManager` instance — the actual end-to-end proof this whole design
       exists to produce. Implements design plan todo 7.
-- [ ] [BACKEND] P2. **Confirm every existing test in `tests/unit/engine/execution/test_orchestrator.py` still
+- [x] ✅ [BACKEND] P2. **Confirm every existing test in `tests/unit/engine/execution/test_orchestrator.py` still
       passes unchanged** with the new optional `oms`/`venue_type` params in place (they must default to
       today's in-memory-only, no-behavior-change shape) — run the full file, not a sample, and cite the pass
       count. Implements design plan todo 7's "zero breaking rewrite" requirement.
 
 ### Close-out
 
-- [ ] [BACKEND] P3. **Fix `ExecutionOrchestrator._handle_execution_error`/`_handle_order_submission_error`'s
+- [x] ✅ [BACKEND] P3. **Fix `ExecutionOrchestrator._handle_execution_error`/`_handle_order_submission_error`'s
       mislabeled venue getattr** (`engine/orchestrator.py`) — both read `getattr(instruction, "exchange",
       "unknown")` for logging/metrics labels, but `Instruction`'s real field (`engine/execution/types.py`) is
       named `venue`, not `exchange` — the fallback silently always fires, mislabeling every error-path
@@ -159,7 +159,7 @@ context_scope:
       fixed there to avoid touching a file adjacent to that session's collision-avoidance scope. Done-when:
       both call sites read `instruction.venue` and an existing/new test asserts the metric label is no longer
       always `"unknown"`.
-- [ ] [BACKEND] P0. **Run `quality-gates.sh` (ship mode) over the full changeset** and quickmerge every commit
+- [x] ✅ [BACKEND] P0. **Run `quality-gates.sh` (ship mode) over the full changeset** and quickmerge every commit
       — cite `execution-service@<sha>` for each landed unit, per this workspace's evidence-backed-completion
       rule.
 - [ ] [AGENT] P1. **Post-implementation codex audit**: update
@@ -177,3 +177,14 @@ context_scope:
   every schema/hook-point/interface decision above is copied verbatim from that plan's 2026-08-21 Progress Log
   entry, not re-derived. `gate_on_depends: true` holds every todo here until that design plan's own tasks are
   `done` in the AO backlog (they are, as of this plan's authoring — the design plan closed same-session).
+- **2026-08-21, Phase B lifecycle hooks shipped**: `OrderAdapter` now persists PENDING before venue submission,
+  records FILLED/REJECTED/SUBMITTED after post-submit auditing, updates CANCELLED only after venue confirmation,
+  and mirrors confirmed amend quantity/price; all OMS writes are loud but fail-open. Landed as
+  `execution-service@4e915b637a` after full quality gates and gitleaks passed.
+- **2026-08-21, final OMS implementation shipment**: persistence methods, shared process-level OMS wiring,
+  adapter/recovery tests, and the venue-label correction are landed as `execution-service@f4cbd596b7`;
+  `quality-gates.sh` passed with 8,896 passed, 22 skipped, 1 xpassed, and 89 warnings (coverage 82.69%),
+  plus PM integration 6 passed and 2 deselected. Quickmerge ancestry was verified.
+- **2026-08-21, OMS persistence and shared-live wiring shipped**: `execution-service@bc2edc16874a3b0828ef692682b69174ddcab4bf` implements the six order persistence methods, process-shared OMS selection/threading, adapter/recovery regression tests, and venue-label correction. Full `quality-gates.sh` passed (621s); quickmerge ancestry verified on `origin/live-defi-rollout`.
+
+- **2026-08-21, implementation close-out**: `PostgreSQLOrderPersistence` order CRUD, shared startup OMS wiring, adapter lifecycle tests, shared recovery visibility, orchestrator venue-label correction, and full quality-gate verification landed in `execution-service`; the SHA is an ancestor of `origin/live-defi-rollout`.

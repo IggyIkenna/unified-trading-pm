@@ -913,6 +913,44 @@ pile sits at 33+ entries with entries running 5-8 weeks old. Chosen thresholds (
 
 Either condition alone trips the warning (an old-but-small pile, e.g. one long-forgotten stash, still deserves a nudge).
 
+### Slot-0 (bare-root checkout) dirty/untracked state is reported, not enforced (2026-08-21 incident)
+
+`slot-git-status-report.sh` classifies "slot 0" (the un-slotted `${WORKSPACE_PATH}/<repo>/` checkouts, only when 0 is
+in `--slots` or the filter is empty — the installed cron passes no `--slots` at all, so it IS in scope every run) and
+`post_snapshot`s the result every 5 minutes. But unlike the numbered-slot loop, the slot-0 branch calls ONLY
+`classify_repo` — it never calls `check_starvation_for_slot`/`check_stash_pile_for_slot`/any alert path. A DIRTY or
+untracked-files verdict for a bare root repo lands in the dashboard snapshot and nothing else: no Slack page, no
+inbox ping, no auto-quarantine. CLAUDE.md's prior wording ("cron-checked every 5 min") overstated this as
+enforcement; it is passive telemetry only, and reads as a safety net that isn't one.
+
+**Measured impact**: three bare root checkouts (`agent-orchestrator`, `execution-service`,
+`unified-trading-system-ui`) sat DIRTY for up to ~20h (2026-08-20 09:08 → 2026-08-21 04:56) before an interactive
+session in slot 13 found them by hand, not via any alert. Root cause per repo, all the same class — a write landed in
+the bare checkout instead of `.tabs/<N>/<repo>/`:
+
+- `agent-orchestrator/instruments-service/` + `agent-orchestrator/strategy-service/` — two untracked directory trees
+  holding files that belong to those SIBLING repos, not AO. Consistent with a relative-path write (e.g.
+  `instruments-service/scripts/foo.py`) issued while CWD was `agent-orchestrator/` instead of the shared parent —
+  the write "succeeded" one level inside the wrong repo. Both were confirmed STALE before deletion: the sports-P4
+  sizing script's own owning todo had already been closed same-day with "no valid standalone sizing exists yet", and
+  the strategy-service `liquidation_candidate_context.py` was a losing duplicate of work `slot-8·planning` had
+  already shipped properly (`strategy-service@ac240dbd`) under different names.
+- `execution-service` — 5 files with real uncommitted OMS-persistence work matching an open plan
+  (`w_execution_orchestrator_oms_persistence_impl_2026_08_21.md`), stranded mid-flight in the bare checkout instead
+  of a slot worktree. Verified via `git diff origin/live-defi-rollout -- <files>` that it PREDATED three commits that
+  landed on origin in the meantime (`005b5f52` OrderStatus dedup, `7d6b909e` amend-persist, `f4cb199b` OMS-inject) —
+  applying it as-is would have resurrected a deleted duplicate enum and a removed method, and dropped ~300 lines of
+  tests origin already has. Quarantined via `git stash push -u` (not discarded) + a saved `.patch`, then the branch
+  was fast-forwarded 33 commits to origin.
+- `unified-trading-system-ui` — one file, pure reformatting (multi-line arrays collapsed to one line, zero content
+  change) — the signature of a bare `prettier`/`npx prettier` run (unpinned version) instead of
+  `prettier-autostage.sh`, the exact banned pattern this doc's sibling coding-standards doc already names. Reverted.
+
+**Fix needed (not yet built)**: wire the same starvation/stash-pile-style alert path into the slot-0 branch of
+`slot-git-status-report.sh` — a DIRTY or untracked-files verdict on a bare root repo should page the same way an
+FF-pull-starvation or stash-pile regrowth does, deduped per episode. Tracked in
+`/plans/active/issues/bare_root_repo_agent_writes_unenforced_2026_08_21.md`.
+
 ### Silent duplicate-file resurrection after a rebase/stash-pop (2026-07-25)
 
 A DIFFERENT failure mode from the conflict case above: a `git pull --rebase --autostash` (or a manual `git stash push` /

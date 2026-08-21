@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: sports-schema-allocation-restructuring
-summary:
+summary: 'Fix 7 misplaced sports schemas + prediction market cross-venue mappings.
+
+  Phases 0-7: schema moves (DONE). Phase 8: PredictionMarketMapping type +
+
+  Polymarket/Kalshi football + crypto/macro mapping data.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,13 +15,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-20'
-overview: 'Fix 7 misplaced sports schemas + prediction market cross-venue mappings.
-
-  Phases 0-7: schema moves (DONE). Phase 8: PredictionMarketMapping type +
-
-  Polymarket/Kalshi football + crypto/macro mapping data.
-
-  '
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

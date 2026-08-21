@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: cefi-phase2-gap-audit
-summary:
+summary: Phase 2 (CeFi) gap audit + root-cause fix list before relaunching MTDS backfill VMs
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +11,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-01
-overview: Phase 2 (CeFi) gap audit + root-cause fix list before relaunching MTDS backfill VMs
 type: mixed
 epic: data-pipeline-completion
 owner: Harsh
@@ -243,7 +242,7 @@ post-mortem SSH. Add a knob (`VM_SHUTDOWN_ON_FAILURE=false`) if we want to prese
 - [ ] [HUMAN] P0. **Clean up 20 zombie `cefi-*` VMs** still showing RUNNING from the 2026-05-01 14:28 UTC launch.
       They've already crashed (rc=1 in run.log) but `VM_SHUTDOWN_ON_COMPLETION` self-delete didn't fire. Each is billing
       on `e2-standard-2`.
-      `bash     for vm in $(gcloud compute instances list --filter='status=RUNNING AND name~"^cefi-"' --format='value(name)'); do       gcloud compute instances delete "$vm" --zone=asia-northeast1-c --quiet     done     `
+      `bash for vm in $(gcloud compute instances list --filter='status=RUNNING AND name~"^cefi-"' --format='value(name)'); do gcloud compute instances delete "$vm" --zone=asia-northeast1-c --quiet done `
 
 - [ ] [AGENT] P0. **BUG-3 — Event-bucket GCS 429 fix.** UTL event flusher hammers
       `events/<service>/<date>/<vm-name>/events.jsonl` faster than GCS's per-object rate cap. Investigate

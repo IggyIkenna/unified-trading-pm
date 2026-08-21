@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: code-readiness-master-plan
-summary:
+summary: 'Per-repo Code Readiness (CR/DR/BR) stage tracker for all 65 manifest repos, grouped by tier.
+
+  Defines the 5-stage CR progression (functionality → unit tests → integration tests → QG → quickmerge).
+
+  Sub-plans own the implementation todos; this plan is the authoritative readiness state tracker.'
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -11,13 +15,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-12'
-overview: 'Per-repo Code Readiness (CR/DR/BR) stage tracker for all 65 manifest repos, grouped by tier.
-
-  Defines the 5-stage CR progression (functionality → unit tests → integration tests → QG → quickmerge).
-
-  Sub-plans own the implementation todos; this plan is the authoritative readiness state tracker.
-
-  '
 type: mixed
 epic: epic-code-completion
 superseded_by: cicd_code_rollout_master_2026_03_13

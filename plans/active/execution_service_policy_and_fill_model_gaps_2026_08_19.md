@@ -276,6 +276,24 @@ context_scope:
       `e2e-testing`, or operator action, once the decision record condition is actually met (which itself is blocked
       on the § I PB.8-into-sub-candle design question above being resolved).
 
+## § L — Batch/paper matching-engine duplication (added 2026-08-21, cross-repo duplication audit)
+
+Provenance: `/plans/active/cross_repo_duplication_cleanup_2026_08_21.md`. Routed here rather than fixed there because
+this plan already analyses both engines (§ I, "both real mode adapters").
+
+- [ ] [AGENT] P1. **Collapse `BatchMatchingEngine` and `PaperMatchingEngine` into one MEL wrapper parameterised by
+      `mode`.** Measured 2026-08-21: the two `submit_order` bodies differ in exactly one substantive line —
+      `select_book_type(..., mode="batch")` vs `mode="live"`. `_resolve_price` and `_build_matcher_kwargs` are
+      **behaviourally identical** (if/elif assignment vs early-return + dict literal; same output for every input,
+      verified by diff). Keep `engine/modes/live/matching_engine.py`'s helper style (cleaner, and it is the copy with a
+      factory, an `__init__` export and a real consumer in `backtest_v2/runner.py`) plus
+      `engine/modes/batch/matching_engine.py`'s extracted `_execute_match_and_convert`. Retain both class names as thin
+      factories so the mode vocabulary survives. ~120 LOC removed, and the matching step of
+      `paper(W) == batch-rerun(W)` becomes true by construction — which matters while
+      `/plans/active/issues/epsilon_zero_determinism_proof_never_runs_2026_08_20.md` records that the proof has never
+      produced a verdict. **Non-obvious**: `BatchMatchingEngine` has no production importer — only tests, benchmarks
+      and its own `__init__.py`. Establish whether batch mode actually routes through it before assuming symmetry.
+
 ## Progress Log
 
 - **2026-08-19, claude (`/autonomous`)**: doc created as a checkbox-only extraction from

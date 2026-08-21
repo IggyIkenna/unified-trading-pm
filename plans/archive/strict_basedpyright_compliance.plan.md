@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: Strict Basedpyright Compliance Plan
-summary:
+summary: Achieve typeCheckingMode strict and reportAny error across all Python repos. No dict[str, Any] in public API. Run
+  basedpyright on source_dir only (never .).
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
-overview: Achieve typeCheckingMode strict and reportAny error across all Python repos. No dict[str, Any] in public API. Run basedpyright on source_dir only (never .).
 todos:
 - {id: pyrightconfig-strict, content: 'Verify pyrightconfig.json — typeCheckingMode strict, reportAny error', status: done}
 - {id: run-basedpyright, content: Run timeout 120 basedpyright <source_dir>/ (never basedpyright .), status: done}

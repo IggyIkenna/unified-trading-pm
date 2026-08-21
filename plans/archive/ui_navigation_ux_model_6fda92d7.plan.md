@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: UI Navigation UX Model
-summary:
+summary: Refine the UI consolidation plan with intent-based navigation (three fast entry points), DimensionalGrid shared
+  component for config grids aligned to sharding dimensions, and a complete 'I want to X, where do I go?' map. Config grids
+  stay in domain surfaces (ML configs in ML Training, strategy/execution configs in Strategy UI) using the same shared FilterBar
+  + DimensionalGrid component.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +14,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-17'
-overview: Refine the UI consolidation plan with intent-based navigation (three fast entry points), DimensionalGrid shared component for config grids aligned to sharding dimensions, and a complete 'I want to X, where do I go?' map. Config grids stay in domain surfaces (ML configs in ML Training, strategy/execution configs in Strategy UI) using the same shared FilterBar + DimensionalGrid component.
 todos:
 - {id: dimensional-grid-component, content: 'Build DimensionalGrid ui-kit component: dimension pills, pin/unpin, sortable metric columns, heatmap toggle, row counts, CSV export', status: pending}
 - {id: filter-bar-cascading, content: 'Build FilterBar with URL state, cascading counts, multi-select, search-within-dropdown, dimension pin toggle', status: pending}

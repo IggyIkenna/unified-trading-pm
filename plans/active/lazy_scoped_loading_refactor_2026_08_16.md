@@ -464,3 +464,9 @@ down" narrative.
   reading-this warning, both real bugs found (submodule-name collision, statement-ordering-before-`__getattr__`),
   and the going-forward convention for adding new exports. Anyone picking up the top-level file next should start
   there, not re-read this entire plan.
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — 2 open P0 items. The UAC
+  Layer-2 top-level `__init__.py` conversion has a KNOWN, unresolved silent-data-corruption bug (3 registries come
+  back empty through the lazy path, root cause bisected to ~1,098 candidate names after the first hypothesis was
+  disproven) explicitly flagged as warranting "its own dedicated pass, not a quick follow-up" — genuinely
+  in-progress investigation, not bounded. The scoped-build proof todo is gated on that same file landing safely
+  first. Both appropriately stay human-supervised given the live-data-corruption risk already found once.

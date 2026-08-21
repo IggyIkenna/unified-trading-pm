@@ -1,7 +1,14 @@
 ---
 doc_type: plan
 title: plan-g-auth-entitlement
-summary:
+summary: 'Backend-only: server-side auth & entitlement hardening. Document service access matrix, enroll all 21 services
+  in
+
+  S2S auth (extend Phase 0 static token), standardize API auth middleware across 9 API repos, enforce subscription
+
+  entitlements server-side (not just UI). Goal: no unauthenticated S2S calls in production, no UI-only entitlement
+
+  gates, org-level data filtering at API layer.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,15 +18,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
-overview: 'Backend-only: server-side auth & entitlement hardening. Document service access matrix, enroll all 21 services in
-
-  S2S auth (extend Phase 0 static token), standardize API auth middleware across 9 API repos, enforce subscription
-
-  entitlements server-side (not just UI). Goal: no unauthenticated S2S calls in production, no UI-only entitlement
-
-  gates, org-level data filtering at API layer.
-
-  '
 type: mixed
 epic: epic-code-completion
 locked_by:

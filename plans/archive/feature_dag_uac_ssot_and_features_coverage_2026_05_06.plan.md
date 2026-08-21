@@ -1,7 +1,12 @@
 ---
 doc_type: plan
 title: feature-dag-uac-ssot-and-features-coverage
-summary:
+summary: Companion to writegate_honest_coverage_endtoend_2026_05_06 — covers ONLY the features-pipeline gaps writegate defers
+  or doesn't touch. (1) UAC feature_group->required_inputs DAG SSOT (writegate explicitly defers this as feature_dag_uac_ssot_<TBD>).
+  (2) UAC EXPECTED_FEATURE_GROUPS_BY_SERVICE + FEATURE_COVERAGE_START registries — honest-coverage denominator for features
+  (writegate covers raw-data shards, not features). (3) data-status denominator clip for features in deployment-api. (4)
+  Phantom-row audit extension to features manifest. (5) ManifestFreshnessCache lifted to UTL + adopted in features-sports
+  + features-volatility BatchHandlers.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,13 +16,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-06
-overview:
-  Companion to writegate_honest_coverage_endtoend_2026_05_06 — covers ONLY the features-pipeline gaps writegate defers
-  or doesn't touch. (1) UAC feature_group->required_inputs DAG SSOT (writegate explicitly defers this as
-  feature_dag_uac_ssot_<TBD>). (2) UAC EXPECTED_FEATURE_GROUPS_BY_SERVICE + FEATURE_COVERAGE_START registries —
-  honest-coverage denominator for features (writegate covers raw-data shards, not features). (3) data-status denominator
-  clip for features in deployment-api. (4) Phantom-row audit extension to features manifest. (5) ManifestFreshnessCache
-  lifted to UTL + adopted in features-sports + features-volatility BatchHandlers.
 type: code
 epic: data-pipeline-completion
 owner: Harsh
@@ -227,7 +225,7 @@ lift entries → tests.
 - [ ] [AGENT] P1. **Lift the 36 sports feature_groups into `FEATURE_REQUIRED_INPUTS`** using the resolver. Mapping
       derived from `features_sports_service` calculator registry — read each calculator's `required_inputs` list and
       convert to
-      `InputReq(asset_group="sports", data_type=<resolved>, available_at_rule=<from     AVAILABILITY_AT_SEMANTICS>, source=<from calculator metadata>)`.
+      `InputReq(asset_group="sports", data_type=<resolved>, available_at_rule=<from AVAILABILITY_AT_SEMANTICS>, source=<from calculator metadata>)`.
       Multi-source entries (e.g. `FIXTURES` from both api_football + footystats) emit one `InputReq` per source.
 - [ ] [TEST] P1. **Closed-set guarantee test** (similar to the defi
       `test_phase_1a_2_lift_8_onchain_feature_groups_seeded` shape) — assert each of the 36 sports feature_groups has ≥

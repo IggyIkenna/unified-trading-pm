@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: Citadel ML + Cascade Signal Master Plan
-summary:
+summary: 'Combined master plan: GBT-specific feature design principles, 5-layer feature architecture (50-100% annual target),
+  HFT plan remaining deployment work, new features-multi-timeframe-service, 6 new delta-one calculators, multi-resolution
+  window banks, regime-conditional models, two-phase multi-TF cascade signal. All feature design decisions governed by what
+  is actually useful for gradient boosted trees.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,11 +14,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-02-28"
-overview:
-  "Combined master plan: GBT-specific feature design principles, 5-layer feature architecture (50-100% annual target),
-  HFT plan remaining deployment work, new features-multi-timeframe-service, 6 new delta-one calculators,
-  multi-resolution window banks, regime-conditional models, two-phase multi-TF cascade signal. All feature design
-  decisions governed by what is actually useful for gradient boosted trees."
 todos:
   - {
       id: remove-monotonic-transforms,

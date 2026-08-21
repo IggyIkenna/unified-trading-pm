@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: execution-service-logic-audit-2026-03-10
-summary:
+summary: Audit execution-service source code logic and replace try/except coverage-gaming tests with genuine behaviour-validating
+  tests across 7 tranches
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
-overview: Audit execution-service source code logic and replace try/except coverage-gaming tests with genuine behaviour-validating tests across 7 tranches
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

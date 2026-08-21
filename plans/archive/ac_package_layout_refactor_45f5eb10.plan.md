@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: AC refactor and SSOT consolidation
-summary:
+summary: '(1) Add codex as SSOT for AC vs UIC scope, dependency rule, and layout (with cursor rules routing to codex). (2)
+  Refactor unified-api-contracts so top-level packages live under shared, unified_api_contracts_external, or move to UIC.
+  Success: abidance by new rules/structure, AC quality gates pass, unit tests (schema validation, normalisation, mapping)
+  finish in under 2 minutes. Integration tests are NOT run in AC — interfaces invoke them (they have connectivity and API
+  keys).'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,12 +15,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-03"
-overview:
-  "(1) Add codex as SSOT for AC vs UIC scope, dependency rule, and layout (with cursor rules routing to codex). (2)
-  Refactor unified-api-contracts so top-level packages live under shared, unified_api_contracts_external, or move to
-  UIC. Success: abidance by new rules/structure, AC quality gates pass, unit tests (schema validation, normalisation,
-  mapping) finish in under 2 minutes. Integration tests are NOT run in AC — interfaces invoke them (they have
-  connectivity and API keys)."
 todos:
   - {
       id: phase0,

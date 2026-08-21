@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: ui-react19-eslint9-upgrade-2026-03-16
-summary:
+summary: Upgrade all 13 UI repos from React 18 + ESLint 8 + Vitest 2 to React 19 + ESLint 9 + Vitest 4. Update workspace-npm-constraints.json
+  to match. Eliminates version split between odum-research-website (already on React 19) and the rest of the fleet.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-16'
-overview: 'Upgrade all 13 UI repos from React 18 + ESLint 8 + Vitest 2 to React 19 + ESLint 9 + Vitest 4. Update workspace-npm-constraints.json to match. Eliminates version split between odum-research-website (already on React 19) and the rest of the fleet.
-
-  '
 type: technical
 epic: epic-infrastructure
 completion_gates: {code: C3}
@@ -52,4 +50,3 @@ todos:
   status: done
   depends_on: [upgrade-batch-3-complex]
 ---
-

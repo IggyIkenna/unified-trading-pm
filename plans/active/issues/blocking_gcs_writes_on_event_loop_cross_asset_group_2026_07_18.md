@@ -162,10 +162,17 @@ the call is still awaited (ordering preserved), and check the file's line/functi
       `_collect_chain_vault_rows`, currently plain `def` called without `await`, driven by sync Alchemy/web3 RPC calls)
       OR carry an explicit in-code note saying why it must stay sync/serial, before any concurrency fan-out can apply.
       Repo: market-tick-data-service. Source: this doc's 2026-08-15 per-handler diagnosis above.
-- [ ] [INFRA] P3. Re-assess `lst_rates_handler.py`: confirm whether ANY per-shard fan-out axis exists (e.g. per LST
+- [x] ✅ [INFRA] P3. Re-assess `lst_rates_handler.py`: confirm whether ANY per-shard fan-out axis exists (e.g. per LST
       address within the single multicall-style EVM fetch, or across the EVM/Solana split) worth parallelizing, or close
       this handler out of "the 8 residual DeFi handlers" scope as not-applicable — it has no `for protocol: for chain:`
       loop to convert. Repo: market-tick-data-service. Source: this doc's 2026-08-15 per-handler diagnosis above.
+      ✅ 2026-08-21 — **real axis found and fixed: per-token (11 EVM LST tokens + the extended-rates sibling
+      module's own token set).** Both `_collect_evm_lst_rows` (`lst_rates_handler.py`) and
+      `_collect_evm_extended_rows` (`_lst_extended_rates.py`) were plain sync `for` loops of independent, blocking
+      `web3.eth.call`s inside the async `process()` path. Converted both to `async def`, fanning out per-token via
+      `asyncio.to_thread` + `asyncio.gather(Semaphore(8))`. Regression test
+      `test_evm_lst_rows_queries_concurrently_not_sequentially` proves it (real `time.sleep` stub, asserts
+      wall-clock << N x sleep). Evidence: `market-tick-data-service@<pending-ship>`.
 - [ ] [INFRA] P3. **Fix the 2 blocking-write sites in SYNC functions** — per "Open — in priority order" item 3:
       `live/websocket_runner.py::_record_empty_window` and
       `unified_trading_library/streaming/live_aggregator.py::_handle_zero_tick_window` perform the same blocking
@@ -228,3 +235,7 @@ the call is still awaited (ordering preserved), and check the file's line/functi
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:8db5b002b714e273]: KEEP-NA, valid -- Grep-verified 5 open checkboxes (lines 153,157,161,165,169), matching inventory_open_todos=5. A real AO dispatch (batch13, 2026-08-15) actually attempted this exact class of work and found the original '8 residual handlers, same nested-loop shape' premise was wrong for 5 of them -- the current 5 open todos are the CORRECTED, freshly-diagnosed shape, and for 3 of them the doc's own text explicitly states the fix 'requires... a separate design call, not this todo's scope' (gas_fee/vault_share_price async-ification) or 'a distinct, larger refactor, not a mechanical port' (dex_swaps extraction). The remaining 2 (lst_rates re-assessment, the 2 sync-function sites) need per-site concurrency-safety judgment per this doc's own 'Verification standard' section (confirm async caller, ordering preservation, line caps) -- exactly the live-dispatch-critical-path caveat the bounded-outcome bar warns about. Doc also carries a standing 2026-07-30 PARK ruling (rule d-adjacent) reaffirmed 4 more times (08-01,08-03,08-06,08-07) before the 08-15 re-diagnosis.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed unchanged since 2026-08-17. 5 open todos
+  (lines 153,157,161,165,169), each needing per-handler correctness judgment (async-ification design calls, a
+  stage-module extraction refactor, a re-assessment of whether any fan-out axis exists, or a signature-chain
+  change up the call stack) — not mechanical mass edits. Cross-cutting tranche, batch 2 of 3.

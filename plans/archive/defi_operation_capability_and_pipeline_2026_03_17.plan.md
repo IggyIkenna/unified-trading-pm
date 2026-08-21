@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: defi-operation-capability-and-pipeline-2026-03-17
-summary:
+summary: Wire operation-level capability validation into all interfaces, resolve SSOT flags, and complete DeFi end-to-end
+  MVP pipeline
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,9 +20,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-17"
-overview:
-  Wire operation-level capability validation into all interfaces, resolve SSOT flags, and complete DeFi end-to-end MVP
-  pipeline
 type: code
 epic: epic-code-completion
 completion_gates: { code: C4, deployment: none, business: none }

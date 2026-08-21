@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: defi-dev-testnet-data-rollout-2026-03-13
-summary:
+summary: 'DeFi dev environment rollout: real market data (batch + live from mainnet), simulated orders via mainnet fork
+  (Anvil/Tenderly) or Hyperliquid testnet, VCR cassette recording for all DeFi venues, position routing through fork RPC
+  so UPI/risk/strategy work unchanged. Venue-by-venue matrix SSOT in unified-api-contracts. Dev infra uses same GCP project
+  (central-element-323112) with -dev annotated resources via Terraform.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +14,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
-overview: 'DeFi dev environment rollout: real market data (batch + live from mainnet), simulated orders via mainnet fork (Anvil/Tenderly) or Hyperliquid testnet, VCR cassette recording for all DeFi venues, position routing through fork RPC so UPI/risk/strategy work unchanged. Venue-by-venue matrix SSOT in unified-api-contracts. Dev infra uses same GCP project (central-element-323112) with -dev annotated resources via Terraform.'
 todos:
 - {id: create-defi-venue-matrix, content: 'Create unified-api-contracts/docs/DEFI_DATA_ORDER_STRATEGY_MATRIX.md — per-venue SSOT for market data source, dev order routing (Anvil fork / Tenderly fork / Hyperliquid testnet), VCR cassette targets, and Sepolia caveats. Referenced by elysium-defi-system and unified-defi-execution-interface READMEs.', status: pending}
 - {id: create-dev-environment-doc, content: 'Create deployment-service/docs/dev-environment.md — canonical dev infra provisioning guide. Content: `terraform apply -var="environment=dev" -var="project_id=central-element-323112"` as the single SSOT for how dev GCS buckets, Pub/Sub topics, Scheduler jobs are created. Replaces the retired setup-dev-*.sh scripts.', status: pending}

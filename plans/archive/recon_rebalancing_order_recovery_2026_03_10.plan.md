@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: recon-rebalancing-order-recovery-2026-03-10
-summary:
+summary: Automated position correction, order recovery on restart, portfolio drift rebalancing, and DeFi vault yield rebalancing
+  with full observability.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
-overview: Automated position correction, order recovery on restart, portfolio drift rebalancing, and DeFi vault yield rebalancing with full observability.
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

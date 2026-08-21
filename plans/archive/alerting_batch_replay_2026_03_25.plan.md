@@ -1,7 +1,18 @@
 ---
 doc_type: plan
 title: alerting-batch-replay
-summary:
+summary: "Wire batch mode for alerting-service so it replays historical events from GCS at batch speed\nthrough the same\
+  \ routing rules as live mode. Same alert decisions, same routing pipeline —\nonly the event source and delivery behaviour\
+  \ differ.\n\n## Problem\nalerting-service accepts `--mode batch` but both batch and live modes read from Pub/Sub\n(AlertSubscriber).\
+  \ Batch mode should read from GCS event logs (`events/{service}/{date}/events.jsonl`)\nand replay them through route_event()\
+  \ at batch speed, with delivery suppressed (audit-only)\nor redirected to a batch-audit channel.\n\nThis violates the\
+  \ system's core batch/live alignment philosophy:\n- `get_messaging_protocol(\"batch\") → \"gcs\"` (topology_reader.py:121)\n\
+  - `get_messaging_protocol(\"live\") → \"pubsub\"`\n- The alerting service ignores this and always uses Pub/Sub\n\n## Solution\n\
+  Phase 1: Create BatchEventReader in alerting-service that reads JSONL event logs from GCS\nPhase 2: Wire batch mode in\
+  \ main.py to use BatchEventReader instead of AlertSubscriber\nPhase 3: Add delivery suppression — batch routes events\
+  \ through rules but writes audit\n         records to GCS instead of firing PagerDuty/Telegram\nPhase 4: Add `--date`\
+  \ CLI arg for batch replay date range\n\n## Scope: 2 repos\n- alerting-service — BatchEventReader, main.py batch wiring,\
+  \ delivery suppression\n- unified-trading-pm/codex — document batch/live alerting convention"
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,8 +24,6 @@ related: []
 created: '2026-03-25'
 locked_by: live-defi-rollout
 locked_since: 2026-03-25
-overview: "Wire batch mode for alerting-service so it replays historical events from GCS at batch speed\nthrough the same routing rules as live mode. Same alert decisions, same routing pipeline —\nonly the event source and delivery behaviour differ.\n\n## Problem\nalerting-service accepts `--mode batch` but both batch and live modes read from Pub/Sub\n(AlertSubscriber). Batch mode should read from GCS event logs (`events/{service}/{date}/events.jsonl`)\nand replay them through route_event() at batch speed, with delivery suppressed (audit-only)\nor redirected to a batch-audit channel.\n\nThis violates the system's core batch/live alignment philosophy:\n- `get_messaging_protocol(\"batch\") → \"gcs\"` (topology_reader.py:121)\n- `get_messaging_protocol(\"live\") → \"pubsub\"`\n- The alerting service ignores this and always uses Pub/Sub\n\n## Solution\nPhase 1: Create BatchEventReader in alerting-service that reads JSONL event logs from GCS\nPhase 2: Wire batch mode in main.py to use BatchEventReader\
-  \ instead of AlertSubscriber\nPhase 3: Add delivery suppression — batch routes events through rules but writes audit\n         records to GCS instead of firing PagerDuty/Telegram\nPhase 4: Add `--date` CLI arg for batch replay date range\n\n## Scope: 2 repos\n- alerting-service — BatchEventReader, main.py batch wiring, delivery suppression\n- unified-trading-pm/codex — document batch/live alerting convention\n"
 type: code
 epic: epic-code-completion
 completion_gates: {code: C4, deployment: D1, business: B4}

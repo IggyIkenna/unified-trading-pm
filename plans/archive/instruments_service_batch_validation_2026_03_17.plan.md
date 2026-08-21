@@ -1,7 +1,13 @@
 ---
 doc_type: plan
 title: instruments-service-batch-validation
-summary:
+summary: 'End-to-end instruments-service architecture fix + batch validation.
+
+  Serves as TEMPLATE for rolling the same pattern to all services.
+
+  Covers: reference data centralization (UAC SSOT), cloud-storage config loading
+
+  (ConfigReloader + TimeSeriesConfigStore), topology-driven transport, QG hardening.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,15 +17,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
-overview: 'End-to-end instruments-service architecture fix + batch validation.
-
-  Serves as TEMPLATE for rolling the same pattern to all services.
-
-  Covers: reference data centralization (UAC SSOT), cloud-storage config loading
-
-  (ConfigReloader + TimeSeriesConfigStore), topology-driven transport, QG hardening.
-
-  '
 type: infra
 epic: epic-code-completion
 completion_gates: {code: C4, deployment: D2, business: B4}

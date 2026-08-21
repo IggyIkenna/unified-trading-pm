@@ -617,7 +617,8 @@ interface marks the v2 additions optional; the route returns verbatim; the test 
       "instrument_gates_download": true,
       "denominator_complete": false,
       "layer1_completeness_pct": 97.3,
-      "storage_bytes_tb": 0.4303
+      "storage_bytes_tb": 0.4303,
+      "hollow_instrument_type_fraction": 0.498
     }
   },
   "by_venue": { "<ag>": { "<venue>": { "...HonestCoverageStatusCounts...": 0 } } },
@@ -632,6 +633,9 @@ interface marks the v2 additions optional; the route returns verbatim; the test 
   "by_venue_instrument_type_data_type_chain": {
     "<ag>": { "<venue>": { "<instrument_type>": { "<data_type>": { "<chain>": { "...counts...": 0 } } } } }
   },
+  "by_venue_instrument_type_data_type_league": {
+    "<ag>": { "<venue>": { "<instrument_type>": { "<data_type>": { "<league_id>": { "...counts...": 0 } } } } }
+  },
 
   "by_day": {
     "<ag>": { "<YYYY-MM-DD>": { "...counts...": 0 } }
@@ -643,9 +647,14 @@ Key fields at each Layer-2 count node (`...counts...`): `captured`, `empty_confi
 `expected_unattempted`, `total`, `coverage_pct` (reachable formula), `all_shards_coverage_pct`.
 
 New-in-v2 keys: `schema_version`, `layer_1`, `by_venue_instrument_type`, `by_venue_instrument_type_data_type`, `by_day`;
-new 2026-08-20: `by_venue_instrument_type_data_type_chain` (see "Projected atom vs declared atom" below);
-new-in-v2 per-AG-cell fields: `instrument_gates_download`, `denominator_complete`, `layer1_completeness_pct`. Everything
-the v1 harness already wrote stays byte-for-byte compatible.
+new 2026-08-20: `by_venue_instrument_type_data_type_chain` and `by_venue_instrument_type_data_type_league` (see
+"Projected atom vs declared atom" above — `league_id` is the operator-ruled full primary atom, folded in the same
+day as `chain`, `instruments-service@6056d46d5c`);
+new-in-v2 per-AG-cell fields: `instrument_gates_download`, `denominator_complete`, `layer1_completeness_pct`,
+`hollow_instrument_type_fraction` (added 2026-08-20 — fraction of that AG's level-5 cells carrying a blank/`"nan"`
+instrument_type; `null`, never `0.0`, when the AG has zero level-5 cells, so "no data" and "fully populated" can't
+be confused; `instruments-service@540a3bd94d`). Everything the v1 harness already wrote stays byte-for-byte
+compatible.
 
 **`storage_bytes_tb`** (added 2026-08-14, `instruments-service@scripts/measure_honest_coverage.py`): total live GCS
 storage for the asset_group, in TB (1e12 bytes), rounded to 4dp. Sourced from Cloud Monitoring's

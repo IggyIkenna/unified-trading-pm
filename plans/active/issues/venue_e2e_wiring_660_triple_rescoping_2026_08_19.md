@@ -25,8 +25,8 @@ created: "2026-08-19"
 author: plan_reconciler
 source: agt-b2fcb2
 parent_epic: security_and_cross_cutting_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 1.5
@@ -89,3 +89,10 @@ independently rather than reopening the 4 already-archived batches.
   operator's `BLK-f87a4927` answer (B). No re-derivation attempted here — that is real engineering work (estimate
   class `research`), out of this run's own remit (detect/verify/route, not execute multi-AG re-scoping).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): RECLASSIFY (whole-doc), `assigned_vm: NA
+  → planning`. All 4 open todos are sequential, procedural follow-through on an already-decided operator ruling
+  (`BLK-f87a4927`, answered B) — re-run/write a diff script with a precisely-stated done-when (a concrete delta list
+  by triple, not a count), record a per-row coverage verdict, fork fresh AG batches for confirmed-new rows, update
+  a banner — no further design/judgment call remains open. Conflict-check: `venue_e2e_wiring_2026_08_16.md`
+  (`assigned_vm: planning`) already explicitly cross-references this doc as the separate follow-up tracking the
+  353→660 gap and does not itself re-attempt the re-derivation — no duplicate coverage found.

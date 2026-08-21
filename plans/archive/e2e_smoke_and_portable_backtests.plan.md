@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: e2e-smoke-and-portable-backtests
-summary:
+summary: Layer 0–3 E2E smoke (contract alignment → schema robustness → infra verification → system smoke/full_e2e) plus
+  CEFI/TradFi/DeFi/Sports portable backtests with VCR/fixtures
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
-overview: Layer 0–3 E2E smoke (contract alignment → schema robustness → infra verification → system smoke/full_e2e) plus CEFI/TradFi/DeFi/Sports portable backtests with VCR/fixtures
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

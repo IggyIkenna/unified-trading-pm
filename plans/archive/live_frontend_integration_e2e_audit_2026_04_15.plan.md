@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: live-frontend-integration-e2e-audit
-summary:
+summary: End-to-end audit of live data protocols per category, frontend mock modes, API gateway protocol support, and backend
+  service readiness — with phased implementation to wire live data through all 7 layers
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-16'
-overview: End-to-end audit of live data protocols per category, frontend mock modes, API gateway protocol support, and backend service readiness — with phased implementation to wire live data through all 7 layers
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D3, business: B4}

@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: identity-registry-and-shard-enrichment
-summary:
+summary: Unified client/account identity, UAC strategy registry SSOT, shard-enriched records across all services and UI,
+  SCE mode enforcement
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,9 +20,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-16"
-overview:
-  Unified client/account identity, UAC strategy registry SSOT, shard-enriched records across all services and UI, SCE
-  mode enforcement
 type: code
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: none, business: none }

@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: uei-pending-event-additions
-summary:
+summary: Consolidated batch PR for all pending unified-events-interface/schemas.py additions from 3 source plans to avoid
+  merge conflicts.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
-overview: Consolidated batch PR for all pending unified-events-interface/schemas.py additions from 3 source plans to avoid merge conflicts.
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

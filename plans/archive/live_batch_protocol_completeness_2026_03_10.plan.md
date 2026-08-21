@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: live-batch-protocol-completeness-2026-03-10
-summary:
+summary: Audit and remediate all 14 T4 services to ensure both batch and live mode handlers, CLI flags, transport switching,
+  and tests are present and functional.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,9 +20,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-10"
-overview:
-  Audit and remediate all 14 T4 services to ensure both batch and live mode handlers, CLI flags, transport switching,
-  and tests are present and functional.
 type: code
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: none, business: none }

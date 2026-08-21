@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: agent7-observe-admin
-summary:
+summary: Absorb deployment-ui, batch-audit-ui, live-health-monitor-ui, logs-dashboard-ui into Observe and Admin services
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +11,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-22'
-overview: Absorb deployment-ui, batch-audit-ui, live-health-monitor-ui, logs-dashboard-ui into Observe and Admin services
 todos:
 - {id: a7-p0-risk-dashboard, content: "- [x] [AGENT] P0. Verify `/services/trading/risk` has real content: exposure breakdown (by venue, asset class, strategy), VaR calculation, Greeks display (delta, gamma, vega, theta), stress scenarios, limit utilization bars. Wire to `GET /risk/exposure?mode=live|batch`, `GET /risk/limits` APIs. Must support live/batch toggle same as all other domain data.\n  CRITICAL — add operational action buttons that call REAL API endpoints:\n  1. \"Trip Circuit Breaker\" button per strategy → `POST /risk/circuit-breaker { strategy_id, action: \"trip\" }`. After success: strategy card shows \"HALTED\" badge. Toast: \"Circuit breaker tripped for {strategy}\".\n  2. \"Reset Circuit Breaker\" button (only visible when tripped) → `POST /risk/circuit-breaker { strategy_id, action: \"reset\" }`. Restores normal operation.\n  3. \"Kill Switch\" button (emergency, requires confirmation dialog) → `POST /risk/kill-switch { scope, target_id }`. Shows prominent \"KILLED\" banner.\n\
     \  4. \"Scale Down\" button per strategy → `POST /analytics/strategies/{id}/scale { scale_factor: 0.5 }`. Shows \"Scaled to 50%\" badge.\n  All actions mutate MockStateStore server-side. Subsequent GET calls reflect the new state. This is NOT cosmetic — it demonstrates the real risk management workflow. In batch mode, action buttons are DISABLED (batch = historical snapshot).\n  DEPENDENCY: Agent 5 a5-p1-operational-actions (must create the endpoints first).\n", status: done}

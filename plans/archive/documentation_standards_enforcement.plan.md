@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: Documentation Standards Enforcement
-summary:
-status: complete
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: [execution-service, strategy-service]
-scope: [engineer, admin]
-tags: []
-related: []
-created: "2026-03-05"
-overview: "Enforce the service-canonical and library-canonical documentation standards (audit S5.1–S5.10)
+summary: 'Enforce the service-canonical and library-canonical documentation standards (audit S5.1–S5.10)
 
   across all repos. Most docs are well-established (ARCHITECTURE.md 35+ repos,
 
@@ -23,9 +13,16 @@ overview: "Enforce the service-canonical and library-canonical documentation sta
 
   and stub docs that need real content. This plan audits per-type, fills gaps, and
 
-  verifies no docs use hardcoded project IDs or bucket names.
-
-  "
+  verifies no docs use hardcoded project IDs or bucket names.'
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-03-05"
 todos:
   - {
       id: config-injection-codex,

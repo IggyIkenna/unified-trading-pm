@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: Observability and Health Endpoints
-summary:
-status: complete
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: [deployment-service, execution-service, strategy-service, system-integration-tests]
-scope: [engineer, admin]
-tags: []
-related: []
-created: "2026-03-05"
-overview: "Standardise observability across all API services and long-running services. Health endpoints
+summary: 'Standardise observability across all API services and long-running services. Health endpoints
 
   exist in 27+ files but /readiness is not consistently implemented, Prometheus metrics are only
 
@@ -23,9 +13,16 @@ overview: "Standardise observability across all API services and long-running se
 
   verifies compliance events, implements pre-crash checkpointing, and validates end-to-end
 
-  correlation_id propagation. Covers audit S12.
-
-  "
+  correlation_id propagation. Covers audit S12.'
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, strategy-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-03-05"
 todos:
   - {
       id: obs-readiness-audit,

@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: agent4-reports-manage
-summary:
+summary: Absorb settlement-ui, client-reporting-ui, onboarding-ui, user-management-ui into Reports and Manage services
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +11,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-22'
-overview: Absorb settlement-ui, client-reporting-ui, onboarding-ui, user-management-ui into Reports and Manage services
 todos:
 - {id: a4-p0-reports-overview, content: '- [x] [AGENT] P0. Verify `/services/reports/overview` (P&L Attribution tab) has real content. Should show: aggregated P&L by strategy, attribution breakdown (funding, carry, basis, delta, greeks, slippage, fees), time series. Wire to `GET /analytics/pnl` and `GET /reporting/pnl-attribution` APIs. The Dashboard already has `PnLAttributionPanel` — reuse that component here with more detail.
 

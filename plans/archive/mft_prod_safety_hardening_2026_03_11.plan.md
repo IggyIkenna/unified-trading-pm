@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: mft-prod-safety-hardening
-summary:
+summary: Fix 13 production safety gaps identified in the 2026-03-11 full parallel audit (9 agents, 17 sections). Covers
+  execution engine hardening, float→Decimal precision, network isolation, auth standardisation, and pytest-socket rollout
+  across 45 repos.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
-overview: Fix 13 production safety gaps identified in the 2026-03-11 full parallel audit (9 agents, 17 sections). Covers execution engine hardening, float→Decimal precision, network isolation, auth standardisation, and pytest-socket rollout across 45 repos.
 type: code
 epic: none
 completion_gates: {code: C4, deployment: none, business: none}

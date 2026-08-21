@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: website-domain-migration-2026-03-13
-summary:
+summary: Migrate odum-research-website from Yell hosting to self-managed odum-research.com. odum-research.co.uk becomes
+  password-protected staging (public sees redirect message). odum-group.io forwarding kept. Cancel Yell after cutover.
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
-overview: Migrate odum-research-website from Yell hosting to self-managed odum-research.com. odum-research.co.uk becomes password-protected staging (public sees redirect message). odum-group.io forwarding kept. Cancel Yell after cutover.
 type: infra
 epic: epic-website
 superseded_by: website_master_2026_03_13

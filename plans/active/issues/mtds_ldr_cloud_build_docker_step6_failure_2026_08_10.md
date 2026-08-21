@@ -228,3 +228,8 @@ is why these two MTDS conditions were hard to tell apart from the alert alone.
 - **na-eligibility-audit 2026-08-17** [body-hash:753c0f5bc7d160de]: KEEP-NA, stale-item corrected -- closed the hosted-baseline.sh resync todo (line 173): already shipped, unified-trading-pm@f7fb62f580 (2026-08-15, verified live via git show: 'chore(ci): resync hosted-baseline snapshot with live workflows'), cited via the active cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (same parent_epic) with an explicit Source: citation to this exact doc. Doc stays assigned_vm: NA for its other 2 items. Cross-cutting tranche audit conflict-check finding.
 - **na-eligibility-audit 2026-08-17** [body-hash:0cb1f07e91d386d8]: KEEP-NA, valid -- re-verified, no content change since the 2026-08-17 marker. 2 open items remain: sibling-repo version-mis-stamp fix ([BACKEND] P3, explicitly BLOCKED on 2 other repos' own broken states -- strategy-service's LDR tip fails its own QG; greeks-service has a peer's uncommitted pre-migration WIP) and the -prod trigger intentionality confirmation ([OPERATOR] P3). Both DEPENDENCY_BLOCKED/OPERATOR_QUESTION, not worker-determinable today. Cross-cutting tranche audit.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed unchanged. Checked `codex/02-data/canonical-
+  cutover-register.md` for an explicit MTDS Cloud Build prod-trigger answer — that register covers path/schema
+  cutover state, not Cloud Build trigger provisioning, so it does not resolve this item; the [OPERATOR] P3
+  confirmation stays genuinely open. The sibling [BACKEND] P3 item stays blocked on 2 other repos' own broken
+  states, unchanged. Cross-cutting tranche, batch 2 of 3.
