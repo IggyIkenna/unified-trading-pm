@@ -34,7 +34,6 @@ tags:
 related:
   [
     /plans/epics/system_readiness_master.md,
-    /plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
     /plans/active/issues/three_chain_registries_disagree_none_authoritative_2026_08_19.md,
     /plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md,
     /plans/audit/results/registry_ground_truth_2026_08_19.md,
@@ -89,7 +88,7 @@ under "Scope note" below rather than silently absorbed.
 
 ## Known P0s (already filed — cited, not re-derived)
 
-- **`/plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`** —
+- **`/codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html`** —
   `unified_api_contracts.execution.get_venue_asset_group()` does `_VENUE_ASSET_GROUP.get(venue.lower(), "cefi")` —
   every unresolved venue (AAVE_V3-ARBITRUM, LIDO-ETHEREUM, JUPITER-SOLANA, MORPHO-BASE all tested) silently returns
   `"cefi"`. No exception, no `None` — a caller cannot tell a real hit from a miss. Any per-asset-group split routed
@@ -142,7 +141,7 @@ evidence.
 | `canonical_path_violations()` blind to filename stem | The oracle drops the last path segment before validating; raw venue wire stems and double-wrapped catalogue-miss ids return 0 violations == CANONICAL when they are not | `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` (open todos still at lines 440-452) | M | Every canonical/non-canonical claim made via the oracle for non-tradfi shapes | N |
 | Data-type-validity combinator fragmented per asset group | No asset group has a genuine `(venue, instrument_type) -> data_types` combinator; CEFI/DeFi/TradFi/Sports/Prediction each patch it differently, TradFi produces a provably-wrong cell (CME==ICE despite ICE having no Databento coverage) | `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md` — remaining open todos are now data-backfill-flavored (lines 975+), suggesting the code-level fragmentation fix has landed but was not independently re-verified this session | unknown | Correctness of every valid-data-types check | **unverified** |
 | Coverage-floor registries don't cross-propagate | Three parallel coverage-floor registries; sports registries 1 and 3 are structurally one SSOT, but cross-asset-group propagation gap remains open | `/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md` | M | Coverage-start dates used inconsistently across MTDS pre-skip / ManifestWriter pre-launch guard | N |
-| `OrderState` (23-doc SSOT) vs shipped `OrderStatus` (UAC) | Doc claims a 9-state `OrderState`; UAC ships a 7-member `OrderStatus`. Ruled 2026-08-06 (Option A: advance the contract), confirmed 2026-08-12 — CODE todo and TEST todo both still open | `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md` (lines 102, 112) | M | W11 order-lifecycle state fidelity in execution-service | N — ruling already made, just needs building |
+| `OrderState` (23-doc SSOT) vs shipped `OrderStatus` (UAC) | Doc claims a 9-state `OrderState`; UAC ships a 7-member `OrderStatus`. Ruled 2026-08-06 (Option A: advance the contract), confirmed 2026-08-12 — CODE todo and TEST todo both still open | `/codex/04-architecture/order-state-machine.md` | M | W11 order-lifecycle state fidelity in execution-service | N — ruling already made, just needs building |
 | W5 — collateral/margin schema populated | `VenueCapabilityV2.collateral_rules`/`MarginSpec` schema exists and is already consumed by strategy-service risk-v2, but **zero venues have it populated** | epic W5, `/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md` | L | Every risk-v2 read degrades silently to "no data" | N — population work, not design |
 | W5 — transfer-capability eligibility flags | No field on `VenueCapabilityV2` (or elsewhere) declares Copper/Ceffu/manual-transfer/prime-broker eligibility per venue — needs new fields, not just population | epic W5 | M | Transfer routing / W22 external instruction API | N |
 | W8 — weightings SSOT | "Define which dimension each weighting applies to, in the contracts registry as SSOT" — P0, open in the epic, **no dedicated owning plan found in this pass** | epic W8 | M | Portfolio/coin/venue weighting correctness | **corpus gap — needs a plan authored** |
