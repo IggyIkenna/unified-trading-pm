@@ -809,15 +809,16 @@
       <div class="stat">
         <span class="v">102</span
         ><span class="k"
-          >Further client-reporting-api routes indexed by group in §05 — see that section for full per-endpoint depth</span
+          >Further client-reporting-api routes indexed by group in §05 — see that section for full per-endpoint
+          depth</span
         >
       </div>
       <div class="stat">
-        <span class="v">10 / 13</span
+        <span class="v">10 / 15</span
         ><span class="k"
           >Instruction types routed to real execution today — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
-          UNSTAKE/TRANSFER/CANCEL/ATOMIC route through live execution wiring; QUOTE arms repricing without submitting
-          an order; BORROW/REPAY/BRIDGE are Coming soon</span
+          UNSTAKE/TRANSFER/CANCEL/ATOMIC route through live execution wiring; QUOTE arms repricing without submitting an
+          order; BORROW/REPAY/BRIDGE are Coming soon</span
         >
       </div>
       <div class="stat">
@@ -1761,22 +1762,22 @@
       >
     </div>
     <p class="lede">
-      One instruction envelope, any asset class — but only one of its fifteen action types actually executes today.
+      One instruction envelope, any asset class — but ten of its fifteen action types are wired to real execution paths
+      today, while unsupported actions fail honestly.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
     </p>
 
     <div class="callout">
       <span class="tag">Read this before anything else on this page</span>
       <p>
-        <b>Only <code>TRADE</code> is wired end-to-end.</b> The request body type, <code>StrategyInstructionV2</code>,
-        is a 15-member discriminated union
+        <b>Ten action types are wired to real execution paths today.</b> The request body type,
+        <code>StrategyInstructionV2</code>, is a 15-member discriminated union
         (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
-        internal DART manual-trade surface uses in production. Thirteen variants — SWAP, LEND, BORROW, WITHDRAW, REPAY,
-        STAKE, UNSTAKE, TRANSFER, BRIDGE, ATOMIC, CANCEL, LP_MINT, LP_BURN — parse successfully (they are real, valid
-        members of the union) but return an honest <code>501</code>: not a silent drop, but not the same contract either
-        (<code>external_instruction_api.py:129-136</code>).
+        internal DART manual-trade surface uses in production. Five variants — BORROW, REPAY, BRIDGE, LP_MINT, and
+        LP_BURN — parse successfully (they are real, valid members of the union) but return an honest <code>501</code>:
+        not a silent drop, but not the same contract either (<code>external_instruction_api.py:129-136</code>).
       </p>
       <p>
         <code>QUOTE</code> is a third case, distinct from both of the above — worth stating precisely rather than
@@ -1809,12 +1810,18 @@
           <tr>
             <td><code>SWAP</code></td>
             <td><code>SwapInstruction</code></td>
-            <td><b class="st st-part">partial</b> — routed to live DeFi execution (Uniswap V3/V2); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (Uniswap V3/V2); falls back to
+              simulation outside LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>LEND</code></td>
             <td><code>LendInstruction</code></td>
-            <td><b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3); falls back to simulation
+              outside LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>BORROW</code></td>
@@ -1824,17 +1831,26 @@
           <tr>
             <td><code>WITHDRAW</code></td>
             <td><code>WithdrawInstruction</code></td>
-            <td><b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3); falls back to simulation
+              outside LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>STAKE</code></td>
             <td><code>StakeInstruction</code></td>
-            <td><b class="st st-part">partial</b> — routed to live DeFi execution (Lido); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (Lido); falls back to simulation outside
+              LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>UNSTAKE</code></td>
             <td><code>UnstakeInstruction</code></td>
-            <td><b class="st st-part">partial</b> — routed to live DeFi execution (Lido); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (Lido); falls back to simulation outside
+              LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>REPAY</code></td>
@@ -1852,7 +1868,11 @@
           <tr>
             <td><code>TRANSFER</code></td>
             <td><code>TransferInstructionV2</code></td>
-            <td><b class="st st-part">partial</b> — routed through live transfer execution; DeFi-to-DeFi and binance/deribit/bybit/aster CeFi withdrawals resolve real credentials today, other CEX withdraw venues return an honest failure with a real error rather than a fabricated success</td>
+            <td>
+              <b class="st st-part">partial</b> — routed through live transfer execution; DeFi-to-DeFi and
+              binance/deribit/bybit/aster CeFi withdrawals resolve real credentials today, other CEX withdraw venues
+              return an honest failure with a real error rather than a fabricated success
+            </td>
           </tr>
           <tr>
             <td><code>BRIDGE</code></td>
@@ -1867,16 +1887,30 @@
           <tr>
             <td><code>CANCEL</code></td>
             <td><code>CancelInstruction</code></td>
-            <td><b class="st st-part">partial</b> — cancels a single tracked instruction's open orders (<code>cancel_scope=SINGLE</code>); cancelling every order for a strategy instance in one call is Coming soon</td>
+            <td>
+              <b class="st st-part">partial</b> — cancels a single tracked instruction's open orders
+              (<code>cancel_scope=SINGLE</code>); cancelling every order for a strategy instance in one call is Coming
+              soon
+            </td>
+          </tr>
+          <tr>
+            <td><code>LP_MINT</code></td>
+            <td><code>LpMintInstruction</code></td>
+            <td><b class="st st-plan">Coming soon</b> — no external execution engine is wired for this action yet</td>
+          </tr>
+          <tr>
+            <td><code>LP_BURN</code></td>
+            <td><code>LpBurnInstruction</code></td>
+            <td><b class="st st-plan">Coming soon</b> — no external execution engine is wired for this action yet</td>
           </tr>
         </tbody>
       </table>
     </div>
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
-      <b class="ev ev-verified">✓ verified</b> schemas.py (all 13 variants + the union);
-      execution-service <code>execution_service/api/external_instruction_api.py</code> +
-      <code>execution_service/api/external_instruction_defi.py</code> (10 of 13 action types routed to real execution
-      wiring; BORROW/REPAY/BRIDGE are the honest 501s)
+      <b class="ev ev-verified">✓ verified</b> schemas.py (all 15 variants + the union); execution-service
+      <code>execution_service/api/external_instruction_api.py</code> +
+      <code>execution_service/api/external_instruction_defi.py</code> (10 of 15 action types routed to real execution
+      wiring; BORROW/REPAY/BRIDGE/LP_MINT/LP_BURN are the honest 501s)
     </p>
 
     <details class="ep">
@@ -2099,7 +2133,7 @@
               <tr>
                 <td><code>422</code></td>
                 <td>
-                  Body doesn't match any of the 13 <code>StrategyInstructionV2</code> variants (e.g. an
+                  Body doesn't match any of the 15 <code>StrategyInstructionV2</code> variants (e.g. an
                   <code>action</code> value like <code>CONVERT_DUST</code> that exists on
                   <code>InstructionActionV2</code> but has no envelope in the union at all)
                 </td>
@@ -2107,10 +2141,13 @@
               </tr>
               <tr>
                 <td><code>501</code></td>
-                <td>Parses as <code>BORROW</code>, <code>REPAY</code>, or <code>BRIDGE</code> — the 3 action types still Coming soon</td>
+                <td>
+                  Parses as <code>BORROW</code>, <code>REPAY</code>, <code>BRIDGE</code>, <code>LP_MINT</code>, or
+                  <code>LP_BURN</code> — the five action types still Coming soon
+                </td>
                 <td class="mono">
                   "action='BORROW' is not yet wired for external submission. TRADE/QUOTE/TRANSFER/CANCEL/SWAP/LEND/
-                  WITHDRAW/STAKE/UNSTAKE/ATOMIC are the 10 of 13 action types wired today."
+                  WITHDRAW/STAKE/UNSTAKE/ATOMIC are the 10 of 15 action types wired today."
                 </td>
               </tr>
               <tr>
