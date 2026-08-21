@@ -186,19 +186,15 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Walkthrough feedback 2026-08-21 — refdata/coverage cluster (operator feedback on platform-external-api-walkthrough.html)
 
-- [x] ✅ [BACKEND] P1. **Kalshi perp — DATA-ONLY repoint, PROCEED (operator ruling 2026-08-21, final — see
-      code_readiness_t2_refdata_marketdata_2026_08_19.md's own "Walkthrough feedback 2026-08-21" section).** Wire
-      RSA-PSS auth from existing GSM secrets (MEASURED 2026-08-21: HTTP 200 with real perp market data on
-      `external-api.kalshi.com/trade-api/v2/margin/markets`), repoint `kalshi_perp.py` to the margin host, flip
-      `_REPOINT_PENDING`, keep the write-guard, discover the real funding-rates subpath (the docstring's literal
-      path 404s), update the stale BLOCKED-CREDENTIALS docstring claim. Never re-enable against the events host.
-      An EARLIER same-day hold ("auth probe ≠ perps trading rights") is SUPERSEDED for data capture, remains in
-      force ONLY for TRADING integration (gated on the member-by-member perps rights signup).
-      ✅ 2026-08-21 — **SHIPPED, instruments-service@2dcee7e149** (verified ancestor of `origin/live-defi-rollout`).
-      Repointed + RSA-PSS signed (`get_secret_client()` only), `_REPOINT_PENDING = False`, write-guard kept,
-      parser rewritten for the REAL measured schema (16 tickers confirmed). Funding rates: probed read-only,
-      genuinely undiscoverable — `get_funding_rate` stays `NotImplementedError`, documented; no order/transfer
-      touched. Shipped isolated; waited out an unrelated `unified-api-contracts@4f25d5f0` break (resolved by `instruments-service@b15eae62bc`).
+- [ ] [BACKEND] P1. **Kalshi perp — DATA-ONLY repoint, PROCEED (operator ruling 2026-08-21, final).** Wire
+      RSA-PSS auth from existing GSM secrets (kalshi-api-key-id + kalshi-private-key-pem — MEASURED 2026-08-21:
+      HTTP 200 with real perp market data on `external-api.kalshi.com/trade-api/v2/margin/markets`), repoint
+      `kalshi_perp.py` enumeration to the margin host, flip `_REPOINT_PENDING`, keep the write-guard, discover
+      the real funding-rates subpath (the docstring's literal path 404s), update the stale BLOCKED-CREDENTIALS
+      docstring claim. Never re-enable against the events host. An EARLIER same-day hold ("auth probe ≠ perps
+      trading rights, do not repoint") applied before the operator distinguished the data path — it is
+      SUPERSEDED for data capture and remains in force ONLY for TRADING integration, which stays gated on the
+      member-by-member perps rights signup.
 - [x] ✅ [AGENT] P1. Classify the sports bookmaker roster for the operator (NOT for the artefact): for each of the
       27 kept books, is it (a) an odds-api bookmaker, (b) covered by the Unity central-wallet integration, or (c)
       neither — legacy arbitrage-research leftovers. Deliver the (c) list as a removal proposal; removal itself is
@@ -975,18 +971,18 @@ todos only to confirm they are data-movement, then leave it.
       ONEXBET/PROPHETX still appear as stale nodes/rows as of `710db834`) — no in-repo generator script was found
       for either file during this session's grep of `scripts/`; locate or rebuild the generator first, then run it
       (never hand-edit the generated output).
-- [x] ✅ [BACKEND] P3. **Second registry family, ONEXBET half — execution-service side DONE; UAC side landed
-      out-of-order.** `unified-api-contracts@cdb8ae88` ("complete the 6-bookmaker removal") deleted
-      `canonical/domain/bookmaker_registry.py` + `external/onexbet/` WITHOUT waiting for execution-service's side
-      first — violating this todo's own STOP-condition ordering — which broke execution-service's entire test
-      collection (`ModuleNotFoundError` transitively via conftest.py). Retired `OneXBetAdapter` +
-      `test_onexbet_adapter.py` + dangling re-exports to match (re-confirmed dead/unrouted first) —
-      execution-service@f4391ac596. See `w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`'s
-      2026-08-21 slot-21 Progress Log entry for full detail.
-- [ ] [BACKEND] P3. The other 5 tokens (BETOPENLY/NOVIG/PROPHETX/BETMGM/BETWAY) still have stale string-mapping
-      references in execution-service's `aggregator/odds_api.py` and `cli/handlers/live_execution_venues.py` (no
-      dedicated adapter class, lower risk than ONEXBET, but same enumerate-and-migrate treatment needed) —
-      UAC-side tokens for all 6 are already gone per `unified-api-contracts@cdb8ae88`.
+- [ ] [BACKEND] P3. **Second registry family for the same 6 tokens, found but explicitly NOT touched this session**
+      (STOP condition, see the DONE entry above) — `unified_api_contracts/canonical/domain/bookmaker_registry.py`
+      + `canonical/domain/sports/{_registry_us,_registry_exchanges,_registry_intl_scrapers,odds_api_mapping}.py`
+      + `registry/venue_manifest/betting_sports.py` + `registry/sports_bookmaker_league_coverage.py` still declare
+      all 6 tokens. Removing `"onexbet"` from `BOOKMAKER_REGISTRY` requires a COORDINATED two-repo change: first
+      retire `execution-service`'s `sports_execution/adapters/bookmaker_api/onexbet.py` (`OneXBetAdapter` + its
+      test `tests/sports_execution/unit/bookmaker_api/test_onexbet_adapter.py`) — already flagged dead/unrouted by
+      `sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md` finding 11 — THEN remove `"onexbet"` from
+      `bookmaker_registry.py`. The other 5 tokens (BETOPENLY/NOVIG/PROPHETX/BETMGM/BETWAY) have no dedicated
+      execution-service adapter class, only string-mapping references in the confirmed-dead-in-prod
+      `aggregator/odds_api.py` and declarative CLI venue frozensets (`live_execution_venues.py`) — lower risk, but
+      still need the same enumerate-and-migrate treatment before removal.
   3. **24 unattributed manifest tokens — plan-conflict found, no code shipped.** Investigated before writing any
      attribution code and found `/plans/active/state_fabric_artefacts_2026_08_20.md` already ran the identical
      investigation same-week with a contrary, DOC-only prescribed fix (see that todo's own edit above for detail).

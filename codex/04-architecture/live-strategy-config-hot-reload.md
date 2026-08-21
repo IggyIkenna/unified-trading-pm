@@ -6,7 +6,7 @@ summary:
   DomainConfigReloader family, same shape as ApiKeyReloader), emitting CONFIG_CHANGED / INSTRUMENT_UNIVERSE_CHANGED on
   atomic swap. The strategies-domain safe-field allow-list (SAFE_STRATEGY_RELOAD_FIELDS) and UnsafeConfigChangeError are
   now IMPLEMENTED (2026-08-14): strategy_params changes hot-reload, enabled_strategies changes are rejected (previous
-  config stays active). The instruments domain has the SAME shape of guard (2026-08-21, SAFE_INSTRUMENT_RELOAD_FIELDS
+  config stays active). The instruments domain has the SAME shape of guard (2026-08-14, SAFE_INSTRUMENT_RELOAD_FIELDS
   / UnsafeConfigChangeError): subscription_list membership (add/remove) hot-swaps live, any other field change
   (an existing instrument's definition) is rejected and requires a restart. Batch and live share the same config
   object."
@@ -75,10 +75,7 @@ event**; that name appears nowhere in the workspace.
 
 ## What can hot-reload safely
 
-> **✅ Enforced for BOTH the strategies and instruments domains — strategies landed 2026-08-14
-> (`strategy-service@48bd3717`), instruments landed 2026-08-21 (`strategy-service@21d46d75`) per the
-> operator ruling below; NOT the same commit as strategies despite an earlier version of this doc's false claim that
-> `48bd3717` already shipped both.**
+> **✅ Enforced for BOTH the strategies and instruments domains (both landed 2026-08-14, same commit family).**
 > `config_reloaders.py` carries `SAFE_STRATEGY_RELOAD_FIELDS = frozenset({"strategy_params"})` for strategies and
 > `SAFE_INSTRUMENT_RELOAD_FIELDS` (subscription_list membership only) for instruments, both backed by
 > `UnsafeConfigChangeError`. `_on_strategies_reload` diffs the incoming `StrategyDomainConfig` field-by-field
@@ -107,12 +104,9 @@ of this doc briefly said the operator ruled the live hot-swap unconditional and 
 changes ("option B"). That was imprecise — the actual ruling (confirmed directly by the operator, and matching what
 the code has done since 2026-08-14) is: **hot-swap applies to `subscription_list` membership only (adding/removing
 instrument_ids); changing the DEFINITION of an existing instrument requires a restart and is rejected, not silently
-applied.** This is exactly what `_reject_unsafe_instrument_change()` in `config_reloaders.py` now enforces (shipped
-strategy-service `21d46d75`, 2026-08-21). **Correction to this doc's own prior text**: an earlier
-version of this section claimed the instruments guard shipped in `48bd37175989be9031eccc1b5dca0c7ab387abb3` — that
-commit's own diff (`git show 48bd3717 -- strategy_service/config_reloaders.py`) contains zero occurrences of
-`SAFE_INSTRUMENT_RELOAD_FIELDS`/`_reject_unsafe_instrument_change`; it shipped ONLY the strategies-domain guard. The
-instruments guard did not exist until the 2026-08-21 shipment cited above — verified by measurement, not assumed. See
+applied.** This is exactly what `_reject_unsafe_instrument_change()` in `config_reloaders.py` already enforces
+(shipped strategy-service `48bd37175989be9031eccc1b5dca0c7ab387abb3`, 2026-08-14) — the guard was in place before the
+"option B" text was written, so no code change was needed here, only this doc's framing. See
 `/plans/archive/2026_08/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md` for the
 archived judgment-call history and `/codex/04-architecture/cross-domain-state-fabric.md` §14 for the cross-reference.
 

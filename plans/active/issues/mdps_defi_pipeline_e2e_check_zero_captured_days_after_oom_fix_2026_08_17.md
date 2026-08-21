@@ -19,7 +19,6 @@ summary: >-
   fall back to for any of them) — a 0% intersection between the shard universe and what's actually captured under
   `service_name=market-tick-data-service` in the raw manifest.
 status: open
-archive_exempt: true
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -141,8 +140,8 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    `test_resolve_shard_day_bounds_scan_to_lookback` + streamed-read coverage shipped in the same commit).
    **Evidence: market-data-processing-service@6ee153a0, unified-trading-library@11f1ebd1 — both verified on
    origin/live-defi-rollout by direct code read.**
-- [x] ✅ [DATA] P1. **➡️ EXTRACTED → plans/active/defi_satellite_ao_dispatch_batch19_2026_08_21.md (2026-08-21,
-   ag-closeout-audit Phase 3 sweep).** Now that (1)/(2) have landed, re-run DEFI's `--legs force,skip --require-captured
+- [ ] [DATA] P1. **➡️ EXTRACTED → plans/active/defi_satellite_ao_dispatch_batch19_2026_08_21.md (2026-08-21,
+   ag-closeout-audit Phase 3 sweep).** Still open. Now that (1)/(2) have landed, re-run DEFI's `--legs force,skip --require-captured
    --auto-day` matrix again to get a REAL (non-"PROVED NOTHING") verdict, then consolidate all 5 AGs' reports per
    `data_pipeline_check_mdps_features_2026_07_20.md`'s open todo. **2026-08-17 note**: the plan's own CEFI driver
    (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) was STILL RUNNING (not terminal) as of this check — do not
@@ -153,14 +152,9 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    **2026-08-21 update (slot-24, data_engineering)**: 4 more re-run attempts (batch19's extraction of this exact
    todo), all still "PROVED NOTHING" — but the OOM/chain-axis/streamed-read bugs are now confirmed NOT the cause.
    Root-caused instead to the consolidated index blob being hours-stale despite a healthy, fast-running manifest
-   consolidator.
-   **CLOSED 2026-08-21 (slot-24) — SUPERSEDED, not achieved**: this item's actual goal (a real, non-"PROVED
-   NOTHING" verdict) was NOT reached. Closing this specific checkbox because the attempt is genuinely exhausted
-   (4 rounds, root cause now precisely isolated one layer up from anything this todo's own scope can fix) and the
-   remaining actionable work has moved to 3 new tracked todos in
-   `/plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`
-   — read that doc, not this checkbox, for what's still open. Do NOT re-attempt a plain re-run of this exact matrix
-   without first reading that doc; a plain retry will reproduce the same "PROVED NOTHING" result.
+   consolidator — full evidence chain + next steps in
+   `/plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`.
+   Still open; do not re-attempt a plain re-run without first reading that doc.
 - [x] ✅ [DATA] P1. **DONE 2026-08-21 (slot-24, data_engineering)** — diagnosed the 2026-08-21 "PROVED NOTHING"
       recurrence at the root (4 shipped diagnostic rounds, each QG-green and re-verified live on a fresh driver VM),
       ruling out OOM / chain-axis composition / streamed-read `service_name` filtering as the cause, and filed the
@@ -209,13 +203,7 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
   (consolidated index blob >4h stale despite the DEFI manifest consolidator completing successfully every ~1-2min).
   Also fixed an unrelated pre-existing pip-audit red (`PYSEC-2026-3721`) blocking shipment in unified-trading-library
   along the way (`unified-trading-library@3095f35151`). Evidence commits: `market-data-processing-service@47a51b1287`,
-  `market-data-processing-service@907ff58912`, `unified-trading-library@3095f35151`. Every todo in this doc is now
-  closed (the last open item is closed above as SUPERSEDED, not achieved), so `archive_exempt: true` is set as a
-  deliberate one-commit bridge: the checkbox flip lands at this still-active path FIRST (required for the
-  cross-repo `/done` M3 plan-flip verification, `RULES.md` §2), and the actual archival (`status` -> terminal,
-  banner, `git mv` to `plans/archive/issues/`) follows as an immediate separate commit right after, per
-  `plan-completion-and-archival-discipline.md`'s "never combine flip + archival git-mv in one cross-repo commit"
-  rule. `archive_exempt` should be considered stale the moment the archival commit lands.
+  `market-data-processing-service@907ff58912`, `unified-trading-library@3095f35151`.
 - **2026-08-21 — stale P2 corrected:** direct code read and git blame verified 4990d2361 already shipped per-leg gc.collect() on 2026-08-20; the prior open checkbox and Real fix still needed prose were stale and are closed with commit evidence.
 
 - **2026-08-19** (`/plan-reconcile security_and_cross_cutting_master` Phase 2.4, zero-checkbox sweep): this entire
