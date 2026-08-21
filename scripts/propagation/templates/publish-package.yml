@@ -13,6 +13,14 @@ name: publish-package
 on:
   push:
     branches: [main]
+    # Also fire on the tag push semver-agent mints right after the same `push: [main]` event
+    # (same trigger, different git ref) -- the commit-push run above races the tag mint and
+    # frequently dispatches a stale `.devN` VERSION hint before the release tag exists (see
+    # /plans/active/issues/publish_package_semver_tag_race_breaks_consumer_builds_2026_08_20.md).
+    # `git describe --tags` on THIS run resolves against the now-landed tag, so it republishes
+    # the correct release wheel a few seconds later -- the commit-push run's `.devN` publish is
+    # harmless and unchanged.
+    tags: ["v*"]
 
 permissions:
   contents: read
