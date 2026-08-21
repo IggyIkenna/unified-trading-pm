@@ -302,24 +302,54 @@ code" detail + the tradfi historical progress log; `depends_on` the Phase-0 chil
       each pollutant verified absent on all 4 legs (pause-consolidator → snapshot → filter → resume for the manifest
       leg).
       **ICE: fully verified clean, all legs** — `instruments-service@42cf8ba5` (2026-08-16), see this doc's own
-      history/other todos. **CBOE: re-measured 2026-08-21 (T2), catalogue leg CLEAN, manifest leg NOT — precise
-      counts differ from the 2026-06-24 estimate.** Catalogue leg (`prod/catalog.parquet`, tradfi-prd bucket):
-      236 live CBOE rows total (COMBO 143, FUTURE 83, INDEX 10), **zero** `SPOT_PAIR` rows, **zero** VX-matching
-      FUTURE rows, and the 10 live INDEX rows are all yield/treasury symbols (`^FVX`/`^IRX`/`^TNX`/`^TYX`/`2YY=F`
-      + their `USxxY` aliases) — no VIX-cash row present. The 91-SPOT_PAIR / 9-stray-VX pollutants are gone from
-      the catalogue; the "5 un-deleted INDEX (VIX cash)" pollutant is also gone from the catalogue specifically
-      (a DIFFERENT set of 10 INDEX rows is legitimately live today).
-      **Manifest leg still carries VIX/VX bookkeeping rows** — `market-data-tick-tradfi-prd` bucket,
-      `venue=CBOE, instrument_type=INDEX`: 7,615 rows across 57 unique `instrument_id`s match `VIX`/`VX`
-      (`CBOE:INDEX:VIX-USD`, `CBOE:INDEX:VX.FUT-USD`, plus dozens of `VX/<month><yr>:1:S - VX<n>/<month><yr>:1:B`
-      calendar-spread combos). **Reassuring measurement**: `capture_status` for every one of these 7,615 rows is
-      `empty_confirmed` (5,223) or `expected_unattempted` (2,392) — **zero `captured` rows** — so no live pollutant
-      DATA exists, only manifest bookkeeping entries for instruments that are correctly never captured. Retirement
-      is functionally safe (nothing is served/counted as real coverage) but not yet complete on this leg per the
-      DoD's own bar ("gone… not just de-enumerated") — the rows still physically exist in the manifest. Did not
-      attempt the pause-consolidator→snapshot→filter→resume purge (GCS/manifest deletes are operator-gated per
-      this tranche's standing rules); left `[ ]` open, CBOE's remaining gap is now precisely scoped rather than
-      an estimate. `/data-status` UI surface and `cefi`-domain equity-perp-singles legs not checked this pass.
+      history/other todos.
+      **CBOE — 2026-08-21 (T2) first pass had a real analysis error, CORRECTED same session (operator caught
+      it).** The first pass claimed "zero VX-matching FUTURE rows" and flagged ~7,615 manifest rows as a
+      "VIX/VX pollutant" — **both wrong.** Root cause: a naive `"VX"` substring search against `instrument_id`
+      missed the real symbols, which spell `VIX` (`V`-`I`-`X`, not a `VX` substring), so the search found
+      nothing in the 83-row live FUTURE catalogue slice and then, going back with a broadened `"VIX"|"VX"`
+      regex against the manifest, swept up an UNRELATED population (thousands of calendar-spread-combo
+      enumeration rows shaped `VX/<mo><yr>:1:S - VX<n>/<mo><yr>:1:B`) and mislabelled the whole mixed bag
+      "pollutant." **Re-checked properly:**
+      - `CBOE:FUTURE:VIX-USD@LIN-*` (83 live catalogue contracts, `raw_symbol` like `VX/M0`) is REAL,
+        LIVE, ACTIVELY-CAPTURED Databento (XCBF.PITCH) data — 24,504 `captured` manifest rows under
+        `venue=CBOE, instrument_type=FUTURE, data_type=futures_chain` (bundle-grain: the whole VX futures
+        curve captures as one shard per day, so individual per-contract rows correctly carry no
+        `instrument_id` — not a bug). This is exactly the CFE/VX data the codebase's own
+        `scripts/restamp_cboe_vx_databento_provenance_2026_06_19.py` describes ("Databento (XCBF.PITCH) is
+        the SOLE source... captured rows are preserved, no GCS data deleted") — **never a retirement
+        candidate, should never be purged.**
+      - The genuinely narrow, still-open item is the **VIX CASH INDEX** (a different product — the level,
+        not the futures — historically Yahoo/Barchart-sourced per that same restamp script's own note: "VIX
+        cash INDEX ... a separate source question"): only **17** manifest rows literally match `VIX` under
+        `instrument_type=INDEX` (`ohlcv_15m`×13, `ohlcv_1s`×2, `ohlcv_1m`×2, all `source=databento`) — a
+        SMALL number, not thousands — and the catalogue's live 10 INDEX rows for CBOE are all yield/treasury
+        symbols (`^FVX`/`^IRX`/`^TNX`/`^TYX`/`2YY=F`), confirming no VIX-cash INDEX is live today. Whether
+        these 17 manifest rows are the genuine "5 un-deleted INDEX (VIX cash)" 2026-06-24 pollutant, or
+        something else entirely, was NOT conclusively re-derived this pass — the number moved from an
+        estimated 5 to a measured 17, close enough to plausibly be the same thing, not far enough to assert
+        it confidently.
+      - Catalogue leg otherwise CLEAN: 236 live CBOE rows (COMBO 143, FUTURE 83, INDEX 10), **zero**
+        `SPOT_PAIR` rows — the 91-SPOT_PAIR pollutant is gone from the catalogue.
+      **CBOE VIX-cash-INDEX manifest rows — PURGED 2026-08-21, operator-directed (explicit "purge them, we
+      don't want them" ruling after the re-measurement above).** Confirmed no GCS objects existed behind any
+      of the 17 rows (all `row_count=0`, none `captured`) — a manifest-only purge, nothing to delete on the
+      GCS leg. Built `deployment-service/scripts/migrations/instruments-service/
+      purge_cboe_vix_cash_index_manifest_rows_2026_08_21.py` mirroring the canonical CAS-write pattern
+      (`purge_deprecated_etf_manifest_rows_2026_05_16.py`) plus the mandatory 2026-08-15 manifest-write
+      coordination gate (`_assert_consolidator_paused` hard-abort check, matching
+      `retire_dex_pool_fees_all_captured_rows_2026_08_12.py`'s worked example). Sequence executed and verified
+      at each step: paused `uts-prod-manifest-consolidator-market-data-tradfi-cron`, dry-run confirmed exactly
+      the same 17 rows (none `captured` — the script hard-aborts if any matched row carries `captured`, as a
+      safety net), `--apply` succeeded via CAS write (`if_generation_match`, no race — new generation
+      returned), resumed the consolidator, then a FRESH read (new generation, not cached) confirmed 0 matching
+      rows remain out of 14,475,101 total tradfi manifest rows. **The production purge is complete and verified,
+      and the script itself has now shipped**: `deployment-service@abeca2a5b0` (landed on `live-defi-rollout`
+      after the blocking peer refactor of `scripts/migrations/lib/templates/template_canonicalize.py` was fixed
+      upstream). This closes CBOE's remaining gap on the retirement-completeness
+      DoD's "manifest rows" leg — real VX futures data (`instrument_type=FUTURE`, `futures_chain` bundle,
+      24,504 `captured` rows) is untouched, exactly as it must be. `/data-status` UI surface and `cefi`-domain
+      equity-perp-singles legs still not checked this pass.
 
 ---
 

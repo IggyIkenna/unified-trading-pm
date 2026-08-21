@@ -33,12 +33,9 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch, round-robin, account-failover, overage, multi-provider, kimi, omniroute, openrouter, quality-gates]
 related:
   [
-    /plans/active/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md,
     /plans/active/issues/account_failover_ignores_overage_rejected_2026_08_18.md,
-    /plans/active/issues/ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md,
     /plans/active/issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
-    /plans/active/kimi_gemma_provider_onboarding_2026_08_16.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
@@ -170,11 +167,9 @@ now — with DeepSeek gated out almost always, the alphabetical waterfall runs c
 - **Accounts-tab dashboard display**: `GET /api/accounts`'s `used_by_slots` (`routes/accounts.py:104`)
   is a live SQL join computed fresh on every call, not cached/stale. No display bug — the fleet really
   is that skewed.
-- **GLM's 0-selections anomaly**: NOT explained in this pass. GLM is registered, healthy,
-  `weekly_pct: 0`, has no dollar-balance concept to trip `_account_has_balance_headroom`, yet got zero
-  selections in 24h with no corresponding skip/failure event either — meaning it isn't reaching
-  `_live_free_combo_ids` at all, or the in-memory failure ring has excluded it since before this
-  session's process-restart window. Flagged as an open follow-up (todo 6), not chased further here.
+- **GLM's 0-selections anomaly**: flagged here as unexplained, later **root-caused and confirmed
+  resolved** — see Part 6 item 5 (bug 3's `free_provider_priority` fix was the fix; GLM got 27
+  selections in the first 2h post-ship).
 
 ## Part 2 — Kimi/OmniRoute/OpenRouter provider removal (SHIPPED)
 
@@ -296,21 +291,168 @@ OMS-persistence task) kept getting bounced and requeued.
   NOT. Full `quality-gates.sh`: 5280 passed / 4 skipped, coverage 86.06% (baseline 85.86%,
   ratchet-clean).
 
-**Not yet done**: `gemini-3-5-flash-lite-proj1` is still paused — re-enabling it is an operator
-call (todo below), and there's no live-traffic proof yet that 4a/4b together prevent a RECURRENCE
-of the same pile-up under a fresh bulk-sweep trigger (the next time an account gets disabled
-with many bound slots).
+**Superseded by Part 5** (the "not yet done" note originally here — no RECURRENCE proof yet — is
+addressed by the audit + fix below; kept as history, not re-stated).
+
+## Part 5 — bug 4a's exact pattern found in the ROUTINE refill/resume paths too (SHIPPED)
+
+Operator: "we dont have to check that in day or two, we have to check it in two hours. see if you
+can find any other issues related to it." Audited every `select_account_for_spawn`/
+`select_account_with_non_strict_retry` call site in the fleet (17 total) for the SAME
+bulk-selection-before-any-commit shape bug 4a was fixed in.
+
+**Found**: `AutoSpawnLoop._run_one_tick` (the ROUTINE refill tick — runs constantly, not just on a
+rare account-disable event) and `AutoSpawnLoop._resume_pass` (dead-worker resume) both pick an
+account per slot inside one DB session via `select_account_with_non_strict_retry`, with the actual
+spawn/resume deferred to a later concurrent phase (`_do_spawns_concurrently`) — the IDENTICAL shape
+that let bug 4a pile 13 slots onto one account, just in the high-frequency path instead of the rare
+bulk-sweep path. Every OTHER call site was checked and ruled out (single-item decision points, not
+batch loops): `escalation.escalate()`/`_maybe_alert_pool_exhaustion` (one PR/wall or a
+headroom-only check, not a dispatch), `plan_health.dispatch()` (one scheduled job per call),
+`main_agent_keeper`'s 4 call sites (the singleton main-agent slot, not a fleet loop),
+`worker_liveness_watchdog._handle_usage_cap` (loops over slots but acts — kill + respawn —
+synchronously per slot before the next iteration, so it doesn't share the staleness mechanism).
+Also confirmed no `@lru_cache`/similar caching on the headroom-check functions that could add a
+DIFFERENT kind of staleness.
+
+**Fix**: `agent-orchestrator@ba855161ae`. Generalized `select_account_with_non_strict_retry` to
+accept `exclude_ids` (mirrors `select_account_for_spawn`'s own bug-4a parameter). Factored the
+exclude+round-reset spreading logic into a new shared helper,
+`autospawn.select_account_with_tick_spread` (mutates a caller-owned `set[str]` in place — adds a
+successful pick, clears-then-reseeds on a round-reset) — needed as a separate function, not inlined
+twice, both to avoid duplicating the logic AND to keep `_run_one_tick` under the ruff C901
+complexity ceiling once the extra branching was added inline (first attempt tripped it: 28 > 26).
+Both `_run_one_tick` and `_resume_pass` now call it instead of `select_account_with_non_strict_retry`
+directly. 4 new regression tests for the shared helper. 1240+ tests across all four bug areas pass;
+full `quality-gates.sh` green (5284 passed/4 skipped, coverage 86.06%). Live-verified: root checkout
+restarted onto `ba855161ae` at 10:20:30 UTC.
+
+**Process note**: shipping this hit a real async-wait trap worth recording — the FIRST
+`quality-gates.sh` background run reported "completed, exit 0" via the harness notification, but the
+scratchpad session directory its output was redirected into had been silently rotated away mid-run
+(the harness's own session-id changed, same class of issue Part 3 item 2 already documented), so the
+"pass" was actually a phantom — the log file didn't exist and QG likely never ran at all. A SECOND
+attempt then hit the OTHER known trap (Part 3 item 1's cousin): the session's persisted cwd had
+drifted to the bare workspace root between calls, so `quality-gates.sh` genuinely failed
+("No such file or directory") while still reporting exit 0 for the wrapping echo. Only a THIRD
+attempt, with the `cd` and the log path both baked into the SAME self-contained backgrounded command
+and the resulting log file's line count verified (9331 real lines, not a stub), produced trustworthy
+evidence. Lesson: a "completed, exit 0" notification is not itself proof of a real pass — read the
+log content and check it isn't suspiciously short/absent before shipping on it.
+
+## Part 6 — 2-hour live-effectiveness recheck: CONFIRMED EFFECTIVE (bugs 4a/4b/5 + GLM anomaly)
+
+Operator directive (2h after shipping, not "a day or two"). `CronCreate` job `be0aad88` fired on
+schedule but the check was deliberately deferred at ~98% context (pre-compact); re-run manually this
+session against the LIVE checkout's `activity_log` via `server.db.get_session_factory()`, window
+2026-08-21T10:20:30Z (`ba855161ae` ship) → 2026-08-21T13:52Z (check time, live checkout by then at
+`d4893b4c`, same fix lineage, no intervening dispatch-logic changes). 3419 activity_log rows in
+window.
+
+**1. Dispatch spread — confirmed, no monopolization.** 705 account-attributed selection events
+across **18 distinct accounts**. Top account (`gemini-3-5-flash-lite-proj3`) holds 19.6% share;
+next four each 13-16%. No account holds a majority — a structurally different pattern from the
+pre-fix near-100%-on-one skew Part 1 measured.
+
+**2. Bulk-sweep spreading (bug 4a) — directly observed live, working.** At 12:41:18-12:41:40 UTC the
+operator disabled `gemini-3-5-flash-lite-proj2`/`proj3` (and briefly `deepseek-v4-flash`/`-pro`,
+re-enabled seconds later — an unrelated toggle, not investigated further), triggering
+`rotate_all_slots_off_account` sweeps that moved 14 slots off the two disabled Gemini accounts.
+Destinations: `glm-5-2`×3, `sub-e-odum2default`×3, `glm-5-turbo`×2, `gemma-self-hosted`×2,
+`sub-f-odum2default`×2, `gemini-3-5-flash-lite-proj2`×1, `sub-h-igboestates`×1 — **7 distinct
+destination accounts**, roughly even split, no pileup. This is exactly the `exclude_ids` fix's
+intended behavior; pre-fix this shape piled every slot onto the single first-ranked account (Part 4).
+
+**3. Resume-pass spreading (bug 5) — directly observed live, working.** 7
+`worker_account_unusable_killed` events this window, all on `gemini-3-7-flash-proj2` (4×) /
+`gemini-3-7-flash-proj3` (3×) — the LOW-volume Gemini accounts hitting real RPM/RPD ceilings
+mid-session, triggering the proactive failover kill (`autospawn.py:4029`, working-as-designed
+self-healing, not a bug). Every one of the 7 kills was followed by a successful resume onto a
+**different** account (`sub-e-odum2default`, `glm-5-turbo`, `gemini-3-5-flash-lite-proj2`/`proj3`) —
+no repeat pileup onto the just-exhausted account, confirming `select_account_with_tick_spread`'s
+exclusion is live-effective in `_resume_pass` too, not just `_run_one_tick`.
+
+**4. Root cause of the "Gemini dying/going stale" symptom — isolated, and it is NOT the routing bug
+post-fix.** It is `gemini-3-7-flash-proj2`/`proj3` specifically (2 of 10 Gemini accounts) hitting
+real upstream RPM/RPD limits mid-session. The high-volume Gemini accounts
+(`gemini-3-5-flash-lite-proj2/3/4`, 93-138 selections each) show low death/selection ratios
+(0.02-0.04) — healthy. The system now self-heals this correctly (kill + respread across providers)
+rather than looping or piling back onto the same exhausted account.
+
+**5. GLM's "0-selections-in-24h" anomaly (Part 1 "Ruled out", flagged but not chased) — CONFIRMED
+RESOLVED, root cause was bug 3.** GLM got 27 selections this 2h window (`glm-5-2`: 13, `glm-5-turbo`:
+14), both `account_status: healthy`, `five_hour_pct` 8-9%, `last_used_at` current at check time.
+`free_provider_spawn_selected` events show GLM being picked both by `autospawn_refill`'s
+`free_provider_priority` walk and by `server_rotate_all_slots_off_account` during the sweep above —
+both call sites bug 3's fix touches (`free_provider_priority` default `["deepseek"]` → `["deepseek",
+"gemini", "glm", "ollama", "codex"]`). The old all-deepseek default meant GLM's `_live_free_combo_ids`
+branch was structurally unreachable whenever DeepSeek was gated — matches the original symptom
+exactly. No separate GLM-specific bug found; closing without further chase.
+
+**New minor observations (not chased further, not bugs in bugs 4a/4b/5's scope — logged as todos
+below):**
+- `sub-e-odum2default`/`sub-f-odum2default` (Claude) show elevated death/selection ratios
+  (0.387/0.385) vs. the healthy Gemini accounts (0.02-0.04) — but on small samples (31/13
+  selections), so not conclusive yet.
+- 2 GLM deaths this window were real upstream 429s ("Usage limit reached for 5 hour") where the
+  `account_snapshot.account_status` embedded in the death event still read `"healthy"` — a small lag
+  between the real-time API rejection and the DB's cached `account_status`/poller state, not a
+  dispatch-routing bug.
+
+**Verdict: bugs 4a/4b/5 hold under live 2h+ traffic. No further round-robin/dispatch fix work
+identified.** Evidence script (one-shot, not promoted — see Deferred/lessons section): live
+`activity_log` queries against `ActivityRow` (`event_type`, `slot_id`, `details_json`), joining death
+events to accounts via each slot's most-recent account-carrying event, run directly against
+`server.db.get_session_factory()` from the live checkout.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Re-enable `gemini-3-5-flash-lite-proj1` (paused 2026-08-21 as bug 4a/4b's
-      immediate stopgap — see Part 4) once comfortable the fix prevents a recurrence, or leave
-      paused if the account has an independent problem worth investigating further first.
-- [ ] [DATA] P3. Re-check bug 4a/4b's live effectiveness a day or two out: does a fresh bulk
-      account-sweep (any account, not just Gemini) spread across multiple destinations instead
-      of piling onto one, and does a repeatedly-dying account's `free_provider_spawn_selected`
-      share drop off after a few `tmux_session_lost` events instead of staying flat. Repo:
+- [x] [OPERATOR] P2. ✅ **RESOLVED 2026-08-21 — operator resumed all Gemini accounts.** Confirmed live:
+      `data/config/accounts.json` shows `account_status: null` (enabled) for all 10 `gemini-*`
+      accounts; `activity_log` shows `account_enabled` events for `gemini-3-5-flash-lite-proj1/2/3/4`
+      at 12:41:49-12:42:19 UTC and `gemini-3-7-flash-proj4/5`, `gemini-3-5-flash-lite-proj5` at
+      13:49:22-13:49:32 UTC. Part 6's recheck (above) confirms the fleet handles the full 10-account
+      Gemini pool correctly post-resume — no pileup, proper spread.
+- [x] [DATA] P3. ✅ **DONE 2026-08-21 — see Part 6.** 2-hour live-effectiveness recheck of bugs 4a/4b/5
+      executed (deferred from the original cron firing, re-run manually this session). Result:
+      effective — dispatch spread across 18 accounts, bulk-sweep spreading confirmed live (7 distinct
+      destinations across 14 slots), resume-pass spreading confirmed live (7/7 unusable-kills
+      resumed onto a different account), no monopolization pattern recurred. Repo: agent-orchestrator.
+- [x] [DATA] P3. ✅ **DONE 2026-08-21 — see Part 6 item 5.** GLM's 0-selections-in-24h anomaly
+      resolved: root cause was bug 3 (`free_provider_priority` defaulting to `["deepseek"]` only,
+      never falling through to GLM). Confirmed live: GLM got 27 selections in the 2h post-fix window,
+      both accounts healthy and actively used. No separate GLM-specific bug. Repo: agent-orchestrator.
+- [ ] [DATA] P3. **NEW, found during Part 6's recheck.** `sub-e-odum2default`/`sub-f-odum2default`
+      show elevated death/selection ratios (0.387/0.385) vs. the healthy high-volume Gemini accounts
+      (0.02-0.04) in the 2h window — but on small samples (31/13 selections each), not conclusive.
+      Re-check once more traffic accumulates (a day+); if the ratio holds on a larger sample,
+      investigate why Claude sub-accounts die more often per-selection than Gemini. Repo:
       agent-orchestrator.
+- [ ] [DATA] P3. **NEW, found during Part 6's recheck.** 2 GLM `tmux_session_lost` deaths this window
+      were real upstream 429s, but the death event's embedded `account_snapshot.account_status` still
+      read `"healthy"` at the moment of death — a small lag between the real API rejection and the
+      DB's cached account-health state (poller/status-write timing, not a dispatch-routing bug). Not
+      chased further; worth a look if it turns out to cause a mis-routed spawn onto an
+      already-rate-limited account. Repo: agent-orchestrator.
+- [ ] [OPERATOR] P2. **NEW, found live 2026-08-21 15:37-15:42 UTC by an `/ao-watchdog` run.** The
+      2026-08-21 12:41-13:49 resume above (`account_status: null` for all 10 gemini-* accounts) put
+      `gemini-3-5-flash-lite-proj4` and `gemini-3-7-flash-proj4` back in the live selection pool, but
+      neither ever had a real credential file provisioned — they were created paused on 2026-08-16
+      (`grok_gemini_translation_proxy_2026_08_14.md`, "paid proj4 pair kept registered-paused as an
+      inert spare") and cancelled the same day ("not needed, no longer relevant"), so unlike
+      proj1/2/3/5 nobody ever ran `claude setup-token` for them. Confirmed live:
+      `~/.claude-accounts/gemini-3-5-flash-lite-proj4.env` does not exist on the planning VM
+      (proj1/proj2/proj3 all do). Every spawn that selects proj4 503s
+      (`env_file ... does not exist; cannot authenticate spawn`) — this is what the sibling doc's
+      "worth a look if it recurs" note (`ci_escalation_reserve_slots_claimed_by_class_a_dispatch_2026_08_21.md`,
+      3 consecutive `escalation_dispatch_failed` events 13:01-13:26 UTC) was flagging, and it has now
+      recurred via a second pathway: `data-pipeline-alerts-reconciler.service` failed at 15:37 UTC and
+      `escalation-queue-reconciler.service` failed at 15:42 UTC, both on this exact error, both
+      systemd-timer-driven so they will keep failing every cycle until either an operator runs
+      `claude setup-token` for proj4/proj4-flash and writes the two `.env` files, or the two accounts
+      are re-disabled. Needs an operator call (credential provisioning is an interactive OAuth flow,
+      not scriptable) — surfaced live in chat the same session this was found. Repo: agent-orchestrator
+      (env-file provisioning is host-level, not a code change).
 - [x] [SCRIPT] P3. **Found while verifying bug 1 post-ship.** The live (gitignored, per-VM)
       `data/config/accounts.json` on the planning VM still carried 3 dead Kimi entries
       (`kimi-k3`/`kimi-k2-6`/`kimi-k2-7-code`) — harmless (gracefully skipped) but not a true "removed
@@ -349,29 +491,75 @@ with many bound slots).
       check regardless of actual usage — providers with an observable real signal (Gemini RPM/RPD, GLM's
       `glm_quota_poller.py` pct fields) get first refusal instead. Operator: flag if a different order is
       wanted; the config default is a one-line change (`server/config.py` ~line 1600).
-- [ ] [OPERATOR] P2. Top up the DeepSeek wallet (currently `-$0.63`, shared by both
-      `deepseek-v4-flash`/`deepseek-v4-pro`) — real, separate exhaustion, not a routing bug, but it's
-      what makes bug 3 bite constantly right now.
-- [ ] [DATA] P3. Investigate GLM's 0-selections-in-24h anomaly (Part 1, "Ruled out" section) — not
-      explained by any check in this pass. Repo: agent-orchestrator.
-- [ ] [SCRIPT] P3. Update the 3 plan docs the Kimi/OmniRoute/OpenRouter removal (Part 2) touches but
-      hasn't yet updated: `kimi_gemma_provider_onboarding_2026_08_16.md` (Kimi-specific todos/Progress
-      Log — leave Gemma untouched), the archived OmniRoute evaluation doc (closing Progress Log entry
-      noting the pilot code itself is now deleted, not just unused), and
-      `deepseek_claude_blended_provider_routing_2026_07_28.md` (short note that OpenRouter was
-      evaluated as a Phase-2 candidate provider and removed as unused code debt). Repo:
-      unified-trading-pm.
-- [ ] [BACKEND] P3. Add a line to `SUB_AGENT_MANDATORY_RULES.md`'s per-slot-worktree section making it
-      explicit that a delegation prompt to a sub-agent must name the operator's assigned slot path,
-      never the bare `<repo>/` root — the concrete gap Part 3 item 1 found. Stay inside the file's 10KB
-      budget. Repo: unified-trading-pm. (Also tracked as todo 4 in
-      `ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md` — resolve in one place, cross-reference
-      the other.)
+- [x] [SCRIPT] P3. ✅ **DONE 2026-08-21.** Updated the 3 plan docs the Kimi/OmniRoute/OpenRouter removal
+      (Part 2) touched but hadn't yet updated: `kimi_gemma_provider_onboarding_2026_08_16.md` (Kimi
+      todos flipped SUPERSEDED, Gemma left untouched — Gemma succeeded, is `gemma-self-hosted` in prod),
+      the archived OmniRoute evaluation doc (closing Progress Log entry: the pilot code itself is now
+      deleted, not just unused), and `deepseek_claude_blended_provider_routing_2026_07_28.md` (note that
+      OpenRouter was a Phase-2 candidate, removed as unused code debt). Repo: unified-trading-pm.
+      **Follow-on, found while shipping**: `kimi_gemma_provider_onboarding_2026_08_16.md` hit 0 open
+      todos as a direct result — archived per the workspace's archive-immediately HARD RULE
+      (`status: complete`, `git mv`'d to `plans/archive/2026_08/`, `plans/epics/orchestrator_master.md`'s
+      2 structural links repointed). Not fixed in the same commit (deliberately out of scope — touching
+      8 unfamiliar, possibly-in-use active plans unilaterally is exactly what the multi-agent-safety
+      rules warn against): 8 OTHER active plans still cite the pre-archival active-path form of
+      `kimi_gemma_provider_onboarding_2026_08_16.md` in their own `related:` frontmatter and will dangle
+      once that path no longer resolves (`check_reference_paths.py`'s
+      corpus-wide sweep will flag these as new violations against its shrinking-ratchet baseline the
+      next time it runs unscoped, since my archival commit only ran the `--only`-scoped check against
+      files I staged). Fix: `check_active_refs_archived_plans.py` bans a `related:` field citing a
+      `/plans/archive/...` path too — so REMOVE each dead `related:` entry outright (or repoint to a
+      codex doc if one now covers what it referenced), never just swap in the new archive path. Files
+      (grepped 2026-08-21, may drift, all `plans/active/` unless noted):
+      `codex_mcp_tool_use_bridge_2026_08_18.md:19`, `multi_provider_model_capability_bakeoff_2026_08_19.md:22`,
+      `issues/gemma_4_31b_it_persistent_timeout_2026_08_19.md:22,42`,
+      `ao_satellite_ao_dispatch_batch25_2026_08_19.md:32,61`,
+      `issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md:31`,
+      `../audit/provider_smoke_test_registry_2026_08_18.md:29`.
+
+      **Referrer cleanup closed 2026-08-21 (interactive session, later)**: 5 of the 6 files above had
+      their dead `related:` entry removed this session while closing an unrelated todo in
+      `worker_slot_account_exhaustion_no_rotation_2026_08_19.md` (same class of dangling reference,
+      found opportunistically): `codex_mcp_tool_use_bridge_2026_08_18.md`,
+      `issues/gemma_4_31b_it_persistent_timeout_2026_08_19.md` (both citations),
+      `issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md`,
+      `../audit/provider_smoke_test_registry_2026_08_18.md`. The 6th listed file
+      (`multi_provider_model_capability_bakeoff_2026_08_19.md`) has itself since been archived, so its
+      own citation is now frozen historical record, out of scope by construction. **Not closed**:
+      `ao_satellite_ao_dispatch_batch25_2026_08_19.md` (found via a fresh grep, wasn't in this todo's
+      original file list) still cites `/plans/archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md`
+      in its `related:` block — repointed to the resolving archive path rather than removed, which
+      clears `check_reference_paths.py` but still violates `check_active_refs_archived_plans.py`'s
+      policy. Left unfixed (not part of this session's staged set); tracked as a real `- [ ]` todo below
+      this time, per the HARD RULE this very paragraph violated the first time around (a prose
+      follow-on with no tracked checkbox).
+- [ ] [SCRIPT] P3. **Found 2026-08-21 while closing out the todo above's referrer-cleanup follow-on.**
+      `ao_satellite_ao_dispatch_batch25_2026_08_19.md` (lines ~32, ~61) cites
+      `/plans/archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md` directly in its `related:`
+      frontmatter — resolves fine (`check_reference_paths.py` clean) but violates
+      `check_active_refs_archived_plans.py`'s policy (active docs must repoint at codex, never cite an
+      archive path directly). Fix: REMOVE both entries outright (or repoint to a codex doc if one now
+      covers what they referenced). Repo: unified-trading-pm.
+- [x] [BACKEND] P3. ✅ **DONE 2026-08-21.** Added a line to `SUB_AGENT_MANDATORY_RULES.md`'s per-slot-
+      worktree section: "If YOUR prompt never named an absolute `.tabs/<N>/` path, STOP and ask — never
+      default to the bare repo root." Also condensed the existing incident sentence to make room. File
+      now 10,119 B, under the 10,240 B (10 KiB) hard cap (`check_agent_rules_size_cap.py`). Repo:
+      unified-trading-pm. (Also tracked as todo 4 in `ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md`
+      — flipped there too, same edit.)
 
 ## Codex SSOTs
 
+- `/codex/04-architecture/agent-orchestrator-autospawn.md` — **rewritten 2026-08-21**
+  (`unified-trading-pm@98d7642c05`) as the primary SSOT for this whole issue: its "Account-pick
+  rotation" section previously described a single-provider (Claude-only) picker with no mention of
+  the multi-provider blend, `free_provider_priority`, Phase 4 rotation, or `account_is_usable`'s real
+  semantics — completely silent on everything bugs 1-5 fixed. Now documents the full
+  `select_account_for_spawn` decision chain, the bulk-selection spreading mechanism, and the
+  health-failure ring. Also fixed a stale 95%→99% pct-ceiling default that had drifted from the code
+  across the whole doc (trigger-contract table, env-var table, anti-patterns section).
 - `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` — multi-account auth model this
-  bug lives in.
+  bug lives in (per-account token/credential rotation — a distinct, correctly-scoped concern from the
+  multi-PROVIDER routing bugs 1-5 fixed; not touched by this pass).
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — worker lifecycle/dispatch
   model the Phase-4 rotation plugs into.
 - `/codex/05-infrastructure/per-tab-worktrees.md` — the per-slot worktree contract Part 3 item 1
@@ -415,3 +603,30 @@ with many bound slots).
   reaching multiple Gemini sub-accounts, both GLM accounts, and multiple Claude accounts, not just
   `codex-luna` — bugs 1-3 are working as intended; the "dying/stale" symptom was entirely bugs 4a/4b,
   not a shortfall in bugs 1-3's fix.
+- **2026-08-21 (slot 13, interactive, later same session)**: operator corrected the re-check interval
+  to 2 hours (not "a day or two") and asked for a further audit for related issues. Found bug 4a's
+  exact pattern also present in `_run_one_tick`/`_resume_pass` (Part 5) — the routine, high-frequency
+  paths, not just the rare bulk-sweep one. Fixed, tested, shipped `agent-orchestrator@ba855161ae`,
+  live-verified via `orchestrator.service` restart (10:20:30 UTC). Scheduled a session-scoped one-shot
+  check (CronCreate `be0aad88`, fires ~12:02 UTC) to re-verify live effectiveness. Hit and recovered
+  from two real async-wait traps while shipping this (see Part 5's "Process note") — a phantom QG
+  "pass" from a rotated-away scratchpad session directory, then a genuine QG failure masked by cwd
+  drift — worth remembering: a background task's "completed, exit 0" notification is not itself proof
+  of a real pass.
+- **2026-08-21 (slot 13, interactive, later same session)**: operator asked to update the codex docs
+  so the round-robin mechanism is documented correctly (post-phase codex audit, CLAUDE.md's own
+  standing rule after a major phase). Found `/codex/04-architecture/agent-orchestrator-autospawn.md`
+  — the doc `authoritative_for: agent-orchestrator AutoSpawn worker-spawn architecture` — completely
+  silent on the multi-provider blend this whole issue lives in: its "Account-pick rotation" section
+  described a single-provider Claude-only picker, no mention of `free_provider_priority`, Phase 4
+  rotation, or `account_is_usable`'s real (post-2026-08-18, post-bug-1) semantics; separately, a
+  95%→99% pct-ceiling default had drifted stale across the whole doc. Rewrote the section end to end
+  (decision chain, bulk-selection spreading, health-failure ring), fixed every stale ceiling
+  reference, fixed two other stale pointers found in passing (a dead "Overview pointer" section
+  reference, an archived-not-active plan path) — both per CLAUDE.md's "a doc/pointer that misled you
+  is a finding, fix it in the same turn" rule. Validated with the repo's own
+  `check_frontmatter_schema.py` (clean) and `check_reference_paths.py` (0 new dangling refs, ratchet
+  held at the existing baseline of 34) before shipping. Shipped `unified-trading-pm@98d7642c05`. The
+  multi-account AUTH doc (`claude-cli-multi-account-headless-auth.md`) was checked and correctly
+  left untouched — its scope (per-account credential/token rotation) is genuinely distinct from the
+  multi-PROVIDER routing this issue is about, confirmed via grep before deciding not to touch it.

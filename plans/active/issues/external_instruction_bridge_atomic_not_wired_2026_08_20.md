@@ -37,7 +37,7 @@ tags: [execution-service, external-api, bridge, atomic, instruction-vocabulary, 
 related:
   [
     /plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md,
-    /plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md,
+    /plans/archive/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md,
   ]
 created: 2026-08-20
 source: >-

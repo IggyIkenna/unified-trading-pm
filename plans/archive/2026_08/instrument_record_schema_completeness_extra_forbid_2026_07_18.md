@@ -8,7 +8,7 @@ summary:
   extra='forbid' + run IS adapter tests) surfaced ~4 systemic undeclared kwargs across ~30 adapters — symbol /
   min_order_size / is_active / updated_at (+ more candidates from a static scan). This plan gets the authoritative list,
   decides per-field add-to-schema vs remove-from-caller, applies it, and flips extra='forbid' so future drops fail LOUD.
-status: active
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -49,6 +49,11 @@ superseded_by:
 ---
 
 # InstrumentRecord schema-completeness + extra='forbid'
+
+> **ARCHIVED 2026-08-21** — all todos done. Flip: unified-api-contracts@cdb8ae8806 (T1, 2026-08-21). Codex audit
+> done (honest-absence-downstream-handling.md). INDEX.md / plans/epics/instruments_master.md still reference the
+> pre-archive path via relative links -- not hand-fixed here (both are typically inventory-regen-maintained;
+> flagged as a follow-up rather than risking a hand-edit that fights the next regen).
 
 **Operator ruling (2026-07-18):** do the schema-completeness version — decide per-field whether each silently-dropped
 kwarg SHOULD be captured (add to `InstrumentRecord` + the parquet schema) or removed from the caller — then flip
@@ -133,15 +138,24 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
       `test_base_adapter.py` (2 test fixtures); corrected a stale docstring in
       `test_prediction_adapters_comprehensive.py`. 421 adapter tests + full `quality-gates.sh` green. Evidence:
       `instruments-service@588f35aeb0`.
-- [ ] [DATA] P1. **Flip `extra='forbid'`** — add `model_config = ConfigDict(extra="forbid")`; UAC + IS suites green
+- [x] ✅ [DATA] P1. **Flip `extra='forbid'`** — add `model_config = ConfigDict(extra="forbid")`; UAC + IS suites green
       (proves no remaining undeclared-kwarg caller). Add a UAC test asserting an unknown kwarg now RAISES.
       **Filed to T1 2026-08-20** — `InstrumentRecord` lives in `unified-api-contracts/unified_api_contracts/internal/
       reference/instrument.py`, outside this tranche's 3 owned repos (instruments-service, market-tick-data-service,
       market-data-processing-service). Every REMOVE-verdict caller is now clean (todo above, fully done) — the flip
       itself is unblocked and ready whenever T1 picks it up. See
       `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`'s `## Inbound requests`.
-- [ ] [REVIEW] P2. **Post-phase codex audit** — note the extra='forbid' contract + any new fields in
+      **Done (T1, 2026-08-21)** — unified-api-contracts@cdb8ae8806. Found + fixed one more undeclared-kwarg call
+      site the earlier sweep missed (`tests/internal/unit/test_uic_ac_alignment.py`'s `symbol=` kwarg) and added 4
+      new regression tests (`tests/unit/test_instrument_record_extra_forbid.py`) asserting: a minimal valid record
+      still constructs, an unknown kwarg raises, each of the 5 previously-removed fields individually raises if
+      resurrected, and a genuinely-declared optional field (`expiry`) is unaffected. Full `quality-gates.sh` green.
+- [x] ✅ [REVIEW] P2. **Post-phase codex audit** — note the extra='forbid' contract + any new fields in
       `honest-absence-downstream-handling.md` + the InstrumentRecord docstring; confirm no plan↔codex drift.
+      **Done** — added a "Related field-level silent-drop" section to `honest-absence-downstream-handling.md`
+      (§6A family) documenting the fix as the field-level sibling of the manifest-row silent-drop classes already
+      catalogued there. InstrumentRecord's own docstring/module comment already documents the contract inline
+      (added in the same commit as the flip).
 
 ## Progress Log
 

@@ -74,7 +74,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-20
+last_updated: 2026-08-21
 locked_since:
 context_scope:
   [
@@ -353,6 +353,27 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
       instead of re-firing every sweep. Source-side defense-in-depth, independent of (and does not replace)
       the alerting-service GCS-persistence fix this doc already tracks — closes the corrected claim above.
       Confirmed by direct code read, not a guess. Repo: deployment-service.
+- [ ] [CODE] P2. **ADDED 2026-08-21 (data_pipeline_failure escalation worker, slot 22, agt-6ea9c3)** — a
+      NEW, distinct candidate mechanism, in a DIFFERENT repo/blob than every fix above: `deployment-service`'s
+      OWN source-side `MissTracker` (`deployment_service/data_pipeline_monitors/_miss_tracker.py`, GCS blob
+      `vm-census/dp-miss-counters.json`) appears to have skipped its `DEFAULT_MIN_CONSECUTIVE_MISSES=2`
+      "below-threshold" grace stage for one specific `check_cron_fired` (DP-WATCHER-002) target — see this
+      session's Progress Log entry below for the full evidence chain. **NOT YET CONFIRMED as the actual
+      mechanism** — did not read the raw `vm-census/dp-miss-counters.json` blob content (no `gcloud storage`
+      subprocess allowed per this workspace's guardrail, and no UTL-installed venv was already provisioned in
+      this one-shot session to read it via `StorageClient`) — so this is a plausible-but-unverified hypothesis,
+      not a confirmed root cause. Next dispatch: read `vm-census/dp-miss-counters.json` (via UTL
+      `StorageClient`, never `gcloud storage`/`gsutil`) at/around the `manifest-consolidator-defi` miss_key
+      before and after the 2026-08-21T15:50:46Z/16:04:51Z sweep pair to confirm whether the pause-suppression
+      reset at 15:50:46 actually persisted, or whether `MissTracker.persist()` (called once at end-of-sweep,
+      AFTER `check_cron_fired` runs per `cli.py`'s own incremental-persist comment at line ~768) lost the
+      update to a concurrent/overlapping write — the exact failure SHAPE (a later reader not seeing an earlier
+      writer's update to a shared GCS-JSON blob) already fixed once in this doc's `alerting-service`
+      `RecurringCooldownState.record()` (`ac21303714`, blind full-dict overwrite → merge-before-write), but
+      `_miss_tracker.py`'s `persist()` still does the same un-merged `json.dumps(self._counts, ...)` full-blob
+      overwrite (`_miss_tracker.py:76-88`) — if confirmed, the identical merge-before-write fix pattern applies
+      here too. Did not attempt a code fix this session — unconfirmed mechanism, `does_not: guess at an
+      ambiguous fix`. Repo: deployment-service.
 
 ## Progress Log
 
@@ -647,3 +668,43 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   reconfirmation, unrelated to the dedup mechanism) was recorded on
   `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md` instead, where its own P1 todo
   already tracks it. Completing via `/done`.
+- **2026-08-21 (data_pipeline_failure escalation worker, slot 22, agt-6ea9c3)**: dispatched off a CRITICAL
+  `DP_CRON_DID_NOT_FIRE` (DP-WATCHER-002, `check_cron_fired`) escalation naming `cron 'manifest-consolidator-defi'
+  did not fire on schedule (last output 566m ago)` (no issue slug — alert-carries-the-details path). Live-verified
+  ground truth first, per role contract: `gcloud scheduler jobs list` shows
+  `uts-prod-manifest-consolidator-market-data-defi-cron` `ENABLED` (`*/1 * * * *`); `gcloud run jobs executions
+  list --job=uts-prod-manifest-consolidator-market-data-defi` shows 5 consecutive `Completed=True` executions
+  16:07:05Z-16:11:37Z (i.e. currently healthy, executing every ~1min, well inside DP-WATCHER-002's 180min budget)
+  — **not a live pipeline outage**. Traced the alert's own history via `gcloud logging read` against
+  `uts-prod-dp-meta-watchers`'s own `meta_watchers` log lines (not Slack): the SAME target
+  (`label="manifest-consolidator-defi"`, per `deployment_service/data_pipeline_monitors/meta_targets.py:246`'s
+  `cron_targets()`, resolving to bucket `market-data-tick-defi-prd-central-element-323112`) was CORRECTLY
+  pause-suppressed at 15:34:50Z and 15:50:46Z (`"scheduler job 'uts-prod-manifest-consolidator-market-data-defi-
+  cron' is PAUSED (paused-by-design during the manual-backfill campaign)"`, `check_cron_fired`'s KEY #2
+  pause-awareness, `meta_watchers.py:850-864`), then paged CRITICAL at 16:04:51Z with NO suppression logged and
+  — notably — WITHOUT the expected intervening `"below consecutive-miss threshold (1/2)"` INFO line that fired
+  in the exact SAME 16:04:51Z sweep for the sibling `'manifest-consolidator-cefi'` target. `MissTracker.register`
+  (`_miss_tracker.py:66-74`) resets a key's persisted count to 0 on every suppressed/fresh probe, and
+  `DEFAULT_MIN_CONSECUTIVE_MISSES=2` at a `*/15` sweep cadence means a fresh miss immediately after a reset
+  should log the same "1/2 below-threshold" INFO line the cefi target logged in this identical sweep, not page —
+  `uts-prod-dp-meta-watchers`'s own execution history (`gcloud run jobs executions list`) shows BOTH the
+  15:45:05Z→15:51:49Z sweep (containing the 15:50:46Z suppression+reset) and the 16:00:17Z→16:05:49Z sweep
+  (containing the 16:04:51Z page) completed successfully (`Completed=True`), ruling out the "sweep crashed before
+  its end-of-sweep persist" failure shape a code comment at `cli.py:768-774` explicitly documents as a known
+  prior incident (2026-08-10). Net: the counter that produced the page appears to have already been ≥1 BEFORE
+  the 16:04:51Z sweep's own single fresh miss, despite the 15:50:46Z reset — i.e. the reset may not have
+  durably persisted, the same general failure SHAPE (a GCS-JSON-blob writer's update getting silently lost to a
+  later reader) this doc already root-caused once for `alerting-service`'s `RecurringCooldownState.record()`
+  (blind full-dict overwrite, fixed at `ac21303714` by merge-before-write) — but in a DIFFERENT repo/blob
+  (`deployment-service`'s own `_miss_tracker.py` / `vm-census/dp-miss-counters.json`, not `alerting-service`'s
+  `cooldowns.json`). **Did NOT confirm this directly** — reading the raw persisted JSON blob requires either a
+  `gcloud storage` subprocess call (blocked by this workspace's own `block_destructive_commands.py` guardrail,
+  which routes ALL GCS object reads through UTL's `StorageClient`/`gcs_describe_object`, never a CLI) or a
+  UTL-installed venv (none was already provisioned in `market-tick-data-service`'s worktree this session, and
+  standing one up from scratch was judged disproportionate for a one-shot escalation whose underlying pipeline
+  is already confirmed healthy) — so this is recorded as an evidenced-but-unconfirmed hypothesis, not a root
+  cause, per role contract (`does_not: guess at an ambiguous fix`). Added the new P2 todo above rather than
+  attempting a speculative code change. No code shipped this session (no bug to fix in the data pipeline itself —
+  the manifest-consolidator-defi cron IS healthy right now); this doc-only edit shipped via `safe-doc-push.sh`.
+  `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id, so skipped the authoring-slot ping per the
+  boot-prompt's skip rule — the dispatch-time Slack alert already covered the FYI. Completing via `/done`.

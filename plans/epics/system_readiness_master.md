@@ -65,6 +65,7 @@ codex_ssots:
   - /codex/06-coding-standards/config-reloader-pattern.md
   - /codex/09-strategy/operational/paper-batch-live-reconciliation.md
 related_plans:
+  - /plans/active/venue_websocket_resilience_and_error_code_mapping_2026_08_21.md
   - /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md
   - /plans/active/venue_e2e_wiring_2026_08_16.md
   - /plans/active/venue_smoke_test_bar_2026_08_16.md
@@ -75,8 +76,7 @@ related_plans:
   - /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md
   - /plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md
   - /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md
-last_updated: "2026-08-19" # was 2026-08-17 — added credentials as W1's 7th readiness dimension + manual/automated
-  # live-mode cross-reference + named the priority venue/protocol acceptance cohort, see body
+last_updated: "2026-08-21" # was 2026-08-19 — linked venue_websocket_resilience_and_error_code_mapping_2026_08_21
 locked_by:
 locked_since:
 resolved_by:
@@ -538,6 +538,12 @@ strategy's `ExposureAggregator` rather than keeping a duplicate local exposure v
 - [ ] [BACKEND] P0. **Manual trades bookable as seen-by-the-system or not-seen**, for disaster cases: we know we hold a
       position, reconciliation has not caught up, and it must not delete that position. Reconciliation pauses BEFORE
       manual entry; persistent-delta (virtual) entries are excluded from the reconciliation delta.
+      **2026-08-21 (T4 tranche): the seen/not-seen half is schema-real** — `recon_excluded` threaded through
+      `ManualInstruction`/`TradeFillRecord`/`LedgerRow` and BLRS's ledger-matching skip (tested). **Still not
+      functionally complete**: no live trade — manual or strategy-driven — is ever written into the real GCS
+      `InstructionLedger` at all (confirmed by trace, not just grep) — see
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §7 G6. `recon_excluded` has nothing to
+      act on until a live-fill ledger-writer path exists.
 
 ## W13 — PnL attribution
 
@@ -549,6 +555,9 @@ strategy's `ExposureAggregator` rather than keeping a duplicate local exposure v
 
 - [ ] [BACKEND] P0. **Every venue error code understood across every consumer** — MTDS, instruments-service, execution
       adaptors, and strategy-service balance queries. Every request and response schema, code and format.
+      → Executed by `/plans/active/venue_websocket_resilience_and_error_code_mapping_2026_08_21.md` (Phase B
+      exhaustive per-venue error-code research from public API docs + Phase C consumer wiring; that plan flips this
+      checkbox with census-test evidence when the wiring lands).
 - [ ] [BACKEND] P0. **Pin the exchange version tested**, so a venue-side version change triggers a **cassette re-run to
       detect drift** — and only then, not on every build.
 - [ ] [OPERATOR] P0. **Test accounts with credentials for each venue** — a prerequisite for the above, and an operator

@@ -50,6 +50,10 @@ locked_since:
 context_scope: [/codex/04-architecture/agent-orchestrator-alerting.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, agent-orchestrator/scripts/ao-self-pull.sh, /agents/main.md, /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md]
 ---
 
+> **🟢 ARCHIVED 2026-08-21** — all todos resolved and evidence-backed (wedge cleared 2026-07-30;
+> AGENT_ORCHESTRATOR_SLACK_WEBHOOK gap root-caused and fixed 2026-08-21 — real bug was
+> `ao-self-pull.sh` reading the webhook from `.env.local` only, not the secret being missing).
+
 # What I found
 
 While running `operator_gated_blocked_answer_is_a_no_op_2026_07_30.md`'s `[REVIEW]` E2E-verification todo, the two
@@ -175,11 +179,29 @@ host/root-clone access (main agent's own session, or the operator).
       ("stale-process self-heal not resolving") — resolved by the same tick's restart path: new `MainPID=686237`,
       `ExecMainStartTimestamp=2026-07-30 17:49:27 UTC`, verified serving real data (`GET /api/backlog` → 200, 1029
       tasks). Root checkout is current and the live service is proven serving current code, not just current on disk.
-- [ ] [BLOCKED-CREDENTIALS] P2. Set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local` so future
-      `ao-self-pull.sh` wedge/drift alerts actually page instead of logging `no webhook` (repo: agent-orchestrator,
-      host-level config). **Retagged 2026-08-19 (plan_reconciler ao)**: the 2026-08-19 attempt below found BOTH
-      documented candidate secret names resolve to nothing — genuinely blocked on locating the correct secret
-      name/project, not just an operator-run-a-script action.
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-21 (interactive session, slot 17).** Set
+      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local` so future `ao-self-pull.sh`
+      wedge/drift alerts actually page instead of logging `no webhook` (repo: agent-orchestrator,
+      host-level config). **Correction to the 2026-08-19 "BLOCKED-CREDENTIALS" finding**: the secret was
+      never actually missing — `gcloud secrets describe AGENT_ORCHESTRATOR_SLACK_WEBHOOK
+      --project=central-element-323112` shows it created 2026-05-19, and it was already wired into
+      `orchestrator.service`'s live systemd `Environment=` (confirmed via `systemctl show orchestrator -p
+      Environment`), which is why the MAIN server's own Slack alerts (`server/notifications/slack.py`,
+      which reads `os.environ`) were never actually broken. The 08-19 attempt's `gcloud secrets versions
+      access` returning empty was specific to that SSM identity/session, not the secret's existence — not
+      chased further, but worth knowing the secret itself was never absent. **The real, narrower bug**:
+      `ao-self-pull.sh:223` reads the webhook via `sed ... "${AO_DIR}/.env.local"` specifically — a
+      DIFFERENT source than the systemd environment the main server reads — and `.env.local` never had
+      this line, so only this one consumer (the wedge-alert path) was silently broken while the rest of
+      the server's alerting worked fine. Fixed by appending
+      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK=<value from Secret Manager>` to
+      `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/.env.local` (no restart needed —
+      `ao-self-pull.sh` re-reads the file fresh each ~2min cron tick). **Verified live**: (1) a test POST
+      to the webhook URL returned HTTP 200 `"ok"` and landed in `#agent-orchestrator-alerts`; (2)
+      `ao-self-pull.sh`'s own `sed` extraction against the updated `.env.local` now returns the correct
+      81-byte URL (was empty before the edit). This closes the gap that let both this incident (07-30) and
+      `ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md` (08-21) run 7h and 50min+ respectively fully
+      unpaged.
 
       **PREPARED 2026-08-08 (operator ruling, ao round-5 apply session item 20): "Operator will set it - needs
           Claude to provide exact file/value/steps."** Verified against the live repo -- `agent-orchestrator/scripts/bootstrap_vm.sh`

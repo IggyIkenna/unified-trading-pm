@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: portfolio-allocator-service
-summary:
-  "The portfolio allocator: one instance per client owning strategy-scope capital allocation, runs ONE allocator
+summary: "The portfolio allocator: one instance per client owning strategy-scope capital allocation, runs ONE allocator
   archetype drawn from two groups — generic weighting engines (FIXED/PNL_WEIGHTED/SHARPE_WEIGHTED/RISK_PARITY/KELLY/
   MIN_CVAR/REGIME_AWARE/MANUAL) and per-archetype RANK allocators that select and weight along an axis (coin/venue/
   protocol/expiry/LST), including the two dispersion allocators — and emits versioned AllocationDirective events per
@@ -113,6 +112,15 @@ Two shapes: **single-stage** (rank across the whole cohort, no grouping — the 
 `top_n_groups`, then within each surviving group filter and truncate to `top_n_per_group`).
 
 Each archetype is a separate engine class. One engine per archetype. **One allocator instance picks one archetype.**
+
+**This Group 1 / Group 2 split is now codified in UAC, not just this doc's own framing (2026-08-21,
+`unified-api-contracts@e55fc5a9d`, W8).** `WeightingDimension` (`PORTFOLIO_PER_CLIENT` / `ARCHETYPE_LEVEL`,
+deliberately binary) + `ALLOCATOR_ARCHETYPE_DIMENSION`, a TOTAL mapping over every `AllocatorArchetype` member —
+Group 1's 8 generic engines weight `PORTFOLIO_PER_CLIENT`, Group 2's 9 rank allocators weight `ARCHETYPE_LEVEL`.
+Totality is enforced by test (`test_allocator_archetype_dimension_is_total`): a future archetype added to either
+group without a matching dimension entry fails CI, closing the exact blind spot this doc's own warning above
+describes (a new archetype silently invisible to a doc/registry reader). Import from
+`unified_api_contracts.internal` alongside `AllocatorArchetype` itself.
 
 ## How composition actually works — two levels, no composite archetype
 

@@ -234,26 +234,38 @@ Each action declares its required bypasses explicitly in the handler; no silent 
 
 Critical AccountInstructions require operator authorization:
 
-| Action                    | Authorization                           |
-| ------------------------- | --------------------------------------- |
-| CLOSE_ALL (non-emergency) | Ops lead                                |
-| CLOSE_ALL_FOR_STRATEGY    | Strategy owner + ops                    |
-| SET_MARGIN_MODE           | Ops lead                                |
-| SET_LEVERAGE              | Ops lead                                |
-| EMERGENCY_LIQUIDATE       | Automatic (kill switch) OR firm officer |
-| WITHDRAW                  | Compliance + 2-of-N                     |
-| DEPOSIT_ACK               | Ops lead                                |
-| ROTATE_CREDENTIAL         | Ops (per rotation policy)               |
-| PAUSE / RESUME            | Ops on-call                             |
+| Action                    | Authorization                                                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| CLOSE_ALL (non-emergency) | Ops lead — **not yet configured, fails closed**                                                                          |
+| CLOSE_ALL_FOR_STRATEGY    | Strategy owner + ops — **not yet configured, fails closed**                                                              |
+| SET_MARGIN_MODE           | Ops lead — **not yet configured, fails closed**                                                                          |
+| SET_LEVERAGE              | Ops lead — **not yet configured, fails closed**                                                                          |
+| EMERGENCY_LIQUIDATE       | Automatic (kill switch) OR firm officer — **not yet configured, fails closed**                                           |
+| WITHDRAW                  | **BUILT 2026-08-21 — 2-of-3 distinct approvals from {CFO, CEO, Business Development Lead}** (operator ruling 2026-08-21) |
+| DEPOSIT_ACK               | Ops lead — **not yet configured, fails closed**                                                                          |
+| ROTATE_CREDENTIAL         | Ops (per rotation policy) — **not yet configured, fails closed**                                                         |
+| PAUSE / RESUME            | Ops on-call — **not yet configured, fails closed**                                                                       |
 
 Auto-recovery flows pre-authorize specific actions per the
 [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md).
 
-**(This table is the DESIGN TARGET, not what ships today — verified 2026-08-20.**
-`AccountInstructionOrchestrator.dispatch()` checks only that `authorization_id` is a non-empty string; it does not
-look up who authorized it, what role they hold, or whether the action-specific requirement above (e.g. "Compliance
-
-- 2-of-N" for `WITHDRAW`) was actually met. Per-action, role-based authorization is real remaining work, not built.)**
+**(BUILT 2026-08-21 — the mechanism half of this table now ships, WITHDRAW's real rule is enforced.
+`AccountInstructionOrchestrator.dispatch()` calls `execution_service.v2.authorization_registry.authorize()`: a
+`RoleRegistry` resolves `authorization_id -> role` (real identities are GSM secret VALUES, never hardcoded; secret
+NAMES are the `ROLE_SECRET_NAMES` constant in that module) against a per-action `ACTION_REQUIREMENTS` table. WITHDRAW
+requires `min_distinct_approvals=2` from `{role:CFO, role:CEO, role:BIZDEV_LEAD}` — `AccountInstruction.authorization_id`
+plus the new `additional_authorization_ids: list[str]` field (added to the UAC schema 2026-08-21,
+`unified-api-contracts@7623729496`) together carry the DISTINCT approver ids for a single WITHDRAW instruction.
+Every OTHER action in this table has an explicit `None` entry in `ACTION_REQUIREMENTS` — deliberately not guessed, no
+operator-confirmed role/identity assignment exists for them yet — so `dispatch()` rejects them with a reason naming
+the missing role assignment, never falling through to the old "any non-empty authorization_id" behavior.
+`allow_unauthorized=True` still bypasses the whole gate (operator shell / tests only).
+**Still needed before WITHDRAW is LIVE-ARMED**: an operator must load the real CFO/CEO/Business-Development-Lead
+authorization_id values into the three GSM secrets named by `ROLE_SECRET_NAMES`
+(`execution_service/v2/authorization_registry.py`) — until then `unprovisioned_roles()` reports all three missing and
+WITHDRAW fails closed exactly like the unconfigured actions. **Still needed for the other 8 actions**: an operator
+ruling naming the real role(s)/identities per action, mirroring the WITHDRAW ruling above, before their
+`ACTION_REQUIREMENTS` entries can move off `None`. Evidence: `execution-service@b4de8e1035`.)**
 
 ## Audit
 
@@ -268,14 +280,20 @@ Every AccountInstruction is audit-logged with:
 
 Retention: permanent per compliance.
 
-**(DESIGN TARGET — verified 2026-08-20.** The shipped path logs two `log_event` calls
-(`ACCOUNT_INSTRUCTION_RECEIVED`/`ACCOUNT_INSTRUCTION_RESULT`) carrying `instruction_id`/`org_id`/`action`/`venue`/
-`account_id`/`accepted`/`reason` — no post-state snapshot, no dedicated permanent-audit-log store beyond whatever
-the `log_event` sink itself retains. Only `CLOSE_ALL` has a real venue-facing runner today
+**(DESIGN TARGET, corrected 2026-08-21 — the earlier version of this note claimed two `log_event` calls
+(`ACCOUNT_INSTRUCTION_RECEIVED`/`ACCOUNT_INSTRUCTION_RESULT`); that was already stale versus the shipped code and is
+fixed here. The real shipped path (`AccountInstructionOrchestrator._emit_audit_event`) fires exactly ONE
+`log_event("ACCOUNT_INSTRUCTION_DISPATCHED", ...)` call plus one `persist_audit_log(...)` GCS write, carrying
+`instruction_id`/`action`/`venue`/`account_id`/`client_id`/`authorization_id`/`additional_authorization_ids`/
+`accepted`/`reason`/`dispatched_at` — no post-state snapshot beyond `accepted`/`reason`, no dedicated permanent-store
+beyond whatever `persist_audit_log`'s GCS sink retains. Fires on BOTH the accept and the role-authorization-reject
+path (2026-08-21), so a rejected WITHDRAW or an unconfigured-action rejection is itself audited, never silently
+dropped. Only `CLOSE_ALL` has a real venue-facing runner today
 (`execution_service/v2/account_orchestrator.py::AccountInstructionOrchestrator._execute_close_all`, reachable via
-`POST /account/instruction` — `execution_service/api/account_instruction_api.py`); every other action in the table
-above is still a log-only accept with no venue call, so "Venue result (ack + fills + timing)" has nothing to log
-for them yet.)**
+`POST /account/instruction` — `execution_service/api/account_instruction_api.py`), and CLOSE_ALL itself now fails
+closed pending its own role-assignment ruling (see Authorization above); every other action in the table above is
+still a log-only accept with no venue call, so "Venue result (ack + fills + timing)" has nothing to log for them
+yet.)**
 
 ## Attribution handling
 

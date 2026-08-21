@@ -25,7 +25,7 @@ summary: >-
   `PredictionUnderlying` + `PredictionBetType`?) — not a mechanical import swap, and touches an external-facing API
   contract (the catalogue route + presumably a deployment-ui category filter dropdown) this session has no visibility
   into.
-status: open
+status: RESOLVED — category facet rebuilt as a canonical-axis projection; deployment-api@9947cc40ae, quality-gates.sh green (5427 passed, 0 failed)
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -40,11 +40,14 @@ related:
   ]
 created: 2026-08-21
 author: claude-code (wave-1c interactive session, code_readiness_t3_features_ml_strategy_2026_08_19.md)
+resolved: 2026-08-21
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P0
 resolved_by:
+  slot-2 2026-08-21 -- deployment-api@9947cc40ae, quality-gates.sh --no-fix green (5427 passed, 0 failed, 11 skipped).
+  See Resolution section.
 source: >-
   Hit live 2026-08-21 re-gating deployment-api after a coordinator signal that unified-api-contracts@4f25d5f0 had
   landed and unblocked an earlier dirty-dep ship-block. `quality-gates.sh --no-fix` failed at pytest collection:
@@ -68,6 +71,79 @@ context_scope:
 depends_on: []
 locked_by:
 locked_since:
+---
+
+## ✅ RESOLUTION 2026-08-21 (slot-2)
+
+**Fix shipped** at `deployment-api@9947cc40ae` (`quickmerge.sh --agent`, landed on `live-defi-rollout`).
+
+**Direction taken — a variant of Option 1 below, NOT a UAC-enum resurrection**: rebuilt the catalogue's `category`
+facet as a deterministic PROJECTION derived from the canonical Axis-1 SSOT
+(`unified_api_contracts.predictions.PredictionUnderlying` / `underlying_for_group()`), per the operator's standing
+ruling (2026-08-21) that prediction markets split by CANONICAL groupings.
+`deployment_api/services/prediction_catalogue.py` now owns a local
+`_UNDERLYING_TO_CATEGORY: dict[PredictionUnderlying, str]` mapping table covering EVERY current
+`PredictionUnderlying` member (57 values) onto one of the legacy 7 coarse buckets
+(politics/financial/sports/crypto/weather/entertainment/other), fail-closed to `"other"` for anything unmapped via a
+new `_category_for_underlying()` helper. This is a deployment-api-owned, UI-facing projection — NOT a new UAC enum,
+NOT a resurrection of the deleted axis inside UAC itself. The external response shape (the `category` field, the
+`category=` query-param filter, and the facet-count semantics) is UNCHANGED: same 7 bucket values, same
+case-insensitive filter behaviour — `PredictionUnderlying`'s finer per-asset granularity collapses back to the same
+coarse buckets the old `PredictionMarketCategory` produced for every value the existing fixture/tests exercise
+(crypto/financial/sports/other all verified unchanged, byte-for-byte, against the pre-existing test fixture). A new
+test, `test_category_projection_covers_every_canonical_underlying`, asserts the mapping table covers every CURRENT
+`PredictionUnderlying` member and that every projected value is one of the 7 known buckets — a future UAC member
+addition that isn't triaged into the table fails this test LOUDLY instead of silently defaulting to `"other"` in
+production.
+
+**Second break found + fixed in the same pass (same root commit, outside this issue's original grep scope)**:
+`unified-api-contracts@4f25d5f0` ALSO deleted `prediction_markets_config_descriptor()` (the whole
+`canonical.domain.prediction.prediction_mapping` module, including its `PREDICTION_MARKETS_CONFIG_VERSION`/
+`_HASH` int-typed constants) with no `ConfigDescriptor`-shaped successor anywhere in UAC. This broke
+`deployment_api/routes/data_status/_coverage_scope.py` — and because `deployment_api/routes/__init__.py` eagerly
+imports the whole `data_status` package, this ONE broken import poisoned the entire `deployment_api.routes` package
+namespace on import. This is WORSE than the break this issue doc originally tracked: it cascaded into 456 pytest
+collection errors + 424 failures across essentially every route module in the repo (`costs`, `health_overview`,
+`infra_health`, `log_stream`, `repo_ci`, …), not just prediction endpoints — confirmed live: `quality-gates.sh
+--no-fix` still failed this way even AFTER the category fix above landed, on the exact same tree. Fixed by projecting
+`config_versions()["prediction_markets"]` from `unified_api_contracts.predictions.CLASSIFIER_STABILITY_HASH` (an
+exact semantic match for the content-hash half) plus a new deployment-api-owned
+`_prediction_markets_config_version()` that deterministically encodes UAC's human-maintained `CLASSIFIER_VERSION`
+(a `"YYYY-MM-DD.patch"` string) into the monotonic int the `ConfigVersionTriple`/`ConfigDescriptor` contract demands
+(`YYYY-MM-DD.patch -> YYYYMMDDpp`, ordering-preserving, honest fallback to `0` — never a fabricated number — if a
+future format ever breaks the assumed shape). 4 new unit tests
+(`TestPredictionMarketsConfigVersionEncoding`) pin the encoding + the fallback path independently of the route-wiring
+test. This is purely internal versioning/cache-invalidation plumbing (config-drift attribution, not an
+external API/UX surface), so — unlike the category axis — it did not need a product/UX design call; it was resolved
+directly as part of unblocking this ship.
+
+**Evidence**: `deployment-api@9947cc40ae` (quickmerge, `live-defi-rollout`, post-push ancestry verified); full
+`quality-gates.sh --no-fix` green — **5427 passed, 0 failed, 11 skipped** (up from 424 failed / 456 errors / 2816
+passed measured mid-fix, once the category ImportError alone was cleared but the second `_coverage_scope.py` break
+was still live). Files touched: `deployment_api/services/prediction_catalogue.py`,
+`deployment_api/routes/data_status/_coverage_scope.py`, `tests/unit/test_prediction_catalogue.py`,
+`tests/unit/test_route_venue_year_coverage_scope.py`. The sibling in-flight strategy-wizard WIP in the same working
+tree (`deployment_api/main.py`, `deployment_api/vm_utils.py`, `deployment_api/routes/strategy_wizard.py`,
+`tests/unit/test_strategy_wizard.py`) was left untouched and unstaged, per that session's own explicit hand-off note.
+
+**Operator notification (big finding — cross-repo, blocked CI/QG for a whole repo)**: the second break
+(`prediction_markets_config_descriptor` deletion) is a SEPARATE, MORE severe cross-repo regression from the SAME
+`unified-api-contracts@4f25d5f0` commit than the one this issue doc originally tracked — it disabled test collection
+for effectively the entire deployment-api route surface, not just prediction endpoints, and was not caught by that
+commit's own self-audit (scoped to `unified-api-contracts/` only, same gap as the first break). Flagging this even
+though it's fully fixed in this same pass, because the pattern (that commit's self-audit missing a live downstream
+consumer) has now recurred THREE times across two repos found so far: this issue's original category break
+(deployment-api), this issue's second config-descriptor break (deployment-api), and a third, independently found +
+already-resolved break in instruments-service
+(`/plans/archive/issues/instruments_service_polymarket_broken_by_uac_prediction_market_mapper_deletion_2026_08_21.md`
+— `PredictionMarketMapper`, resolved at `instruments-service@b15eae62bc`). No further downstream repos were checked
+this session for a possible fourth consumer of the deleted `canonical.domain.prediction.prediction_mapping` module.
+
+**Not attempted / out of scope**: deployment-ui's category filter/dropdown (if one exists) was not checked this
+session (deployment-ui is a separate repo, out of this task's assigned scope) — the external `category` VALUES are
+unchanged (same 7 buckets, same strings), so no deployment-ui change should be needed, but this is not independently
+verified against deployment-ui's actual source.
+
 ---
 
 ## What's broken
@@ -138,6 +214,9 @@ call on the external API/UX, out of this session's visibility into deployment-ui
    whatever deployment-ui renders for this — a real UX change, needs product/T-owner
    sign-off, can't be done blind from deployment-api alone.
 
+**Resolved via Option 1** — see the Resolution section above for exactly how (canonical-axis-derived, not a
+UAC-enum resurrection).
+
 ## Impact right now
 
 Every `quality-gates.sh` run in deployment-api is red until this is fixed — blocks
@@ -146,9 +225,14 @@ ANY ship to this repo, not just prediction-catalogue changes. Confirmed blocking
 ship (code complete + tested + gate-green on everything except this pre-existing,
 unrelated import break).
 
-- [ ] [BACKEND] P0. Pick one of the two options above (or a third, better one) and fix
+- [x] [BACKEND] P0. Pick one of the two options above (or a third, better one) and fix
       `deployment_api/services/prediction_catalogue.py` + `routes/prediction_catalogue.py`
       + `tests/unit/test_prediction_catalogue.py` accordingly, then confirm
       `quality-gates.sh --no-fix` collects + passes in deployment-api again. If
       deployment-ui has a category filter/dropdown consuming this route, check + update
-      it in the same change.
+      it in the same change. — deployment-api@9947cc40ae + evidence: canonical-axis
+      projection (Option 1, non-UAC-enum variant); quality-gates.sh --no-fix green,
+      5427 passed / 0 failed / 11 skipped. deployment-ui not checked (out of scope,
+      external category values unchanged so no change should be needed). See Resolution
+      section above for the full trace, including a second same-commit break found +
+      fixed in the same pass.

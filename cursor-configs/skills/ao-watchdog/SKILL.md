@@ -366,14 +366,20 @@ pulled in Step 1). Read the output against the status model
   for weeks (this exact class of bug — 6 modes left paused from an unrelated 2026-08-11 investigation, misread as
   "error" on every retry for days — is documented in
   `agent-orchestrator/scripts/install-escalation-queue-reconciler-timer.sh`'s own header comment).
-  **Currently-known paused modes (as of 2026-08-18, operator-confirmed intentional — check
-  `plans/active/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md` for the full reasons before
-  re-flagging these as a mystery):** `cefi_mtds_smoke` (cost/orphan-resource risk, pending deployment-service
-  registration of its spawned resources), `ag_closeout` (heavy concurrent manual AG-closeout reconciliation in
-  flight), `ci_reconcile` (deliberately run manually as a daily task until escalation-routing confidence is
-  higher). If `GET /api/scheduled-dispatch/status` still shows exactly these three paused, treat it as expected
-  and move on; if the SET has changed (a new mode paused, or one of these three unexpectedly resumed), that's a
-  real finding — check the issue doc's "Unblocks when" for each before assuming anything.
+  **Currently-known paused modes (confirmed live 2026-08-21, operator-ruled standing state — check
+  `plans/archive/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md` for the full history/reasons before
+  re-flagging these as a mystery — that doc is ARCHIVED, its own todos resolved, this IS the steady state, not
+  an open question):** six modes, not three — `ag_closeout` (heavy concurrent manual AG-closeout reconciliation
+  in flight), `cefi_mtds_smoke` (cost/orphan-resource risk, pending deployment-service registration of its
+  spawned resources), `ci_reconcile` (re-paused 2026-08-19 after a same-day resume; run manually pending more
+  escalation-routing confidence), `na_eligibility`, `reconcile` (= the `plan_reconciler` job), and `report` —
+  operator confirmed 2026-08-20 all three of these last were intentional and ruled 2026-08-21 to leave them as
+  is (no schema/capacity-alert change needed). Per-mode `GET /api/scheduled-dispatch/status` `pause_details`
+  reasons may still read "Reason not recorded" for modes paused before the reason-field schema fix landed
+  (agent-orchestrator@3e982e3174) — that is NOT itself a new finding, the reason lives in the archived doc, not
+  the API. If `GET /api/scheduled-dispatch/status` still shows exactly these six paused, treat it as expected
+  and move on; if the SET has changed (a new mode paused, or one of these six unexpectedly resumed), that's a
+  real finding — check the archived doc's per-mode "Unblocks when" for each before assuming anything.
 - **Capacity-queue depth** (`ScheduledJobQueueRow`) — a persistently non-empty queue across multiple ticks means
   the fleet's scheduled-job reserve (`scheduled_task_slot_reserve()`, default 4) is undersized relative to actual
   contention; this is a capacity-sizing finding, not a per-job bug.

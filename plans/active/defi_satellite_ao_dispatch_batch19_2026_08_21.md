@@ -123,6 +123,11 @@ flipping to `active`/`planning` is an operator decision, not made here.
       remaining open [DATA] P1 todo). Done when: the DEFI leg reports a real (non-"PROVED NOTHING") verdict with a
       nonzero verified-cell count, and the result is folded into `data_pipeline_check_mdps_features_2026_07_20.md`'s
       5-AG consolidated report.
+      **2026-08-21 update (slot-24)**: attempted 4x this session — still "PROVED NOTHING", but the OOM/chain-axis/
+      streamed-read bugs this todo's premise depended on are now confirmed fixed and NOT the cause. New, deeper
+      blocker (consolidated index blob stale despite a healthy consolidator) filed at
+      `plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`
+      — read that doc before the next attempt.
 
 ## Conflict-check (per item, §3 protocol)
 
@@ -209,3 +214,10 @@ parked doc's own table annotations.
   ~10 rows read in full and correctly declined (operator/time/design-gated, or already resolved); the remainder of
   the 54-row table not read in full this pass for budget reasons (see the list above). `status: draft` per the
   skill's safety rail — flipping to `active` is an operator decision, not made here.
+- **2026-08-21 (slot-24, data_engineering)**: item 3 (DEFI pipeline_e2e_check re-run) attempted 4x — still
+  "PROVED NOTHING". The OOM/chain-axis/streamed-read fixes item 3 assumed were the last blockers are all confirmed
+  working; found a new, deeper root cause instead (consolidated index blob stale despite a healthy consolidator),
+  filed at
+  `plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`.
+  Also fixed an unrelated pre-existing pip-audit CVE (`PYSEC-2026-3721`) blocking shipment in
+  unified-trading-library along the way. Item 3 stays not-done.

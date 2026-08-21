@@ -266,6 +266,26 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
 
 ## Progress Log
 
+- **2026-08-21 (interactive session, slot 15) — this proxy was the PRIMARY cause of a fleet-wide dispatch
+  stall; every Gemini account had been non-functional since rollout.** Operator asked why 824 queued tasks
+  weren't dispatching against 19 idle worker slots and accounts with quota headroom. Root cause: this
+  proxy's `model_name` aliases were built from the accounts.json `variant` (`gemini-3.5-flash-lite-proj1`,
+  DOTTED) while a spawned worker sends its env file's `ANTHROPIC_MODEL`, which is the accounts.json `id`
+  (`gemini-3-5-flash-lite-proj1`, DASHED) — so every real Gemini request 400'd with `Invalid model name`.
+  The worker still BOOTED (`autospawn_succeeded` logged, slot shows `working`), then failed every call and
+  idled until reclaimed, so all 10 Gemini accounts reported `healthy` with full RPM/RPD headroom throughout.
+  Measured 76% autospawn failure rate. **It hid because `server/gemini_translation_smoke.py` resolves the
+  model name by READING THIS CONFIG** (`first_gemini_model_name`), so the smoke test asked for the dotted
+  alias the proxy really served, passed, and never exercised the string production sends. Aliases corrected
+  to the dashed `id` form + the header comment that wrongly named `variant` rewritten + a regression test
+  (`tests/test_gemini_proxy_alias_account_id_alignment.py`) that asserts the CONTRACT rather than re-reading
+  the config against itself. Restores 6 of 10 accounts (proj1/2/3 × both variants); proj4/proj5 remain
+  unprovisioned (no env file, no API key — `GEMINI_API_KEY_PROJ5` is referenced by this config but absent
+  from `.env.local`). Full root-cause chain, the four secondary causes, the account-selection amplifier, and
+  all open todos: `/plans/active/issues/fleet_dispatch_stall_gemini_proxy_alias_mismatch_2026_08_21.md`.
+  **Not yet loaded** — the service has run since 2026-08-20 11:45 with `NRestarts=0` and needs a restart
+  (tracked as an `[OPERATOR] P0` todo in that issue doc).
+
 - **2026-08-20 (later, dispatched sub-agent session) — residual live-VM incident closed + full removal
   RE-VERIFIED end-to-end; nothing new left to remove.** Triggered by a real production incident earlier the
   same day: two live `provider: "grok"` rows survived in the orchestrator VM's gitignored, operator-edited

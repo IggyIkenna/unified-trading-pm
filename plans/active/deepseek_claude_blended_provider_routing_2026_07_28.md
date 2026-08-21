@@ -388,6 +388,14 @@ default from an external reference.
           **The first real second-provider integration must treat this as unverified code**, not as a working feature to
           configure. Do not re-file this as a standing todo — re-open it at that moment instead.
 
+          **Note, 2026-08-21**: of the four candidate providers named in this todo (openrouter/gemini/groq/sambanova),
+          `openrouter` specifically never progressed past this generalized-`Literal` stub — zero live accounts were
+          ever registered against it — and has since been removed as unused code debt in the same session's broader
+          Kimi/OmniRoute/OpenRouter cleanup, shipped `agent-orchestrator@055bd037b7`. See
+          `/plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` Part 2. Gemini and GLM
+          (a `zai`-provider variant not in this todo's original candidate list) did go on to be onboarded via other
+          plans; groq/sambanova were never pursued either, same as openrouter.
+
 - [x] [DATA] P2. ✅ Generalize the DeepSeek-specific health-gate ring to a per-provider map (failing free provider
       degrades to the next-priority free provider before falling back to Claude). — `agent-orchestrator@24bd611`, proven
       via simulated multi-provider-failover tests; all 34 pre-existing routing tests pass unmodified.

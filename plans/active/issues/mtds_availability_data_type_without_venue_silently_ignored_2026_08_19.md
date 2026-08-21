@@ -91,6 +91,31 @@ one day suggests the pattern is worth a sweep, not just two point fixes.
       wave-2 pass and the AO-dispatched batch21 plan) — touching them here risked a collision; a dedicated pass
       once those land is safer.
 
+## Findings — sibling parameter audit (2026-08-21)
+
+Batch21 item (`cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`), source: this doc's todo 2 ("check the
+sibling parameters ... for the same conditional-branch bug"). Read `get_availability()` in
+`market-tick-data-service/market_tick_data_service/api/routers/external.py` (current HEAD, post-fix commit
+`8addeac2` confirmed as an ancestor) in full. The endpoint's complete parameter set is exactly four:
+`asset_group`, `venue`, `data_type`, `date` — no `instrument_type` parameter exists on this endpoint.
+
+| Parameter | Verdict | Evidence |
+| --- | --- | --- |
+| `asset_group` | **UNAFFECTED** — not exposed to this bug class at all | `Query(...)` (required, not optional); FastAPI 422s the request before the handler body runs if absent, so there is no "supplied but silently ignored" path. It is also read unconditionally in every branch (`_validate_asset_group`, `enforce_market_data_entitlement`, `by_asset_group.get(ag)` in the base `result` dict built before any `venue`/`data_type` branching) — never gated behind a sibling parameter's presence. |
+| `instrument_type` | **N/A — parameter does not exist** | Grepped `get_availability`'s signature (lines 121-127) and the whole file: no `instrument_type` Query parameter anywhere on this endpoint. The only `instrument_type` hit in the repo's test suite (`tests/unit/api/test_external_router.py:39`) is a literal path-segment substring inside a mocked GCS object name for the delivery-batch shard-matching tests, unrelated to a query parameter on `/availability`. The task brief's premise (that `instrument_type` is one of this endpoint's sibling filters) does not hold — there is nothing to verify affected/unaffected for a parameter that isn't there. |
+| `date` | **UNAFFECTED** | Optional (`Query(None, ...)`), but consumed unconditionally before any `venue`/`data_type` branch: `candidate_dates = [date] if date is not None else _lookback_dates(...)` (line 153) feeds the coverage-file lookup loop and is echoed as `requested_date`/`resolved_date` in every response shape, regardless of whether `venue` or `data_type` is present. Never gated behind a sibling parameter. |
+| `venue` | **UNAFFECTED** (the conditioning parameter itself, not a sibling being dropped) | Every branch that can fire either consumes `venue` when present (the `if venue is not None:` arm — entitlement check, `result["venue"]`, `result["venue_summary"]`) or is the `elif data_type is not None:` arm reached only when `venue` is absent. There is no code path where `venue` is supplied and silently has zero effect. |
+
+**Not the same bug class, noted so a future reader doesn't conflate it**: the docstring (lines 141-145) documents
+that an explicit single-`venue` ask 403s if out of scope, while the `data_type`-without-`venue` aggregate instead
+*silently narrows* to the caller's entitled venues via `entitled_venues(...)` (never a 403). That narrowing is
+deliberate entitlement scoping — the filter is still applied and still has effect (fewer venues in the response),
+not a parameter whose value is discarded with no effect at all. It is not an instance of the silent-drop pattern
+this todo was checking for.
+
+**Conclusion**: only `data_type` was ever affected by the conditional-branch silent-drop bug (fixed 2026-08-19/21,
+`market-tick-data-service@8addeac2`). No other current or claimed parameter on this endpoint exhibits the pattern.
+
 ## Progress Log
 
 **2026-08-19 — filed.** Not fixed; no MTDS code touched. Surfaced during client-artefact work, so it is disclosed
@@ -106,3 +131,8 @@ in the API reference as known behaviour pending this fix rather than documented 
   `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`. Todo 1 ("Decide and implement the correct
   contract") stays `assigned_vm: NA` — explicit design decision. Doc's own `assigned_vm: NA` unchanged.
   Cross-cutting tranche, batch 2 of 3.
+- **2026-08-21 (batch21 item, sibling-parameter audit)** — closed the sibling-parameter todo (batch21's own copy).
+  Verdict: `asset_group` UNAFFECTED (required, not optional — no silent-drop path exists); `instrument_type` N/A
+  (no such parameter exists on this endpoint at all); `date` UNAFFECTED (consumed unconditionally regardless of
+  `venue`/`data_type`); `venue` UNAFFECTED (the conditioning parameter itself). Only `data_type` was ever affected,
+  already fixed. Full evidence in the new "Findings — sibling parameter audit (2026-08-21)" section above.

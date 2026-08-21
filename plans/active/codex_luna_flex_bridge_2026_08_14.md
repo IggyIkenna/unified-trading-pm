@@ -19,11 +19,10 @@ related:
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     /codex/06-coding-standards/model-tier-selection.md,
-    agent-orchestrator/docs/omniroute_cli_setup_guide.md,
     agent-orchestrator/docs/deepseek_cli_setup_guide.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-18
+last_updated: "2026-08-21" # docs-reconcile: dropped dead related: ref (omniroute_cli_setup_guide.md never existed — omniroute evaluated + rejected 2026-08-06, no guide was ever authored)
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -357,3 +356,8 @@ template, minus the third-party dependency).
   content change since the 2026-08-19 redirect-banner verdict. `ag_closeout_audit_ao_parked_2026_08_16.md` still
   explicitly excludes this whole doc from AO-dispatch (operator handling elsewhere, 2026-08-14). Doc stays
   `assigned_vm: NA`.
+- **docs-reconcile 2026-08-21**: `check_frontmatter_schema.py`'s full-corpus run flagged `related:` citing
+  `agent-orchestrator/docs/omniroute_cli_setup_guide.md`, which never existed (no git history, no rename) — likely
+  vestigial from the omniroute multi-provider evaluation (`omniroute_multi_provider_routing_evaluation_2026_08_03.md`,
+  archived, rejected in favor of Claude+DeepSeek). Confirmed the sibling `deepseek_cli_setup_guide.md` reference
+  DOES exist. Dropped the dead reference; kept the real one.

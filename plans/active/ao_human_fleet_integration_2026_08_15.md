@@ -43,7 +43,7 @@ context_scope:
     agent-orchestrator/server/config.py,
     agent-orchestrator/server/deepseek_usage.py,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
+    /plans/archive/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
   ]
 supersedes:
 superseded_by:

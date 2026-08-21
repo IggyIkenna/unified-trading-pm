@@ -41,7 +41,7 @@ execution_scope: local-only
 estimate_class: research
 drift_direction: needs-decision
 depends_on: []
-resolved_by: operator-ruling-2026-08-21-option-B-live-hotswap-blessed
+resolved_by: operator-ruling-2026-08-21-add-remove-hotswap-definition-change-restart-required
 locked_by:
 locked_since:
 context_scope:
@@ -52,9 +52,44 @@ context_scope:
   ]
 ---
 
-> **📦 ARCHIVED 2026-08-21 — RESOLVED.** Operator ruled option B: the live instrument-universe hot-swap is
-> intentional and safe; the codex row in `/codex/04-architecture/live-strategy-config-hot-reload.md` was
-> corrected in the same turn. No guard added; no successor plan needed.
+> **📦 ARCHIVED 2026-08-21 — RESOLVED, REOPENED SAME DAY TO CLOSE A GAP, RE-CLOSED.** This doc's first archival pass
+> recorded an "option B, unconditional hot-swap is safe" ruling. That was a MIS-SCOPING of the actual operator
+> answer — see the "Refined ruling 2026-08-21" section below, which supersedes it. The refined ruling is narrower
+> than pure option B and closer to option A: add/remove hot-swaps unconditionally; a definition change on an
+> existing instrument does NOT — it is rejected and requires a restart, enforced via a new
+> `SAFE_INSTRUMENT_RELOAD_FIELDS` guard in `strategy-service/strategy_service/config_reloaders.py`, mirroring the
+> strategies-domain `SAFE_STRATEGY_RELOAD_FIELDS` guard exactly. Reopened in place (not moved back to
+> `plans/active/issues/`) since every other aspect of this doc was already correctly closed — this is a
+> content-correction + guard-shipment, not new open-ended work.
+
+## Refined ruling 2026-08-21 — supersedes the "option B, unconditional" framing above
+
+**Operator's exact words**: "hot swap is for adding and deleting instruments. changing definitions requires
+restart, do that."
+
+This is neither pure option A (as originally scoped — "extend the safe-field allow-list to reject ANY
+instrument-universe change") nor pure option B (as first recorded here — "the hot-swap is unconditionally safe").
+It is a precise boundary: **adding or removing `instrument_id`s from `subscription_list` is safe and hot-swaps live
+with no restart. Changing the DEFINITION of an instrument already in the universe — any other
+`InstrumentDomainConfig` field, since this schema carries no other per-instrument state (`InstrumentDomainConfig` is
+just `subscription_list: list[str]` + `enabled_venues`/`categories`/`defi_major_assets`, all global/universe-level,
+not per-instrument) — must be rejected at hot-swap time and requires a restart.**
+
+Implemented in `strategy-service/strategy_service/config_reloaders.py`:
+`SAFE_INSTRUMENT_RELOAD_FIELDS = frozenset({"subscription_list"})` + `_reject_unsafe_instrument_change()`, wired into
+`_on_instruments_reload()` — mirrors the strategies-domain `SAFE_STRATEGY_RELOAD_FIELDS` /
+`_reject_unsafe_strategy_change()` guard shape exactly (same `UnsafeConfigChangeError`, same
+`FieldFilteredCallbackRegistry.notify` swallow-and-log behavior, same fail-closed philosophy). Tests cover: add-only
+change hot-swaps, remove-only change (of an instrument with no open position implied by pure list removal) hot-swaps,
+and a same-membership-but-other-field-changed reload is rejected and the previous config stays active.
+
+Also corrects a **false claim found in `/codex/04-architecture/live-strategy-config-hot-reload.md`**: that doc's
+"RESOLVED 2026-08-21" section claimed the instruments guard had already shipped in
+`strategy-service@48bd37175989be9031eccc1b5dca0c7ab387abb3` (2026-08-14) — verified false: that commit's diff to
+`config_reloaders.py` contains zero occurrences of `SAFE_INSTRUMENT_RELOAD_FIELDS`/`_reject_unsafe_instrument_change`
+and shipped ONLY the strategies-domain guard. Corrected in the same turn as this doc.
+
+Evidence: `strategy-service@21d46d75`.
 
 # Live instrument-universe hot-swap position-state safety — still unruled
 
@@ -89,9 +124,14 @@ Left unruled, the codex SSOT keeps contradicting the shipped code on a live-trad
 
 ## Follow-ups
 
-- [x] ✅ [OPERATOR] P2. RULED 2026-08-21: **option B — the live hot-swap is intentional and safe.** Codex row
-      corrected in the same turn (`/codex/04-architecture/live-strategy-config-hot-reload.md` "Underlying
-      instruments" now reads ruled-safe with the contradiction preserved as historical context). No guard added.
+- [x] ✅ [OPERATOR] P2. RULED 2026-08-21 (first pass, later refined same day — see below): **option B — the live
+      hot-swap is intentional and safe.** Codex row corrected in the same turn.
+- [x] ✅ [OPERATOR] P2. REFINED RULING 2026-08-21: neither pure A nor pure B — **"hot swap is for adding and
+      deleting instruments. changing definitions requires restart, do that."** Guard shipped
+      `strategy-service@21d46d75` (`SAFE_INSTRUMENT_RELOAD_FIELDS = frozenset({"subscription_list"})`
+      + `_reject_unsafe_instrument_change()`, mirroring the strategies-domain guard); tests cover add-hot-swaps,
+      remove-hot-swaps, and definition-change-rejected. Codex doc + this doc's earlier "option B, unconditional"
+      framing both corrected in the same turn. See "Refined ruling 2026-08-21" section above for full detail.
 
 ## Progress Log
 
@@ -101,3 +141,8 @@ Left unruled, the codex SSOT keeps contradicting the shipped code on a live-trad
 - **context-scout 2026-08-17**: populated context_scope (3 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:5e6b7fed4d4c0336]: KEEP-NA, valid -- 1 open todo confirmed via grep, matches inventory. Sole item is explicitly [OPERATOR]-tagged: rule A (extend the strategy-config safe-field-allow-list guard pattern to the instruments domain) vs B (confirm the live hot-swap is intentional/safe and correct the codex SSOT's stale 'restart required' row) for live instrument-universe hot-swap position-state continuity safety. This is a genuine, unresolved, live-trading-safety judgment call the doc's own frontmatter frames as drift_direction: needs-decision, split off deliberately from an archived parent doc specifically so it would not silently evaporate. No prior ruling exists in this doc's own text to cite -- the question is live and open.
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries).
+- **2026-08-21**: reopened in place (still under `plans/archive/2026_08/issues/`, not moved back to `plans/active/`)
+  to correct the first archival pass's "option B, unconditional" ruling against the operator's actual, narrower
+  answer given directly in this session. Shipped `SAFE_INSTRUMENT_RELOAD_FIELDS` guard in strategy-service +
+  corrected the false "already shipped in 48bd3717" claim this doc's own earlier text had propagated into
+  `/codex/04-architecture/live-strategy-config-hot-reload.md`. Re-closed same turn.

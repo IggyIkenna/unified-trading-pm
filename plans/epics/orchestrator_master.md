@@ -61,7 +61,7 @@ related_plans:
   - ../active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md
   - ../active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11_finalize.md
   - ../active/grok_gemini_translation_proxy_2026_08_14.md
-  - ../active/kimi_gemma_provider_onboarding_2026_08_16.md
+  - ../archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md # status:complete 2026-08-21, git mv'd from active
   - ../active/multi_provider_context_billing_reconciliation_2026_08_16.md
   - ../active/quality_gates_quickmerge_timing_baseline_2026_07_31.md
   - ../active/quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md
@@ -394,9 +394,10 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 4 cal AI-days (class: brand-new)
 **title**: Gemini translation proxy — self-hosted Anthropic-format facade
 
-### [`kimi_gemma_provider_onboarding_2026_08_16`](../active/kimi_gemma_provider_onboarding_2026_08_16.md)
-**status**: active · **estimate**: 4 cal AI-days (class: brand-new)
-**title**: Kimi (Moonshot) + Gemma (NVIDIA NIM) provider onboarding
+### [`kimi_gemma_provider_onboarding_2026_08_16`](../archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md)
+**status**: complete (archived 2026-08-21) · **estimate**: 4 cal AI-days (class: brand-new)
+**title**: Kimi (Moonshot) + Gemma (NVIDIA NIM) provider onboarding — Gemma onboarded (`gemma-self-hosted`, live),
+Kimi later removed from the codebase entirely (unrelated session)
 
 ### [`multi_provider_context_billing_reconciliation_2026_08_16`](../active/multi_provider_context_billing_reconciliation_2026_08_16.md)
 **status**: active · **estimate**: 6 cal AI-days (class: research)

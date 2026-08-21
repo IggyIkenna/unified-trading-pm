@@ -134,6 +134,35 @@ framing) + 8 Unity child books registered 2026-08-17 (`cross_cutting_satellite_a
       `openapi/capability-manifest.json` + `openapi/venue-coverage-report.md` (still list the 6 removed venues, no
       in-repo generator script found), (b) the coordinated two-repo removal of the `bookmaker_registry.py` family
       (execution-service's dead `OneXBetAdapter` retires first, then `"onexbet"` comes out of the registry).
+- [x] [BACKEND] P1. **2026-08-21 (slot-7) — execution-service half of the "coordinated two-repo removal" (b);
+      surfaced a live break from the UAC side going first anyway, independently fixed, then superseded by a
+      parallel slot's already-landed fix — corrected here after the duplicate was discovered.**
+      `sports_execution/adapters/bookmaker_api/onexbet.py` (`OneXBetAdapter` + its dedicated test) needed retiring
+      because `unified-api-contracts@cdb8ae88` ("complete the 6-bookmaker removal") had ALREADY deleted
+      `unified_api_contracts/external/onexbet/` (the schemas package `onexbet.py` imports at module level)
+      believing "zero remaining importers" — missing this exact cross-repo consumer and breaking
+      execution_service's import chain fleet-wide (every quickmerge pre-flight import-smoke-test for this repo
+      failed until a fix landed). This session built its own fix locally (originally committed as
+      `1f4e1346`+`065fc9d0`), but a fetch immediately before shipping showed slot-21 had independently hit the
+      same break and already landed an equivalent retirement on `origin/live-defi-rollout` as
+      `f4391ac5`+`0c81d755` (see the W15 plan's Progress Log, "2026-08-21 — slot 21 CCTP idempotency fix" entry).
+      Rebased this session's branch onto `origin/live-defi-rollout` and dropped the now-redundant local commits
+      rather than ship a duplicate/conflicting change — `1f4e1346`/`065fc9d0` were never pushed and no longer
+      exist anywhere; the actually-landed fix is `execution-service@f4391ac5,0c81d755` (slot-21's, not this
+      session's). The `"onexbet"` key in `bookmaker_registry.py` and the other 5 tokens' cleanup
+      (BETOPENLY/NOVIG/PROPHETX/BETMGM/BETWAY) remain open per the T2 plan's P3 todo — not done by either slot
+      (UAC-side, out of this fix's repo scope).
 - [ ] [BACKEND] P3. Resolve the Unity 15-book-vision vs `unity_child_books.py` contradiction (PINNACLE, CROWN) —
       update whichever source is stale, cite the resolution.
 - [ ] [BACKEND] P3. Resolve the Betfair-family ↔ Unity "BETFAIR" child-book mapping ambiguity.
+
+## Progress Log
+
+- **2026-08-21 (T1 tranche)**: The cross-repo risk this doc's own P1 todo flagged (removing `bookmaker_registry.py`'s
+  onexbet entry would break execution-service's module-level import) materialized when a T1 session completed the
+  removal in the untouched second registry family — deleting `unified_api_contracts/external/onexbet/` broke
+  `execution-service/sports_execution/adapters/bookmaker_api/onexbet.py`'s import chain for real. Caught and fixed
+  same-session (execution-service@0c81d75501, a concurrent session independently found and fixed the identical
+  break — reconciled via rebase). Full incident writeup:
+  [uac_bookmaker_removal_broke_execution_service_onexbet_import_2026_08_21.md](/plans/archive/issues/uac_bookmaker_removal_broke_execution_service_onexbet_import_2026_08_21.md).
+  This closes the "coordinated two-repo removal" follow-up (b) flagged in this doc's own P1 todo above.

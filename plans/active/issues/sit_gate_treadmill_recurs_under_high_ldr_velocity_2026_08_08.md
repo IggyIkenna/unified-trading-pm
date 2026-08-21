@@ -173,7 +173,7 @@ gone quiet or the streak has reset." Run live from an interactive session with A
       fix by only 34s) — not a masked second bug, just unlucky timing against the documented race. **Do not close this
       todo on the PHOENIX-SOLANA fix alone** — the ERR_LDR finding is the reason the gate is STILL blocked as of
       14:09Z+ even with the real regression already fixed.
-- [ ] [SCRIPT] P3. **`ldr_to_main_fleet_promote.sh:638`'s `gh api repos/$OWNER/$REPO/commits/live-defi-rollout \
+- [x] [SCRIPT] P3. **✅ DONE 2026-08-21 (ci_reconciler, unified-trading-pm@b76af747a2).** `ldr_to_main_fleet_promote.sh:638`'s `gh api repos/$OWNER/$REPO/commits/live-defi-rollout \
       2>/dev/null || echo '{}'` silently swallows the real error, making a live GitHub platform outage
       indistinguishable from a genuine per-repo API regression in the workflow's own log** (found diagnosing the
       2026-08-17 ~14:45Z `ERR_LDR` occurrence above — required an out-of-band `githubstatus.com` check to confirm the
@@ -488,3 +488,88 @@ Doc stays `assigned_vm: NA` (this is an extraction, not a whole-doc reclassify �
 incident-tracking record for future treadmill occurrences). The `archive_exempt: true` frontmatter note (flagged
 stale-but-harmless since 2026-08-18) is unchanged by this extraction — still moot rather than load-bearing, since
 this todo remains genuinely open until the batch ships it.
+
+**cicd escalation agt-4c5e02, 2026-08-21 ~10:55Z** (`sit_gate_stuck` wall, `unified-api-contracts` — `CONTEXT` cited 5
+straight SIT-gate-blocked ticks, latest tick run `https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32469267969`,
+escalating run `https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32469495811`): Live-diagnosed via
+`sit_gate_stuck_detector.py` + `gh run view --log` on the fleet-promote ticks, not assumed from the alert text — same
+"`CONTEXT` is stamped at original-detection time and does not refresh on redispatch" delayed-dispatch pattern the
+2026-08-18 entry already documents. **Same documented moving-tree treadmill, already converging on arrival, fully
+converged during diagnosis — no code fix needed, nothing to push.** By the time I checked, the streak had already
+dropped from the cited 5 to 2 (default `--threshold 3` reported "healthy" outright; `--threshold 1 --lookback 10`
+showed `unified-api-contracts` at 2 straight and `execution-service` at 1, both below the 3-tick alert bar). The
+latest completed fleet-promote tick at that point (run `32473765826`, 10:41:17Z→10:43:20Z) confirmed the standard
+fail-closed race, not a genuinely stuck run: `TIER A PASS unified-api-contracts: ci_status cached='MAIN_GREEN'
+live='MAIN_GREEN'`, `CONTENT GATE PASS`, then `SIT GATE BLOCK unified-api-contracts: true-delta not SIT-validated on
+this tree (sit_validated_tree='24e7f2bddd2b36ab0f5ce1a28829f88c03e84e57', LDR tree='36d9552e9e4654a647c836871b3315cc2d22f8d1')
+— fail-CLOSED. Dispatching SIT-on-LDR; a later tick promotes once SIT validates this exact tree.` — the exact
+`sit_validated_tree`-vs-moving-LDR-tip race from the 2026-07-20 doc, with SIT-on-LDR already in flight, no `ERR_LDR`
+degradation, no orphaned/stale promote PR (`gh pr list --search "chore(promote)" --repo IggyIkenna/unified-api-contracts`
+→ empty). Backgrounded a bounded poll of `sit_gate_stuck_detector.py` (every 3 min, 20-min cap, self-heartbeating)
+rather than declare done on the partial read: converged at the very next check, 10:57:11Z —
+`sit-gate stuck detector: healthy (no repo has 3+ consecutive SIT GATE BLOCK ticks)`. Verified concretely, not just
+inferred from the detector. This is the 9th consecutive occurrence of this exact wall type resolving to
+"self-converges, no code fix" (deployment-api, execution-service, market-tick-data-service ×4, agent-orchestrator,
+unified-api-contracts). Todos 1 (dedup-key, already `[x]`) and the swallowed-error P3 (already extracted to
+`ci_satellite_ao_dispatch_batch16_2026_08_21.md`) are unchanged — this occurrence did not exercise either (no
+orphaned PR, no `ERR_LDR`).
+
+**cicd escalation agt-a38708, 2026-08-21 ~11:08Z** (`sit_gate_stuck` wall, `execution-service` 3 straight + `unified-api-contracts`
+4 straight SIT-gate-blocked ticks, latest tick run `https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32475666053`):
+Live-diagnosed via `sit_gate_stuck_detector.py` + `gh run view --log` on the fleet-promote ticks, not assumed from the alert
+text. **`unified-api-contracts`: same documented moving-tree treadmill, fully converged — no code fix needed, nothing to
+push.** Sequence: run `32475666053` (11:06:14Z) logged `SIT GATE BLOCK unified-api-contracts: true-delta not SIT-validated
+on this tree (sit_validated_tree='36d9552e...', LDR tree='cd6a536f...')` — fail-closed, SIT-on-LDR already dispatched, no
+`ERR_LDR`, no orphaned promote PR (`gh pr list --search "chore(promote)" --repo IggyIkenna/unified-api-contracts` → empty).
+Backgrounded a bounded poll (every 3 min): converged by 11:32:10Z, run `32477480358` logging
+`SIT GATE PASS unified-api-contracts: true-delta SIT-validated on this tree (sit_validated_tree == LDR tree cd6a536f...)`.
+**`execution-service`: same race mechanism, but did NOT converge within this escalation's observation window (~50 min,
+11:08Z-11:54Z+) — root cause confirmed benign, not a genuinely stuck gate.** `execution-service`'s own `live-defi-rollout`
+tip kept advancing with fresh commits throughout the window (`070a0bc1...`→`bdb4c9f0...`→`1b077f3e...`, latest observed
+commit `b49a3f1a` at 11:53:22Z) faster than a `full-workspace-sit` round trip (~15-30 min, confirmed via
+`gh run list --workflow full-workspace-sit.yml`: 8 consecutive runs in the window, ALL `conclusion=success`, none red,
+none cancelled) can complete against a fixed tree — the textbook `sit_validated_tree`-vs-moving-LDR-tip race from the
+2026-07-20 doc, this time sustained because `execution-service` itself (not a sibling repo) is the one under active
+commit velocity. `fleet-promote` itself ticked normally throughout (8 consecutive `conclusion=success` runs, roughly
+every 8-15 min, confirmed NOT stalled), no `ERR_LDR` at any tick, no orphaned/stale promote PR
+(`gh pr list --search "chore(promote)" --repo IggyIkenna/execution-service` → empty both at start and end of the
+window), `githubstatus.com` reported `All Systems Operational` throughout. Streak climbed 3→4→5 over two bounded
+polls (20 min + partial 15 min, second poll was killed by session/task-lifecycle before its own 15-min cap, not because
+convergence failed) but held FLAT at 5 across the final 5 checks (11:41Z-11:54Z) against the SAME latest-tick URL, i.e.
+not runaway-worsening — consistent with "genuinely racing a busy repo's own commit stream", not a masked distinct bug.
+**Exiting with `execution-service` still technically SIT-gate-blocked** (this is the operator-acceptable, previously-ruled
+architecture per the 2026-07-20 resolution — accept-and-monitor was the adopted direction, not eliminate — and no code
+push in any covered repo can shorten a round-trip that is racing that repo's own live commit velocity); it will
+self-converge on `execution-service`'s next natural commit lull, per the doc's own "a window does exist" framing. This is
+the 10th consecutive occurrence of this exact wall type diagnosed live and confirmed as the documented treadmill (not a
+distinct bug) — `unified-api-contracts` converged during this session, `execution-service` remains a benign in-flight
+race at hand-off. Todos 1 (dedup-key, already `[x]`) and the swallowed-error P3 (already extracted to
+`ci_satellite_ao_dispatch_batch16_2026_08_21.md`) are unchanged — this occurrence did not exercise either.
+
+**ci_reconciler (interactive /ci-reconcile session), 2026-08-21 ~17:00Z**: shipped the one remaining open todo
+(the swallowed-`gh api`-error P3, also mirrored in `ci_satellite_ao_dispatch_batch16_2026_08_21.md` todo 2) — not a
+re-litigation of the treadmill's accepted architecture, just the small bounded logging fix this doc's own history
+already scoped and deferred pending a calmer day. Both `ldr_to_main_fleet_promote.sh:638` and
+`ldr-to-staging-promote.yml`'s LDR/staging tree-compare now surface the real `gh api` stderr via `::warning::`
+before falling back to `ERR_LDR`/`{}`, instead of a bare sentinel with no diagnosable cause. Evidence:
+unified-trading-pm@b76af747a2. This doc's remaining content (the 11 documented treadmill occurrences, all
+self-converging) is unchanged — this entry only closes the one genuinely open code-fix todo.
+
+**cicd escalation agt-06ef7a, 2026-08-21 (re-dispatch citing `execution-service` 7 straight SIT-gate-blocked ticks,
+latest tick run `https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32480318469` — continuation of the
+same in-flight race the immediately-preceding `agt-a38708` entry handed off at streak 5): confirms `execution-service`
+already converged before this dispatch reached me — the same delayed-dispatch/stale-`CONTEXT` pattern this doc's
+Finding 2 correction and the 2026-08-18 entry already document. Live-checked, not assumed from `CONTEXT`:
+`sit_gate_stuck_detector.py --threshold 1 --lookback 10` shows `execution-service` no longer in the blocked list at
+all (only `market-tick-data-service` at 2 straight, below the 3-tick alert bar); `--threshold 3 --lookback 8` (default)
+reports `healthy`. Verified concretely via the actual fleet-promote run, not just inferred from the detector: run
+`32492468779` (14:30:04Z→14:32:24Z) logged `TIER A PASS execution-service: ci_status cached='MAIN_GREEN'
+live='MAIN_GREEN'`, `CONTENT GATE PASS`, `posted sit-gate/fleet-green=success on execution-service@e4e6b9623230`,
+`SIT GATE PASS execution-service: non-breaking delta`, opened promote PR
+`https://github.com/IggyIkenna/execution-service/pull/759`, and the same tick's summary lists `execution-service`
+under `Promoted (13)`. No orphaned/stale promote PR (`gh pr list --search "chore(promote)" --repo
+IggyIkenna/execution-service` → empty post-merge). No code fix needed, nothing to push — this occurrence resolved
+itself in the natural commit lull the prior entry predicted. This is the 11th consecutive occurrence of this exact
+wall type resolving to "self-converges, no code fix." Todos 1 (dedup-key, already `[x]`) and the swallowed-error P3
+(already extracted to `ci_satellite_ao_dispatch_batch16_2026_08_21.md`) are unchanged — this occurrence did not
+exercise either.

@@ -880,6 +880,26 @@ contain the ONLY copy of a foreign agent's uncommitted WIP:
 content for that file — if the autostash held a foreign agent's only WIP copy for that path, it is permanently gone
 (UNRECOVERABLE). The autostash drop follows silently and the WIP is lost with no warning.
 
+### Plain `git stash pop` conflict — `--theirs` means the STASH, not the pull (2026-08-21)
+
+Distinct from the rebase-autostash case above (that's `git rebase`'s merge machinery; this is `git stash pop`'s
+own, plain `git merge`-based apply). The sequence `git stash push -m "wip"` → `git pull --ff-only` (or
+`--rebase --autostash`) → `git stash pop` is a common, correct pattern for reconciling local WIP against new
+upstream commits. When the pop reports a conflict, **`git checkout --theirs -- <file>` restores YOUR OLD STASHED
+CONTENT, not the newly-pulled commit's content — the opposite of what `--theirs`/`--ours` mean in a normal merge
+or rebase.** Git's stash-pop conflict is internally a merge where the just-pulled HEAD is "ours" and the stash's
+patch is "theirs" (the stash is being applied ON TOP of HEAD, so HEAD is the base you're already on). Measured
+twice in one session (2026-08-21, execution-service and unified-trading-pm): using `--theirs` to "defer to the
+newer upstream version" instead silently kept the stale local stash content, discarding hours of a domain owner's
+newer, already-shipped fix, undetected until a `git diff --cached --stat -- <file>` (comparing the resolved
+content against HEAD) showed a nonzero diff where none was expected.
+
+**The fix**: to keep the newly-pulled HEAD version and discard your stashed version, use
+`git checkout HEAD -- <file>` (unambiguous, not `--ours`/`--theirs`). To keep your stashed version over HEAD's,
+`git checkout --theirs -- <file>` (or just don't stash-pop that file's hunk). **Always verify after resolving**:
+`git diff --cached --stat -- <file>` (or vs `HEAD` if unstaged) — a nonzero diff when you intended to take HEAD's
+content means the resolution went backwards; fix it before shipping, not after.
+
 ### Stash-pile regrowth signal (2026-07-30, stash_pile_workspace_cleanup_2026_06_03.md Phase 5)
 
 The autostash-conflict pattern above means `refs/stash` piles regrow silently between manual `audit-stash-pile.sh`
