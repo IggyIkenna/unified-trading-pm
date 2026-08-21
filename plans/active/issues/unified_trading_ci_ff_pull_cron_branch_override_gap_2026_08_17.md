@@ -236,6 +236,27 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
       once genuinely idle, or an interactive session on those specific laptops reconciles directly per the
       liveness-gated realign recipe already used above. Repo: unified-trading-ci.
 
+- [ ] [OPERATOR] P2. Reconcile the orchestrator VM's (`ip-172-31-5-118`) two remaining diverged
+      `unified-trading-ci` clones — the MAIN-workspace clone (`ahead 3 / behind 5`) and slot-16
+      (`ahead 7 / behind 5`), measured 2026-08-21 09:4x via `/api/fleet/git-health` + a per-clone audit over
+      SSM. All 32 OTHER ci clones on that VM are already `main...origin/main` clean. Both are the SHAPE-B
+      residue (on `main` already, but local `main` polluted by the pre-2026-08-17 cron FF-merging
+      `live-defi-rollout` into it) — NOT the stranded-branch shape, so `24106a7374`'s Step 2b correctly does
+      not touch them. Repair is `git checkout -B main origin/main`, proven lossless by measurement:
+      `dirty=0` and `git rev-list HEAD --not --remotes=origin` = 0 on both. NOT done from this session
+      because both slots reported `status=working` (slot-16 mid-task
+      `cross_cutting_satellite_ao_dispatch_batch21-d3c17ca9d783`) and `ao-watchdog/SKILL.md` § 3g rule 1
+      forbids an outside session touching a live slot. Do it when they go idle. Note the standing
+      "its own worker reconciles in due course" assumption has now empirically failed — slot 0 has been
+      diverged since 2026-08-11 (10 days).
+- [ ] [OPERATOR] P2. Revive the `Mac` laptop's slot cron + reporter — `/api/fleet/git-health` (2026-08-21)
+      shows all 11 of its `unified-trading-ci` rows last reported `2026-08-19T19:57:03Z` with
+      `reporter_stale: true`, `ff_cron_stale: true` and `ff_pull_last_result: conflict` from
+      `2026-08-19T19:53:14Z`. That host has not run a sweep in 2 days, so its 11 diverged rows are a STALE
+      snapshot of unknown current shape, and NO fix can reach it until the cron runs again — the
+      self-updating crontab entry is precisely what would deliver `24106a7374` to it. Once it sweeps again,
+      re-measure before assuming either shape.
+
 ## Progress Log
 
 - **2026-08-17 (slot-5, interactive)**: root-caused via SSM live-VM check (confirmed still-firing,
