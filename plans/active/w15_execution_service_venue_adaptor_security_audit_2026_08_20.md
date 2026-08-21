@@ -188,7 +188,7 @@ impression:
       phase above resolves to either a landed fix (cite the sha) or a new tracked todo/issue-doc (cite the
       slug), zero exceptions. — unified-trading-pm@(pending) + evidence: see Progress Log entry below.
 
-- [ ] [BACKEND] P0. Add strict bridge request validation and fail-closed live credential handling (bridge.py); HIGH findings: checklist points 1, 3, and 4.
+- [x] ✅ [BACKEND] P0. Add strict bridge request validation and fail-closed live credential handling (bridge.py); HIGH findings: checklist points 1, 3, and 4. — execution-service@fb50f729,116c5e2f + evidence: verified already-landed (see Progress Log 2026-08-21 slot-7 entry below); no new code required.
 - [ ] [BACKEND] P0. Add CCTP amount/recipient validation and reject missing source wallet credentials before approve/burn (cctp.py); HIGH finding: checklist point 3.
 - [ ] [BACKEND] P0. Make CCTP transfer tracking durable and idempotent across retries; preserve source burn tx hash and prevent duplicate approve/burn submissions; HIGH finding: checklist point 6.
 - [ ] [BACKEND] P0. Define and enforce caller slippage/deadline bounds for Socket bridge routes, including validation of aggregator-produced transaction targets and calldata; HIGH findings: checklist points 2 and 4.
@@ -367,3 +367,22 @@ Cross-checked every completed audit phase's Progress Log entry against the Triag
 - **Cleanup:** removed a duplicate set of 4 native-REST-adapter triage todos (an earlier, less-precise pass had been appended twice — once generically, once with the slot-4 audit's own more exact `kraken_futures_orders.py` line citations) to avoid the backlog regen dispatching two near-identical fix tasks for the same findings.
 
 No production code was changed — this is a triage-only pass per the todo's own scope; the five new todos and the duplicate removal are the deliverable.
+
+### 2026-08-21 — slot 7 bridge.py triage-todo verification (checklist points 1, 3, 4)
+
+Re-read `execution_service/defi_execution/protocols/bridge.py` at current LDR HEAD against the specific "Add strict
+bridge request validation and fail-closed live credential handling" triage todo. The fix was already landed —
+between the slot-5 audit (2026-08-20) and now, slot-10/15's commits `ef899bf5` (request reservation boundary) and
+`fb50f729` (bridge transfer security state) introduced `_validate_request()` (finite/positive amount, max-amount
+cap, `max_slippage_bps` range check, near-future `deadline` check, `_EVM_ADDRESS_RE` recipient validation,
+`WELL_KNOWN_TOKENS` chain/token allowlist), replaced the silent-fallback `_resolve_token_address()` with one that
+raises `ValueError` for any unlisted symbol/chain, and added `_validate_aggregator_target()` (Socket-returned
+`txTarget`/`allowanceTarget` must be in `config["allowed_aggregator_targets"]`) plus a `_HEX_DATA_RE`/length check on
+returned calldata. Commit `116c5e2f` (2026-08-20, predates the slot-5 audit read) had already removed the
+`socket_api_key` prefix logging — grepped every `_api_key` reference in the current file; it is used only as the
+`API-KEY` HTTP header, never logged. Fail-closed live-credential handling is present: `_prepare_bridge()` raises when
+`is_live` and no durable `_state_store` is configured; `_route_and_execute()` raises when `is_live` and
+`not self.has_signing_capability` — neither path falls through to simulated success. All three checklist points (1
+credential handling, 3 input validation, 4 slippage/deadline bounds) verified against the live file content, not
+assumed from the commit subject lines. No new code was needed; the todo checkbox above is flipped citing the two
+substantive fix SHAs.
