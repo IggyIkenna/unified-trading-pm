@@ -178,6 +178,51 @@ book-snapshot/depth-rebuild connector (no per-update exchange ts exists to carry
 doesn't parse the underlying chain event's own timestamp. The P0 schema-split todo above must account for `mixed`
 connectors needing a per-path decision, not just a per-file one.
 
+## Findings — `resolve_mtds_ts_event_timestamp_naming_collision` disposition (2026-08-21)
+
+Batch21 item (`cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`), source: this doc's "Close or supersede
+`resolve_mtds_ts_event_timestamp_naming_collision`" todo. **Verdict: PARTIALLY LANDED, THEN REVERTED — the collision is
+live again today, in the exact form this parent issue's audit measured.** Not descoped (no deliberate decision to
+abandon it) and not forgotten (it's narrated in the current code comments) — it shipped a real fix, which was reverted
+5 days later as a hotfix for a regression the fix itself caused, and never re-attempted.
+
+**Method**: found the reference (`market_tick_data_service/engine/orchestrator/symbol_rules.py:70,127` +
+`tests/unit/test_symbol_rules_column_aliases.py:18`), then walked full git history via
+`git log --all -S"resolve_mtds_ts_event_timestamp_naming_collision"` / `git log -S"_COLUMN_ALIASES"` on
+`market-tick-data-service`.
+
+**Timeline** (all commits on `market-tick-data-service`):
+
+1. **2026-08-05, `5efc76cc`** ("dual-write ts_event alongside timestamp in `_apply_column_aliases`") — Phase-1: a
+   compatibility copy, `ts_event → timestamp`, added to `_COLUMN_ALIASES`.
+2. **2026-08-05, `79c2e961`** ("remove ts_event→timestamp column alias (Phase 4)") — **this is
+   `resolve_mtds_ts_event_timestamp_naming_collision`'s actual fix landing**: the alias/copy was removed, so
+   Databento's `ts_event` (exchange time) stopped being silently duplicated under the generic `timestamp` name.
+3. **2026-08-10, `dcd3b7c4`** ("restore ts_event→timestamp alias copy — unblock VIX/CBOE ohlcv_1m schema
+   validation") — **5 days later, Phase-4's removal was REVERTED.** Root cause (per the now-archived
+   `plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md` todo 1, resolved by this exact commit):
+   removing the alias broke `_TICK_REQUIRED_COLUMNS["ohlcv_1m"]` validation for VIX/CBOE (XCBF.PITCH) writes —
+   `Schema validation FAILED: missing columns=['timestamp']` on every chunk — because the ohlcv_1m validator and the
+   pre-2026-08-05 on-disk corpus both hard-depend on a `timestamp` column existing. The revert restores the dual-write
+   copy (current code, `symbol_rules.py:84-88` `_COLUMN_ALIASES = {"ts_event": "timestamp", ...}`), now framed
+   explicitly as intentional ("a COPY, not a rename") rather than an oversight.
+4. **2026-08-10, `8c46c456`** ("accept Databento-native ts_event as time column in `_validate_tick_schema`") —
+   companion fix, same incident.
+
+**Current state, confirmed by direct read of `symbol_rules.py:64-141` (2026-08-21)**: the alias/copy is live. Every
+Databento tick still gets `ts_event`'s exchange-time value duplicated verbatim into the generic `timestamp` column —
+the identical "one column, two meanings" shape this parent issue documents for the live tick path (`ReceivedTick`),
+just on the write-time/schema-validation side rather than the live-ingest side. No follow-up re-attempt of Phase-4 has
+been filed or landed since 2026-08-10.
+
+**Implication for the P0 schema-split todos above**: they must not assume Phase-4's prior work is still in effect —
+it isn't. The planned fix (first-class, separately-named `exchange_timestamp`/`local_timestamp` fields) is a different
+and more correct approach than Phase-4's narrower alias-removal, but it repeats Phase-4's exact failure mode if it
+removes/repoints `timestamp` without migrating `_TICK_REQUIRED_COLUMNS`'s ohlcv_1m entry and the pre-2026-08-05
+on-disk corpus readers in the SAME change — that is precisely what triggered the 2026-08-10 incident and forced the
+revert. Treat "does anything still validate against a bare `timestamp` column for ohlcv_1m" as a required check before
+shipping the split, not an afterthought.
+
 ## Progress Log
 
 **2026-08-20 — filed.** No code touched. Filed after an operator correction to an orchestrating-session claim; the
