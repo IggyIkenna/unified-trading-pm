@@ -141,13 +141,3 @@ Two independent tracks:
   shipped and closed independently (agent-orchestrator@52e153d65a) — this issue tracks the underlying host/QG-infra
   finding, which is out of scope for that one-shot task but too valuable to lose.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).
-- **2026-08-21 (slot 17, interactive) — corroborating live evidence**: while investigating scheduled/escalation-
-  worker health (unrelated task), found `uptime` reporting **load average 46/54/60 on a 16-core orchestrator VM**
-  (~3-4x overload) and **30GB of swap actively in use on a 30GB-RAM host**, with `ps aux --sort=-%cpu` showing ~25
-  concurrent QG/pytest/basedpyright/quickmerge processes across slots at that moment. Two of this session's own
-  `curl localhost:8765/api/...` calls timed out during the same window. This is system-wide evidence of the same
-  "many concurrent Claude sessions contending for this shared host" condition this doc's own root cause describes
-  (13+ concurrent sessions, load avg ~13/16 at the time this doc was filed) — just a more severe snapshot,
-  consistent with the fleet's growth since 08-20. Not a new root cause, not independently investigated further
-  here — cross-linking as reinforcing evidence for track 2 ("host-level investigation... why does `--cov`'s live
-  dataset growth trigger an unexplained silent death under load") rather than opening a separate doc.

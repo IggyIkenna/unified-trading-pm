@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: quality-gates-systemic-remediation-2026-03-16
-summary: 'Full QG audit of all 69 repos (26 libraries/PM/codex, 22 services, 9 APIs, 12 UIs). Results: 28 PASS, 41 FAIL.
-  Identified 6 systemic patterns affecting 40+ repos. This plan tracks remaining fixes. No relaxing of registry or alignment
-  tests — UCI must not re-export UAC domain enums (uci-no-domain-schemas); SIT must keep strict guardrails.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-16'
+overview: 'Full QG audit of all 69 repos (26 libraries/PM/codex, 22 services, 9 APIs, 12 UIs). Results: 28 PASS, 41 FAIL. Identified 6 systemic patterns affecting 40+ repos. This plan tracks remaining fixes. No relaxing of registry or alignment tests — UCI must not re-export UAC domain enums (uci-no-domain-schemas); SIT must keep strict guardrails.
+
+  '
 type: infra
 epic: epic-infra
 completion_gates: {code: C4, deployment: D2, business: none}

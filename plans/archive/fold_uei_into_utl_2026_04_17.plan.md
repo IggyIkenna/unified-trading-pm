@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: fold-uei-into-utl
-summary: Consolidate unified-trading-library into unified_trading_library.events (new sub-package name, aggregate of both
-  divergent packages), migrate all consumers off the old paths, archive the UEI repo.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-17'
+overview: Consolidate unified-trading-library into unified_trading_library.events (new sub-package name, aggregate of both divergent packages), migrate all consumers off the old paths, archive the UEI repo.
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

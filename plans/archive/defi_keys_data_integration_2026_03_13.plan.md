@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: defi-keys-data-integration-2026-03-13
-summary: Consolidates all API key provisioning, VCR cassette recording, DeFi testnet data, data freshness SLAs, and production
-  backfill into a single plan. 30 vendor API keys across 4 phases, VCR cassettes for all venues including 3 missing interface
-  repos (audit §10 FAIL), FreshnessMonitor implementation with per-venue SLAs for 33 venues, and 5-step production data
-  backfill pipeline. Milestone-gated.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -14,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
+overview: 'Consolidates all API key provisioning, VCR cassette recording, DeFi testnet data, data freshness SLAs, and production backfill into a single plan. 30 vendor API keys across 4 phases, VCR cassettes for all venues including 3 missing interface repos (audit §10 FAIL), FreshnessMonitor implementation with per-venue SLAs for 33 venues, and 5-step production data backfill pipeline. Milestone-gated.
+
+  '
 type: mixed
 epic: epic-infra
 completion_gates: {code: C4, deployment: D3, business: none}

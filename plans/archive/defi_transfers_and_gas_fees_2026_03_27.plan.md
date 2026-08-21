@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: defi-transfers-and-gas-fees
-summary: Cross-chain transfer orchestration, Alchemy transfer verification, historical gas fee reference data, per-instruction
-  gas costing, ETH balance tracking, and P&L gas attribution
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-27"
+overview:
+  Cross-chain transfer orchestration, Alchemy transfer verification, historical gas fee reference data, per-instruction
+  gas costing, ETH balance tracking, and P&L gas attribution
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

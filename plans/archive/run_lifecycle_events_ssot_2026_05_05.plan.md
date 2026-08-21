@@ -1,13 +1,7 @@
 ---
 doc_type: plan
 title: run-lifecycle-events-ssot
-summary: 'Make every long-running entry-point in the workspace emit structured RUN_STARTED + RUN_COMPLETED|FAILED
-
-  events via a single UTL helper, so monitors / observability / VM-watchdog can gate on the event stream
-
-  rather than tail-grep raw logs. Closes the "no fire-and-forget VM launches" rule that just landed in
-
-  CLAUDE.md (2026-05-05). Phased: UTL helper → audit → rollout → QG enforcement test.'
+summary:
 status: in_progress
 nature: record
 asset_group: [cross-cutting]
@@ -25,6 +19,15 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-05
+overview: 'Make every long-running entry-point in the workspace emit structured RUN_STARTED + RUN_COMPLETED|FAILED
+
+  events via a single UTL helper, so monitors / observability / VM-watchdog can gate on the event stream
+
+  rather than tail-grep raw logs. Closes the "no fire-and-forget VM launches" rule that just landed in
+
+  CLAUDE.md (2026-05-05). Phased: UTL helper → audit → rollout → QG enforcement test.
+
+  '
 type: code
 epic: observability
 priority: P0

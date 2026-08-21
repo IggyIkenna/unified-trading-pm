@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: umi-mtds-merger
-summary: Merge unified-market-interface into market-tick-data-service as market_interface sub-package
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-14'
+overview: Merge unified-market-interface into market-tick-data-service as market_interface sub-package
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

@@ -164,10 +164,3 @@ own design pass first (see Todo 2), not a copy-paste of this guard.
   by path and the worker-liveness codex SSOT, neither previously included.
 - **na-eligibility-audit 2026-08-18 (ao tranche)**: RECLASSIFY (per-todo split) considered, then parked as CONFLICT — Todos 5-6 (UserPromptSubmit-driven IDE-compatible human-fleet heartbeat) individually read as bounded, but `ao_human_fleet_integration_2026_08_15.md` (the active, extensively-shipped plan owning this exact heartbeat mechanism) has an explicit "Design decisions... do not re-open without a new operator ruling" section that evaluated and REJECTED UserPromptSubmit as a heartbeat carrier (cites the same hook missing context-window/model/account fields). Whether Todo 5's "IDE-compatible" framing is a genuinely uncovered gap (statusline doesn't fire in Cursor/VS Code IDE mode) or re-litigates the rejected mechanism needs an operator call, not a worker read — parked, not extracted (see `ao_satellite_ao_dispatch_batch24_2026_08_18.md`'s "Explicitly excluded" section). Todos 1-4 confirmed KEEP-NA (explicit design fork, dependency-gated, or a safety-critical-path design-first requirement).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. No content change since the
-  2026-08-18 verdict. Todos 1-4 remain an explicit design fork (generalizing the review-slot hard rule to
-  scheduler/cicd/escalation roles, gated on that same design decision), a dependency on it, and a safety-critical-
-  path design-first requirement (the auto-heal-quarantine agent). Todos 5-6 (IDE-compatible heartbeat) stay parked
-  as a genuine conflict against `ao_human_fleet_integration_2026_08_15.md`'s own explicit "do not re-open without a
-  new operator ruling" rejection of the same carrier mechanism — still needs an operator call, not a worker read.
-  Doc stays `assigned_vm: NA`.

@@ -141,18 +141,13 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
           UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
           (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
 
-- [x] ✅ [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
+- [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
       (prediction uses the flat `instruments-store-prediction` kind, no per-AG key). Harmless today (prediction `_index`
       is already canonical — 500 rows, 0 blank, 0 dup → nothing to canonicalize), but the `--asset-group prediction`
       choice is a dead path. Fix `_bucket_for` to route prediction →
       `kind="instruments-store-prediction", asset_group=None` if prediction ever needs re-canonicalisation.
       **NICE-TO-HAVE** (provenance: 2026-06-18 instruments-store audit). — instruments-service
-      ✅ 2026-08-21 — **already fixed, stale todo.** `_bucket_for()` already has exactly this routing
-      (`instruments-service@60552cb8`, landed 2026-08-05, "fix(instruments-service): route prediction through
-      instruments-store-prediction kind in canonicalize _bucket_for"). Verified live:
-      `resolve_bucket_name(cloud="gcp", kind="instruments-store-prediction", asset_group=None)` returns a real
-      bucket name, no exception. Nothing to ship.
 
 ## Folded-in (I-2 consolidation 2026-06-26)
 

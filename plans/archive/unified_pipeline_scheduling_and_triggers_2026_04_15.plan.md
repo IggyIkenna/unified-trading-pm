@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: unified-pipeline-scheduling-and-triggers
-summary: End-to-end pipeline readiness — backfill, T+1, thermal, live — across all 6 clusters with sports trigger scheduling
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -15,6 +15,7 @@ remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_1
 superseded_by: [consolidated_operational_validation_2026_04_15.plan.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
+overview: End-to-end pipeline readiness — backfill, T+1, thermal, live — across all 6 clusters with sports trigger scheduling
 type: mixed
 epic: epic-deployment
 completion_gates: {code: C5, deployment: D3, business: B4}

@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: full_system_audit_resolution_2026_03_18
-summary: Resolve all findings from the 31-section production readiness audit (2026-03-18). 8 FAILs, 12 WARNs, 11 PASS.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
+overview: Resolve all findings from the 31-section production readiness audit (2026-03-18). 8 FAILs, 12 WARNs, 11 PASS.
 type: mixed
 epic: none
 completion_gates: {code: C4, deployment: none, business: none}

@@ -271,9 +271,3 @@ immediately surfaced 2 DIFFERENT failures elsewhere in the same repo, because a 
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries).
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- The doc's single open item (step 3: whether quickmerge.sh's branch check should broaden beyond literal `main` to recognise live-defi-rollout/staging) is explicitly framed in-doc as a design/judgment call on fleet-wide shared ship infrastructure, gated on file-ownership contention with ci_satellite_ao_dispatch_batch4_2026_07_31.md's own todo 1 (tracked there as Deferred D4-1). Steps 2 and 4 of the same follow-up are done with commit evidence (unified-trading-library@dc1dc7df, worker slot-15...
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — unchanged since the 2026-08-18 verdict.
-Sole open item (step 3: whether `quickmerge.sh`'s branch check should broaden beyond literal `main` to recognise
-`live-defi-rollout`/staging) remains an explicit design/judgment call on fleet-wide shared ship infrastructure,
-gated on file-ownership contention with `ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s own todo 1 (tracked there
-as Deferred D4-1). Steps 2 and 4 stay done with commit evidence. No `assigned_vm` change.

@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: Coding Standards Codex Audit Plan
-summary: Audit all repos against unified-trading-codex 06-coding-standards. Config, UTC, imports, error handling, typing,
-  quality gates, setup.sh, batch-live pattern.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
+overview: Audit all repos against unified-trading-codex 06-coding-standards. Config, UTC, imports, error handling, typing, quality gates, setup.sh, batch-live pattern.
 todos:
 - {id: codex-docs-updated-to-match-plans, content: 'Pre-work complete: audited all 21 plans against codex docs and cursor rules; updated codex/rules to match plans. Fixed: Layer 0 execution location (AC/UIC define, interfaces execute), Layer 1.5 added, BATCH-LIVE-SYMMETRY.md created, TIER-ARCHITECTURE.md (ModelArtifactStore→T0, UMI→UDC violation, Cloud* naming, system-integration-tests), try-except ImportError Tier 3 carve-out removed, secrets-management.md import paths fixed, pre-sprint-baseline.md + vcr-cassette-pattern.md created, phase0-baseline.mdc + integration-testing-layers.mdc cursor rules updated.', status: done}
 - {id: audit-codex-sections, content: 'Audit against 06-coding-standards/README.md, quality-gates.md, feature-branch-workflow, batch-live-symmetry. OUTPUT FORMAT: CODEX_AUDIT_REPORT.md in unified-trading-pm/reports/ with one row per repo per standard: | repo | standard | status (PASS/FAIL/WARN) | file:line evidence |. GATE: report generated for all repos in workspace-manifest.json; every FAIL row has a corresponding fix ticket in the relevant plan.', status: done}

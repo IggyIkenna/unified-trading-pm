@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: strategy-lifecycle-visibility-ui
-summary: Strategy lifecycle enforcement, paper trading comparison, ML dashboard, feature lineage, composable strategies,
-  auto-retuning, research shell, risk attribution UI
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -16,6 +15,7 @@ remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
 superseded_by: [consolidated_strategy_and_ui_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
+overview: Strategy lifecycle enforcement, paper trading comparison, ML dashboard, feature lineage, composable strategies, auto-retuning, research shell, risk attribution UI
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: Schema Normalization Completion
-summary: Complete normalization of all unified-api-contracts external schemas into canonical formats, establish UAC as the
-  single source of truth for canonical schemas, align interfaces (UMI, UTEI, USEI) to import from UAC, and produce a full
-  audit table of every schema and its normalization path.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
+overview: Complete normalization of all unified-api-contracts external schemas into canonical formats, establish UAC as the single source of truth for canonical schemas, align interfaces (UMI, UTEI, USEI) to import from UAC, and produce a full audit table of every schema and its normalization path.
 todos: []
 isProject: false
 ---

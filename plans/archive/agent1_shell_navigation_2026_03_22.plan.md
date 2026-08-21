@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: agent1-shell-navigation
-summary: Remove card landing pages, wire direct-to-tab routing, restore orphaned components, add Debug Footer with Reset
-  Demo
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-22'
+overview: Remove card landing pages, wire direct-to-tab routing, restore orphaned components, add Debug Footer with Reset Demo
 todos:
 - {id: a1-p0-remove-key-landing, content: '- [x] [AGENT] P0. Delete `app/(platform)/services/[key]/page.tsx` (dynamic card landing page) and the `SERVICE_SECTIONS` / `SERVICE_REGISTRY` definitions it uses. Each lifecycle nav dropdown item should link DIRECTLY to the first tab of that service (e.g. "Trading" → `/services/trading/overview`, NOT `/services/trading`).
 

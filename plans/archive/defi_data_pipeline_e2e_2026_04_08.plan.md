@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: defi-data-pipeline-e2e
-summary: End-to-end DeFi data pipeline — backfill all MTDS operations, wire downstream consumers, build data manifest
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +12,7 @@ tags: []
 related: []
 created: '2026-04-14'
 remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
+overview: End-to-end DeFi data pipeline — backfill all MTDS operations, wire downstream consumers, build data manifest
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D3, business: B4}

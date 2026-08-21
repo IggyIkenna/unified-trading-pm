@@ -334,22 +334,6 @@ below don't need todo 5's code to have landed first): a new module
 
 ---
 
-- [ ] [BACKEND] P0. **Break the deployment-api to deployment-service Python dependency** (added 2026-08-21, provenance
-      `/plans/active/cross_repo_duplication_cleanup_2026_08_21.md`). `deployment-api/pyproject.toml:47,69,128` declares
-      `deployment-service` as an editable path dependency and **15 non-test files import it**, two at module level
-      (`routes/deployments_inventory/_aggregation.py:22-23`, `routes/deployments_inventory/_classification.py:20-21`;
-      the rest are function-level, e.g. `routes/vm_admin.py:262`, `services/artifact_pipeline/providers.py:442`). This
-      is a banned service-to-service dependency and it contradicts `deployment_api/config_loader.py:4-10`, whose
-      docstring states deployment-api must not import deployment-service as a package. Someone already half-decoupled
-      the repos — `config_loader.py`, `metrics.py` and `storage_client.py` are deliberately slimmed independent
-      reimplementations — and left the route-level registry imports behind. Fix: hoist `CLOUD_RUN_JOBS` and
-      `deployment_classification` to UAC, re-point the routes, drop the path dependency. SSOT:
-      `/codex/04-architecture/tier-and-import-architecture.md`.
-- [ ] [BACKEND] P2. **Deduplicate the two backend pairs in `deployment-service`** (same provenance). `backends/aws.py`
-      vs `backends/aws_batch.py` measure 404 vs 411 lines with **21 differing** (254 shared 30-line blocks);
-      `backends/cloud_run.py` vs `backends/gcp.py` share 164 blocks. Extract the common driver rather than keeping two
-      near-copies per cloud.
-
 ## Progress Log
 
 - **2026-08-18 (authoring)**: Plan drafted this session after tracing the deployment-service/deployment-api

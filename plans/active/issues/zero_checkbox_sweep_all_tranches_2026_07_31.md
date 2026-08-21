@@ -226,7 +226,3 @@ them as a finding; the population definition is deliberately left unchanged.
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (4 entries), unchanged.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 1 open todo — a deliberately-permanent standing-register cadence item ('re-run the sweep at the next monthly /plan-reconcile pass'), owned by the /plan-reconcile scheduled job, not AO/operator judgment; flipping.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — sole open item remains the
-  deliberately-permanent standing-register cadence marker ("re-run the sweep at the next monthly /plan-reconcile
-  pass"), owned by the `/plan-reconcile` scheduled job per this doc's own standing-owner table, not AO/operator
-  judgment. Re-affirms 5+ prior audit passes on identical reasoning.

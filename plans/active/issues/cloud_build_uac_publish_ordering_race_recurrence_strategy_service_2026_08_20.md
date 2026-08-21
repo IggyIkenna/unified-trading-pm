@@ -34,7 +34,6 @@ related:
   - /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md
   - /plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md
   - /plans/active/issues/agent_orchestrator_qg_cancel_notifier_same_sha_rerun_gap_2026_08_20.md
-  - /plans/active/issues/publish_package_semver_tag_race_breaks_consumer_builds_2026_08_20.md
 created: 2026-08-20
 author: cloud-build-failure-watcher escalation (cicd, slot-11)
 parent_epic: ci_master
@@ -299,9 +298,3 @@ This incident was one of six alerts the operator asked to be triaged together. D
   concrete fix above; not implemented this session (operator asked for the issue doc first so the implementation has
   full context). Also confirmed instruments-service self-cleared without intervention, and reconciled the
   `publish-package` "FAILED" alert against real run history (does not match — same incident, different vantage point).
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2, first audit pass — doc filed 2026-08-20): KEEP-NA, valid.
-The doc's own primary "Implement" todo (line ~233) is explicitly gated: "operator review pending — do not ship
-until reviewed" — cannot be dispatched ahead of that sign-off regardless of how bounded the implementation reads.
-The remaining 4 todos are sizing/sequencing/defense-in-depth follow-ups explicitly scoped as secondary to that same
-gated primary fix. No operator review recorded yet as of this pass (doc is 1 day old). No `assigned_vm` change.

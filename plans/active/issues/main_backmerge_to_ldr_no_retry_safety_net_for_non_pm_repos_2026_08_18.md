@@ -123,10 +123,6 @@ checked clean before auto-merge was armed, per `ldr_to_main_fleet_promote.sh`'s 
 - **na-eligibility-audit 2026-08-18** [body-hash:ef6e0dc9d0973bd1]: RECLASSIFY (per-todo split) -- 3 of 4 open todos are bounded/deterministic with cited existing patterns (workspace-manifest.json repo-list read, notify-slack.yml dedup_key carrier). Conflict-checked against 7 other active-plan hits on main-backmerge-to-ldr/branch-health.yml (different axes: git-ref hygiene, CI cost/billing, stuck-queued-run cleanup, template-hosting location, self-hosted-runner migration cost, an already-shipped different-DECISION escalation-resolution poll) -- none claims this scope/comment/detection-surface work. Completed in the batch17 work split (items 1-3). Remaining 1 item stays assigned_vm: NA: todo 4 (evaluate a warm local action-cache), explicitly self-framed in-doc as an open investigation with an uncertain answer. Corrected a stale fix-location pointer in todo 2 while extracting (unified-trading-pm/scripts/workflow-templates/ no longer hosts main-backmerge-to-ldr.yml; migrated to unified-trading-ci 2026-08-07/08). Cross-cutting tranche audit.
 - **context-scout 2026-08-19**: populated/refreshed context_scope (4 entries).
 - **2026-08-20 (finalize review, slot 18)**: re-verified the three extracted items against landed commits and current `origin/live-defi-rollout`, then added concrete commit/run evidence to the three checkbox citations above. The source doc intentionally remains active with only the independent warm action-cache investigation open.
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed unchanged. Sole remaining todo ([CI] P3) is
-  explicitly framed in-doc as "Scope this as an investigation — the answer may be 'accept the transient and rely
-  on the P1 retry net'" — an open-ended investigation with an uncertain answer, not a bounded task. Cross-cutting
-  tranche, batch 2 of 3.
 
 ## Triage recipe for the next instance of this class
 

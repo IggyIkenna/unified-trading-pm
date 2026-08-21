@@ -80,16 +80,11 @@ leading slash, concentrated in: `gate_on_depends_wiring_gap_defi_dex_pool_finali
 this pass** (see Progress Log); the remainder is logged here rather than hand-fixed one-by-one in this session given
 the volume.
 
-- [ ] [DOC] P3. **na-eligibility-audit 2026-08-21: the concrete fix-existing-instances half of this item was
-      RECLASSIFY-extracted (per-todo split) to `/plans/active/ao_satellite_ao_dispatch_batch3_2026_08_21.md`** (a
-      pure mechanical add-a-leading-slash fix across the named files, no design judgment). This bullet stays open
-      here for its OTHER, distinct half — a genuine design/engineering-preference call, NOT extracted: consider
-      widening `check_reference_paths.py`'s format check (`BARE_CODEX_RE`) to also match bare
+- [ ] [DOC] P3. Sweep and fix the remaining ~40+ bare `/plans/...`-missing-slash instances enumerated above.
+      Consider widening `check_reference_paths.py`'s format check (`BARE_CODEX_RE`) to also match bare
       `plans/[0-9a-z_/-]+\.md` the same way it already does for `codex/`, so this class becomes mechanically gated
-      instead of requiring a manual hunter sweep every time (a scope/design decision on the checker itself, not a
-      bounded one-line fix). Done when (for the checker-widening half): a fresh `/plan-reconcile
-      agent_operating_framework_master` pass finds 0 bare-plans-ref instances in this epic's corpus AND the widened
-      check holds it there mechanically going forward.
+      instead of requiring a manual hunter sweep every time. Done when: a fresh `/plan-reconcile
+      agent_operating_framework_master` pass finds 0 bare-plans-ref instances in this epic's corpus.
 
 ## 4. Flagged, NOT auto-fixed: `task_template.md` self-issues (conservative per this run's instructions)
 
@@ -143,12 +138,3 @@ Two low-confidence items hunters flagged but did NOT recommend fixing (left as-i
   fixes, 1 zero-checkbox-doc conversion, 1 epic-roster mechanical regen, 1 Phase -1 stale-prior-finding
   resolution). This doc parks what that pass could not settle from evidence alone.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: RECLASSIFY (per-todo split) — §3's mechanical
-  fix-existing-bare-refs work extracted to `/plans/active/ao_satellite_ao_dispatch_batch3_2026_08_21.md` (conflict-
-  checked clear: no active `assigned_vm: planning` doc already covers this epic's remaining ~40 bare-ref instances).
-  §2's 3 `[REVIEW]` investigation items (recover/close a stalled prior hunter run; confirm a tradfi candidate list
-  was addressed; confirm a cross-cutting-closeout doc-coverage question) stay KEEP-NA — these are judge-the-evidence
-  investigations, not pure mechanical fixes. §4's 3 `task_template.md` self-issues stay KEEP-NA — the doc's own text
-  explicitly flags them for a deliberate human-attended edit given that file's fleet-wide authoring-SSOT blast
-  radius, a caution this audit respects rather than overrides (same class of restraint already applied to
-  `orchestrator_vm_e2e_hardening_2026_07_24.md`'s dirty-worktree dispatch-hook item). Doc stays `assigned_vm: NA`.

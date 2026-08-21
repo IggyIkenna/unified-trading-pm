@@ -87,7 +87,3 @@ fix depends on a product/architecture call this doc doesn't have the authority t
 - **na-eligibility-audit 2026-08-17** [body-hash:b7816f2287ce8a02]: KEEP-NA, valid -- Fresh doc (2026-08-17). Sole todo is an explicit [OPERATOR] binary product/architecture decision (accept polymarket's dual-casing split as permanent vs. treat as needing a narrower fallback) the doc's own text says it "doesn't have the authority to make." Both downstream code outcomes are fully pre-specified (websocket_streaming_handler.py:138-142); trivially AO-dispatchable once the operator answers. Cross-cutting tranche audit.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — Fresh doc (2026-08-17), 1 open todo = an explicit [OPERATOR]-tagged binary product/architecture decision the doc's own text says it lacks authority to make; both downstream code outcomes are fully pre-specified and.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed unchanged. Sole todo is still an explicit
-  [OPERATOR] binary product/architecture decision the doc's own text says it lacks authority to make; both
-  downstream code outcomes are already fully pre-specified once the decision lands. Cross-cutting tranche, batch
-  2 of 3.

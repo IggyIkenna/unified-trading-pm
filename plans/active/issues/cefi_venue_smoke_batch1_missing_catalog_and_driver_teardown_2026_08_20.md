@@ -65,28 +65,17 @@ shared cap and produces false skips/failures.
 
 ## Open todos
 
-- [x] [BACKEND] P0. Rerun the 79 failed and 208 skipped CeFi cells as bounded serial force/skip/canonical attempts under
+- [ ] [BACKEND] P0. Rerun the 79 failed and 208 skipped CeFi cells as bounded serial force/skip/canonical attempts under
   the Tardis concurrency cap, retaining per-cell terminal reports and fresh manifest evidence (repos:
-  `market-tick-data-service`, `deployment-service`). — slot-5 staging driver completed 2026-08-21T03:51:42Z;
-  report measured `total=294`, `passed=10`, `failed=72`, `ambiguous=0`, `skipped=212`. Reason counts included 117
-  `no_captured_data_for_cell`, 95 `tardis_guard_busy`, and 51 `canonical_no_matching_objects_in_test_bucket`; the
-  smoke contract remains RED, while the rerun/evidence todo is complete. Evidence: retained report
-  `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.{md,json}`.
-- [x] [BACKEND] P0. Resolve the LIGHTER-ZKSYNC derivative-ticker catalogue mapping so sampled symbols cannot be emitted
+  `market-tick-data-service`, `deployment-service`).
+- [ ] [BACKEND] P0. Resolve the LIGHTER-ZKSYNC derivative-ticker catalogue mapping so sampled symbols cannot be emitted
   as a bare `ARM` instrument id, then rerun its canonical negative/positive controls (repos: `instruments-service`,
-  `unified-api-contracts`, `market-tick-data-service`). — unified-api-contracts@2d025cabe + Evidence: quality-gates.sh ALL QUALITY GATES PASSED; regression controls cover crypto-only CLOB acceptance and ARM rejection.
+  `unified-api-contracts`, `market-tick-data-service`).
 - [ ] [BACKEND] P1. Classify every `no_captured_data_for_cell` and `tardis_guard_busy` result against the production
   source listing and record an honest absence or successful capture; no row may remain represented only by a skipped
   aggregate result (repos: `market-tick-data-service`, `deployment-service`).
 
 ## Progress Log
-
-**2026-08-21 — slot 5 latest force/skip terminal rerun.** After the shared Tardis count reached zero, the staging invocation `--day 2026-08-20 --asset-group CEFI --legs force,skip --mvp-only --require-captured --auto-day --wall-clock-timeout-sec 14400` ran from `2026-08-21T02:54:53Z` through `2026-08-21T04:43:13Z`. The parent driver reached `EXIT_STATUS=1`; the retained aggregate report is `status: partial` with `total=196`, `passed=2`, `failed=21`, `ambiguous=0`, `skipped=173`, including `tardis_guard_busy` and `no_captured_data_for_cell` outcomes. This is fresh terminal RED evidence for the execution attempt, not proof of the P0 smoke contract; the P1 classification and source/capture remediation remain open. Evidence: report `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`; parent log `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260821-025131-830c4a/run.log`.
-
-**2026-08-21 — slot 5 final bounded serial rerun.** The exact staging invocation completed from `2026-08-21T01:14:16Z` through `2026-08-21T03:51:42Z`; phase-0 consolidation succeeded (`3` per-VM shards, `117914` rows in, `117099` out), and the retained report measured `total=294`, `passed=10`, `failed=72`, `ambiguous=0`, `skipped=212`. Reason counts were 117 `no_captured_data_for_cell`, 95 `tardis_guard_busy`, 51 `canonical_no_matching_objects_in_test_bucket`, one `vm_self_deleted_no_exit_status`, and one launcher client-timeout exhaustion. The staging catalogue loaded from `instruments-store-cefi-stg-central-element-323112/staging/catalog.parquet` (434024 rows); the LIGHTER-ZKSYNC canonical control still observed raw `LIGHTER-ZKSYNC:PERPETUAL:ARM.parquet`. Root-backed `TMPDIR` eliminated the prior `/tmp` ENOSPC auto-republish failure; a later peer-owned dirty deployment-service tree correctly caused one stale-tarball refusal and was not bypassed. This is terminal RED evidence; P1 classification and source/capture remediation remain open. Evidence: report `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.{md,json}`.
-**2026-08-21 — slot 5 terminal bounded rerun.** The exact staging driver invocation `--day 2026-08-20 --asset-group CEFI --legs force,skip,canonical --mvp-only --require-captured --auto-day --wall-clock-timeout-sec 14400` completed from 2026-08-21T01:01:30Z through 02:46:15Z. It launched 118 child cells serially and reached `EXIT_STATUS=1`; the retained report measured `total=294`, `passed=5`, `failed=77`, `skipped=212`. Reason counts were 95 `tardis_guard_busy`, 117 `no_captured_data_for_cell`, 108 `canonical_no_matching_objects_in_test_bucket`, and 10 `vm_self_deleted_no_exit_status` occurrences (some rows carry multiple reason fragments). This is a terminal RED execution attempt with fresh per-cell evidence, not a green P0 result; the P1 classification todo and remaining source/capture remediation stay open. Evidence: report `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`; driver log `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260821-005802-1aa1ea/run.log`.
-
-**2026-08-21 — slot 5.** Shipped `deployment-service@905794b381`, which makes the launcher’s `VM_TARDIS_CONSUMER` metadata stamp use the same venue predicate as the concurrency guard; native-REST ASTER/HYPERLIQUID cells no longer falsely consume the shared Tardis lease. Quality gates passed (`3655 passed, 5 skipped`; integration `6 passed, 2 deselected`; basedpyright clean). A staging canonical-only rerun completed with terminal report `total=98`, `passed=8`, `failed=51`, `skipped=39` at `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`; the force/skip legs were not launched because the shared guard remained at `1` active HYPERLIQUID peer lease across repeated checks. P0 remains open; no peer VM was modified.
 
 **2026-08-20 — slot 18.** Captured the failed full-driver and bounded diagnostic evidence above. P0 remains open.
 
@@ -110,9 +99,6 @@ bounded serial runs.
 
 **2026-08-20 — resumed execution attempt 2 (slot 14).** The UAC generator again measured 73 CeFi rows. The driver ran with explicit staging VM launch arguments, `--require-captured`, `--auto-day`, and `--bundle`; phase-0 consolidation succeeded (`shards=4`, `rows_in=111855`, `rows_out=109308`). It progressed through the CeFi venue cells, including native-REST HYPERLIQUID/ASTER, but did not produce a terminal CeFi report. The staging launcher eventually failed its freshness auto-republish with `printf: write error: No space left on device` and refused to launch stale/unverified tarballs for `market-tick-data-service`, `unified-api-contracts`, `unified-trading-library`, and `deployment-service`. The exact driver retry process was stopped after SIGTERM when the full-filesystem retry loop continued. The existing audit result at `unified-trading-pm/plans/audit/results/data_pipeline_e2e_check_mtds_2026_08_20.md` is a Prediction run, not CeFi evidence. P0 remains open; next rerun requires reclaiming the launcher staging space, regenerating verified tarballs, and then bounded serial CeFi cells with retained per-cell terminal reports.
 
-
-**2026-08-21 — slot 12 mapping fix.** The shared CeFi MVP predicate now restricts LIGHTER-ZKSYNC, EXTENDED-STARKNET, and PACIFICA-SOLANA perpetuals to the crypto base universe, preventing equity-perp symbols such as ARM from entering derivative_ticker sampling. UAC regression controls assert BTC/ETH remain eligible and ARM is rejected; unified-api-contracts@2d025cabe is landed on live-defi-rollout. Evidence: quality-gates.sh reported ALL QUALITY GATES PASSED (789s).
-
 **2026-08-21 — terminal correction for resumed staging run (slot 14).** The preserved driver
 `pipeline-e2e-check-mtds-20260820-2217-cefi` reached a terminal failed state: remote
 `/tmp/vm-exec-5628.exit_status` is `1`; the log records `118` shard launches and `136` poll ticks; and the
@@ -121,30 +107,4 @@ report was written at 2026-08-21T00:24:08Z. Final result: `total=294`, `passed=7
 canonical rejection of raw `LIGHTER-ZKSYNC:PERPETUAL:ARM.parquet`; this is terminal RED evidence, not a zero-row
 success. P0 remains open. Evidence: VM log
 `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260820-2217-cefi/run.log` and
-report `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`.
-
-
-2026-08-21 - staging command hardening and rerun hold (slot 5). The launcher now pins DEPLOYMENT_ENV=staging and ENVIRONMENT=staging in the child driver command as well as instance metadata, preventing the startup script legacy missing-metadata fallback from targeting production. Focused launcher test and full deployment-service quality gates passed; fix landed as deployment-service 1915555fe0. A first launch was stopped after serial-console inspection showed the startup fallback resolving DEPLOYMENT_ENV=prod despite staging metadata; the exact VM is TERMINATED. The required rerun remains held because the Tardis guard repeatedly measured 1-3 active staging CeFi consumers, including a replacement starting while an earlier consumer was STOPPING. No peer VM was terminated and no new driver was launched under a nonzero guard. P0 remains open pending a zero-count window and terminal per-cell report.
-
-**2026-08-21 — terminal bounded serial rerun (slot 5).** The protected staging driver
-`pipeline-e2e-check-mtds-20260821-005802-1aa1ea` ran `--day 2026-08-20 --asset-group CEFI
---legs force,skip,canonical --mvp-only --require-captured --auto-day --wall-clock-timeout-sec 14400` from
-`2026-08-21T01:01:30Z` through `2026-08-21T02:46:15Z`. It enumerated 98 shards / 294 per-cell legs and retained terminal
-force, skip, and canonical rows plus per-VM manifest atoms. The authoritative report measured `total=294`, `passed=5`,
-`failed=77`, `ambiguous=0`, `skipped=212`; the driver and report `EXIT_STATUS` are both `1`. The staging catalogue was
-loaded from `instruments-store-cefi-stg-central-element-323112/staging/catalog.parquet` (434,024 rows) during nested
-cells. Failures/skips remain honest RED evidence, including `tardis_guard_busy`, `no_captured_data_for_cell`,
-`canonical_no_matching_objects_in_test_bucket`, and the raw `LIGHTER-ZKSYNC:PERPETUAL:ARM.parquet` canonical rejection;
-P1 classification and the overall P0 contract remain open.
-
-**2026-08-21 — terminal bounded serial rerun (slot 5, follow-up).** The protected staging driver
-`pipeline-e2e-check-mtds-20260821-015725-816753` ran with `--bundle` and explicit staging args:
-`--day 2026-08-20 --asset-group CEFI --legs force,skip,canonical --mvp-only --require-captured --auto-day
---wall-clock-timeout-sec 14400`. The Tardis cap reached zero before launch; the registered driver then ran serial
-nested cells until `EXIT_STATUS=1` at `2026-08-21T03:57:23Z`. The authoritative report generated at
-`2026-08-21T03:57:22Z` measured `total=294`, `passed=11`, `failed=74`, `ambiguous=0`, `skipped=209`, with fresh
-per-cell terminal rows and manifest checks. The rerun evidence is complete, but the smoke contract remains RED:
-the report retains `tardis_guard_busy`, `no_captured_data_for_cell`, `canonical_no_matching_objects_in_test_bucket`,
-`vm_self_deleted_no_exit_status`, and the raw `LIGHTER-ZKSYNC:PERPETUAL:ARM.parquet` canonical rejection.
-Evidence: VM log `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260821-015725-816753/run.log`;
 report `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`.

@@ -891,11 +891,3 @@ gated off, 6 plan-hygiene ratchets fixed, job-minutes re-measured -32.4%). 8 ite
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Large, actively-evolving CI-VM cost/I/O audit (2026-08-05 original, independently re-verified/corrected 2026-08-06: 3 confirmed / 5 corrected / 6 falsified in its own Part 0 table) with 6+ sequential na-eligibility-audit KEEP_NA confirmations from 2026-08-06 through 2026-08-10. Most of the original action-item list is already [x] closed with live AWS/SSM/CloudWatch evidence (VM downsized to m8i.2xlarge, EBS bumped, public-repo migration completed, uv-cache gated off, 6 plan-hygiene ratchets...
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — unchanged since the 2026-08-18 verdict.
-7 open items confirmed by direct grep, all previously checked against the workspace's accumulated operator-Q&A
-precedents with none applying: CI-volume investigation, re-baseline `qg_resource_baseline.json`, stagger the
-promote-fleet fan-out, the fleet-wide concurrency cap (same judgment call tracked by the sibling
-`ci_vm_exposure_remediation_2026_08_06.md`), cut sibling-clone I/O, reap the governor marker-file leak, and decide
-`content-gate`'s runner — each either a judgment call, cross-referenced/duplicate-tracked elsewhere, or lacking a
-forcing function. No new facts since 08-18. No `assigned_vm` change.

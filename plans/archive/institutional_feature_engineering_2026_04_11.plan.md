@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: institutional-feature-engineering
-summary: Implement 150+ institutional-grade features across sports, DeFi, CeFi, and volatility services with unified validity/confidence
-  engine
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-14'
+overview: Implement 150+ institutional-grade features across sports, DeFi, CeFi, and volatility services with unified validity/confidence engine
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: B3}

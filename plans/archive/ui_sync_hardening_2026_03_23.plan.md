@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: ui-sync-hardening-2026-03-23
-summary: Unified Trading System UI — full sync, schema unification, doc alignment, mock data fix, and agent-readiness hardening
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +12,7 @@ tags: []
 related: []
 created: '2026-03-23'
 remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
+overview: Unified Trading System UI — full sync, schema unification, doc alignment, mock data fix, and agent-readiness hardening
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: B6}

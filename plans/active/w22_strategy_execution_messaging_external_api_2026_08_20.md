@@ -10,7 +10,7 @@ status: active
 nature: design
 asset_group: [cross-cutting]
 stage: [execution]
-repos: [execution-service, strategy-service, unified-trading-library, unified-api-contracts, deployment-service]
+repos: [execution-service, strategy-service, unified-trading-library]
 scope: [engineer]
 tags: [execution, messaging, event-transport, external-api, w22]
 related:
@@ -47,11 +47,6 @@ context_scope:
   [
     strategy-service/strategy_service/engine/strategies/v2/live_routing.py,
     unified-trading-library/unified_trading_library/streaming/event_facade.py,
-    unified-api-contracts/unified_api_contracts/events/sink_matrix.py,
-    deployment-service/terraform/gcp/live_event_log/main.tf,
-    deployment-service/terraform/gcp/live_event_log/warm_sink.tf,
-    deployment-service/terraform/gcp/live_event_log/bq_external.tf,
-    deployment-service/terraform/gcp/live_event_log/strategy_atomic_instruction.tf,
     execution-service/execution_service/api/external_instruction_api.py,
     execution-service/execution_service/adapters/defi_adapter.py,
     execution-service/execution_service/v2/account_orchestrator.py,
@@ -124,19 +119,11 @@ context_scope:
       issue's own remaining todos proceed, cross-link both directions in `related:` once landed). Done-when: a
       live `QUOTE` instruction's repricing responds to a published feature-group tick within one round trip,
       not just a registered-but-inert state. Evidence: bash scripts/quality-gates.sh --no-fix (8816 passed, 22 skipped, 1 xpassed; venue-routing commit 62d2e3ab76).
-- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — `deployment-service@9f602e64aa` +
-      `deployment-service@f843fd5314`. The wildcard `atomic_instruction` sink adds the declared SINK_MATRIX topic,
-      warm-GCS subscription, and BigQuery external table; `strategy_atomic_instruction.tf` adds the concrete
-      `cefi`/`defi`/`prediction` topics, execution-reader subscriptions, warm-GCS subscriptions, and matching
-      external-table definitions used by `PubSubTransport`. Evidence: `bash scripts/quality-gates.sh --no-fix`
-      (ALL QUALITY GATES PASSED); `tofu validate` passed; live topic/subscription read-back is ACTIVE; the
-      published canonical verification envelope produced
-      `gs://central-element-323112-events/live-events/warm/all/atomic_instruction/2026-08-21T03:56:54+00:00_b0f481.parquet`
-      and BigQuery `live_events.all_atomic_instruction` returned one row for
-      `correlation_id=w22-atomic-sink-20260821`. The event-log warm sink has no separate availability-manifest
-      surface; the durable proof is the warm object plus external-table row. No synthetic message was injected into
-      the concrete execution-reader topics because those are live execution destinations; their ACTIVE resources are
-      structurally verified, while a naturally emitted concrete-path row remains a live-traffic verification.
+- [ ] [BACKEND] P0. Sink every strategy-emitted instruction consumed by the new subscriber to GCS, one record at
+      a time, via the EXISTING manifest/shard pipeline (reuse, do not invent a parallel writer) — queryable via
+      the same BigQuery external-table pattern other shard types already use. Distinct from market-tick-data
+      aggregation (a separate axis). Done-when: one consumed instruction produces one queryable GCS row with a
+      manifest entry, verified via a real read-back, not just a written-file check.
 
 ### Instruction action vocabulary
 
@@ -151,7 +138,7 @@ context_scope:
       that LIVE/MANUAL mode never leaves the wired adapter `None` (an empty-but-real `DeFiAdapter()` substitutes
       when Secret Manager credentials can't be resolved, so a genuinely live-mode dispatch always reaches an
       honest per-connector FAILED, never silently falls back to simulation). Evidence: bash
-      scripts/quality-gates.sh --no-fix (8872 passed, 22 skipped, 1 xpassed, 89 warnings in 237.24s; sentinel=4af371549778653f8240e1f3ca5ebb32a37e44f6).
+      scripts/quality-gates.sh --no-fix (<PENDING-QG-EVIDENCE>).
 - [x] [BACKEND] P0. Wire `SWAP`/`LEND`/`WITHDRAW`/`STAKE`/`UNSTAKE` on `POST /external/instructions`, converting
       each `StrategyInstructionV2` variant (`SwapInstruction`/`LendInstruction`/`WithdrawInstruction`/
       `StakeInstruction`/`UnstakeInstruction`) into the internal `ExecutionInstruction` type and routing through a
@@ -178,7 +165,7 @@ context_scope:
       `TestStakeInstructionPath` (each with an honest-FAILED-not-fabricated landmine test, mirroring
       `TestTransferInstructionPath`'s). Full resolution record:
       `/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md` § "Resolution
-      2026-08-21". Evidence: bash scripts/quality-gates.sh --no-fix (8872 passed, 22 skipped, 1 xpassed, 89 warnings in 237.24s; sentinel=4af371549778653f8240e1f3ca5ebb32a37e44f6).
+      2026-08-21". Evidence: bash scripts/quality-gates.sh --no-fix (<PENDING-QG-EVIDENCE>).
 - [ ] [BACKEND] P1. Wire `BORROW`/`REPAY` on `POST /external/instructions` through an analogous `defi_adapter=`
       injection seam on `BorrowHandler` — split out of the combined todo above (deliberately out of scope for the
       2026-08-21 change per explicit operator instruction: "do not touch BorrowHandler, stop and report if scope
@@ -211,7 +198,10 @@ context_scope:
       translation-shim wiring task like TRANSFER/CANCEL. Full evidence + done-when:
       /plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md. Blocked on:
       bridge-protocol selection.
-- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — Wire `ATOMIC` through the existing `InstructionRouter.route_signal()` multi-leg dispatch; `execution-service@1636abd22e` translates each leg into the shared execution contract and returns per-leg results. Evidence: `bash scripts/quality-gates.sh --no-fix` (ALL QUALITY GATES PASSED, 934s); direct HTTP verification returned `200 COMPLETED_SUCCESS` with 2 per-leg results. The real venue-side atomic/compensation engine remains tracked in `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md`.
+- [ ] [BACKEND] P0. Wire `ATOMIC` on the same surface, routing through the existing multi-leg dispatch
+      (`AtomicInstruction`'s handling already exists in `backtest_v2/action_handlers.py::resolve_settlement` for
+      BATCH — reuse the same leg-iteration logic for the live path, do not reimplement). Done-when: a 2-leg
+      atomic instruction produces real per-leg results over HTTP, not a 501.
 - [ ] [BACKEND] P0. Add `KILL_SWITCH`/`FLATTEN_POSITION` as `InstructionActionV2` members — **coordinate with
       T1** (owns `unified-api-contracts`) for the schema addition; this tranche does not add UAC members
       directly. Each instruction carries an authorization field mirroring `AccountInstruction.authorization_id`.

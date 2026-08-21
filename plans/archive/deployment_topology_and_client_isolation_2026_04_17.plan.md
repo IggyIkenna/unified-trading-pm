@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: deployment-topology-and-client-isolation
-summary: Per-service client-isolation policy (shared vs isolated) + SLA tiers + runtime profiles + chaos/kill-switch primitives
-  wired end-to-end across runtime-topology SSOT, UAC, UTL, deployment-service/api/ui, and affected services.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-17"
+overview:
+  Per-service client-isolation policy (shared vs isolated) + SLA tiers + runtime profiles + chaos/kill-switch primitives
+  wired end-to-end across runtime-topology SSOT, UAC, UTL, deployment-service/api/ui, and affected services.
 type: mixed
 epic: epic-code-completion
 locked_by: live-defi-rollout

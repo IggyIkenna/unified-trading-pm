@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: frontend-backend-bilateral-plan3-backend-gap-fill
-summary: Add missing backend API endpoints, fix data shape mismatches, wire all strategies to API, complete monitoring/governance
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-03'
+overview: Add missing backend API endpoints, fix data shape mismatches, wire all strategies to API, complete monitoring/governance
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

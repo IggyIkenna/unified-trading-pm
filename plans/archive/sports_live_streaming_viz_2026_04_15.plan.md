@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: sports-live-streaming-viz
-summary: Sports live streaming visualization + execution — live odds from MTDS (Odds API + Betfair), live stats from API
-  Football/SFI, WebSocket to UI, manual bet placement via execution-service
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-15'
+overview: Sports live streaming visualization + execution — live odds from MTDS (Odds API + Betfair), live stats from API Football/SFI, WebSocket to UI, manual bet placement via execution-service
 type: code
 epic: epic-deployment
 completion_gates: {code: C5, deployment: none, business: B4}

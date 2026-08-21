@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: Sports Migration Phase 2 Full
-summary: Port all logic from sports-betting-services into UTS. All venues, features, arbitrage, ML practices. Strategy service
-  arb + ML; execution via USEI. Unit tests only; strict quality gates.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-02'
+overview: Port all logic from sports-betting-services into UTS. All venues, features, arbitrage, ML practices. Strategy service arb + ML; execution via USEI. Unit tests only; strict quality gates.
 todos:
 - {id: feature-calculators, content: 'Feature calculators — season_context, goal_timing, venue_context, referee; team features (split team_form, team_goals, etc.)', status: pending}
 - {id: data-loader, content: Data loader — in-memory DataFrames; optional DB later, status: done}

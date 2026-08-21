@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: Corporate Actions + Earnings to Calendar
-summary: Migrate corporate actions from instruments-service to features-calendar-service, use Polygon.io (Equities Basic)
-  for confirmed dividends and splits, keep yfinance for earnings actuals (EPS), extend FRED to fetch macro actuals (NFP/CPI/FOMC/GDP)
-  on the same 15-minute schedule, and add a mock calendar feed to the trading terminal UI.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-24'
+overview: Migrate corporate actions from instruments-service to features-calendar-service, use Polygon.io (Equities Basic) for confirmed dividends and splits, keep yfinance for earnings actuals (EPS), extend FRED to fetch macro actuals (NFP/CPI/FOMC/GDP) on the same 15-minute schedule, and add a mock calendar feed to the trading terminal UI.
 todos:
 - {id: uac-polygon-schemas, content: 'Add PolygonDividend, PolygonDividendsResponse, PolygonSplit, PolygonSplitsResponse to UAC polygon/schemas.py and add polygon entry to provider_api_versions.yaml', status: completed}
 - {id: uic-domain-models, content: Move DividendRecord/StockSplitRecord/EarningsRecord from instruments-service to UIC domain/corporate_actions/models.py; add EarningsResultRecord and MacroResultRecord, status: completed}

@@ -1,13 +1,7 @@
 ---
 doc_type: plan
 title: sports-data-migration-mapping-plan
-summary: 'Layered data migration plan for sports pipeline. Maps every data source,
-
-  endpoint, and field to its UTS classification. Migration starts with
-
-  mappings only, then reference data, then odds, then derived features.
-
-  Each layer tested live before proceeding to the next.'
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -17,6 +11,15 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-27'
+overview: 'Layered data migration plan for sports pipeline. Maps every data source,
+
+  endpoint, and field to its UTS classification. Migration starts with
+
+  mappings only, then reference data, then odds, then derived features.
+
+  Each layer tested live before proceeding to the next.
+
+  '
 type: code
 epic: epic-code-completion
 depends_on: [sports-integration-01-reference-data-pipeline, sports-integration-02-odds-market-data-pipeline, sports-batch-pipeline-end-to-end]

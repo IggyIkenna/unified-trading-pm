@@ -179,22 +179,9 @@ projection:
 >   headline shard count against it is a separate, operator-gated step, because per
 >   `/plans/epics/system_readiness_master.md` § W3 a denominator change lands as a dated supersession, never a silent
 >   edit.
-> - **`league_id` — PROJECTION resolved 2026-08-20, GATE still open.** Operator ruling: fold `league_id` into the
->   FULL primary shard atom `(venue, instrument_type, data_type, league_id)`, not a lighter drill-down. Shipped as
->   level 5e, `by_venue_instrument_type_data_type_league` (`instruments-service@6056d46d5c`,
->   `unified-trading-pm@25b428ee8f`) — this is the projection/read side, and it is what a consumer sees in
->   `coverage.json`.
->   **Still open, and NOT a code-effort gap**: the Layer-1 enumeration-completeness GATE
->   (`instruments-service/scripts/check_enumeration_completeness.py` + `expected_universe.py::_expected_sports()`)
->   still computes its EXPECTED/ENUMERATED denominator at the coarser `(venue, instrument_type, data_type)` grain —
->   confirmed by reading the code, not assumed (2026-08-21 investigation). It cannot see a venue that has one league
->   fully captured and every other league untouched; `instrument_gates_download` stays a coarser, honest LOWER
->   BOUND, same as before this session. Closing this requires a new authoritative "expected leagues per bookmaker
->   venue" source — none exists today: `unified_api_contracts.registry.sports_per_source_rules` covers the
->   reference-data sources (understat/footystats/api_football), a different surface from the MTDS odds venues Honest
->   Coverage reads; each odds adapter (e.g. `market-tick-data-service`'s `odds_api_adapter.py`) resolves its own
->   fetch-time league scope ad hoc, with no shared cross-venue registry to read back from. Tracked as
->   `plans/active/code_readiness_t2_refdata_marketdata_2026_08_19.md`'s shard-atom-identity todo.
+> - **`league_id` — STILL OPEN.** No league axis exists anywhere in the payload, though both this atom and the W3
+>   ruling name it. Sports contributes 822 cells across 46 venues with leagues entirely uncollapsed into them. Whether
+>   league belongs on the shard atom or stays a drill-down is denominator-defining and therefore an operator decision.
 
 `instrument_type` is a **real lowercase writer-grain column** (`spot`, `perpetuals`, `options_chain`, `futures_chain`,
 `pool`, `lending`, `prediction_market`, …) — NOT the UPPERCASE catalogue enum. The v2 harness MUST read
@@ -617,8 +604,7 @@ interface marks the v2 additions optional; the route returns verbatim; the test 
       "instrument_gates_download": true,
       "denominator_complete": false,
       "layer1_completeness_pct": 97.3,
-      "storage_bytes_tb": 0.4303,
-      "hollow_instrument_type_fraction": 0.498
+      "storage_bytes_tb": 0.4303
     }
   },
   "by_venue": { "<ag>": { "<venue>": { "...HonestCoverageStatusCounts...": 0 } } },
@@ -633,9 +619,6 @@ interface marks the v2 additions optional; the route returns verbatim; the test 
   "by_venue_instrument_type_data_type_chain": {
     "<ag>": { "<venue>": { "<instrument_type>": { "<data_type>": { "<chain>": { "...counts...": 0 } } } } }
   },
-  "by_venue_instrument_type_data_type_league": {
-    "<ag>": { "<venue>": { "<instrument_type>": { "<data_type>": { "<league_id>": { "...counts...": 0 } } } } }
-  },
 
   "by_day": {
     "<ag>": { "<YYYY-MM-DD>": { "...counts...": 0 } }
@@ -647,14 +630,9 @@ Key fields at each Layer-2 count node (`...counts...`): `captured`, `empty_confi
 `expected_unattempted`, `total`, `coverage_pct` (reachable formula), `all_shards_coverage_pct`.
 
 New-in-v2 keys: `schema_version`, `layer_1`, `by_venue_instrument_type`, `by_venue_instrument_type_data_type`, `by_day`;
-new 2026-08-20: `by_venue_instrument_type_data_type_chain` and `by_venue_instrument_type_data_type_league` (see
-"Projected atom vs declared atom" above — `league_id` is the operator-ruled full primary atom, folded in the same
-day as `chain`, `instruments-service@6056d46d5c`);
-new-in-v2 per-AG-cell fields: `instrument_gates_download`, `denominator_complete`, `layer1_completeness_pct`,
-`hollow_instrument_type_fraction` (added 2026-08-20 — fraction of that AG's level-5 cells carrying a blank/`"nan"`
-instrument_type; `null`, never `0.0`, when the AG has zero level-5 cells, so "no data" and "fully populated" can't
-be confused; `instruments-service@540a3bd94d`). Everything the v1 harness already wrote stays byte-for-byte
-compatible.
+new 2026-08-20: `by_venue_instrument_type_data_type_chain` (see "Projected atom vs declared atom" below);
+new-in-v2 per-AG-cell fields: `instrument_gates_download`, `denominator_complete`, `layer1_completeness_pct`. Everything
+the v1 harness already wrote stays byte-for-byte compatible.
 
 **`storage_bytes_tb`** (added 2026-08-14, `instruments-service@scripts/measure_honest_coverage.py`): total live GCS
 storage for the asset_group, in TB (1e12 bytes), rounded to 4dp. Sourced from Cloud Monitoring's

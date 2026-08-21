@@ -295,12 +295,3 @@ ruling, which is settled; I am assessing the new implementation todo it spawned)
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 7 of 8 todos are done, including the [DESIGN] P2 consumer-QG-gate policy question that anchored 7+ consecutive prior audit passes — resolved via explicit 2026-08-08 operator ruling, with its mechanical implementation shipped 2026-08-14 (unified-api-contracts@ae2f4ce4c5 + instruments-service@054a67ba04). That same shipment spawned exactly one NEW follow-up item, created the same day (2026-08-14), postdating the doc's most recent na-eligibility-audit pass (2026-08-10): wire the new...
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): **KEEP-NA-STALE (already-duplicated) — citation added, not
-previously recorded.** Sole open todo (line ~219, wire `consumer-qg-gate` into `pin_branch_protection_rulesets.py`'s
-required-status-check set) was already extracted verbatim into `ci_satellite_ao_dispatch_batch15_2026_08_16.md`
-(line ~286-289, `status: active`, gate: "a deliberately broken consumer-QG check on a test PR is confirmed to block
-the merge button") — a full 5 days before this pass, but no prior na-eligibility-audit round (2026-08-18 included)
-recorded the citation here. Not reclassifying this doc's `assigned_vm` — batch15 activation is the operator's/AO's
-call, and flipping here too risks a duplicate dispatch. Verified batch15's todo is still open (not yet shipped) via
-direct grep before citing.

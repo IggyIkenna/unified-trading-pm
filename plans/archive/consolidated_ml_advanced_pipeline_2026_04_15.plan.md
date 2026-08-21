@@ -1,11 +1,7 @@
 ---
 doc_type: plan
 title: consolidated-ml-advanced-pipeline
-summary: 'Consolidated remaining ML work from ml_pipeline_revolution and domain_agnostic_ml_framework.
-
-  Covers: calibration, P&L objectives, Bayesian tuning, incremental/transfer/multi-task training,
-
-  hierarchical inference, strategy signal consumption, decision policy engine, sports feature adapter.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -15,6 +11,13 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-16"
+overview: "Consolidated remaining ML work from ml_pipeline_revolution and domain_agnostic_ml_framework.
+
+  Covers: calibration, P&L objectives, Bayesian tuning, incremental/transfer/multi-task training,
+
+  hierarchical inference, strategy signal consumption, decision policy engine, sports feature adapter.
+
+  "
 type: code
 epic: epic-code-completion
 reconciliation_status: yaml_to_markdown_converted
@@ -158,7 +161,7 @@ under architecture-v2 (ml-training `d53c2ea`, `f94f7db`, `df6caa4`; ml-inference
       (apply calibration at inference time).
 - [x] [AGENT] P1. mlr-p3-shap-inference: Add optional SHAP explanation to inference responses (PARTIALLY_DONE —
       request.explain exists, no schema field). [AUDIT 2026-05-07: DONE — verified UAC
-      `InferenceRequest.explain: bool = Field(...)` shipped at `internal/domain/ml/schemas.py:605`;
+      `InferenceRequest.explain: bool =     Field(...)` shipped at `internal/domain/ml/schemas.py:605`;
       `inference_shap.py` (TreeExplainer cache + bag) shipped at
       `ml-inference-service/ml_inference_service/app/inference/inference_shap.py`; orchestrator wires `request.explain`
       at `engine/orchestrator.py:180`. The "no schema field" note in plan body is stale.]

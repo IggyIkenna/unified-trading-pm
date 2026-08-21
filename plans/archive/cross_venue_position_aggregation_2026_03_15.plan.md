@@ -1,7 +1,17 @@
 ---
 doc_type: plan
 title: cross-venue-position-aggregation
-summary: 'Institutional-grade cross-venue position aggregation engine with full asset-class coverage.
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service, system-integration-tests, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-15'
+overview: 'Institutional-grade cross-venue position aggregation engine with full asset-class coverage.
 
   Adds AggregatedPosition (with asset_group, instrument_type, strategy_id, margin_type,
 
@@ -17,16 +27,9 @@ summary: 'Institutional-grade cross-venue position aggregation engine with full 
 
   Covers all 5 asset classes (CRYPTO, EQUITY, FX, COMMODITY, FIXED_INCOME), all 16+
 
-  instrument types, all 4 strategy types (MOM, MR, BASIS, YIELD), and 33 venues.'
-status: complete
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: [execution-service, strategy-service, system-integration-tests, unified-api-contracts, unified-trading-pm]
-scope: [engineer, admin]
-tags: []
-related: []
-created: '2026-03-15'
+  instrument types, all 4 strategy types (MOM, MR, BASIS, YIELD), and 33 venues.
+
+  '
 todos:
 - {id: p0-uac-aggregated-position, content: "- [x] [AGENT] P0. Add AggregatedPosition, VenuePositionBreakdown, PortfolioGreeksSnapshot,\n  UnderlyingGreeksBreakdown, PortfolioPnLAttribution, RiskGroupSummary, PortfolioView,\n  DeFiAggregatedHealth, ProtocolHealthBreakdown, DeFiLPAggregatedMetrics, LPProtocolBreakdown,\n  DeFiStakingAggregatedMetrics, StakingProtocolBreakdown to UAC\n  canonical/domain/position/__init__.py. All Pydantic extending CanonicalBase, all Decimal\n  fields, no float. Export from position.py facade and UAC __init__.py.\n", status: done}
 - {id: p0-uac-sports-arb-position, content: "- [x] [AGENT] P0. Add SportsArbPosition + SportsArbLeg to UAC canonical/domain/sports/arb.py.\n  Export from sports/__init__.py and sports.py facade.\n", status: done, note: SportsArbPosition + SportsArbLeg in canonical/domain/sports/arb.py and re-exported from canonical/domain/__init__.py — confirmed 2026-03-16}

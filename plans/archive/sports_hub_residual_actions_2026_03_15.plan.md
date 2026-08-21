@@ -1,13 +1,7 @@
 ---
 doc_type: plan
 title: sports-hub-residual-actions
-summary: 'Residual human-required actions for the Sports Hub infrastructure.
-
-  All code scaffolding, registries, adapters, configs, and GCS-wired endpoints
-
-  are implemented. These items require live site access, real credentials, and
-
-  browser testing that cannot be automated by an agent.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -17,6 +11,15 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-15'
+overview: 'Residual human-required actions for the Sports Hub infrastructure.
+
+  All code scaffolding, registries, adapters, configs, and GCS-wired endpoints
+
+  are implemented. These items require live site access, real credentials, and
+
+  browser testing that cannot be automated by an agent.
+
+  '
 todos:
 - {id: r1-secret-manager-credentials, content: '[HUMAN] Create Secret Manager secrets for all 78 venues following
 

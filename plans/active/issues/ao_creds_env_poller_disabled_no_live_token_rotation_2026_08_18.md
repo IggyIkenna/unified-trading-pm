@@ -137,12 +137,3 @@ this will recur on each one's own expiry unless fixed.
   the creds-poller fix (unrelated env var, tracked in the sibling doc) — not chased further this pass; flagging so
   the next attempt doesn't repeat the same 2 dead-end secret names.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed, conservatively. The config-change
-  half is now done (applied live 2026-08-19), but the remaining verification bar ("a real token rotation... observed
-  landing... without any manual SSM intervention", plus capturing a "CredsEnvPoller started" log line) still needs
-  live read access to the production orchestrator VM's systemd/journal state — every prior live-VM interaction of
-  this shape in this tranche was done by an interactive/main-agent session via SSM, not a routine slot-worker
-  dispatch, and no documented, worker-scoped script exists for this specific check (unlike the backlog-status
-  read path the `check-agent-orchestrator` skill documents). Erring toward KEEP-NA per this audit's own "when
-  genuinely unsure" guidance rather than force a RECLASSIFY on a fleet-critical live service. Todo 2 stays gated on
-  todo 1's outcome. Doc stays `assigned_vm: NA`.

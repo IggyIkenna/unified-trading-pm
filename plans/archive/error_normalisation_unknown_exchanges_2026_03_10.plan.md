@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: error-normalisation-unknown-exchanges-2026-03-10
-summary: Complete venue error map coverage, add CanonicalUnknownVenueError, wire circuit breaker to canonical error types
-  with configurable per-venue thresholds
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
+overview: Complete venue error map coverage, add CanonicalUnknownVenueError, wire circuit breaker to canonical error types with configurable per-venue thresholds
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

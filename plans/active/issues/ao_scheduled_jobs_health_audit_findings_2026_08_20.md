@@ -89,14 +89,9 @@ edit the moment an `[OPERATOR]` tag resolves" rule. It carries no `BLK-op-*` das
 todo exists only as un-surfaced plan-doc prose, the same terminal shape as plan_reconciler's stuck PRs, via a different
 mechanism (a rotted premise, not a starved gate).
 
-- [x] ✅ [DOC] P3. Retag or resolve `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`'s stale
+- [ ] [DOC] P3. Retag or resolve `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`'s stale
       `[OPERATOR]` todo now that its blocking premise (the line-cap trim) has already happened — either close it with
       the completed trim as evidence, or retag it to whatever it's actually still waiting on. Repo: unified-trading-pm.
-      **CLOSED 2026-08-21 (na-eligibility-audit, ao tranche) — moot, target doc already archived.** Direct check:
-      `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md` no longer exists under `plans/active/` —
-      it is at `plans/archive/2026_08/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`,
-      meaning it already went through normal archival (which requires zero open todos) since this finding was
-      written. The stale-tag concern this todo tracked has already been resolved as part of that archival.
 
 ## Finding 2 — escalation-queue-reconciler is blind to external GitHub PR-backlog state
 
@@ -117,10 +112,3 @@ designed to watch git/GitHub state.
 - **2026-08-20**: doc authored, completing the Track B synthesis todo in
   `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, stale items — closed the DOC retag item above with hard
-  evidence (target doc already archived, meaning the stale tag it tracked was already resolved through normal
-  archival). The remaining `[BACKEND] P3` item (fold an external-PR-backlog check into escalation-queue-reconciler)
-  stays open and NA: its own text explicitly frames it as a low-urgency, speculative "Consider" — a preventive
-  gap-closer for a pattern (review-branch PRs) no current job even uses, not a definitively-scoped build task yet.
-  Erring toward KEEP-NA per this audit's own guidance rather than force a build decision that isn't clearly ruled.
-  Doc stays `assigned_vm: NA`.

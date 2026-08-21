@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: remove-data-types-field
-summary: Remove deprecated data_types field from InstrumentDefinition and all consumers — PROTOCOL_CAPABILITIES in UAC is
-  the SSOT
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -16,6 +15,7 @@ remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_1
 superseded_by: [consolidated_operational_validation_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
+overview: Remove deprecated data_types field from InstrumentDefinition and all consumers — PROTOCOL_CAPABILITIES in UAC is the SSOT
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

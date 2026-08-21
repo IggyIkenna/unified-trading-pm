@@ -763,12 +763,3 @@ citation verified real by reading it in place. Tag: DEPENDENCY_BLOCKED.
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Large 762-line audit doc with 5 open checkboxes, independently re-read end-to-end. Item 1 (F1 trading kill-switch no-op) is TIME-GATED on an explicit dated 2026-07-28 operator ruling quoted verbatim in the doc ('Standing 2026-07-23 ruling preserved verbatim: KEEP TRACKED, DO NOT FIX YET... fixed when execution-service work starts') -- honored per the never-re-litigate rule. Items 2/3/5 each read as plausibly bounded/mechanical but their citation trails point to now-archived, status:complete...
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — unchanged since the 2026-08-18 verdict
-(11th+ consecutive confirmation). 5 open checkboxes, independently re-read end-to-end. Item 1 (F1 trading kill-switch
-no-op) stays TIME-GATED per the explicit dated 2026-07-28 operator ruling quoted verbatim in the doc ("KEEP TRACKED,
-DO NOT FIX YET" — gate is execution-service handling live order flow, not yet true pre-live-trading). The remaining
-4 items sit under the doc's SUPERSEDED/design-judgment/credential-gated umbrella established across 10+ prior
-audit passes — the reconcile-missing-tags item is deliberately NOT a bulk backfill by design; the F3
-success-reporting remainder and F4 vacuous-crons item stay the same bundled bounded+open-ended pair; the
-`sit_validated_workspace_digest` item stays a genuine design call. No `assigned_vm` change.

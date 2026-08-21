@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: instrument-data-source-separation
-summary: Separate instrument identity from data-source-specific fields across UAC and consumers
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
+overview: Separate instrument identity from data-source-specific fields across UAC and consumers
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

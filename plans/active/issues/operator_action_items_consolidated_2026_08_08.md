@@ -278,11 +278,3 @@ outcome, so they belong on this list rather than in an audit report nobody owns.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:e8072075a33c3ee4]: KEEP-NA, valid — all 27 open items are vendor/wallet credential blocks, GH UI-only settings, categorically-banned git-stash-drops, or explicit judgment/design-fork calls with no evidence-based tiebreaker; converges with 2 prior na-eligibility-audit rounds (2026-08-09, 2026-08-10) and today's plan_reconciler infra-tranche pass. Note for a future pass: L75/L188 redirect to sibling issue docs not yet checked for assigned_vm status — may become KEEP-NA-STALE-DUPLICATED pointers.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — full re-read of all 27 open items;
-  every item remains genuinely operator-only (vendor/wallet credentials, GitHub UI-only settings, categorically-
-  blocked git-stash-drops, live-trading hard-stops, human design reviews/judgment calls). Spot-checked the 2 prior
-  round's flagged redirect pointers: L75 (`ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`) is still
-  `status: open`/`assigned_vm: NA` — its underlying item was independently retagged `[BLOCKED-CREDENTIALS]` in that
-  doc by `plan_reconciler ao 2026-08-19` (still unresolved, no drift in this doc's own pointer); L188
-  (`/plans/archive/issues/ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md`) remains archived with its cited
-  design-fork unresolved — no reclassification needed for either citation. No new bounded item found.

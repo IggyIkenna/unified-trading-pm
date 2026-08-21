@@ -998,12 +998,3 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
   workspace's own findings-triage rule. `[unresolved]`: neither underlying todo is fixed; slot 31's context risk
   is UNCHANGED by this session and could recur on its next long run.
   cross-linked here since it shares this session and this code area.
-
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — doc's own Non-goals section rules
-  this an explicit human/design plan ("not building this as an AO-dispatched background-worker plan... the design
-  calls and live-testing judgment here don't fit the AO-eligible bar"). The 4 pure-bounded telemetry-capture todos
-  were already correctly RECLASSIFY-extracted on 2026-08-18 (`ao_satellite_ao_dispatch_batch24_2026_08_18.md`
-  items 1-4). Remaining ~19 items (live-harness verification across providers, schema/methodology design, the
-  Codex/GLM boost-parity 7-step workstream, Gate 8a/8b burst-vs-pace analysis + final recommendation) all require
-  live multi-turn testing, vendor-dependency resolution, or human synthesis judgment — no further bounded item
-  found on this re-read.

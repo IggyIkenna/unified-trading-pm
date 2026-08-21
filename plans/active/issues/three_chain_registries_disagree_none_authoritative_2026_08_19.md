@@ -157,4 +157,3 @@ containment properties were also executed standalone as direct probes.
 **Still open**: the 13-vs-14 count (see todo — partially diagnosed, blocked on the pending `ONCHAIN` pseudo-chain
 decision) and the coverage-denominator check. Neither closed on a plausible-looking number.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; sole open item (the 13-vs-14 chain-count discrepancy) remains explicitly `BLOCKED-OPERATOR-DECISION` pending the ONCHAIN pseudo-chain keep/remove ruling named in `chain_env.py:655-656`; not worker-determinable. Doc stays `assigned_vm: NA`.
