@@ -8,10 +8,8 @@ summary: >-
   `_place_order_sim` paths, both present and correct) and the paper-batch-live determinism-spine SSOT
   (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`) that defines how this proof is normally
   constructed for other asset classes. Conclusion: the proof CANNOT be legitimately constructed today — not an
-  execution-service-scoped gap, but a missing prerequisite one level up (no archetype instance is wired into the
-  paper engine with tradfi as its routed asset_group — archetype and venue are orthogonal axes, several archetypes
-  already have IBKR-routed catalog rows, none has live paper-engine wiring — and the spine's own G1 "single shared
-  fill model" gap is still open workspace-wide). Guard NOT
+  execution-service-scoped gap, but a missing prerequisite one level up (no tradfi archetype is wired into the paper
+  engine at all, and the spine's own G1 "single shared fill model" gap is still open workspace-wide). Guard NOT
   flipped. No false-positive proof forced.
 status: open
 nature: issue
@@ -83,10 +81,7 @@ genuinely passes.
 
 The blocker is not in execution-service. It is two levels up, and both are workspace-wide, standing, documented gaps:
 
-1. **No archetype instance is wired into the paper engine with tradfi as its routed asset_group.** Archetype
-   (e.g. `EVENT_DRIVEN`, `STAT_ARB_PAIRS_FIXED`) and venue/asset_group (defi/cefi/tradfi) are orthogonal axes —
-   several archetypes already have IBKR-routed rows in `catalog_trading.py`, so this is not a missing archetype
-   TYPE, just a missing paper-engine wiring entry for any tradfi-routed instance. The determinism spine's ledger/manifest/recon
+1. **No tradfi archetype is wired into the paper engine at all.** The determinism spine's ledger/manifest/recon
    machinery (G3/G4/G5) is shipped and proven for DeFi carry archetypes (`CARRY_STAKED_BASIS`,
    `CARRY_BASIS_PERP`/`CARRY_FUNDING_DISPERSION` — the only two rows in the spine's own "per-archetype canonical data
    source" table, §4.6). Nothing drives an IBKR/CME/NASDAQ/etc. instruction through `colocated_engine.py` in paper mode
