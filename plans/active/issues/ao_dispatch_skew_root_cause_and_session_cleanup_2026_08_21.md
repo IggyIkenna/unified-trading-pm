@@ -296,21 +296,68 @@ OMS-persistence task) kept getting bounced and requeued.
   NOT. Full `quality-gates.sh`: 5280 passed / 4 skipped, coverage 86.06% (baseline 85.86%,
   ratchet-clean).
 
-**Not yet done**: `gemini-3-5-flash-lite-proj1` is still paused — re-enabling it is an operator
-call (todo below), and there's no live-traffic proof yet that 4a/4b together prevent a RECURRENCE
-of the same pile-up under a fresh bulk-sweep trigger (the next time an account gets disabled
-with many bound slots).
+**Superseded by Part 5** (the "not yet done" note originally here — no RECURRENCE proof yet — is
+addressed by the audit + fix below; kept as history, not re-stated).
+
+## Part 5 — bug 4a's exact pattern found in the ROUTINE refill/resume paths too (SHIPPED)
+
+Operator: "we dont have to check that in day or two, we have to check it in two hours. see if you
+can find any other issues related to it." Audited every `select_account_for_spawn`/
+`select_account_with_non_strict_retry` call site in the fleet (17 total) for the SAME
+bulk-selection-before-any-commit shape bug 4a was fixed in.
+
+**Found**: `AutoSpawnLoop._run_one_tick` (the ROUTINE refill tick — runs constantly, not just on a
+rare account-disable event) and `AutoSpawnLoop._resume_pass` (dead-worker resume) both pick an
+account per slot inside one DB session via `select_account_with_non_strict_retry`, with the actual
+spawn/resume deferred to a later concurrent phase (`_do_spawns_concurrently`) — the IDENTICAL shape
+that let bug 4a pile 13 slots onto one account, just in the high-frequency path instead of the rare
+bulk-sweep path. Every OTHER call site was checked and ruled out (single-item decision points, not
+batch loops): `escalation.escalate()`/`_maybe_alert_pool_exhaustion` (one PR/wall or a
+headroom-only check, not a dispatch), `plan_health.dispatch()` (one scheduled job per call),
+`main_agent_keeper`'s 4 call sites (the singleton main-agent slot, not a fleet loop),
+`worker_liveness_watchdog._handle_usage_cap` (loops over slots but acts — kill + respawn —
+synchronously per slot before the next iteration, so it doesn't share the staleness mechanism).
+Also confirmed no `@lru_cache`/similar caching on the headroom-check functions that could add a
+DIFFERENT kind of staleness.
+
+**Fix**: `agent-orchestrator@ba855161ae`. Generalized `select_account_with_non_strict_retry` to
+accept `exclude_ids` (mirrors `select_account_for_spawn`'s own bug-4a parameter). Factored the
+exclude+round-reset spreading logic into a new shared helper,
+`autospawn.select_account_with_tick_spread` (mutates a caller-owned `set[str]` in place — adds a
+successful pick, clears-then-reseeds on a round-reset) — needed as a separate function, not inlined
+twice, both to avoid duplicating the logic AND to keep `_run_one_tick` under the ruff C901
+complexity ceiling once the extra branching was added inline (first attempt tripped it: 28 > 26).
+Both `_run_one_tick` and `_resume_pass` now call it instead of `select_account_with_non_strict_retry`
+directly. 4 new regression tests for the shared helper. 1240+ tests across all four bug areas pass;
+full `quality-gates.sh` green (5284 passed/4 skipped, coverage 86.06%). Live-verified: root checkout
+restarted onto `ba855161ae` at 10:20:30 UTC.
+
+**Process note**: shipping this hit a real async-wait trap worth recording — the FIRST
+`quality-gates.sh` background run reported "completed, exit 0" via the harness notification, but the
+scratchpad session directory its output was redirected into had been silently rotated away mid-run
+(the harness's own session-id changed, same class of issue Part 3 item 2 already documented), so the
+"pass" was actually a phantom — the log file didn't exist and QG likely never ran at all. A SECOND
+attempt then hit the OTHER known trap (Part 3 item 1's cousin): the session's persisted cwd had
+drifted to the bare workspace root between calls, so `quality-gates.sh` genuinely failed
+("No such file or directory") while still reporting exit 0 for the wrapping echo. Only a THIRD
+attempt, with the `cd` and the log path both baked into the SAME self-contained backgrounded command
+and the resulting log file's line count verified (9331 real lines, not a stub), produced trustworthy
+evidence. Lesson: a "completed, exit 0" notification is not itself proof of a real pass — read the
+log content and check it isn't suspiciously short/absent before shipping on it.
 
 ## Todos
 
 - [ ] [OPERATOR] P2. Re-enable `gemini-3-5-flash-lite-proj1` (paused 2026-08-21 as bug 4a/4b's
       immediate stopgap — see Part 4) once comfortable the fix prevents a recurrence, or leave
       paused if the account has an independent problem worth investigating further first.
-- [ ] [DATA] P3. Re-check bug 4a/4b's live effectiveness a day or two out: does a fresh bulk
-      account-sweep (any account, not just Gemini) spread across multiple destinations instead
-      of piling onto one, and does a repeatedly-dying account's `free_provider_spawn_selected`
-      share drop off after a few `tmux_session_lost` events instead of staying flat. Repo:
-      agent-orchestrator.
+- [ ] [DATA] P3. Re-check bugs 4a/4b/5's live effectiveness ~2 hours after shipping (operator
+      directive, not "a day or two" — the original wording here): does a fresh bulk account-sweep OR
+      a routine refill/resume tick spread across multiple destinations instead of piling onto one,
+      and does a repeatedly-dying account's `free_provider_spawn_selected` share drop off after a
+      few `tmux_session_lost` events instead of staying flat. A session-scoped one-shot check is
+      already scheduled for 12:02 UTC 2026-08-21 (CronCreate job `be0aad88`, this session only —
+      gone if the session ends first; re-derive manually via the `activity_log` queries in Part 1/4
+      if it doesn't fire). Repo: agent-orchestrator.
 - [x] [SCRIPT] P3. **Found while verifying bug 1 post-ship.** The live (gitignored, per-VM)
       `data/config/accounts.json` on the planning VM still carried 3 dead Kimi entries
       (`kimi-k3`/`kimi-k2-6`/`kimi-k2-7-code`) — harmless (gracefully skipped) but not a true "removed
@@ -415,3 +462,13 @@ with many bound slots).
   reaching multiple Gemini sub-accounts, both GLM accounts, and multiple Claude accounts, not just
   `codex-luna` — bugs 1-3 are working as intended; the "dying/stale" symptom was entirely bugs 4a/4b,
   not a shortfall in bugs 1-3's fix.
+- **2026-08-21 (slot 13, interactive, later same session)**: operator corrected the re-check interval
+  to 2 hours (not "a day or two") and asked for a further audit for related issues. Found bug 4a's
+  exact pattern also present in `_run_one_tick`/`_resume_pass` (Part 5) — the routine, high-frequency
+  paths, not just the rare bulk-sweep one. Fixed, tested, shipped `agent-orchestrator@ba855161ae`,
+  live-verified via `orchestrator.service` restart (10:20:30 UTC). Scheduled a session-scoped one-shot
+  check (CronCreate `be0aad88`, fires ~12:02 UTC) to re-verify live effectiveness. Hit and recovered
+  from two real async-wait traps while shipping this (see Part 5's "Process note") — a phantom QG
+  "pass" from a rotated-away scratchpad session directory, then a genuine QG failure masked by cwd
+  drift — worth remembering: a background task's "completed, exit 0" notification is not itself proof
+  of a real pass.
