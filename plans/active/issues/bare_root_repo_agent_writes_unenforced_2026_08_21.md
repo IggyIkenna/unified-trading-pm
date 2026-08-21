@@ -99,16 +99,3 @@ The monitoring gap itself is unfixed: `slot-git-status-report.sh`'s slot-0 branc
 - [ ] [AGENT] P2. Once the alert lands, re-verify CLAUDE.md's slot-0 line (already corrected this session to
       "reported not enforced every 5 min") reads as accurate again — flip back to describing real enforcement only
       after the alert path is live and proven (at least one real DIRTY-slot-0 page observed).
-
-## Progress Log
-
-- 2026-08-21, slot 5 (P2 gate check; task `…-e7474cc559f7`, released GATED): verified the P2 gate is NOT met.
-  P1's alert path is absent from `scripts/dev/slot-git-status-report.sh` at LDR HEAD (the slot-0 branch is still
-  `classify_repo` + `post_snapshot` only, no alert call), the P1 checkbox above is still open, and the P1 backlog
-  task (`…-c77574a3f999`) is `dispatched` in-flight on another slot. All three bare-root repos (agent-orchestrator,
-  execution-service, unified-trading-system-ui) are currently CLEAN — so "at least one real DIRTY-slot-0 page
-  observed" cannot fire until a future agent write lands in a bare-root checkout; the wait after P1 lands is
-  unbounded. CLAUDE.md's current slot-0 wording ("reported not enforced every 5 min", grep "reported not
-  enforced" in `cursor-configs/CLAUDE.md`) re-verified ACCURATE as-is — flipping it now would reintroduce the
-  overstated enforcement claim this issue exists to remove. **P2 remains gated on BOTH: P1 landed + first real
-  DIRTY-slot-0 page observed.** Next worker on P2: confirm both conditions before touching CLAUDE.md.

@@ -1370,7 +1370,7 @@
       </div>
     </details>
     <details class="sec-body">
-      <summary>Thirteen of the 16 action types, with their real fields</summary>
+      <summary>The thirteen action types, with their real fields</summary>
       <div class="code">
         <span class="k">class</span> <b>TradeInstruction</b>(StrategyInstructionEnvelope): target_position_units:
         Decimal <i># a TARGET, not a delta — idempotent by design</i>
@@ -1432,10 +1432,9 @@
           is what makes the contract safe to retry across a service restart.
         </p>
         <p>
-          <b class="ev ev-verified">✓ verified</b> — the 13 subclasses above were checked directly against
-          <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> (2026-08-18); the
-          <code>StrategyInstructionV2</code> union lists 16 today — <code>ControlInstruction</code>,
-          <code>LpMintInstruction</code> and <code>LpBurnInstruction</code> are not shown above. An earlier edition of
+          <b class="ev ev-verified">✓ verified</b> — all thirteen subclasses above, and the
+          <code>StrategyInstructionV2</code> union that lists them, checked directly against
+          <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> (2026-08-18). An earlier edition of
           this document said nine and omitted <code>TransferInstructionV2</code> and <code>BridgeInstructionV2</code>,
           which were already present in code.
         </p>
@@ -1469,11 +1468,8 @@
         </p>
       </div>
       <p>
-        <b class="ev ev-verified">✓ verified 2026-08-18</b> — of the 16 action types in the envelope above, this
-        endpoint wired exactly two as of that check; all 16 dispatch as of 2026-08-21
-        (<code>_submit_control_instruction()</code> was the last) — see
-        <code>platform-api-reference.html §01</code> for the current per-action wiring. <code>TRADE</code>
-        executes end-to-end, routed through the same
+        <b class="ev ev-verified">✓ verified</b> — of the thirteen action types in the envelope above, this endpoint
+        wires exactly two. <code>TRADE</code> executes end-to-end, routed through the same
         <code>ManualOperationHandler</code> → <code>LiveOrchestrator.execute_instruction()</code> path the internal
         manual-trade surface uses in production. <code>QUOTE</code> is wired too, but differently: it arms delta-proxy
         repricing (<code>execution_service/engine/quote_maintenance.QuoteMaintainer</code>) and answers

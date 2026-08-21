@@ -124,7 +124,7 @@ orphaned and the check short-circuited; the pattern is otherwise a real, recurri
       DIFFERENT, unlocated tool, not quickmerge.sh itself). Not investigated further this session — deeper forensics
       (e.g. asking the peer directly, or inspecting shell history/rc files) is out of scope for an unattended AO
       worker and risks an unbounded search.
-- [x] [REVIEW] P1. **CORRECTION, 2026-08-21 (slot-16): the earlier "confirmed live" verdicts (Progress Log entries
+- [ ] [REVIEW] P1. **CORRECTION, 2026-08-21 (slot-16): the earlier "confirmed live" verdicts (Progress Log entries
       below, timestamped pre-this-entry) were a measurement trap — commit-recency is NOT the right liveness signal
       here.** `oms-wt.oc3YkB`'s HEAD commit has now been observed under **3 distinct author identities across the
       session** (`ikennaigboaka [slot-2·laptop]` → `github-actions[bot]` → `uts-backmerge-bot`), each landing a fresh
@@ -151,22 +151,6 @@ orphaned and the check short-circuited; the pattern is otherwise a real, recurri
       **STILL OPEN 2026-08-21 (slot-14)**: unchanged by this session's work — todos 3/4's fix stops this WIP from
       blocking OTHER slots'/sessions' unrelated `/done` calls, but does not touch or resolve the WIP itself. The
       operator decision on whether it's safe to stash/discard is still needed.
-      **RESOLVED 2026-08-21 (interactive slot 15, operator-directed)**: operator reviewed this doc's own evidence
-      and directed discard. Re-verified before acting: same state persists, now 8h+ stale (file mtime unchanged at
-      11:47 vs a 19:50 check), byte-identical 160-file staged diff, no live process (the only `pgrep` hit was a
-      self-match on the search command's own argument — the identical false-positive trap this doc's REVIEW todo
-      above already flagged and corrected). Confirmed via `grep` that no active plan references `deribit` or
-      `execution_service/venues` — the staged content (a new Deribit venues facade module + a DeFi-protocol
-      idempotency-removal refactor) has no backing design doc anywhere, and the OMS-persistence work its branch
-      name references is separately, fully shipped already
-      (`w_execution_orchestrator_oms_persistence_impl_2026_08_21.md`,
-      `execution-service@bc2edc16874a3b0828ef692682b69174ddcab4bf` confirmed ancestor of
-      `origin/live-defi-rollout`) — so nothing valuable was at risk. Resolved per the sanctioned recovery path
-      above: `pyproject.toml`'s one conflict (trivial version-pin mismatch) taken to HEAD, remainder
-      `git stash push`ed (parked as `stash@{0}` on the `execution-service` worktree, recoverable). Also pruned 5
-      unrelated `prunable` isolated-quickmerge worktree registrations found alongside it (dirs already gone, pure
-      bookkeeping cleanup). Full detail: `fleet_dispatch_stall_gemini_proxy_alias_mismatch_2026_08_21.md`'s
-      quarantined-slot-WIP todo.
 - [x] ✅ [SCRIPT] P2. **NARROWED 2026-08-21**: since `scripts/quickmerge.sh --isolated` is now evidenced NOT to be the
       creator (see todo 1 above), this todo is no longer "fix quickmerge.sh's path resolution" — it is instead
       **locate the actual tool that creates `<tag>-wt.<random>`-style directories flat inside `.tabs/<N>/`** (grepped
