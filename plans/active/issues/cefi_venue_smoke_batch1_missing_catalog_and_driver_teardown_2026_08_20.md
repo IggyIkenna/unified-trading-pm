@@ -68,9 +68,9 @@ shared cap and produces false skips/failures.
 - [ ] [BACKEND] P0. Rerun the 79 failed and 208 skipped CeFi cells as bounded serial force/skip/canonical attempts under
   the Tardis concurrency cap, retaining per-cell terminal reports and fresh manifest evidence (repos:
   `market-tick-data-service`, `deployment-service`).
-- [ ] [BACKEND] P0. Resolve the LIGHTER-ZKSYNC derivative-ticker catalogue mapping so sampled symbols cannot be emitted
+- [x] [BACKEND] P0. Resolve the LIGHTER-ZKSYNC derivative-ticker catalogue mapping so sampled symbols cannot be emitted
   as a bare `ARM` instrument id, then rerun its canonical negative/positive controls (repos: `instruments-service`,
-  `unified-api-contracts`, `market-tick-data-service`).
+  `unified-api-contracts`, `market-tick-data-service`). — unified-api-contracts@2d025cabe + Evidence: quality-gates.sh ALL QUALITY GATES PASSED; regression controls cover crypto-only CLOB acceptance and ARM rejection.
 - [ ] [BACKEND] P1. Classify every `no_captured_data_for_cell` and `tardis_guard_busy` result against the production
   source listing and record an honest absence or successful capture; no row may remain represented only by a skipped
   aggregate result (repos: `market-tick-data-service`, `deployment-service`).
@@ -98,6 +98,9 @@ operator ruling, this report does not prove the P0 contract. Keep this issue ope
 bounded serial runs.
 
 **2026-08-20 — resumed execution attempt 2 (slot 14).** The UAC generator again measured 73 CeFi rows. The driver ran with explicit staging VM launch arguments, `--require-captured`, `--auto-day`, and `--bundle`; phase-0 consolidation succeeded (`shards=4`, `rows_in=111855`, `rows_out=109308`). It progressed through the CeFi venue cells, including native-REST HYPERLIQUID/ASTER, but did not produce a terminal CeFi report. The staging launcher eventually failed its freshness auto-republish with `printf: write error: No space left on device` and refused to launch stale/unverified tarballs for `market-tick-data-service`, `unified-api-contracts`, `unified-trading-library`, and `deployment-service`. The exact driver retry process was stopped after SIGTERM when the full-filesystem retry loop continued. The existing audit result at `unified-trading-pm/plans/audit/results/data_pipeline_e2e_check_mtds_2026_08_20.md` is a Prediction run, not CeFi evidence. P0 remains open; next rerun requires reclaiming the launcher staging space, regenerating verified tarballs, and then bounded serial CeFi cells with retained per-cell terminal reports.
+
+
+**2026-08-21 — slot 12 mapping fix.** The shared CeFi MVP predicate now restricts LIGHTER-ZKSYNC, EXTENDED-STARKNET, and PACIFICA-SOLANA perpetuals to the crypto base universe, preventing equity-perp symbols such as ARM from entering derivative_ticker sampling. UAC regression controls assert BTC/ETH remain eligible and ARM is rejected; unified-api-contracts@2d025cabe is landed on live-defi-rollout. Evidence: quality-gates.sh reported ALL QUALITY GATES PASSED (789s).
 
 **2026-08-21 — terminal correction for resumed staging run (slot 14).** The preserved driver
 `pipeline-e2e-check-mtds-20260820-2217-cefi` reached a terminal failed state: remote
