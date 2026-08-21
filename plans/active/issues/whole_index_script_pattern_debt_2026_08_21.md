@@ -97,9 +97,7 @@ The proven replacement pattern (shipped + verified in
 
 ## Todos
 
-- [x] [CODE] P1. ✅ DONE 2026-08-21 — LANDED as `deployment-service@3000d17ccc` (full isolated re-gate
-      green: templates purge/canonicalize/reconcile/backfill + `migration_common` streaming/CAS seams +
-      5 template test files + 2 consumers declaring `predicate_scope`). Port the streaming + CAS pattern into the four migration templates
+- [ ] [CODE] P1. Port the streaming + CAS pattern into the four migration templates
       (`deployment-service/scripts/migrations/lib/templates/template_{purge,canonicalize,audit,
       reconcile}.py`) so every future stamped script inherits it — mirror the proven AAVEV3 purge
       script structure (generation-pinned read, iter_batches scan, few-column mask view, Arrow filter,
@@ -110,8 +108,7 @@ The proven replacement pattern (shipped + verified in
       load (161,763,519 rows), despite the script's existing column-projection + dictionary
       preservation. **The scheduled nightly is therefore BROKEN at today's index size** until either
       (a) the launcher default machine (and whatever the scheduler passes) is raised — a one-line
-      deployment-service change (the AAVEV3 [SHIP] batch has LANDED at `3000d17ccc`; ship the bump
-      standalone) — or (b) the read path is converted to
+      deployment-service change riding the blocked [SHIP] — or (b) the read path is converted to
       streaming (`migration_common.stream_filter_parquet`-style per-batch aggregation), the durable
       fix. A 128GB (`--machine-type e2-highmem-16 --oom-monitor`) run was used same-day to produce
       2026-08-21's coverage.json and to capture the real peak for sizing; check its oom-monitor trail
@@ -130,13 +127,10 @@ The proven replacement pattern (shipped + verified in
       The correct change is category-scoped: size only the whole-index categories (index
       download+filter+rewrite CAS ops) to 64GB, keyed on the category/task flag at launch — make that
       call when next actually running one against today's 7.5GB+ indexes.
-- [x] [INFRA] P2. ✅ DONE 2026-08-21 — six prefix entries LANDED in `deployment-service@3000d17ccc`;
-      zombie-watchdog VM relaunched (old `…20260815-191525` deleted → `vm-zombie-watchdog-20260821-144933`
-      RUNNING; the launcher re-uploads the `.py` SSOT from the landed tree on every launch). Add
-      `PREFIX_IDLE_THRESHOLDS` entries for the whole-index `bucket=None` prefixes named in the Finding
-      (same `(90, 360)` shape), then relaunch the zombie-watchdog VM once.
-- [x] [INFRA] P3. ✅ DONE 2026-08-21 — LANDED in `deployment-service@3000d17ccc` (`lc_gcloud_create`:
-      `KEEP_VM=true` → `VM_SHUTDOWN_ON_COMPLETION=false` + `keep=true` label). Generalize `KEEP_VM=true` (shutdown=false + `keep=true` label) from
+- [ ] [INFRA] P2. Add `PREFIX_IDLE_THRESHOLDS` entries for the whole-index `bucket=None` prefixes named
+      in the Finding (same `(90, 360)` shape as `canonical-migration-` / `defi-aavev3-bare-alias-purge-`),
+      then relaunch the zombie-watchdog VM once (its running copy never re-fetches).
+- [ ] [INFRA] P3. Generalize `KEEP_VM=true` (shutdown=false + `keep=true` label) from
       `launch-defi-aavev3-bare-alias-purge-vm.sh` into `lib/launcher_common.sh` so any launcher gets a
       supervised-diagnostic mode without a per-copy edit.
 

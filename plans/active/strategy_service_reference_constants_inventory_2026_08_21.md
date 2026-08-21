@@ -103,7 +103,7 @@ all heavily operator-ruling-cited archetype policy, not duplicated reference dat
 | 26 | `ARCHETYPE_ALLOCATOR` | archetype_allocator.py:42 | Archetype→allocator-class registry | 4 | No SSOT | STAYS LOCAL |
 | 27 | `_DEFI_ARCHETYPES` | batch_harness.py:61 | Set of archetypes in the DeFi family (batch-harness scoping) | 4 | UAC `StrategyFamily`/`StrategyArchetype` enums exist but not this pre-filtered membership set | STAYS LOCAL — trivial derived membership set, test/harness scoping only |
 | 28 | `_FAMILY_TO_ASSET_GROUP` | live_routing.py:54 | `StrategyFamily` → event-log `asset_group` shard key, for the 3 families that publish `AtomicInstruction` | 2 | UAC has no family→asset_group map (asset_group taxonomy lives in UAC but this specific derived mapping for LEADER_HEDGE routing does not) | AMBIGUOUS — asset_group is a UAC-owned axis in principle, but this table is a narrow routing-key derivation for one publish path, not general reference data; flag for operator: fold into UAC's asset_group taxonomy vs. keep as routing-local |
-| 29 | `_MONTH_ABBREV` | vol_trading/atm_straddle_resolver.py:37 (pre-migration) | Locale-independent month→3-letter-abbrev map for Deribit/options instrument-symbol construction | 1 (this file) | No UTL/UAC calendar-abbreviation SSOT existed | ✅ MIGRATED 2026-08-21 — destination #4 (centralized domain module) applies directly: needed by 2 resolvers in this domain, no existing SSOT required to qualify. Moved to new shared module `strategy_service/engine/strategies/v2/dated_symbol_conventions.py::MONTH_ABBREV`; both local dicts deleted, both files re-import under the original private name (`as _MONTH_ABBREV`) so existing call sites/tests are unchanged. New unit tests added (`tests/unit/engine/strategies/v2/test_dated_symbol_conventions.py`). This corrects the original AMBIGUOUS verdict below — "no SSOT to migrate to" conflated "no *pre-existing* SSOT" with "no valid destination"; the four-destination table's #4 doesn't require a pre-existing module, only a genuine multi-consumer need, which this had (confirmed byte-identical duplicate, see #67). |
+| 29 | `_MONTH_ABBREV` | vol_trading/atm_straddle_resolver.py:37 | Locale-independent month→3-letter-abbrev map for Deribit instrument-symbol construction | 1 (this file) | No UTL/UAC calendar-abbreviation SSOT found (grepped `unified-trading-library` for `MONTH_ABBREV`, 0 hits) | AMBIGUOUS — byte-identical to #55 below (`dated_contract_resolver.py`'s own `_MONTH_ABBREV`), a same-repo duplicate; no ready SSOT exists yet in UTL to migrate to, so not actionable as MIGRATE this session — recommend a new shared module in `strategy_service/engine/strategies/v2/carry_and_yield/` (or UTL, if genuinely generic) rather than two hand-copies |
 | 30 | `_STRIKE_INCREMENT` | vol_trading/atm_straddle_resolver.py:57 | Per-underlying option strike-price grid (btc=1000, eth=100, spx=25) | 1 | Not found in UAC's option/instrument registries under a quick probe; instruments-service is the more likely long-term owner of strike-grid reference data but no confirmed-real SSOT located | AMBIGUOUS — plausibly instrument reference data (strike ticks), but no confirmed SSOT exists to migrate to; flag for operator rather than guess instruments-service scope |
 | 31 | `_BUILDERS_BY_ARCHETYPE` | target_universe/catalog.py:99 | Archetype→target-universe-builder-function registry | 1 (used to build #32) | No SSOT | STAYS LOCAL — internal wiring |
 | 32 | `TARGET_UNIVERSE` | target_universe/catalog.py:152 | Full flattened tuple of every archetype's target instances | many | N/A — derived from every catalog_*.py constant below | STAYS LOCAL — the aggregation point, not new data |
@@ -141,7 +141,7 @@ all heavily operator-ruling-cited archetype policy, not duplicated reference dat
 | 64 | `_SELL_DIRECTION_BY_VENUE` | arbitrage_structural/prediction_venue_dispersion.py:123 | Venue → arbitrage-direction-enum map, 1:1 derived from #63's keys | 1 | N/A — derived | STAYS LOCAL |
 | 65 | `_KNOWN_DISPERSION_TYPES` | arbitrage_structural/price_dispersion.py:98 | Valid dispersion-type string enum for this engine | 1 | No SSOT | STAYS LOCAL |
 | 66 | `_QUARTER_MONTHS` | carry_and_yield/dated_contract_resolver.py:67 | Quarterly-futures expiry months (3,6,9,12) | 1 | No UTL calendar SSOT found | STAYS LOCAL — small, self-evident calendar fact; not worth a registry for 4 ints, unlike #29/#67's larger duplicate |
-| 67 | `_MONTH_ABBREV` (dated_contract_resolver) | carry_and_yield/dated_contract_resolver.py:75 (pre-migration) | Same locale-independent month-abbrev map as #29 | 1 (this file) | Same probe as #29 | ✅ MIGRATED 2026-08-21 — see #29, same commit, this was the second copy. |
+| 67 | `_MONTH_ABBREV` (dated_contract_resolver) | carry_and_yield/dated_contract_resolver.py:75 | Same locale-independent month-abbrev map as #29 | 1 (this file) | Same probe as #29 | AMBIGUOUS — confirmed byte-identical duplicate of #29 (`vol_trading/atm_straddle_resolver.py:37`); consolidate into one shared module regardless of external SSOT (none exists yet) |
 | 68 | `_BANNED_LST_PERP_COMBOS` | carry_and_yield/staked_basis.py:174 | Explicit (LST, perp-venue) combos banned for margin-calibration reasons | 1 | No SSOT — defense-in-depth policy list per its own comment | STAYS LOCAL |
 | 69 | `_STABLECOINS` | carry_and_yield/staked_basis.py:245 | Stablecoins the strategy can start in (USDC/USDT/FDUSD) | 1 | Same probe as #45 | AMBIGUOUS — same duplicate cluster as #45/#63 (identical value set across 3 files); consolidate locally, no external SSOT confirmed |
 | 70 | `_PERP_MARGIN_STABLE_PREFERENCE` (staked_basis.py) | carry_and_yield/staked_basis.py:261 | Stable preference order, byte-identical to #47 | 1 | N/A | AMBIGUOUS — exact duplicate of #47, see #47's note |
@@ -162,32 +162,24 @@ total for auditability). Net: **72 real distinct candidates**, not 69 — see "C
   a given archetype is willing to trade, sizing tiers, internal engine wiring, QG ratchet baselines, parser
   grammars) matching the `_ALLOWED_CHAINS` precedent. None of these are duplicated reference data — each was
   checked against the plausible UAC registry by content, not name.
-- **AMBIGUOUS**: 8 constants, forming 4 distinct clusters (rows are cross-referenced, not independent
-  duplicates of different things) — revised 2026-08-21 after `_MONTH_ABBREV` (cluster 2 below) was reclassified
-  MIGRATED, see below:
+- **AMBIGUOUS**: 10 constants, forming really 5 distinct clusters (rows are cross-referenced, not independent
+  duplicates of different things):
   1. `_FAMILY_TO_ASSET_GROUP` (#28) — narrow routing-key derivation vs. fold into UAC's asset_group taxonomy.
-  2. `_STRIKE_INCREMENT` (#30) — plausible instrument reference data (strike ticks); no confirmed SSOT located.
-  3. `_LP_CONCENTRATED_POOLS` (#39) — pool contract addresses; no confirmed UAC LP-pool registry exists.
-  4. Stablecoin-preference cluster: `_STABLE_PREFERENCE` (#45) / `_PERP_MARGIN_STABLE_PREFERENCE` × 2 (#47, #70,
+  2. `_MONTH_ABBREV` × 2 (#29, #67) — confirmed byte-identical intra-repo duplicate; no UTL/UAC SSOT exists to
+     migrate to yet.
+  3. `_STRIKE_INCREMENT` (#30) — plausible instrument reference data (strike ticks); no confirmed SSOT located.
+  4. `_LP_CONCENTRATED_POOLS` (#39) — pool contract addresses; no confirmed UAC LP-pool registry exists.
+  5. Stablecoin-preference cluster: `_STABLE_PREFERENCE` (#45) / `_PERP_MARGIN_STABLE_PREFERENCE` × 2 (#47, #70,
      confirmed byte-identical to each other) / `_STABLECOINS` (#69) — near-identical stable-preference lists
      scattered across 3 files, no external SSOT confirmed, real intra-repo dedup opportunity.
-- **MIGRATED**: **1 fact, 2 rows** (#29, #67) — `_MONTH_ABBREV`, corrected 2026-08-21 from this doc's original
-  AMBIGUOUS verdict. The original reasoning ("no ready SSOT exists yet ... not actionable as MIGRATE") conflated
-  "no pre-existing external SSOT" with "no valid destination" — the parent plan's own destination #4 (centralized
-  domain module) doesn't require a pre-existing module, only a genuine multi-consumer need within the domain, which
-  this constant had (confirmed byte-identical duplicate across 2 resolvers). Migrated to
-  `strategy_service/engine/strategies/v2/dated_symbol_conventions.py::MONTH_ABBREV`; both local definitions
-  deleted, no shims (both call sites were edited to import from the new module — the private-name re-import
-  preserves existing tests' import path, not a compatibility layer). See parent plan Progress Log for the commit.
-- **MIGRATE (confirmed-real external SSOT, e.g. UAC)**: **0**, unchanged from the original audit. Every constant
-  that looked plausible on name alone (LST lists, venue lists, chain lists) was checked against its real UAC
-  counterpart by content and confirmed to be archetype-specific *curation* on top of UAC data, not a duplicate of
-  it — the one confirmed literal duplicate against an EXTERNAL SSOT (`_STAKING_PROTOCOL_CHAIN`) was already fixed
-  before this audit (parent plan's exemplar todo, `strategy-service@1ea9d0b170`/`8a7f80e8`).
+- **MIGRATE (confirmed-real SSOT, ready to migrate now)**: **0**. Every constant that looked plausible on name
+  alone (LST lists, venue lists, chain lists) was checked against its real UAC counterpart by content and
+  confirmed to be archetype-specific *curation* on top of UAC data, not a duplicate of it — the one confirmed
+  literal duplicate (`_STAKING_PROTOCOL_CHAIN`) was already fixed before this audit (parent plan's exemplar todo,
+  `strategy-service@1ea9d0b170`/`8a7f80e8`). This is a genuine (if less exciting) finding: the "GENERAL CLASS"
+  problem's worst instance was the one already fixed; the remaining 72 are, on individual inspection, correctly
+  local.
 
-Task 2 ("migrate the unambiguous ones") therefore has **one row acted on** (`_MONTH_ABBREV`, an internal
-same-repo duplicate with a single defensible destination) — no candidate here has both an unambiguous destination
-AND a confirmed-real, already-existing EXTERNAL SSOT to receive it, which is what the original "0" summary
-measured; internal-duplicate migrations are a distinct, smaller category this revision separates out. The
-remaining AMBIGUOUS cluster is listed in the parent plan's `[OPERATOR] P1` "Rule on the ambiguous ones" todo for a
-ruling.
+Task 2 ("migrate the unambiguous ones") therefore has **no rows to act on** — there is no candidate here with both
+an unambiguous destination and a confirmed-real, already-existing SSOT to receive it. The AMBIGUOUS cluster is
+listed in the parent plan's `[OPERATOR] P1` "Rule on the ambiguous ones" todo for a ruling.

@@ -166,17 +166,7 @@ unset _QG_CALLER QG_SCRIPT_DIR QG_PROJECT_ROOT
 # ibkr-gateway-infra was on fastapi 0.136.1/starlette 1.1.0 (missed by the 2026-07-28 fleet bump, which
 # only touched repos declaring fastapi directly). Full audit + every shipped sha:
 # cve_affected_pinned_deps_remediation_2026_06_18.md.
-#
-# NEW 2026-08-21 (agt-614918, ldr_qg_failure escalation on unified-trading-pm): PYSEC-2026-3721 /
-# CVE-2026-13346 — pip 26.1.2 (the version pinned fleet-wide as the FIX for the earlier PYSEC-2026-196)
-# is itself vulnerable (doubly-encoded index-URL path traversal), fixed in pip 26.2. TEMPORARY ignore —
-# a permanent fix is the same recipe as every prior entry here (bump the `pip` floor to >=26.2 in each
-# repo's pyproject.toml + `uv lock`, then drop this ignore once the fleet sweep is 100% clean). Bumping
-# workspace-constraints.toml's canonical `pip` pin here would immediately reflag all 14 not-yet-bumped
-# repos via check-dependency-alignment.py and block PM's own quickmerge Stage 1.5 on unrelated repos —
-# out of scope for a one-shot CI-wall fix. Follow-up tracked:
-# plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md § "NEW 2026-08-21".
-QG_PIP_AUDIT_COMMON_IGNORES="--ignore-vuln PYSEC-2026-3721 --ignore-vuln CVE-2026-13346"
+QG_PIP_AUDIT_COMMON_IGNORES=""
 
 # ── QG PROFILER (opt-in; inactive unless QG_PROFILE=1) ────────────────────────
 # No-op by default — zero behaviour change for normal runs across all repos. When

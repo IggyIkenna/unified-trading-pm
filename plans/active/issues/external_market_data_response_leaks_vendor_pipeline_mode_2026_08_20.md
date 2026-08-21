@@ -81,39 +81,6 @@ example and the real response now disagree on purpose: the doc states the target
 - [ ] [REVIEW] P2. **Confirm the fix against the corrected doc example** once shipped — the doc now says `file` is
       opaque; the fix should make that literally true, not just documented as an aspiration.
 
-## Findings — sibling endpoint audit (2026-08-21)
-
-Batch21 item (`cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`), source: this doc's todo 2. Direct read of
-`market-tick-data-service/market_tick_data_service/api/routers/external.py` (both endpoints, full bodies) plus the
-schemas each response is built from. Pure investigation — no fix applied.
-
-- **`GET /external/market-data/availability` — NO LEAK.** `get_availability()` (lines 120-216) reads
-  `{gcp_project_id}-honest-coverage/{date}/coverage.json` and returns only the `by_asset_group` /
-  `by_venue` / `by_venue_data_type` rollup cells verbatim (`summary`, `venue_summary`,
-  `venue_data_type_summary`, `data_type_summary_by_venue`). Confirmed by reading
-  `instruments-service/scripts/measure_honest_coverage.py::_compute_coverage()` (the writer of those cells): every
-  cell is count/percentage/diagnostic aggregates (`captured`/`empty_confirmed`/`attempted_failed` counts,
-  `*_pct` fields, `hollow_instrument_type_fraction`, etc.) — no raw GCS object path, no `pipeline_mode`/vendor
-  field anywhere in the writer's output shape. `grep`'d the writer for `pipeline_mode`/`source`/`path`: zero hits
-  in the emitted-cell construction.
-- **`GET /external/market-data/delivery/stream` — LEAKS, and more directly than `/delivery/batch`.**
-  `get_stream_delivery()` (lines 410-448) streams NDJSON via `envelope.model_dump_json()` on each
-  `CanonicalPersistEnvelope` read off the `EventTransport` facade. `CanonicalPersistEnvelope`
-  (`unified-api-contracts/unified_api_contracts/events/persist.py:53-117`) declares
-  `pipeline_mode: PipelineMode | None = None` as a **named top-level field** — `model_dump_json()` serializes it
-  verbatim into every emitted line, so the vendor tag reaches the external caller as an explicit, labeled field
-  rather than embedded inside a path string the caller would have to parse (arguably a *worse* disclosure than
-  `/delivery/batch`'s `file` path leak — no parsing needed to read it off). Additionally, when `payload_pointer`
-  is set (non-hot-path shards) it carries a raw GCS blob path per the same canonical partition convention as
-  `/delivery/batch`'s `file` field, so that field would independently re-leak the same tag via the path-embedding
-  mechanism too.
-
-**Verdict for the record**: `/availability` = no leak (aggregate-only payload, no path/vendor field in the writer's
-schema). `/delivery/stream` = leak, both via the explicit `pipeline_mode` field and via `payload_pointer` when set.
-Mechanism decision (todo 1 above) still applies to `/delivery/stream` too — whichever fix lands there should also
-strip/opacify `pipeline_mode` on the envelope (or the external serializer) and any `payload_pointer` path, not just
-`/delivery/batch`'s `file` field.
-
 ## Progress Log
 
 **2026-08-20 — filed.** No code touched. `platform-api-reference.html` corrected in the same session to document the
@@ -124,8 +91,3 @@ pending this fix, not silently inconsistent.
   leak) is a bounded, pure investigation task; extracted to
   `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`. Todo 1 ("Decide the mechanism") stays `assigned_vm:
   NA` — explicit design decision. Doc's own `assigned_vm: NA` unchanged. Cross-cutting tranche, batch 2 of 3.
-- **2026-08-21 (batch21 item, slot 4)**: sibling-endpoint audit done. `/availability` = no leak (verified against
-  the coverage-rollup writer's own output shape). `/delivery/stream` = leak — `CanonicalPersistEnvelope.pipeline_mode`
-  is a named field serialized verbatim by `model_dump_json()`, plus `payload_pointer` re-leaks via path-embedding
-  when set. Findings section added above. Todo 1's mechanism fix should cover both `/delivery/batch` and
-  `/delivery/stream`.
