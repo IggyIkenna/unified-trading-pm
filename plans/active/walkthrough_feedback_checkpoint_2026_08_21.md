@@ -73,6 +73,12 @@ Integration Guide → https://claude.ai/code/artifact/952680c2-2bda-4735-b298-8e
       (strategy-service@21937bb2cf).
 - [ ] [AGENT] P1. Verify BLRS recon_excluded landed on origin; if absent re-run its recorded quickmerge, flip its
       todo in the main plan.
+- [ ] [AGENT] P1. WATCH: platform-api-reference.html §01 states the MTDS entitlement seam as landed, but that
+      code is still in its ship queue (rate-limits lane carries it). If the MTDS ship fails, correct §01 to
+      origin truth; when it lands, the claim is true — verify and close.
+- [ ] [DOC] P1. Walkthrough §16–§25/§27/§29: ~25 remaining `st-plan`/pending markers (wizard stages, archetype
+      configs, algo-selection specifics) need per-service verification passes to reach zero-pending — the voice
+      lane verified only today's landed fixes (its report, 2026-08-21).
 - [ ] [AGENT] P0. Republish both artifacts (same file paths) after the in-flight lanes land; relay landed shas.
 
 ## Lessons
