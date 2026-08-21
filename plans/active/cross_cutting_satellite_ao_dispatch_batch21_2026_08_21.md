@@ -165,11 +165,19 @@ source: >-
 
 ## From `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`
 
-- [ ] [REVIEW] P1. **Check the sibling parameters on `GET /external/market-data/availability`** —
+- [x] ✅ [REVIEW] P1. **Check the sibling parameters on `GET /external/market-data/availability`** —
       `asset_group`, `instrument_type`, and any other optional filter — for the same conditional-branch silent-drop
       bug found for `data_type` without `venue`. Pure investigation; the fix decision (todo 1 in the source doc)
       is still open. Done when: each sibling parameter has a definite affected/unaffected verdict on record.
       Source: `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md` todo 2.
+      **Done 2026-08-21** — `asset_group` UNAFFECTED (required, not optional — no silent-drop path exists);
+      `instrument_type` N/A (no such parameter exists on this endpoint — the only `instrument_type` hit anywhere
+      in the file/tests is an unrelated mocked path-segment string); `date` UNAFFECTED (consumed unconditionally
+      regardless of `venue`/`data_type`); `venue` UNAFFECTED (the conditioning parameter itself, always applied
+      when present). Only `data_type` was ever affected by this bug class, already fixed
+      (market-tick-data-service@8addeac2). Full evidence in
+      `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`'s new "Findings — sibling
+      parameter audit (2026-08-21)" section. Evidence: unified-trading-pm@<pending>.
 - [ ] [AGENT] P2. **Sweep the three external routers for silent-no-op parameters generally**
       (`instruments-service/.../external.py`, `market-tick-data-service/.../external.py`,
       `execution-service/.../external_instruction_api.py`) — a parameter accepted, silently ignored, and returning
@@ -205,3 +213,8 @@ source: >-
   (market-tick-data-service@dcd3b7c401, 2026-08-10) after breaking VIX/CBOE `ohlcv_1m` backfills — never corrected
   in the archived plan pair. Full evidence in
   `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new Findings section.
+- **2026-08-21 (slot-1)** — Closed the `GET /external/market-data/availability` sibling-parameter audit todo.
+  `asset_group` UNAFFECTED (required, not optional), `instrument_type` N/A (no such parameter exists on this
+  endpoint), `date` UNAFFECTED (applied unconditionally), `venue` UNAFFECTED (the conditioning parameter itself).
+  Only `data_type` was ever affected by the silent-drop bug, already fixed. Full evidence in
+  `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`'s new Findings section.
