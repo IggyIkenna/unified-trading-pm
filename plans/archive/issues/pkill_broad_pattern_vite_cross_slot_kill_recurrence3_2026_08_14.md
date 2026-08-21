@@ -48,18 +48,6 @@ context_scope:
 > archive-on-resolve rule. All 3 todos done: P1/P2 root-fixed via agent-orchestrator@2e4122b (guard now sourced directly
 > into every AO-spawned worker pane's `bash_cmd`, not a per-host `~/.bashrc` install); P3 (this doc's own DOC todo)
 > landed the safe cwd-scoped pkill recipe in `agents/RULES.md` § 1 — unified-trading-pm@`1d29effea1`.
->
-> **🔴 CORRECTION 2026-08-21**: the P1/P2 "root-fixed" claim above was WRONG — the sourced-into-`bash_cmd` mechanism
-> was dead-on-arrival for any real agent Bash-tool-call `pkill`, because `_start_session`'s `exec claude ...` REPLACES
-> the shell image (the guard function is never inherited across an `exec`) and the guard script itself never did
-> `export -f`, so no descendant shell could see the function even without the `exec` issue. This verification's own
-> methodology was the gap: it checked the guard sourced correctly in the SAME shell, never that it survived an
-> `exec`-into-`claude` + a FRESH subshell of that exec'd process — the actual real-world topology every agent runs
-> under. Found + properly fixed as recurrence #4:
-> `/plans/archive/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md` (a PATH-prepended
-> `pkill-guard-bin/{pkill,pgrep}` wrapper, verified against the real exec+fresh-subshell chain this time —
-> `agent-orchestrator@2fe498b30f` + `unified-trading-pm@dbc5ac0bcd`). Treat recurrence #4 as the doc that actually
-> closes this, not this one.
 
 # pkill broad-pattern cross-slot vite kill — 2026-08-14 incident (recurrence #3)
 
