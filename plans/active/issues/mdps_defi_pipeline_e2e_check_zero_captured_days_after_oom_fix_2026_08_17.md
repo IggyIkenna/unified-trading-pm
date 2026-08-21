@@ -169,18 +169,17 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    `pipeline-e2e-check-mdps-20260817-024215-f56c11` (identical `--day 2026-07-05 --asset-group DEFI --legs
    force,skip --require-captured --auto-day` invocation), confirmed `e2-highmem-16` / `PREEMPTIBLE=` (blank —
    NOT spot, ruling out preemption and supporting the OOM-kill inference) / `STATUS=RUNNING` via the launcher's
-   own `gcloud compute instances create` output. **Real fix still needed** (separate P2 follow-up, not blocking
-   this relaunch): explicit `del`/`gc.collect()` of each leg's large intermediate structures
-   (`_captured_days_by_cell`'s frame/groupby results) in `pipeline_e2e_check.py` between legs, or run each leg
-   in its own subprocess so OS-level cleanup is guaranteed.
-- [ ] [SCRIPT] P2. Extracted from item 5's own "Real fix still needed" tail (was prose-only, not a tracked
-      checkbox — converted 2026-08-19 by `/plan-reconcile security_and_cross_cutting_master` Phase 2.4 zero-checkbox
-      sweep). Explicit `del`/`gc.collect()` of each leg's large intermediate structures
-      (`_captured_days_by_cell`'s frame/groupby results) between legs in `pipeline_e2e_check.py`, or run each leg
-      in its own subprocess, so RSS doesn't accumulate leg-over-leg (the item-5 relaunch used a bigger VM as a
-      mitigation, not a fix — this is the real fix).
+   own `gcloud compute instances create` output. The cross-leg retention fix is now shipped: `gc.collect()` runs
+   after the force and skip legs so their poll-loop/log-buffer objects are reclaimed before the next leg —
+   `market-data-processing-service@4990d2361`. The large peak-RSS value remains a historical `ru_maxrss` maximum,
+   not a claim that live RSS is still growing.
+- [x] ✅ [SCRIPT] P2. Explicit per-leg garbage collection landed in
+      `market-data-processing-service@4990d2361`; `_run_shard_batch_legs` calls `gc.collect()` after force and skip
+      execution, preventing leg-over-leg retention without changing the canonical matcher or launching a second
+      subprocess.
 
 ## Progress Log
+2026-08-21 — stale P2 corrected: direct code read and git blame verified 4990d2361 already shipped per-leg gc.collect() on 2026-08-20; the prior open checkbox and Real fix still needed prose were stale and are closed with commit evidence.
 
 - **2026-08-19** (`/plan-reconcile security_and_cross_cutting_master` Phase 2.4, zero-checkbox sweep): this entire
   "Recommended decision" list used numbered-prose format (`1. `[TAG] P1.` ...`) instead of canonical `- [ ] [TAG]
