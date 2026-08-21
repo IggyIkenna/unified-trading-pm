@@ -51,6 +51,7 @@ context_scope:
     deployment-service/terraform/gcp/live_event_log/main.tf,
     deployment-service/terraform/gcp/live_event_log/warm_sink.tf,
     deployment-service/terraform/gcp/live_event_log/bq_external.tf,
+    deployment-service/terraform/gcp/live_event_log/strategy_atomic_instruction.tf,
     execution-service/execution_service/api/external_instruction_api.py,
     execution-service/execution_service/adapters/defi_adapter.py,
     execution-service/execution_service/v2/account_orchestrator.py,
@@ -123,19 +124,19 @@ context_scope:
       issue's own remaining todos proceed, cross-link both directions in `related:` once landed). Done-when: a
       live `QUOTE` instruction's repricing responds to a published feature-group tick within one round trip,
       not just a registered-but-inert state. Evidence: bash scripts/quality-gates.sh --no-fix (8816 passed, 22 skipped, 1 xpassed; venue-routing commit 62d2e3ab76).
-- [x] [BACKEND] P0. Sink every strategy-emitted instruction consumed by the new subscriber to GCS, one record at
-      a time, via the EXISTING event-log shard pipeline (reuse, do not invent a parallel writer) — queryable via
-      the same BigQuery external-table pattern other shard types already use. Distinct from market-tick-data
-      aggregation (a separate axis). Done-when: one consumed instruction produces one queryable GCS row with a
-      manifest entry, verified via a real read-back, not just a written-file check. The `atomic_instruction`
-      `SINK_MATRIX` entry already exists; this todo adds the matching Pub/Sub topic, warm-GCS subscription, and
-      BigQuery external table so the canonical envelope published by strategy-service is durably queryable. —
-      **SHIPPED 2026-08-21**: `unified-api-contracts@96ce5bdd6e` adds focused SINK_MATRIX coverage;
-      `deployment-service@9f602e64aa` adds the wildcard `atomic_instruction` Pub/Sub topic, never-expiring warm GCS
-      subscription, and BigQuery external table over the existing event-log sink. Evidence: UAC quality-gates green
-      (214s), deployment-service quality-gates green (246s), UAC focused suite 27 passed, compactor suite 6 passed,
-      `tofu fmt -check` passed; `tofu validate` was unavailable because the Google provider 7.43.0 is not cached
-      locally.
+- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — `deployment-service@9f602e64aa` +
+      `deployment-service@f843fd5314`. The wildcard `atomic_instruction` sink adds the declared SINK_MATRIX topic,
+      warm-GCS subscription, and BigQuery external table; `strategy_atomic_instruction.tf` adds the concrete
+      `cefi`/`defi`/`prediction` topics, execution-reader subscriptions, warm-GCS subscriptions, and matching
+      external-table definitions used by `PubSubTransport`. Evidence: `bash scripts/quality-gates.sh --no-fix`
+      (ALL QUALITY GATES PASSED); `tofu validate` passed; live topic/subscription read-back is ACTIVE; the
+      published canonical verification envelope produced
+      `gs://central-element-323112-events/live-events/warm/all/atomic_instruction/2026-08-21T03:56:54+00:00_b0f481.parquet`
+      and BigQuery `live_events.all_atomic_instruction` returned one row for
+      `correlation_id=w22-atomic-sink-20260821`. The event-log warm sink has no separate availability-manifest
+      surface; the durable proof is the warm object plus external-table row. No synthetic message was injected into
+      the concrete execution-reader topics because those are live execution destinations; their ACTIVE resources are
+      structurally verified, while a naturally emitted concrete-path row remains a live-traffic verification.
 
 ### Instruction action vocabulary
 
