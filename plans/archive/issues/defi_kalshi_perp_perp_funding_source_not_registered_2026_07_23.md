@@ -7,13 +7,13 @@ summary: >-
   a registered source for asset_group='defi' data_type='perp_funding'. Allowed: ['hyperliquid']" — the objects exist on
   GCS and are written under asset_group=defi, but SOURCE_PRIORITY[(defi, perp_funding)] only lists hyperliquid, so these
   rows never enter the manifest at all (silent, logged-and-skipped, not a crash).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
 repos: [unified-api-contracts, market-tick-data-service]
 scope: [engineer]
-tags: [defi, kalshi-perp, source-priority, manifest, registry-gap]
+tags: [defi, kalshi-perp, source-priority, manifest, registry-gap, resolved]
 related:
   [
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
@@ -32,7 +32,7 @@ estimate_calibrated_ai_days: 0.1
 assigned_role: data_engineer
 drift_direction: worsening-slowly
 depends_on: []
-resolved_by:
+resolved_by: market-tick-data-service@f7cdd18b21
 locked_by:
 source: ["discovered live during defi_consolidated_closeout_2026_07_18.md's manifest rebuild work, 2026-07-23"]
 context_scope:
@@ -47,6 +47,13 @@ context_scope:
 ---
 
 # KALSHI_PERP perp_funding manifest emits fail — source not registered
+
+> **🟢 RESOLVED 2026-08-21** — the `[DATA] P1` re-emit todo (2026-08-06 operator ruling, option b) is closed: a live
+> full-window CEFI manifest query found the 567-row re-emit already complete (58/58 days, chain="" throughout)
+> before this session started. Getting there required resolving a separate chain-convention contradiction first —
+> see `/plans/archive/issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md` — fixed
+> via `market-tick-data-service@f7cdd18b21`. Archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual.
 
 ## What was measured (live, during a scoped defi-rebuild for day=2026-07-22)
 
@@ -132,17 +139,20 @@ concrete, currently-failing symptom; the classification question is the census a
       from 2026-07-18 onward. All markers are 0-row empty parquet files — safe to delete via existing tooling. The
       abrupt stop is unrelated to the gap-day finding (the two phenomena share a trigger date but have different root
       causes). Full analysis in `defi_satellite_ao_dispatch_batch6_2026_07_30.md` Progress Log (2026-08-05, slot-4).
-- [ ] [DATA] P1. **Execute the 2026-08-06 operator ruling (option b, above).** Re-emit all 567 GCS-present/
-      manifest-absent KALSHI_PERP/POLYMARKET_PERP perp_funding (day, symbol) instances (2026-05-29..2026-07-25) into the
-      CEFI manifest under the now-shipped cefi-routing classification — NOT the DEFI manifest, and NOT left as a gap.
-      This is `defi_satellite_ao_dispatch_batch2_2026_07_26.md` todo `-011`'s own blocked prerequisite
-      (`defi_kalshi_perp_perp_funding_recovery_operator_decision`) — once this re-emit ships and is verified
-      (`quality-gates.sh` green, manifest row count == 567 under `asset_group=cefi`), flip that prerequisite so `-011`
-      unparks. Repo: market-tick-data-service (manifest rebuild), unified-trading-pm (unpark). **Duplicate-claim note
-      (2026-08-07): `defi_satellite_ao_dispatch_batch2_2026_07_26.md` line ~306 already carries an open `[DATA] P2` todo
-      for this exact re-emit (same 567-row scope, same source-doc citation, status: active). Do NOT reclassify this
-      checkbox independently — it would open a second dispatch path for the identical fix. Close both together once
-      either ships.**
+- [x] ✅ [DATA] P1. **CLOSED 2026-08-21.** Execute the 2026-08-06 operator ruling (option b, this doc's own "Not yet
+      done" section above, line ~111-114: "RULED 2026-08-06 (operator, chat): option (b)"): re-emit all 567
+      GCS-present/manifest-absent KALSHI_PERP/POLYMARKET_PERP perp_funding (day, symbol) instances
+      (2026-05-29..2026-07-25) into the CEFI manifest under the cefi-routing classification. **Found already done**:
+      attempting this via `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s duplicate todo surfaced a separate
+      blocker first (the manifest's `chain` convention contradicted the code's own enforced invariant — see
+      `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md`), which required an
+      operator ruling + a code fix (`market-tick-data-service@f7cdd18b21`) before any write could safely happen. Once
+      that landed, a live full-window query of the CEFI manifest found the 567-row re-emit was ALREADY complete —
+      58/58 days present, chain="" throughout, zero missing — done by an unidentified prior process before this
+      session started. No new write was needed; verified via live query, not assumed. Full evidence in the chain
+      issue doc's Resolution section. `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s duplicate todo closed
+      together with this one (all 23 todos in that plan now done; archival owned by its own machine-gated finalize plan,
+      not done in this session).
 
 ## Codex SSOTs
 
@@ -218,4 +228,10 @@ concrete, currently-failing symptom; the classification question is the census a
   non-blank `chain="KALSHI_PERP"` workaround (raises `BlankChainError` otherwise) — an unresolved contradiction
   between code and live data for this exact shard family. Paused before writing anything to production. Filed
   `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md` with the full investigation.
-  This doc's `[DATA] P1` re-emit todo stays open, now blocked on that new issue doc's resolution. — unchanged, still accurate
+  This doc's `[DATA] P1` re-emit todo stays open, now blocked on that new issue doc's resolution.
+- **2026-08-21 (resolution)**: Operator ruled on the chain-convention question ("KALSHI-PERP is not a chain");
+  code fix shipped `market-tick-data-service@f7cdd18b21`. A live full-window query then found the 567-row re-emit
+  was already complete (58/58 days, chain="" throughout) before this session started — no new write was needed.
+  `[DATA] P1` flipped above with full evidence. Doc resolved; `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s
+  duplicate todo closed together (all 23 todos in that plan now done; archival owned by its own machine-gated
+  finalize plan, not done in this session).
