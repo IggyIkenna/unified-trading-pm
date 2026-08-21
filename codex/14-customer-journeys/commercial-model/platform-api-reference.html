@@ -1770,7 +1770,7 @@
       >
     </div>
     <p class="lede">
-      One instruction envelope, any asset class — but twelve of its fifteen action types are wired to real execution
+      One instruction envelope, any asset class — but twelve of its sixteen action types are wired to real execution
       paths today, while unsupported actions fail honestly.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
     </p>
@@ -1928,9 +1928,9 @@
       </table>
     </div>
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
-      <b class="ev ev-verified">✓ verified</b> schemas.py (all 15 variants + the union); execution-service
+      <b class="ev ev-verified">✓ verified</b> schemas.py (all 16 variants + the union); execution-service
       <code>execution_service/api/external_instruction_api.py</code> +
-      <code>execution_service/api/external_instruction_defi.py</code> (12 of 15 action types routed to real execution
+      <code>execution_service/api/external_instruction_defi.py</code> (12 of 16 action types routed to real execution
       wiring; BRIDGE/LP_MINT/LP_BURN are the honest 501s)
     </p>
 
@@ -3547,7 +3547,7 @@
           <tr>
             <td><code>422</code></td>
             <td>
-              Request validation failed — bad enum value, a body that matches none of the 15 instruction variants, or a
+              Request validation failed — bad enum value, a body that matches none of the 16 instruction variants, or a
               malformed date on client-reporting-api
             </td>
             <td>Market-data (asset_group / topology / after), instructions POST, client-reporting-api date params</td>
@@ -3560,7 +3560,7 @@
           <tr>
             <td><code>501</code></td>
             <td>
-              Recognised but not wired for external submission — 13 of the 15 instruction types (TRADE executes; QUOTE
+              Recognised but not wired for external submission — 13 of the 16 instruction types (TRADE executes; QUOTE
               registers without submitting an order and does not 501 — see §04)
             </td>
             <td>Instructions POST</td>
