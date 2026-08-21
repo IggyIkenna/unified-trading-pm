@@ -102,67 +102,9 @@ legitimate tier request; the read-time correction above makes whatever's display
 correct regardless of what tier was requested at dispatch time or which account ends
 up serving it.
 
-## Resolved 2026-08-21 — both deferred items closed
+## Deferred — real, unfixed, NOT display-only
 
-- [x] [BACKEND] P1. **Turn pricing now resolves off the ACCOUNT, not the transcript's
-      self-declared model** — agent-orchestrator@b220efddbf. CONFIRMED REAL first, by
-      querying live `task_usage` rather than reasoning from the code: account
-      `deepseek-v4-flash` had 9 turns priced as `deepseek-v4-pro` ($1.9071) and account
-      `deepseek-v4-pro` had 8 priced as flash ($1.7458) — mispriced in BOTH directions at
-      ~3x (pro input 0.435 vs flash 0.14 $/M) — plus 1 turn on the ANTHROPIC account
-      `sub-b-iggy2london` attributed to `deepseek-v4-pro` ($1.4427).
-      Fix: `deepseek_usage.pricing_model_for(account_id, transcript_model)` prices by
-      `account_id` when it is ITSELF a registered rate card, else falls back to the
-      transcript. That condition is what makes it a fleet-wide rule and not a DeepSeek
-      special case — `glm-5-turbo` is both an account and a model so it resolves, while
-      `glm-5-2` and every `sub-*` Anthropic account correctly defer (one Anthropic
-      subscription legitimately serves several tiers). Threaded through
-      `scan_session_usage`/`scan_usage_across_transcripts`/`compute_task_usage` and both
-      `/done` call sites. **TRAP CAUGHT BEFORE SHIPPING**: this doc previously proposed
-      reusing `effective_model_for_telemetry` — that would have been ACTIVELY HARMFUL. It
-      returns the DISPLAY label `{provider}-{variant}` (`deepseek-pro`), which has NO rate
-      card, so every DeepSeek turn would have gone silently UNPRICED (strictly worse than
-      the bug); it also defaults an unset `variant` to `"pro"`, returning `deepseek-pro`
-      for the FLASH account too and collapsing the exact distinction being mispriced.
-      Display and pricing need different resolutions of "the real model" — a regression
-      test now asserts the fix can never turn a priced turn into an unpriced one.
-      **Scope**: FORWARD writes only. Historical rows are NOT re-priced (a data migration,
-      and a separate decision). Two `deepseek_usage_poller` call sites still price from the
-      transcript; they feed a different table than the corrupted one measured here — see
-      the follow-up todo below rather than assuming they are covered.
-- [x] [BACKEND] P2. **`server/dispatch.py`'s raw `SlotRow.model` read — INVESTIGATED, it is
-      NOT a defect, and the fix this doc proposed would have been a no-op shipped into the
-      live dispatch hot path.** Measured: `short_tier()` resolves a model by SUBSTRING-
-      matching haiku/sonnet/opus/fable and defaults to `sonnet`. No non-Anthropic model
-      name in this fleet contains any of those tokens, so `gemini-3-5-flash-lite-proj1`,
-      `codex-luna`, `gpt-5.6-luna`, `deepseek-v4-pro`, `glm-5.3` and `gemma-self-hosted`
-      ALL resolve to `sonnet` rank 1 — identical to the stale `"sonnet"` value. Correcting
-      the field cannot change the comparison's outcome. And for an ANTHROPIC slot the
-      correction would not help either: all 8 subscription accounts serve any tier, so the
-      account does not determine the tier and `effective_model_for_telemetry` has nothing
-      to correct against. The invariant is CONTINGENT though, so it is now pinned by
-      `tests/test_dispatch_tier_rank_provider_invariance.py` (agent-orchestrator@b220efddbf)
-      — it fails loudly if `MODEL_RANK` gains a non-Anthropic entry, or a provider ships a
-      model whose NAME carries a tier token (a plausible `gemini-3-opus` is included as a
-      live demonstration of the break). At that moment this todo should be re-opened.
-
-## Follow-up
-
-- [ ] [BACKEND] P3. **Trace the remaining transcript-priced call sites.**
-      `deepseek_usage_poller.py`'s two `scan_session_usage` calls still price from the
-      transcript model with no `account_id`; they feed the ephemeral preview /
-      `DeepSeekNativeUsageRow` path rather than the `TaskUsageRow` table measured as
-      corrupted above, so they were deliberately left alone rather than changed without
-      verification. Confirm whether either needs the same account-resolution, and check the
-      Gemini/GLM/Codex transcript-writing paths that the 2026-08-21 audit did not trace.
-      (`slot_account_attribution.py`'s call must stay unresolved — its whole purpose is
-      DERIVING the account from a transcript, so passing one in would be circular.)
-
-## Previously deferred (both now resolved above)
-
-- [x] [BACKEND] P1-SUPERSEDED by the resolved entry above (kept verbatim for the record —
-      note its proposed `effective_model_for_telemetry` fix was WRONG, see above).
-      **DeepSeek-native transcript `model` field corrupts aggregate billing
+- [ ] [BACKEND] P1. **DeepSeek-native transcript `model` field corrupts aggregate billing
       stats** (TaskUsageWindows, BatchingEfficiencyPanel, UsageTimeSeriesModal — all
       group $/token totals by `TaskUsageRow.model`/`BatchingTurnRow.model`, populated
       from the transcript's own `message.model`, itself written from
@@ -180,8 +122,7 @@ up serving it.
       writes — a decision for whoever picks this up, not something to change
       unilaterally. Gemini/GLM/Codex transcript-writing paths were NOT traced in the
       2026-08-21 audit pass — verify those too before considering this closed.
-- [x] [BACKEND] P2-SUPERSEDED by the resolved entry above (kept verbatim — its premise was
-      measured FALSE). **`server/dispatch.py:200,564`** (`_blocks_model_tier`,
+- [ ] [BACKEND] P2. **`server/dispatch.py:200,564`** (`_blocks_model_tier`,
       `_task_outranks_slot`) reads the raw, uncorrected `SlotRow.model` (`s.model or
       "sonnet"`) to rank task-vs-slot tier eligibility for real dispatch decisions — a
       FUNCTIONAL consumer, not display. A slot whose stored model field is stale could

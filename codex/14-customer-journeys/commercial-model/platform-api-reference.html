@@ -1104,16 +1104,6 @@
       runs its own strategies on, shareable with clients; see
       <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §dart.
     </p>
-    <p>
-      Inter-service checks each declare their own cadence — reconciliation runs nightly with a faster
-      operator-driven path for a break, per-input staleness is bounded per input — and kill switches are scoped
-      (venue, archetype or global) rather than all-or-nothing. The platform's own delivery pipeline runs on the same
-      automated-detection-to-verified-fix discipline: a build failure is diagnosed against its real logs, fixed, and
-      re-verified through the same gates before it ships, escalating to a human only when it cannot be. Storage and
-      compute address AWS and GCP through one provider-neutral resolver today, with a third provider (IONOS) being
-      brought into the same pattern and Azure available on request — full detail in
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §15.
-    </p>
     <p style="font-size: 0.9rem; color: var(--ink-3)">
       Full narrative version of all three engagement models, plus DeFi liquidity-pool engagement detail: see
       <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §about/§engage/
@@ -1725,16 +1715,6 @@
       then stream" daily batch, and a near-real-time NDJSON leg over the shared UTL event transport.
       <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>.
     </p>
-    <p>
-      Every venue connector tracks its own reconnect state — a window built across a reconnect is stamped
-      <code>data_freshness=STALE</code>, never silently presented as fresh — backed by a 60-second heartbeat that
-      catches a connector that has stopped producing ticks without dropping. Every shard also carries an explicit
-      <code>cadence</code> (one-off backfill, nightly T+1, continuous live, recovery replay) as its own manifest
-      column, so history stays current without a manual re-trigger. Intraday replay of your own already-delivered
-      data — key for exchange-outage recovery — is in development on top of the same gap-fill watermark mechanism
-      that already re-drives the internal live pipeline after a disconnect. Narrative detail:
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §06.
-    </p>
 
     <details class="ep">
       <summary>
@@ -2230,16 +2210,6 @@
       One instruction envelope, any asset class — all sixteen of its <code>StrategyInstructionV2</code> action
       types execute for real through this endpoint today.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
-    </p>
-    <p>
-      Two mechanisms in progress extend this contract for latency-sensitive execution. A per-venue position
-      handshake lets execution check its own live position against what strategy last believed it held on every
-      instruction — a mismatch blocks by default, reusing the risk engine's existing consequence vocabulary. A
-      cached reference-price-and-sensitivity fast path lets execution reprice against live market moves without a
-      round-trip back to strategy, within a defined staleness bound — the extrapolation engine is real, tested code;
-      the general contract is still being wired end to end. Both ride on dual-timestamp capture already enforced on
-      external market data (local receipt time validated against the exchange's own clock). Narrative detail:
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §12.
     </p>
 
     <div class="callout">
@@ -2741,14 +2711,6 @@
       service adds on top — entitlement scoping tied to <code>client_id</code>.
       <code>client-reporting-api/client_reporting_api/api/main.py</code> and
       <code>client_reporting_api/api/routes/**/*.py</code>.
-    </p>
-    <p>
-      Reconciliation is not only a target design. The manual-trade exclusion path
-      (<code>recon_excluded=True</code>) is real, shipped code today: the reconciliation service's daily determinism
-      stage splits a manually-booked fill out of ledger matching and logs the count it excluded rather than dropping
-      it silently. The full six-stage reconciliation DAG runs end to end on a T+1 nightly cadence in staging;
-      production activation is the remaining step. Narrative detail:
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §21.
     </p>
 
     <div class="callout">

@@ -117,17 +117,6 @@ follow-up in `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`.
 
 ## Progress Log
 
-- **2026-08-21 (data-pipeline-failure escalation `agt-793267`, slot 31)**: a 6th independent escalation dispatch
-  fired for this exact identity (`DP_CRON_DID_NOT_FIRE` carrying `registry_id=DP-LIVE-004`, "last attempt 0.0h ago").
-  Read-only `gcloud compute instances describe mtds-live-cefi-consolidated-20260817-025031` confirms the VM is
-  unchanged: still `RUNNING`, still `creationTimestamp=2026-08-16T19:50:40.547-07:00` (== the pre-fix VM every prior
-  dispatch identified). No new diagnosis needed and no code change to make — `market-tick-data-service@5f88715e4b`
-  is already on `live-defi-rollout`; the sole remaining action is still the `[OPERATOR]` VM-cycle todo above, unactioned
-  since 2026-08-20. Did not file a new issue doc. Note for whoever next triages the meta-pattern: 6 independent
-  escalation dispatches have now fired for one already-tracked, already-`assigned_vm: planning`-dispatchable finding
-  with no change in state between them — that repeat-dispatch-despite-already-tracked shape is itself covered by the
-  open `dp_cron_did_not_fire_*` dedup issue docs (see `related:` above / `/codex/05-infrastructure/data-pipeline-alerts.md`'s
-  2026-08-18 regression note), not something to re-diagnose here.
 - **2026-08-21 (data-pipeline-failure escalation `agt-934add`, slot 31)**: a 5th independent escalation dispatch
   fired for this exact identity (`mtds-live-cefi-consolidated-20260817-025031` / `BYBIT-FUTURES` / `book_snapshot_5`,
   `DP_CRON_DID_NOT_FIRE` event carrying `registry_id=DP-LIVE-004`, "last attempt 0.0h ago" — the VM is still alive
