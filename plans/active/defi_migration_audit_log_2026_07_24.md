@@ -911,9 +911,7 @@ sweep (post-apply) — both downstream of the gated WRITE, not code.
    fixed before the §H object `--apply` only).
 4. **Pre-migration drain** (all GCP+AWS VMs stopped + manifest consolidated + snapshot) before any object `--apply`.
 
-No code-correctness blocker remains for the DeFi migrator/rebuild/enumerator. The 3 open todos are: P1 doubled-`day=` (a
-§H object-migration gate, instruments-service) · P2 `SOURCE_PRIORITY` registry tidy · P3 POOL union-coarse + P3 L1-find
-speed-note (both deferred optimisations, non-blocking).
+No code-correctness blocker remains for the DeFi migrator/rebuild/enumerator. **STALE 2026-08-21**: the former "3 open todos are P1 doubled-`day=`/P2 registry-tidy/P3 POOL+L1-find" claim is wrong — all 3 are closed (P1 2026-08-03, both P3s extracted 2026-08-17 to batch16); real open items are this file's own `- [ ]` list.
 
 \*\*Regression re-confirmation (slot-2, 2026-06-07) — STILL APPLY-READY after the shared bundle-grain + sports-catalogue
 
