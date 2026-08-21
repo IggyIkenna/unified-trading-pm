@@ -147,13 +147,21 @@ source: >-
       live emission yet). Full table + methodology filed in
       `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new "Findings — full connector
       timestamp-semantics audit (2026-08-21)" section. Evidence: unified-trading-pm@c81b5881d8.
-- [ ] [REVIEW] P1. **Close or supersede `resolve_mtds_ts_event_timestamp_naming_collision`** — this exact
+- [x] ✅ [REVIEW] P1. **Close or supersede `resolve_mtds_ts_event_timestamp_naming_collision`** — this exact
       timestamp collision was already identified and named in-code (referenced in `symbol_rules.py` comments) but
       never closed. Find the reference, establish whether that prior work was descoped, forgotten, or partially
       landed, and report which — before the P0 schema-split todos in the source doc re-do work that may already
       exist. Done when: a definite disposition (descoped / forgotten / partially-landed-where) is on record.
       Source: `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md` todo "Close or supersede
-      resolve_mtds_ts_event_timestamp_naming_collision".
+      resolve_mtds_ts_event_timestamp_naming_collision". **Done 2026-08-21** — neither descoped nor forgotten:
+      partially landed (all 6 todos of `resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md` shipped +
+      verified 2026-08-05), then Phase 4 (alias removal) was specifically REVERTED in production 5 days later
+      (market-tick-data-service@dcd3b7c401, 2026-08-10, "restore ts_event→timestamp alias copy — unblock VIX/CBOE
+      ohlcv_1m schema validation") and never corrected in the archived plan pair. Live code today
+      (`symbol_rules.py:84-88`) still carries the `ts_event→timestamp` alias Phase 4 claimed to have removed;
+      Phases 1-3 remain intact. Full evidence chain filed in
+      `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new "Findings — disposition of
+      resolve_mtds_ts_event_timestamp_naming_collision" section. Evidence: unified-trading-pm@<pending>.
 
 ## From `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`
 
@@ -192,3 +200,8 @@ source: >-
 - **2026-08-21**: drafted by na-eligibility-audit (cross-cutting tranche, batch 2 of 3). All 10 items conflict-
   checked against every existing cross-cutting satellite batch (1b, 13-20) and the consolidated closeout — no
   duplication found.
+- **2026-08-21 (slot-10)** — Closed the `resolve_mtds_ts_event_timestamp_naming_collision` disposition todo.
+  Disposition: partially landed, then Phase 4 (alias removal) reverted in production 5 days later
+  (market-tick-data-service@dcd3b7c401, 2026-08-10) after breaking VIX/CBOE `ohlcv_1m` backfills — never corrected
+  in the archived plan pair. Full evidence in
+  `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new Findings section.
