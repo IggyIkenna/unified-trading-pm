@@ -131,3 +131,16 @@ session is not sustainable for the remaining artefact work still in flight.
   from `67ee71b773` (last good); the 9 dropped lines were minor cross-reference tweaks, re-derivable in T5's
   re-derive pass. The AO "claim-ownership baseline restore" escalation path is doing blind file-level reverts on
   this artefact — it should be constrained to claim-marker edits, never whole-file baselines.
+- **2026-08-21 addendum**: `cef0bcfa8e` clobbered `platform-api-reference.html` the same way (3,457 → 2,169
+  lines — the endpoint enumeration for reporting/clients/exports APIs deleted). Restored from `2340bd96b5` with
+  the one later legitimate addition (WITHDRAW type-support row from `f28330fafc`) re-applied. The other three
+  state-fabric artefacts touched by `cef0bcfa8e` have NOT been audited for the same loss — check
+  platform-architecture.html, strategy-service-deep-dive.html, strategy-service-walkthrough.html before wave 2.
+- **2026-08-21 sweep completed**: ALL FIVE artefacts were clobbered by `cef0bcfa8e`, now all restored from
+  `2340bd96b5`: platform-architecture.html (10,189L, was 9,502), strategy-service-deep-dive.html (4,582L, was
+  3,848), strategy-service-walkthrough.html (3,183L, was 2,768), plus the two restored earlier. Small real
+  additions the revert carried are dropped by the wholesale restore and MUST be re-derived in T5's pass:
+  deep-dive gained ~10 lines (CCXT venue-API/withdrawal route rows; P&L-attribution route-inventory rows citing
+  position/api/routes/risk.py, margin_health.py, pnl/api/main.py, pnl_series.py); walkthrough ~9 (cross-refs +
+  external_instruction_api auth-pending note); architecture 1; ss-walkthrough ~6. All content-shaped snippets
+  are derived-from-source and regenerate in the wave-2 re-derive.
