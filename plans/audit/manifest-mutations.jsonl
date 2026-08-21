@@ -4728,3 +4728,5 @@
 {"timestamp": "2026-08-21T17:38:09Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "trading-agent-service=0.13.26 (branch=main, bump=patch)", "commit_sha": "bc65dc60bab640e334d403a44a5afb20a8573725"}
 {"timestamp": "2026-08-21T17:39:12Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "ml-service=0.58.63 (branch=main, run=32509208291)", "commit_sha": "dc50d285363b3f2d302e5051ea92adf811d2d990"}
 {"timestamp": "2026-08-21T17:39:16Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "ml-service=0.58.63 (branch=main, bump=patch)", "commit_sha": "dc50d285363b3f2d302e5051ea92adf811d2d990"}
+{"timestamp": "2026-08-21T17:40:44Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.96.5 (branch=main, run=32509312264)", "commit_sha": "70b70027c0f790134ad7cbf558422f5ac4ac8026"}
+{"timestamp": "2026-08-21T17:40:47Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.96.5 (branch=main, bump=patch)", "commit_sha": "70b70027c0f790134ad7cbf558422f5ac4ac8026"}
