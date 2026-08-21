@@ -44,7 +44,7 @@ related:
     /plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md,
     /plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md,
   ]
-priority: P1
+priority: P2
 resolved_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -175,3 +175,12 @@ a real gap worth fixing even if this specific occurrence has now settled.
   Resumed the job at 15:52:59Z (no live window, no justifying VM). 5-minute background watch armed
   to check for immediate re-pause — result pending, will be appended below before this escalation
   closes.
+- **2026-08-21, same session, watch completed**: `gcloud scheduler jobs describe` polled every 20s
+  for 300s straight — job stayed `state: ENABLED` the entire window (re-verified live once more
+  after the watch exited: still `ENABLED`, `userUpdateTime` unchanged at `15:52:59Z`). No re-pause
+  observed. Per this doc's own todo 1 decision rule: downgrading priority `P1 -> P2` (no active
+  re-triggering condition caught live), but NOT closing the doc — the missing-maintenance-window
+  question (todo 2) is real regardless of whether this specific occurrence recurs, since
+  `RevocationActuator._register_maintenance_windows` is correctly wired yet no window was found at
+  diagnosis time. Escalation `agt-2b817b` closing out here (one-shot lifecycle); this doc stays
+  `assigned_vm: planning` for a future dispatch to pick up todos 1-3.
