@@ -523,7 +523,8 @@ Kamino/Jupiter conflated the two.
       credentialed integrations for sports betting, retail brokerage and prediction markets — nothing to do with a DeFi
       mandate. They are inert unless a venue is configured, so shipping them costs nothing operationally. Purely a
       question of what we disclose. Record the decision in the Elysium plan § E.
-- [x] ✅ [AGENT] P2. **SHIPPED 2026-08-21 — `execution-service@<pending-shipment-sha>`.** Adapter reconciliation +
+- [x] ✅ [AGENT] P2. **SHIPPED 2026-08-21 — `execution-service@bd21bb55b3`** (same commit also ships the Betfair
+      paper-mode matcher below). Adapter reconciliation +
       paper-mode matching proof for `polymarket`, closing the gap this doc's out-of-mandate line implied ("working
       credentialed integration") without ever verifying order-matching against real market structure.
       **Reconciliation finding: NOT a duplicate** (verified by reading both in full, not file-size assumption) —
