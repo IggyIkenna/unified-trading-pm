@@ -98,7 +98,10 @@ The monitoring gap itself is unfixed: `slot-git-status-report.sh`'s slot-0 branc
       of `unified-trading-pm/scripts/dev/slot-git-status-report.sh` (around the `if slot_in_filter "0"` block) — a
       DIRTY or untracked-files verdict on a bare root repo should page the same way FF-pull-starvation or stash-pile
       regrowth already does. Extend `classify_repo`'s slot-0 call site, not the numbered-slot one. —
-      unified-trading-pm@3ab65adb7e
+      unified-trading-pm@db93c3a0b5 (current as of the 2026-08-21 pre-compact recheck; still unpushed and
+      pending resolution of `deployment_api_deployment_service_tier_violation_blocks_pm_dep_alignment_2026_08_21.md`
+      — a further rebase before push will rewrite this again, re-derive via `git log --oneline | grep "page on
+      bare-root"` if stale)
 - [ ] [AGENT] P2. Once the alert lands, re-verify CLAUDE.md's slot-0 line (already corrected this session to
       "reported not enforced every 5 min") reads as accurate again — flip back to describing real enforcement only
       after the alert path is live and proven (at least one real DIRTY-slot-0 page observed).

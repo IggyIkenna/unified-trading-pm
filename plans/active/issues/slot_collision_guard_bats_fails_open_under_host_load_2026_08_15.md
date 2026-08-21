@@ -161,7 +161,9 @@ this case and will send the next agent hunting a regression in unrelated files.
       `test_pretooluse_slot_collision_guard.bats` 17/17 pass CLEANLY (previously relied on the
       `slot_collision_guard_bats_fails_open_under_host_load` skip fallback for its 6 BLOCK-expectation tests — see
       `plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md` cross-ref, now moot
-      for this specific failure mode). Repo: unified-trading-pm@<pending>.
+      for this specific failure mode). Repo: unified-trading-pm@93a90ecf15 (current as of the 2026-08-21
+      pre-compact recheck; still unpushed, blocked on the same tier-violation gate — re-derive via
+      `git log --oneline | grep "command -p pgrep"` if stale).
 - [ ] [CODE] P2. The same exposure pattern (bare `pgrep -f '<pattern>'` with no slot-specific discriminator, inside
       PRODUCTION code that legitimately needs a host-wide scan) exists in two more call sites found via
       `grep -rn 'pgrep ' cursor-configs/hooks/ scripts/dev/*.sh` while root-causing the todo above — NOT fixed here
