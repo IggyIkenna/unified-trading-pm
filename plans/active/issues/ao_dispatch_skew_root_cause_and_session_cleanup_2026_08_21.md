@@ -241,29 +241,44 @@ designed. They're session-process mistakes worth recording so they aren't repeat
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **Found while verifying bug 1 post-ship.** The live (gitignored, per-VM)
-      `data/config/accounts.json` on the planning VM still carries 3 dead Kimi entries
-      (`kimi-k3`/`kimi-k2-6`/`kimi-k2-7-code`) — `load_accounts()` now gracefully skips them (logged,
-      not fatal, since `"kimi"` is no longer a valid `AccountProvider` literal post-removal), so this
-      is harmless today, but it isn't a true "removed from the accounts list" the way the operator
-      asked for. Delete the 3 entries from the live JSON file directly (not git-tracked, no PR/ship
-      needed — a plain edit on the planning VM). Repo: agent-orchestrator, host-level config only.
-- [ ] [BACKEND] P1. Fix bug 1 — make the `overage_status == "rejected"` exclusion proportional to
-      actual usage (only block when the account is also near its included-quota ceiling), so Claude
-      accounts with real headroom re-enter `_anthropic_pool_headroom_pct`/`_quota_adaptive_fraction`.
-      Read current `account_is_usable()` call sites first (6+ per its own docstring) before deciding
-      whether to change it directly or add a parallel check. Verify with
-      `scripts/orchestrator/claude_headroom_exclusion_readout.py` (new, this session — run from the
-      LIVE checkout per its own docstring, not a per-slot worktree) — re-confirmed 2026-08-21 post-ship
-      that bug 1 is still live (all 8 Claude accounts still `usable=False`). Repo: agent-orchestrator.
-- [ ] [BACKEND] P1. Fix bug 2 — wire `_live_free_combo_ids()` to `_account_meets_dispatch_headroom()`
-      (or the specific per-provider checks it composes) so Gemini/GLM/etc. are only rotated into the
-      Phase-4 pool when they can actually serve the request. Repo: agent-orchestrator.
-- [ ] [BACKEND] P2. Fix bug 3 — replace `free_provider_priority`'s 1-entry-plus-alphabetical-fallthrough
-      default with a real, explicit ranking. Needs an operator call on the actual intended order
-      (cost/latency/reliability tradeoff across codex/gemini/glm/ollama) — flag as
-      `[OPERATOR]`-gated for the ordering decision itself, `[BACKEND]` for the mechanical config change
-      once decided. Repo: agent-orchestrator.
+- [x] [SCRIPT] P3. **Found while verifying bug 1 post-ship.** The live (gitignored, per-VM)
+      `data/config/accounts.json` on the planning VM still carried 3 dead Kimi entries
+      (`kimi-k3`/`kimi-k2-6`/`kimi-k2-7-code`) — harmless (gracefully skipped) but not a true "removed
+      from the accounts list". Deleted directly on the planning VM (host-level, gitignored, no
+      PR/ship) — 2026-08-21. Evidence: `claude_headroom_exclusion_readout.py` re-run post-delete shows
+      zero `load_accounts: skipping malformed account entry (id='kimi-*')` tracebacks, JSON re-validated
+      (`python3 -c "import json; json.load(...)"`).
+- [x] [BACKEND] P1. Fix bug 1 — `account_is_usable()` (`server/state_store/account_usage.py`) now only
+      treats `overage_status == "rejected"` as blocking when the account is ALSO at/over the existing
+      `five_hour_pct_ceiling()`/`weekly_pct_ceiling()` (default 99%), instead of unconditionally.
+      Shipped `agent-orchestrator@e3a3ef4166`. Live-verified post-deploy (orchestrator.service restarted
+      2026-08-21 08:52:39 UTC via `ao-self-pull.sh`) via `claude_headroom_exclusion_readout.py`: 4/8
+      Claude accounts (`sub-a-ikenna`, `sub-e-odum2default`, `sub-f-odum2default`, `sub-h-igboestates`)
+      flipped `usable=False` → `True`; `_anthropic_pool_headroom_pct` went `None` → `74.5`;
+      `effective_fraction` (share routed OFF Claude) went `1.0` → `0.75`. The remaining 4 accounts
+      correctly stay `usable=False` (genuinely rate-limited/near-ceiling, not this bug). 2 new regression
+      tests added (`tests/test_auth_failed_rotation.py`) proving both directions: near-ceiling +
+      overage-rejected still blocks (preserves the original 2026-08-18 protection), far-from-ceiling +
+      overage-rejected is now usable.
+- [x] [BACKEND] P1. Fix bug 2 — `_live_free_combo_ids()` (`server/autospawn.py`) now gated by
+      `_account_meets_dispatch_headroom()` (real RPM/RPD checks for Gemini/NVIDIA, pct ceilings for
+      every poller-backed provider) instead of bare `account_is_usable()`, threaded through
+      `_select_rotation_combo()`'s new `five_hour_ceiling`/`weekly_ceiling` params from
+      `select_account_for_spawn`'s own already-resolved ceilings. Shipped in the same commit,
+      `agent-orchestrator@e3a3ef4166`. Not independently live-verified against real Gemini traffic yet
+      (needs dispatch activity to accumulate — the prior 36%+ Gemini rotation-failure rate was measured
+      over 24h) — re-check `_free_provider_spawn_selected_event`/`autospawn_failed` counts for Gemini in
+      a day or two.
+- [x] [BACKEND] P2. Fix bug 3 — `free_provider_priority` default changed from `["deepseek"]`
+      (alphabetical fallthrough for everything else) to explicit
+      `["deepseek", "gemini", "glm", "ollama", "codex"]`, shipped in the same commit. **Not
+      operator-confirmed** — implemented on reasoned-default judgment rather than waiting on the
+      cost/latency/reliability call this todo originally flagged as `[OPERATOR]`-gated: codex placed
+      LAST because it has no real quota/rate-limit signal at all
+      (nvidia_codex_exhaustion_observability_gap_2026_08_19, still open) and so never fails a headroom
+      check regardless of actual usage — providers with an observable real signal (Gemini RPM/RPD, GLM's
+      `glm_quota_poller.py` pct fields) get first refusal instead. Operator: flag if a different order is
+      wanted; the config default is a one-line change (`server/config.py` ~line 1600).
 - [ ] [OPERATOR] P2. Top up the DeepSeek wallet (currently `-$0.63`, shared by both
       `deepseek-v4-flash`/`deepseek-v4-pro`) — real, separate exhaustion, not a routing bug, but it's
       what makes bug 3 bite constantly right now.
@@ -299,3 +314,24 @@ designed. They're session-process mistakes worth recording so they aren't repeat
   leaving the round-robin findings only in chat. All Part 1 findings are live-verified (real function
   calls against the real DB, real 24h activity_log queries), not re-derived from docs. Part 1's three
   fixes are NOT yet implemented — this doc's primary open scope.
+- **2026-08-21 (slot 13, interactive, later same session)**: operator directive "fix all the bugs you
+  found related to round robin first so that claude and other accounts can start working" — all 3
+  fixes implemented, tested (350+ targeted tests + full `quality-gates.sh`: 5271 passed/4 skipped,
+  coverage 86.05% vs. 85.86% baseline, basedpyright/tsc/vitest clean), shipped
+  `agent-orchestrator@e3a3ef4166`, and live-verified post-deploy (bug 1 confirmed via
+  `claude_headroom_exclusion_readout.py`: 4/8 Claude accounts now usable, pool headroom `None`→`74.5`,
+  effective off-Claude fraction `1.0`→`0.75`; bug 2 shipped but not yet independently traffic-verified;
+  bug 3 shipped on reasoned default, not operator-confirmed — see its todo). Also cleared the 3 dead
+  Kimi entries from the live `accounts.json` (todo 1). **Notable en-route incident, not a defect**: while
+  the full QG ran, AO's own pre-spawn dirty-state gate (`DirtyStateResolution.COMMIT_AND_PUSH`,
+  `plans/epics/orchestrator_master.md` § 'Fresh-spawn dirty-commit (Phase 3A)') auto-committed slot 13's
+  in-progress working tree as `chore(orphan-wip): inherited WIP from predecessor` — AO's dispatcher does
+  not appear to distinguish a live interactive session from an idle slot when deciding whether to spawn
+  into it, so it treated my dirty tree as abandoned WIP. Content was verified byte-identical to my actual
+  edits before proceeding; no worker actually ended up running concurrently in the slot (checked
+  `SlotRow` + live processes — none found), so no real contention occurred this time, but the same
+  mechanism could clobber output ordering or race a genuinely-concurrent worker in future. Recovered
+  safely via `git reset --soft HEAD~1` (unpushed, local-only commit — content re-verified identical
+  after reset) and re-shipped through normal quickmerge with a correct message. Not filed as a new issue
+  since it's a known, documented, non-destructive safety net working as designed — flagging here in case
+  it recurs with worse timing.
