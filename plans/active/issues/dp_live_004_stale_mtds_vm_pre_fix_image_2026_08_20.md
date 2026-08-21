@@ -117,6 +117,17 @@ follow-up in `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`.
 
 ## Progress Log
 
+- **dedup pass 2026-08-21**: found a 5th independent filing of this exact incident,
+  `/plans/active/issues/dp_live_004_bybit_stale_vm_tarball_2026_08_21.md` (same VM →
+  `mtds-live-cefi-consolidated-20260821-200626` replacement, same root cause), not caught by the 2026-08-21
+  ag-closeout-audit consolidation above. Kept it `status: open` (not flipped to `superseded` like the other 3 —
+  its decommission-step todo and its diagnostic detail aren't literally duplicated here yet) but marked its
+  overlapping open todo `DUPLICATE OF` this doc's own todo 2 below, added it to `related:` above. It carries
+  genuinely useful, not-yet-duplicated diagnostic progress on this doc's own open todo 2 below: on the post-fix replacement VM, BYBIT-FUTURES still shows 100% `empty_confirmed` across all 4
+  MVP data types (zero `captured` rows) while every sibling venue on the same VM captures normally in the same
+  window; universe resolution and `canonical_instrument_id` shape are both confirmed correct, so the remaining
+  hypothesis space narrows to the connector's runtime subscribe-set / websocket-ack behavior — read that doc's "NEW
+  FINDING 2026-08-21" entry in full before re-diagnosing todo 2 from scratch.
 - **2026-08-21 (infra, slot 8, applying operator ruling)**: Operator (Harsh, via `/ao-watchdog` interactive session,
   2026-08-21) APPROVED the `[OPERATOR]` todo. Cycled the VM via
   `deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh --force` (`--force` required to bypass the

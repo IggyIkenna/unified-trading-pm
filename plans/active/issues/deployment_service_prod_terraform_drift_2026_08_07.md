@@ -184,9 +184,10 @@ the IaC config; the third is a Cloud Run job module removal.
             item 3.** ~~Re-add `cost_snapshot_cron`'s `X-API-Key` header (`cost_snapshot_scheduler.tf`) sourced from a
             proper Secret Manager reference~~ — not yet executed, tracked there; now load-bearing since
             `DISABLE_AUTH=false` went live. Repo: deployment-service.
-      - [ ] [INFRA] P3. Resolve `deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md` (own doc,
-            not duplicated here) — still open, still oscillating labels between two module definitions on every
-            untargeted apply.
+      - [ ] [INFRA] P3. **DUPLICATE OF `/plans/active/issues/deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md`**
+            (status: open, verified 2026-08-21) — pure forward-pointer, not independent content here; that doc owns
+            the actual fix for the two module definitions oscillating labels on every untargeted apply. Checkbox
+            stays open until that doc resolves it.
 
 ## Progress Log
 
@@ -268,3 +269,7 @@ the IaC config; the third is a Cloud Run job module removal.
   2026-08-17. Sole remaining item is still a pure forward-pointer to its own sibling doc
   (`deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md`), not independent content.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **dedup pass 2026-08-21**: sole remaining open todo (the t1_recon module-definition forward-pointer) marked
+  `DUPLICATE OF` its own sibling doc (verified `status: open`, not archived) so the plan-hygiene open-task counter
+  stops double-counting it — no content change, this doc's own remaining work genuinely lives entirely at that
+  sibling doc.
