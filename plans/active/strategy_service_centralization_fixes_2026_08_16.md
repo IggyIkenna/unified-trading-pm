@@ -440,17 +440,35 @@ answer rather than pre-empting it.
 **Staying in place is a valid outcome** — but only for a constant that is genuinely local to one archetype's own
 logic and that no second archetype could ever want. That must be stated, not assumed by inaction.
 
-- [ ] [BACKEND] P1. **Inventory and classify all 69 candidates.** For each module-level reference-shaped constant
-      under `strategy_service/engine/strategies/`, record: symbol, file:line, what fact it encodes, how many
-      archetypes need that fact, whether an SSOT already exists (probing the WRITER's vocabulary, not literals), and
-      the destination the table above selects. Output a table in this plan, one row per constant. Done-when: every
-      one of the 69 has a row and a named destination, including "stays local" with its justification.
-- [ ] [BACKEND] P1. **Migrate the unambiguous ones** — every candidate where the table selects exactly one
-      destination and an SSOT already exists to receive it. Delete the local constant in the same change (no shims,
-      per the workspace rule). Done-when: the local definition is gone and its consumers resolve through the SSOT.
-- [ ] [OPERATOR] P1. **Rule on the ambiguous ones** — any candidate where two destinations are defensible, or where
-      migrating means merging two registries that may be legitimately orthogonal (the `VENUE_CHAIN_MAP` case above is
-      the type specimen). Escalate as a list with a recommendation each, not one at a time.
+- [x] ✅ [BACKEND] P1. **Inventory and classify all 69 candidates — DONE 2026-08-21.** Full per-constant table (72
+      distinct candidates measured, not 69 — see the sibling doc's "Count discrepancy" section for why: the 69 was
+      measured 2026-08-16 against `_STAKING_PROTOCOL_CHAIN`, since deleted, and this plan's own Progress Log shows
+      active development adding new archetype-scoped constants in the same window) moved to a sibling doc because
+      this plan was already over its 500-line soft cap before the table:
+      [strategy_service_reference_constants_inventory_2026_08_21](/plans/active/strategy_service_reference_constants_inventory_2026_08_21.md).
+      Every candidate probed for a real SSOT by content/vocabulary, not name similarity, per the `_STAKING_PROTOCOL_CHAIN`
+      measurement-trap lesson above.
+- [x] ✅ [BACKEND] P1. **Migrate the unambiguous ones — DONE 2026-08-21, zero rows qualified.** Every candidate that
+      looked plausible on name alone (venue lists, LST lists, chain lists) was checked against its real UAC
+      counterpart by content and confirmed to be archetype-specific *curation* layered on top of UAC data (matching
+      the `_ALLOWED_CHAINS` precedent), not a duplicate of it. No candidate has both an unambiguous destination and a
+      confirmed-real, already-existing SSOT to receive it — the one genuine literal duplicate
+      (`_STAKING_PROTOCOL_CHAIN`) was already fixed by the exemplar todo above before this audit ran. No code changed
+      by this todo; see the sibling doc's Summary section for the full reasoning.
+- [ ] [OPERATOR] P1. **Rule on the ambiguous ones** — 5 clusters (10 table rows) surfaced by the inventory above,
+      full list + one recommendation each in
+      [strategy_service_reference_constants_inventory_2026_08_21](/plans/active/strategy_service_reference_constants_inventory_2026_08_21.md)'s
+      Summary section: (1) `_FAMILY_TO_ASSET_GROUP` — fold into UAC asset_group taxonomy vs. keep as a narrow
+      routing-key derivation (recommend: keep local, it's a 3-entry publish-path routing key, not general reference
+      data); (2) `_MONTH_ABBREV` ×2 byte-identical duplicate, no UTL SSOT exists (recommend: new shared module under
+      `carry_and_yield/`, not UTL — it's Deribit-symbol-grammar-specific, not generic); (3) `_STRIKE_INCREMENT` —
+      plausible instruments-service reference data, no confirmed SSOT (recommend: ask instruments-service whether it
+      already owns strike-grid data before building a new registry); (4) `_LP_CONCENTRATED_POOLS` — pool contract
+      addresses, no confirmed UAC LP-pool registry (recommend: build one in UAC only if a second consumer emerges —
+      currently single-consumer); (5) stablecoin-preference cluster (`_STABLE_PREFERENCE` / `_PERP_MARGIN_STABLE_PREFERENCE`
+      ×2 / `_STABLECOINS`, near-identical values across 3 files) — recommend consolidating to one local shared
+      constant in `carry_and_yield/` regardless of the operator's UAC-vs-local ruling, since the duplication is
+      intra-repo either way.
 - [x] ✅ [BACKEND] P1. **Fix the exemplar — DONE 2026-08-21, `strategy-service@1ea9d0b170`.**
       `_STAKING_PROTOCOL_CHAIN` was already gone (shipped earlier this session,
       `strategy-service@8a7f80e8`) — replaced with UAC's `get_chain_for_protocol()`. Verified live
@@ -478,6 +496,20 @@ logic and that no second archetype could ever want. That must be stated, not ass
 
 ## Progress Log
 
+- **2026-08-21 (interactive session)** — Completed the W7 inventory + migration todos. Grepped all module-level
+  reference-shaped constants under `strategy_service/engine/strategies/`: 72 distinct candidates (76 raw grep
+  matches, 3 index duplicates, minus `_ALLOWED_CHAINS` already covered by the exemplar todo above), not the
+  claimed 69 — explained as net drift from active development in the 5 days since the 69 was measured, not a
+  wrong original count. Full table in sibling doc
+  [strategy_service_reference_constants_inventory_2026_08_21](/plans/active/strategy_service_reference_constants_inventory_2026_08_21.md)
+  (split out because this plan was already over its 500-line soft cap). Result: 62 STAYS LOCAL (archetype-specific
+  trading policy, matching the `_ALLOWED_CHAINS` precedent — every venue/LST/chain list that looked plausibly
+  UAC-duplicative on name alone was checked by content and confirmed to be curation layered on real UAC data, not
+  a duplicate of it), 10 rows across 5 AMBIGUOUS clusters escalated to the `[OPERATOR]` todo below with a
+  recommendation each, **0 confirmed-real MIGRATE targets** — the one genuine literal duplicate this class of bug
+  produced (`_STAKING_PROTOCOL_CHAIN`) was already fixed by the exemplar todo before this audit ran, so Task 2 (the
+  "migrate the unambiguous ones" todo) had no rows to act on. No strategy-service code changed this session — this
+  was inventory + classification only, per both todos' own done-when bars.
 - **2026-08-18 (slot 5, backend_engineer)** — Resolved the P0 reconciliation todo. Read the actual call graph
   (`risk.py::update_lending_positions()` already chains `DeFiHealthAggregator.aggregate()` into
   `emit_margin_event_for_health()`) rather than trusting either module's docstring. A and B are not independent
