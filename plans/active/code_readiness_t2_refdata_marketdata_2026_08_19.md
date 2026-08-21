@@ -737,6 +737,21 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Close the foundation-completeness and phase-0 cross-cutting CODE items. Evidence:
       `/plans/active/instruments_foundation_completeness_2026_06_24.md`,
       `/plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`.
+      **PARTIAL 2026-08-21 — audited all 10 open sub-items across both docs (general-purpose sub-agent, measured
+      against live code, not trusted from checkbox state).** 1 was ALREADY DONE, stale — cbETH/COINBASE-ETHEREUM
+      DeFi LST venue-add, flipped `[x]` in the source doc with evidence. 2 more had stale PARTIAL annotations
+      understating real shipped progress (cumulative-drawdown health metric now generalised to one script for
+      cefi+defi and running on a daily schedule, not the 2 separate scripts the doc described; the §2.3
+      drilldown-correctness ε=0 reconciliation guard now EXISTS and is QG-wired, deliberately scoped to one cell,
+      not "unbuilt" as the doc said) — both source docs' annotations refreshed to current reality, still left
+      `[ ]` since the remaining gap in each is real (write-time enforcement; multi-cell extension). The other 7
+      remain genuinely open: 4 are large/design-heavy (defi/sports Phase-2 gate completeness, the expected-universe
+      ORACLE design, the canonical-form single-SoT GCS migration — the last is `[DATA]`-tagged, out of scope for a
+      CODE pass per this tranche's own standing rule), 1 is correctly blocked (depth-aware re-fetch trigger,
+      depends on the ORACLE design), 1 needs verification work (retirement completeness — ICE fully verified clean
+      via `instruments-service@42cf8ba5`, CBOE's known stray objects not yet confirmed purged), 1 needs an
+      incremental-reconcile implementation gated on the same ORACLE design. None of the 7 attempted this pass —
+      genuinely multi-session work, not a quick close. Full evidence in each source doc's own updated annotations.
 - [x] [BACKEND] P2. Fix the AAVEV3 bare-alias enumerator CODE (already root-caused — duplicate dict key plus missing
       alias canonicalisation). The 46,300 bad `empty_confirmed` manifest rows stay operator-gated, not yours.
       ✅ 2026-08-20 — **verified in place by reading the code, not by trusting the issue's checkbox.** Both halves of
