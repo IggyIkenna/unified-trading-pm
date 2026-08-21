@@ -805,7 +805,13 @@
           >Services expose a counterparty surface — one of them (strategy-service) not reachable by anyone yet</span
         >
       </div>
-      <div class="stat"><span class="v">8</span><span class="k">Endpoints documented in full depth below</span></div>
+      <div class="stat">
+        <span class="v">14</span
+        ><span class="k"
+          >Endpoints documented in full depth below (2 instruments, 3 market data, 1 instructions, 2 client
+          reporting, 6 signal leasing)</span
+        >
+      </div>
       <div class="stat">
         <span class="v">102</span
         ><span class="k"
@@ -829,6 +835,77 @@
           counterparties are pre-activation ahead of the stated 2026-09-01 launch window</span
         >
       </div>
+    </div>
+
+    <h3 style="margin-top: 34px">What this platform is</h3>
+    <p class="lede">
+      One canonical platform spanning five market ecosystems — centralised crypto, decentralised finance,
+      traditional markets, sports and prediction markets — with historical batch delivery and near-real-time
+      streaming over the same canonical contracts, a controlled path from backtest through paper to live, and
+      modular choices over who owns the signal and who owns execution.
+    </p>
+    <div class="keypoints">
+      <div>
+        <b>Five asset groups</b
+        ><span
+          >CeFi, DeFi, TradFi, sports and prediction markets are represented through common discovery and data
+          contracts — most providers expose a separate schema and operating model per domain.</span
+        >
+      </div>
+      <div>
+        <b>Live plus batch</b
+        ><span
+          >The same canonical universe supports daily persisted delivery, replay/recovery and near-real-time
+          consumption — research historically and operate live without rebuilding the integration.</span
+        >
+      </div>
+      <div>
+        <b>Lifecycle continuity</b
+        ><span
+          >Backtest, paper and live retain the same strategy/configuration identity and can be reconciled against
+          each other — promotion is controlled and evidential, not a rewrite.</span
+        >
+      </div>
+      <div>
+        <b>Modular responsibility</b
+        ><span
+          >A counterparty can own signals, execution, or both — the platform supports managed, licensed and
+          infrastructure-only products without exporting core implementation.</span
+        >
+      </div>
+    </div>
+    <p>Subject to entitlement, a counterparty on this platform can:</p>
+    <ul>
+      <li>Discover available instruments, venues, data types and historical coverage across all five asset groups.</li>
+      <li>
+        Download point-in-time instrument catalogues and historical market data in bulk, for local research and
+        recovery.
+      </li>
+      <li>Consume near-real-time normalised market-data envelopes over a durable, replayable stream.</li>
+      <li>
+        Lease an entitled signal slot at an agreed payload depth, receive it by pull or push, and acknowledge
+        delivery.
+      </li>
+      <li>
+        Submit target-position, quote, cancel, transfer, DeFi and multi-leg instructions for execution where
+        authorised.
+      </li>
+      <li>Run an externally generated strategy through this platform's data, execution and reporting.</li>
+      <li>
+        Inspect positions, NAV, P&amp;L, attribution, trades, transfers and fees, scoped to their own
+        <code>client_id</code>.
+      </li>
+      <li>Promote a versioned strategy from backtest to paper to live under explicit approvals, limits and kill switches.</li>
+    </ul>
+    <div class="callout">
+      <span class="tag">Read this before treating any of the above as uniform across the five groups</span>
+      <p>
+        A common <code>asset_group</code> parameter proves architectural reach, not equal production coverage.
+        Availability and execution capabilities are venue-, dataset-, action- and environment-specific — see the
+        measured capability endpoints in each section below, and the coverage narrative in
+        <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> for the full
+        picture per asset group.
+      </p>
     </div>
   </header>
 
@@ -1939,12 +2016,12 @@
         <span class="method method-post">POST</span>
         <code class="ep-path">/external/instructions</code>
         <span class="ep-purpose"
-          >Submit one StrategyInstructionV2 envelope — TRADE executes, everything else returns 501</span
+          >Submit one StrategyInstructionV2 envelope — see the support table above for which action types execute</span
         >
         <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
-        <h3>Request body — TradeInstruction (the only variant that executes)</h3>
+        <h3>Request body — TradeInstruction (shown as the reference shape; see the support table above for every other variant)</h3>
         <div class="scroll-x">
           <table>
             <thead>
@@ -3555,7 +3632,7 @@
           <tr>
             <td><code>500</code></td>
             <td>Unhandled server-side error</td>
-            <td>All six endpoints</td>
+            <td>Every endpoint on this page</td>
           </tr>
           <tr>
             <td><code>501</code></td>

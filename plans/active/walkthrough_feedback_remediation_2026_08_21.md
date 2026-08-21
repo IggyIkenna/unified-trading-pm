@@ -605,8 +605,46 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       dispatch gate for all three lives in `execution_service/api/external_instruction_api.py`, which this pass's
       own file-coordination note reserves for the sibling session also touching it — resolve that collision before
       starting. Genuinely deferred, not guessed at.
-
-- 2026-08-21 — **[FROM-BLRS] batch-live-reconciliation-service consuming-half session**: built the ledger-matching
+- [ ] [SCRIPT] P0. execution-service: bind `POST /external/instructions`' `identity.client_id` to the
+      authenticated caller's `auth.org_id` — verified 2026-08-21 still true at `origin/live-defi-rollout` HEAD
+      (`8d4356bf2c`): `auth.org_id` is written to the audit log alongside the instruction
+      (`external_instruction_api.py:144`) but is never checked against the instruction's own `identity.client_id`,
+      so a caller-supplied `client_id` is not validated against the authenticated org on this router. This is the
+      CTO handoff's "Execution client_id is caller supplied without org binding" correction (Security/P0) —
+      genuinely still open, not owned by any active plan/issue found by grep. Deny-by-default when they don't
+      match, mirroring client-reporting-api's `enforce_entitlement(auth, client_id)` pattern. Disclosed honestly in
+      the doc's §01 callout already; this todo is the code-side fix.
+- [ ] [SCRIPT] P0. client-reporting-api: secure or disable `GET /api/v1/stream/reports` (`reports_stream.py`) —
+      verified 2026-08-21 still true: it is the only route in the service mounted outside the
+      `_authenticated_router` wrapper (`api/main.py`'s `dependencies=[Depends(_api_auth)]` block), so it carries
+      no auth dependency at all and fans out every published report event for every client with no `client_id`
+      scoping. CTO handoff correction "Global report stream lacks authentication/scoping" (Security/P0) — no
+      owning plan/issue found by grep. Disclosed honestly in the doc's §05 callout already; this todo is the
+      code-side fix.
+- [ ] [SCRIPT] P1. client-reporting-api: apply `enforce_entitlement`/`require_internal` to the 13 routes confirmed
+      2026-08-21 to call neither today (`alerts.py`, `compliance.py`, `documents.py`, `docusign.py` in full, plus
+      `reporting/investor_relations_archive.py`) — any authenticated caller of any `org_id` can currently reach
+      them (still only behind the blanket token check). CTO handoff correction "Authenticated reporting routes
+      lack confirmed entitlement checks" (Security/P0) — no owning plan/issue found by grep. Disclosed as `? check`
+      in the doc's §05 endpoint index already; this todo is the code-side fix.
+- [ ] [SCRIPT] P2. client-reporting-api: remove or sandbox-gate the unconditionally-fixture routes
+      (`GET /api/v1/exports/trades`, `/coin-breakdown`, `/daily-summary`, `/hourly-snapshots` —
+      `MOCK_TRADES`/`MOCK_COIN_BREAKDOWN`/`get_mock_performance_summary()`, none gated by `CLOUD_MOCK_MODE`, plus
+      DocuSign envelope status via `MOCK_ENVELOPES`) so production responses are never fixture data regardless of
+      environment. CTO handoff correction "Some reporting endpoints always return fixtures" (Integrity/P0) — no
+      owning plan/issue found by grep. Disclosed in full in the doc's §05 "real vs fixture" callout already; this
+      todo is the code-side fix.
+- [ ] [DOC] P2. platform-api-reference.html §04: `ControlInstruction` (action ∈ `{KILL_SWITCH, FLATTEN_POSITION}`,
+      `unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:457-468`) is a real,
+      already-committed 16th `StrategyInstructionV2` union member — confirmed wired at
+      `origin/live-defi-rollout` execution-service HEAD (`8d4356bf2c`,
+      `external_instruction_api.py::_submit_control_instruction`: `KILL_SWITCH` activates the durable kill switch
+      directly, `FLATTEN_POSITION` delegates to `AccountInstructionOrchestrator.CLOSE_ALL`, both gated on a
+      required `authorization_id`) — but it is entirely absent from this page's instruction-type-support table and
+      every "N of 15" count. Not added this pass: the table's own instruction-count numbers are under active
+      concurrent edit by the execution-service T4 lane (uncommitted/mid-merge-conflict at inspection time,
+      2026-08-21) and adding a 16th row now would collide with that in-flight recount — do after the T4 lane's
+      current work lands, verified fresh against that point in time, not guessed from this session's snapshot. built the ledger-matching
   skip + explicit auditability surfacing for `TradeFillRecord.recon_excluded` (traced the consumer chain per the
   P2 follow-up todo above under "Todos — execution/transfer cluster"). `_exclude_recon_excluded()` in
   `engine/daily_determinism_stage.py` (already shipped at `batch-live-reconciliation-service@1ba1a6260c` per this
@@ -748,3 +786,67 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   moment `unified-api-contracts` is clean. The drafted `platform-api-reference.html` QUOTE prose is held back
   (not pushed) until that code todo actually ships, so the doc's "✓ verified 2026-08-21" claims cite code that is
   actually on origin, not just locally staged.
+
+- **2026-08-21 — CTO handoff proposition + corrections fold-in pass (this session).** Read
+  `/tmp/cto_handoff.txt` (the "Odum External Delivery Platform — CTO Handoff", evidence baseline 20 Aug 2026, one
+  day stale against today's ships) in full and worked it against `platform-api-reference.html` (verified real size
+  at session start: 3586 lines, not the ~2.1k revert-clobber trip-wire) plus this plan.
+  **Added**: a new client-facing "What this platform is" proposition block in the header (before the Contents
+  nav) — the handoff's headline proposition, its four-row "two primary hooks" table (five asset groups / live plus
+  batch / lifecycle continuity / modular responsibility), and its 8-item counterparty capability list, all
+  rewritten into this doc's own house style (`.keypoints`/`.callout`/plain lists — no invented numbers, no
+  internal-audience language: dropped the handoff's "prevent the implementation from collapsing" framing,
+  "Corrections" section title, and epic-breakdown instructions entirely, per this task's explicit instruction to
+  keep only client-facing content). Deliberately did NOT reproduce a "measured coverage matrix" inline — pointed
+  instead to `platform-external-api-walkthrough.html`, which already owns that narrative per this doc's own §00
+  division of labor, rather than duplicate/drift a second copy of coverage numbers.
+  **Fixed — genuine self-contradictions found while reading the file end-to-end** (the handoff's correction
+  "Instruction support prose contradicts audited table" — Contract/P0 — turned out to still partially apply, in a
+  different spot than the handoff's own evidence baseline): §04's endpoint summary line and request-body heading
+  still read "TRADE executes, everything else returns 501" / "the only variant that executes", directly
+  contradicting the accurate 12-of-15 table two paragraphs above them; §07's error reference still said "13 of
+  the 15 instruction types" return 501, also contradicting §04. Fixed all four to cross-reference the (already
+  correct) §04 table rather than restate a number, so the fix holds regardless of which lane is currently
+  changing that count. Also fixed a real undercount: the header's "8 Endpoints documented in full depth below"
+  stat predates §06 (signal-leasing) being added to the page — recounted `class="ep"` blocks directly (`grep -c`)
+  and corrected to 14, with a breakdown. Fixed §07's "All six endpoints" (500 row) to "Every endpoint on this
+  page", matching the style already used in the 401 row, so it stops needing a hand-maintained count.
+  **Verified re: task's "already-done" baseline** — all confirmed still true against current HEAD: MTDS
+  availability `data_type`-without-`venue` fix (market-tick-data-service, §03's callout, already landed and
+  disclosed with a real Source citation); the ev-check/ev-verified markers throughout are the prior session's
+  already-completed sweep, no false claims found; `check_artefact_claim_ownership.py` — 246 open markers, baseline
+  247, ratchet-compliant, unchanged by this session's edits (no new `st-plan`/`st-part`/`ev-check` spans added —
+  every new sentence is plain prose or reuses the doc's existing marker vocabulary as-is).
+  **Task item 3 (re-verify instruction-table rows against execution-service commits since `d7ef159405`)**:
+  `d7ef159405` resolved to a `unified-trading-pm` commit (2026-08-21 07:44:52+01:00, not an execution-service sha —
+  the task's own phrasing was ambiguous, resolved by checking both repos). `git -C execution-service log --oneline
+  --since=<that timestamp>` returns zero commits — nothing has landed in execution-service since. **Important
+  caveat found, not fixed by this session (T4/execution-service's own lane, actively in flight — do not
+  duplicate)**: the doc's current instruction-table content (BORROW/REPAY "wired 2026-08-21", `cancel_scope=
+  ALL_FOR_STRATEGY_INSTANCE` "wired 2026-08-21", the 12/15 split) describes code that is **uncommitted and
+  mid-merge-conflict** in the local execution-service worktree at inspection time (`git status --short` showed
+  `UU execution_service/api/external_instruction_api.py` plus several `M` files; `git blame` on the new dispatch
+  branch showed "Not Committed Yet"). Direct confirmation against `origin/live-defi-rollout` HEAD (`8d4356bf2c`,
+  which equals local HEAD — not behind, so this is live in-progress work, not a stale pull): `cancel_scope=
+  ALL_FOR_STRATEGY_INSTANCE` is still an honest 501 there (`"is not supported — no ..."`), and
+  `external_instruction_defi.py` at that ref has no BORROW/REPAY entry in `_ACTION_BUILDERS`. The module
+  docstring at that same ref states the real current baseline plainly: "10 of the 13 StrategyInstructionV2 action
+  types are wired." This session left the doc's 12/15 content untouched (a concurrent T4 session is visibly mid-
+  flight on exactly this, per this same plan's own held-back QUOTE-todo note above) rather than reverting it —
+  reverting now would just be overwritten again within minutes and risks a real edit-conflict on the same file.
+  Flagged here for whichever session next re-verifies the instruction table once the concurrent merge resolves.
+  **New finding, filed as a todo above, not guess-fixed**: `ControlInstruction` (`KILL_SWITCH`/`FLATTEN_POSITION`)
+  is a real, already-*committed* 16th union member with working dispatch at `origin/live-defi-rollout` HEAD, and
+  is completely undocumented on this page — did not add a row for it this session since the table's own counts
+  are mid-recount by the concurrent T4 lane; safer to add once that settles than to hand-patch a count that will
+  change again within the hour.
+  **New follow-up todos filed** (checked first that none were already owned by an in-flight lane — grepped
+  `plans/active/*.md` + `plans/active/issues/*.md` for each, zero hits): execution-service client_id↔org_id
+  binding (Security/P0), client-reporting-api's unauthenticated global report stream (Security/P0),
+  client-reporting-api's 13 no-entitlement-check routes (Security/P1), client-reporting-api's unconditional-
+  fixture reporting routes (Integrity/P2), and the `ControlInstruction` documentation gap above (P2, gated on the
+  T4 recount landing first). All five are genuine handoff corrections not yet true in code; each is disclosed
+  honestly in the doc already (§01/§05 callouts) — these todos are the code-side (or, for `ControlInstruction`,
+  doc-side) fix, not a re-disclosure.
+  Checker: `check_artefact_claim_ownership.py` — 246 open markers, baseline 247 (unchanged by this session).
+  Shipped via `scripts/dev/safe-doc-push.sh` — sha recorded in the commit trailer.
