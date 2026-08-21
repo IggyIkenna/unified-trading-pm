@@ -388,11 +388,30 @@ RESULTS=()
 # NOT a blanket disable — a normal PR into main still gets full diff-scoping, which is where
 # these checks actually catch a specific change's new violations.
 DIFF_BASE_REF=""
-if [ -n "$CI_MODE" ] \
-  && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]] \
-  && [ "${GITHUB_REF_NAME-}" != "live-defi-rollout" ] \
-  && git -C "$PM_DIR" rev-parse --verify -q origin/main >/dev/null 2>&1; then
-  DIFF_BASE_REF="origin/main"
+if [ -n "$CI_MODE" ] && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]]; then
+  case "${GITHUB_EVENT_NAME-}" in
+    push)
+      BEFORE_SHA=""
+      if [ -n "${GITHUB_EVENT_PATH-}" ] && [ -f "$GITHUB_EVENT_PATH" ]; then
+        BEFORE_SHA="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("before") or "")' "$GITHUB_EVENT_PATH" 2>/dev/null || true)"
+      fi
+      if [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+        git -C "$PM_DIR" fetch --quiet origin "$BEFORE_SHA" 2>/dev/null || true
+        if git -C "$PM_DIR" rev-parse --verify -q "${BEFORE_SHA}^{commit}" >/dev/null 2>&1; then
+          DIFF_BASE_REF="$BEFORE_SHA"
+        fi
+      fi
+      ;;
+    pull_request)
+      if [ -n "${GITHUB_BASE_REF-}" ]; then
+        git -C "$PM_DIR" fetch --quiet origin "${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}" 2>/dev/null || true
+        if git -C "$PM_DIR" rev-parse --verify -q "origin/${GITHUB_BASE_REF}" >/dev/null 2>&1; then
+          DIFF_BASE_REF="origin/${GITHUB_BASE_REF}"
+        fi
+      fi
+      ;;
+    *) ;;
+  esac
 fi
 
 run_check() {
