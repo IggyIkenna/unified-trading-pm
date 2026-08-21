@@ -83,13 +83,22 @@ source: >-
       string is wrong. Done when: `_SCE_1H`/`_SCE` no longer appears in any DeFi strategy_id, all consumers
       migrated in one change, QG green. Source:
       `execution_delta_proxy_repricer_generalization_2026_08_18.md` todo at "Fix the stale `_SCE_1H` suffix".
-- [ ] [AGENT] P2. **Trace whether `HealthFactorMonitor`/`DeleverageExecutor` are wired to a real production
-      entrypoint** — a service bootstrap constructing the monitor per-chain, and a real Pub/Sub subscription
-      calling `deleverage_executor.handle()` — or are declared-but-unwired like the rest of this issue's findings
-      (the source doc found zero `HealthFactorMonitor(` production call sites in its own pass, same
-      declared-but-unwired shape as `TransferCoordinator`/`OrderRecoveryEngine`/the deleted `QuoteHandler`). Pure
-      fact-finding, no design decision — file the answer back into the source doc either way. Done when: a
-      definite wired/unwired verdict is on record with evidence. Source:
+- [x] ✅ [AGENT] P2. **Trace whether `HealthFactorMonitor`/`DeleverageExecutor` are wired to a real production
+      entrypoint** — VERDICT: both are declared-but-unwired, same shape as `TransferCoordinator`/
+      `OrderRecoveryEngine`/the deleted `QuoteHandler`. Evidence — `unified-trading-pm@<pending>`: (1)
+      `HealthFactorMonitor(` has zero production constructor call sites in `execution-service`; the only two
+      call sites are `tests/unit/defi_execution/test_health_factor_monitor.py`. No service bootstrap constructs
+      it per-chain. `perp_hedge_wiring.py`'s own docstring independently confirms this: "no venue adapter exists
+      for either perp venue; `HealthFactorMonitor`'s own fetch is injectable with zero production callers." (The
+      similarly-named `PerpHedgeMonitor` in `perp_hedge_monitor.py` IS wired at `app.py` startup via
+      `build_perp_hedge_lifecycle` — a distinct class that only mirrors `HealthFactorMonitor`'s `run()`/`stop()`/
+      `_poll_loop()` shape; do not conflate the two.) (2) `DeleverageExecutor(` has zero production constructor
+      call sites either — the only non-test instantiation is the module's own
+      `_DEFAULT_EXECUTOR: DeleverageExecutor = DeleverageExecutor()` singleton in `deleverage_executor.py`,
+      backing the `handle_margin_event()` convenience wrapper whose own docstring says "for smoke tests and
+      ad-hoc CLI invocations" — not production. `MarginEvent` (the type it consumes) and `handle_margin_event`
+      appear nowhere else in `execution_service/` — no Pub/Sub subscription, consumer, or service bootstrap
+      references either. Done when: a definite wired/unwired verdict is on record with evidence. Source:
       `execution_delta_proxy_repricer_generalization_2026_08_18.md` todo "Trace whether HealthFactorMonitor/
       DeleverageExecutor are wired to a real production entrypoint".
 
