@@ -126,3 +126,7 @@ agent_operating_framework_master` Phase 2 zero-checkbox sweep — no real work c
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:b10d22b59c109ec8]: KEEP-NA, valid — genuine unresolved phantom-CI investigation needing GH Actions runner-side debug access not available to this session; correctly not escalated further since the failing workflow is schedule-only/advisory.
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (2 entries), unchanged.
 - **context-scout 2026-08-20**: refreshed context_scope (2 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — all 3 remaining `[INFRA] P2` todos
+  form a sequential BLOCKED-ON chain needing GH Actions runner-side debug access not available to this session,
+  against a workflow that is schedule-only/advisory (not one of the 3 gates that block LDR→main) — correctly
+  deprioritized, re-affirming the 2026-08-17 verdict.

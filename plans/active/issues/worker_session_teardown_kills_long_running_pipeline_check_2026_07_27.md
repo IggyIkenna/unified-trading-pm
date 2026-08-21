@@ -532,3 +532,7 @@ tracked here rather than silently claimed complete.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:34a75202ca1bc9fd]: KEEP-NA, valid — sole open item (--resume/checkpoint capability) is directly gated by an explicit dated 2026-08-02 operator ruling until a named prerequisite condition closes; that condition remains unmet as of the doc's most recent 2026-08-15 reproduction entries.
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — sole open item (`--resume`/checkpoint
+  capability for `pipeline_e2e_check`) is directly gated by the explicit dated 2026-08-02 operator ruling (option A)
+  until the shared-host-RAM-exhaustion mechanism (`mdps-e2e-shared-host-teardown-fixed`) also closes; that
+  prerequisite remains unmet as of the doc's most recent 2026-08-15 reproduction entries.

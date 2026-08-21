@@ -195,13 +195,17 @@ carve-out criterion) — none qualified as a single unambiguous value substituti
       cron-branch-override incident or the new `check_cron_branch_override_parity.py` guard
       (`unified-trading-pm@434e3adebc`), despite documenting a closely-related historical correction on the same
       mechanism. Add a cross-reference. Source: hunter D, 2026-08-19.
-- [ ] [BACKEND] P2. Verify whether `server/plan_health.py`'s `_consecutive_kick_failures` counter (the Kicker
+- [x] ✅ [BACKEND] P2. **CLOSED 2026-08-21 (na-eligibility-audit) — superseded by a later shipped fix, verified.**
+      Was: verify whether `server/plan_health.py`'s `_consecutive_kick_failures` counter (the Kicker
       escalation mechanism documented at `/codex/04-architecture/agent-orchestrator-worker-liveness.md:198-216`)
       actually increments for a `phase=pre_boot`+`worker_alive=false` wedge (the exact shape
-      `slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md`'s still-open todo describes, observed
-      ~17-18min/kick sustained 1.5h+ with zero escalation). If it does NOT increment for this state, that doc's open
-      todo is real net-new work; if it DOES, the todo may be stale/duplicate. Needs a live code/state read, not a
-      citation fix. Source: hunter B2, 2026-08-19.
+      `slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md`'s still-open todo describes). **Evidence
+      of supersession**: that exact target doc's own Progress Log records the durable fix shipped and deployed
+      `agent-orchestrator@609d044b8f` (2026-08-20, "Implemented and shipped bounded pre-boot resume-budget
+      escalation plus healthy negative coverage... isolated quickmerge passed 5284 tests") — the watchdog-escalation
+      mechanism this investigation question was about has since been rewritten with a real, tested escalation path,
+      making the original "does the OLD counter increment for this state" question moot rather than answered.
+      Source: hunter B2, 2026-08-19.
 - [ ] [PM] P3. `plans/epics/plan_hygiene_master.md`'s `related_plans:` roster is missing ~17 more
       `parent_epic: plan_hygiene_master` docs beyond the 1 fixed in this pass (see Contradictions #6) — a sibling
       doc (`plan_reconciler_findings_plan_hygiene_master_2026_08_18.md`) already found these via a grep workaround.
@@ -244,3 +248,10 @@ None — no doc in this tranche's non-grace working set reached 0 open todos dur
 
 None — all 54 non-grace docs in the `ao` tranche's working set were read in full by a hunter this run.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA-STALE (item closed) — closed the
+  `_consecutive_kick_failures` investigation todo (see the checkbox's own citation above) as superseded by
+  `agent-orchestrator@609d044b8f`, verified via the target doc's own Progress Log. The remaining 3 durable todos
+  (author a missing codex pattern citing `agent-orchestrator@ef73a44`; add a per-tab-worktrees.md cross-reference;
+  refresh `plan_hygiene_master.md`'s `related_plans:` roster) are genuine, bounded, mechanical documentation tasks —
+  flagged here as candidates for a future extraction pass rather than pulled into this batch's own satellite doc
+  (out of this pass's time budget); doc stays `assigned_vm: NA` pending that follow-up.

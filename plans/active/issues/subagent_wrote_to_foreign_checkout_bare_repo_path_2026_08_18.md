@@ -103,3 +103,6 @@ working tree.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:4a9dbc02450782c8]: KEEP-NA-STALE (items closed) — todo 1 (harden SUB_AGENT_MANDATORY_RULES.md) verified done: unified-trading-pm@34ebb7e5f, clause confirmed present, file 9893 bytes < 10KB cap. Todo 3 (bounded, GENUINE_WORK) extracted to plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md item 1 (RECLASSIFY per-todo split). Todo 2 (mechanical guard) stays NA — explicit judgment/cost tradeoff, no determinable outcome.
 - **context-scout 2026-08-19**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — sole open item (`[SCRIPT] P2`,
+  consider a mechanical guard wrapping every sub-agent write) remains an explicit judgment/cost-tradeoff call with
+  no determinable outcome, re-affirming the 2026-08-19 verdict.

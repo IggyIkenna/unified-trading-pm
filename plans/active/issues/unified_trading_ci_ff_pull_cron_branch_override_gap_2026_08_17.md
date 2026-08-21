@@ -270,3 +270,8 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
   fix. Not touched (slot 0 is `main`, status `working` — live, per this skill's own § 3g rule 1, its own worker
   reconciles in due course, not an outside session).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — re-read all 3 open items: the
+  registry-collapse question is an explicit `[OPERATOR]` design call (now scoped against 4 registries, not 3); the
+  fleet-wide quarantine-alert dedup-key rollup is a genuine design change to alerting granularity, not a bug fix
+  (per its own text); the MacBook-Pro/Mac laptop local-`main` reconciliation is cross-host-access-gated, not
+  reachable from this session. None clears the bounded/deterministic bar without further scoping.

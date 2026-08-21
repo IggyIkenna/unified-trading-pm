@@ -945,3 +945,9 @@ work.
   reads as the practical answer to that question too, but the todo's own literal bar (record the max-plan's
   real terms) technically remains unconfirmed, so it stays open rather than being silently closed on an
   inference.
+
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — explicit operator "human plan"
+  framing throughout (real accounts, real vendor decisions, live credential/waitlist gating). Remaining open items
+  (`[OPERATOR] P0` Kimi re-add reconciliation, `[OPERATOR] P3` Moonshot waitlist tracking) are both genuinely
+  operator-gated per the doc's own 2026-08-20 Progress Log entry explicitly declining to close todo 1 on inference
+  alone. No bounded worker-determinable item found.
