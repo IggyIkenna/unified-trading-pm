@@ -433,7 +433,8 @@ SSOT `/codex/04-architecture/cross-domain-state-fabric.md` (R1-R16) before this 
 below are durable DIRECTIONAL signal — they refine, and are consistent with, the fabric contract — but the
 implementation shape is the fabric's snapshot/factor-state contract (per-instrument J_i/H_i/Theta_i against
 canonical factors, reference positions and the A-matrix in the versioned snapshot with watermarks), NOT literal
-scalar delta/gamma/theta fields on `StrategyInstructionEnvelope`. Q3 (position vectors) is RESOLVED as fabric R22 — three vectors, opt-in per archetype, q_worst venue-derived — reconfirmed by operator 2026-08-21. Genuinely-still-open: the five Wave-0 rulings, carried in the codex doc.
+scalar delta/gamma/theta fields on `StrategyInstructionEnvelope`. Q3 (position vectors) is RESOLVED as fabric R22 — three vectors, opt-in per archetype, q_worst venue-derived — reconfirmed by operator 2026-08-21. The five Wave-0
+rulings (codex doc) were **ALL RESOLVED 2026-08-21** — see section 15 item 5 (line ~934); nothing here remains open.
 
 - **Q12**: the vector `references: list[InstrumentReferenceEntry]` is the ONE home on
   `StrategyInstructionEnvelope`; N=1 is a list of one; no envelope-level scalar duplication. Each entry is the
@@ -449,7 +450,7 @@ scalar delta/gamma/theta fields on `StrategyInstructionEnvelope`. Q3 (position v
   (BLOCK/SCALE_DOWN/MONITOR/TEST_ONLY per entry, default BLOCK); needs the UAC PR per risk-rule-taxonomy.md.
 - **Q16**: `position_adjustment_bps_per_unit_risk` is per-entry.
 
-### Open questions for the operator — do not resolve unilaterally
+### SUPERSEDED — see "OPERATOR RULING 2026-08-21 — Q12-Q16 answered" above (stale leftover, kept as a record, not a live ask)
 
 12. **Does `references: list[InstrumentReferenceEntry]` live on `StrategyInstructionEnvelope` directly, or does the
     envelope keep single-instrument convenience fields (today's `reference_price`) for the common N=1 case, with the
@@ -531,8 +532,7 @@ infrastructure investment is future work, sequenced separately.
 2. **Does every trigger reduce to a price-sensitivity comparison?** `LIQUIDATION_BUNDLE`'s health-factor and
    `JIT_LIQUIDITY`'s pending-swap-size are state thresholds, not literally "price moved by delta×X." Does
    `watched_field` support non-price fields from day one?
-3. **Fixed 2-leg shape now, or an arbitrary list from day one?** Recommend list — the N=1/N=2 cases are trivial
-   instances, and this session already found multi-underlying portfolio math (`GreekTargets`) elsewhere.
+3. **RESOLVED — arbitrary list, not fixed 2-leg.** Q12 (line ~437) adopted `references: list[...]` as the one home, N=1 as the trivial list-of-one case.
 4. **How is "never branch on archetype" enforced** — convention, or is `provenance` structurally excluded from the
    object the algo's own function signature receives?
 5. **Staleness default** — inherit the epic's 2026-08-18 W16 fail-closed ruling as-is, or does a brand-new schema
@@ -921,7 +921,7 @@ consumes those and adds valuation, the adjustment matrix and credit. Each strate
 N disagreeing estimators for one BTC — duplication, and two strategies quoting inconsistent prices on the same
 underlying. Consistent with the standing "strategy reads only processed data, never MTDS directly" invariant.
 
-### 15. OPEN — needs an operator ruling next session
+### 15. SUPERSEDED — all 5 resolved (1/2/4 -> §16 R8/R15/R3; 3 -> R22 near line 435; 5 below), kept as a record
 
 1. **Market-state dependence of A** — cross-tensors `A^(k)` for important factors + trust-region the rest (external
    doc's recommendation), full `Dz' B_i Dq`, or keep A fixed relying on trust region + refresh cadence?
@@ -934,7 +934,8 @@ underlying. Consistent with the standing "strategy reads only processed data, ne
 5. Five Wave-0 rulings — **ALL RESOLVED 2026-08-21 (operator)**: CloudKMS wallet check closed by measurement
    (no live wallet-config in any prod GCP bucket — evidence in the CloudKMS issue doc); UAC `__init__` root →
    convert (parity test first); catalogue → enumerate+fix writer-vs-contract diffs, then lock+version;
-   hot-swap → option B, blessed, codex corrected; venue-eligibility → one declarative R17 resolver, fail closed.
+   hot-swap → **CORRECTED** (was stale "option B, blessed"): `subscription_list` add/remove only, a DEFINITION
+   change is rejected + restart required — SHIPPED strategy-service `48bd3717` (2026-08-14); venue-eligibility → one declarative R17 resolver, fail closed.
 
 - [ ] [DOC] P0. **Write the full build spec** — a CTO-level document covering slow/fast split, worked examples,
       infrastructure, feed arbitration, instrument selection for fast updates, and the options fast path. A peer
@@ -971,8 +972,7 @@ them:
 
 **Section 15's open list now resolves as**: Q1 (market-dependence of `A`) -> R8, low-rank `L R + D`. Q2 (adopt the
 factor model) -> R15, adopted **as the continuous-quote kernel**. Q4 (substrate-conditional transport) -> R3, the
-contract is substrate-neutral and the transport follows locality. **Q3 (position vectors) and the five Wave-0 rulings
-remain OPEN** — carried into the codex doc's section 10.
+contract is substrate-neutral and the transport follows locality. **UPDATE 2026-08-21**: Q3 + the five Wave-0 rulings, listed above as open, are now resolved — see line ~435 (Q3 -> R22) and section 15 item 5.
 
 - [x] ✅ [DOC] P0. **Build spec written** — unified-trading-pm, codex SSOT + verbatim external reference, both linked
       above. The peer agent's document arrived and was reconciled rather than accepted wholesale; three of its framings
