@@ -978,3 +978,23 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   "Security, audit and client isolation" directive doesn't apply — that string only exists in other artefacts, left
   for their owning session. Also split a text-merge artifact next to the `ControlInstruction` todo (two paragraphs
   concatenated on one line) — no content altered.
+
+- 2026-08-21 — **platform-external-api-walkthrough.html client-voice + completion pass, checkpoint 1/2.**
+  Re-verified against `origin/live-defi-rollout` first: `instruments-service@0abd96f3bb`
+  (`enforce_asset_group_entitlement`, wired `external.py:94`/`:131`), `execution-service@0aa709f076`
+  (`_enforce_client_org_binding`) confirmed ancestor + wired. **MTDS's entitlement seam did NOT verify** —
+  `market_tick_data_service/api/entitlement.py` is untracked, uncommitted local-only diff in this checkout (local
+  HEAD == origin HEAD `802784de`), absent from origin entirely, though `platform-api-reference.html`'s own §01
+  already claims it landed — flagged to the operator in this session's report, not fixed here (out of scope).
+  Rewrote the auth callout (was "del auth"/"gate not a scope" forensics) into landed-model prose mirroring
+  `platform-api-reference.html` §01; MTDS stated only as its real router-gate today. Two more stale claims fixed
+  while sourcing that rewrite: `ChainKind` is 24 members incl. `PLASMA` (confirmed on origin) — added the table
+  row, deleted the now-moot "Correction"/"gap surfaced" pair; `VENUE_CHAIN_MAP`'s docstring fix
+  (`unified-api-contracts@4d78e2f0c5`, confirmed ancestor) already states wallet-grouping-not-coverage, so its
+  callout was restated plainly instead of re-warning about a closed gap. Verified `StrategyInstructionV2` is 16
+  members on origin (dispatch chain confirmed NOT routing to `_submit_control_instruction`) — fixed 5 stale
+  "15 of 15" counts to "15 of 16" across §02/§26, added the missing `KILL_SWITCH`/`FLATTEN_POSITION` table row,
+  fixed §09's Control row (was "not yet expressible" — false; the gap is dispatch, not the schema); repointed
+  §14's dead `transfer_coordinator.py` citation to `transfer_handler.py`. **Lost-and-redone**: the first 5 edits were silently reverted by a concurrent write between two edit batches
+  (Edit tool's drift warning + `git diff` caught it, the `walkthrough_file_shared_checkout_repeated_content_loss_
+  2026_08_20.md` failure mode) — redone + grep-verified before this ship. Checkpoint 2/2 follows this session.

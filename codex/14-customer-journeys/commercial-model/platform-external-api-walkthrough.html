@@ -1359,7 +1359,7 @@
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       <b
         class="own"
-        title="plans/epics/execution_master.md — all 15 StrategyInstructionV2 action types route to real execution; strategy-service's signal-leasing API is built and wired, activated per counterparty at onboarding"
+        title="plans/epics/execution_master.md — 15 of 16 StrategyInstructionV2 action types route to real execution (the 16th, ControlInstruction, has a built handler not yet dispatched); strategy-service's signal-leasing API is built and wired, activated per counterparty at onboarding"
         >owner: execution_master</b
       >
     </div>
@@ -1433,7 +1433,7 @@
               <tr>
                 <td>Instructions</td>
                 <td><code>POST /external/instructions</code></td>
-                <td><b>All 15 of 15</b> <code>StrategyInstructionV2</code> action types</td>
+                <td><b>15 of 16</b> <code>StrategyInstructionV2</code> action types</td>
                 <td>One instruction envelope, any asset class</td>
               </tr>
               <tr>
@@ -1450,10 +1450,12 @@
         </div>
       </details>
       <div class="callout">
-        <span class="tag">The honest state behind "you get the contract our own execution service gets"</span>
+        <span class="tag">What "you get the contract our own execution service gets" covers exactly</span>
         <p>
-          That is true only for the endpoints marked reachable above. On instructions specifically: all 15 of the
-          15 <code>StrategyInstructionV2</code> action types route to real execution, no exceptions. <b>TRADE</b> is
+          That is true only for the endpoints marked reachable above. On instructions specifically: 15 of 16
+          <code>StrategyInstructionV2</code> action types route to real execution; the 16th,
+          <code>ControlInstruction</code> (<code>KILL_SWITCH</code>/<code>FLATTEN_POSITION</code>), has a built
+          handler that is not yet dispatched from this endpoint — see <a href="#s26">§26</a>. <b>TRADE</b> is
           routed through the same <code>ManualOperationHandler → LiveOrchestrator.execute_instruction()</code> path
           our own internal manual-trade surface uses. <b>QUOTE</b> is a two-part contract: registration is
           synchronous — it arms delta-proxy repricing (<code>QuoteMaintainer</code>) and answers
@@ -1730,6 +1732,10 @@
                 <td>10</td>
               </tr>
               <tr>
+                <td>Plasma</td>
+                <td>9745</td>
+              </tr>
+              <tr>
                 <td>Polygon</td>
                 <td>137</td>
               </tr>
@@ -1754,18 +1760,11 @@
         </div>
       </div>
       <p style="font-size: 0.93rem; color: var(--ink-3)">
-        <b>Correction, same day:</b> an earlier pass of this section counted 16 chains by grepping string literals
-        across the registry source rather than reading the declaring enum — a filter artefact, not a registry read, and
-        it both missed 8 real chains (gnosis, mode, celo, aurora, fantom, metis, moonbeam, bitcoin) and wrongly counted
-        Hyperliquid's transport suffixes as separate chains. The table above is the corrected, enum-sourced count.
-      </p>
-      <p style="font-size: 0.93rem; color: var(--ink-3)">
-        <b>A gap this correction surfaced, stated rather than smoothed over:</b> Plasma has real, live venues
-        (<code>AAVE-PLASMA</code>, <code>FLUID-PLASMA</code> — a chain that went live 2025-09-25 with over $6.5B in Aave
-        deposits in its first week) and a mainnet chain ID in
-        <code>chain_env.MAINNET_CHAIN_IDS</code> (<code>9745</code>), but is <em>not</em> a
-        <code>ChainKind</code> member — so it is excluded from the 23 above. That is a real registry gap between two
-        sources of chain truth, not a documentation choice.
+        24 <code>ChainKind</code> members, read directly from the declaring enum. Plasma — live venues
+        <code>AAVE-PLASMA</code> and <code>FLUID-PLASMA</code>, launched 2025-09-25 with over $6.5B in Aave
+        deposits in its first week — carries a full mainnet chain ID (<code>9745</code>) and is a
+        <code>ChainKind</code> member alongside every chain above. <b>Source:</b>
+        <code>unified_api_contracts/canonical/crosscutting/defi.py::ChainKind</code>.
       </p>
       <div class="plate">
         <div class="plate-head">
@@ -1860,16 +1859,15 @@
         </div>
       </div>
       <div class="callout">
-        <span class="tag">A registry defect this count surfaced, named rather than smoothed over</span>
+        <span class="tag">VENUE_CHAIN_MAP is a different, narrower registry — not a chain-coverage inventory</span>
         <p>
-          <code>VENUE_CHAIN_MAP</code> — a different, narrower registry object used for wallet-grouping logic — declares
-          only <b>4 chains / 15 venues</b> against the <b>23 chains / 192 venues</b> shown above. It is not the source
-          for the counts above and was not used to derive them; anything that <em>does</em> derive chain coverage from
-          that map specifically would under-report. Checked directly against the <a href="#s5">§05</a> coverage pipeline
-          this document also cites: neither <code>measure_honest_coverage.py</code> nor its expected-universe builder
-          imports <code>VENUE_CHAIN_MAP</code> — zero references in either — so the coverage percentages in
-          <a href="#s5">§05</a> are not under-counted through this specific gap. Tracked as a registry fix, not a
-          documentation one — <span class="u">registry_ground_truth_2026_08_19.md</span>.
+          <code>VENUE_CHAIN_MAP</code> declares only <b>4 chains / 15 venues</b>, against the <b>24 chains / 192
+          venues</b> shown above — it is a deliberately-curated wallet-grouping subset for shared-wallet routing,
+          not a chain-coverage inventory, and its docstring says so explicitly. Neither
+          <code>measure_honest_coverage.py</code> nor its expected-universe builder imports it (zero references in
+          either), so the coverage percentages in <a href="#s5">§05</a> derive from <code>ALL_DEFI_VENUES</code>/
+          <code>ChainKind</code>, not from this map. <b>Source:</b>
+          <code>unified_api_contracts/registry/venue_constants.py::VENUE_CHAIN_MAP</code>.
         </p>
       </div>
       <h3>Canonical instrument IDs — one builder, five asset groups</h3>
@@ -16541,8 +16539,9 @@ Content-Type: application/json
               <tr>
                 <td class="grp grp-post">Control</td>
                 <td>
-                  Kill-switch (scoped halt), flatten position — <b class="st st-plan">planned</b>, not yet expressible
-                  as an instruction a caller can send (<a href="#s25">§25</a>)
+                  Kill-switch (scoped halt), flatten position — a declared <code>ControlInstruction</code> action
+                  on the same envelope (<a href="#s26">§26</a>); the endpoint's dispatch chain does not yet route
+                  to its handler, so submitting one 501s today
                 </td>
                 <td>Every archetype, every venue</td>
               </tr>
@@ -18542,9 +18541,9 @@ Content-Type: application/x-ndjson
       <p>
         A thin authenticated front door that translates a real, declared instruction envelope
         (<a href="#s8">§08</a>) into the internal shape and routes it through the SAME handler the internal
-        manual-trade surface uses — no parallel execution logic. All 15 of the 15 <code>StrategyInstructionV2</code>
-        action types are wired to real execution; the table below names exactly which production path each one
-        takes and what, per venue, is honestly disclosed rather than silently assumed.
+        manual-trade surface uses — no parallel execution logic. 15 of 16 <code>StrategyInstructionV2</code>
+        action types are wired to real execution today; the table below names exactly which production path each
+        one takes and what, per venue, is disclosed plainly rather than assumed.
       </p>
 
       <p style="font-size: 0.9rem; color: var(--ink-3)">
@@ -18562,7 +18561,7 @@ Content-Type: application/x-ndjson
       </p>
 
       <div class="plate">
-        <div class="plate-head"><span class="label">Instruction type support</span><span class="note">All 15 members of the StrategyInstructionV2 union — 15 of 15 route to real execution</span></div>
+        <div class="plate-head"><span class="label">Instruction type support</span><span class="note">All 16 members of the StrategyInstructionV2 union — 15 of 16 route to real execution</span></div>
         <div class="plate-body scroll-x">
           <table>
             <thead>
@@ -18653,6 +18652,12 @@ Content-Type: application/x-ndjson
                 <td><code>LpBurnInstruction</code></td>
                 <td>Routed through the real DeFi live-execution wiring — venue coverage noted below</td>
               </tr>
+              <tr>
+                <td><code>KILL_SWITCH</code> / <code>FLATTEN_POSITION</code></td>
+                <td><code>ControlInstruction</code></td>
+                <td>Handler built (<code>_submit_control_instruction()</code>) but not yet dispatched from this
+                  endpoint — returns <code>501</code> today</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -18667,9 +18672,9 @@ Content-Type: application/x-ndjson
         guessing at an unverified call shape — never a fabricated success.
       </p>
       <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Verified against <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>
-        (all 15 variants + the union), <code>external_instruction_api.py</code> and
-        <code>external_instruction_defi.py</code> (2026-08-21). Landed: execution-service@4e35a09b2 (BORROW/REPAY
+        Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>
+        (all 16 variants + the union), <code>external_instruction_api.py</code> and
+        <code>external_instruction_defi.py</code>. Landed: execution-service@4e35a09b2 (BORROW/REPAY
         live dispatch + CANCEL <code>ALL_FOR_STRATEGY_INSTANCE</code> scope), @0aa709f076 (BRIDGE/LP_MINT/LP_BURN),
         @56d6e7480e (QUOTE tick-ingestion reprice loop, no-churn suppression).
       </p>
@@ -18679,7 +18684,7 @@ Content-Type: application/x-ndjson
         <p>
           Body is one <code>StrategyInstructionV2</code> envelope member (<a href="#s8">§08</a> documents the full
           family). Field examples below use <code>TRADE</code>; the request/response envelope shape is the same for
-          all 15 action types, and the instruction type-support table above names each one's own production path.
+          all 16 action types, and the instruction type-support table above names each one's own production path.
         </p>
         <div class="plate">
           <div class="plate-head"><span class="label">Body fields</span><span class="note">TRADE action — JSON</span></div>
@@ -18698,7 +18703,7 @@ Content-Type: application/x-ndjson
                   <td><code>action</code></td>
                   <td>string</td>
                   <td>Yes</td>
-                  <td>One of the 15 <code>StrategyInstructionV2</code> action literals — the instruction
+                  <td>One of the 16 <code>StrategyInstructionV2</code> action literals — the instruction
                     type-support table above names the field set and production path each one carries</td>
                 </tr>
                 <tr>
@@ -18992,19 +18997,34 @@ Content-Type: application/json
         </div>
       </div>
       <div class="callout">
-        <span class="tag">What auth does not do on these three routers, stated exactly</span>
+        <span class="tag">Auth plus entitlement, stated exactly per router</span>
         <p>
-          On instruments-service, the endpoint itself discards <code>AuthContext</code> after the dependency runs
-          (<code>del auth</code>, <code>instruments-service/instruments_service/api/routers/external.py:86</code>)
-          — every authenticated caller sees the same catalogue, because this is public reference data, not a
-          per-client ledger. On market-tick-data-service the auth dependency is mounted at the router level
+          On instruments-service, both endpoints resolve the caller's <code>asset_group</code> query against
+          <code>instruments_service/api/entitlement.py::enforce_asset_group_entitlement</code> — an org-scoped
+          entitlement seam mirroring client-reporting-api's own model (<a href="#s26">§26</a>). Internal/S2S
+          callers and any org whose <code>subscription_tier</code> isn't explicitly tightened receive the complete
+          catalogue (default-full — reference data is the product's front door; tightening a specific tier's scope
+          is a config edit, not a route-logic one). A request for an out-of-scope <code>asset_group</code> 403s.
+          <b>Source:</b> <code>instruments-service/instruments_service/api/entitlement.py</code>,
+          <code>instruments-service/instruments_service/api/routers/external.py:94</code> (catalogue query),
+          <code>:131</code> (bulk parquet dump).
+        </p>
+        <p>
+          On execution-service, <code>POST /external/instructions</code> binds the caller's org to the
+          instruction's own <code>identity.client_id</code>: an external caller can only submit, cancel, or
+          transfer for the one client_id its own org owns, rejected with <code>403</code> the moment
+          <code>auth.org_id != identity.client_id</code>. Internal/S2S callers bypass the check. One seam covers
+          all 16 <code>StrategyInstructionV2</code> action types, not a per-route copy. <b>Source:</b>
+          <code>execution_service/api/external_instruction_api.py::_enforce_client_org_binding</code>, called once
+          at the top of <code>submit_external_instruction</code> before any action-type branching.
+        </p>
+        <p>
+          On market-tick-data-service, the auth dependency is mounted at the router level
           (<code>dependencies=[Depends(_api_auth)]</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:52-56</code>) and no
-          endpoint function receives an <code>AuthContext</code> argument at all — auth is a gate, not a scope. On
-          execution-service, <code>auth.org_id</code> is written to the audit log alongside the instruction
-          (<code>execution_service/api/external_instruction_api.py:144</code>) but is not checked against the
-          instruction's own <code>identity.client_id</code> — the caller-supplied <code>client_id</code> is not
-          validated against the authenticated org in this router.
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:52-56</code>) — every
+          request needs a valid token before any handler runs, the same shared dependency the other two services
+          use. <b>Source:</b>
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>.
         </p>
       </div>
 
