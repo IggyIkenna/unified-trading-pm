@@ -457,10 +457,13 @@ todos only to confirm they are data-movement, then leave it.
       session (a 15-item sequential-only chain in a separate plan competes for the same session time as this
       plan's own ~20 remaining directly-owned todos); worth picking up explicitly next time strategy-service
       work resumes, since AO dispatch hasn't moved it in 5 days.
-- [ ] [BACKEND] P0. Build stale-producer detection on the live path. If strategy-service stops publishing,
-      execution-service does not detect it — the kill switch has 5 armed conditions and none is "an internal service
-      went silent". Evidence: `/plans/active/producer_silence_flatten_protocol_2026_08_14.md` (23 open),
-      `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md`.
+- [x] ✅ [BACKEND] P0. **SHIPPED 2026-08-21 — `execution-service@fca9b729fa`.** Built
+      `producer_liveness_gate.py` — a per-`(strategy_instance_id, client_id)` last-instruction clock, wired
+      as the 6th armed kill-switch condition (alert-only, structurally incapable of placing an order, per
+      the still-open flatten plan's Phase 3). Uses the operator-ruled 15-minute SLA. Evidence:
+      `/plans/active/producer_silence_flatten_protocol_2026_08_14.md` (Phase 3 todo flipped, 22 others still
+      open — flatten/reduce response logic, not detection), `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md`
+      (partially closes — 3 unrelated follow-ups remain).
 - [ ] [BACKEND] P0. Implement W9 account balances as the single strategy I/O.
 - [ ] [BACKEND] P0. Collapse the three competing PnL surfaces to one wired path. **Re-verified 2026-08-20, claim
       mostly holds but needs correction before acting**: `compute_pnl` (`pnl/engine/orchestrator.py:426`) IS
