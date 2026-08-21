@@ -101,12 +101,14 @@ source: >-
       Rename to something accurate (e.g. `crash_alert.py`/`oom_watchdog.py`) or gut the misleading docstring/name.
       No behavior change. Done when: the file's name/docstring no longer implies state checkpointing. Source:
       `execution_state_does_not_survive_restart_2026_08_20.md` todo "Rename or gut pre_crash_checkpoint.py".
-- [ ] [AGENT] P1. **Enumerate execution-service classes with tests but no non-test instantiation.** This issue's
-      own finding is "the fourth instance of one pattern" (`TransferCoordinator`, `HealthFactorMonitor`,
-      `QuoteHandler` deleted, `OrderRecoveryEngine`) — a repeatable, scriptable check (grep every class definition,
-      confirm at least one non-test constructor call site exists somewhere in the repo) that belongs in the
-      quality gate, not in another one-off audit. Report the full list; do not fix any findings, just enumerate.
-      Done when: a list of classes with tests but zero non-test instantiation is on record. Source:
+- [x] ✅ [AGENT] P1. **Enumerate execution-service classes with tests but no non-test instantiation.** AST-based
+      scan (916 production classes; 161 have test-side constructor calls but zero non-test instantiation) — full
+      list, methodology, and caveats filed in `execution_state_does_not_survive_restart_2026_08_20.md`'s new
+      "Findings — execution-service classes with tests but zero non-test instantiation" section. Notable
+      side-finding: corrected that same doc's own "OrderRecoveryEngine has zero production call sites" row — it is
+      now wired (`live_execution_handler.py:136,189-222`), so it correctly does NOT appear in the 161. Follow-up
+      per-class triage tracked as a new REVIEW P2 todo in the source doc, not done here (report-only scope).
+      Evidence: unified-trading-pm@<pending>. Source:
       `execution_state_does_not_survive_restart_2026_08_20.md` todo "Enumerate execution-service classes with
       tests but no non-test instantiation".
 - [ ] [REVIEW] P2. **Close the audit's own open questions** — read in full and report ABSENT/PRESENT (with

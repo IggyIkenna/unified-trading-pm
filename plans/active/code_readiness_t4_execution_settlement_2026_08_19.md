@@ -393,13 +393,13 @@ todos only to confirm they are data-movement, then leave it.
       fields did not exist). Evidence:
       `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
 - [ ] [BLOCKED-OPERATOR] P1. Delta-proxy — the POSITION and CREDIT legs of the triple. NOT deferred by this
-      tranche. **RE-CHECKED 2026-08-20, still genuinely blocked — reference updated, was stale.** The Q12-Q16
-      citation this todo carried is itself stale per T1's own plan: the actual current blocker is
-      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` §15 ("OPEN — needs an
-      operator ruling next session"), which supersedes Q12-Q16 with a full FACTOR-STATE MODEL (§11-14) and its
-      own 4 named open questions plus 5 outstanding Wave-0 rulings — a real design, not a stub. Execution-side
-      work resumes the moment that shape is decided; the price leg above is independent of it and is already
-      shipped.
+      tranche. **RE-CHECKED 2026-08-21 — "OPEN — needs an operator ruling" was stale; corrected, still blocked,
+      different reason.** The Wave-0/Q12-Q16 rulings the old note cited as open ARE resolved (issue doc §15
+      item 5, §16) — but that RULES OUT this todo's shape rather than unblocking it: issue doc says Q12-Q16's
+      answers are directional only, real implementation is the fabric's snapshot/factor-state contract, explicitly
+      "NOT literal scalar delta/gamma/theta fields on `StrategyInstructionEnvelope`" (what this todo would build) —
+      see `/codex/04-architecture/cross-domain-state-fabric.md`, needs open P0 todos R9 + R10/R11 first (issue doc
+      §16, neither execution-service-local).
 
 ### W11 — order lifecycle and execution state
 
@@ -901,12 +901,9 @@ todos only to confirm they are data-movement, then leave it.
 
 ### 2026-08-20 session
 
-**Where to work.** `.tabs/5`, NOT `.tabs/7` (no `.venv`). Shared with another live session on other repos: scope
-every commit by name, never `git add .`. **`.venv/bin/activate` does NOT persist across Bash tool calls** — each
-call is a fresh shell; a bare `python` in a LATER call silently resolves to whatever's on default PATH, not the
-sourced venv. Always invoke `.venv/bin/python -m <tool>` explicitly, every call, or a lint/test check silently
-runs against the wrong interpreter (cost one full false-alarm diagnosis this session: an `AttributeError` that
-looked like a real gate failure was actually a wrong-python artifact).
+**Where to work.** `.tabs/5`, NOT `.tabs/7` (no `.venv`). Shared checkout: scope commits by name, never `git add .`.
+**`.venv/bin/activate` does NOT persist across Bash tool calls** — always invoke `.venv/bin/python -m <tool>`
+explicitly or a check silently runs against the wrong interpreter (cost one false-alarm diagnosis this session).
 
 **Landed (each verified against origin, never by quickmerge's exit code):**
 
@@ -983,7 +980,7 @@ checkboxes above, not duplicated here)
 |---|---|---|
 | Kill-switch/flatten-position as instructions | `[FROM-T1]` | waiting on T1 landing `KILL_SWITCH`/`FLATTEN_POSITION` on `StrategyInstructionType`; T4's answer already given |
 | Ceffu integration | `[FROM-T1]` | corrected 2026-08-21: wiring already reaches CeffuCustodyProvider via TransferHandler; only ceffu.py's REST impl is pending — genuinely no Ceffu API spec exists anywhere in the workspace, a docs gap not credentials |
-| Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | superseded Q12-Q16 → now `execution_delta_proxy_repricer_generalization_2026_08_18.md` §15, still open |
+| Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | corrected 2026-08-21: rulings landed but rule OUT scalar-field shape — real blocker is unbuilt fabric snapshot contract (R9/R10/R11), see `execution_delta_proxy_repricer_generalization_2026_08_18.md` §16 |
 | 9-state order lifecycle full unification | open P0 | terminal-state-never-overwritten validation shipped `execution-service@69a9a088be`; full vocabulary de-dup (oms.py/persistent_oms.py duplicate files) still open |
 | BATCH settlement gap | open P1, 3/5 done | `CONVERT_DUST`/`WITHDRAW`/`REPAY` closed; `LP_MINT`/`LP_BURN` `BLOCKED-` on T1 landing the UAC schema (shape already specified on T1's plan) |
 | execution-policy/fill-model-gaps (own doc) | 7/13 closed | remaining 6 are real design gaps or out-of-repo-scope, see the doc directly |
@@ -994,3 +991,9 @@ checkboxes above, not duplicated here)
 | W14 exchange-version pinning | spun to dedicated plan | `w14_execution_service_exchange_version_pinning_and_cassette_drift_2026_08_20` |
 | W15 venue-adaptor security audit | spun to dedicated plan | `w15_execution_service_venue_adaptor_security_audit_2026_08_20` |
 | W22 strategy→execution messaging | spun to dedicated plan | `w22_strategy_execution_messaging_external_api_2026_08_20` |
+
+**2026-08-21 — delta-proxy POSITION/CREDIT re-check: still blocked, reason corrected.** Verdict: NOT genuinely
+unblocked — the 2026-08-21 rulings (R1-R27, issue doc §16) rule OUT the naive scalar-field shape ("NOT literal
+scalar delta/gamma/theta fields on `StrategyInstructionEnvelope`" — issue doc ~line 429); real prerequisite is the
+fabric's snapshot contract, gated on open P0 todos R9/R10/R11. No code changed; stale framing corrected in place
+(todo + deferred table row).

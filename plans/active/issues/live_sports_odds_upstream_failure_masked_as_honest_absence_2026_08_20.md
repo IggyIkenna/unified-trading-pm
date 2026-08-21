@@ -21,7 +21,11 @@ stage: [live, meta]
 repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: [data-pipeline, dp-alerts, live-capture-stall, honest-absence, odds-api, misclassified-empty, dp-live-004]
-related: [/plans/active/sports_consolidated_closeout_2026_07_19.md]
+related:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/issues/dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md,
+  ]
 created: 2026-08-20
 author: data-pipeline-fleet-monitor (escalation agt-f712d7, slot 31)
 parent_epic: observability_master
@@ -137,3 +141,14 @@ correctness hard rule ("only a genuine 200+empty stays honest-absence; an error 
   (`OddsApiWSFeedConnector.upstream_failure_reason()`, QG green, landed on `live-defi-rollout`).
   Operator-gated `odds-api-key` top-up remains open (BLOCKED-CREDENTIALS).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **ag-closeout-audit 2026-08-21 (sports tranche, Phase 2 sweep)**: found this doc and
+  `dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md` document the SAME incident
+  (same VM `mtds-live-sports-odds-api-odds-20260816-145019`, same root-cause chain: shared `odds-api-key`
+  exhaustion + the connector's missing `upstream_failure_reason()`) filed hours apart with no cross-reference
+  either direction — added the sibling doc to `related:` above. This doc's own `upstream_failure_reason()` fix
+  (`market-tick-data-service@40b9b624`) is the SAME commit the sibling doc cites as already-shipped — no
+  duplicate/competing code work exists between the two; the sibling doc additionally tracks 2 more bounded
+  follow-ups (a batch-path quota-stop fix, extracted to `sports_satellite_ao_dispatch_batch17_2026_08_21.md`) not
+  named here. The `[OPERATOR]` top-up ask in both docs is the same real-world action — resolving one resolves
+  both; not merging the docs (each carries its own independent evidence trail), just cross-referencing per the
+  ag-closeout-audit parked-findings mechanical-hygiene flag.
