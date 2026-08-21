@@ -139,9 +139,17 @@ spawn workers.
       above — expected queue-draining contention with only a 3-slot reserve, not a regression; ties
       directly into the "spread across multiple accounts" follow-up below (a 3-slot single-account
       reserve saturates fast under simultaneous escalations). (repo: agent-orchestrator)
-- [ ] [OPERATOR] P2. Spread 31/32/33 across more than one account instead of triple-booking sub-b —
+- [ ] [BACKEND] P2. Spread 31/32/33 across more than one account instead of triple-booking sub-b —
       today's incident is exactly what a single-account reserve produces the moment that one
-      account gets paused/exhausted. (repo: agent-orchestrator)
+      account gets paused/exhausted. **Operator decision 2026-08-21**: assigned to the agent
+      already working
+      [[ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21]] — that doc root-caused the 3
+      stacked dispatch-routing bugs concentrating the fleet onto one account (`codex-luna` as of
+      2026-08-21) and owns the actual fix; once its 3 remaining todos land, account spread should
+      self-correct as routing rebalances. No separate action needed here — track via that doc's
+      todos. Cross-referenced identically in
+      [[ci_escalation_reserve_slots_claimed_by_class_a_dispatch_2026_08_21]], not duplicated.
+      (repo: agent-orchestrator)
 - [x] N. ✅ [SCRIPT] P2. Pull `overage_disabled_reason` for the other 21 disabled accounts (the field
       name this session's first pass got wrong) to understand whether that's a temporary overage
       window or something needing operator action — separate from this specific stuck row, but

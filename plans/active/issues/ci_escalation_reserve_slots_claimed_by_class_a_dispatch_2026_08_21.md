@@ -152,16 +152,19 @@ Mirrored the 2026-08-16 `scheduled_reserve` fix exactly, for the CI-escalation r
       show the same tasks they were running before the fix shipped — expected, since the fix
       prevents new claims, it doesn't evict already-running work; the real test (no new non-escalation
       task landing there) held for the observed post-restart window.
-- [ ] [OPERATOR] P2. Separately, the reserve is still 100% single-account-concentrated
+- [ ] [BACKEND] P2. Separately, the reserve is still 100% single-account-concentrated
       (`codex-luna` as of 2026-08-21, was `sub-b-iggy2london` on 2026-08-18) — this doc's fix
       protects the SLOTS from ordinary dispatch, but does not address the account-concentration
       risk already tracked as an open todo in
       [[ao_stuck_escalation_mtds_no_free_slot_2026_08_18]] ("spread 31/32/33 across more than one
-      account"). Not duplicating that todo here — cross-referenced only. **Context found 2026-08-21**:
-      `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` root-caused WHY codex-luna
-      dominates the fleet right now (3 stacked dispatch-routing bugs excluding Claude/Gemini/GLM from
-      normal rotation) — that doc, not this one, owns the actual fix; once it lands the reserve's
-      account concentration should self-correct as routing rebalances, worth re-checking then.
+      account"). Not duplicating that todo here — cross-referenced only. **Operator decision
+      2026-08-21**: assigned to the agent already working
+      `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` — that doc root-caused WHY
+      codex-luna dominates the fleet right now (3 stacked dispatch-routing bugs excluding
+      Claude/Gemini/GLM from normal rotation) and owns the actual fix; once its 3 remaining todos
+      land, the reserve's account concentration should self-correct as routing rebalances. No
+      separate action needed here — track completion via that doc's todos, re-verify 31/32/33's
+      account spread once it ships.
 
 ## Progress Log
 
