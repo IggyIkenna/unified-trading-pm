@@ -41,7 +41,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 - [x] [BACKEND] P0. **Execution attempt complete — gate RED, not a false pass.** The final staging CeFi report measured `total=294`, `passed=7`, `failed=79`, `skipped=208`; the staging catalogue and terminal VM evidence are retained, while `no_parquet_under`, self-deleted-VM/no-exit-status, and canonical-object failures remain tracked in [/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md]. The no-zero-row-success contract is therefore not yet satisfied. — Evidence: retained terminal VM log/report and open blocker issue; this checkbox records the RED execution attempt, not a green smoke-gate result.
 - [x] [BACKEND] P1. ✅ Record one testnet verdict for every CeFi venue, including simulation where no venue testnet exists; Gate: every distinct venue in the live work list has a verdict. — Evidence: full 24-venue verdict table in the Progress Log entry below (17 real testnet/demo/sandbox, 7 require simulation via our own matching engine).
-- [ ] [BACKEND] P1. Add or run testnet smoke coverage where credentials are available or provisionable and record an honest unavailable result for the remainder; file an operator credential request when a credential gap is confirmed. Gate: every attempted path has a measured terminal result.
+- [x] [BACKEND] P1. ✅ Add or run testnet smoke coverage where credentials are available or provisionable and record an honest unavailable result for the remainder; file an operator credential request when a credential gap is confirmed. Gate: every attempted path has a measured terminal result. — Evidence: live per-venue smoke run in the Progress Log entry below; `execution-service@a5b248491d` (`scripts/run_cefi_testnet_connectivity_smoke.py`), `unified-api-contracts@b2f54822b3` (Aster dead-DNS registry fix found while running it).
 - [ ] [BACKEND] P1. Track every failed or absent CeFi row with its source and data type; Gate: no failure is hidden behind a declared-absence or expected-unattempted status.
 - [ ] [BACKEND] P2. Register `bitfinex`, `okx_swap`, and `coinbase_cde` as their own `SourceCapability` entries in `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_cefi.py` (domains/operations/base_urls derived from the real adapters, e.g. `bitfinex_native.py` for Bitfinex — not fabricated); `supports_testnet` per the 2026-08-21 verdict table below (Bitfinex: False; OKX-SWAP: True, same demo-trading infra as `okx`; Coinbase-CDE: True, certification/UAT environment provisioned on request, not self-serve). (repo: unified-api-contracts)
 - [x] [BACKEND] P0. ✅ Verified source-scoped exemptions and canonical oracle/manifest checks with negative controls. UAC `03c79c82` resolves source per `(venue, data_type)` and excludes only source-first Databento cells; its quality-gate tests passed. MTDS `f90bf09a` routes CEFI/DEFI object paths through `canonical_path_violations(..., require_pipeline_mode=True)` and its tests reject missing `pipeline_mode`, raw wire-symbol filenames, and missing captures. — Evidence: `unified-api-contracts` QG `tests` slice passed; `market-tick-data-service` QG `tests` slice passed (`11113 passed, 28 skipped, 1 xpassed`).
@@ -154,3 +154,34 @@ operations/base_url fields):** BITFINEX-SPOT, BITFINEX-FUTURES, COINBASE-CDE, an
 `SourceCapability` declaration in `_cefi.py` at all (confirmed via a full `source="` grep of the file), despite each
 being a real row in the live CeFi work list and, for Bitfinex, having a live execution-service adapter
 (`bitfinex_native.py`). The testnet verdicts above for these four are sourced externally, not from the registry.
+
+### 2026-08-21 — slot 21 live testnet connectivity smoke (todo #3)
+
+Shipped `execution-service/scripts/run_cefi_testnet_connectivity_smoke.py` (permanent,
+re-runnable) and ran it live against the 17-venue denominator the prior verdict table above
+already settled — one credential-free HTTP request per venue, honest two-tier verdict so a
+wrong endpoint guess degrades to "unconfirmed" rather than a false negative. Full JSON
+evidence + stdout captured this session (not committed — a live network snapshot, not
+canonical data). Result: **15/16 attempted venues `host_reachable_endpoint_ok`** (2xx from
+the specific well-known public endpoint) — BINANCE-FUTURES, BINANCE-SPOT, BITGET-FUTURES,
+BITGET-SPOT, BYBIT, BYBIT-SPOT, COINBASE-FUTURES, COINBASE-SPOT, DERIBIT, EXTENDED-STARKNET,
+HYPERLIQUID, KRAKEN-FUTURES, OKX-FUTURES, OKX-SPOT, OKX-SWAP. **1/16 `host_unreachable`**:
+ASTER — the UAC-declared testnet host `testnet-api.aster.finance` is dead DNS (confirmed via
+independent `getent`/`curl` checks, not transient); found the real, already-shipped execution
+adapter uses `fapi.asterdex.com` instead and never referenced `aster.finance`. Fixed the
+evidenced mainnet URL in the same session (`unified-api-contracts@b2f54822b3`, `_cefi.py` +
+`endpoints.py`); no verified testnet host was found for Aster, tracked as open follow-up in
+[/plans/active/issues/aster_testnet_endpoint_unresolved_2026_08_21.md]. Two BITGET rows and
+three OKX rows share their mainnet domain (demo trading is account/header-scoped, not
+URL-scoped) — their `host_reachable_endpoint_ok` result proves shared-domain reachability
+only, called out explicitly in the script rather than silently equated with a testnet-distinct
+signal. COINBASE-CDE recorded as `credential_required_no_endpoint` (no live attempt — no UAC
+declaration and no publicly known base_url exist to attempt); operator credential/access
+request filed at
+[/plans/active/issues/coinbase_cde_testnet_credential_ask_2026_08_21.md]. The 7 simulate-only
+venues (BITFINEX-FUTURES, BITFINEX-SPOT, KALSHI-PERP, KRAKEN-SPOT, LIGHTER-ZKSYNC,
+PACIFICA-SOLANA, POLYMARKET-PERP) recorded as `not_applicable_simulated` per the already-settled
+prior verdict, no attempt made (structural absence, not a gap). Every one of the 24 venues now
+has a measured terminal result — the gate this todo names. Full quality gates passed both repos
+(unified-api-contracts 314s, execution-service 363s); both SHAs verified ancestors of
+`origin/live-defi-rollout` via `git merge-base --is-ancestor`.
