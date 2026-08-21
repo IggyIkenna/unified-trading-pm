@@ -107,9 +107,11 @@ impression:
       failed/partial result when `_maybe_burn_nft()` catches a reverted burn instead of returning `success=True` with
       only `burn_error` (`uniswap.py:529-538,568-580`). — execution-service@124042b4 + evidence: QG passed (8,807 passed, 82.54% coverage); post-push ancestry verified.
 
-- [ ] [BACKEND] P0. Add Jupiter quote/input validation, caller-controlled expiry, and idempotency/retry protection
+- [x] ✅ [BACKEND] P0. Add Jupiter quote/input validation, caller-controlled expiry, and idempotency/retry protection
       around `/swap` plus Solana broadcast (`jupiter.py:120-199,205-224,261-279`). A retry after an ambiguous
-      `send_transaction()` result currently obtains and signs a fresh transaction. (repo: execution-service)
+      `send_transaction()` result currently obtains and signs a fresh transaction. — execution-service@e1e1788d35
+      + evidence: quality-gates.sh green (155s, full unbroken run incl. STEP 5.83); post-push ancestry verified;
+      see Progress Log entry below. (repo: execution-service)
 
 - [x] ✅ [BACKEND] P0. Replaced the Orca/Raydium placeholder liquidity instructions with validated protocol account
       metas and explicit positive amount/tick/range bounds; the current live paths serialize caller values and submit
@@ -546,3 +548,51 @@ dangling re-exports/comment (execution-service@f4391ac596, same push as the CCTP
 committing: only the deleted file's entry was removed, nothing else changed) since the file no longer exists. Full
 `quality-gates.sh` green (8880 passed, 0 failed, 155s) on the final commit. Updated the T2 plan's own todo to reflect
 current reality; see that plan for the remaining 5-token cleanup this did NOT touch.
+
+### 2026-08-21 — slot 7 Jupiter security fix (checklist points 3, 4, 6)
+
+Fixed the "Add Jupiter quote/input validation, caller-controlled expiry, and idempotency/retry protection..." P0
+todo, closing the three findings recorded in the 2026-08-20 slot-7 swap/DEX audit entry above (checklist points 3,
+4, 6). Added `_validate_quote_request()` (mint shape via base58 regex, `input_mint != output_mint`, positive
+amount, `0 <= slippage_bps <= 1000`) called before every `/quote` request. Added caller-controlled quote-age
+enforcement: `execute_swap()` now takes `max_quote_age_seconds` (default 30s) and rejects a stale or
+freshness-unverifiable quote before signing. Added idempotency/retry protection modeled on `bridge.py`/`cctp.py`'s
+precedent: a `_swap_intent_key()` fingerprint (mint pair + amount, stable across quote refreshes) tracks
+in-flight/completed attempts; a successful swap is cached and replayed byte-identical on retry (no second
+broadcast); an *ambiguous* outcome (an exception from `send_transaction()` itself, not a returned failure) fails
+closed and blocks resubmission until the caller explicitly calls the new `clear_ambiguous_swap_attempt()` escape
+hatch — the exact gap the todo named ("a retry after an ambiguous `send_transaction()` result currently obtains
+and signs a fresh transaction"). `execute_swap()` was decomposed into `_check_prior_swap_attempt()` /
+`_check_quote_freshness()` / `_broadcast_and_finalize()` to stay under the 50-line method cap. Added 8 new
+regression tests to `tests/defi_execution/unit/test_solana_connectors.py::TestJupiterConnector` covering each
+validation rejection, stale-quote rejection, successful-replay object-identity, and the
+ambiguous-outcome-blocks-resubmission-until-cleared path.
+
+**Unrelated pre-existing QG blocker fixed in the same session:** `execution_service/utils/market_hours.py:261`'s
+fallback `except Exception:` (dated 2026-05-21, unrelated to this todo) was the sole in-scope
+(`--source-dir execution_service`) site over the STEP 5.5 broad-except baseline — added `# noqa: broad-except`
+plus a one-line reason; verified pre-existing via `git blame` before touching it.
+
+**Duplicate-work discovery and correction** (full account in this repo's
+`plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md`): mid-session, the same
+`unified-api-contracts@cdb8ae88` → `onexbet.py` `ModuleNotFoundError` documented in the slot-21 entry above
+independently broke this session's own `quality-gates.sh` collection step too (confirmed byte-identical root
+cause). This session built its own fix (retire `OneXBetAdapter` + its test), originally committed locally as
+`1f4e1346`+`065fc9d0` — but a `git fetch` immediately before shipping showed slot-21 had already landed an
+equivalent retirement on `origin/live-defi-rollout` (`f4391ac5`+`0c81d755`), starting from the same shared
+ancestor (`e7d65703`). Rather than ship a duplicate/conflicting change on top of an already-published fix, this
+session ran `git rebase --onto origin/live-defi-rollout e7d65703 <jupiter-fix-commit>` to drop the two now-redundant
+local onexbet commits (never pushed, no longer exist anywhere) while replaying only the genuinely new Jupiter +
+market_hours commits on top of origin's current tip. **Lesson for future sessions:** a
+`git rev-list --count origin/<branch>..HEAD` ahead-only check (which this session ran first) does NOT surface a
+concurrent-slot conflict — only the bidirectional `git rev-list --left-right --count HEAD...origin/<branch>` catches
+it; run the bidirectional form before shipping whenever a fix touches code another slot could plausibly be fixing
+at the same time (a shared cross-repo break discovered via the same root-cause commit is exactly that signal).
+
+Full `quality-gates.sh` green end-to-end on the final rebased tree (155s, one unbroken run including STEP 5.83's
+adapter-contract-call regression ratchet, which needed `unified-trading-pm/scripts/quality_gates/
+adapter_contract_baseline.yaml` regenerated via `--regenerate-baseline` after `onexbet.py`'s deletion — diffed
+before trusting it, confirming only the deleted file's 2-line entry disappeared; a subsequent
+`git pull --rebase --autostash` in this repo picked up slot-21's own independent identical regen already on
+origin, so nothing further needed committing here). Shipped via quickmerge — execution-service@e1e1788d35;
+post-push ancestry verified.
