@@ -138,7 +138,7 @@ context_scope:
       that LIVE/MANUAL mode never leaves the wired adapter `None` (an empty-but-real `DeFiAdapter()` substitutes
       when Secret Manager credentials can't be resolved, so a genuinely live-mode dispatch always reaches an
       honest per-connector FAILED, never silently falls back to simulation). Evidence: bash
-      scripts/quality-gates.sh --no-fix (<PENDING-QG-EVIDENCE>).
+      scripts/quality-gates.sh --no-fix (8872 passed, 22 skipped, 1 xpassed, 89 warnings in 237.24s; sentinel=4af371549778653f8240e1f3ca5ebb32a37e44f6).
 - [x] [BACKEND] P0. Wire `SWAP`/`LEND`/`WITHDRAW`/`STAKE`/`UNSTAKE` on `POST /external/instructions`, converting
       each `StrategyInstructionV2` variant (`SwapInstruction`/`LendInstruction`/`WithdrawInstruction`/
       `StakeInstruction`/`UnstakeInstruction`) into the internal `ExecutionInstruction` type and routing through a
@@ -165,7 +165,7 @@ context_scope:
       `TestStakeInstructionPath` (each with an honest-FAILED-not-fabricated landmine test, mirroring
       `TestTransferInstructionPath`'s). Full resolution record:
       `/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md` § "Resolution
-      2026-08-21". Evidence: bash scripts/quality-gates.sh --no-fix (<PENDING-QG-EVIDENCE>).
+      2026-08-21". Evidence: bash scripts/quality-gates.sh --no-fix (8872 passed, 22 skipped, 1 xpassed, 89 warnings in 237.24s; sentinel=4af371549778653f8240e1f3ca5ebb32a37e44f6).
 - [ ] [BACKEND] P1. Wire `BORROW`/`REPAY` on `POST /external/instructions` through an analogous `defi_adapter=`
       injection seam on `BorrowHandler` — split out of the combined todo above (deliberately out of scope for the
       2026-08-21 change per explicit operator instruction: "do not touch BorrowHandler, stop and report if scope

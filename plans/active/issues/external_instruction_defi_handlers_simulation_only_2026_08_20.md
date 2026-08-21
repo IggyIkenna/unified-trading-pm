@@ -160,7 +160,7 @@ Shipped: `execution-service@4af3715497`. Real design, NOT what this issue's own 
   mirrors `TestHandlerRegistryTransferAdapterWiring`), `tests/unit/test_external_instruction_api.py`'s new
   `TestSwapInstructionPath`/`TestLendInstructionPath`/`TestStakeInstructionPath` classes (mirror
   `TestTransferInstructionPath`, including the "no live credentials -> honest FAILED, never fabricated" landmine
-  test for each). Evidence: `bash scripts/quality-gates.sh --no-fix` green — `<PENDING-QG-EVIDENCE>`.
+  test for each). Evidence: `bash scripts/quality-gates.sh --no-fix` green — `8872 passed, 22 skipped, 1 xpassed, 89 warnings in 237.24s; sentinel=4af371549778653f8240e1f3ca5ebb32a37e44f6`.
 
 ## The real live-authoritative path (already documented, just not wired to this endpoint)
 
