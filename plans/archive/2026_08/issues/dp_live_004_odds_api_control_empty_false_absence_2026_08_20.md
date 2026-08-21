@@ -6,7 +6,7 @@ summary: >-
   runner treated those control ids as data shards and recorded empty-confirmed rows when a poll produced no fixture
   ticks. HTTP/auth/rate-limit failures were therefore indistinguishable from an honest source empty, leaving the live
   sports odds shard attempting and unproductive beyond its staleness budget.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -26,7 +26,7 @@ parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: market-tick-data-service@9097603c86 + deployment-service@c4f2b1d048
 execution_scope: local-only
 priority: P1
 severity: P1
@@ -49,6 +49,9 @@ context_scope:
 
 # DP-LIVE-004 — Odds API fan-out control empty false absence
 
+> **ARCHIVED 2026-08-21** — Duplicate closure record; canonical resolution is
+> `/plans/archive/2026_08/issues/dp_live_004_odds_api_control_shard_unproductive_2026_08_20.md`.
+
 ## What I found
 
 The live Odds API connector subscribes to coarse `ODDS_API:SPORT:<sport_key>` ids and emits richer
@@ -62,7 +65,7 @@ empty; authentication, rate-limit, timeout, and other fetch failures must be `at
 
 ## Root-cause fix
 
-`market-tick-data-service@59b85aa0` adds a connector fan-out capability marker and tracks control ids in the runner. A
+`market-tick-data-service@ac663a5e` adds a connector fan-out capability marker and tracks control ids in the runner. A
 healthy empty control buffer is skipped entirely, while any non-healthy upstream state is sent through the existing
 failure recorder. The connector exposes `upstream_failure_reason()` and classifies HTTP and fetch failures so the
 runner records `record_failed` instead of a false empty. Regression tests cover both healthy fan-out empties and an
@@ -71,10 +74,14 @@ HTTP/auth failure.
 ## Verification
 
 - [x] [TEST] P1. Unit regression coverage added in `tests/unit/test_websocket_runner.py`.
-- [ ] [VERIFY] P1. Run the target repository quality gates and verify the shipped commit is present on `origin/live-defi-rollout`.
-- [ ] [VERIFY] P1. Re-run the DP-LIVE-004 candidate check against the live shard and confirm no new false empty-confirmed rows.
+- [x] [VERIFY] P1. Run the target repository quality gates and verify the shipped commit is present on `origin/live-defi-rollout` — `market-tick-data-service@9097603c86`, required quality gate green.
+- [x] [VERIFY] P1. Re-run the DP-LIVE-004 candidate check against the live shard and confirm no new false empty-confirmed rows — production meta monitor `uts-prod-dp-meta-watchers-gsj6w` completed at `2026-08-21T02:36:07Z` with no finding for the named VM.
 
 ## Progress Log
 
 **2026-08-20 — filed by escalation `agt-a1445b`.** No originating issue slug was supplied; this document records the
 candidate payload before final verification and shipping.
+
+**2026-08-21 — resolved.** Duplicate of the archived canonical fan-out false-positive record
+`/plans/archive/2026_08/issues/dp_live_004_odds_api_control_shard_unproductive_2026_08_20.md`; the shipped MTDS and
+deployment-service fixes are verified, and the latest successful meta sweep emitted no finding for the named VM.
