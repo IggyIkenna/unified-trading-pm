@@ -1,83 +1,82 @@
 {
-  "report": "data_pipeline_reconciliation_cefi_2026_08_21",
-  "asset_group": "cefi",
-  "run_date": "2026-08-21",
-  "auditor": "cefi_reconciliation_auditor",
-  "slot": 28,
+  "date": "2026-08-21",
   "dispatch_id": "agt-26e8f2",
-  "scope": "tier1_phase0_census_honest_coverage",
+  "slot_id": 28,
+  "asset_group": "cefi",
+  "layer": "raw-tick",
+  "tier": "Tier-1",
   "read_only": true,
-  "status": "attention",
-  "severity": "P1",
-  "buckets": {
-    "gcp_market_data": "market-data-tick-cefi-prd-central-element-323112",
-    "gcp_instruments": "instruments-store-cefi-prd-central-element-323112",
-    "aws_market_data": "market-data-tick-cefi-prd-427895769566",
-    "aws_instruments": "instruments-store-cefi-prd-427895769566"
-  },
-  "market_data_index": {
-    "generation": "1787254157655029",
-    "last_modified": "2026-08-20T19:29:17.669Z",
-    "size_bytes": 469897537,
-    "latest_run": {
-      "last_run_at": "2026-08-21T04:02:23.085712Z",
-      "success": false,
-      "shards_scanned": 108715,
-      "shards_changed": 0,
-      "error_reason": "marker_missing_oversized_merge: 108714 shards > 50000 — cron full merge infeasible"
+  "probe_time": "2026-08-21T04:27:02Z",
+  "status": "degraded",
+  "phase0": {
+    "market_data_gcp": {
+      "bucket": "market-data-tick-cefi-prd-central-element-323112",
+      "reachable": true,
+      "lock_present": false,
+      "index_generation": 1787254157655029,
+      "index_last_modified": "2026-08-20T19:29:17.669000+00:00",
+      "latest": {
+        "last_run_at": "2026-08-21T04:02:23.085712+00:00",
+        "success": false,
+        "verdict": "failed",
+        "shards_scanned": 108715,
+        "error_reason": "marker_missing_oversized_merge: 108714 shards > 50000 — cron full merge infeasible"
+      },
+      "stall_state": { "streak": 0, "baseline_shards": 110524 },
+      "phantom_audit_generated_at": "2026-07-27T17:38:18.042418+00:00",
+      "reprobe_generated_at": "2026-08-20T09:00:58.823819+00:00"
     },
-    "lock_present": false,
-    "stall_streak": 0
-  },
-  "manifest": {
-    "rows": 30764419,
-    "capture_status": {
-      "captured": 10888214,
-      "empty_confirmed": 7155106,
-      "attempted_failed": 1156302,
-      "expected_unattempted": 11564797
+    "instruments_gcp": {
+      "bucket": "instruments-store-cefi-prd-central-element-323112",
+      "reachable": true,
+      "latest_success": true
     },
-    "venue_accepted_alias_rows": 30828,
-    "venue_genuine_drift": {
-      "OKX": 5225,
-      "BINANCE-DELIVERY": 4838,
-      "KALSHI_PERP": 2,
-      "OKX-OPTIONS": 2
+    "aws_market_data": {
+      "bucket": "market-data-tick-cefi-prd-427895769566",
+      "reachable": true,
+      "status_objects": false
     },
-    "instrument_type": {
-      "perpetual": 0,
-      "future": 0,
-      "spot_pair": 0,
-      "index": 3910
-    },
-    "data_type_drift": {
-      "depth_of_book_10": { "total": 58634, "captured": 20939, "empty_confirmed": 37629, "attempted_failed": 66 },
-      "perp_daily_ctx": 11,
-      "ohlcv_15m": 2,
-      "ohlcv_15s": 2,
-      "ohlcv_1d": 2,
-      "ohlcv_1h": 2,
-      "ohlcv_5m": 2
+    "aws_instruments": {
+      "bucket": "instruments-store-cefi-prd-427895769566",
+      "reachable": true,
+      "status_objects": false
     }
   },
+  "manifest_snapshot": { "rows": 30801085, "source_generation": 1787254157655029 },
+  "genuine_findings": {
+    "venues": { "OKX": 5225, "BINANCE-DELIVERY": 4838, "KALSHI_PERP": 2, "OKX-OPTIONS": 2 },
+    "instrument_types": { "index": 3910 },
+    "data_types": {
+      "depth_of_book_10": 58634,
+      "perp_daily_ctx": 11,
+      "ohlcv_5m": 2,
+      "ohlcv_15s": 2,
+      "ohlcv_1h": 2,
+      "ohlcv_1d": 2
+    }
+  },
+  "suppressed_accepted": {
+    "venues": { "BYBIT-FUTURES": 30782, "OKEX-FUTURES": 36, "CRYPTOFACILITIES": 10 },
+    "instrument_types": { "futures_chain": 175484, "options_chain": 36382 }
+  },
   "honest_coverage": {
-    "rollup_date": "2026-08-20",
+    "source_date": "2026-08-20",
     "generated_at": "2026-08-20T20:56:32Z",
     "captured": 10538345,
     "attempted_failed": 855304,
     "expected_unattempted": 10839811,
     "empty_confirmed": 6602176,
-    "total": 28835636,
-    "coverage_pct": 47.4,
-    "all_shards_coverage_pct": 36.55,
-    "denominator_complete": false,
-    "instrument_gates_download": true,
-    "formula_verified": "10538345 / (10538345 + 855304 + 10839811) = 47.40%",
-    "interpretation": "lower_bound"
+    "published_pct": 47.4,
+    "recomputed_pct": 47.4017,
+    "formula": "captured / (captured + attempted_failed + expected_unattempted)",
+    "lower_bound": true,
+    "denominator_status": "INCOMPLETE",
+    "instrument_gates_download": true
   },
-  "existing_issue_pointers": [
-    "/plans/active/issues/manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md",
-    "/plans/active/issues/dp_fetch_009_cefi_depth_of_book_10_corrective_migration_overreach_2026_08_16.md"
-  ],
-  "out_of_scope": ["machine_oracle", "tier2_vm", "orphan_scan", "deletes", "gcs_descent", "service_code", "deployment"]
+  "coverage_gaps": [
+    "stale consolidated manifest",
+    "empty AWS mirror status surfaces",
+    "stale phantom audit",
+    "Tier-1 did not assess S1/S2/S4 or orphan/delete surfaces"
+  ]
 }
