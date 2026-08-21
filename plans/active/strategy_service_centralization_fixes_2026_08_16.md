@@ -376,10 +376,18 @@ logic and that no second archetype could ever want. That must be stated, not ass
 - [ ] [OPERATOR] P1. **Rule on the ambiguous ones** — any candidate where two destinations are defensible, or where
       migrating means merging two registries that may be legitimately orthogonal (the `VENUE_CHAIN_MAP` case above is
       the type specimen). Escalate as a list with a recommendation each, not one at a time.
-- [ ] [BACKEND] P1. **Fix the exemplar.** Resolve `_STAKING_PROTOCOL_CHAIN` and `_ALLOWED_CHAINS` in
-      `staked_basis.py` onto whatever W2 rules for venue→chain, adding the 5 protocols UAC currently lacks
-      (rocketpool, coinbase_staking, eigenlayer, jito, marinade) to the SSOT rather than to a strategy file.
-      Done-when: `staked_basis.py` declares neither constant and every staking archetype reads the same source.
+- [x] ✅ [BACKEND] P1. **Fix the exemplar — DONE 2026-08-21, `strategy-service@1ea9d0b170`.**
+      `_STAKING_PROTOCOL_CHAIN` was already gone (shipped earlier this session,
+      `strategy-service@8a7f80e8`) — replaced with UAC's `get_chain_for_protocol()`. Verified live
+      (`python -c` against the real registry, not assumed) that all 5 originally-cited "missing"
+      protocols now resolve correctly: `rocketpool`→ethereum, `coinbase_staking`→ethereum,
+      `eigenlayer`→ethereum, `jito`→solana, `marinade`→solana — the gap this todo was filed against
+      is fully closed. `_ALLOWED_CHAINS` (a 3-chain trading-scope allow-list, not a protocol→chain
+      map) verdicted STAYS LOCAL: grepped every archetype under `engine/strategies/v2/`, it's the
+      only file with anything shaped like this — no second archetype wants it — and it already cites
+      its own codex spec (`carry-staked-basis.md § allowed_chains`). Added an explicit
+      "stays local, here's why" comment to the constant itself rather than leaving the verdict
+      implicit, per this todo's own done-when bar.
 - [ ] [BACKEND] P2. **Gate the regression.** A check that fails when a new module-level reference-shaped constant
       naming venues/chains/tokens/protocols appears under `engine/strategies/`. Baseline it at the post-migration
       count and ratchet DOWN only, per the workspace's shrinking-baseline convention — a hard zero would block

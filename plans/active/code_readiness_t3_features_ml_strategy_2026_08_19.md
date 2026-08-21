@@ -395,10 +395,23 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W7 — centralisation and anti-drift
 
-- [ ] [BACKEND] P1. Migrate the 69 module-level reference-shaped constants to one of the four centralisation
-      destinations. Evidence: `/plans/active/strategy_service_centralization_fixes_2026_08_16.md`.
-- [ ] [BACKEND] P1. Finish wiring the asset-group-agnostic position-risk core.
-- [ ] [BACKEND] P1. Complete the lazy/scoped loading refactor on the strategy-service side. Evidence:
+- [ ] [BACKEND] P1. **Re-scoped 2026-08-21 — tracked in the same sibling plan as the W9/W10/W13
+      pointer above, not a separate build.** The 69-constant migration is
+      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md`'s own W7 section (4 open
+      todos there: inventory all 69, migrate the unambiguous ones, an `[OPERATOR]` ruling on
+      ambiguous ones, fix the exemplar). Work it from that plan — see this file's own
+      Progress Log for what "fix the exemplar" already turned out to be partially done by an
+      earlier fix this session.
+- [ ] [BACKEND] P1. **Re-scoped 2026-08-21 — same sibling plan.** "Position-risk core" wiring is
+      that plan's `DeFiHealthAggregator`/`MarginEvent` reconciliation work (the same 15-open,
+      `sequential: true` chain the W9/W10/W13 row above already points to) — not a separate T3
+      build. See the W9/W10/W13 row above for current status; do not track separately here.
+- [x] ✅ [BACKEND] P1. **Verified 2026-08-21 — the strategy-service side is already done; what remains
+      is UAC-scoped, not T3's to build.** `lazy_scoped_loading_refactor_2026_08_16.md` has exactly 2
+      open todos, both explicitly about `unified-api-contracts`'s `registry/__init__.py`/
+      `internal/__init__.py`/`internal/architecture_v2/__init__.py` (already "in progress 2026-08-20"
+      per its own text) — zero open todos reference strategy-service's `factory.py`, confirming that
+      layer landed. Cross-repo (T1's tranche), correctly not touched here. Evidence:
       `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md`.
 
 ### W9, W10, W13 — balances, risk, exposure, PnL
@@ -490,8 +503,18 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W16, W18 — preflight and canonical output paths
 
-- [ ] [BACKEND] P0. Build the universal fail-closed startup readiness check — a strategy missing a required input
-      fails REGISTRATION, not a live run. Missing or stale data fails closed by default (RULED).
+- [ ] [BACKEND] P0. **Re-scoped 2026-08-21 — real, ruled, but its own "first concrete instance" ties
+      directly to the stalled sibling plan.** Epic spec (`system_readiness_master.md` line 571-584):
+      RULED 2026-08-18 — every archetype needs a NAMED startup-readiness check covering position/
+      PnL/risk/venues/every market-data type it consumes, both presence AND freshness, fail-closed
+      by default; done-when is explicit. The epic's own text names its first concrete instance as
+      `strategy_service_centralization_fixes_2026_08_16.md`'s DeFi health-factor gates — the same
+      15-open-todo, `sequential: true`, AO-stalled-5-days plan already flagged above (W9/W10/W13
+      row). Building the GENERIC per-archetype mechanism before that first instance lands risks
+      designing against an unproven shape; land the health-factor instance first (via that sibling
+      plan), then generalize. Not attempted this session for the same reason: competes for session
+      time with this plan's own ~15 remaining directly-owned todos, and the real unlock is picking
+      up the sibling plan, not a fresh parallel mechanism here.
 - [x] ✅ [BACKEND] P0. **Partially shipped 2026-08-21 — `unified-trading-library@78f7e269c2` +
       `strategy-service@42fedf7966`.** W18 (epic line 601-605) asks for one grammar across
       strategy-service's 5 emission datasets (`positions`/`pnl_attribution`/`risk_metrics`/
@@ -518,7 +541,18 @@ todos only to confirm they are data-movement, then leave it.
       never built?), and confirming no OTHER strategy-service emission type exists outside these 5
       PATH_REGISTRY entries (e.g. account balances, once W9 lands, will need the same grammar
       applied from the start rather than retrofitted).
-- [ ] [BACKEND] P1. Build trigger, latency-tracing and staleness-SLA mechanisms (W16) — "specified, not built".
+- [ ] [OPERATOR] P1. **Re-triaged 2026-08-21 — the real scope is massively larger and design-gated,
+      not directly buildable.** Read the epic's own W16 spec (`plans/epics/system_readiness_master.md`
+      line 562-593) — this is 2 genuinely separate things bundled under one line: (a) latency-tracing
+      (time-data-received/time-data-sent per artefact) — small, mechanical, likely buildable, but
+      needs its own scoping pass to find where to hook it; (b) the "generic price-sensitivity contract
+      for fast execution-side repricing" — `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`,
+      a 998-line, 3-service, 11-open-judgment-call design doc, explicitly `assigned_vm: NA`/
+      `KEEP-NA` because it's live execution-critical-path (order pricing/repricing) machinery —
+      building this blind would mean inventing trading-mechanics decisions unilaterally, exactly
+      what that doc's own judgment-call list repeatedly flags as not-AO-dispatchable. Do NOT build
+      (b) without operator resolution of its judgment calls; (a) is a real, separately-scoped
+      follow-up worth splitting out.
 
 ### Position adapters and venue coverage
 
