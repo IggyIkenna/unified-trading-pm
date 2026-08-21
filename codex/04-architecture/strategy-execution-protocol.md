@@ -3,7 +3,7 @@ doc_type: codex-ssot
 title: Strategy ↔ Execution Protocol
 summary:
   The strategy-to-execution runtime contract — 5 protocol rules (target-state not deltas, intent not algo, polymorphic
-  targets, layer separation, benchmark fills), the 15-action StrategyInstruction envelope, idempotent reconciliation.
+  targets, layer separation, benchmark fills), the 11-action StrategyInstruction envelope, idempotent reconciliation.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -20,7 +20,7 @@ related:
 created: 2026-04-17
 authoritative_for:
   [
-    strategy-execution runtime protocol (five rules + 15 polymorphic actions),
+    strategy-execution runtime protocol (five rules + 11 polymorphic actions),
     StrategyInstruction target-state instruction semantics,
   ]
 referenced_by:
@@ -41,18 +41,9 @@ code_refs:
 
 # Strategy ↔ Execution Protocol
 
-> **What it is:** The runtime contract between strategy-service and execution-service. Five protocol rules, fifteen
+> **What it is:** The runtime contract between strategy-service and execution-service. Five protocol rules, eleven
 > polymorphic action types, one parallel AccountInstruction envelope, target-state semantics, idempotent reconciliation.
 > This is the most load-bearing contract in the system — every strategy and every execution path is constrained by it.
->
-> **2026-08-21 update**: `WITHDRAW`/`REPAY` (inverse of `LEND`/`BORROW`) and `LP_MINT`/`LP_BURN` (concentrated-LP
-> open/close) shipped this session — `unified-api-contracts@f5fc118ae1` and `@d751e743`. `InstructionActionV2` also
-> carries `KILL_SWITCH`/`FLATTEN_POSITION`/`CONVERT_DUST` (18 members total); those three are control-plane actions
-> under a separate authority model (see
-> [/codex/04-architecture/account-instructions.md](/codex/04-architecture/account-instructions.md)) and are
-> deliberately NOT part of this doc's target-state action family, so this doc's "15" counts the target-state family
-> only (the original 11 + the 4 added this session). `InstructionActionV2` itself is the live oracle for the full
-> member list if this count drifts again.
 
 ## Five Protocol Rules
 
@@ -98,25 +89,21 @@ Execution resolves `(execution_policy_ref, urgency, deadline, size)` → algo + 
 
 ### Rule 3 — Polymorphic targets
 
-Target semantics differ per action type. Don't collapse 15 actions into "just TRADE with extra fields."
+Target semantics differ per action type. Don't collapse 11 actions into "just TRADE with extra fields."
 
-| Action   | Target                                                           |
-| -------- | ---------------------------------------------------------------- |
-| TRADE    | position_units                                                   |
-| SWAP     | one-shot swap quantity + min_out                                 |
-| LEND     | supplied_amount                                                  |
-| BORROW   | debt_amount                                                      |
-| WITHDRAW | target_supplied_amount (inverse of LEND)                         |
-| REPAY    | target_debt_amount (inverse of BORROW)                           |
-| STAKE    | staked_amount                                                    |
-| UNSTAKE  | unstaked_amount                                                  |
-| QUOTE    | continuous two-sided quote with spread + inventory + sensitivity |
-| TRANSFER | target_balance at destination (same-chain)                       |
-| BRIDGE   | target_balance at destination chain                              |
-| ATOMIC   | all legs filled or none                                          |
-| CANCEL   | references a prior instruction_id                                |
-| LP_MINT  | open/add to a concentrated-LP position                           |
-| LP_BURN  | close/reduce a concentrated-LP position (inverse of LP_MINT)     |
+| Action   | Target                                             |
+| -------- | -------------------------------------------------- |
+| TRADE    | position_units                                     |
+| SWAP     | one-shot swap quantity + min_out                   |
+| LEND     | supplied_amount                                    |
+| BORROW   | debt_amount                                        |
+| STAKE    | staked_amount                                      |
+| UNSTAKE  | unstaked_amount                                    |
+| QUOTE    | continuous two-sided quote with spread + inventory |
+| TRANSFER | target_balance at destination (same-chain)         |
+| BRIDGE   | target_balance at destination chain                |
+| ATOMIC   | all legs filled or none                            |
+| CANCEL   | references a prior instruction_id                  |
 
 Type-discriminated at the StrategyInstruction level. Shared fields: `instruction_id`, `client_id`,
 `strategy_instance_id`, `timestamp`, `attestations`.
@@ -149,7 +136,7 @@ Strategy alpha attribution uses only `benchmark_pnl`. Execution alpha measures `
 Full contract:
 [/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md](/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md).
 
-## StrategyInstruction (Polymorphic, 15 Actions)
+## StrategyInstruction (Polymorphic, 11 Actions)
 
 Common envelope:
 
@@ -215,30 +202,6 @@ max_borrow_apy_bps: Optional[int]
 collateral_health_min: Optional[Decimal]
 ```
 
-### `WITHDRAW`
-
-Rate-matched inverse of `LEND` — added 2026-08-21, `unified-api-contracts@f5fc118ae1`, to close the BATCH-settlement
-gap (`resolve_settlement` had no dataclass to dispatch on for this enum member). **Name collision, not a duplicate**:
-`AccountInstruction` (below) separately has its own `WITHDRAW` action meaning operator withdrawal to off-venue — this
-one is a strategy-owned action reducing a supplied lending position, a different envelope and a different authority
-model.
-
-```python
-protocol: LendingProtocolId
-asset: AssetId
-target_supplied_amount: Decimal
-```
-
-### `REPAY`
-
-Inverse of `BORROW` — same shipment as `WITHDRAW` above.
-
-```python
-protocol: LendingProtocolId
-asset: AssetId
-target_debt_amount: Decimal
-```
-
 ### `STAKE`
 
 ```python
@@ -265,12 +228,7 @@ reference_price: Decimal              # from pricer; execution MMs around
 half_spread_bps: int
 max_inventory_abs: Decimal
 skew_on_inventory: bool
-refresh_cadence_ms: int                       # STRATEGY-side cadence, distinct from execution's faster tick loop
-delta: Optional[Decimal]                      # added 2026-08-21, unified-api-contracts@6be4b136d7
-gamma: Optional[Decimal]                      # sensitivity coefficients for DeltaProxyRepricer._reprice():
-underlying_instrument_id: Optional[InstrumentId]  # effective_delta = delta + gamma * underlying_move.
-                                               # None on all three reproduces the prior hardcoded delta=1.0 /
-                                               # self-underlying case, so no existing construction changes meaning.
+refresh_cadence_ms: int
 ```
 
 ### `TRANSFER`
@@ -342,39 +300,6 @@ The schema above is the contract; this is the state of the code that honours it.
 ```python
 cancel_instruction_id: str
 cancel_scope: SINGLE | ALL_FOR_STRATEGY_INSTANCE
-```
-
-### `LP_MINT`
-
-Open/add to a concentrated-LP position — added 2026-08-21, `unified-api-contracts@d751e743`, closing the last 2/5 of
-the BATCH-settlement gap. Superset schema over Uniswap V3 (NFT-position, sqrt-price-bounds) and Orca/Raydium
-(pool-address, raw-tick) connector shapes; protocol-specific fields nullable.
-
-```python
-protocol: str          # "uniswap_v3" | "orca" | "raydium" | ...
-pool_id: str
-asset_a: str
-asset_b: str
-amount_a_desired: Decimal
-amount_b_desired: Decimal
-amount_a_min: Optional[Decimal]
-amount_b_min: Optional[Decimal]
-lower_tick: int
-upper_tick: int
-fee_tier: Optional[int]                # Uniswap-specific tiered-pool selector; None for single-pool-per-pair
-```
-
-### `LP_BURN`
-
-Close/reduce a concentrated-LP position — inverse of `LP_MINT`, same shipment.
-
-```python
-protocol: str
-pool_id: str
-position_token_id: Optional[str]       # Uniswap V3's NFT position id; None for Orca/Raydium (no NFT)
-liquidity_amount: Decimal
-amount_a_min: Optional[Decimal]
-amount_b_min: Optional[Decimal]
 ```
 
 ## AccountInstruction (Parallel Envelope)
