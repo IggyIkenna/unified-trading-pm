@@ -142,9 +142,12 @@ REUSES the frameworks that already exist rather than building new ones:
 - [ ] [BACKEND] P0. CeFi execution venues (every venue declared in `capability_declarations/_cefi.py` with an
       execution adapter key) — populate `WsProtocolSpec` + full error-code table per venue, sub-checkbox per
       venue as each lands. Done-when — every CeFi execution venue populated + cited, QG green.
-      Progress 2026-08-21 — binance shipped @2bebacf085; bybit/okx/coinbase/deribit/hyperliquid ws facts
-      doc-fetched into the session scratchpad (`cefi_ws_research_notes.md`), file application + error tables next
-      batch.
+      Progress 2026-08-21 — binance shipped @2bebacf085; bybit/okx/coinbase/deribit/hyperliquid ws-protocol specs
+      SHIPPED unified-api-contracts@54009a4fdd (doc-fetched facts inline in `_cefi.py` with per-venue provenance
+      notes — the session-scratchpad research file is superseded by the shipped declarations). Still open on this
+      todo — exhaustive error-code tables for ALL CeFi venues, plus ws specs for the remaining `_cefi.py` entries
+      (bitget/kucoin/mexc/upbit/kraken/kraken_futures/ccxt/tardis/aster/extended/lighter/pacifica/fix/nautilus/
+      kalshi_perp/polymarket_perp).
 - [ ] [BACKEND] P1. CeFi pricing-only venues — same treatment. Done-when — same bar.
 - [ ] [BACKEND] P1. TradFi venues (IBKR, CME, ICE) + Databento as the data vendor
       (`/codex/02-data/tradfi-databento-sourcing-ssot.md`) — same treatment; note TradFi surfaces include FIX/native
@@ -186,12 +189,14 @@ REUSES the frameworks that already exist rather than building new ones:
 
 ## Phase C — runtime rotation framework
 
-- [ ] [BACKEND] P0. UTL websocket-session-manager primitive (new module under `unified_trading_library.streaming`) —
-      staleness detection (no-message + missed-heartbeat timers driven by the feed's `DataFreshnessContract.max_age`
-      and the venue's `VenueWsProtocolSpec`), a per-venue-configurable retry ladder, then ROTATE per decision 2
-      (make-before-break when `duplicate_subscription_allowed`, else teardown-reconnect + REST gap-backfill via the
-      spec's endpoint). Done-when — unit tests simulate silent-stall, venue-forced disconnect, and rotation with gap
-      replay; all green.
+- [x] 3. ✅ [BACKEND] P0. UTL websocket-session-manager primitive — unified-trading-library@fcfcbf3893 + full
+      `quality-gates.sh --no-fix` green pre-commit (6907 passed). `streaming/ws_session_manager.py` — staleness
+      watchdog driven by `DataFreshnessContract.max_age` + the venue `WsProtocolSpec`, per-venue retry ladder with
+      exponential backoff, rotation per decision 2 (make-before-break when `duplicate_subscription_allowed`, else
+      teardown-reconnect + REST gap-backfill callback), proactive rotation ahead of venue-forced disconnects,
+      listen-key-style auth refresh; exported via `streaming/__init__`; 5 unit tests cover silent-stall,
+      forced-disconnect make-before-break ordering, ladder-exhaustion rotation with gap replay, staleness deferral,
+      and auth cadence. Broad-except registered in `QUALITY_GATE_BYPASS_AUDIT.md` §2.1a + the gate's excludes list.
 - [ ] [BACKEND] P0. Bind rotation into the feed-SLA registry as a first-class action — extend the `refetch_action`
       vocabulary in `data_freshness.py` (`ALL_FRESHNESS_CONTRACTS`) so a stale live feed's Layer-0 self-heal can be
       `rotate_websocket`; keep the registry's CI no-orphan + warn<max invariants green
@@ -211,6 +216,11 @@ REUSES the frameworks that already exist rather than building new ones:
       execution adaptors, strategy-service balance queries. This EXECUTES `system_readiness_master` W14's "Every
       venue error code understood across every consumer" P0 — flip that epic checkbox with evidence when this lands.
       Done-when — a census test asserts zero unmapped codes for registered venues; epic checkbox flipped.
+- [ ] [BACKEND] P2. Hoist the ws-resilience symbols onto the sanctioned import facades — export `WsProtocolSpec`
+      from UAC's root `unified_api_contracts` facade and the `WsSession*` family from UTL's root facade, then drop
+      the three `# noqa: qg-deep-import` markers this phase added (`streaming/ws_session_manager.py`,
+      `execution_service/trade_execution/private_stream_guard.py`, `engine/modes/live/data_source.py`). Done-when —
+      top-level imports in all three consumers; deep-import checks green with zero noqas from this plan.
 
 ## Phase D — alerting + kill-switch wiring (existing frameworks only)
 
@@ -258,3 +268,39 @@ REUSES the frameworks that already exist rather than building new ones:
   `provider_api_versions.yaml` decision — most venue doc sites are living pages publishing NO version identifier;
   doc URLs + retrieval dates are recorded in the declaration files themselves, the yaml gets entries only where a
   real version exists (none surfaced so far).
+- **2026-08-21 (batch 2 shipped + pre-compact checkpoint)** — unified-api-contracts@54009a4fdd (cefi ws specs ×5) +
+  unified-trading-library@fcfcbf3893 (C1 session manager) landed, LDR ancestry verified. Execution-service C4 is
+  COMMITTED locally as execution-service@6cef44435 (all 4 files + Quickmerge trailer; exec QG was green) with the
+  push re-running in background at checkpoint time — the next session verifies
+  `git merge-base --is-ancestor 6cef44435 origin/live-defi-rollout` in execution-service and flips the C4 checkbox
+  with that sha; nothing else is uncommitted in any repo. **Lessons**: (1) quickmerge quarantines the dirty tree
+  into a named `quickmerge-NNNNN` stash BEFORE its remote fetch — a DNS flap (`ssh.github.com` unresolvable, hit
+  twice) then leaves a CLEAN tree + "Nothing to commit" on re-run; recovery is `git restore --source='stash@{N}'`
+  for tracked files AND `--source='stash@{N}^3'` for untracked ones (the stash's untracked third parent —
+  `git stash show` does NOT list untracked files); both the UAC and UTL batches were recovered exactly this way —
+  ALWAYS check `git stash list` before re-authoring "lost" work. (2) UAC is EDITABLE-installed in UTL's venv
+  (direct_url.json editable=true) — never edit UAC while a UTL/execution gate is mid-run. (3) UTL gate conventions:
+  `unified_api_contracts.registry.*` counts as a deep import (only one-level domains like `.internal` or the root
+  facade pass; `# noqa: qg-deep-import` is the sanctioned interim marker); a broad `except Exception:` needs BOTH a
+  `QUALITY_GATE_BYPASS_AUDIT.md` §2.1a row AND a `BROAD_EXCEPT_EXTRA_EXCLUDES` glob in the repo's
+  `scripts/quality-gates.sh` — the audit row alone does not clear the gate, and the violation prints as a ⚠️ line,
+  not a ❌. (4) pytest-xdist `KeyError: <WorkerController gwN>` INTERNALERROR with "N passed, 0 failed" is a
+  teardown flake under host contention — one re-run, not a test hunt. Stashes `quickmerge-47010` (UAC) and
+  `quickmerge-66065` (UTL) are now-redundant copies of landed content — parked, droppable once shas confirmed on
+  origin.
+
+## Deferred work after 2026-08-21
+
+| Item                                                                     | State / why deferred                                                                                              | Blocked on                                       |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| C4 push confirm + flip (execution-service@6cef44435)                     | commit local + gate-green; push re-running in background at checkpoint                                             | quickmerge completing (network)                  |
+| Phase B research — TradFi (zero output), CeFi remaining venues + ALL     | sub-agent account session limit                                                                                    | quota reset 16:40 Europe/London → 3-agent wave   |
+| CeFi error tables, sports/altdata completeness verify, PROTOCOL_CAPS     |                                                                                                                    |                                                  |
+| C2 `rotate_websocket` refetch_action                                     | deliberately split — spans UAC `data_freshness.py` + alerting-service `feed_refetch_rules.py` consumers            | nothing — next code unit                         |
+| C3 MTDS `websocket_runner` integration                                   | recon done — compose with `WSFeedConnector.pop_reconnect_flag()` STALE-window semantics; runner owns ONE connector, | nothing — after C2                               |
+|                                                                          | so make-before-break needs a dual-connector overlap refactor; implementation not started                           |                                                  |
+| C5 consumer wiring + W14 epic flip                                       | needs Phase-B error tables substantially complete                                                                  | Phase B                                          |
+| Phase D alerting + kill-switch; Phase E codex audit; facade hoist; census | not started                                                                                                        | phases above                                     |
+| Versifi docs                                                             | operator-owned ([OPERATOR] todo)                                                                                   | operator doc link / credentials                  |
+
+Recommended next — C4 push verification + flip (minutes), then the post-16:40 research-agent wave (the long pole), then C2.
