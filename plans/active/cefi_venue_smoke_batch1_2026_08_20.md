@@ -47,10 +47,6 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 ## Progress Log
 
-**2026-08-21 — slot 3 regression evidence.** Preserved the peer’s completed P0 checkbox and added explicit source-scoped and missing-capture regression coverage.
-`unified-api-contracts@b84bc7dfc` asserts a Databento exemption for `CBOE/ohlcv_1m` does not exempt the Yahoo-sourced `CBOE/ohlcv_24h` cell; `market-tick-data-service@a1b1f21ad` asserts a successful VM with no parquet/manifest atom fails, and a parquet write without its manifest atom fails.
-Full quality gates passed in both repos: UAC 305s; MTDS 676s, `11113 passed, 28 skipped, 1 xpassed`.
-
 **2026-08-20 — forked from W5.** This batch follows the five-todo W4 decomposition and keeps its denominator
 re-runnable through the UAC generator.
 

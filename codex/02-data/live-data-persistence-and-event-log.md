@@ -115,9 +115,8 @@ One Pub/Sub topic per shard `(asset_group, data_type)`. Wildcard shards use topi
 
 ## Terraform provisioning
 
-54 wildcard/declared Pub/Sub sink topics (measured 2026-08-21, `deployment-service/terraform/gcp/live_event_log/`) +
-Cloud Storage subscriptions (warm GCS). Strategy atomic instructions additionally require concrete asset-group topics
-and execution-reader subscriptions because `PubSubTransport` publishes and reads `persist-{asset_group}-*` names.
+54 Pub/Sub topics (measured 2026-08-21, `deployment-service/terraform/gcp/live_event_log/main.tf`) + Cloud Storage
+subscriptions (warm GCS), including the wildcard `atomic_instruction` strategy-instruction shard.
 
 - BigQuery external tables + daily compaction Cloud Run Job deployed in
   `deployment-service/terraform/gcp/live_event_log/`.
