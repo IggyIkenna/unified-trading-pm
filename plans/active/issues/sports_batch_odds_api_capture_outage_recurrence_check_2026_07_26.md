@@ -311,6 +311,11 @@ write a manifest row of any kind — not even `attempted_failed`).
       coverage in the manifest (verified via `read_capture_status_counts`/`read_availability_index`, manifest-only, no
       GCS walk) at the intended granularity, and this todo cites the launcher/dispatch evidence.
 
+      **2026-08-21 (dedup pass)**: **➡️ DUPLICATE OF** `/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md`
+      (verified `status: open`, `assigned_vm: planning`) — that doc's own guard-respecting `mtds-backfill-odds-*` chain
+      is the live executor for both of this todo's windows, per the repeated re-verification entries in this doc's own
+      Progress Log; not an independently dispatchable launch.
+
       **ag-closeout-audit sports 2026-08-09 — doc-hygiene note, do not launch a second VM:** this todo's two windows
           (2026-06-27..07-15, 2026-07-16..07-25) both fall inside the broader 2020-06-06→present range that
           `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` already launched via the single guard-respecting
@@ -549,6 +554,11 @@ via `GET /api/backlog`) and its `prereqs.prerequisites` in the live `agent-orche
 covering the general mechanism + an immediate-mitigation todo (re-attach the gate to the current id — needs
 main/operator write access to the root-clone yaml, out of scope here). Checkbox still correctly left unchecked. Skipping
 with `reason_code: GATED`.
+
+**2026-08-21 (dedup pass)**: **➡️ DUPLICATE OF** `/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md`
+(verified `status: open`, `assigned_vm: planning`) — that doc's own guard-respecting `mtds-backfill-odds-*` chain is the
+live executor for both of this todo's windows, per this todo's own repeated re-verification entries above; not an
+independently dispatchable launch.
 
 **2026-08-19T22:59Z (slot 7, dispatched as review-role, task assigned_role=data_engineering)** — Re-dispatched item 1
 again, ~3h after the slot-33 19:48Z entry above. Read `ao_backlog_task_id_churn_orphans_handtuned_prereqs_2026_08_19.md`
