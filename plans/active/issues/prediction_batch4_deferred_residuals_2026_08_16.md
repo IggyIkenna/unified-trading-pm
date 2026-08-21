@@ -140,3 +140,23 @@ Full per-bullet disposition of `prediction_satellite_ao_dispatch_batch4_2026_07_
   hard-stop per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (a false positive would silently mark
   good captured data as failed) and the standing ruling in
   `prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`. Not re-litigated. Doc stays NA.
+- **D2 execution pass 2026-08-22 (issues_corpus_completion_2026_08_21 dispositions, entry D2 — "Approve all queued,
+  individually verified prod manifest/GCS corrections, each under its own stated precondition (retention check /
+  fresh dry-run / snapshot-first)")**: dispatched here as `affected_docs[0]`. Re-checked the 1 open todo's stated
+  gate FRESH before acting: this item's own precondition, per this doc's Progress Log and
+  `prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s 2026-08-07 entry, is **not** one of D2's three
+  named precondition types (retention-check / fresh dry-run / snapshot-first) — it is "manifest `--apply` reserved
+  for human execution forever," a standing permanent-`[OPERATOR]`-hard-stop ruling independently reconfirmed on
+  2026-08-17, 2026-08-18, and 2026-08-21 (the same day as D2). Per
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3, a human-only hard stop is "never crossed
+  autonomously … on any operator instruction that does not name the specific stop in the same turn" — D2's
+  disposition text is generic across 7 sibling docs and names only the three mechanical precondition types above; it
+  does not name this item's 38,020-row POLYMARKET reclassification specifically, nor does it assert the required
+  human review/execution has occurred. No `--apply` command or script is named anywhere in this doc's chain either
+  (consistent with the item genuinely being human-run tooling, not an agent-executable one). **Disposition:
+  gate-failed-withheld** — the `--apply` was NOT executed. Todo 1 stays `- [ ]`, doc stays NA, unchanged. This
+  withholding is itself the correct/expected outcome for this item, not a stall — see
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3 hard-stop #2 framing for why a manifest-correctness
+  gate of this shape does not fall under §3a's reversibility carve-out (that carve-out covers GCS object/prefix/
+  bucket deletes with a soft-delete undo window, not a manifest reason-code reclassification whose risk is a
+  silent false-positive mark on already-captured data, which has no equivalent restore mechanism).
