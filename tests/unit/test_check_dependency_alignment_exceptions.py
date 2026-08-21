@@ -41,7 +41,7 @@ def test_real_exceptions_file_loads_and_matches_prior_dict_shape() -> None:
     by the loader — this test's job is the SHAPE, not a frozen entry count)."""
     mod = _load_module()
     exceptions = mod._load_per_repo_exceptions(mod.EXCEPTIONS_YAML_PATH)
-    assert len(exceptions) == 12
+    assert len(exceptions) == 13
     for repo in (
         "ml-service",
         "unified-trading-library",
