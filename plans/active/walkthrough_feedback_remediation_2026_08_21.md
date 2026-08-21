@@ -270,16 +270,20 @@ drift_direction: advance-code
       in `execution_service/v2/__init__.py`, `backtest_v2/runner.py`, and 2 test files) — REST path confirmed
       real. `execution_service/readiness/instruction_path.py` exists and is non-empty — confirmed real. All
       three claims hold; T5 may cite them as fixed reality.
-- [ ] [BACKEND] P2. **New, found 2026-08-21 during todo 1's consolidation.** `BusTransferType.REBALANCE` dispatch
-      is wired (`TransferHandler._execute_rebalance_transfer`, `execution-service` todo 1 ships this), but
-      `classify_transfer_type()` (UAC `transfer_types.py:461`) never RETURNS `REBALANCE` from any venue-pair
-      input — it is derived purely from `(from_venue, to_venue)`, with no signal on `ExecutionInstruction` to
-      force a specific `BusTransferType`. REBALANCE is therefore genuinely unreachable in production today
-      (dispatch-ready, no producer). Fixing this needs either a `classify_transfer_type` heuristic (risky
-      guess — what venue-pair pattern IS a rebalance vs. a same-venue on-chain move?) or a new
-      `ExecutionInstruction` field carrying an explicit `BusTransferType`/purpose override (a UAC schema change
-      with wide blast radius — every other handler consumes this type). Genuinely ambiguous design question,
-      deliberately not guessed at — needs an operator/design decision, not a self-served UAC addition.
+- [x] ✅ [BACKEND] P2. **RESOLVED 2026-08-21 — operator-confirmed non-issue, no code change needed.** Operator
+      asked the right question directly: "why does exec need to know whether it's a rebalance — they just need
+      urgency for gas fees?" Re-read `TransferHandler._execute_rebalance_transfer`'s own docstring + body: it
+      delegates STRAIGHT to `_execute_onchain_transfer` — mechanically byte-for-byte identical, kept as a
+      separate dispatch branch only as a future seam ("a future rebalance-specific concern (netting receipts,
+      rebalance-only metrics) has a dedicated seam without touching the dispatch table again" — its own words).
+      So `classify_transfer_type()` never returning `REBALANCE` has ZERO functional impact today: a transfer
+      that "should" be REBALANCE classifies as plain `ON_CHAIN` instead and produces the identical result.
+      There is no current gas-fee/urgency distinction either — grepped `transfer_handler.py`/`isolation.py` for
+      urgency/gas_priority/priority_fee, zero hits; no such field or behavior exists yet for ANY transfer type,
+      REBALANCE included. **No action needed unless/until a real rebalance-specific mechanic (netting, distinct
+      metrics, a genuine gas-priority axis) is actually built** — at that point THIS is the todo to reopen, and
+      the real design question becomes generic ("does urgency belong on `ExecutionInstruction` for every
+      transfer, not REBALANCE-specifically"), not a `BusTransferType` producer-signal problem.
 - [x] [BACKEND] P2. **New, found 2026-08-21 during todo 3's implementation.** The manual-trade
       `recon_excluded` flag (todo 3) is threaded end-to-end through `ManualInstructionRequest` →
       `ManualInstruction`/`ManualInstructionAuditLog` (FCA audit trail, real) → `TradeFillRecord`/`LedgerRow`
