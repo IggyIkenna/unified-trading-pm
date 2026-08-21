@@ -516,17 +516,10 @@ successor plan, the work remains tracked here as still-open todos, not lost).
 
 ## Progress Log
 
-- 2026-08-21 — T4 execution/transfer-cluster wave-1b session (this session): drafted an independent
-  implementation of todos 1-3 (transfer-path convergence, REBALANCE/gas-topup, recon-exclusion flag) and
-  QG-passed it, then hit `QUICKMERGE_BLOCKED` (behind-origin) at ship time — a CONCURRENT wave-1b session had
-  already landed a more complete version of the same 3 todos at `execution-service@b1857845c` (real UAC
-  `BusTransferType.REBALANCE` + `recon_excluded` threaded onto UAC `ManualInstruction` itself, vs. this
-  session's UAC-avoidant workarounds). Discarded this session's redundant draft in favor of the already-landed
-  version rather than re-shipping a duplicate; a THIRD concurrent session's doc reconciliation (commit
-  `68abd8bf69`) had already flipped todos 1-4 with real evidence by the time this session's own doc-push
-  attempt hit the same file, so this session's remaining contribution was flipping todo 5 (DOC→T5 handoff,
-  custody/external-API facts-confirmation — independently verified true against HEAD, no code change) plus
-  this log entry. Net new code from this session: none (superseded); net doc contribution: todo 5 + this note.
+- 2026-08-21 — T4 wave-1b session: drafted an independent todos-1-3 implementation, QG-passed, then found a
+  CONCURRENT session had already landed a more complete version (`execution-service@b1857845c`) and a THIRD
+  session had already flipped todos 1-4 in this doc — discarded the redundant draft rather than re-shipping a
+  duplicate. Net contribution: flipped todo 5 (verified true against HEAD, no code change).
 
 - 2026-08-21 — Plan created from operator feedback session; every claim re-verified against repo HEAD by three
   parallel investigation agents (registry, venue-cell, execution clusters) before todo conversion. T1/T4/T5
@@ -996,9 +989,12 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   once that session's own commit (`unified-api-contracts@4f25d5f0`) cleared the dependency.
   Shas: `unified-api-contracts@3204e607e4`, `execution-service@0aa709f076`.
 
-- 2026-08-21 — Resolved the `4f25d5f0` deployment-api fallout: `PredictionMarketCategory`/`category_for_group`
-  deletion (filed P0 issue) fixed as a canonical-axis (`PredictionUnderlying`) projection; a SECOND same-commit
-  break found in the same pass (`prediction_markets_config_descriptor` deletion, cascaded to ALL of
-  `deployment_api.routes`, 456 collection errors) fixed via `CLASSIFIER_STABILITY_HASH`/`CLASSIFIER_VERSION`.
-  `deployment-api@9947cc40ae`, quality-gates.sh green (5427 passed). Issue archived + resolution documented:
+- 2026-08-21 — Resolved the `4f25d5f0` deployment-api fallout (`PredictionMarketCategory` deletion + a second
+  same-commit `prediction_markets_config_descriptor` break): `deployment-api@9947cc40ae`, quality-gates.sh green
+  (5427 passed). Full detail archived:
   `/plans/archive/issues/deployment_api_prediction_catalogue_broken_by_uac_category_deletion_2026_08_21.md`.
+
+- 2026-08-21 — Fourth `4f25d5f0` consumer closed: features-service's two cross-venue-mapping test files built
+  `PredictionMarketCrossVenueMapping` fixtures via the deleted `PredictionMarketCategory` enum — migrated to
+  `PredictionUnderlying` (`.BTC`/`.SPORTS_EPL`); no production code read `.category` (grep-confirmed).
+  quality-gates.sh --no-fix green (18540 passed). `features-service@1fb32923a8`.
