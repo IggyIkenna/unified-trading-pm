@@ -280,7 +280,7 @@ Findings use the fixed seven-point checklist and exact implementation lines. EVM
 
 No code was changed or tests run for this read-only audit. The HIGH findings require the existing triage phase to add explicit fixes/todos before W15 close-out.
 - [x] ✅ [BACKEND] P0. Harden perp/CLOB order boundaries across Hyperliquid, Aster, Pacifica, and the DeFi-side Bybit wrapper: reject non-finite/non-positive size and price, reject unknown side/order-type values, and preserve the underlying adapter's validation before any live submission; HIGH finding: checklist point 3 (hyperliquid.py:370-402,504-516; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132). — execution-service@e7481a0d13 + evidence: new shared `validate_perp_order_params()` in `_perp_order_validation.py` (mirrors `ccxt_common.validate_ccxt_order_params`), called from each connector's `place_order`/`_build_order_params` before dispatch to sim or live; 14 new regression tests in `tests/defi_execution/unit/test_perp_clob_order_validation.py`; quality-gates.sh green (293s, sentinel matched committed HEAD); post-push ancestry verified.
-- [x] ✅ [BACKEND] P0. Define a caller-controlled expiry/deadline bound for perp order requests -- checklist point 4 now fully closed (slippage half execution-service@fc7835b13e; this deadline half execution-service@d4876e394e). Hyperliquid's `expiresAfter` request deadline is now wired into `place_order()`, folded into the signed action hash exactly per the official SDK's byte construction (verified via `gh api` against `hyperliquid-dex/hyperliquid-python-sdk`). Aster/Pacifica/Bybit confirmed (WebFetch) to expose no equivalent mechanism. See Progress Log for the full research + a real EIP-712 chainId bug found and fixed along the way.
+- [ ] [BACKEND] P0. Define caller-controlled slippage and expiry/deadline bounds for market and resting perp orders; remove the implicit Hyperliquid 5% IOC buffer and make Aster/Pacifica/Bybit market semantics explicit and bounded; HIGH finding: checklist point 4 (hyperliquid.py:381-391; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132).
 - [x] ✅ [BACKEND] P0. Add durable idempotency/client-order IDs and ambiguous-outcome recovery for the perp/CLOB order paths; thread client_order_id through the Bybit wrapper into BybitCCXTAdapter, and prevent duplicate retries for Hyperliquid nonce-based, Aster timestamp-based, and Pacifica timestamp/expiry-based submissions; HIGH finding: checklist point 6 (hyperliquid.py:504-546; aster.py:479-519; pacifica.py:559-655; bybit.py:105-132). — execution-service@2d1766ef96 + evidence: quality-gates.sh green (186s, sentinel matched committed HEAD exactly); see Progress Log entry below.
 - [x] ✅ [BACKEND] P0. Make Bybit position/balance read failures observable instead of returning empty positions or zero balance, while preserving the already honest failed-order result; MEDIUM finding related to checklist point 7 (bybit.py:136-176). — execution-service@f1565e8a5e + evidence: `fetch_positions()`/`fetch_balance()` now log at ERROR and re-raise instead of swallowing adapter-init/CCXT read failures into `[]`/`Decimal("0")`; consistent with existing callers (`bybit_deposit.py`'s poll loop already try/excepts around `fetch_balance`, `perp_hedge_wiring.py`'s HL-side readers already let real errors propagate); 2 tests updated to assert the raise instead of the old silent fallback; quality-gates.sh green (292s, sentinel matched committed HEAD).
 - [x] ✅ [BACKEND] P0. Confirm Pacifica's future live enablement retains the current fail-closed boundary (supports_live=False) and validates the configured Solana keypair/account relationship before changing that flag; HIGH-risk signing/auth guardrail (pacifica.py:31-48,286-328,610-645). — execution-service@9d0753d6ff + evidence: `supports_live` confirmed still `BaseConnector`'s fail-closed `False` default, no override (`base.py:312,330-336`). Real gap found + fixed: `sign_pacifica_payload` always set `account` to the signing keypair's own pubkey with no `agent_wallet` header — silently wrong for Pacifica's documented delegated "Agent Key" mode (verified via WebFetch of `docs.pacifica.fi/api-documentation/api/signing/api-agent-keys.md`: "Still use the original wallet's public key for `account`" + a required `agent_wallet` header). Added optional `wallet_account_address` config + `account_address`/`_signing_headers()`; `supports_live` itself untouched. 8 new regression tests; `quality-gates.sh` green (354s, sentinel matched committed HEAD `3ae00b8a`); post-push ancestry independently verified after a quickmerge push-race rebase.
@@ -301,21 +301,10 @@ No code was changed or tests run for this read-only audit. The HIGH findings req
       points 3 and 4 (bitfinex_native.py:337-365, bitget_native.py:274-315,
       kraken_rest_adapter.py:230-344,437-472, kraken_futures_orders.py:49-123,163-177). — execution-service@a57d7fba93
       + evidence: shared validators in _native_base.py, wired pre-body-build into all 4 files; QG green.
-- [x] ✅ [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
+- [ ] [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
       retrying; do not discard invalid/missing IDs or allow a fresh retry to double-place an order; HIGH finding:
       checklist point 6 (bitfinex_native.py:337-368, bitget_native.py:274-318,
-      kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143). — execution-service@df1ef85ffd + evidence:
-      new native_idempotency.py (mirrors _perp_idempotency.py's no-venue-side-lookup pattern -- Kraken's own order
-      parser doesn't capture a client-order-id field either, so there is nothing to reconcile against): Bitfinex
-      and Bitget now always require/generate a client_order_id (require_client_order_id) instead of leaving it
-      optional, and Bitfinex's numeric `cid` is derived deterministically from it (client_order_id_to_bitfinex_cid)
-      instead of silently discarded to None on a non-digit id; Kraken Spot's `_place_order_spot` and Futures'
-      `_place_order_futures` (the only two of the four that make a real HTTP round trip today) are wrapped in
-      execute_native_order_idempotent, so a retry for the same client_order_id replays the cached result and an
-      ambiguous prior attempt (an exception mid-submit) fails closed with NativeOrderInFlightError rather than
-      resubmitting. quality-gates.sh green (152s, 9051 passed, sentinel matched committed HEAD); 23 new regression
-      tests across test_native_idempotency.py/test_kraken_order_idempotency.py plus 2 added to the existing
-      Bitfinex/Bitget adapter test files; post-push ancestry verified by quickmerge.
+      kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143).
 - [x] ✅ [BACKEND] P0. Make Kraken Spot/Futures response-envelope parsing fail closed and require a validated order
       result before constructing NEW/CANCELLED/AMENDED success results; malformed or empty payloads must be reported
       as failures, not interpreted as success; HIGH finding: checklist point 7
@@ -556,65 +545,6 @@ approval + Karak vault line 226; native rate-limit/blocking-sleep hardening line
 (Aave/Morpho typed-params decimals, lines 213/215), the 2 unstarted audit phases (sports exchange line 188, sports
 unity line 192), and this close-out todo itself.
 
-### 2026-08-21 — slot-7 perp/CLOB slippage bounds (checklist point 4, slippage half) — SHIPPED
-
-Landed as `execution-service@fc7835b13e`, post-push ancestry verified against `origin/live-defi-rollout`. Covers
-ONLY the slippage-bound half of checklist point 4 -- the expiry/deadline-bound half is deliberately deferred to a
-narrowed line-283 todo above (not silently dropped).
-
-**Design**: new `execution_service/defi_execution/protocols/_perp_order_bounds.py` (`resolve_max_slippage_bps`,
-`compute_bounded_limit_price`, `slippage_bps_to_percent_str`; default 5%, capped 20%). Per-venue mechanics verified
-against each venue's own docs before implementing (WebFetch + `gh api` against `asterdex/api-docs`,
-`docs.pacifica.fi`, `hyperliquid.gitbook.io`):
-- **Pacifica** has a NATIVE required `slippage_percent` field on its market-order endpoint -- threaded through
-  directly, no reference price needed (the venue bounds against its own mark price). Previously entirely absent from
-  this connector's (structurally-unreachable, `supports_live=False`) live request shape.
-- **Hyperliquid and Aster** have no native market-order price-protection field; both now use the "marketable IOC
-  limit" technique (a limit order priced past the reference by the bound, `tif=Ioc`/`timeInForce=IOC`) -- Hyperliquid
-  already did this for its old fixed-5%-hardcoded case, generalized here and applied the same way to Aster (verified
-  Aster's `timeInForce` enum is GTC/IOC/FOK/GTX/HIDDEN only, no native slippage field).
-- **Bybit**'s perp-hedge wrapper (`BybitPerpHedgeConnector`) now threads an optional `price` through to the same
-  IOC-limit technique via the already-live-tested `BybitCCXTAdapter.place_order()` (`order_type`/`price`/
-  `time_in_force` already supported), instead of its previous unconditional unbounded `order_type="market"`.
-
-**Real bug fixed alongside the missing bound**: Hyperliquid's market-order reference price previously fell back to a
-hardcoded `Decimal("100")` when the caller supplied none -- wrong for essentially every real asset (e.g. BTC), which
-silently produced a nonsensical IOC limit price. Now fetches a REAL live mark price via a new `/info
-type=metaAndAssetCtxs` call (mirrors the existing `/info` call pattern already used for `meta`/`clearinghouseState`)
-when no caller reference price is given.
-
-**Backward compatible**: the only real caller today, `perp_hedge_consumer.py` (`connector.place_order(...)` for both
-Hyperliquid and Bybit venues), never supplies a reference `price` -- so Aster/Pacifica/Bybit's behavior is
-byte-for-byte unchanged for it (still an unbounded venue-native market order); Hyperliquid gets a strictly-better
-live-mark-price-based IOC fill in place of the dangerous `$100` fallback, with no interface break.
-
-**Deliberately deferred (see the narrowed line-283 todo above)**: a resting-order or per-request expiry/deadline
-bound. Verified none of the four venues expose a per-order good-til-date: Hyperliquid's order schema has only
-ALO/IOC/GTC time-in-force; Aster's `timeInForce` enum is GTC/IOC/FOK/GTX/HIDDEN; Pacifica's `tif` enum is
-GTC/IOC/ALO/TOB; all three venues' only expiry-shaped field is a request-SIGNATURE freshness window (Pacifica's
-`expiry_window`, already handled by `_perp_idempotency.py`), unrelated to how long a resting order stays open.
-Hyperliquid's exchange action DOES support a request-processing deadline (`expiresAfter`, verified via WebFetch:
-top-level POST field alongside `action`/`nonce`/`signature`, rejects the whole action if not processed in time) --
-NOT wired in this pass because `_hyperliquid_signing.sign_l1_action` has no existing plumbing for it and the docs are
-ambiguous on whether it factors into the signed msgpack hash; getting that wrong risks a signature that's silently
-NOT enforcing the deadline while looking correct locally -- a worse outcome than deferring cleanly with the research
-already recorded here.
-
-**Tests added**: `tests/defi_execution/unit/test_perp_order_bounds.py` (the shared module, fully isolated -- resolve/
-reject/ceiling, bounded-price math both directions, bps-to-percent conversion); two new live-mode tests in
-`tests/defi_execution/integration/test_hyperliquid_mock.py` (reference-price-given bounds into IOC without an extra
-`/info` call; no-price-given triggers the live mark-price fetch and bounds around THAT); two new tests in
-`test_aster_connector.py` (market-with-price converts to LIMIT+IOC; market-without-price stays unbounded MARKET,
-unchanged); two new tests in `test_pacifica_connector.py` (`_build_order_params` carries `slippage_percent` for
-market, omits it for limit); two new tests in `test_bybit_connector.py` (reference-price bounds into limit+IOC;
-an absurd `max_slippage_bps` above the 20% ceiling is rejected before reaching the adapter).
-
-**Also fixed in the same pass** (stale doc pointer, per the "misled you = fix it" rule): `aster.py`'s module
-docstring cited a dead docs URL (`asterdex/api-docs/blob/master/aster-finance-api.md`, 404 -- the file moved under
-`V3(Recommended)/EN/aster-finance-futures-api-v3.md` in a repo restructure); corrected in place.
-
-`quality-gates.sh` green (270s, 9022 passed, sentinel matched committed HEAD exactly).
-
 **This close-out todo's own done-when ("once every todo above is done or explicitly re-scoped") is NOT yet
 satisfied** — the 3 open P0s above are genuine unresolved HIGH findings, not re-scoped/deferred work, so the
 checkbox below stays `[ ]` rather than being falsely flipped. No production code was changed; this is a doc-accuracy
@@ -627,38 +557,6 @@ in this same Progress Log, and the flipped checkbox at line 284). The close-out 
 stale by one: 2 open P0 fixes remain, not 3 — perp/CLOB slippage/deadline bounds (line 283) and native-REST
 client-order-id idempotency (line 304). The close-out todo's own checkbox stays `[ ]` (still 2 genuine open P0s plus
 the 2 unstarted audit phases), but its epic-doc correction should be re-run once those clear rather than trusted as
-current. **Update (2026-08-21, slot-7): checklist point 4 (line 283) is now done — see the two Progress Log entries
-below.** Only one todo remains open in this "DeFi by primitive — perp / CLOB on-chain" section: the close-out
-epic-reflection todo above, whose own epic-doc correction should be re-run now that both P0s it counted are closed.
-
-### 2026-08-21 — slot-7 Hyperliquid request deadline (checklist point 4, remainder) + EIP-712 chainId fix — SHIPPED
-
-Landed as `execution-service@d4876e394e` (rebased during push onto 2 upstream commits; full QG re-ran green
-post-rebase, 269s), post-push ancestry verified. Closes checklist point 4 in full — see the slippage-half entry
-above (`execution-service@fc7835b13e`) for that half's design.
-
-**Resolved the deferred uncertainty**: pulled `hyperliquid-dex/hyperliquid-python-sdk`'s `utils/signing.py` via
-`gh api` (the authoritative reference, not a doc page) and confirmed `expires_after`/`expiresAfter` IS part of the
-signed hash -- `action_hash()` appends `b"\x00" + expires_after.to_bytes(8, "big")` AFTER the vault marker, only
-when not `None`. Implemented `_hyperliquid_signing.sign_l1_action(..., expires_after_ms=...)` matching this exactly;
-`hyperliquid.py`'s `place_order()` gained a `deadline: int | None` param (absolute unix seconds, matching this
-codebase's existing AMM-swap deadline convention), validated in-range (future, ≤300s ahead) before the idempotency
-lock, converted to ms, folded into the signature, and added to the POST body's top-level `expiresAfter` field.
-
-**Real bug found + fixed in the same pass**: `_hyperliquid_signing.py`'s EIP-712 domain `chainId` varied by
-`testnet_mode` (1337 mainnet / 421614 testnet) -- the official SDK's `l1_payload()` confirms it's ALWAYS 1337 for L1
-actions regardless of network; only the phantom-agent `source` field ("a"/"b") distinguishes mainnet/testnet. The
-prior behavior would have produced an EIP-712 domain hash Hyperliquid's testnet endpoint could never verify --
-every testnet order/cancel would have failed signature verification. `testnet_mode` is a real, live-wired config
-option (used at both `place_order()` and `cancel_order()` call sites), so this had real (if perhaps not yet
-exercised) blast radius, not a theoretical gap. Fixed by removing the `is_mainnet`-conditional chainId branch
-entirely; `source` still varies as before.
-
-**Tests added**: new `tests/unit/defi_execution/test_hyperliquid_signing.py` -- domain chainId asserted 1337 for
-BOTH `is_mainnet=True` and `False` (regression for the bug above, via patching `eth_account.messages.
-encode_typed_data` to capture the full EIP-712 message), plus an independent byte-for-byte reconstruction of the
-`expires_after`-folded hash (not trusting the production code's own math) compared against the actual signature
-output. Four new tests in `test_hyperliquid_mock.py`: deadline threads into the POST body's `expiresAfter` (ms);
-omitted when not supplied (unchanged prior behavior); a past deadline is rejected before any network call; a
-deadline further than 300s ahead is rejected. `quality-gates.sh` green (9028 passed, sentinel matched committed HEAD
-before the push-time rebase; QG re-ran and stayed green after).
+current. Two todos remain open in this "DeFi by primitive — perp / CLOB on-chain" section: the checklist-point-4
+slippage/deadline-bounds todo (line 283) and the close-out epic-reflection todo above — pick point-4 next per the
+plan's own top-to-bottom ordering, it's the natural sibling (same four files, same audit phase).

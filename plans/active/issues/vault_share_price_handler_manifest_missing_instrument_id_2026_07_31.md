@@ -26,9 +26,8 @@ tags: [defi, vault-share-price, manifest, instrument-id, per-instrument-grain]
 related:
   [
     /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
   ]
-  # 2026-08-21 (archival sweep): dropped defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20 (archived to
-  # plans/archive/issues/, fully resolved — the systemic write-path fix landed market-tick-data-service@4ca2640d).
 created: "2026-07-31"
 author: unknown
 last_updated: "2026-07-31"
@@ -56,6 +55,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/vault_share_price_handler.py,
     market-tick-data-service/scripts/rename_vault_venue_canonical.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
   ]
 ---
 

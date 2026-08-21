@@ -187,8 +187,8 @@ original audit and this measurement, not a discrepancy in method; both counts de
       prior KEEP-NA verdicts (through 2026-08-07) relied on.
 - [ ] [SCRIPT] P1. **Execute the remaining half of the 2026-08-08 ruling** — the RPC `factory()` resolver + UAC venue
       registration half shipped 2026-08-09 (see Progress Log below); migrate + purge the historical objects/manifest to
-      canonical venue+chain naming, and resolve the UNISWAP-ETHEREUM cohort, still remain. **EXTRACTED `defi_satellite_ao_dispatch_batch11_2026_08_09.md`**
-      — execution tracked at that plan's (`/plans/active/`) follow-up `[SCRIPT] P1` todo
+      canonical venue+chain naming, and resolve the UNISWAP-ETHEREUM cohort, still remain. **Execution tracked at
+      `/plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09.md`'s follow-up `[SCRIPT] P1` todo
       (`assigned_vm: planning`, active — split 2026-08-09 from the now-closed resolver todo; the intermediate hop at
       `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s own `[SCRIPT] P1` todo was itself further
       extracted there the same day) — work the fix at batch11, not a second copy here; close all three together once it

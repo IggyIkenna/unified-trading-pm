@@ -158,8 +158,7 @@ context_scope:
       new `defi_adapter=` injection seam on `SwapHandler`/`LendHandler`/`StakeHandler` (mirrors
       `TransferHandler`'s existing `adapter=` pattern — NOT literally `DeFiAdapter.execute_instruction()` as
       originally worded here; that method has its own fabricated/degraded-success gap, found mid-implementation
-      and filed separately: `/plans/archive/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md`
-      (RESOLVED + ARCHIVED 2026-08-21),
+      and filed separately: `/plans/active/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md`,
       deliberately not fixed in this change to avoid widening its blast radius onto `DeFiAdapter`'s already-shipped
       internal-manual-API consumer). Done-when: each of the 5 actions produces a real (non-mock) settlement result
       over HTTP, both the real-credentials-present and no-credentials-honest-FAILED paths tested. — this todo's

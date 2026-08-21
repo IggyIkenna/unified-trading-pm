@@ -154,12 +154,3 @@ Still genuinely open, for the next run to re-assess against the primary RECLASSI
   `defi_consolidated_closeout_2026_07_18.md` for the tranche's own AG closeout tracker.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **2026-08-21 (dedup verification pass)**: attempted to formalize the doc's own prose `SUPERSEDED 2026-08-17` banner
-  into `status: superseded` frontmatter — reverted: `check_terminal_status_archived.py` (pre-commit `plan-hygiene`
-  hook) treats `status: superseded` as unconditionally TERMINAL for an issue doc and requires it to already be
-  `git mv`'d to `plans/archive/`, which contradicts this doc's own banner ("Kept here, not archived... archival
-  deferred to a dedicated hygiene pass"). No open `- [ ]` todos exist in this doc either way (Phase 1b consolidation
-  report, not checkbox-tracked) — nothing for the dedup counter to gain from the frontmatter change regardless.
-  Flagging for archive instead (see FLAG-FOR-ARCHIVE note): content-superseded, 0 open todos, successor confirmed
-  present and `status: open` (active) — an operator/hygiene-pass archival (not a self-archive here, per this session's
-  scope) would let `status: superseded` land cleanly alongside the `git mv`.

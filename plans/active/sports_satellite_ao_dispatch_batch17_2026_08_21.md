@@ -22,6 +22,7 @@ scope: [engineer]
 tags: [sports, ao-dispatch, close-out, batch-17, satellite-docs, ag-closeout-audit, dp-live-004]
 related:
   [
+    /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_21.md,
     /plans/active/issues/dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md,
     /plans/active/issues/live_sports_odds_upstream_failure_masked_as_honest_absence_2026_08_20.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
@@ -48,7 +49,7 @@ source: >-
   /ag-closeout-audit sports (2026-08-21, sub-agent authoring session) Phase 3, per
   /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md §3's shared conflict-check protocol
   and task_template.md's dispatch-scope eligibility test. Source triage:
-  /plans/archive/issues/ag_closeout_audit_sports_parked_2026_08_21.md (archived 2026-08-21, fully processed).
+  /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_21.md.
 context_scope:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,

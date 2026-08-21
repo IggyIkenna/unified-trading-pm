@@ -49,17 +49,6 @@ source:
 depends_on: []
 ---
 
-> **🟢 ARCHIVED 2026-08-21** — all 4 todos `[x]` done, unlocked, not `archive_exempt`; archived per
-> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
-> archive-on-resolve rule. The durable fact (the placeholder bug, its root cause, and the fix) is now captured in
-> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)
-> § "`locked_by: live-defi-rollout` was a hardcoded branch-name placeholder" — every active-corpus `related:` citation
-> of this doc was repointed there as part of this archival. Moved during an ARCHIVE_RESOLVED archival-chunk pass
-> (chunk 3, 2026-08-21); the companion gated finalize
-> (`locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10_finalize_2026_08_19.md`, still active) had already
-> re-confirmed the writer-patch commit (`parity_watchdog.py`) as real and reachable, satisfying its own
-> re-verification precondition for this move.
-
 # `locked_by: live-defi-rollout` — hardcoded placeholder, not a real lock (96 docs corpus-wide)
 
 ## Evidence
@@ -163,11 +152,3 @@ mis-treating a doc that coincidentally has a real reason to be locked under that
   Flipped `assigned_vm: NA -> planning`, filled `assigned_role: worker` (was missing). Companion:
   `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10_finalize_2026_08_19.md`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-- **2026-08-21 (archival chunk-3)**: re-verified all 4 todos `[x]`, `locked_by`/`archive_exempt` both empty, evidence
-  re-confirmed live (`scripts/plans/clear_locked_by_placeholder_2026_08_12.py` exists; `parity_watchdog.py:111` writes
-  an empty `locked_by:` field). Migrated the durable fact to
-  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` and repointed the 3 active-corpus `related:`
-  citations (`plan_reconciler_full_corpus_sweep_2026_08_20.md`,
-  `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10_finalize_2026_08_19.md`,
-  `operator_ruling_record_plan_reconcile_session_2026_08_15.md`) at that codex doc instead of this path. Archived to
-  `plans/archive/issues/`.

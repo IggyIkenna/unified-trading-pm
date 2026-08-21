@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, finalize, na-eligibility-audit, locked_by]
 related:
   [
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-19"
@@ -38,7 +38,7 @@ context_scope:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
   ]
 supersedes:
 superseded_by:

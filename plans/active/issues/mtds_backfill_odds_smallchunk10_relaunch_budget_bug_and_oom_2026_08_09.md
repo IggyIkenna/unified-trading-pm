@@ -128,15 +128,12 @@ Two independent paths, not mutually exclusive:
       expected value. Repo: deployment-service. — **deployment-service@6e6f509f** (Quickmerge, verified ancestor of
       `origin/live-defi-rollout`): targeted `test_dp_recovery_actuators.py` tests (11/11, `vm_prefix`/
       `stalled_relaunch` selection) + full `quality-gates.sh` green, sentinel=6e6f509f.
-- [ ] [OPERATOR] P2. **DUPLICATE OF `/plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`**
-      (status: open, verified 2026-08-21) — path A (machine-type resize) was already applied there for this exact
-      launcher (`deployment-service@bbce1b6`, 2026-07-29, `launch-mtds-sports-odds-backfill-vm.sh` → `e2-highmem-4`);
-      path B (odds_api memory-growth root cause) is that doc's own active, ongoing investigation (15+ sessions since
-      2026-07-22, per this doc's 2026-08-12 Progress Log entry below). No independent decision remains here beyond
-      what that doc already tracks — relaunch/abandon-vs-retry for this specific `smallchunk10` shard should follow
-      that doc's own resolution, not be decided independently. Once decided there, relaunch via
-      `RelaunchStalledVm`/`RelaunchBackfillVm` — the budget-collision bug no longer blocks it (fixed above,
-      `mtds-backfill-odds-` bucket currently at 0/2 today).
+- [ ] [OPERATOR] P2. Decide + apply path A (machine-type resize for `launch-mtds-sports-odds-backfill-vm.sh`) and/or
+      dispatch path B (investigate the odds_api BUNDESLIGA memory-growth root cause in market-tick-data-service) for
+      `mtds-backfill-odds-smallchunk10-20260809` (and any sibling `smallchunk*` shards hitting the same pattern —
+      `smallchunk12/13/14` are also in-flight/recent per the registry, worth a quick cross-check once path B lands).
+      Once decided, relaunch via `RelaunchStalledVm`/`RelaunchBackfillVm` — the budget-collision bug no longer blocks it
+      (fixed above, `mtds-backfill-odds-` bucket currently at 0/2 today).
 
 ## Progress Log
 
@@ -175,7 +172,3 @@ Two independent paths, not mutually exclusive:
   tests, full quality-gates.sh green). Does not close this todo -- the general OOM root cause is still open, only this
   additive amplifier is fixed.
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries) — added scripts/vm/launch-mtds-sports-odds-backfill-vm.sh (the launcher whose MACHINE_TYPE/CHUNK_SIZE defaults the unresolved OOM path A would change).
-- **dedup pass 2026-08-21**: marked the sole open todo `DUPLICATE OF`
-  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (verified status: open, not archived; that doc's own body
-  independently confirms both the shipped machine-type bump and the still-active memory-growth investigation this
-  doc's todo asks for) so the plan-hygiene open-task counter stops double-counting it — no content change.

@@ -19,7 +19,7 @@ related:
   [
     /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
   ]
 created: 2026-08-15
 parent_epic: plan_hygiene_master
@@ -65,7 +65,7 @@ checkbox-flip citations resolve to a real path instead of an unsourced "operator
 - **Item 2 — corpus-wide `locked_by: live-defi-rollout` placeholder bug** — _"One-time corpus-wide clear
   (Recommended)."_ Ruling: Option B — treat the literal string `live-defi-rollout` as never a real lock and clear it
   from every doc in `plans/active/` carrying it in one pass, per
-  `/plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`. Applied via
+  `/plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`. Applied via
   `scripts/plans/clear_locked_by_placeholder_2026_08_12.py --apply`; measured live count was only 2 remaining docs in
   the active corpus (earlier batches had already cleared the rest), not the ~96 originally estimated.
 - **Item 3 — GCS-delete autonomy contradiction** (`deployment_registry_firestore_migration_2026_07_14.md` "fully

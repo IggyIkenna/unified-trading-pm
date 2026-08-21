@@ -23,6 +23,7 @@ related:
   [
     /plans/active/issues/prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md,
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
+    /plans/active/issues/ag_closeout_audit_prediction_parked_2026_08_21.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-21"
