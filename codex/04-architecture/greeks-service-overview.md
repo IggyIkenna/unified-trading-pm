@@ -30,10 +30,16 @@ type: architecture
 # Greeks-Service Overview
 
 > **[DELTA 2026-05-23]** **New dedicated service codified** — operator decision in
-> `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md` (greeks compute is its own service, not absorbed
-> into MTDS or strategy-service). Phase 1 skeleton landed at `greeks-service/` (15 files / 575 lines); Phase 2+ wires
-> `BlackScholesGreeksCalculator`, carry-rate readers, batch/live mode handlers, and PricingLedger writers per
-> `plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md`.
+> `plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md` (ARCHIVED; greeks compute is its own
+> service, not absorbed into MTDS or strategy-service). Phase 1 skeleton landed at `greeks-service/` (15 files / 575
+> lines); Phase 2+ (`BlackScholesGreeksCalculator`, carry-rate readers, batch/live mode handlers, PricingLedger
+> writers) SHIPPED under `plans/archive/2026_05/pricing_ledger_carry_rates_mtds_2026_06_01.md` Phase 3 (status:
+> complete) — the `..._migration_2026_06_01.md` plan originally cited here never actually carried this work; it was
+> archived as a stub and the work folded into the pricing-ledger plan instead (see that plan's "Consolidation note").
+> **[DELTA 2026-08-21]** Verified `greeks_service/config_reloaders.py` (DomainConfigReloader-based instrument hot
+> -reload) remains an unwired Phase 1 stub with zero callers — the instrument-metadata need it was meant to serve was
+> fulfilled instead by `InstrumentReader` (HTTP + TTL cache) in the Phase 3 work above. No active plan owns wiring it;
+> left as-is rather than inventing new design intent.
 
 ## What it is
 
@@ -231,7 +237,8 @@ reader and greeks_block join are pending (plan Phase 3 CODE P0 — BLOCKED-SCHEM
   greeks-service consumes `InstrumentRecord` via the same canonical reader path.
 - `/codex/02-data/availability-manifest-and-data-status.md` — greeks-service emits the standard 4-state `capture_status`
   per shard (`captured` / `empty_confirmed` / `attempted_failed` / `expected_unattempted`); no silent placeholder rows.
-- `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md` — operator decision (2026-05-23) to spin
-  greeks-service as a standalone service.
-- `plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md` — Phase 1 skeleton (shipped) → Phase 2
-  calculator + writer wiring.
+- `plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md` — ARCHIVED; operator decision
+  (2026-05-23) to spin greeks-service as a standalone service.
+- `plans/archive/2026_05/pricing_ledger_carry_rates_mtds_2026_06_01.md` — ARCHIVED, status complete; Phase 3 shipped
+  the calculator/handler/batch-backfill/PricingLedger writer wiring (the `..._migration_2026_06_01.md` plan cited
+  here previously never carried this work — see the DELTA callout above).
