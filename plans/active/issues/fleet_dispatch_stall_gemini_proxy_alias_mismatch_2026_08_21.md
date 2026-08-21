@@ -188,7 +188,33 @@ exercised different strings, so a green suite carried no signal about the live p
       alias. Deliberately does not re-read the config to compare it against itself, which is
       exactly how the smoke test missed this. — agent-orchestrator@bee25ba8de
 
+- [x] [INFRA] P0. **Cross-provider audit + a guard that reads what PRODUCTION reads.**
+      Operator ask: "check that's not the case with other models as well, and make sure
+      tests and prod use the same paths and names so we can check this early."
+      **Audit result: Gemini was the only broken provider.** All 24 accounts / 6 providers
+      checked by reading each env file's real `ANTHROPIC_MODEL` + `ANTHROPIC_BASE_URL` and
+      resolving it against that backend's registry — 20/20 provisioned accounts now
+      resolve (litellm ×7, deepseek ×2 by URL path, codex ×1 vs the bridge constant,
+      anthropic ×8 correctly pinning no model, glm ×2 honestly reported SKIP as an
+      external vendor API). Also checked the BILLING path, where a name mismatch withholds
+      spend silently rather than erroring: `gpt-5.6-luna` and the Gemini aliases have no
+      rate card, but both are DELIBERATE (`billing_shape_for_provider` = `subscription_
+      unknown` and `rate_limited_free` respectively), not drift.
+      Shipped `scripts/orchestrator/check_prod_model_names_resolve.py` +
+      `tests/test_prod_model_name_resolution.py` — agent-orchestrator@ebfbde53f7.
+      Covers three failure modes nothing was checking: Codex model drift (fails SILENTLY —
+      the bridge serves its own constant regardless), DeepSeek routing to another account's
+      `/accounts/<id>` path (silently misattributes usage/billing), and an Anthropic env
+      file pinning `ANTHROPIC_MODEL` (silently overrides AO's chosen tier).
+
 ## Open todos
+
+- [ ] [INFRA] P1. **Run `check_prod_model_names_resolve.py` on a schedule** — it is
+      currently only run by hand, which is the same "nobody thinks to look" gap that let
+      the original bug live for days. Wire it into `/ao-watchdog`'s pass (cheapest) or its
+      own systemd timer, and page on exit 1. On a slot checkout it needs
+      `--repo-root /home/ubuntu/unified-trading-system-repos/agent-orchestrator` to see the
+      deployed host state.
 
 - [ ] [OPERATOR] P0. **Restart `litellm-grok-gemini-proxy.service`** so the corrected aliases
       load. The service is already serving a >22h-stale config and is currently 100%
@@ -242,6 +268,23 @@ exercised different strings, so a green suite carried no signal about the live p
   The Gemini smoke test read the config to build its request, so it could never detect that
   the config disagreed with production. Where two systems must agree on a string, the test has
   to assert the CONTRACT (the account-id form), not re-read one side.
+- **A test that always SKIPS is worse than no test — it reads green forever while proving
+  nothing.** The first version of the cross-provider guard was written as a pytest. It
+  "passed" by skipping all 5 cases: `config.accounts_path()` is repo-relative, so from any
+  slot it resolves to a `data/config/accounts.json` that does not exist, and tests only ever
+  run in slots. That is the SAME false-assurance failure as the smoke test above, just
+  wearing a different disguise — so it was deleted rather than shipped. The honest split is
+  two layers: the repo-verifiable invariant (alias FORM) stays a CI test, and the host-state
+  check becomes a script that runs where the state actually lives. When adding a guard, check
+  it can actually EXECUTE in the environment it will run in, and that it FAILS on the real
+  broken input (`test_catches_the_2026_08_21_dot_vs_dash_mismatch` feeds the guard the
+  genuine dotted-vs-dashed inputs and asserts BROKEN) — a guard only ever exercised against
+  already-fixed state demonstrates nothing.
+- **`| tail`/`| head` on a gate run fabricates exit 0 AND truncates the diagnosis.** A gate
+  run reported "completed (exit code 0)" while its own log said `❌ FAILED`, because the pipe
+  returned `tail`'s status. It cost a full round-trip and nearly produced a false "green"
+  claim to the operator. Redirect to a file (`> log 2>&1`), never pipe, and read the log's
+  own verdict line rather than trusting the exit code.
 - **"Service active" and "account healthy" are both proxies, not measurements.** systemd
   reported the proxy `active (running)` throughout; AO reported all 10 Gemini accounts
   `healthy` with full quota headroom. Both were true and both were useless — the only signal
