@@ -75,23 +75,9 @@ shared cap and produces false skips/failures.
 - [x] [BACKEND] P0. Resolve the LIGHTER-ZKSYNC derivative-ticker catalogue mapping so sampled symbols cannot be emitted
   as a bare `ARM` instrument id, then rerun its canonical negative/positive controls (repos: `instruments-service`,
   `unified-api-contracts`, `market-tick-data-service`). — unified-api-contracts@2d025cabe + Evidence: quality-gates.sh ALL QUALITY GATES PASSED; regression controls cover crypto-only CLOB acceptance and ARM rejection.
-- [x] [BACKEND] P1. Classify every `no_captured_data_for_cell` and `tardis_guard_busy` result against the production
+- [ ] [BACKEND] P1. Classify every `no_captured_data_for_cell` and `tardis_guard_busy` result against the production
   source listing and record an honest absence or successful capture; no row may remain represented only by a skipped
-  aggregate result (repos: `market-tick-data-service`, `deployment-service`). — market-tick-data-service@27f4087273 +
-  Evidence: classified all 87 distinct (venue, data_type) pairs carrying a `no_captured_data_for_cell`/`tardis_guard_busy`
-  reason in the retained report — 31 `confirmed_absent_at_source`, 45 `confirmed_available_needs_capture`, 11
-  `unresolved_source_check`; `--apply` run against the live PROD CeFi manifest returned `gate_ok=true`,
-  `reclassed=0`, `applied=false` (no live row currently sits in `attempted_failed` status for any of the 31
-  confirmed-absent pairs, so the reclass step correctly no-op'd rather than force a write). See Progress Log entry
-  below for the full breakdown and follow-up todos.
-- [ ] [BACKEND] P2. Recapture the 45 `confirmed_available_needs_capture` pairs identified below (production Tardis
-  listing confirms the data_type exists for that exchange, or the venue's on-chain-perp launcher default covers it) —
-  gate on the shared Tardis lease being free (hard cap 1 concurrent VM per `/codex/05-infrastructure/spot-vms-for-backfill.md`)
-  and rerun the bounded serial driver scoped to just those pairs (repo: `market-tick-data-service`).
-- [ ] [BACKEND] P3. Extend `VENUE_TO_TARDIS_EXCHANGE` in
-  `market_tick_data_service/scripts/classify_cefi_skips_against_source_listing_2026_08_21.py` for the 3 venues left
-  `unresolved_source_check` (`COINBASE-FUTURES`, `KRAKEN-SPOT`, `OKX-SWAP` — 11 pairs total) once their real Tardis
-  exchange ids are confirmed, then rerun the classifier to resolve those verdicts (repo: `market-tick-data-service`).
+  aggregate result (repos: `market-tick-data-service`, `deployment-service`).
 
 ## Progress Log
 
@@ -162,31 +148,3 @@ the report retains `tardis_guard_busy`, `no_captured_data_for_cell`, `canonical_
 `vm_self_deleted_no_exit_status`, and the raw `LIGHTER-ZKSYNC:PERPETUAL:ARM.parquet` canonical rejection.
 Evidence: VM log `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260821-015725-816753/run.log`;
 report `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`.
-
-**2026-08-21 — slot 19, P1 classification shipped + applied.** Shipped
-`market-tick-data-service@27f4087273`
-(`market_tick_data_service/scripts/classify_cefi_skips_against_source_listing_2026_08_21.py` +
-`tests/unit/scripts/test_classify_cefi_skips_against_source_listing_2026_08_21.py`; quality-gates.sh ALL QUALITY GATES
-PASSED). The script reads the retained `2026-08-20` CeFi report's `results[]`, extracts the distinct (venue, data_type)
-pairs whose `reason` is `no_captured_data_for_cell` or `tardis_guard_busy`, and checks each against the real production
-source listing: Tardis's free `GET api.tardis.dev/v1/exchanges/{exchange}` `datasets.symbols[].dataTypes` for
-Tardis-routed venues, and a fixed perp-only-triple rule (`trades`/`book_snapshot_5`/`derivative_ticker` only) for the
-5 on-chain-perp venues that never route through Tardis (ASTER, HYPERLIQUID, LIGHTER-ZKSYNC, EXTENDED-STARKNET,
-PACIFICA-SOLANA). Classified all 87 distinct pairs: **31 `confirmed_absent_at_source`** (the source genuinely never
-offers that data_type for that venue — e.g. `BINANCE-SPOT:derivative_ticker`, every `*:options_chain` outside Deribit,
-every on-chain-perp venue's `liquidations`/`options_chain`), **45 `confirmed_available_needs_capture`** (the source
-does carry the data_type — these are real capture gaps, not source absences), and **11 `unresolved_source_check`**
-(3 venues — `COINBASE-FUTURES`, `KRAKEN-SPOT`, `OKX-SWAP` — not yet in the script's `VENUE_TO_TARDIS_EXCHANGE` map).
-Full per-pair breakdown with rationale is in the script's `--out` JSON (not committed; regenerable by rerunning the
-classifier against the same report). Then ran `--apply` against the live PROD CeFi availability manifest
-(`_index/availability_index.parquet`): the DuckDB out-of-core reclass path (built specifically to avoid decoding the
-~30.8M-row PROD manifest into pandas on the shared host, after an earlier near-OOM/SIGKILL incident this session)
-computed `gate_ok=true` (row count preserved at 30801085, `captured` count unchanged at 10888214) but found **zero**
-manifest rows currently in `attempted_failed` status matching any of the 31 confirmed-absent (venue, data_type) keys
-— so `reclassed=0`, `applied=false`, and no snapshot was written (the snapshot-before-write path only fires on an
-actual write). This is a genuine, honest no-op, not a script defect: the smoke-run skip reasons
-(`no_captured_data_for_cell`/`tardis_guard_busy`) are report-level driver skips, and none of the 31 confirmed-absent
-pairs happen to also carry a stale `attempted_failed` row in the live manifest to reclassify. The classification
-itself — not a manifest write — is the durable "honest absence" record for those 31 pairs going forward. Follow-ups
-tracked as the two new todos above: recapture the 45 confirmed-available pairs, and extend the exchange map for the
-3 unresolved venues.
