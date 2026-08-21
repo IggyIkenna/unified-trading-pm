@@ -206,11 +206,14 @@ REUSES the frameworks that already exist rather than building new ones:
       (`/codex/05-infrastructure/live-pipeline-architecture.md`) — a rotation gap is recorded honestly, never
       silently spanned. Done-when — rotation exercised against at least one real venue in paper mode with the
       backfilled gap rows manifest-verified (zero silent loss).
-- [ ] [BACKEND] P0. Execution private-stream staleness + position resync — apply the same manager to
-      `execution_service/trade_execution/ws_feeds.py` and `engine/modes/live/data_source.py`; EVERY rotation of a
-      user-data/order/position stream is followed by a mandatory REST snapshot resync (positions + open orders)
-      before the stream is trusted again, so execution's position state can never silently stay stale across a
-      rotation. Done-when — tests prove a dropped private stream terminates in a resynced state, not a stale one.
+- [x] 4. ✅ [BACKEND] P0. Execution private-stream staleness + position resync — execution-service@42e54a11f8 +
+      full `quality-gates.sh --no-fix` green pre-commit. `trade_execution/private_stream_guard.py`
+      (`PrivateStreamGuard`) wraps any `BaseOrderFeedHandler` with the UTL `WsSessionManager` and enforces the
+      resync invariant — after EVERY new connection generation (initial/reconnect/rotation) the REST snapshot
+      resync is awaited BEFORE any update from that generation is yielded; a venue-closed stream rotates
+      immediately. `ws_feeds.py` gains a uniform base `close()`; `engine/modes/live/data_source.py` feeds ticks to
+      an optional session manager. 3 tests prove a dropped private stream terminates resynced, never stale
+      (initial-resync-before-first-update, close→rotate→resync-before-next-update ordering, stop semantics).
 - [ ] [BACKEND] P0. Wire the Phase-B error-code registry into every consumer — MTDS shard loops
       (`classify_venue_error()` per `/codex/04-architecture/shard-level-failure-isolation.md`), instruments-service,
       execution adaptors, strategy-service balance queries. This EXECUTES `system_readiness_master` W14's "Every
@@ -269,11 +272,9 @@ REUSES the frameworks that already exist rather than building new ones:
   doc URLs + retrieval dates are recorded in the declaration files themselves, the yaml gets entries only where a
   real version exists (none surfaced so far).
 - **2026-08-21 (batch 2 shipped + pre-compact checkpoint)** — unified-api-contracts@54009a4fdd (cefi ws specs ×5) +
-  unified-trading-library@fcfcbf3893 (C1 session manager) landed, LDR ancestry verified. Execution-service C4 is
-  COMMITTED locally as execution-service@6cef44435 (all 4 files + Quickmerge trailer; exec QG was green) with the
-  push re-running in background at checkpoint time — the next session verifies
-  `git merge-base --is-ancestor 6cef44435 origin/live-defi-rollout` in execution-service and flips the C4 checkbox
-  with that sha; nothing else is uncommitted in any repo. **Lessons**: (1) quickmerge quarantines the dirty tree
+  unified-trading-library@fcfcbf3893 (C1 session manager) landed, LDR ancestry verified. Execution-service C4
+  LANDED as execution-service@42e54a11f8 (the push-reject rebase renamed the local 6cef44435 — cite 42e54a11f8;
+  content verified at origin tip; checkbox flipped above); nothing is uncommitted in any repo. **Lessons**: (1) quickmerge quarantines the dirty tree
   into a named `quickmerge-NNNNN` stash BEFORE its remote fetch — a DNS flap (`ssh.github.com` unresolvable, hit
   twice) then leaves a CLEAN tree + "Nothing to commit" on re-run; recovery is `git restore --source='stash@{N}'`
   for tracked files AND `--source='stash@{N}^3'` for untracked ones (the stash's untracked third parent —
@@ -293,7 +294,7 @@ REUSES the frameworks that already exist rather than building new ones:
 
 | Item                                                                     | State / why deferred                                                                                              | Blocked on                                       |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| C4 push confirm + flip (execution-service@6cef44435)                     | commit local + gate-green; push re-running in background at checkpoint                                             | quickmerge completing (network)                  |
+| C4 push confirm + flip (execution-service@42e54a11f)                     | commit local + gate-green; push re-running in background at checkpoint                                             | quickmerge completing (network)                  |
 | Phase B research — TradFi (zero output), CeFi remaining venues + ALL     | sub-agent account session limit                                                                                    | quota reset 16:40 Europe/London → 3-agent wave   |
 | CeFi error tables, sports/altdata completeness verify, PROTOCOL_CAPS     |                                                                                                                    |                                                  |
 | C2 `rotate_websocket` refetch_action                                     | deliberately split — spans UAC `data_freshness.py` + alerting-service `feed_refetch_rules.py` consumers            | nothing — next code unit                         |
