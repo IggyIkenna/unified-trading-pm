@@ -234,14 +234,23 @@ todos only to confirm they are data-movement, then leave it.
       confirmed. **Do NOT wire RSA-PSS auth, flip `_REPOINT_PENDING`, or repoint the base URL until that
       confirmation happens** — this is an operator/business action (signing up for perps rights), not a code
       readiness gap. Re-open as actionable BACKEND work once the operator confirms the rights are secured.
-- [ ] [AGENT] P1. Classify the sports bookmaker roster for the operator (NOT for the artefact): for each of the
-      27 kept books, is it (a) an odds-api bookmaker, (b) covered by the Unity central-wallet integration
-      (enumeration lives in sports_master.md / mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md
-      / e2e docs — the 2026-08-21 verification pass could not find one clean list, so build it), or (c) neither
-      — legacy arbitrage-research leftovers. Deliver the (c) list as a removal proposal; removal itself is
+- [x] ✅ [AGENT] P1. Classify the sports bookmaker roster for the operator (NOT for the artefact): for each of the
+      27 kept books, is it (a) an odds-api bookmaker, (b) covered by the Unity central-wallet integration, or (c)
+      neither — legacy arbitrage-research leftovers. Deliver the (c) list as a removal proposal; removal itself is
       operator-gated. Artefact side (T5): sports data types are odds, arbitrage_opportunity,
       odds_horizon_bucket, trades, trades_inplay; execution = Unity integration central-wallet, "coming soon —
       available faster on demand".
+      **2026-08-21 — built the missing clean list, classified all currently-kept venues.** Full table + evidence:
+      `/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md`. The "27" is a stale 2026-08-08
+      snapshot; the CURRENT kept roster is 39 (27 original + 4 Betfair-family/Pinnacle + 8 Unity child books added
+      2026-08-17, after the count was taken) — all 39 classified. 25 actively odds_api-fetched, 9 Unity-covered (1
+      dual-covered), 4 **HIGH-confidence removal candidates** (BETOPENLY, NOVIG, ONEXBET, PROPHETX — canonical
+      token + odds_api key exist but were never wired into the live fetch scope, zero manifest presence of any
+      kind in the 2026-08-20 coverage.json, no Unity coverage — arbitrage-research vintage), 2 LOW-MEDIUM
+      confidence flags (BETMGM, BETWAY — same unwired pattern but some real captured rows, an operator judgment
+      call rather than a clean removal). 2 Unity-roster contradictions surfaced, not resolved (code SSOT vs
+      `sports_master.md`'s historical vision doc disagree on PINNACLE/CROWN). Operator + follow-up todos filed in
+      the issue doc, not here.
 - [ ] [BACKEND] P2. Unattributed manifest tokens (24 in the 2026-08-19 manifest, incl. 76 pre-canonical
       bare-protocol DeFi tokens in the wider decomposition): land the manifest-side attribution/canonicalisation
       CODE so the "Unattributed" bucket disappears from client-facing surfaces (migration run itself stays out
