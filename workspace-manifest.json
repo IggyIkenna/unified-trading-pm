@@ -73,7 +73,7 @@
     "deployment-ui": "0.1.0",
     "execution-service": "0.94.0",
     "features-service": "0.94.5",
-    "fund-administration-service": "0.12.5",
+    "fund-administration-service": "0.12.8",
     "ibkr-gateway-infra": "0.5.3",
     "instruments-service": "0.103.48",
     "market-tick-data-service": "0.148.8",
