@@ -206,7 +206,7 @@ impression:
 - [x] ✅ [BACKEND] P0. Add CCTP amount/recipient validation and reject missing source wallet credentials before approve/burn (cctp.py); HIGH finding: checklist point 3. — execution-service@fa434b66a0 + evidence: verified already-landed in fb50f729 (see Progress Log entry below); added regression test coverage, no production code change required.
 - [x] ✅ [BACKEND] P0. Make CCTP transfer tracking durable and idempotent across retries; preserve source burn tx hash and prevent duplicate approve/burn submissions; HIGH finding: checklist point 6. — execution-service@f4391ac596 + evidence: see Progress Log 2026-08-21 slot-21 entry below.
 - [x] ✅ [BACKEND] P0. Define and enforce caller slippage/deadline bounds for Socket bridge routes, including validation of aggregator-produced transaction targets and calldata; HIGH findings: checklist points 2 and 4. — execution-service@fb50f729,3f54ca20 + evidence: verified already-landed (see Progress Log 2026-08-21 slot-22 entry below); no new code required.
-- [ ] [BACKEND] P0. Correct CCTP status lookup and enforce attestation timeout/terminal failure semantics; HIGH finding: checklist point 7.
+- [x] ✅ [BACKEND] P0. Correct CCTP status lookup and enforce attestation timeout/terminal failure semantics; HIGH finding: checklist point 7. — execution-service@004bd5c15c + evidence: see Progress Log 2026-08-21 slot-21 CCTP attestation-timeout entry below.
 - [ ] [BACKEND] P0. Harden Aave lending writes: reject non-positive/non-integral amounts and invalid flash-loan vectors, fail closed instead of simulating success when live credentials/executor are absent, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3, 6, and 7 (`aave.py`, `aave_live.py`).
 - [ ] [BACKEND] P0. Harden Morpho Blue writes: validate amount/LLTV/market-id inputs, use configured loan-token decimals rather than unconditional 18-decimal conversion, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3 and 6 (`morpho.py`).
 - [ ] [BACKEND] P0. Validate Kamino transaction intent before signing: enforce positive amount and address/mint relationships, inspect/allowlist fee payer, programs, accounts, and token-approval scope in API-produced transactions, and add retry idempotency; HIGH findings: checklist points 2, 3, 5, and 6 (`kamino.py`).
@@ -596,3 +596,34 @@ before trusting it, confirming only the deleted file's 2-line entry disappeared;
 `git pull --rebase --autostash` in this repo picked up slot-21's own independent identical regen already on
 origin, so nothing further needed committing here). Shipped via quickmerge — execution-service@e1e1788d35;
 post-push ancestry verified.
+
+### 2026-08-21 — slot 21 CCTP attestation-timeout/terminal-failure fix (checklist point 7)
+
+Re-read `cctp.py` at current LDR HEAD against the "Correct CCTP status lookup and enforce attestation
+timeout/terminal failure semantics" P0 todo (2026-08-20 slot-5 audit finding: "`_pending_burns` is keyed by
+transfer ID... so a valid source tx hash remains `BRIDGING` indefinitely; receive failures are reported, but
+timeout/terminal semantics are incomplete").
+
+The status-lookup half was already fixed as a side effect of the earlier `fb50f729` security-state commit:
+`get_bridge_status()` now resolves via `_find_burn_by_tx_hash()`, which checks the tx-hash-keyed
+`_burns_by_source_tx` dict first — confirmed by tracing `_index_burn()`'s population of that dict against every
+call site; no lookup bug remains for a valid tx hash. No new code needed for that half.
+
+The remaining real gap: `get_bridge_status()` already returned `FAILED` once a burn waited past
+`_attestation_timeout` with no attestation, but `receive_on_dest()` never checked elapsed time at all — the
+identical underlying transfer could report `FAILED` from one entry point and `BRIDGING` forever from the other.
+Fix: extracted the check into a shared `_attestation_timed_out()` helper, used by both `get_bridge_status()` and
+`receive_on_dest()`. The timeout only gates the *wait for* the attestation — once `burn.attestation` is set,
+neither entry point re-checks elapsed time, so an already-attested transfer can still complete regardless of its
+total age (verified by a dedicated regression test).
+
+Left `get_bridge_status()`'s `burn is None → BRIDGING` behavior untouched: it is a separate, deliberately-tested
+contract (`TestCCTPGetBridgeStatusNoRecord.test_returns_bridging_for_unknown_tx_hash`), not part of this
+finding, and `TransferStatus` has no "unknown" value to report instead — changing it would be a different,
+riskier change outside this todo's scope.
+
+4 new regression tests added to `test_cctp.py` (`TestCCTPAttestationTimeout`): `get_bridge_status` FAILED after
+timeout, `receive_on_dest` FAILED after timeout (the actual fix), `receive_on_dest` still BRIDGING before
+timeout, and `receive_on_dest` ignores an old `created_at` once attestation is already present. Full
+`quality-gates.sh` green (156s); shipped via quickmerge — execution-service@004bd5c15c; post-push ancestry
+verified.
