@@ -33,7 +33,6 @@ related:
   - /plans/active/ao_consolidated_closeout_2026_08_12.md
   - /plans/active/issues/plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md
   - /plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md
-  - /plans/active/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md
 context_scope: [agent-orchestrator/server/tmux_spawn.py, agent-orchestrator/server/orphan_reap.py, agent-orchestrator/scripts/orchestrator/strace_tmux_server_supervisor.sh, scripts/self-hosted-runners/tmpfs-disk-cleanup.sh, /codex/15-runbooks/safe-service-restart-procedures.md]
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
@@ -441,34 +440,33 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       2026-08-21, see Progress Log entry below), sticky, fleet-wide, via the existing operator-disable mechanism
       (`server/state_store/account_usage.py::disable_account`) — no auto-clear path exists, so this requires an
       explicit action, not a passive wait.
-- [x] ✅ [INVESTIGATE] P1. **DeepSeek's dominant mid-task death mechanism — ROOT-CAUSED 2026-08-21 via a 26-agent
-      transcript-level Workflow investigation** (32-death population, 14-day DB lookback confirmed ALL fall inside
-      one bounded cluster, 2026-08-19 23:45:28 -> 2026-08-20 15:46:01, none before or since). Two distinct causes,
-      not one:
-      - **Cluster A (11 deaths, high confidence)**: DeepSeek account balance exhaustion (HTTP 402 "Insufficient
-        Balance"), confirmed directly against `deepseek_balance_history` — balance drains to zero/negative, every
-        subsequent turn (real or AO-resumed) gets an instant synthetic 402, AO's resume/respawn cycling exhausts
-        after `max_attempts=2` and kills the slot, requeuing the task. `death_class="unexplained"` here is a
-        classification gap, not a mystery — AO's `account_snapshot` health tracker has NO field for billing/balance
-        state at all (only rate-limit/auth-failed/overage), so a fully-diagnosable condition reads as "unexplained."
-      - **Cluster B (the remaining majority)**: a repeated fleet-wide multi-slot, multi-account, simultaneous
-        whole-process-group SIGTERM/SIGKILL burst (tmux server itself always survives; backgrounded children die at
-        the exact same instant as their parent pane). Root-caused to a **4th recurrence of the already-3x-seen
-        cross-slot broad-pattern `pkill` incident** — this time discovered to be caused by a fix that was declared
-        closed on 2026-08-14 but is provably non-functional: `pkill-guard.sh`'s shell-function guard cannot survive
-        `tmux_spawn.py::_start_session`'s `exec` into the `claude` binary (exec replaces the process image; the
-        guard functions are never `export -f`'d; a fresh Bash-tool-call subshell never sourced the guard in the
-        first place). Full mechanism, code citations, and fix recommendation:
-        `/plans/active/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md` (new doc — this is a
-        distinct, high-priority finding in its own right, not merged into this already-large doc). Also ruled out
-        for Cluster B, with hard per-death evidence across all 26 investigated transcripts: OOM (cgroup counters
-        zero on every one), `orphan_reap`, the kicker's forced-respawn escalation, every `WorkerLivenessWatchdog`
-        `_kill_slot` reason (`watchdog_slot_killed` absent everywhere), and `resource-watchdog.sh` (its own log shows
-        `pressure=normal` bracketing every single death across multiple different days' rotations, zero kill lines
-        in any full day checked). `external_kill.checked=false` on every sampled death — that forensics leg has
-        still never actually completed for this cluster, and even if it had, its regex requires an explicit
-        `-9`/`-KILL` token that a bare `pkill -f "<name>"` (default SIGTERM) would never carry — tracked as its own
-        todo in the new doc.
+- [ ] [INVESTIGATE] P1. **DeepSeek's dominant mid-task death mechanism — PARTIALLY root-caused 2026-08-21, genuinely
+      not closed.** Normalized 24h death rate (`unexplained`/`autospawn_succeeded`): `deepseek-v4-flash` 25/27=93%
+      (worse per-spawn than codex-luna's 63%), `deepseek-v4-pro` 13/20=65%. Read the actual `.jsonl` transcripts (not
+      just `activity_log` correlation) for two genuine mid-task `unexplained` deaths, 2026-08-20 15:19-15:20 cluster:
+      slot 8 (`deepseek-v4-pro`, `.claude-configs/orch-slot-8/.../77872753-9ef4-40ad-bd58-0fcf299fc23e.jsonl`) and slot
+      12 (`deepseek-v4-flash`, `.../ef0eeaaf-f163-4e49-a5e1-c9fb75b7cf1a.jsonl`) — both were killed while a full
+      `quality-gates.sh` run was genuinely in progress (slot 8: foreground `Bash` tool call,
+      `timeout=600000`, only ~97s into it; slot 12: BACKGROUNDED via `run_in_background`, and Claude Code's own
+      harness delivered an explicit `<status>killed</status>` task-notification for that backgrounded QG process
+      ~49s before the outer pane also died) — neither was idle or genuinely frozen. Ruled out for both: OOM
+      (`death_forensics.py` genuinely ran, `oom_kill_suspected: false`), the already-known `orphan_reap` setsid gap
+      (zero `orphan_process_reaped` events fired in either window), and the worker-liveness kicker's forced
+      auto-respawn escalation (`worker_kick_failed` appears once for slot 8 but no `slot_auto_respawned`/
+      `slot_auto_respawn_failed` event followed — the escalation path was never reached, ruling out an earlier
+      working hypothesis this session that the kicker's own force-respawn was the mechanism). Host `load_avg`/
+      `ram_percent`/`swap_percent` snapshots at time of death were NORMAL for both (3-13 load, 24-36% RAM, 7.5-9.7%
+      swap) — unlike codex-luna's Pattern A, this does NOT look like host-wide resource exhaustion, at least not at
+      the single post-death snapshot point sampled. `external_kill.checked: false` for both — likely just STALE
+      (these deaths are 2026-08-20 15:19-15:20, and the `ausearch` date-format bug's fix landed later that same
+      day per this doc's own 2026-08-20 entry above), not a new gap — my own live reproduction of the identical
+      `ausearch` call today succeeds cleanly and would compute `checked: true`. **Not confirmed** because zero
+      DeepSeek `unexplained` mid-task deaths have recurred since (checked through 2026-08-21 morning) to test the
+      fix against post-hoc. Genuinely still open: what killed the quality-gates.sh child process (and, moments
+      later, the parent pane) in both cases if none of the above fired — next step is exactly this doc's own
+      established method (live-catch the NEXT DeepSeek death and immediately check `external_kill` + a fresh
+      per-process/per-cgroup memory check DURING the QG run, not just the post-death snapshot, since a QG run's
+      peak RSS is transient and could exceed a per-slot cgroup limit invisibly by the time forensics samples it).
 
 ## Progress Log
 
@@ -918,16 +916,3 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   account, preserving in-flight task/worktree. Confirmed persisted: `account_usage.account_status='codex-luna'` row =
   `disabled`; `activity_log` id 623935 `account_disabled`. Re-enable is gated on both `[OPERATOR]`/`[INFRA]` todos
   above landing AND being independently re-verified, per the new todo above — not a passive timeout.
-- **2026-08-21 (continued, ultracode Workflow investigation)**: operator asked to find the real root cause of the
-  DeepSeek death cluster by reading more transcripts. Queried a 14-day window instead of 24h and found all 32
-  DeepSeek `unexplained` mid-task deaths fall inside one bounded window (2026-08-19 23:45:28 -> 2026-08-20 15:46:01,
-  zero before/since) — not an ongoing daily problem. Launched a Workflow: 26 agents (8 hit a weekly account-quota
-  wall mid-run and failed, including the originally-planned boundary-check and synthesis steps) each independently
-  read one death's full JSONL transcript plus cross-checked activity_log/resource-watchdog logs against every
-  mechanism this doc has previously investigated. Synthesized the results myself (the automated synthesis step was
-  among those that hit the quota wall). Full findings folded into the todo above: Cluster A (balance exhaustion, 11
-  deaths, closed) and Cluster B (a 4th recurrence of the cross-slot broad-pattern `pkill` incident, root-caused to a
-  provably-dead guard mechanism — new doc
-  `/plans/active/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md`, not merged here to keep this
-  doc's size in check). The Cluster-B finding is the single most consequential discovery of this whole investigation
-  thread — a fleet safety mechanism believed fixed since 2026-08-14 has been silently non-functional the entire time.
