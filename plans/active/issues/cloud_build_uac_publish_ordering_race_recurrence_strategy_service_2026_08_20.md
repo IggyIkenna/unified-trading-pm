@@ -27,7 +27,7 @@ status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
-repos: [strategy-service, unified-api-contracts, unified-trading-pm, market-data-processing-service, trading-agent-service]
+repos: [strategy-service, unified-api-contracts, unified-trading-pm, market-data-processing-service, trading-agent-service, instruments-service]
 scope: [engineer, admin]
 tags: [ci, cloud-build, publish-ordering, artifact-registry, unified-api-contracts, race-condition, live-incident]
 related:
@@ -340,3 +340,18 @@ gated primary fix. No operator review recorded yet as of this pass (doc is 1 day
   ship. Root cause identical to every other entry in this doc: the fix belongs in `update-repo-version.yml`'s
   `resolve-gate`, not in any consumer repo; this entry is additional evidence for the still operator-review-gated P2
   "Implement" todo, not a new investigation. Escalation closed.
+- **2026-08-21 (cicd slot-8, escalation `agt-069c25`, wall_type `cloud_build_router_failure`)** — Another sibling of
+  the SAME 2026-08-21 `0.158.0`-floor wave as the `trading-agent-service` PRIOR-floor entry above, this time
+  `instruments-service`. Escalated Cloud Build `95687259-49f9-48ab-ae2c-25779f33d853` (main @ `42f81d962b`,
+  createTime 2026-08-21T10:53:53Z, FAILURE 11:06:25Z) — docker step 5 `uv pip install` (7 retry attempts, ~594s):
+  "× No solution found ... instruments-service==0.104.0 depends on unified-api-contracts>=0.158.0,<1.0.0" while AR's
+  newest wheel at that moment was `0.157.1.dev1+g615972874` (published 10:07:19Z) — `0.158.0` never resolved cleanly;
+  AR went straight from `0.158.1.dev1+gae56a4f9f` (11:46:00Z) to `0.159.0` (12:36:34Z), the same never-a-clean-release
+  pattern the MDPS entry above documented. Verified LIVE, no manual re-run needed: 10 consecutive natural
+  `instruments-service-prod` builds since 12:51:16Z today are all SUCCESS (spot-checked through 16:50:40Z), current
+  `live-defi-rollout`/`main` `pyproject.toml` already carries `unified-api-contracts>=0.159.0,<1.0.0` (no drift, matches
+  the sibling repos' already-advanced floor), and current AR head is `0.161.2` — comfortably inside range. No open
+  repo-blocker for instruments-service (`GET /api/repo-blockers` → only one open entry, an unrelated unified-trading-pm
+  BATS finding `RB-fbd8d08f`). Root cause identical to every other entry in this doc: the fix belongs in
+  `update-repo-version.yml`'s `resolve-gate`, not in any consumer repo; this entry is additional evidence for the
+  still operator-review-gated P2 "Implement" todo, not a new investigation. Escalation closed.
