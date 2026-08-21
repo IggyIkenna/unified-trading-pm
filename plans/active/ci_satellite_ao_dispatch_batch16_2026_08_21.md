@@ -78,16 +78,17 @@ source: >-
       (no `GITHUB_REF_NAME` pre-set by the caller), correctly selects baseline+buffer mode — verified via the
       script's own diagnostic output, not inferred.
 
-- [ ] [SCRIPT] P3. **`ldr_to_main_fleet_promote.sh:638`'s `gh api repos/$OWNER/$REPO/commits/live-defi-rollout
-      2>/dev/null || echo '{}'` silently swallows the real error**, making a live GitHub platform outage
+- [x] [SCRIPT] P3. **✅ DONE — `ldr_to_main_fleet_promote.sh:638`'s `gh api repos/$OWNER/$REPO/commits/live-defi-rollout
+      2>/dev/null || echo '{}'` silently swallowed the real error**, making a live GitHub platform outage
       indistinguishable from a genuine per-repo API regression in the workflow's own log (found diagnosing a
       2026-08-17 `ERR_LDR` occurrence — required an out-of-band `githubstatus.com` check purely because the step
-      log carried no error text). Echo the captured stderr (or at minimum the HTTP status) to the step log before
-      falling back to `{}`. Check whether `ldr_to_staging_promote.sh` shares this same helper/pattern and fix both
-      call sites in the same change if so. Source:
-      `/plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` (line ~176). Gate: a
-      simulated `gh api` failure (bad token / 5xx) on this call site produces a non-empty error string in the step
-      log instead of a bare `{}` fallback.
+      log carried no error text). Both call sites (`ldr_to_main_fleet_promote.sh:638` and
+      `ldr-to-staging-promote.yml`'s LDR/staging tree-compare) now retry once stderr-only on the failure path and
+      log the real error via `::warning::` before falling back to the sentinel — the common success path pays no
+      extra API call. Left `ldr-to-staging-promote.yml`'s third, similarly-shaped HEAD_SHA re-dispatch call site
+      untouched (its own comment documents it as fail-quiet/best-effort by design). Source:
+      `/plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` (line ~176).
+      Evidence: unified-trading-pm@b76af747a2.
 
 - [ ] [BACKEND] P2. **Extend the `streak_start_sha`/`resolved_streak_start_sha` CI-failure-resolution linkage
       (shipped 2026-08-16, `unified-trading-ci@7000ac0`, currently wired into `notify-qg-fail`/`notify-qg-recovered`

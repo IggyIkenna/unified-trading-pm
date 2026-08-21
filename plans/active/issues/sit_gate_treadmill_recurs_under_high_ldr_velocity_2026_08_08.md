@@ -173,7 +173,7 @@ gone quiet or the streak has reset." Run live from an interactive session with A
       fix by only 34s) — not a masked second bug, just unlucky timing against the documented race. **Do not close this
       todo on the PHOENIX-SOLANA fix alone** — the ERR_LDR finding is the reason the gate is STILL blocked as of
       14:09Z+ even with the real regression already fixed.
-- [ ] [SCRIPT] P3. **`ldr_to_main_fleet_promote.sh:638`'s `gh api repos/$OWNER/$REPO/commits/live-defi-rollout \
+- [x] [SCRIPT] P3. **✅ DONE 2026-08-21 (ci_reconciler, unified-trading-pm@b76af747a2).** `ldr_to_main_fleet_promote.sh:638`'s `gh api repos/$OWNER/$REPO/commits/live-defi-rollout \
       2>/dev/null || echo '{}'` silently swallows the real error, making a live GitHub platform outage
       indistinguishable from a genuine per-repo API regression in the workflow's own log** (found diagnosing the
       2026-08-17 ~14:45Z `ERR_LDR` occurrence above — required an out-of-band `githubstatus.com` check to confirm the
@@ -545,6 +545,15 @@ the 10th consecutive occurrence of this exact wall type diagnosed live and confi
 distinct bug) — `unified-api-contracts` converged during this session, `execution-service` remains a benign in-flight
 race at hand-off. Todos 1 (dedup-key, already `[x]`) and the swallowed-error P3 (already extracted to
 `ci_satellite_ao_dispatch_batch16_2026_08_21.md`) are unchanged — this occurrence did not exercise either.
+
+**ci_reconciler (interactive /ci-reconcile session), 2026-08-21 ~17:00Z**: shipped the one remaining open todo
+(the swallowed-`gh api`-error P3, also mirrored in `ci_satellite_ao_dispatch_batch16_2026_08_21.md` todo 2) — not a
+re-litigation of the treadmill's accepted architecture, just the small bounded logging fix this doc's own history
+already scoped and deferred pending a calmer day. Both `ldr_to_main_fleet_promote.sh:638` and
+`ldr-to-staging-promote.yml`'s LDR/staging tree-compare now surface the real `gh api` stderr via `::warning::`
+before falling back to `ERR_LDR`/`{}`, instead of a bare sentinel with no diagnosable cause. Evidence:
+unified-trading-pm@b76af747a2. This doc's remaining content (the 11 documented treadmill occurrences, all
+self-converging) is unchanged — this entry only closes the one genuinely open code-fix todo.
 
 **cicd escalation agt-06ef7a, 2026-08-21 (re-dispatch citing `execution-service` 7 straight SIT-gate-blocked ticks,
 latest tick run `https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32480318469` — continuation of the
