@@ -221,11 +221,18 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Walkthrough feedback 2026-08-21 — refdata/coverage cluster (operator feedback on platform-external-api-walkthrough.html)
 
-- [ ] [BACKEND] P1. Kalshi perp: verified 2026-08-21 — ZERO adapter code anywhere (only an aspirational comment
-      in `market_data_categories.py:1509`). Build the adapter scaffold (MTDS + IS + UAC capability rows) per the
-      external-data-always-available rule; access itself is an application-gated credential ask —
-      once the scaffold lands, retag the remaining access work with the credentials-blocked marker. Artefact presents it as "Coming Soon". Same treatment for the
-      market-perp venue whose API is in beta (note: not officially launched; added when they launch).
+- [ ] [BACKEND] P1. Kalshi perp — REPOINT, not build (corrected 2026-08-21; the earlier "zero adapter code"
+      claim was a search artefact): `instruments-service/.../adapters/cefi/kalshi_perp.py` EXISTS with a
+      write-guard layer, enumeration disabled (`_REPOINT_PENDING = True`) after the events-host contamination
+      incident. MEASURED 2026-08-21: an RSA-PSS-signed probe with the EXISTING GSM creds (kalshi-api-key-id +
+      kalshi-private-key-pem) returned HTTP 200 on `external-api.kalshi.com/trade-api/v2/margin/markets` (live
+      perp market data: bid/ask, leverage, liquidation marks) and 200 on portfolio/balance — our membership
+      ALREADY has margin/perps API access; no separate application or kalshi-perp-api-key secret is needed.
+      (`/margin/funding_rates` 404s at that literal path — discover the correct funding subpath during repoint.)
+      Do: repoint the adapter per its own Phase-2 plan, wire RSA-PSS auth from the existing secrets, flip
+      `_REPOINT_PENDING`, and update the adapter docstring + issue docs that still say access is
+      credentials-blocked. Artefact: "Coming Soon" until data flows. Market-perp venue (beta API, not launched)
+      stays "Coming Soon" with the beta note.
 - [ ] [AGENT] P1. Classify the sports bookmaker roster for the operator (NOT for the artefact): for each of the
       27 kept books, is it (a) an odds-api bookmaker, (b) covered by the Unity central-wallet integration
       (enumeration lives in sports_master.md / mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md
