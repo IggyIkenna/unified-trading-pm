@@ -425,6 +425,22 @@ envelope. It is explicitly NOT the final word: which container this list lives o
 `QuoteInstruction.reference_price: Decimal` (currently REQUIRED — narrows the envelope's optional field, a
 single-instrument override that itself assumes a scalar) is unresolved.
 
+### OPERATOR RULING 2026-08-21 — Q12-Q16 RESOLVED (supersedes the open-questions block below; kept for context)
+
+- **Q12**: the vector `references: list[InstrumentReferenceEntry]` is the ONE home on
+  `StrategyInstructionEnvelope`; N=1 is a list of one; no envelope-level scalar duplication. Each entry is the
+  full per-instrument reference matrix for the strategy instance's universe: `reference_price`, per-venue
+  `reference_position`, `credit`, `position_adjustment_bps_per_unit_risk`, `sensitivity_coefficient` (delta),
+  `second_order_coefficient` (gamma), and — added by this ruling, operator named it explicitly — an optional
+  `time_decay_coefficient` (theta). `QuoteInstruction.reference_price` reconciles to the vector (single-
+  instrument override narrows the list-of-one, not a parallel scalar).
+- **Q13**: venue axis nested per-instrument (no `(instrument_id, venue)` cross-product); the one-venue-per-
+  instrument-per-instance hard rule stands.
+- **Q14**: `credit` is per-entry (independent thresholds per arb leg), still optional and strategy-owned.
+- **Q15**: the new position-mismatch `RiskRuleTrigger` subtype evaluates PER ENTRY
+  (BLOCK/SCALE_DOWN/MONITOR/TEST_ONLY per entry, default BLOCK); needs the UAC PR per risk-rule-taxonomy.md.
+- **Q16**: `position_adjustment_bps_per_unit_risk` is per-entry.
+
 ### Open questions for the operator — do not resolve unilaterally
 
 12. **Does `references: list[InstrumentReferenceEntry]` live on `StrategyInstructionEnvelope` directly, or does the

@@ -427,7 +427,11 @@ todos only to confirm they are data-movement, then leave it.
       formula from schema-carried values. Also documented `refresh_cadence_ms` as the STRATEGY-side cadence
       specifically — the issue is explicit that conflating it with execution's faster tick-driven loop is a design
       error. 5 tests incl. a JSON round-trip (the instruction crosses the EventTransport seam).
-- [ ] [BACKEND] **BLOCKED-OPERATOR** P0. Add `reference_position` to `StrategyInstructionEnvelope`. **The shape this
+- [ ] [BACKEND] P0. **UNBLOCKED 2026-08-21 — operator ruled Q12-Q16** (ruling recorded at the top of the source
+      issue's open-questions section): vector `references: list[InstrumentReferenceEntry]` is the ONE home;
+      per-entry full matrix (price, per-venue position, credit, bps-per-unit-risk, delta, gamma, optional theta);
+      venue nested per-instrument; per-entry credit/trigger/coefficient. Implement per the ruling, not the
+      superseded scalar text below. Add `reference_position` to `StrategyInstructionEnvelope`. **The shape this
       todo names (`dict[venue, Decimal]`, "same shape as the existing price leg") is SUPERSEDED** — the source issue
       carries a dated correction banner from a later same-day operator revision ruling that shape incomplete: it
       solves the venue axis but not the INSTRUMENT axis, since a strategy instance holds a universe of instruments.
@@ -437,7 +441,8 @@ todos only to confirm they are data-movement, then leave it.
       literal text would ship the rejected shape; implementing the vector would answer five questions explicitly
       reserved for the operator. **Needs: a ruling on Q12-Q16**, then this becomes a bounded code task.
       Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
-- [ ] [BACKEND] **BLOCKED-OPERATOR** P0. Add the `credit` leg to `StrategyInstructionEnvelope`. Same gate as
+- [ ] [BACKEND] P0. **UNBLOCKED 2026-08-21 — same Q12-Q16 ruling as above** (credit is per-entry, optional,
+      strategy-owned). Add the `credit` leg to `StrategyInstructionEnvelope`. Formerly same gate as
       `reference_position` above — Q14 asks whether `credit` varies per-entry or is one policy shared across the
       vector, which cannot be answered without first resolving Q12 (where the vector lives). Landing `credit` as a
       flat envelope field now would re-commit the exact scalar-shape regression the operator caught. Note the
