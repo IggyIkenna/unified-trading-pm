@@ -147,7 +147,6 @@ drift_direction: advance-code
       **Finding**: BINANCE-FUTURES+BYBIT/futures_chain — ruling framed BYBIT as real-bundle too, but `FUTURE_BUNDLE_VENUES["cefi"]={DERIBIT,OKX}` + its own "NOT a sound discriminator — BYBIT lists futures_chain yet captures per-contract" comment + 2 pre-existing regression tests all prove BYBIT is per-contract — retired BOTH venues' stale RAW keys (BINANCE-FUTURES's own ruled pattern), not a fabricated bundle.
       COINBASE-ETHEREUM/oracle_prices, FRAX/MORPHOVAULTS vault_share_price, JUPITER-SOLANA/dex_pool_swaps, SOLANA-NATIVE-SOLANA/lst_rates, AAVE-PLASMA/lending_indices — real declared capabilities missing/misrouted `PROTOCOL_CAPABILITIES` entries; registered `frax`/`morphovaults`/`jupiter`/`solana_native` + a venue-specific slug-override table in `venue_instrument_type_axis.py` (AAVE-PLASMA→aave_v3, mirrors `venue_adapter_keys.py` precedent).
       FRED/ohlcv_1d+yield_curve — venue-scoped `VALID_DATA_TYPES_VENUE_ADDITIONS` rows. QG green (13441 passed) after updating the one regression test the fix deliberately invalidated (now `{CBOE,DERIBIT,FRED}`).
-      **Cross-repo consumer sweep lesson (same class as 4f25d5f0)**: the DERIBIT self-admission broke instruments-service's `scripts/enumerate_expected_universe.py::_row_data_types` (assumed the matrix already narrowed chain grains to `{trades}`; the new self-referential token leaked into expected CeFi data_types, 7 test failures) — fixed same-session, instruments-service@3dcee8d602, excludes the bundle instrument_type's own name from cefi `row_dts` (Era-B restated: CAPTURED data_type is `trades`, the token exists only so the denominator triple classifies). `scripts/expected_universe.py` checked and found NOT affected (different carve-out ordering already excludes it) — locked in via a new regression test, not a redundant patch. Lesson: a UAC registry semantics change is never DONE at the UAC commit alone — sweep known live downstream consumers first.
 - [ ] [BACKEND] P1. Fix the CeFi instrument_type roster over-fan: ASTER (perp-only per the registry's own
       comment at `market_data_categories.py:2114`) shows Futures-chain/Options-chain buckets in the artefact
       because `venue_instrument_type_axis.py`'s CeFi path probes the full asset-group roster with no venue-level
@@ -711,26 +710,23 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       todo below. Tests in `tests/unit/test_exports_honesty.py` (mock-mode fixture unchanged, real-mode reuses the
       real reader, empty real result = explicit "No data"). `platform-api-reference.html` §05 "real vs fixture"
       callout updated to match.
-- [x] [SCRIPT] P2. client-reporting-api: side-discovery from the P2 fixture-honesty fix above — DocuSign envelope
+- [ ] [SCRIPT] P2. client-reporting-api: side-discovery from the P2 fixture-honesty fix above — DocuSign envelope
       status (`GET /api/v1/documents/{document_id}/signature-status`) was checked and found ALREADY honest
       (`docusign.py`: `MOCK_ENVELOPES` only under `CLOUD_MOCK_MODE=true`, live-mode returns an honest `404` rather
       than the fixture), so no code change was needed there — noted here only so the CTO handoff's list isn't
       silently dropped. `reporting/investor_relations_archive.py`'s data source
-      (`data/investor_relations_archive_metadata.json`) was gitignored (repo-wide `data/` pattern, meant for
-      scratch data not this route's source of truth) and never committed, so the route 500'd on every fresh
-      checkout — ✅ Fixed 2026-08-21 — `client-reporting-api@83de2b3`. Relocated to
-      `reporting/static/investor_relations_archive_metadata.json` (not gitignored, option (b)). Real content
-      mirrors the 8 presentation records already shipped in the UI's `investor-relations/page.tsx` — no prior
-      committed version existed anywhere (checked). QG green; pre-existing route tests now pass (previously 500).
-- [x] [SCRIPT] P3. client-reporting-api: `exports.py`'s real-mode `GET /api/v1/exports/trades` (2026-08-21 P2
+      (`data/investor_relations_archive_metadata.json`, sibling to the route module) does not exist in this repo at
+      all — it is caught by the repo-wide `.gitignore` `data/` pattern (meant for repo-local scratch data, not this
+      route's actual source of truth) and was never committed, so the route 500s (`FileNotFoundError`) on every
+      fresh checkout / live deployment, independent of the entitlement fix landed alongside this todo. Needs either
+      a `.gitignore` negation for this specific path plus committing real content, or relocating the data out of a
+      gitignored directory.
+- [ ] [SCRIPT] P3. client-reporting-api: `exports.py`'s real-mode `GET /api/v1/exports/trades` (2026-08-21 P2
       fixture-honesty fix) covers the two most common cases — canonical ledger fills, falling back to backfilled
       history — the same primary/fallback sources `trades.py::get_trade_history` uses. The rarer case of a client
       with neither ledger fills nor backfilled history but with live-collector-only state isn't covered yet (that
       route's third fallback, `get_collector().get_client_trades(...)`, wasn't reused to keep the fix scoped). Low
-      priority: affects only clients with no ledger run and no backfill history. — ✅ Fixed 2026-08-21 —
-      `client-reporting-api@d30afc7`. Extended the real-mode path to try `get_collector().get_client_trades(...)`
-      (reused verbatim) when ledger + backfill are both empty; all-three-empty still returns "No data". Two
-      regression tests added to `test_exports_honesty.py`. QG green (711 passed).
+      priority: affects only clients with no ledger run and no backfill history.
 - [x] [SCRIPT] P0. instruments-service: build org-scoped entitlement into the external instrument catalogue — the
       external router discarded `AuthContext` after the auth dependency ran (`del auth`, `external.py:86`),
       serving an identical catalogue to every authenticated caller (Security/P0, the same "auth is a gate, not a

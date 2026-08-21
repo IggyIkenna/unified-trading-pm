@@ -69,25 +69,6 @@ Integration Guide → https://claude.ai/code/artifact/952680c2-2bda-4735-b298-8e
       framework (AWS + GCP today, IONOS integration in progress — cite the IONOS plan; Azure on request; regions
       near the client; cross-cloud same-region streaming into the client's own account to cut streaming cost).
       Verify every claim's code/plan basis before writing.
-- [x] [DOC] P0. **Operator content additions 2026-08-21, second tranche (both docs; compact in api-reference,
-      fuller in the walkthrough) — About Us / engagement models / research-as-a-service / DART / security /
-      DeFi LP** — About Odum Research (main site, who-we-are, tear sheet, the 1yr+ consultancy engagement, and
-      the same client's separate bespoke-execution negotiations, DeFi today/CeFi planned); three engagement
-      models (Allocate / Signals — cross-linked to the §06(api-ref)/§26(walkthrough) signal-leasing surface as
-      its literal integration contract / Run in your ecosystem); research-and-backtest-as-a-service + the
-      backtest mirror, citing `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`'s ε=0
-      paper↔batch determinism proof; a new DART — Data Analytics Research Terminal section (walkthrough) +
-      pointer (api-ref), grounded in `unified-trading-system-ui` + `codex/08-workflows/platform-walkthrough-and-
-      demo-context.md` + `prospect-questionnaire-flow.md`; dual-authorization (tiered SMALL=1/MEDIUM=2/LARGE=3
-      quorum withdrawal approval, `deployment-api/deployment_api/routes/client_treasury.py`) and custody-adapts-
-      to-the-client (pluggable signing: CLOUD_KMS_ENCRYPTED shipped, Copper MPC production for DeFi +
-      non-Binance CeFi) folded into walkthrough §15 + api-ref §04; DeFi LP marketing (Uniswap V3 mint/burn
-      landed execution-service@0aa709f076 across 5 EVM chains, broader connector roster, "more on demand").
-      This is a SEPARATE operator directive from the P0 item above — supersedes nothing there; reconciliation
-      prominence / WebSocket rotations / position handshake / SLAs / disaster recovery / T+1 backfill / intraday
-      replay / credit-reference-price / cloud-agnostic remain open in that item. Marker check re-verified
-      202/247 (unchanged) post-ship. Evidence: unified-trading-pm@40ac124b0f (walkthrough),
-      unified-trading-pm@b50711e8b7 (api-reference), both confirmed ancestors of origin/live-defi-rollout.
 - [ ] [BACKEND] P2. UAC `PortfolioPnLAttribution.staking_pnl` first-class field — drop the documented carry fold
       (strategy-service@21937bb2cf).
 - [ ] [AGENT] P1. Verify BLRS recon_excluded landed on origin; if absent re-run its recorded quickmerge, flip its
@@ -108,16 +89,3 @@ needs the CROSS-REPO consumer sweep (4f25d5f0 missed four downstream consumers).
 agent's FOUNDING prompt with verify-then-write discipline — mid-flight messages get refused as unverifiable. Seed
 claim-ownership baselines against FULL artefacts or the escalation path deletes content (cef0bcfa8e). Condensing a
 Progress Log entry that EMBEDS todos trips todo-regression — split history, never delete todo lines.
-
-**2026-08-21 (operator directive)**: Deleted walkthrough §14 "Readiness: batch, paper, live" entirely (nav entry +
-all 9 cross-refs fixed/repointed to §16); its batch/paper/live same-code-path symmetry content relocated into §16
-Integration path. Swept every literal `unverified` outside the DeFi coverage trees to real state (KALSHI-PERP/
-POLYMARKET-PERP/PACIFICA-SOLANA → "coming soon (venue-side onboarding)"; 8 Unity child books → confirmed
-NO_ADAPTER_YET; BETOPENLY/NOVIG/ONEXBET/PROPHETX → retired per 2026-08-21 ruling, `unified-api-contracts@710db834`);
-re-homed the 3 non-DeFi "Unclassified" nodes (BINANCE-FUTURES, BYBIT, DERIBIT + FRED) per
-`unified-api-contracts@f79cd936`. Marker check 200/247 (down from 202, deletions lowering it as expected). Evidence:
-`unified-trading-pm@6c2b779de8`, confirmed ancestor of origin. Residual (not done here, flagged for the voice/
-parity lane): CeFi/Sports header ready/not-ready/unverified tallies (25/39 totals) are the 2026-08-19 measured
-snapshot and now read stale against today's per-cell wording/registry changes — needs a fresh `derive_readiness.py`
-run, not a doc-text fix; BETMGM/BETWAY nodes still show real historical rows despite being in the same 6-venue
-retirement ruling (their disposition is explicitly still operator-pending per this doc's own lane table).

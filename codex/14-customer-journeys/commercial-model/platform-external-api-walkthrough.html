@@ -847,22 +847,6 @@
     background: var(--g-post-wash);
     cursor: help;
   }
-  /* Smoke-DUMP proof — a one-block acquisition probe into a -test- bucket succeeded
-     (venue/data_type dependent). Orthogonal to .rdy: .rdy is the machine-derived
-     coverage.json production-readiness verdict; .smk only claims the acquisition path
-     was proven to work on a real, minimal unit — never conflate the two. */
-  .smk {
-    font-family: var(--mono);
-    font-size: 10.5px;
-    font-weight: 700;
-    padding: 1px 7px;
-    border-radius: 3px;
-    white-space: nowrap;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    background: var(--accent-wash);
-    cursor: help;
-  }
 
   /* Nested coverage tree: asset group -> venue -> instrument type -> data type. */
   details.tree {
@@ -1049,241 +1033,9 @@
     </div>
   </header>
 
-  <section id="about">
-    <div class="sec-head">
-      <span class="num">§</span>
-      <h2>About Odum Research</h2>
-    </div>
-    <p class="lede">
-      Odum Research is the firm behind this platform — an investment-management and quantitative-research business
-      that researches, backtests and runs trading strategies across CeFi, DeFi, TradFi, sports and prediction
-      markets, and makes the same infrastructure available to counterparties who want to allocate to it, lease its
-      signals, or run their own strategy on it end to end.
-    </p>
-    <div class="keypoints">
-      <div>
-        <b>The firm</b>
-        <span
-          >Team, background and how Odum is structured —
-          <a href="https://www.odum-research.com/who-we-are" target="_blank" rel="noopener">who we are</a> on
-          <a href="https://www.odum-research.com/" target="_blank" rel="noopener">odum-research.com</a>.</span
-        >
-      </div>
-      <div>
-        <b>The track record</b>
-        <span
-          >A live, independently checkable performance record for the strategy currently running in the
-          investment-management business —
-          <a href="https://www.odum-research.com/odum-tearsheet-5cda11d0928332808a3fcd57.html" target="_blank" rel="noopener"
-            >the tear sheet</a
-          >. It is hosted on the same site as the pages above, so moving between them needs no separate login or
-          authentication step.</span
-        >
-      </div>
-      <div>
-        <b>An ongoing engagement, not a pitch</b>
-        <span
-          >Odum has been under a strategy-building consultancy engagement with a client for over a year. That same
-          client is now, separately, in negotiations for bespoke execution services on this platform — covering a
-          range of DeFi strategies today, with CeFi strategies expected to follow. Between them, the signal side and
-          the execution side of the engagement models below are each already being commercialized, not only
-          built.</span
-        >
-      </div>
-    </div>
-  </section>
-
-  <section id="engage">
-    <div class="sec-head">
-      <span class="num">§</span>
-      <h2>Three ways to engage on strategy</h2>
-    </div>
-    <p class="lede">
-      A counterparty's relationship to this platform is modular by design (the "Modular responsibility" keypoint
-      above) — allocate capital to a strategy Odum runs, lease the signal and keep execution for yourself, or run a
-      strategy entirely inside your own environment. The three are not mutually exclusive, and commercial terms for
-      each are negotiated independently rather than read off a rate card.
-    </p>
-    <div class="keypoints">
-      <div>
-        <b>1 — Allocate</b>
-        <span>
-          Deploy capital into Odum's own investment-management business. One strategy is live today with a
-          verifiable track record — see
-          <a href="https://www.odum-research.com/odum-tearsheet-5cda11d0928332808a3fcd57.html" target="_blank" rel="noopener"
-            >the tear sheet</a
-          >. This platform is the infrastructure accelerating further strategy builds behind it: more allocations
-          are on offer toward year-end, expected to be at least as strong across the asset groups this platform
-          already spans (<a href="#s5">§05</a>).
-        </span>
-      </div>
-      <div>
-        <b>2 — Signals</b>
-        <span>
-          Lease one of our signal slots instead of capital exposure. This is not a separate, hypothetical product —
-          the signal-leasing surface documented in this same guide (<a href="#s26">§26</a>, full endpoint depth in
-          <code>platform-api-reference.html</code> §06) <em>is</em> the integration contract for this engagement
-          model: the full <code>SignalPayload</code> schema at your entitled depth, pull-or-push delivery, and
-          acknowledgement.
-        </span>
-      </div>
-      <div>
-        <b>3 — Run in your ecosystem</b>
-        <span>
-          We carve out a strategy for your full ownership, or build-and-license it with bespoke commercial terms —
-          negotiated case by case. The platform is asset-group-agnostic (<a href="#s5">§05</a>) and
-          strategy-style-agnostic (<a href="#s28">§28</a>), so the scope of what gets carved out is as wide as the
-          counterparty wants it to be. This is not theoretical: the client under Odum's ongoing consultancy
-          engagement (above) is separately negotiating bespoke execution services on this same infrastructure
-          today.
-        </span>
-      </div>
-    </div>
-  </section>
-
-  <section id="research-service">
-    <div class="sec-head">
-      <span class="num">§</span>
-      <h2>Research and backtest as a service — the backtest mirror</h2>
-    </div>
-    <p class="lede">
-      For every engagement model above, the work starts the same way: we research and backtest the strategy for the
-      client, not just review one they hand us. What makes that backtest worth trusting is that promotion to paper
-      and live does not rewrite it — it runs the identical code path.
-    </p>
-    <div class="callout">
-      <span class="tag">The backtest mirror, precisely</span>
-      <p>
-        Promotion from backtest to paper to live is not a re-implementation at a higher fidelity — it is the
-        <em>same</em> decision path (<code>V2EngineOrchestrator.on_tick()</code>), the same data types, the same
-        execution assumptions, down to granular latency assumptions and book-triggered events. The platform's own
-        determinism proof states this precisely: <code>paper(W)</code> must equal <code>batch-rerun(W)</code>
-        trade-for-trade — any non-zero difference is treated as a bug, not a tolerance to absorb. The only
-        intentional divergence left is the live fill boundary, where real venue slippage, fees and partials show
-        up — and that <code>live − paper</code> delta is, by design, the execution-quality measurement, not noise.
-      </p>
-      <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Source: <code>/codex/09-strategy/operational/paper-batch-live-reconciliation.md</code> — the determinism
-        spine SSOT (ε=0 paper↔batch proof; live↔paper delta = execution alpha). See also
-        <a href="#s16">§16</a> (the same-code-path guarantee behind it).
-      </p>
-    </div>
-    <p>
-      We backtest both halves of the strategy, not just the signal: the decision logic, and the execution — the
-      algo design (routing, sizing, aggression) is chosen against the client's own risk limits and to generate
-      alpha in the execution itself, not just to fill the order (<a href="#s12">§12</a>, in depth at
-      <a href="#s30">§30</a>). Once that mirror is proven, taking the strategy live means moving it onto the same
-      infrastructure that produced the backtest — not a migration to a different execution stack.
-    </p>
-  </section>
-
-  <section id="dart">
-    <div class="sec-head">
-      <span class="num">§</span>
-      <h2>DART — Data Analytics Research Terminal</h2>
-    </div>
-    <p class="lede">
-      DART is the in-house analytics and trading terminal Odum uses to research, promote, backtest, paper-trade and
-      run its own strategies — the same component stack, shareable with clients rather than an external-facing
-      product built separately from what we use ourselves.
-    </p>
-    <div class="keypoints">
-      <div>
-        <b>What it covers</b>
-        <span
-          >Two access shapes exist today, depending on entitlement: a full research surface (research, promote,
-          backtest, paper and live) and a narrower signals-in surface (execution, post-trade, observe and
-          reporting only — no research/promote/backtest). Both sit alongside the platform's Reports and Strategy
-          Catalogue components, reused rather than rebuilt per context.</span
-        >
-      </div>
-      <div>
-        <b>Already client-facing</b>
-        <span
-          >DART is one of the personas offered through the platform's own controlled demo/UAT process — a
-          time-boxed, magic-link-scoped session against mock data, before a prospect signs up for the real
-          thing.</span
-        >
-      </div>
-      <div>
-        <b>Where it lives</b>
-        <span
-          >The terminal itself is built in the <code>unified-trading-system-ui</code> repository; the demo-access
-          model is documented in <code>/codex/08-workflows/platform-walkthrough-and-demo-context.md</code>, and its
-          place in the prospect funnel in <code>/codex/08-workflows/prospect-questionnaire-flow.md</code>. Public
-          marketing surfaces this as <b>DART Trading Infrastructure</b>; internal, legal and admin surfaces keep the
-          shorter <b>DART</b>.</span
-        >
-      </div>
-    </div>
-    <p>
-      More information, including how to request a live demo, is on
-      <a href="https://www.odum-research.com/" target="_blank" rel="noopener">odum-research.com</a> — a short
-      questionnaire is how a prospect tells us which service family fits before we open access. A live demo is
-      available on request; self-serve public access is coming soon.
-    </p>
-  </section>
-
-  <section id="defi-lp">
-    <div class="sec-head">
-      <span class="num">§</span>
-      <h2>Any asset group, including decentralized liquidity</h2>
-    </div>
-    <p class="lede">
-      Strategies on this platform are not scoped to a fixed venue list — they are customizable across any asset
-      group this platform covers (<a href="#s5">§05</a>), and that includes providing liquidity into decentralized
-      pools. LP participation is not a special integration; it is a strategy instruction on the same
-      <code>StrategyInstructionEnvelope</code> as everything else (<a href="#s8">§08</a>).
-    </p>
-    <div class="callout">
-      <span class="tag">Landed today, not roadmap</span>
-      <p>
-        Uniswap V3 concentrated-liquidity position management — minting and burning LP positions — is wired through
-        real execution (<code>LP_MINT</code>/<code>LP_BURN</code> → <code>LpMintHandler</code>/
-        <code>LpBurnHandler</code> → <code>UniswapConnector.mint_position()</code>/<code>.burn_position()</code>),
-        alongside the pre-existing Uniswap V3 swap path (exact-input, exact-output, and multi-hop routes), live
-        across five EVM chains today — Ethereum, Arbitrum, Base, Optimism and Polygon. That is the same connector
-        registered in the coverage tree as <code>UNISWAP_V3-ETHEREUM</code> / <code>-ARBITRUM</code> /
-        <code>-BASE</code> / <code>-OPTIMISM</code> / <code>-POLYGON</code> (<a href="#s27">§27</a>).
-      </p>
-      <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Source: <code>execution-service@0aa709f076</code> (LP_MINT/LP_BURN wiring),
-        <code>execution-service/execution_service/defi_execution/protocols/uniswap.py</code>. Uniswap V2 and V4 are
-        present in the market-data coverage registry; execution wiring for them was not found and is not claimed
-        here.
-      </p>
-    </div>
-    <p>
-      Concentrated-liquidity mint/burn is the newest addition, but it sits inside an already-broad DeFi execution
-      roster covering lending, staking and yield: AAVE V3 (lend/borrow/repay/withdraw), Lido (stake/unstake), and
-      connectors for Beefy, Convex, Idle, Yearn, EtherFi, RocketPool, Puffer, Renzo, KelpDAO, Jito, JitoRestaking,
-      EigenLayer, Karak, Symbiotic, Morpho and Pendle, plus the Solana-side DEX/lending connectors (Orca, Raydium,
-      Jupiter, Kamino). Additional protocols and pools are added on demand, the same way this set was built —
-      either the client parametrizes an LP or yield instruction against our existing execution, or we custom-build
-      the specific pool/protocol integration for them.
-    </p>
-  </section>
-
   <nav class="contents">
     <h2>Contents — every section collapses</h2>
     <ol>
-      <li>
-        <a href="#about"><span class="num">§</span><span class="ttl">About Odum Research</span></a>
-      </li>
-      <li>
-        <a href="#engage"><span class="num">§</span><span class="ttl">Three ways to engage on strategy</span></a>
-      </li>
-      <li>
-        <a href="#research-service"
-          ><span class="num">§</span><span class="ttl">Research &amp; backtest as a service</span></a
-        >
-      </li>
-      <li>
-        <a href="#dart"><span class="num">§</span><span class="ttl">DART — Data Analytics Research Terminal</span></a>
-      </li>
-      <li>
-        <a href="#defi-lp"><span class="num">§</span><span class="ttl">Any asset group, including decentralized liquidity</span></a>
-      </li>
       <li>
         <a href="#s0"><span class="num">00</span><span class="ttl">How to read this</span></a>
       </li>
@@ -1325,6 +1077,9 @@
       </li>
       <li>
         <a href="#s13"><span class="num">13</span><span class="ttl">Treasury, wallets, transfers</span></a>
+      </li>
+      <li>
+        <a href="#s14"><span class="num">14</span><span class="ttl">Readiness: batch, paper, live</span></a>
       </li>
       <li>
         <a href="#s15"><span class="num">15</span><span class="ttl">Security and the audit record</span></a>
@@ -2322,7 +2077,7 @@
       <p style="font-size: 0.95rem; color: var(--ink-3)">
         Structure shown with representative entries beneath the asset-group headers. Each header's ready / not-ready /
         unverified split is measured — DeFi refreshed 2026-08-19 (a clean re-run with all three service probes
-        reachable; CeFi/TradFi/Sports/Prediction/Unattributed remain the 2026-08-18 pass, not
+        reachable; CeFi/TradFi/Sports/Prediction/Unattributed remain the 2026-08-18 pass in <a href="#s14">§14</a>, not
         re-verified this session). The asset-group-level coverage percentage is now measured (below, 2026-08-19);
         per-venue / per-data-type cells inside each tree remain <b class="pend">pending</b> at that finer grain — the
         hierarchy, grouping and controls are what this draft is asking you to react to. DeFi's chain level is the
@@ -2450,11 +2205,8 @@
           in its dependency chain; and <code>measure_honest_coverage.py</code> (the script that writes that manifest)
           partitions by asset_group structurally — one manifest bucket per asset_group, read from a static per-group
           bucket table, never a per-venue classifier call. <b class="ev ev-verified">✓ verified</b> by reading both call
-          chains, 2026-08-19. Why every group still reads 0 ready is answered once, not per group: every venue is
-          graded against an 8-leg readiness model — declared, instruments-service, market data, processing,
-          features, strategy, execution transfers, execution instruction — and one failing or unchecked leg fails
-          the venue, so a strict grader with checks still being wired up returns zero by construction rather than
-          by defect.
+          chains, 2026-08-19. Why every group still reads 0 ready is answered once, not per group — see
+          <a href="#s14">§14</a>'s "Reading &quot;ready = 0&quot; correctly".
         </p>
       </div>
 
@@ -2651,7 +2403,7 @@
               <span class="nm"><code>BINANCE-FUTURES</code></span
               ><span class="meta"
                 ><b class="rdy" title="captured&gt;0 for all 7 observed data_types">ready</b>
-                <span class="u">(4 data types)</span></span
+                <span class="u">(5 data types)</span></span
               >
             </summary>
             <div class="tree-body">
@@ -2820,6 +2572,40 @@
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              </details>
+              <details class="tree">
+                <summary>
+                  <span class="nm">Unclassified <span class="u">— instrument_type unresolved</span></span
+                  ><span class="meta"><span class="u">1 data type</span></span>
+                </summary>
+                <div class="tree-body">
+                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 0 0 6px">
+                    No roster instrument_type resolved this (venue, data_type) cell against
+                    <code>valid_data_types_for_venue_instrument_type</code> (<code>venue_instrument_type_axis.py</code>)
+                    — a structural classification gap, not a data-coverage gap; the Coverage state below is still the
+                    venue's real measured state.
+                  </p>
+                  <div class="tree-body scroll-x">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Data type</th>
+                          <th>Declared since</th>
+                          <th>Coverage</th>
+                          <th>Granularity</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><code>futures_chain</code></td>
+                          <td>2019-11-17</td>
+                          <td><b class="rdy" title="captured&gt;0 for all 7 observed data_types">ready</b></td>
+                          <td>per chain snapshot</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </details>
             </div>
@@ -3647,7 +3433,7 @@
               <span class="nm"><code>BYBIT</code></span
               ><span class="meta"
                 ><b class="rdy" title="captured&gt;0 for all 7 observed data_types">ready</b>
-                <span class="u">(4 data types)</span></span
+                <span class="u">(5 data types)</span></span
               >
             </summary>
             <div class="tree-body">
@@ -3816,6 +3602,40 @@
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              </details>
+              <details class="tree">
+                <summary>
+                  <span class="nm">Unclassified <span class="u">— instrument_type unresolved</span></span
+                  ><span class="meta"><span class="u">1 data type</span></span>
+                </summary>
+                <div class="tree-body">
+                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 0 0 6px">
+                    No roster instrument_type resolved this (venue, data_type) cell against
+                    <code>valid_data_types_for_venue_instrument_type</code> (<code>venue_instrument_type_axis.py</code>)
+                    — a structural classification gap, not a data-coverage gap; the Coverage state below is still the
+                    venue's real measured state.
+                  </p>
+                  <div class="tree-body scroll-x">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Data type</th>
+                          <th>Declared since</th>
+                          <th>Coverage</th>
+                          <th>Granularity</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><code>futures_chain</code></td>
+                          <td>2020-01-01</td>
+                          <td><b class="rdy" title="captured&gt;0 for all 7 observed data_types">ready</b></td>
+                          <td>per chain snapshot</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </details>
             </div>
@@ -4512,7 +4332,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm">Futures chain</span><span class="meta"><span class="u">2 data types</span></span>
+                  <span class="nm">Futures chain</span><span class="meta"><span class="u">1 data type</span></span>
                 </summary>
                 <div class="tree-body scroll-x">
                   <table>
@@ -4536,18 +4356,6 @@
                           >
                         </td>
                         <td>tick</td>
-                      </tr>
-                      <tr>
-                        <td><code>futures_chain</code></td>
-                        <td>2019-03-30</td>
-                        <td>
-                          <b
-                            class="nrdy"
-                            title="zero captured for data_types with a non-zero denominator: [&#x27;trades&#x27;, &#x27;trades&#x27;]"
-                            >not-ready</b
-                          >
-                        </td>
-                        <td>per chain snapshot</td>
                       </tr>
                     </tbody>
                   </table>
@@ -4555,7 +4363,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm">Options chain</span><span class="meta"><span class="u">2 data types</span></span>
+                  <span class="nm">Options chain</span><span class="meta"><span class="u">1 data type</span></span>
                 </summary>
                 <div class="tree-body scroll-x">
                   <table>
@@ -4579,18 +4387,6 @@
                           >
                         </td>
                         <td>tick</td>
-                      </tr>
-                      <tr>
-                        <td><code>options_chain</code></td>
-                        <td>2019-03-30</td>
-                        <td>
-                          <b
-                            class="nrdy"
-                            title="zero captured for data_types with a non-zero denominator: [&#x27;trades&#x27;, &#x27;trades&#x27;]"
-                            >not-ready</b
-                          >
-                        </td>
-                        <td>per chain snapshot</td>
                       </tr>
                     </tbody>
                   </table>
@@ -4692,6 +4488,58 @@
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              </details>
+              <details class="tree">
+                <summary>
+                  <span class="nm">Unclassified <span class="u">— instrument_type unresolved</span></span
+                  ><span class="meta"><span class="u">2 data types</span></span>
+                </summary>
+                <div class="tree-body">
+                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 0 0 6px">
+                    No roster instrument_type resolved this (venue, data_type) cell against
+                    <code>valid_data_types_for_venue_instrument_type</code> (<code>venue_instrument_type_axis.py</code>)
+                    — a structural classification gap, not a data-coverage gap; the Coverage state below is still the
+                    venue's real measured state.
+                  </p>
+                  <div class="tree-body scroll-x">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Data type</th>
+                          <th>Declared since</th>
+                          <th>Coverage</th>
+                          <th>Granularity</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><code>futures_chain</code></td>
+                          <td>2019-03-30</td>
+                          <td>
+                            <b
+                              class="nrdy"
+                              title="zero captured for data_types with a non-zero denominator: [&#x27;trades&#x27;, &#x27;trades&#x27;]"
+                              >not-ready</b
+                            >
+                          </td>
+                          <td>per chain snapshot</td>
+                        </tr>
+                        <tr>
+                          <td><code>options_chain</code></td>
+                          <td>2019-03-30</td>
+                          <td>
+                            <b
+                              class="nrdy"
+                              title="zero captured for data_types with a non-zero denominator: [&#x27;trades&#x27;, &#x27;trades&#x27;]"
+                              >not-ready</b
+                            >
+                          </td>
+                          <td>per chain snapshot</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </details>
             </div>
@@ -5038,7 +4886,8 @@
             <summary>
               <span class="nm"><code>KALSHI-PERP</code></span
               ><span class="meta"
-                ><span class="u">coming soon (venue-side onboarding)</span>
+                ><span class="pend">unverified</span>
+                <span class="u">— no coverage.json shard cells observed for this venue</span>
                 <span class="u">(1 data type)</span></span
               >
             </summary>
@@ -5061,15 +4910,14 @@
                       <tr>
                         <td><code>perp_funding</code></td>
                         <td>2026-06-03</td>
-                        <td><span class="u">coming soon</span></td>
+                        <td><span class="pend">unverified</span></td>
                         <td>per interval</td>
                       </tr>
                     </tbody>
                   </table>
                   <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                    Capture adapter is built (<code>instruments_service.reference_data.adapters.cefi.kalshi_perp</code>,
-                    <code>market_tick_data_service.live.connectors.kalshi_perp_ws</code>) — live coverage is coming
-                    soon (venue-side onboarding), pending Kalshi-side perpetuals trading rights.
+                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
+                    venue.
                   </p>
                 </div>
               </details>
@@ -6137,16 +5985,18 @@
             <summary>
               <span class="nm"><code>PACIFICA-SOLANA</code></span
               ><span class="meta"
-                ><span class="u">coming soon (venue-side onboarding)</span></span
+                ><span class="pend">unverified</span>
+                <span class="u"
+                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
+                  the 2026-08-19 coverage manifest</span
+                ></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                Capture adapter is built (<code>instruments_service.reference_data.adapters.cefi.pacifica</code>,
-                <code>market_tick_data_service.live.connectors.pacifica_solana_perp_ws</code>,
-                <code>execution_service.defi_execution.protocols.pacifica</code>) — no data_types are registered yet
-                pending Pacifica-side onboarding, so there is nothing to derive an instrument-type or data-type
-                breakdown from today.
+                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
+                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
+                instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -6154,7 +6004,8 @@
             <summary>
               <span class="nm"><code>POLYMARKET-PERP</code></span
               ><span class="meta"
-                ><span class="u">coming soon (venue-side onboarding)</span>
+                ><span class="pend">unverified</span>
+                <span class="u">— no coverage.json shard cells observed for this venue</span>
                 <span class="u">(1 data type)</span></span
               >
             </summary>
@@ -6177,15 +6028,14 @@
                       <tr>
                         <td><code>perp_funding</code></td>
                         <td>2026-08-07</td>
-                        <td><span class="u">coming soon</span></td>
+                        <td><span class="pend">unverified</span></td>
                         <td>per interval</td>
                       </tr>
                     </tbody>
                   </table>
                   <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                    Capture adapter is built (<code>instruments_service.reference_data.adapters.cefi.polymarket_perp</code>,
-                    <code>market_tick_data_service.live.connectors.polymarket_perp_ws</code>) — live coverage is
-                    coming soon (venue-side onboarding), pending Polymarket-side perpetuals trading rights.
+                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
+                    venue.
                   </p>
                 </div>
               </details>
@@ -6394,7 +6244,7 @@
                           <tr>
                             <td><code>governance_events</code></td>
                             <td>2020-07-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per governance event</td>
                           </tr>
                           <tr>
@@ -6442,19 +6292,19 @@
                           <tr>
                             <td><code>flash_loan_events</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per event</td>
                           </tr>
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=6627 n_rows_in_shard=30)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>liquidation_events</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per event</td>
                           </tr>
                           <tr>
@@ -6466,19 +6316,19 @@
                           <tr>
                             <td><code>position_data</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per position snapshot</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=captured row_count=2 n_rows_in_shard=2)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=captured row_count=67 n_rows_in_shard=67)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -6507,19 +6357,19 @@
                           <tr>
                             <td><code>flash_loan_events</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per event</td>
                           </tr>
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=6627 n_rows_in_shard=30)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>liquidation_events</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per event</td>
                           </tr>
                           <tr>
@@ -6531,19 +6381,19 @@
                           <tr>
                             <td><code>position_data</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per position snapshot</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=captured row_count=2 n_rows_in_shard=2)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=captured row_count=67 n_rows_in_shard=67)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -6559,7 +6409,10 @@
               <details class="tree">
                 <summary>
                   <span class="nm"><code>ANKR-ETHEREUM</code></span
-                  ><span class="meta"><span class="smk" title="Every declared data type for this venue was smoke-tested 2026-08-21 and proven acquisition-capable into the -test- bucket. Production coverage.json backtestable status is measured separately.">data proven</span> <span class="u">(1 data type)</span></span
+                  ><span class="meta"
+                    ><span class="pend">unverified</span>
+                    <span class="u">— no coverage.json shard cells observed for this venue</span>
+                    <span class="u">(1 data type)</span></span
                   >
                 </summary>
                 <div class="tree-body">
@@ -6582,7 +6435,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2020-12-30</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                         </tbody>
@@ -6683,7 +6536,10 @@
               <details class="tree">
                 <summary>
                   <span class="nm"><code>BINANCE-ETHEREUM</code></span
-                  ><span class="meta"><span class="smk" title="Every declared data type for this venue was smoke-tested 2026-08-21 and proven acquisition-capable into the -test- bucket. Production coverage.json backtestable status is measured separately.">data proven</span> <span class="u">(1 data type)</span></span
+                  ><span class="meta"
+                    ><span class="pend">unverified</span>
+                    <span class="u">— no coverage.json shard cells observed for this venue</span>
+                    <span class="u">(1 data type)</span></span
                   >
                 </summary>
                 <div class="tree-body">
@@ -6706,7 +6562,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2023-04-19</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                         </tbody>
@@ -6722,7 +6578,10 @@
               <details class="tree">
                 <summary>
                   <span class="nm"><code>CHAINLINK-ETHEREUM</code></span
-                  ><span class="meta"><span class="smk" title="Every declared data type for this venue was smoke-tested 2026-08-21 and proven acquisition-capable into the -test- bucket. Production coverage.json backtestable status is measured separately.">data proven</span> <span class="u">(1 data type)</span></span
+                  ><span class="meta"
+                    ><span class="pend">unverified</span>
+                    <span class="u">— no coverage.json shard cells observed for this venue</span>
+                    <span class="u">(1 data type)</span></span
                   >
                 </summary>
                 <div class="tree-body">
@@ -6744,7 +6603,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2020-01-01</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=chainlink capture_status=captured row_count=48 n_rows_in_shard=48)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -6773,7 +6632,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2020-01-01</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=chainlink capture_status=captured row_count=48 n_rows_in_shard=48)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -6815,7 +6674,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2022-02-05</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                         </tbody>
@@ -6895,7 +6754,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-08-14</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=5 n_rows_in_shard=5)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
@@ -6930,7 +6789,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-08-14</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=5 n_rows_in_shard=5)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
@@ -7062,7 +6921,7 @@
                           <tr>
                             <td><code>eigenlayer_rewards</code></td>
                             <td>2024-08-06</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
@@ -7158,7 +7017,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2023-11-01</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                           <tr>
@@ -7186,7 +7045,10 @@
               <details class="tree">
                 <summary>
                   <span class="nm"><code>EULER_V2-ETHEREUM</code></span
-                  ><span class="meta"><span class="smk" title="Every declared data type for this venue was smoke-tested 2026-08-21 and proven acquisition-capable into the -test- bucket. Production coverage.json backtestable status is measured separately.">data proven</span> <span class="u">(1 data type)</span></span
+                  ><span class="meta"
+                    ><span class="pend">unverified</span>
+                    <span class="u">— no coverage.json shard cells observed for this venue</span>
+                    <span class="u">(1 data type)</span></span
                   >
                 </summary>
                 <div class="tree-body">
@@ -7208,7 +7070,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-08-01</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                         </tbody>
@@ -7434,7 +7296,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2020-12-18</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=2 n_rows_in_shard=2)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                           <tr>
@@ -7494,7 +7356,7 @@
                           <tr>
                             <td><code>vault_share_price</code></td>
                             <td>2023-01-18</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per share-price update</td>
                           </tr>
                         </tbody>
@@ -7510,7 +7372,10 @@
               <details class="tree">
                 <summary>
                   <span class="nm"><code>MANTLE-ETHEREUM</code></span
-                  ><span class="meta"><span class="smk" title="Every declared data type for this venue was smoke-tested 2026-08-21 and proven acquisition-capable into the -test- bucket. Production coverage.json backtestable status is measured separately.">data proven</span> <span class="u">(1 data type)</span></span
+                  ><span class="meta"
+                    ><span class="pend">unverified</span>
+                    <span class="u">— no coverage.json shard cells observed for this venue</span>
+                    <span class="u">(1 data type)</span></span
                   >
                 </summary>
                 <div class="tree-body">
@@ -7533,7 +7398,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2023-10-06</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                         </tbody>
@@ -7575,13 +7440,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-01-08</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=868 n_rows_in_shard=70)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>liquidation_events</code></td>
                             <td>2024-01-08</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per event</td>
                           </tr>
                           <tr>
@@ -7616,13 +7481,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-01-08</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=868 n_rows_in_shard=70)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>liquidation_events</code></td>
                             <td>2024-01-08</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_rpc capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per event</td>
                           </tr>
                           <tr>
@@ -7760,7 +7625,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2024-02-01</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                           <tr>
@@ -7814,7 +7679,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-07-18</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
@@ -7883,7 +7748,10 @@
               <details class="tree">
                 <summary>
                   <span class="nm"><code>ROCKETPOOL-ETHEREUM</code></span
-                  ><span class="meta"><span class="smk" title="Every declared data type for this venue was smoke-tested 2026-08-21 and proven acquisition-capable into the -test- bucket. Production coverage.json backtestable status is measured separately.">data proven</span> <span class="u">(1 data type)</span></span
+                  ><span class="meta"
+                    ><span class="pend">unverified</span>
+                    <span class="u">— no coverage.json shard cells observed for this venue</span>
+                    <span class="u">(1 data type)</span></span
                   >
                 </summary>
                 <div class="tree-body">
@@ -7906,7 +7774,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2021-11-08</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                         </tbody>
@@ -7948,7 +7816,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-01-01</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=10 n_rows_in_shard=10)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
@@ -7983,7 +7851,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-01-01</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=10 n_rows_in_shard=10)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
@@ -8005,7 +7873,10 @@
               <details class="tree">
                 <summary>
                   <span class="nm"><code>STADER-ETHEREUM</code></span
-                  ><span class="meta"><span class="smk" title="Every declared data type for this venue was smoke-tested 2026-08-21 and proven acquisition-capable into the -test- bucket. Production coverage.json backtestable status is measured separately.">data proven</span> <span class="u">(1 data type)</span></span
+                  ><span class="meta"
+                    ><span class="pend">unverified</span>
+                    <span class="u">— no coverage.json shard cells observed for this venue</span>
+                    <span class="u">(1 data type)</span></span
                   >
                 </summary>
                 <div class="tree-body">
@@ -8028,7 +7899,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2023-07-10</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                         </tbody>
@@ -8044,7 +7915,10 @@
               <details class="tree">
                 <summary>
                   <span class="nm"><code>STAKEWISE-ETHEREUM</code></span
-                  ><span class="meta"><span class="smk" title="Every declared data type for this venue was smoke-tested 2026-08-21 and proven acquisition-capable into the -test- bucket. Production coverage.json backtestable status is measured separately.">data proven</span> <span class="u">(1 data type)</span></span
+                  ><span class="meta"
+                    ><span class="pend">unverified</span>
+                    <span class="u">— no coverage.json shard cells observed for this venue</span>
+                    <span class="u">(1 data type)</span></span
                   >
                 </summary>
                 <div class="tree-body">
@@ -8067,7 +7941,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2023-11-28</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                         </tbody>
@@ -8126,7 +8000,10 @@
               <details class="tree">
                 <summary>
                   <span class="nm"><code>SWELL-ETHEREUM</code></span
-                  ><span class="meta"><span class="smk" title="Every declared data type for this venue was smoke-tested 2026-08-21 and proven acquisition-capable into the -test- bucket. Production coverage.json backtestable status is measured separately.">data proven</span> <span class="u">(1 data type)</span></span
+                  ><span class="meta"
+                    ><span class="pend">unverified</span>
+                    <span class="u">— no coverage.json shard cells observed for this venue</span>
+                    <span class="u">(1 data type)</span></span
                   >
                 </summary>
                 <div class="tree-body">
@@ -8149,7 +8026,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2023-04-17</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured row_count=1 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per rate update</td>
                           </tr>
                         </tbody>
@@ -8238,7 +8115,7 @@
                           <tr>
                             <td><code>dex_pool_state</code></td>
                             <td>2020-05-06</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=captured/empty_confirmed row_count=19 n_rows_in_shard=24)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per block/state change</td>
                           </tr>
                           <tr>
@@ -8335,7 +8212,7 @@
                           <tr>
                             <td><code>dex_pool_state</code></td>
                             <td>2025-01-30</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=empty_confirmed/captured row_count=157 n_rows_in_shard=470)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per block/state change</td>
                           </tr>
                           <tr>
@@ -8357,7 +8234,10 @@
               <details class="tree">
                 <summary>
                   <span class="nm"><code>VENUS-ETHEREUM</code></span
-                  ><span class="meta"><span class="smk" title="Every declared data type for this venue was smoke-tested 2026-08-21 and proven acquisition-capable into the -test- bucket. Production coverage.json backtestable status is measured separately.">data proven</span> <span class="u">(1 data type)</span></span
+                  ><span class="meta"
+                    ><span class="pend">unverified</span>
+                    <span class="u">— no coverage.json shard cells observed for this venue</span>
+                    <span class="u">(1 data type)</span></span
                   >
                 </summary>
                 <div class="tree-body">
@@ -8380,7 +8260,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-06-01</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                         </tbody>
@@ -8409,7 +8289,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-06-01</td>
-                            <td><span class="smk" title="Smoke-tested 2026-08-21 -- one-block acquisition probe into the -test- bucket succeeded (source=onchain_subgraph capture_status=empty_confirmed row_count=0 n_rows_in_shard=1)">data proven</span></td>
+                            <td><span class="pend">unverified</span></td>
                             <td>per index update</td>
                           </tr>
                         </tbody>
@@ -12199,12 +12079,11 @@
         <summary><span class="nm">TradFi</span><span class="meta">0 ready / 8 not-ready / 0 unverified</span></summary>
         <div class="tree-body">
           <p style="font-size: 0.93rem; color: var(--ink-3)">
-            All 8 registry-declared TradFi venues (<code>VENUES_BY_ASSET_GROUP[“tradfi”]</code>). Vendor-sourced
+            All 8 registry-declared TradFi venues (<code>VENUES_BY_ASSET_GROUP["tradfi"]</code>). Vendor-sourced
             (one primary provider, per internal TradFi sourcing documentation); the boundary disclosure differs per
-            dataset and is stated inline where it diverges. <code>FRED</code>'s <code>yield_curve</code> and
-            <code>ohlcv_1d</code> data types resolve to the <b>Bond</b> and <b>Index</b> instrument-type buckets
-            respectively, via an explicit venue-scoped classification override
-            (<code>unified-api-contracts@f79cd936</code>).
+            dataset and is stated inline where it diverges. <code>FRED</code> carries data types
+            (<code>yield_curve</code>, <code>ohlcv_1d</code>) that the instrument-type roster could not classify — shown
+            under its own “Unclassified” node rather than folded into a category it does not belong to.
           </p>
           <details class="tree">
             <summary>
@@ -13185,64 +13064,54 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm">Index</span><span class="meta"><span class="u">1 data type</span></span>
+                  <span class="nm">Unclassified <span class="u">— instrument_type unresolved</span></span
+                  ><span class="meta"><span class="u">2 data types</span></span>
                 </summary>
-                <div class="tree-body scroll-x">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Data type</th>
-                        <th>Declared since</th>
-                        <th>Coverage</th>
-                        <th>Granularity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><code>ohlcv_1d</code></td>
-                        <td>1962-01-02</td>
-                        <td>
-                          <b
-                            class="nrdy"
-                            title="zero captured for data_types with a non-zero denominator: [&#x27;ohlcv_15m&#x27;, &#x27;ohlcv_15m&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_24h&#x27;, &#x27;ohlcv_24h&#x27;]"
-                            >not-ready</b
-                          >
-                        </td>
-                        <td>1d</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-              <details class="tree">
-                <summary>
-                  <span class="nm">Bond</span><span class="meta"><span class="u">1 data type</span></span>
-                </summary>
-                <div class="tree-body scroll-x">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Data type</th>
-                        <th>Declared since</th>
-                        <th>Coverage</th>
-                        <th>Granularity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><code>yield_curve</code></td>
-                        <td>1962-01-02</td>
-                        <td>
-                          <b
-                            class="nrdy"
-                            title="zero captured for data_types with a non-zero denominator: [&#x27;ohlcv_15m&#x27;, &#x27;ohlcv_15m&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_24h&#x27;, &#x27;ohlcv_24h&#x27;]"
-                            >not-ready</b
-                          >
-                        </td>
-                        <td>per curve snapshot</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div class="tree-body">
+                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 0 0 6px">
+                    No roster instrument_type resolved this (venue, data_type) cell against
+                    <code>valid_data_types_for_venue_instrument_type</code> (<code>venue_instrument_type_axis.py</code>)
+                    — a structural classification gap, not a data-coverage gap; the Coverage state below is still the
+                    venue's real measured state.
+                  </p>
+                  <div class="tree-body scroll-x">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Data type</th>
+                          <th>Declared since</th>
+                          <th>Coverage</th>
+                          <th>Granularity</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><code>ohlcv_1d</code></td>
+                          <td>1962-01-02</td>
+                          <td>
+                            <b
+                              class="nrdy"
+                              title="zero captured for data_types with a non-zero denominator: [&#x27;ohlcv_15m&#x27;, &#x27;ohlcv_15m&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_24h&#x27;, &#x27;ohlcv_24h&#x27;]"
+                              >not-ready</b
+                            >
+                          </td>
+                          <td>1d</td>
+                        </tr>
+                        <tr>
+                          <td><code>yield_curve</code></td>
+                          <td>1962-01-02</td>
+                          <td>
+                            <b
+                              class="nrdy"
+                              title="zero captured for data_types with a non-zero denominator: [&#x27;ohlcv_15m&#x27;, &#x27;ohlcv_15m&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_24h&#x27;, &#x27;ohlcv_24h&#x27;]"
+                              >not-ready</b
+                            >
+                          </td>
+                          <td>per curve snapshot</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </details>
             </div>
@@ -14983,30 +14852,30 @@
         </summary>
         <div class="tree-body">
           <p style="font-size: 0.93rem; color: var(--ink-3)">
-            All 39 registry-declared sports venues (<code>VENUES_BY_ASSET_GROUP["sports"]</code>) at last measurement
-            (2026-08-19) — 6 since retired by 2026-08-21 operator ruling
-            (<code>unified-api-contracts@710db834</code>: BETOPENLY, NOVIG, ONEXBET, PROPHETX, plus BETMGM/BETWAY
-            whose historical-rows disposition is still pending), not yet re-measured. Carries the explicit
+            All 39 registry-declared sports venues (<code>VENUES_BY_ASSET_GROUP["sports"]</code>). Carries the explicit
             2020-06-06 data floor (<code>sports-2020-06-data-floor.md</code>) — odds data begins at that date, and
             anything before it is excluded from the denominator rather than reported as a gap. 8 venues
             (<code>3ET</code>, <code>BROKER5</code>, <code>CROWN</code>, <code>SBO</code>, <code>SHARPBET</code>,
-            <code>VX</code>, <code>BETDEX</code>, <code>IBC</code>) are confirmed Unity central-wallet child books
-            with no capture adapter built yet — a different, and different-cause, gap from
-            <code>PACIFICA-SOLANA</code>'s venue-side-onboarding wait under CeFi.
+            <code>VX</code>, <code>BETDEX</code>, <code>IBC</code>) are bucketed here but absent from both
+            <code>VENUE_DATA_TYPE_CAPABILITIES</code> and the coverage manifest — the same declared-but-uncapabilitied
+            gap <code>PACIFICA-SOLANA</code> shows under CeFi, not unique to one asset group.
           </p>
           <details class="tree">
             <summary>
               <span class="nm"><code>3ET</code></span
               ><span class="meta"
-                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
+                ><span class="pend">unverified</span>
+                <span class="u"
+                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
+                  the 2026-08-19 coverage manifest</span
+                ></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                A confirmed Unity central-wallet child book (commission terms already negotiated,
-                <code>unity_child_books.py</code>) — no direct capture adapter exists yet
-                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
-                nothing to derive an instrument-type or data-type breakdown from.
+                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
+                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
+                instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -15050,16 +14919,18 @@
             <summary>
               <span class="nm"><code>BETDEX</code></span
               ><span class="meta"
-                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
+                ><span class="pend">unverified</span>
+                <span class="u"
+                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
+                  the 2026-08-19 coverage manifest</span
+                ></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                A confirmed Unity central-wallet child book (commission terms already negotiated — decentralized
-                betting exchange via Unity, per Unity pricing 2026-04-17), <code>unity_child_books.py</code>) — no
-                direct capture adapter exists yet (<code>venue_adapter_keys.py</code>'s explicit
-                <code>NO_ADAPTER_YET</code> sentinel), so there is nothing to derive an instrument-type or data-type
-                breakdown from.
+                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
+                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
+                instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -15287,19 +15158,41 @@
             <summary>
               <span class="nm"><code>BETOPENLY</code></span
               ><span class="meta"
-                ><span class="u">retired 2026-08-21 (operator ruling)</span></span
+                ><span class="pend">unverified</span>
+                <span class="u">— no coverage.json shard cells observed for this venue</span>
+                <span class="u">(1 data type)</span></span
               >
             </summary>
             <div class="tree-body">
-              <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                HIGH-confidence removal — canonical venue token and odds_api key existed but were never wired into
-                the live fetch scope, with zero manifest presence of any kind (arbitrage-research vintage). Removed
-                from the registry per 2026-08-21 operator ruling.
-              </p>
-              <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                Source: <code>unified-api-contracts@710db834</code> ·
-                <code>/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md</code>.
-              </p>
+              <details class="tree">
+                <summary>
+                  <span class="nm">Odds</span><span class="meta"><span class="u">1 data type</span></span>
+                </summary>
+                <div class="tree-body scroll-x">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Data type</th>
+                        <th>Declared since</th>
+                        <th>Coverage</th>
+                        <th>Granularity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>odds</code></td>
+                        <td>not declared</td>
+                        <td><span class="pend">unverified</span></td>
+                        <td>per line movement</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
+                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
+                    venue.
+                  </p>
+                </div>
+              </details>
             </div>
           </details>
           <details class="tree">
@@ -15516,15 +15409,18 @@
             <summary>
               <span class="nm"><code>BROKER5</code></span
               ><span class="meta"
-                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
+                ><span class="pend">unverified</span>
+                <span class="u"
+                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
+                  the 2026-08-19 coverage manifest</span
+                ></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                A confirmed Unity central-wallet child book (commission terms already negotiated,
-                <code>unity_child_books.py</code>) — no direct capture adapter exists yet
-                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
-                nothing to derive an instrument-type or data-type breakdown from.
+                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
+                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
+                instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -15604,15 +15500,18 @@
             <summary>
               <span class="nm"><code>CROWN</code></span
               ><span class="meta"
-                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
+                ><span class="pend">unverified</span>
+                <span class="u"
+                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
+                  the 2026-08-19 coverage manifest</span
+                ></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                A confirmed Unity central-wallet child book (commission terms already negotiated,
-                <code>unity_child_books.py</code>) — no direct capture adapter exists yet
-                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
-                nothing to derive an instrument-type or data-type breakdown from.
+                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
+                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
+                instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -15692,15 +15591,18 @@
             <summary>
               <span class="nm"><code>IBC</code></span
               ><span class="meta"
-                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
+                ><span class="pend">unverified</span>
+                <span class="u"
+                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
+                  the 2026-08-19 coverage manifest</span
+                ></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                A confirmed Unity central-wallet child book — IBCBet, Asian handicap specialist, commission terms
-                already negotiated (<code>unity_child_books.py</code>) — no direct capture adapter exists yet
-                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
-                nothing to derive an instrument-type or data-type breakdown from.
+                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
+                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
+                instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -15826,40 +15728,82 @@
             <summary>
               <span class="nm"><code>NOVIG</code></span
               ><span class="meta"
-                ><span class="u">retired 2026-08-21 (operator ruling)</span></span
+                ><span class="pend">unverified</span>
+                <span class="u">— no coverage.json shard cells observed for this venue</span>
+                <span class="u">(1 data type)</span></span
               >
             </summary>
             <div class="tree-body">
-              <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                HIGH-confidence removal — canonical venue token and odds_api key existed but were never wired into
-                the live fetch scope, with zero manifest presence of any kind (arbitrage-research vintage). Removed
-                from the registry per 2026-08-21 operator ruling.
-              </p>
-              <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                Source: <code>unified-api-contracts@710db834</code> ·
-                <code>/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md</code>.
-              </p>
+              <details class="tree">
+                <summary>
+                  <span class="nm">Odds</span><span class="meta"><span class="u">1 data type</span></span>
+                </summary>
+                <div class="tree-body scroll-x">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Data type</th>
+                        <th>Declared since</th>
+                        <th>Coverage</th>
+                        <th>Granularity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>odds</code></td>
+                        <td>not declared</td>
+                        <td><span class="pend">unverified</span></td>
+                        <td>per line movement</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
+                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
+                    venue.
+                  </p>
+                </div>
+              </details>
             </div>
           </details>
           <details class="tree">
             <summary>
               <span class="nm"><code>ONEXBET</code></span
               ><span class="meta"
-                ><span class="u">retired 2026-08-21 (operator ruling)</span></span
+                ><span class="pend">unverified</span>
+                <span class="u">— no coverage.json shard cells observed for this venue</span>
+                <span class="u">(1 data type)</span></span
               >
             </summary>
             <div class="tree-body">
-              <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                HIGH-confidence removal — canonical venue token and odds_api key existed but were never wired into
-                the live fetch scope, with zero manifest presence of any kind (arbitrage-research vintage). Removed
-                from the registry per 2026-08-21 operator ruling. (The dead <code>OneXBetAdapter</code> class in
-                execution-service and the separate <code>bookmaker_registry.py</code> entry are a follow-on,
-                still-open cleanup — <code>sports_bookmaker_roster_classification_2026_08_21.md</code>.)
-              </p>
-              <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                Source: <code>unified-api-contracts@710db834</code> ·
-                <code>/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md</code>.
-              </p>
+              <details class="tree">
+                <summary>
+                  <span class="nm">Odds</span><span class="meta"><span class="u">1 data type</span></span>
+                </summary>
+                <div class="tree-body scroll-x">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Data type</th>
+                        <th>Declared since</th>
+                        <th>Coverage</th>
+                        <th>Granularity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>odds</code></td>
+                        <td>not declared</td>
+                        <td><span class="pend">unverified</span></td>
+                        <td>per line movement</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
+                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
+                    venue.
+                  </p>
+                </div>
+              </details>
             </div>
           </details>
           <details class="tree">
@@ -15948,34 +15892,59 @@
             <summary>
               <span class="nm"><code>PROPHETX</code></span
               ><span class="meta"
-                ><span class="u">retired 2026-08-21 (operator ruling)</span></span
+                ><span class="pend">unverified</span>
+                <span class="u">— no coverage.json shard cells observed for this venue</span>
+                <span class="u">(1 data type)</span></span
               >
             </summary>
             <div class="tree-body">
-              <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                HIGH-confidence removal — canonical venue token and odds_api key existed but were never wired into
-                the live fetch scope, with zero manifest presence of any kind (arbitrage-research vintage). Removed
-                from the registry per 2026-08-21 operator ruling.
-              </p>
-              <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                Source: <code>unified-api-contracts@710db834</code> ·
-                <code>/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md</code>.
-              </p>
+              <details class="tree">
+                <summary>
+                  <span class="nm">Odds</span><span class="meta"><span class="u">1 data type</span></span>
+                </summary>
+                <div class="tree-body scroll-x">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Data type</th>
+                        <th>Declared since</th>
+                        <th>Coverage</th>
+                        <th>Granularity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>odds</code></td>
+                        <td>not declared</td>
+                        <td><span class="pend">unverified</span></td>
+                        <td>per line movement</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
+                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
+                    venue.
+                  </p>
+                </div>
+              </details>
             </div>
           </details>
           <details class="tree">
             <summary>
               <span class="nm"><code>SBO</code></span
               ><span class="meta"
-                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
+                ><span class="pend">unverified</span>
+                <span class="u"
+                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
+                  the 2026-08-19 coverage manifest</span
+                ></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                A confirmed Unity central-wallet child book (commission terms already negotiated,
-                <code>unity_child_books.py</code>) — no direct capture adapter exists yet
-                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
-                nothing to derive an instrument-type or data-type breakdown from.
+                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
+                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
+                instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -15983,15 +15952,18 @@
             <summary>
               <span class="nm"><code>SHARPBET</code></span
               ><span class="meta"
-                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
+                ><span class="pend">unverified</span>
+                <span class="u"
+                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
+                  the 2026-08-19 coverage manifest</span
+                ></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                A confirmed Unity central-wallet child book (cheapest commissioned book, 0.2% on winnings — commission
-                terms already negotiated, <code>unity_child_books.py</code>) — no direct capture adapter exists yet
-                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
-                nothing to derive an instrument-type or data-type breakdown from.
+                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
+                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
+                instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -16245,16 +16217,18 @@
             <summary>
               <span class="nm"><code>VX</code></span
               ><span class="meta"
-                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
+                ><span class="pend">unverified</span>
+                <span class="u"
+                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
+                  the 2026-08-19 coverage manifest</span
+                ></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                A confirmed Unity central-wallet child book (cheapest commissioned book, 0.2% on winnings — commission
-                terms already negotiated, <code>unity_child_books.py</code>; distinct from the CBOE VIX futures root
-                sharing this ticker) — no direct capture adapter exists yet (<code>venue_adapter_keys.py</code>'s
-                explicit <code>NO_ADAPTER_YET</code> sentinel), so there is nothing to derive an instrument-type or
-                data-type breakdown from.
+                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
+                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
+                instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -16315,7 +16289,7 @@
           <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
             24 tokens in the 2026-08-19 coverage manifest that neither the manifest's own
             <code>by_asset_group</code> partition nor <code>VENUES_BY_ASSET_GROUP</code> can resolve to one of the five
-            groups above — already present in the fleet-wide readiness measurement but missing from this tree until now, which
+            groups above — already present in <a href="#s14">§14</a>'s table but missing from this tree until now, which
             made this tree's total (264) silently undercount the measured universe (288) by exactly this bucket. Not the
             <code>get_venue_asset_group()</code> defect named in the callout above — that function is not in this path —
             but a real, separate gap worth its own look.
@@ -16366,7 +16340,7 @@
       <p>
         Streaming, on the same schemas as batch. This matters more than it sounds: the live and batch paths are the same
         code, so a strategy developed against history behaves identically against a stream. That property is enforced
-        rather than asserted — see <a href="#s16">§16</a>.
+        rather than asserted — see <a href="#s14">readiness</a>.
       </p>
       <div class="callout">
         <span class="tag">Why batch and live share schemas</span>
@@ -16745,8 +16719,7 @@ Content-Type: application/json
       </div>
       <p style="font-size: 0.93rem; color: var(--ink-3)">
         This is the structural catalogue, not a readiness claim — an archetype existing in the registry is not the same
-        as an archetype being satisfiable on a given venue in a given mode; that capability audit is planned but not
-        yet built.
+        as an archetype being satisfiable on a given venue in a given mode; that check is per <a href="#s14">§14</a>.
       </p>
     </details>
   </section>
@@ -17102,6 +17075,217 @@ Content-Type: application/json
     </details>
   </section>
 
+  <section id="s14">
+    <div class="sec-head">
+      <span class="num">14</span>
+      <h2>Readiness: batch, paper, live</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b class="own" title="system_readiness_master.md — W1: Readiness derivation and the state dump">owner: W1</b>
+    </div>
+    <p class="lede">
+      Three modes, stated per venue rather than as a platform-wide claim. What separates them is which accounts exist,
+      not which code exists.
+    </p>
+    <details class="sec-body" open>
+      <summary>The mode model and how readiness is derived</summary>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Modes</span
+          ><span class="note">A venue sits at the highest mode whose requirements all hold</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Mode</th>
+                <th>Means</th>
+                <th>Needs</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>Batch</b></td>
+                <td>Research and backtest against history, honestly</td>
+                <td>No venue credentials</td>
+              </tr>
+              <tr>
+                <td><b>Paper</b></td>
+                <td>
+                  Runs forward without capital at risk. Either against a venue testnet, or simulated through our own
+                  matching
+                </td>
+                <td>Live market data; testnet accounts where they exist</td>
+              </tr>
+              <tr>
+                <td><b>Live</b></td>
+                <td>Real capital</td>
+                <td>Live credentials and funded accounts</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Readiness is computed, not declared</span>
+        <p>
+          A venue's mode is derived from checks rather than written down, so it cannot drift as the system changes.
+          Where a check does not yet exist, the venue reports <b>unverified</b> — never a pass. A readiness table that
+          cannot say "I don't know" is not telling you anything.
+        </p>
+      </div>
+      <h3>Why batch and paper must agree</h3>
+      <p>
+        The same code path serves batch and live, and paper is compared against a batch re-run of the same window. If
+        they disagree, that is a defect to fix rather than an expected difference — which is what makes a backtest
+        result meaningful as a forward-looking claim.
+      </p>
+      <p>
+        The mechanism is one transport facade, not a parallel implementation per mode. MTDS, MDPS, features, strategy
+        and execution all publish and read through the UTL <code>EventTransport</code> facade
+        (<code>unified_trading_library.streaming.event_facade</code>): <code>InMemoryTransport</code> backs paper and
+        colocated runs, Pub/Sub backs live — same call sites, same schemas, a different transport underneath. That is
+        what makes <code>paper(W) == batch-rerun(W)</code> an enforceable property rather than a hoped-for one.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Source: <code>unified_trading_library/streaming/event_facade.py</code>'s
+        <code>get_transport()</code> dispatch.
+      </p>
+      <h3>Measured readiness — 2026-08-18 <span class="u">(DeFi row refreshed 2026-08-19)</span></h3>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Derived readiness, pipeline legs</span
+          ><span class="note">288 venues × 3 modes = 864 rows</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Asset group</th>
+                <th>Ready</th>
+                <th>Not ready</th>
+                <th>Unverified</th>
+                <th>Rows (BATCH)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>CeFi</td>
+                <td>0</td>
+                <td>5</td>
+                <td>19</td>
+                <td>24</td>
+              </tr>
+              <tr>
+                <td>DeFi</td>
+                <td>0</td>
+                <td>180</td>
+                <td>0</td>
+                <td>180</td>
+              </tr>
+              <tr>
+                <td>TradFi</td>
+                <td>0</td>
+                <td>9</td>
+                <td>0</td>
+                <td>9</td>
+              </tr>
+              <tr>
+                <td>Sports</td>
+                <td>0</td>
+                <td>49</td>
+                <td>1</td>
+                <td>50</td>
+              </tr>
+              <tr>
+                <td>Prediction</td>
+                <td>0</td>
+                <td>0</td>
+                <td>1</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td>Unattributed</td>
+                <td>0</td>
+                <td>16</td>
+                <td>8</td>
+                <td>24</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">DeFi readiness — measured 2026-08-19</span>
+        <p>
+          <code>derive_readiness.py --asset-group defi</code>, reading
+          <code>gs://central-element-323112-honest-coverage/2026-08-19/coverage.json</code>, with all three service
+          probes reachable: the <b>strategy</b> leg — a position adapter AND a satisfiable archetype, both required
+          — returns a definitive verdict on every DeFi row today (<code>not_ready</code> on all 180) rather than
+          the <code>unverified</code> bail-out 47 of those rows carried previously. Row count (180) is unchanged;
+          only the split within it moved. CeFi / TradFi / Sports / Prediction / Unattributed above are the
+          2026-08-18 measurement. The separate all-mode, all-group total in <a href="#s17">§17</a> (864 rows —
+          not_ready 844 / unverified 20) is from that same 2026-08-18 pass.
+        </p>
+      </div>
+      <div class="callout">
+        <span class="tag">Readiness applies to archetypes as well as venues</span>
+        <p>
+          A venue has a readiness state; so does a <b>strategy archetype</b>, and so does each
+          <b>(archetype, venue)</b> pair. They are genuinely different questions — an archetype is only usable on a
+          venue whose data satisfies the inputs it declares, so a fully-captured venue with no archetype able to consume
+          it is not a ready venue.
+        </p>
+        <p>
+          <b class="st st-plan">planned</b> — a capability audit deriving archetype readiness across batch, paper and
+          live is specified and not yet built. Until it runs, that axis reports <code>unverified</code> rather than
+          being assumed.
+        </p>
+      </div>
+      <div class="callout">
+        <span class="tag">Reading "ready = 0" correctly</span>
+        <p>
+          <b>Zero venues currently clear the bar, and the bar is ours.</b> A venue is ready only when every leg of an
+          8-leg readiness model — declared, instruments-service, market data, processing, features, strategy, execution
+          transfers, execution instruction — passes a real machine check; one failing or unchecked leg fails the venue.
+          This is not "nothing works"; it is "we grade strictly and have not yet wired every check". Reported plainly,
+          because a readiness model that cannot return zero is not measuring anything.
+        </p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">
+          Verified against the readiness-state-dump derivation's 8-leg model (<code>declared</code>,
+          <code>instruments_service</code>, <code>market_tick_data</code>, <code>market_data_processing</code>,
+          <code>features</code>, <code>strategy</code>, <code>execution_transfers</code>,
+          <code>execution_instruction</code>) — a different framework from any step-count contract quoted elsewhere.
+        </p>
+        <p>
+          <b>Corrected 2026-08-20</b> — the structural gap behind the prior "execution-instruction is unverified on
+          all 864 rows" claim is fixed: the per-venue-per-mode check now exists
+          (<code>execution_service.readiness.instruction_path</code>) and the dump calls it
+          (<code>unified-trading-pm@8d47cf3393</code>). Re-run and independently re-verified on the <code>defi</code>
+          asset group alone: 540 rows went from blanket-<code>unverified</code> to a real
+          <code>{unverified: 20, ready: 133, not_ready: 387}</code> distribution. The full 864-row fleet-wide number
+          has not been re-derived since this fix landed — stated here rather than guessed, so this page does not
+          quote a number nobody has actually re-run. The strategy leg passes 24 of 864 (pre-fix count, not
+          re-measured either), dominated by archetypes whose input declarations are deliberately incomplete rather
+          than by venues that cannot trade.
+        </p>
+      </div>
+      <div class="callout">
+        <span class="tag">Three known gaps, stated rather than smoothed</span>
+        <p>
+          <b>Path canonicalisation currently fails.</b> A live enumeration on 2026-08-18 found 113 non-canonical entries
+          across the five asset groups (defi 38, sports 71, cefi 1, prediction 1, tradfi 2), most unaccounted for by the
+          accepted-exception registry. A related casing defect is an <em>active writer regression</em> — it grew
+          thirteen-fold — so this is degrading rather than static, and no canonical claim is made anywhere here.
+        </p>
+        <p>
+          <b>Prediction capture has an active outage</b> (8 days and counting at measurement), so its coverage must not
+          be read as steady state. <b>Unattributed venues</b>: 8 appear in the coverage manifest with no resolvable
+          asset group.
+        </p>
+      </div>
+    </details>
+  </section>
+
   <section id="s15">
     <div class="sec-head">
       <span class="num">15</span>
@@ -17151,34 +17335,6 @@ Content-Type: application/json
         Failures resolve through a defined ladder rather than ad hoc alerting — retry, restart, drain, hold dependants,
         halt — with each step's scope declared. Automated recovery handles the classes it is allowed to; the rest
         escalates to a human with the reason attached.
-      </p>
-      <h3>Dual authorization on treasury movements</h3>
-      <p>
-        A withdrawal is not a single signature away from moving funds. The number of independent, HMAC-signed
-        approvals required scales with the client's configured tier — SMALL needs 1, MEDIUM needs 2, LARGE needs
-        3 — accumulated server-side until quorum is reached; a duplicate approval, or one submitted after quorum is
-        already met, is rejected outright rather than silently accepted. For MEDIUM and LARGE tiers that is genuine
-        multi-person sign-off enforced in the code path, not left to operational policy.
-      </p>
-      <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Source: <code>deployment-api/deployment_api/routes/client_treasury.py::approve_withdrawal</code>
-        (<code>get_required_approvers()</code>), signature verified via
-        <code>execution_service.custody.withdrawal_signing.sign_withdrawal_approval()</code>.
-      </p>
-      <h3>Custody adapts to the client, not the reverse</h3>
-      <p>
-        Signing is pluggable and declared per deployment rather than assumed: HSM-backed cloud-KMS envelope
-        encryption is shipped, and Copper MPC custody is the production provider for every DeFi chain and
-        non-Binance CeFi venue (Ceffu is a custody provider but not a distinct signing surface — its signing routes
-        via Copper, and the Ceffu integration itself is stubbed pending its API spec). Because the signing surface
-        is an explicit, swappable extension point rather than a hardcoded assumption, bringing a client's own
-        custodian or wallet arrangement onto the platform is a deployment-time configuration decision — we
-        integrate with what the client already uses, rather than requiring them to move onto ours.
-      </p>
-      <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>,
-        <code>execution-service/execution_service/engine/handlers/transfer_handler.py::TransferHandler</code>. Full
-        provider-by-provider state: <a href="#s13">§13</a>.
       </p>
     </details>
   </section>
@@ -17253,23 +17409,6 @@ Content-Type: application/json
           ruling). Schemas and contracts do not change between these steps, so beginning at step 1 costs nothing later.
         </p>
       </div>
-      <h3>Why batch and paper must agree</h3>
-      <p>
-        The same code path serves batch and live, and paper is compared against a batch re-run of the same window. If
-        they disagree, that is a defect to fix rather than an expected difference — which is what makes a backtest
-        result meaningful as a forward-looking claim.
-      </p>
-      <p>
-        The mechanism is one transport facade, not a parallel implementation per mode. MTDS, MDPS, features, strategy
-        and execution all publish and read through the UTL <code>EventTransport</code> facade
-        (<code>unified_trading_library.streaming.event_facade</code>): <code>InMemoryTransport</code> backs paper and
-        colocated runs, Pub/Sub backs live — same call sites, same schemas, a different transport underneath. That is
-        what makes <code>paper(W) == batch-rerun(W)</code> an enforceable property rather than a hoped-for one.
-      </p>
-      <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>unified_trading_library/streaming/event_facade.py</code>'s
-        <code>get_transport()</code> dispatch.
-      </p>
     </details>
   </section>
 
@@ -17794,7 +17933,7 @@ Content-Type: application/json
       </div>
       <h3>Internal: messaging, not a service dependency</h3>
       <p>
-        Strategy's decisions reach execution the same way market data already does (<a href="#s16">§16</a>) — over the
+        Strategy's decisions reach execution the same way market data already does (<a href="#s14">§14</a>) — over the
         UTL <code>EventTransport</code> facade, Pub/Sub-backed, keyed on what the subscriber needs. Two subscriptions,
         not one: execution subscribes to strategy's instruction stream, and separately to the feature groups it needs
         from features-service. A messaging dependency in both cases, never a direct service-to-service call — this
@@ -18334,7 +18473,7 @@ Content-Type: application/x-ndjson
         </div>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
           Fields are the real <code>unified_api_contracts.events.persist.CanonicalPersistEnvelope</code> — one
-          envelope shape, every producer on the event-log spine (<a href="#s16">§16</a>).
+          envelope shape, every producer on the event-log spine (<a href="#s14">§14</a>).
         </p>
       </details>
 
@@ -19218,8 +19357,8 @@ Content-Type: application/json
           A family or archetype existing in this registry is a structural claim, not a readiness claim — the same
           distinction <a href="#s9">§09</a> draws. None of the families above carries a <b class="st st-live">live</b>
           mark, because none can honestly carry one yet: a capability audit deriving archetype readiness across
-          batch, paper and live is <b class="st st-plan">planned</b>, specified and not yet built.
-          Until it runs, archetype-level readiness reports <code>unverified</code> rather
+          batch, paper and live is <b class="st st-plan">planned</b>, specified and not yet built
+          (<a href="#s14">§14</a>). Until it runs, archetype-level readiness reports <code>unverified</code> rather
           than being assumed from the archetype simply existing in the enum.
         </p>
       </div>
