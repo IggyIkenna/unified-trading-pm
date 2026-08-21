@@ -162,10 +162,17 @@ the call is still awaited (ordering preserved), and check the file's line/functi
       `_collect_chain_vault_rows`, currently plain `def` called without `await`, driven by sync Alchemy/web3 RPC calls)
       OR carry an explicit in-code note saying why it must stay sync/serial, before any concurrency fan-out can apply.
       Repo: market-tick-data-service. Source: this doc's 2026-08-15 per-handler diagnosis above.
-- [ ] [INFRA] P3. Re-assess `lst_rates_handler.py`: confirm whether ANY per-shard fan-out axis exists (e.g. per LST
+- [x] ✅ [INFRA] P3. Re-assess `lst_rates_handler.py`: confirm whether ANY per-shard fan-out axis exists (e.g. per LST
       address within the single multicall-style EVM fetch, or across the EVM/Solana split) worth parallelizing, or close
       this handler out of "the 8 residual DeFi handlers" scope as not-applicable — it has no `for protocol: for chain:`
       loop to convert. Repo: market-tick-data-service. Source: this doc's 2026-08-15 per-handler diagnosis above.
+      ✅ 2026-08-21 — **real axis found and fixed: per-token (11 EVM LST tokens + the extended-rates sibling
+      module's own token set).** Both `_collect_evm_lst_rows` (`lst_rates_handler.py`) and
+      `_collect_evm_extended_rows` (`_lst_extended_rates.py`) were plain sync `for` loops of independent, blocking
+      `web3.eth.call`s inside the async `process()` path. Converted both to `async def`, fanning out per-token via
+      `asyncio.to_thread` + `asyncio.gather(Semaphore(8))`. Regression test
+      `test_evm_lst_rows_queries_concurrently_not_sequentially` proves it (real `time.sleep` stub, asserts
+      wall-clock << N x sleep). Evidence: `market-tick-data-service@<pending-ship>`.
 - [ ] [INFRA] P3. **Fix the 2 blocking-write sites in SYNC functions** — per "Open — in priority order" item 3:
       `live/websocket_runner.py::_record_empty_window` and
       `unified_trading_library/streaming/live_aggregator.py::_handle_zero_tick_window` perform the same blocking

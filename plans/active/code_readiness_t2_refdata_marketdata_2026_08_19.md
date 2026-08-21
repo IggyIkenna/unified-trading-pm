@@ -587,6 +587,24 @@ todos only to confirm they are data-movement, then leave it.
       re-assess `lst_rates_handler.py` for whether any per-shard fan-out axis exists at all, and fix 2 blocking
       writes in sync functions. All four handler files confirmed present here, so this residual IS T2-owned — kept
       OPEN, at its real P3 weight, behind this tranche's outstanding P0s.
+      **PARTIAL 2026-08-21 — `lst_rates_handler.py` re-assessed and fixed; 3 sub-items remain open.** Found a
+      real, worth-it fan-out axis the prior pass's "re-assess" correctly left undecided: `_collect_evm_lst_rows`
+      (11 EVM LST tokens, each a blocking `web3.eth.call` via `_query_rate_with_retry`) and its sibling
+      `_collect_evm_extended_rows` in `_lst_extended_rates.py` (multi-chain, similar count) were both plain
+      synchronous `for` loops inside the async `process()` path — the exact class this issue tracks. Converted
+      both to `async def`, fanning out per-token queries via `asyncio.to_thread` + `asyncio.gather` under a
+      `Semaphore(8)` bound (conservative cap for a third-party RPC provider, not a headroom limit). Preserves
+      exact row/error semantics (per-token failures still isolate via `evm_errors`/per-item skip, never abort the
+      batch). New regression test proves the fix, not just non-regression:
+      `test_evm_lst_rows_queries_concurrently_not_sequentially` stubs `_query_rate` with a real `time.sleep(0.05)`
+      and asserts wall-clock stays near ONE sleep rather than N — fails against the pre-fix sequential
+      implementation by construction (11 tokens x 0.05s = 0.55s sequential vs the assertion's <0.275s bound).
+      59/59 tests passing (58 pre-existing + 1 new). Evidence: `market-tick-data-service@<pending-ship>`.
+      **Still open**: `dex_swaps_handler.py` (needs a stage-module extraction first, file at its 900L cap — a
+      distinct, larger refactor, not attempted this pass), `gas_fee_handler.py`/`vault_share_price_handler.py`
+      (sync RPC-calling functions, needs async-ifying the call chain first — a separate design call per the
+      issue doc's own scoping), and the 2 blocking writes in `websocket_runner.py`/`live_aggregator.py` sync
+      functions (needs signature changes up the call chain). Kept OPEN at P3.
 - [x] [BACKEND] P1. Ensure `expected_unattempted` is materialised by the WRITER and never re-derived downstream.
       ✅ 2026-08-20 — **already satisfied.** `instruments_service/engine/orchestrator/process_write.py:604` calls
       `manifest.record_expected_unattempted(...)` at write/pre-flight time — the writer-side materialisation the
@@ -690,6 +708,14 @@ todos only to confirm they are data-movement, then leave it.
       todo's CODE scope. The 2 genuinely code-only remainders are both P3: a `canonicalize_instruments_store_
       index.py` prediction-bucket resolution bug, and an MTDS schema-drift-dup investigation. Left open at P3
       weight rather than falsely closed; not picked up this pass given the P0/P1 backlog still ahead.
+      **2026-08-21 — the prediction-bucket bug is stale, already fixed.** `_bucket_for()` already routes
+      `asset_group == "prediction"` to `kind="instruments-store-prediction", asset_group=None` (checked the code,
+      not the todo's self-report) — `instruments-service@60552cb8`, landed 2026-08-05, well before this todo's
+      last re-check. Verified live: `resolve_bucket_name(cloud="gcp", kind="instruments-store-prediction",
+      asset_group=None)` returns a real bucket name with no exception. Nothing to ship. The MTDS schema-drift-dup
+      item remains genuinely open (writer-side row-key idempotency across `unified-trading-library` +
+      `instruments-service` — a real investigation-then-refactor, not a quick fix; correctly still P3, not
+      attempted this pass).
 - [x] [BACKEND] P1. Resolve the DeFi golden/red capability drift — `test_expected_matches_golden[defi]` failing
       fleet-wide. Re-verify current red/green state first; the prior pass did not. Evidence:
       `/plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md`.
