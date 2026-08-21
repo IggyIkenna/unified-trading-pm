@@ -179,7 +179,7 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
       subprocess.
 
 ## Progress Log
-2026-08-21 — stale P2 corrected: direct code read and git blame verified 4990d2361 already shipped per-leg gc.collect() on 2026-08-20; the prior open checkbox and Real fix still needed prose were stale and are closed with commit evidence.
+- **2026-08-21 — stale P2 corrected:** direct code read and git blame verified 4990d2361 already shipped per-leg gc.collect() on 2026-08-20; the prior open checkbox and Real fix still needed prose were stale and are closed with commit evidence.
 
 - **2026-08-19** (`/plan-reconcile security_and_cross_cutting_master` Phase 2.4, zero-checkbox sweep): this entire
   "Recommended decision" list used numbered-prose format (`1. `[TAG] P1.` ...`) instead of canonical `- [ ] [TAG]
