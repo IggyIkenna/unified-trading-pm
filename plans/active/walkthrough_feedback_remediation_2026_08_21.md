@@ -508,3 +508,31 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       names BORROW/REPAY as the last 2 DeFi action types on pure simulation — wiring them through the same
       `defi_live_dispatch` seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE just used would close the doc's last 2
       DeFi-side "Coming soon" rows in well under a day, since the dispatch pattern is now proven 5x.
+
+- 2026-08-21 — **[FROM-BLRS] batch-live-reconciliation-service consuming-half session**: built the ledger-matching
+  skip + explicit auditability surfacing for `TradeFillRecord.recon_excluded` (traced the consumer chain per the
+  P2 follow-up todo above under "Todos — execution/transfer cluster"). `_exclude_recon_excluded()` in
+  `engine/daily_determinism_stage.py` (already shipped at `batch-live-reconciliation-service@1ba1a6260c` per this
+  plan's own T4 log entry above) now returns the excluded fills alongside the kept ones rather than just dropping
+  them; added a BLRS-local `ExcludedFillRecord` model (`models/recon_report.py` — CORRECT-LOCAL, not a UAC
+  contract, so no schema-change stop needed here) and threaded it through `run_daily_determinism_stage()`
+  (now a 3-tuple: `report, rollup, excluded_fills`) into `DailyDeterminismHandler.run()`'s result dict as
+  `excluded_from_recon` — excluded fills are booked/audited/skipped-from-matching but never invisible. Two new
+  tests: `test_recon_excluded_fill_skipped_from_matching_and_reported` (one recon_excluded fill skipped from
+  matching + surfaced in `excluded_fills`, one normal fill unaffected) plus the existing handler tests updated for
+  the 3-tuple + asserting `excluded_from_recon == []` on the no-exclusions path. `quality-gates.sh --no-fix` green
+  locally (sentinel `0a6553da95364d79256f97124b9c1ffdc9ac08fe`). **Not shipped this session**: `quickmerge.sh`
+  pre-flight blocked on a LIVE sibling-repo dependency — `unified-api-contracts` has uncommitted changes from a
+  concurrently-running session (file mtimes ~40s old at check time, matching this same plan's T1
+  registry-cluster PredictionMarketCategory-deletion work-in-progress, todo 4 above) — per the multi-agent-safety
+  liveness gate (mtime <120s → PROTECT), those foreign uncommitted changes were left untouched rather than
+  committed. Work is intact, uncommitted, in the `batch-live-reconciliation-service` worktree at
+  `.tabs/2/batch-live-reconciliation-service` (5 files: `models/recon_report.py`,
+  `engine/daily_determinism_stage.py`, `cli/handlers/daily_determinism_handler.py`,
+  `tests/unit/test_daily_determinism_stage.py`, `tests/unit/test_daily_determinism_handler.py`) — ready to
+  `quickmerge.sh` once `unified-api-contracts`'s dependency state is clean. The one link this session did NOT
+  build (confirmed genuinely out of `batch-live-reconciliation-service`'s own scope): the real GCS
+  `LedgerRow`-writer path in `unified-trading-library` still needs to be confirmed to thread `recon_excluded`
+  through from `execution-service`'s `log_event()` call — same open item as the P2 follow-up todo above; this
+  session's BLRS-side change consumes whatever `recon_excluded` value the ledger reader ultimately sees, it does
+  not change how that value gets there.
