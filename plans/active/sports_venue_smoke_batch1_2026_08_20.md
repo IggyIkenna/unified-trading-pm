@@ -57,3 +57,24 @@ the canonical-path negative control is rejected by `canonical_path_violations(re
 source-scoped negative control `CBOE/ohlcv_24h -> yahoo` remains in scope and outside the eight-cell exemption set.
 This closes only the floor/source/oracle verification todo; row-level production capture, manifest atoms, and genuine
 capture statuses remain open under the first todo.
+
+**2026-08-21 — slot-5 execution attempt #1 (denominator mismatch, superseded by attempt #2 below).** Launched
+`deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh --service mtds --day 2026-08-20 --asset-group
+SPORTS --legs force,skip,canonical --mvp-only --require-captured --auto-day --wall-clock-timeout-sec 14400` (VM
+`pipeline-e2e-check-mtds-20260821-131503-1ccdef`). Terminal `EXIT_STATUS=1` after ~2h25m. Report:
+`gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_sports.md`
+— `total=75 passed=0 failed=75 ambiguous=0 skipped=0` over 25 `(venue, odds)` shards × 3 legs, every row genuinely
+`no_parquet_under:...`/`canonical_no_matching_objects_in_test_bucket` (fail-closed, not ambiguous). Root cause traced
+into one child VM's own log: `No active venues for date=2026-07-26 asset_groups=['SPORTS']` — the `--auto-day`
+sampler resolved a day with no scheduled fixture activity for the sampled venue, so the force leg legitimately wrote
+zero rows and every downstream leg failed closed on the empty result.
+
+**This run used the wrong CLI mode.** `--mvp-only` invokes the plain MVP shard enumeration, not the
+`--generator-scoped-sports` mode `market-tick-data-service@aaa0c8b1b6` shipped specifically for Sports
+(`/plans/active/issues/sports_venue_smoke_checker_scope_and_canonical_gap_2026_08_20.md`, which this plan's own
+context_scope did not surface because it lives under the sibling `venue_smoke_test_bar` doc's issue tree, not this
+plan's own). The result: 25 shards / 75 checks measured here does not match the 39-row canonical UAC work-list
+denominator this todo's Gate requires ("every current Sports row"). The zero-capture/`No active venues` finding
+itself is genuine evidence (and consistent with that issue doc's own prior finding of the identical failure mode on
+`SPORTS:PINNACLE:odds`/2025-12-20), but the row coverage is not the canonical set. Re-launching with
+`--generator-scoped-sports` (see next entry) rather than closing this todo on the wrong denominator.
