@@ -121,3 +121,13 @@ superseded_by:
 **2026-08-20 — filed.** All three losses were fully recovered within the same session — nothing is currently missing.
 Filed because the pattern (not the individual incidents) needs a real fix; recovering by luck three times in one
 session is not sustainable for the remaining artefact work still in flight.
+
+- **2026-08-21 (slot-2 interactive, operator-reported)**: RECURRENCE — operator noticed "most sections entirely
+  gone". Root cause: `unified-trading-pm@cef0bcfa8e` ("fix: restore artefact claim-ownership baseline",
+  slot-32·planning AO escalation agt-ea249c, 2026-08-20 19:54Z) reverted the walkthrough from 19,180 to 17,878
+  lines, deleting FIVE whole sections (External API reference; Shard-level coverage drilldown; Trade the full
+  stack — strategy styles; The instrument universe; Execution algorithms in depth) that three commits that
+  evening had just recovered/added — 1,312 lines deleted vs 9 added. Recovered by restoring the file wholesale
+  from `67ee71b773` (last good); the 9 dropped lines were minor cross-reference tweaks, re-derivable in T5's
+  re-derive pass. The AO "claim-ownership baseline restore" escalation path is doing blind file-level reverts on
+  this artefact — it should be constrained to claim-marker edits, never whole-file baselines.
