@@ -100,11 +100,20 @@ locked_since:
       this is a documentation-completeness gap, not a live data-safety incident, and is reported as exactly that.
       **Verdict**: 6/7 compliant with an explicit same-run check; the 1 non-compliant case is named, evidenced, and
       logged rather than silently waved through.
-- [ ] [REVIEW] P1. **Reconcile the API-Football gate.** Confirm `sports_af_full_entity_completion_2026_08_03.md` had
+- [x] ✅ [REVIEW] P1. **Reconcile the API-Football gate.** Confirm `sports_af_full_entity_completion_2026_08_03.md` had
       genuinely converged before P2's rename executed (its P0 re-census closed), and REMOVE the cross-plan banner added
       to it on 2026-08-08 (`unified-trading-pm@3bb3214bdf`) now that the ordering constraint has been discharged — a
       stale banner is misinformation for the next reader. **Done when**: convergence is evidenced and the banner is
-      removed or updated to a past-tense record.
+      removed or updated to a past-tense record. **DONE 2026-08-21 (slot-7)** — read `sports_af_full_entity_completion_
+      2026_08_03.md` end to end: `status: resolved`, `resolved_by: sports_af_full_entity_completion-9798da269f23`, and
+      its own P0 re-census todo records **DONE 2026-08-12 (slot 32)** with all 8 in-scope AF entities converged to
+      honest-absence floors (PLAYER_STATS 14 · INJURIES 72 · STANDINGS 68 · TEAMS 76 · FIXTURE_STATS 133 ·
+      FIXTURE_LINEUPS 133, zero `attempted_failed`). Cross-checked against P2's own Progress Log: the 19-token rename
+      physically ran on VM `canonical-migration-sports-19token-restamp-20260814-045346`, **2026-08-14** — two days
+      AFTER this doc's convergence, so the ordering constraint was genuinely honored, not just declared. Updated the
+      banner in place to a dated past-tense record (🟡→🟢, "DISCHARGED 2026-08-21") citing both dates and the
+      honest-absence floor numbers, rather than deleting it outright, so a future reader sees the gate was real and was
+      met, not just that it no longer applies.
 - [x] ✅ [REVIEW] P2. **DONE — already satisfied, verified 2026-08-17 (na-eligibility-audit, dispatch agt-1c51ee).**
       Correct the historical record in
       `/plans/archive/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md` (archived this
@@ -124,3 +133,10 @@ locked_since:
 - **2026-08-08** — Authored alongside the parent per the finalize-plan-coverage rule.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- re-verified all 4 entries still
   resolve on disk; unchanged.
+- **2026-08-21 (slot-7)** — Closed the "Reconcile the API-Football gate" todo. Verified genuine convergence (2026-08-12,
+  P0 re-census, all 8 entities at honest-absence floors) preceded the P2 rename's actual execution (2026-08-14 VM run)
+  by 2 days — the gate held. Updated the stale 🟡 cross-plan banner in
+  `plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md` to a 🟢 dated past-tense record rather
+  than deleting it, per the todo's "removed or updated to a past-tense record" done-when. Two todos remain open in this
+  doc: the exception-sets-empty proof (P1) and the P2-archival ritual (P2, itself gated on the exception-sets proof and
+  everything else in the parent plan landing first).
