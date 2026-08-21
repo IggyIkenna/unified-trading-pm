@@ -336,20 +336,16 @@ drift_direction: advance-code
       sibling todo's "not a ghost" verdict for ICEBERG appears to be about implementation existence, not
       production reachability. NOT fixed here (out of this todo's own BEST_PRICE-only scope, and this needs its
       own confirmation pass before touching either allow-list). See new follow-up todo below.
-- [ ] [BACKEND] P2. **New, found 2026-08-21 during the BEST_PRICE fix above (partially corrects the sibling
-      "3 of the 4 named ghosts" todo's ICEBERG verdict).** Confirm whether `ICEBERG` and `SOR` (still in
-      `manual_instruction_helpers._SUPPORTED_ALGOS` and `selector.MANUAL_ONLY_ALGOS`) are actually reachable
-      from the PRODUCTION manual-submit orchestrator (`live_execution_handler.py::_create_orchestrator_for_venue`
-      → `ExecutionOrchestrator` with no `algorithm_factory` arg → `DefaultAlgorithmFactory`, which has neither) —
-      this session found `adapters/algorithm_factory.AlgorithmFactory` (a differently-named, separate class) DOES
-      have real `IcebergAlgorithm`/`SORAlgorithm` entries, but found no code path that ever wires that factory
-      into the production `ExecutionOrchestrator`, contradicting the sibling todo's "ICEBERG fully available for
-      manual/live real-fill trading" claim. Needs a real trace (not assumption either way) before acting: either
-      (a) `DefaultAlgorithmFactory` should be extended to include ICEBERG/SOR (or constructed with
-      `adapters.algorithm_factory.AlgorithmFactory` instead), closing a real production gap, or (b) some other
-      wiring this session missed already makes them reachable, in which case no code change is needed — just
-      update the sibling todo's evidence. If (a), remove them from the allow-lists like `BEST_PRICE` was, or wire
-      them in — same "don't guess" treatment as `BEST_PRICE` got.
+- [x] ✅ [BACKEND] P2. **CLOSED 2026-08-21 — `execution-service@8d4356bf2c`.** Traced both: `SORAlgorithm` already
+      had a real bridge into the `ExecutionAlgorithm` interface `DefaultAlgorithmFactory` uses
+      (`engine/execution/algorithms/sor.py`, derives its config from the `Instruction` itself via
+      `instruction_to_sor_config` — no missing input), it just was never registered — registered it, SOR is now
+      genuinely reachable from a manual submission. `ICEBERG` has NO equivalent bridge in
+      `engine/execution/algorithms/` — only the lower-level `algo_library` implementation and the separate,
+      still-unwired `adapters/algorithm_factory.AlgorithmFactory` class — same failure mode `BEST_PRICE` had, no
+      real fix available without building a new bridge (tracked as its own follow-up, not attempted). Removed
+      from `_SUPPORTED_ALGOS`/`MANUAL_ONLY_ALGOS` like `BEST_PRICE` was. 3 tests updated, 2 added
+      (`test_dynamic_venues.py`, `test_select_manual_algorithm.py`, `test_orchestrator.py`), full QG green.
 
 ## Todos — presentation cluster (T5 scope: the artefact itself; run AFTER the clusters above land)
 

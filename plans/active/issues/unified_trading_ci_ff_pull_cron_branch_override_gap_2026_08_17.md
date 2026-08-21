@@ -45,7 +45,7 @@ related:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
-    /plans/archive/issues/ao_scheduled_job_branch_quarantine_friction_2026_07_28.md,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     /plans/active/issues/slot7_unified_trading_ci_foreign_slot12_commit_wrong_branch_2026_08_14.md,
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
   ]
