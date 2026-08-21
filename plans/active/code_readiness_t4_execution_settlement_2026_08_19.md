@@ -554,48 +554,22 @@ todos only to confirm they are data-movement, then leave it.
       message "Funds NEVER move between different clients (custody + legal boundary)" citing the SSOT directly;
       `validate_intent` (`:173`) and the handler path (`:238-244`) both propagate it rather than swallowing. SSOT:
       `/codex/04-architecture/client-funds-isolation.md`.
-- [ ] [BACKEND] P1. Close the BATCH settlement gap the instruction-path check surfaced 2026-08-20. MEASURED via
-      `backtest_v2.action_handlers.BATCH_UNHANDLED_ACTIONS`: `resolve_settlement` has no handler for
-      `CONVERT_DUST`, `LP_BURN`, `LP_MINT`, `REPAY`, `WITHDRAW`, so each raises `UnhandledActionError` and
-      `paper(W) == batch-rerun(W)` cannot hold for any instruction using them — this is why every lending venue
-      derives `batch=wired` instead of `deployed`. SSOT: `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2.
-
-      **3/5 CLOSED — stale text corrected 2026-08-20, this todo had drifted behind its own shipped progress.**
-      `CONVERT_DUST` — `execution-service@6f664e80a0`. The UAC `ConvertDustInstruction` schema already existed
-      (`unified_api_contracts/internal/architecture_v2/restaking_rewards.py`), it just was never wired into
-      `resolve_settlement` or the `StrategyInstructionV2` union — the isinstance branch takes the base
-      `StrategyInstructionEnvelope` type so no UAC-side union edit was needed. Priced order-matched (like
-      `ATOMIC`), fill_size = Σ input-token amounts. 2 new tests. `WITHDRAW`/`REPAY` — `execution-service@59627fa2d2`.
-      **RE-MEASURED 2026-08-20 directly against current code** (this todo's own prior text incorrectly claimed
-      these two also had no UAC schema — they do, this was fixed the same session but the todo was never
-      updated): `WithdrawInstruction`/`RepayInstruction` exist at
-      `unified_api_contracts/internal/architecture_v2/schemas.py:337,347` and are wired in
-      `action_handlers.py:215-228`, rate-matched like `LEND`/`BORROW`. `BATCH_UNHANDLED_ACTIONS` is DERIVED
-      (`frozenset(InstructionActionV2) - BATCH_SETTLEMENT_ACTIONS - BATCH_NO_FILL_ACTIONS`), MEASURED now =
-      exactly `{LP_BURN, LP_MINT}`, down from the original 5.
-
-      **`LP_MINT`/`LP_BURN` genuinely remain — no `StrategyInstructionEnvelope` subclass exists in UAC for
-      either.** This tranche does not own `unified-api-contracts`, so it cannot add the schema itself. The
-      `[FROM-T4]` inbound request on
-      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md` now carries the full shape
-      spec (grounded in real connector signatures — Uniswap's NFT-position `mint_position`/`burn_position` vs.
-      Orca/Raydium's pool-address `add_liquidity`/`remove_liquidity`), not just a bare ask — once T1 lands the 2
-      subclasses, T4's side is mechanical (2 more `isinstance` branches, same pattern as the 3 fixes above).
-      `BLOCKED-` on that request until then.
-
-      **3/5 CLOSED 2026-08-20 — `execution-service@59627fa2d2`.** T1 landed `WithdrawInstruction`/
-      `RepayInstruction` (`unified-api-contracts@f5fc118ae1`) same day, exactly as the request predicted —
-      `resolve_settlement` now handles both as rate-matched inverses of `LEND`/`BORROW` (protocol/asset/
-      target_supplied_amount and target_debt_amount respectively). `BATCH_UNHANDLED_ACTIONS` measured shrinking
-      to exactly `{LP_BURN, LP_MINT}`. Fixed a test that had pinned the OLD gap as expected behavior
-      (`test_lending_venue_is_only_wired_on_batch` asserted `AAVE-V3-ETHEREUM.batch == "wired"` — now genuinely
-      `"deployed"`, rewritten to assert the fixed reality rather than the historical gap). 4 new tests total.
-      **Still open, but no longer a blank design question — shape specified 2026-08-20** on
-      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`'s `[FROM-T4]` thread,
-      grounded in both real connector families (`UniswapConnector.mint_position()`/`burn_position()` — NFT
-      position id + sqrt-price bounds — vs. Orca/Raydium's `add_liquidity()`/`remove_liquidity()` — pool address +
-      raw ticks, no NFT). `BLOCKED-ON:` T1 landing `LpMintInstruction`/`LpBurnInstruction`; once shipped, T4's
-      side is the same mechanical 2-branch `isinstance` addition as `CONVERT_DUST`/`WITHDRAW`/`REPAY` — 5/5.
+- [x] ✅ [BACKEND] P1. **CLOSED 2026-08-21 — 5/5, condensed from an earlier duplicated Progress-Log-style
+      history.** BATCH settlement gap surfaced 2026-08-20 via `backtest_v2.action_handlers.BATCH_UNHANDLED_ACTIONS`
+      (originally `{CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW}` — each raised `UnhandledActionError`, so
+      `paper(W) == batch-rerun(W)` couldn't hold for any instruction using them). SSOT:
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2. Evidence, all 5:
+      `CONVERT_DUST` — `execution-service@6f664e80a0` (order-matched, fill_size = Σ input-token amounts).
+      `WITHDRAW`/`REPAY` — UAC schema `unified-api-contracts@f5fc118ae1` + wiring `execution-service@59627fa2d2`
+      (rate-matched inverses of `LEND`/`BORROW`); fixed a stale test that had pinned the gap itself as expected
+      behavior. `LP_MINT`/`LP_BURN` — T1 fully specified the shape on
+      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md` (grounded in real connector
+      signatures: Uniswap's NFT-position `mint_position`/`burn_position` vs. Orca/Raydium's pool-address
+      `add_liquidity`/`remove_liquidity`) and explicitly deferred the go-ahead to "T4's call" — T4 shipped both
+      halves directly rather than wait: UAC schema `unified-api-contracts@d751e743cf`, wiring
+      `execution-service@cde9311a1f` (same order-matched pattern as `CONVERT_DUST`/`ATOMIC` — a two-asset deposit
+      has no single implied price). **MEASURED**: `BATCH_UNHANDLED_ACTIONS` is now `frozenset()` — 16/16
+      `InstructionActionV2` members have a real settlement handler.
 
 ### W12 — reconciliation
 
