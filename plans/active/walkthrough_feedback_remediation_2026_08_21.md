@@ -308,6 +308,18 @@ drift_direction: advance-code
         invented). The per-endpoint request/response examples (external instruction API real payload,
         cancel path, wizard endpoint, hot-config-reload, coverage/data retrieval, transfers) are content
         work gated on wave-1 landing and were NOT done — unified-trading-pm@<shipping-sha>.
+      - 2026-08-21 (api-reference merge lane) — partial: merged the extra depth `platform-api-reference.html`
+        carries into §26 "External API reference" (the six-endpoint reference) — canonical-instrument-ID
+        reference, the `data_type` vocabulary table, the full 15-member instruction type-support table (incl.
+        the QUOTE variant, previously undocumented in the walkthrough — it registers delta-proxy repricing but
+        does not place an order), the QUOTE example request/response, and the auth header-precedence table +
+        "what auth does not do" disclosure. Also added two short indexed callouts naming the two counterparty
+        surfaces `platform-api-reference.html` documents beyond these six (client-reporting-api's 102 routes,
+        strategy-service's signal-leasing API) with a pointer to the companion doc for full per-route depth —
+        NOT reproduced in full here (out of §26's own "six reachable endpoints" scope per §02). Per-endpoint
+        request/response examples for the OTHER named endpoints this todo lists (cancel path, wizard endpoint,
+        hot-config-reload, coverage/data retrieval, transfers) remain NOT done — content work gated on wave-1
+        landing. `platform-api-reference.html` itself is unchanged. unified-trading-pm@<shipping-sha>.
 - [ ] [DOC] P1. Content additions: parquet rationale (typed + compressed; open to other formats/flat CSV);
       shard schemas list ALL data types' schemas plainly (no "pending"), colour distinction type vs column;
       "declared since: not declared" legend note (live-only capability, no batch start date — not "not real");
