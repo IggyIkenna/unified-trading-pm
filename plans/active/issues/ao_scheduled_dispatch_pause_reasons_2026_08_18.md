@@ -272,10 +272,14 @@ dispatch"` — consistent with the account snapshots seen the same hour
       (`agent-orchestrator/data/state/scheduled_dispatch_paused_modes.dedup.json`, mtime 2026-08-19 22:56) —
       `["ag_closeout","cefi_mtds_smoke","ci_reconcile","na_eligibility","reconcile","report"]`; prior 3-mode
       listing was stale. (repo: unified-trading-pm)
-- [ ] [INFRA] P2. Decide whether scheduled-job capacity starvation deserves its own alert: the
-      three `plan_health`-family jobs above sat queued ~20h on 2026-08-19 with `no free configured
-      slot` / `no headroom account`, and nothing paged. Distinct from the pause question — these
-      modes are enabled and still not running. (repo: agent-orchestrator)
+- [x] [INFRA] P2. **DECIDED 2026-08-21 (operator ruling): no change.** Considered whether
+      scheduled-job capacity starvation deserves its own alert — the three `plan_health`-family
+      jobs above sat queued ~20h on 2026-08-19 with `no free configured slot` / `no headroom
+      account`, and nothing paged (distinct from the pause question — these modes are enabled and
+      simply couldn't get capacity). Operator decision: the existing na-eligibility/ao-watchdog
+      periodic cadence already surfaces this class of issue (as happened this same session), and a
+      dedicated real-time alert isn't worth the added alerting-channel complexity right now. Closed
+      as decided-no-change. (repo: agent-orchestrator)
 - [ ] [OPERATOR] P3. Decide whether the reason field's immutable-once-set design (tested,
       intentional — see the 2026-08-21 Progress Log entry above) should change to allow an explicit
       reason to update an already-paused mode's stored reason. If yes: widen `set_paused()`, update
