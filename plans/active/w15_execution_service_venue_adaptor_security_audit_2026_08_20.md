@@ -218,7 +218,8 @@ impression:
 - [x] ✅ [BACKEND] P0. Replace Marinade's placeholder `Instruction(accounts=[])` writes with validated protocol account metas, enforce positive lamport-safe amounts, and add retry/idempotency protection around Solana broadcast; HIGH findings: checklist points 2, 3, and 6 (`marinade.py:176-202`). — execution-service@bc9ca94964 + evidence: replaced placeholder `Instruction(accounts=[])` deposit/liquidUnstake writes with validated Marinade Anchor account metas; added lamport-safe positive-amount validation; added new `solana_idempotency.py` module (mirrors the established `staking_idempotency.py`/`aave_idempotency.py` durable-idempotency pattern, separate module because `SolanaTransactionResult` is attribute-based, not dict-shaped) wired around the Solana broadcast; quality-gates.sh green; post-push ancestry verified. (repo: execution-service)
 - [x] ✅ [BACKEND] P0. Validate finite/positive amounts (reject non-positive Decimal before `to_wei()`/lamport conversion) and validate operator/network/address parameters instead of accepting arbitrary caller-supplied strings, across the second staking/restaking group; HIGH finding: checklist point 3 (`symbiotic.py:141-161,243-279`; `karak.py:141-163,244-284`; `kelpdao.py:154-178,212-258`; `puffer.py:156-186,188-212,214-242`; `renzo.py:119-154,178-225`; `eigenlayer.py:88-91,379-498`; `jito.py:104-125,228-305`; `jito_restaking.py:163-185,210-273`; `solblaze.py:164-202,204-242`). — execution-service@67fb2c6070 + evidence: quality-gates.sh full run green (8907 passed incl. 21 new regression tests in `tests/defi_execution/unit/test_second_staking_group_input_validation.py`); added a shared `require_valid_eth_address()` helper in `_evm_generic.py` alongside the existing `require_finite_positive_amount()`, plus a local Solana-pubkey validator for `jito_restaking.py`'s `delegate()`; jito.py's fetched jitoSOL/SOL ratio is now also constrained positive before use as a divisor/multiplier; fixed 3 pre-existing test fixtures (`test_karak_connector.py`, `test_kelpdao_connector.py`, `test_jito_restaking_connector.py`) that used malformed placeholder addresses/pubkeys the missing validation had been silently accepting. (repo: execution-service)
 - [x] ✅ [BACKEND] P0. Add durable idempotency across approval-plus-deposit and withdrawal/delegate retries for the live-capable connectors in the second staking/restaking group (Solana-only Jito/Jito-Restaking/SolBlaze are simulation-only and PASS/N-A here); HIGH finding: checklist point 6 (`symbiotic.py:186-202,254-263`; `karak.py:187-190,244-284`; `kelpdao.py:194-197,212-258`; `puffer.py:196-200,214-242`; `renzo.py:119-154,178-225`; `eigenlayer.py:170-221,379-498`). — execution-service@652b5157 (+ prerequisite commit debdf9f7) + evidence: reused `staking_idempotency.py` as-is (generic signature already covers this group) for symbiotic/karak/kelpdao/puffer/renzo's approve/deposit/withdraw live paths (all via the shared `BaseConnector.sign_and_send_transaction()`); wrapped EigenLayer's `_execute_live_deposit`/`_execute_live_queue_withdrawal` at their own normalized-`TxResult` boundary (extracted `_queue_withdrawal_live()` to keep the wrapped closure's shares-decrement from double-firing on a cache-replayed retry, and to stay under the 50-line method cap); 22 new regression tests in `tests/defi_execution/unit/test_second_staking_group_idempotency.py` (retry-replay-no-resubmit, clean-revert-allows-retry, ambiguous-exception-blocks-until-cleared per connector); quality-gates.sh green (313s, sentinel matched committed HEAD); post-push ancestry independently verified. (repo: execution-service)
-- [ ] [BACKEND] P0. Fix fabricated-success write paths that report success without performing the on-chain action, including under `is_live=True`: Symbiotic and Karak `delegate()`; Kelp DAO's unwired withdrawal queue and `delegate()`; Puffer's unwired withdrawal queue; Renzo's unwired withdrawal queue and `delegate()`; EigenLayer's `complete_withdrawal()` and `claim_rewards()`; HIGH finding: checklist point 7 (`symbiotic.py:265-279`; `karak.py:244-284`; `kelpdao.py:212-258`; `puffer.py:214-242`; `renzo.py:178-225`; `eigenlayer.py:481-498,516-547`). (repo: execution-service)
+- [x] ✅ [BACKEND] P0. Fix fabricated-success write paths that report success without performing the on-chain action, including under `is_live=True`: Symbiotic and Karak `delegate()`; Kelp DAO's unwired withdrawal queue and `delegate()`; Puffer's unwired withdrawal queue; Renzo's unwired withdrawal queue and `delegate()`; EigenLayer's `complete_withdrawal()` and `claim_rewards()`; HIGH finding: checklist point 7 (`symbiotic.py:265-279`; `karak.py:244-284`; `kelpdao.py:212-258`; `puffer.py:214-242`; `renzo.py:178-225`; `eigenlayer.py:481-498,516-547`). — execution-service@862d5377b2 + evidence: quality-gates.sh green (227s, sentinel matched committed HEAD); 14 new regression tests in `tests/defi_execution/unit/test_second_staking_group_honest_error_handling.py`; see Progress Log entry below. (repo: execution-service)
+- [ ] [BACKEND] P1. Wire the real on-chain calls the fail-closed guards above stand in for: Symbiotic/Karak/KelpDAO/Renzo `delegate()` (no network/operator-delegation contract call exists in any of the four), KelpDAO/Puffer/Renzo's own withdrawal-queue contracts (delayed exit, not instant redeem), and EigenLayer's `completeQueuedWithdrawals()` (needs the full on-chain `Withdrawal` struct -- delegatedTo/nonce/startBlock -- tracked from the `queue_withdrawal()` step, which this connector does not currently retain) plus `RewardsCoordinator.processClaim()`. Each currently fails closed (`success: False`) in live mode rather than fabricating success, pending a verified ABI/contract address per protocol -- do not fabricate one without a verifiable source. (repo: execution-service)
 - [ ] [BACKEND] P0. Enforce a real minimum-output bound on Kelp DAO deposits instead of the hardcoded `minRSETHAmountExpected=0`, and add minimum-output/deadline bounds plus correct instant-vs-delayed withdrawal reporting across the rest of the second staking/restaking group; HIGH finding: checklist point 4 (`kelpdao.py:201-210`); MEDIUM findings: checklist point 4 (`symbiotic.py:171-202,243-263`; `karak.py:173-203,244-268`; `puffer.py:156-186,214-242`; `renzo.py:119-154,178-225`; `jito.py:104-125,228-305`; `jito_restaking.py:210-250`; `solblaze.py:164-202,204-242`). (repo: execution-service)
 - [ ] [BACKEND] P1. Add the missing ERC-20 approval before EigenLayer's `depositIntoStrategy()` and replace Karak's hardcoded low-confidence vault address with a validated/derived one; MEDIUM findings: checklist points 5 and 2 (`eigenlayer.py:200-208,379-411`; `karak.py:80-84,194-202`). (repo: execution-service)
 - [ ] [BACKEND] P0. Harden the shared CCXT order boundary with explicit side/type/symbol/finite-positive amount/price validation before `create_*_order`; HIGH finding: checklist point 3 (`ccxt_common.py` plus each adapter's `_submit_ccxt_order`).
@@ -858,4 +859,41 @@ results, idempotent replay for deposit AND withdraw (no resubmission), a differe
 deduped, clean-revert retry, ambiguous-exception lock + `clear_stale_operation()` recovery, and
 durable-store replay across connector instances. Full `quality-gates.sh` green (301s, sentinel
 matched the committed HEAD). Shipped via quickmerge — execution-service@7d0e32de0e; post-push
+ancestry independently verified.
+
+### 2026-08-21 — slot 25 fabricated-success fail-closed fix (checklist point 7)
+
+Fixed the "Fix fabricated-success write paths..." P0 todo, closing the checklist-point-7 HIGH
+finding the slot-13 second-staking/restaking audit recorded for `symbiotic.py`/`karak.py`/
+`kelpdao.py`/`puffer.py`/`renzo.py`/`eigenlayer.py`.
+
+All nine affected methods returned `success: True` unconditionally, regardless of `is_live`,
+without ever building or broadcasting a transaction: `delegate()` (Symbiotic/Karak/KelpDAO/Renzo)
+had no on-chain call at all; `withdraw()` (KelpDAO/Puffer/Renzo) mutated the simulated
+balance/shares ledger and reported success even with a live wallet/web3 configured, despite each
+docstring already disclosing the withdrawal-queue contract "is NOT wired here"; EigenLayer's
+`complete_withdrawal()` did the same live/simulated-credit conflation and also cleared the pending-
+withdrawal entry; `claim_rewards()`'s docstring literally claimed "Calls
+RewardsCoordinator.processClaim() on-chain in live mode" while the code comment admitted "For now,
+simulate the claim" (corrected in the same change per the misleading-doc HARD RULE).
+
+**Fix**: each method now checks `self.is_live` (+ `self._wallet_address`/`self._web3_instance` for
+the five EVM connectors, `self._live_executor` for EigenLayer) and returns an explicit
+`{"success": False, "error": "... is not wired ..."}` before any simulated-state mutation, instead
+of falling through to the simulation path. Genuinely wiring the real on-chain calls (five separate
+withdrawal-queue/delegation contracts plus EigenLayer's full `Withdrawal`-struct tracking) is a
+separate, larger lift needing a verified ABI/contract address per protocol — out of scope for this
+fix, tracked as a new P1 follow-up todo above (same partial-fix pattern as this plan's Orca/Raydium
+and Kamino precedents). Simulation-mode (`is_live=False`, the default) behaviour is unchanged —
+every pre-existing per-connector unit test constructs its connector without `is_live=True`, so none
+of them exercise the new guard.
+
+14 new regression tests in
+`tests/defi_execution/unit/test_second_staking_group_honest_error_handling.py`: one fail-closed
+case per fixed method (all four `delegate()`s, all three `withdraw()`s, EigenLayer's
+`complete_withdrawal()`/`claim_rewards()`), each asserting `success: False`, a "not wired" error,
+zero broadcasts, and no silent balance/shares/rewards mutation; plus a case confirming EigenLayer's
+pre-existing "no rewards to claim" failure reason still surfaces first for a live caller with zero
+accumulated rewards (not shadowed by the new guard). Full `quality-gates.sh` green (227s, sentinel
+matched the committed HEAD). Shipped via quickmerge — execution-service@862d5377b2; post-push
 ancestry independently verified.
