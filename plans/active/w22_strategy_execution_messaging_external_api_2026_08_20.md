@@ -214,9 +214,9 @@ context_scope:
 - [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — Wire `ATOMIC` through the existing `InstructionRouter.route_signal()` multi-leg dispatch; `execution-service@1636abd22e` translates each leg into the shared execution contract and returns per-leg results. Evidence: `bash scripts/quality-gates.sh --no-fix` (ALL QUALITY GATES PASSED, 934s); direct HTTP verification returned `200 COMPLETED_SUCCESS` with 2 per-leg results. The real venue-side atomic/compensation engine remains tracked in `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md`.
 - [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — Add `KILL_SWITCH`/`FLATTEN_POSITION` as coordinated `InstructionActionV2`
       members in unified-api-contracts and route authorized external controls through the existing kill-switch and
-      `AccountInstructionOrchestrator.CLOSE_ALL` primitives. Evidence: unified-api-contracts@d44de9fb21,
-      execution-service@bc2edc1687; `bash scripts/quality-gates.sh --no-fix` passed (execution-service: 8896 passed,
-      22 skipped, 1 xpassed; UAC isolated gate: ALL QUALITY GATES PASSED, 0 type errors). Regression coverage:
+      `AccountInstructionOrchestrator.CLOSE_ALL` primitives. Evidence: unified-api-contracts@d44de9fb21351b2bdae1e78c32334c1272777678,
+      execution-service@bc2edc16874a3b0828ef692682b69174ddcab4bf; `bash scripts/quality-gates.sh --no-fix` passed (execution-service: 8896 passed,
+      22 skipped, 1 xfailed; UAC gate: ALL QUALITY GATES PASSED, 0 type errors). Regression coverage:
       `tests/unit/api/test_external_control_instruction.py` and UAC control-instruction contract tests.
 
 ### Deployment topology and external hosting
