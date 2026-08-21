@@ -389,6 +389,14 @@ refdata/coverage cluster'. Same ship rules."
 codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html. Re-derive every number from a
 fresh same-day run; then the re-audit todo."
 
+## Deferred work — migrated to:
+
+Four P0/P1 todos above (venue-set convergence, `PredictionMarketCategory` deletion, the
+12 unresolved (venue, data_type) triples, and the ASTER roster over-fan) were explicitly
+DEFERRED this pass — each stays open with its own inline blocker note; see:
+plans/active/walkthrough_feedback_remediation_2026_08_21.md (this doc — no separate
+successor plan, the work remains tracked here as still-open todos, not lost).
+
 ## Progress Log
 
 - 2026-08-21 — T4 execution/transfer-cluster wave-1b session (this session): drafted an independent
