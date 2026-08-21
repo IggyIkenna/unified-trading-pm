@@ -108,3 +108,6 @@ canonical rejection of raw `LIGHTER-ZKSYNC:PERPETUAL:ARM.parquet`; this is termi
 success. P0 remains open. Evidence: VM log
 `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260820-2217-cefi/run.log` and
 report `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`.
+
+
+2026-08-21 - staging command hardening and rerun hold (slot 5). The launcher now pins DEPLOYMENT_ENV=staging and ENVIRONMENT=staging in the child driver command as well as instance metadata, preventing the startup script legacy missing-metadata fallback from targeting production. Focused launcher test and full deployment-service quality gates passed; fix landed as deployment-service 1915555fe0. A first launch was stopped after serial-console inspection showed the startup fallback resolving DEPLOYMENT_ENV=prod despite staging metadata; the exact VM is TERMINATED. The required rerun remains held because the Tardis guard repeatedly measured 1-3 active staging CeFi consumers, including a replacement starting while an earlier consumer was STOPPING. No peer VM was terminated and no new driver was launched under a nonzero guard. P0 remains open pending a zero-count window and terminal per-cell report.
