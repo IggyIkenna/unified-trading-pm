@@ -301,10 +301,10 @@ No code was changed or tests run for this read-only audit. The HIGH findings req
       points 3 and 4 (bitfinex_native.py:337-365, bitget_native.py:274-315,
       kraken_rest_adapter.py:230-344,437-472, kraken_futures_orders.py:49-123,163-177). — execution-service@a57d7fba93
       + evidence: shared validators in _native_base.py, wired pre-body-build into all 4 files; QG green.
-- [ ] [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
+- [x] ✅ [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
       retrying; do not discard invalid/missing IDs or allow a fresh retry to double-place an order; HIGH finding:
       checklist point 6 (bitfinex_native.py:337-368, bitget_native.py:274-318,
-      kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143).
+      kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143). — execution-service@a57d7fba93 + evidence: native client-order IDs (`cid`, `clientOid`, `clOrderId`) preserved and parsed across Bitfinex, Bitget, Kraken Rest, and Kraken Futures native adapters; verified via code inspection and test suite.
 - [x] ✅ [BACKEND] P0. Make Kraken Spot/Futures response-envelope parsing fail closed and require a validated order
       result before constructing NEW/CANCELLED/AMENDED success results; malformed or empty payloads must be reported
       as failures, not interpreted as success; HIGH finding: checklist point 7
