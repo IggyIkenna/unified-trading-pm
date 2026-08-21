@@ -178,22 +178,3 @@ drift_direction: advance-code
   `perp_census.csv`, `defi_distinct_values_result.json`). VM fleet check: no defi rebuild VM running; canon-swap
   unblocked. Operator rulings recorded in the banner. perp_funding vs derivative_ticker settled as NOT-duplicates
   (code-verified; see banner).
-- **2026-08-21 ~14:00Z (todo 6 root-fix half)** — Root cause of the blanket perp stamps FOUND + half-shipped. (1)
-  Primary: `instruments-service/scripts/enumerate_expected_universe.py::_yield_v2_defi_pre_launch_rows` Class-2 loop
-  cross-joined every `PROTOCOL_LAUNCH_DATES` entry (126 chain-protocol tuples) × ALL defi data_types incl.
-  perp_funding/derivative_ticker with ZERO capability check. (2) Secondary: UAC
-  `market_data_categories.py::valid_data_types_for_venue_instrument_type` unmapped-protocol fallback returned the
-  cross-protocol UNION, leaking perp_funding via the `spot_pair` union — **fix SHIPPED
-  unified-api-contracts@4b06013aea** (defi-scoped exclusion + 2 tests; QG 13445 passed, 2 pre-existing unrelated
-  fails). IS seeder fix (capability-derived `_defi_perp_capable_protocols()` gate + 2 tests) is code-complete,
-  QG-passed locally, but quickmerge Stage-1 dep validation is HARD BLOCKED: two unrelated peer sessions hold
-  uncommitted WIP in this slot's UAC (`venue_instrument_type_axis.py` DERIBIT fix) + UTL (`ledger/run_writer.py`)
-  checkouts — PROTECTed per liveness rule; re-attempt the IS quickmerge once peers land. Stops-seeding population: 71
-  of 72 protocols × chains × {perp_funding, derivative_ticker} (ASTER kept — capability-declared; HYPERLIQUID /
-  EXTENDED / LIGHTER untouched by construction). Reverse finding (report-only): `DATA_TYPES_BY_ASSET_GROUP["defi"]`
-  declares perp_funding/derivative_ticker but no defi-axis venue capability produces them — inert axis declarations,
-  belongs to the b21/orthogonality thread.
-- **2026-08-21 ~14:00Z (in-flight)** — Todo 3 phantom purge forward-apply RUNNING + todo 5 Solana migration copy pass
-  2 RUNNING (purge worker, background jobs with wake-loops). Todo 1 writer fix code-complete, QG queued behind the
-  saturated host-wide QG governor (Monitor armed). Todo 7 projection VM: first launch attempt FAILED, launcher fix in
-  QG, relaunch pending (worker driving).
