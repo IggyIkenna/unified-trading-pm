@@ -6,7 +6,7 @@ summary: >-
   before market-tick-data-service@5f88715e4b landed on 2026-08-18. Read-only SSH
   inspection confirms the deployed connector still subscribes the unfiltered IS
   universe, so a fresh relaunch is required before judging the shipped fix.
-status: open
+status: resolved
 nature: process
 asset_group: [cefi]
 stage: [live]
@@ -18,9 +18,8 @@ related:
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/dp_live_004_bybit_futures_book_snapshot_unproductive_2026_08_21.md,
-    /plans/archive/issues/dp_live_004_bybit_stale_vm_relaunch_required_2026_08_20.md,
-    /plans/archive/issues/dp_live_004_bybit_vm_stale_tarball_2026_08_20.md,
+    /plans/active/issues/dp_live_004_bybit_stale_vm_tarball_2026_08_21.md,
+    /plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md,
   ]
 created: 2026-08-20
 author: data_pipeline_failure (slot 32, escalation agt-0d8048)
@@ -33,7 +32,9 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: both todos done 2026-08-21 — VM cycled + fix confirmed deployed (todo 1); post-relaunch
+  verification run, negative result root-caused, follow-up filed at
+  dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21 (todo 2)
 last_updated: 2026-08-21
 locked_since:
 context_scope:
@@ -47,6 +48,16 @@ source: DP-LIVE-004 / DP_CRON_DID_NOT_FIRE (mtds-live-cefi-consolidated-20260817
 ---
 
 # DP-LIVE-004 BYBIT-FUTURES book shard is running a pre-fix image
+
+> **RESOLVED 2026-08-21 (data_engineering, slot 19)**: both todos done. The stale-image condition this doc tracks
+> is fixed (VM cycled, fix-provenance confirmed on the replacement). Post-relaunch verification found BYBIT-FUTURES
+> still 0 captured rows — a genuine, DIFFERENT bug (silently-dropped Bybit subscribe ack frames), now tracked in
+> its own follow-up: `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`.
+> DP-LIVE-004 itself stays open/unmuted — this doc closes only the "stale image" diagnosis this doc's own scope
+> covers, per `/codex/11-project-management/issue-doc-lifecycle.md`'s terminal-status convention. No new codex
+> contract is established by this resolution (the VM-relaunch pattern is already covered by
+> `/codex/05-infrastructure/vm-launcher-runbook.md`); the durable NEW finding (subscribe-ack observability gap)
+> lives in the follow-up doc above, not here.
 
 > **CONSOLIDATED 2026-08-21 (ag-closeout-audit cefi tranche, Phase 3)**: this is the same incident as 3 sibling
 > docs, filed independently by 4 different escalation dispatches, none cross-referencing each other, all naming the
@@ -108,12 +119,20 @@ follow-up in `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`.
       applied in the deployed `bybit_ws.py`/`bybit_futures_book_ticker_ws.py`). The stale VM
       `mtds-live-cefi-consolidated-20260817-025031` was deliberately left RUNNING (not stopped/deleted) — that step
       belongs to todo #2 below, which is still open.
-- [ ] [DATA] P1. After the cycle, verify at least one real `captured` `BYBIT-FUTURES`/`book_snapshot_5` row in the
-      new per-VM manifest shard (direct GCS/manifest read, never a fabricated/placeholder row). Never reclassify the
-      existing all-`empty_confirmed`/`SOURCE_RETURNED_ZERO` rows without this proof. If the fresh runtime is still
-      unproductive, inspect Bybit subscribe acknowledgements/rejections and file a follow-up code issue rather than
-      muting DP-LIVE-004. Once verified, close the related follow-up in
-      `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`.
+- [x] ✅ [DATA] P1. After the cycle, verify at least one real `captured` `BYBIT-FUTURES`/`book_snapshot_5` row in
+      the new per-VM manifest shard (direct GCS/manifest read, never a fabricated/placeholder row). Never
+      reclassify the existing all-`empty_confirmed`/`SOURCE_RETURNED_ZERO` rows without this proof. If the fresh
+      runtime is still unproductive, inspect Bybit subscribe acknowledgements/rejections and file a follow-up code
+      issue rather than muting DP-LIVE-004. Once verified, close the related follow-up in
+      `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`. — **DONE 2026-08-21 (negative result, root-caused
+      + follow-up filed, per the todo's own contingency)**: see Progress Log entry for full evidence. Confirmed
+      still 0 captured rows (100% `empty_confirmed` across all 4 BYBIT-FUTURES data_types, stable across 5 repeated
+      reads) via a targeted per-VM shard read (never a full-bucket per-VM merge — that path timed out/was too
+      expensive for this bucket's 1700+ shards). Did NOT reclassify the existing rows. Root-caused via SSH log
+      inspection + code read: Bybit's subscribe/unsubscribe ack frames are silently dropped, unlogged, in both
+      `bybit_ws.py` and `bybit_futures_book_ticker_ws.py` — filed
+      `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md` with 3 tracked
+      todos. DP-LIVE-004 stays open/unmuted per the todo's own instruction — this is diagnosis, not closure.
 
 ## Progress Log
 
@@ -128,6 +147,22 @@ follow-up in `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`.
   window; universe resolution and `canonical_instrument_id` shape are both confirmed correct, so the remaining
   hypothesis space narrows to the connector's runtime subscribe-set / websocket-ack behavior — read that doc's "NEW
   FINDING 2026-08-21" entry in full before re-diagnosing todo 2 from scratch.
+- **2026-08-21 (data_engineering, slot 19)**: independently reached the same "connector subscribe-ack behavior"
+  conclusion the dedup-pass entry above flags — closed out both todos. Verified todo 2 via a targeted per-VM
+  manifest-shard read (bypassing the earlier-noted rolling-buffer flush instability by reading the SAME target
+  file 5x ~10s apart and confirming a stable, unchanging result — 100% `empty_confirmed` across all 4
+  BYBIT-FUTURES data_types, cross-checked against a genuinely-`captured` sibling venue on the identical shard).
+  Root-caused the negative result via SSH log inspection (zero subscribe/ack/reject log lines across the
+  connector's full ~2h run) + a direct code read (both `bybit_ws.py` and `bybit_futures_book_ticker_ws.py` send
+  `{"op":"subscribe",...}` with no logging, and their receive loops silently drop any frame that isn't a
+  recognized tick payload — including Bybit's own ack control frames). Filed
+  `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md` (3 tracked `[CODE]`/
+  `[DATA]` todos) and updated `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`'s matching Finding-C
+  nested todo with the same evidence. This doc's own scope (stale VM image) is now fully resolved — archiving per
+  the plan-completion-and-archival-discipline HARD RULE (all todos `[x]`, unlocked). DP-LIVE-004 the ALERT
+  condition stays open (tracked in the new follow-up doc), only THIS doc's narrower "stale image" diagnosis is
+  closed.
+
 - **2026-08-21 (infra, slot 8, applying operator ruling)**: Operator (Harsh, via `/ao-watchdog` interactive session,
   2026-08-21) APPROVED the `[OPERATOR]` todo. Cycled the VM via
   `deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh --force` (`--force` required to bypass the
