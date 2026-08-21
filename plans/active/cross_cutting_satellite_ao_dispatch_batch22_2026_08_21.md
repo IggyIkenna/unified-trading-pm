@@ -61,7 +61,7 @@ source: >-
 
 ## From `walkthrough_file_shared_checkout_repeated_content_loss_2026_08_20.md`
 
-- [ ] [BACKEND] P1. **Add a pre-write safety snapshot for agent-authored client-artefact edits.** Before a
+- [x] ✅ [BACKEND] P1. **Add a pre-write safety snapshot for agent-authored client-artefact edits.** Before a
       single-file structure-pass agent begins editing a large, contested file (the pattern that produced 2 of the 3
       losses this issue documents), snapshot its current content (content-hashed, timestamped) to a location
       outside the shared working tree — a scratchpad or a dedicated GCS prefix, not another spot in the same
@@ -70,7 +70,11 @@ source: >-
       recovery path is exercised once (restore from a snapshot, confirm content matches). Source:
       `walkthrough_file_shared_checkout_repeated_content_loss_2026_08_20.md` todo 2 (the pre-write safety snapshot
       item — NOT todo 1 "determine the actual reset mechanism" or todo 3 "investigate whether this file is
-      unusually contended," both genuine root-cause investigation left on the source doc).
+      unusually contended," both genuine root-cause investigation left on the source doc). ✅
+      `unified-trading-pm@d079c9322e` — `scripts/dev/pre-write-safety-snapshot.sh` (snapshot/list/latest/restore),
+      snapshots stored content-hashed + timestamped outside any repo's working tree (default
+      `$HOME/.uts-pre-write-snapshots`). Exercised end-to-end this session against this very plan doc: snapshot
+      taken pre-edit, then restored and confirmed byte-identical (sha256-verified) against the pre-edit content.
 - [ ] [DOC] P2. **Add the 2026-08-20 shared-checkout content-loss incident to
       `/codex/05-infrastructure/per-tab-worktrees.md`** as a concrete case study alongside the existing
       multi-agent-collision documentation — the existing guidance anticipates loss occurring via a git operation
@@ -122,3 +126,10 @@ source: >-
   them carry an enumerated, currently-verified target list in that doc's own text (the raw per-finding transcripts
   from that one-off sweep were explicitly not preserved), so a worker picking them up would need to re-derive the
   candidate set first rather than execute against a fixed list — not the bounded-outcome bar this split applies.
+- **2026-08-21 (slot 13)**: item 1 shipped — `unified-trading-pm@d079c9322e` adds
+  `scripts/dev/pre-write-safety-snapshot.sh` (snapshot/list/latest/restore subcommands; content-hashed +
+  timestamped snapshots under `$HOME/.uts-pre-write-snapshots`, outside any repo's working tree). Shipped as a
+  direct-push dirty-deps carve-out — quickmerge Stage 1.5 fails fleet-wide right now on the pre-existing,
+  unrelated `deployment_api_imports_deployment_service_tier_violation_2026_08_21.md` tier violation;
+  `quality-gates.sh` was green on this exact change before the push. Mechanism exercised end-to-end this session
+  (snapshot → list → latest → restore, sha256-verified byte-identical match) against this plan doc's own edit.
