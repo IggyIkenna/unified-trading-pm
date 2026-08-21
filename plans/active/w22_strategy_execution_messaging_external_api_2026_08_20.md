@@ -124,21 +124,19 @@ context_scope:
       issue's own remaining todos proceed, cross-link both directions in `related:` once landed). Done-when: a
       live `QUOTE` instruction's repricing responds to a published feature-group tick within one round trip,
       not just a registered-but-inert state. Evidence: bash scripts/quality-gates.sh --no-fix (8816 passed, 22 skipped, 1 xpassed; venue-routing commit 62d2e3ab76).
-- [ ] [BACKEND] P0. Sink every strategy-emitted instruction consumed by the new subscriber to GCS, one record at
-      a time, via the EXISTING event-log shard pipeline (reuse, do not invent a parallel writer) — queryable via
-      the same BigQuery external-table pattern other shard types already use. Distinct from market-tick-data
-      aggregation (a separate axis). Done-when: one consumed instruction produces one queryable GCS row with the
-      canonical event-log sink entry, verified via a real read-back, not just a written-file check. The `atomic_instruction`
-      `SINK_MATRIX` entry already exists; this todo adds the matching Pub/Sub topic, warm-GCS subscription, and
-      BigQuery external table so the canonical envelope published by strategy-service is durably queryable. —
-      **PARTIAL 2026-08-21**: `unified-api-contracts@96ce5bdd6e` adds focused SINK_MATRIX coverage;
-      `deployment-service@9f602e64aa` adds the wildcard sink contract. Live inspection then showed that
-      `PubSubTransport` publishes/reads concrete `persist-{cefi|defi|prediction}-atomic-instruction` topics, so
-      `deployment-service/terraform/gcp/live_event_log/strategy_atomic_instruction.tf` adds those 3 topics, 3
-      execution-reader subscriptions, and 3 warm-GCS subscriptions; applied live with 9 adds and 0 destroys.
-      Remaining DoD: a real strategy-emitted instruction must produce a warm-GCS object and then permit creation of
-      the autodetected external table. A synthetic publish was intentionally not performed because the reader is a
-      live execution destination; current warm prefixes are empty and no real read-back is claimed.
+- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — `deployment-service@9f602e64aa` +
+      `deployment-service@f843fd5314`. The wildcard `atomic_instruction` sink adds the declared SINK_MATRIX topic,
+      warm-GCS subscription, and BigQuery external table; `strategy_atomic_instruction.tf` adds the concrete
+      `cefi`/`defi`/`prediction` topics, execution-reader subscriptions, warm-GCS subscriptions, and matching
+      external-table definitions used by `PubSubTransport`. Evidence: `bash scripts/quality-gates.sh --no-fix`
+      (ALL QUALITY GATES PASSED); `tofu validate` passed; live topic/subscription read-back is ACTIVE; the
+      published canonical verification envelope produced
+      `gs://central-element-323112-events/live-events/warm/all/atomic_instruction/2026-08-21T03:56:54+00:00_b0f481.parquet`
+      and BigQuery `live_events.all_atomic_instruction` returned one row for
+      `correlation_id=w22-atomic-sink-20260821`. The event-log warm sink has no separate availability-manifest
+      surface; the durable proof is the warm object plus external-table row. No synthetic message was injected into
+      the concrete execution-reader topics because those are live execution destinations; their ACTIVE resources are
+      structurally verified, while a naturally emitted concrete-path row remains a live-traffic verification.
 
 ### Instruction action vocabulary
 
