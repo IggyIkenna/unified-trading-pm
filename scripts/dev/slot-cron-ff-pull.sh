@@ -832,6 +832,49 @@ ff_one() {
         return 0
     fi
 
+    # Step 2b: stranded-branch self-heal (2026-08-21). Step 0 re-points @{upstream} to
+    # origin/<int_branch> every tick but never moves HEAD, so a clone checked out BEFORE a repo's
+    # canonical integration_branch changed stays on the OLD branch forever. Every slot's
+    # unified-trading-ci sat on the retired `live-defi-rollout` for 4 days after the 2026-08-07
+    # `integration_branch: main` ruling: the branches are content-identical but SHA-disjoint
+    # (cherry-picked, plus a merge commit `git cherry` scores as genuine), so Step 5's adopt-rebase
+    # refused and every tick logged `[skip:diverged] ... manual/mirror will handle` -- a handoff no
+    # automation owned, leaving a permanent phantom "ahead 7, behind 5" in the IDE SCM badge.
+    # Rebasing is the WRONG repair here (it would graft the retired branch onto the canonical one);
+    # the correct move is to switch branches, and only when provably nothing is at stake:
+    #   * working tree clean, AND
+    #   * no commit on HEAD absent from every origin ref, AND
+    #   * no commit on the target branch absent from every origin ref (checkout -B resets it).
+    # Any local work at all -> leave it and let the existing skip paths report it.
+    # Scope: fires ONLY when HEAD sits on the FLEET-DEFAULT integration branch while this repo's
+    # resolved int_branch is a per-repo override -- i.e. exactly the stranded-after-a-ruling case.
+    # A deliberate feature-branch checkout in a slot is never touched. This block also must NEVER
+    # return early: ff_one's later per-repo bookkeeping (dirty-streak confirmation, _ff_record) has
+    # to keep running, so every path here falls through to the existing logic.
+    # SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Upstream tracking"; incident:
+    # plans/active/issues/unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md
+    if [[ "${branch}" != "${int_branch}" && "${branch}" == "${INTEGRATION_BRANCH}" ]]; then
+        local _old_branch _stranded_dirty _head_unpushed _tgt_unpushed
+        _old_branch="${branch}"
+        _stranded_dirty="$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
+        _head_unpushed="$(git rev-list HEAD --not --remotes=origin 2>/dev/null | wc -l | tr -d ' ')"
+        _tgt_unpushed=0
+        if git rev-parse --verify --quiet "refs/heads/${int_branch}" >/dev/null 2>&1; then
+            _tgt_unpushed="$(git rev-list "refs/heads/${int_branch}" --not --remotes=origin 2>/dev/null | wc -l | tr -d ' ')"
+        fi
+        if [[ "${_stranded_dirty}" != "0" || "${_head_unpushed}" != "0" || "${_tgt_unpushed}" != "0" ]]; then
+            log "[skip:stranded-branch] ${repo_name} on '${_old_branch}' (want '${int_branch}') — local work present (dirty=${_stranded_dirty}, head_unpushed=${_head_unpushed}, target_unpushed=${_tgt_unpushed}); resolve by hand"
+        elif [[ "${DRY_RUN}" -eq 1 ]]; then
+            log "[dry-run:stranded-branch] ${repo_name} — would switch '${_old_branch}' → '${int_branch}' @ origin/${int_branch}"
+        elif git checkout -B "${int_branch}" "origin/${int_branch}" --quiet 2>/dev/null; then
+            branch="${int_branch}"
+            local_sha=$(git rev-parse HEAD)
+            log "[stranded-branch-fix] ${repo_name} — switched '${_old_branch}' → '${int_branch}' @ origin/${int_branch}"
+        else
+            log "[skip:stranded-branch] ${repo_name} — could not switch '${_old_branch}' → '${int_branch}'"
+        fi
+    fi
+
     # Step 3: already up-to-date?
     if [[ "${local_sha}" == "${remote_sha}" ]]; then
         log_quiet "[ok:up-to-date] ${repo_name} (${branch} → ${int_branch})"
