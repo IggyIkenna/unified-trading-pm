@@ -90,6 +90,9 @@ STASH_WARN_COUNT="${STASH_WARN_COUNT:-15}"
 STASH_WARN_AGE_DAYS="${STASH_WARN_AGE_DAYS:-14}"
 STASH_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/stash-pile-detect.sh"
 
+# Bare root repo dirty watchdog: pages if slot 0 (bare root checkout) has dirty or untracked files.
+BARE_ROOT_DIRTY_WATCHDOG="${BARE_ROOT_DIRTY_WATCHDOG:-1}"
+
 # Token-near-expiry early warning
 # (git_status_reporter_stale_public_url_token_expiry_2026_07_24.md option (a) —
 # the reporter already resolves the bearer token to build the Authorization
@@ -787,6 +790,60 @@ check_stash_pile_for_slot() {
     done
 }
 
+# Bare root repo dirty watchdog check. For slot 0 (main workspace checkout at WORKSPACE_PATH),
+# checks each repo for dirty/untracked files and posts an alert via post_starve_ping
+# with a dedup-marker pattern, exactly like check_starvation_for_slot and check_stash_pile_for_slot.
+check_bare_root_dirty_for_slot() {
+    local slot_id="0" slot_dir="${WORKSPACE_PATH}"
+    [[ "${BARE_ROOT_DIRTY_WATCHDOG}" -eq 1 ]] || return 0
+    local token
+    token=$(resolve_token_for_slot "${slot_id}") || return 0
+    mkdir -p "${STARVE_STATE_DIR}" 2>/dev/null || true
+
+    local repo_dir repo_name marker porcelain dirty_files sample_list line file payload
+    for repo_dir in "${slot_dir}"*/; do
+        [[ -d "${repo_dir}" ]] || continue
+        [[ "$(basename "${repo_dir}")" == ".tabs" ]] && continue
+        [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
+        repo_name=$(basename "${repo_dir}")
+        marker="${STARVE_STATE_DIR}/slot-${slot_id}__${repo_name}.bare-root-dirty"
+
+        pushd "${repo_dir}" >/dev/null 2>&1 || continue
+        porcelain=$(git status --porcelain 2>/dev/null || echo "")
+        sample_list=()
+        if [[ -n "${porcelain}" ]]; then
+            while IFS= read -r line; do
+                [[ -z "${line}" ]] && continue
+                if [[ "${#sample_list[@]}" -lt 10 ]]; then
+                    sample_list+=("${line}")
+                fi
+            done <<< "${porcelain}"
+        fi
+        dirty_files="${#sample_list[@]}"
+        popd >/dev/null 2>&1 || continue
+
+        if [[ "${dirty_files}" -gt 0 ]]; then
+            payload="Bare root repo checkout for '${repo_name}' (slot 0 at ${repo_dir}) has ${dirty_files} uncommitted/untracked file(s):\n"
+            for line in "${sample_list[@]}"; do
+                payload+="  ${line}\n"
+            done
+            payload+="\nAgent writes must land inside per-slot worktrees (.tabs/<N>/<repo>/), never in the bare root checkout. Clean or quarantine these changes."
+
+            # Ping once per episode (skip if already marked).
+            if [[ ! -f "${marker}" ]]; then
+                if post_starve_ping "${slot_id}" "${repo_name}" "${payload}" "${token}" "bare-root-dirty"; then
+                    : > "${marker}" 2>/dev/null || true
+                fi
+            else
+                log_quiet "[bare-root-dirty-dup] slot ${slot_id}/${repo_name} — already signalled this episode"
+            fi
+        else
+            # Clean → clear any prior marker (future dirt re-pings).
+            [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+        fi
+    done
+}
+
 # Decode the `exp` (Unix epoch, UTC) claim from a JWT's second (payload) segment.
 # Prints the epoch on success; prints nothing and returns non-zero on any malformed/
 # undecodable input — callers MUST treat that as "can't tell, skip" rather than
@@ -970,6 +1027,7 @@ if slot_in_filter "0"; then
     else
         log_quiet "[skip:empty] slot 0 (main workspace) — no git repos found"
     fi
+    check_bare_root_dirty_for_slot
 else
     log_quiet "[skip:not-in-filter] slot 0 (main workspace)"
 fi
