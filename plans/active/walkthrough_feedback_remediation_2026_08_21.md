@@ -624,28 +624,54 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       `tests/unit/test_handler_registry.py`). QG green (8915 passed, cov 82.53%). Closes
       `external_instruction_defi_handlers_simulation_only_2026_08_20.md`'s last 2 DeFi rows;
       `platform-api-reference.html` BORROW/REPAY rows updated — `unified-trading-pm@185e266a0e`.
-- [ ] [SCRIPT] P2. execution-service: BRIDGE/LP_MINT/LP_BURN are the platform-api-reference.html client-ready pass's
-      only remaining honest-501 rows (2026-08-21 pass; confirmed genuinely unbuilt, not guessed). BRIDGE — no real
-      execution engine at all; `TransferHandler._execute_bridge_transfer` is a live stub that always fails, and
-      `transfer_coordinator.py`'s own docstring cites a dangling `execution_service.v2.handlers.BridgeHandler` that
-      does not exist anywhere in the repo (already tracked in full, including the design/build follow-up todos, at
-      `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md` — do not re-file, extend
-      that doc). LP_MINT/LP_BURN — zero real handler exists anywhere (`rg -n "LpMint|LpBurn" execution-service`
-      returns only the schema/readiness-index files, no execution code): needs a new concentrated-liquidity
-      mint/burn execution engine designed and built from scratch (Uniswap V3-style position management), not a
-      wiring shim like BORROW/REPAY was. Each is a brand-new, >1-day build (estimate_class: brand-new); the
-      dispatch gate for all three lives in `execution_service/api/external_instruction_api.py`, which this pass's
-      own file-coordination note reserves for the sibling session also touching it — resolve that collision before
-      starting. Genuinely deferred, not guessed at.
-- [ ] [SCRIPT] P0. execution-service: bind `POST /external/instructions`' `identity.client_id` to the
-      authenticated caller's `auth.org_id` — verified 2026-08-21 still true at `origin/live-defi-rollout` HEAD
-      (`8d4356bf2c`): `auth.org_id` is written to the audit log alongside the instruction
-      (`external_instruction_api.py:144`) but is never checked against the instruction's own `identity.client_id`,
-      so a caller-supplied `client_id` is not validated against the authenticated org on this router. This is the
-      CTO handoff's "Execution client_id is caller supplied without org binding" correction (Security/P0) —
-      genuinely still open, not owned by any active plan/issue found by grep. Deny-by-default when they don't
-      match, mirroring client-reporting-api's `enforce_entitlement(auth, client_id)` pattern. Disclosed honestly in
-      the doc's §01 callout already; this todo is the code-side fix.
+- [x] [SCRIPT] P2. execution-service: BRIDGE/LP_MINT/LP_BURN wired to real execution — the last 3 of 16
+      `StrategyInstructionV2` action types, closing
+      `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md`'s BRIDGE half (its ATOMIC
+      half was already closed) and the LP_MINT/LP_BURN gap this todo named. **BRIDGE**: `TransferHandler`'s
+      `_execute_bridge_transfer` stub replaced with real dispatch via a new `LiveBridgeTransferAdapter` wrapping
+      `SocketBridgeConnector` (`execution_service/defi_execution/protocols/bridge.py` — a real, live-capable Socket
+      v2 bridge-route aggregator across Across/Stargate/CCTP/Hop that already existed but was never wired into any
+      reachable adapter, confirmed via a repo-wide grep before this change). New `force_transfer_type` override on
+      `TransferHandler._resolve_transfer_type` (metadata-carried, no UAC schema change) — required because
+      `classify_transfer_type()` has no notion of a bare chain-name pair and never derives BRIDGE on its own (its
+      own module comment: "same chain assumed; caller can override to BRIDGE"). New durable
+      `GcsTransferStateStore` (`execution_service/defi_execution/bridge_state_store.py`) satisfies
+      `SocketBridgeConnector`'s durable-state-store requirement for live dispatch. Self-bridges to the connector's
+      own resolved wallet address when no recipient is given (`BridgeInstructionV2` carries no recipient field).
+      **LP_MINT/LP_BURN**: new `LpMintHandler`/`LpBurnHandler` (mirroring `BorrowHandler`'s
+      ALPHA_ZERO-simulation/live-dispatch split) + a new, independent `lp_concentrated_dispatch` seam (kept
+      separate from `defi_live_dispatch.py` to avoid colliding with the concurrent BORROW/REPAY session) calling
+      `UniswapConnector.mint_position()`/`.burn_position()` — real NPM mint/decrease-liquidity+collect calls that
+      already existed on that connector, just never had a dispatch-seam consumer. New `OperationType.LP_MINT`/
+      `.LP_BURN` members (UAC, purely additive). All three LIVE-WIRED for one venue/protocol each so far (Socket
+      for BRIDGE, Uniswap V3 for LP_MINT/LP_BURN); fall back to existing/ALPHA_ZERO simulation outside LIVE/MANUAL
+      mode, same convention as every other DeFi handler. The file-coordination collision this todo flagged
+      resolved cleanly: confirmed the sibling BORROW/REPAY + CANCEL-scope commit
+      (`execution-service@4e35a09b2`) landed before touching `external_instruction_api.py`/
+      `external_instruction_defi.py`, per the dispatching operator's own instruction. Tests: new
+      `test_lp_concentrated_dispatch.py`, `test_bridge_state_store.py`, `test_live_bridge_adapter.py`,
+      `test_lp_handlers.py`, `test_transfer_factory.py`, `test_transfer_handler_bridge.py`,
+      `test_external_instruction_bridge_lp_translation.py`, plus a new `TestBridgeInstructionPath` class and an
+      `_FakeTransferAdapter.execute_bridge_transfer` addition in the existing `test_external_instruction_api.py`
+      (all RPC/connector boundaries mocked — no live mainnet calls in tests). UAC round-trip test coverage added
+      for `BridgeInstructionV2`/`LpMintInstruction`/`LpBurnInstruction` (schema classes already existed, pre-dating
+      this session; only test coverage was missing).
+      `platform-api-reference.html` BRIDGE/LP_MINT/LP_BURN rows + stat + error-table updated (removed the stale
+      501 row — there is no longer a "recognised but unrouted" 501 case on this surface at all).
+      QG green both repos. — `execution-service@0aa709f076`, `unified-api-contracts@3204e607e4`,
+      `unified-trading-pm@<this-commit>`.
+- [x] [SCRIPT] P0. execution-service: bind `POST /external/instructions`' `identity.client_id` to the
+      authenticated caller's `auth.org_id` — CTO handoff's "Execution client_id is caller supplied without org
+      binding" correction (Security/P0). Found already implemented as uncommitted, stale (27+ min untouched,
+      mtime-verified dead WIP per the multi-agent-safety liveness gate) work in `external_instruction_api.py` while
+      shipping the BRIDGE/LP_MINT/LP_BURN todo above, which also touches this file — inherited and shipped in the
+      same commit rather than left stranded. New `_enforce_client_org_binding(auth, client_id)`, called once at the
+      top of `submit_external_instruction` before any action-type branching (every `StrategyInstructionV2` member
+      inherits `identity.client_id` from the shared envelope base, so one seam covers every action type).
+      `auth.is_internal` callers bypass (cross-client reach for reconciliation/support, same precedent
+      client-reporting-api's `enforce_entitlement` documents); external callers denied HTTP 403 the moment
+      `auth.org_id != identity.client_id` — deny-by-default, including the empty/absent case. —
+      `execution-service@0aa709f076` (same commit as the todo above).
 - [ ] [SCRIPT] P0. client-reporting-api: secure or disable `GET /api/v1/stream/reports` (`reports_stream.py`) —
       verified 2026-08-21 still true: it is the only route in the service mounted outside the
       `_authenticated_router` wrapper (`api/main.py`'s `dependencies=[Depends(_api_auth)]` block), so it carries
@@ -899,3 +925,43 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   doc-side) fix, not a re-disclosure.
   Checker: `check_artefact_claim_ownership.py` — 246 open markers, baseline 247 (unchanged by this session).
   Shipped via `scripts/dev/safe-doc-push.sh` — sha recorded in the commit trailer.
+
+- 2026-08-21 — **BRIDGE/LP_MINT/LP_BURN session: the last 3 of 16 `StrategyInstructionV2` action types wired to
+  real execution, plus the client_id↔org_id binding P0 todo inherited from stale dead WIP found in the same
+  file.** Confirmed at session start (measured, not guessed) that `BridgeInstructionV2`/`LpMintInstruction`/
+  `LpBurnInstruction` schema classes and `InstructionActionV2.BRIDGE`/`.LP_MINT`/`.LP_BURN` already existed in UAC
+  (this todo's own premise that they were "pending" was stale) — only JSON round-trip test coverage was missing,
+  added in `tests/internal/unit/test_bridge_lp_instructions.py`; also added `OperationType.LP_MINT`/`.LP_BURN`
+  (execution-internal enum, 1:1 naming parity with `InstructionActionV2`, purely additive) since no execution-side
+  operation identifier existed for the concentrated-liquidity engines below. Waited on the sibling BORROW/REPAY +
+  CANCEL-scope commit (`execution-service@4e35a09b2`) per the dispatching operator's explicit instruction before
+  touching `external_instruction_api.py`/`external_instruction_defi.py`; built the LP_MINT/LP_BURN dispatch engine
+  in new, independent files first (`lp_concentrated_dispatch.py`, kept separate from the concurrently-edited
+  `defi_live_dispatch.py` on purpose) while waiting. BRIDGE turned out feasible to wire fully end-to-end through
+  clean (non-dirty) files alone (`engine/transfers/*`, `engine/handlers/transfer_handler.py`) — discovered
+  `SocketBridgeConnector` already existed as a real, live-capable Socket v2 bridge-route aggregator but had never
+  been wired into any adapter a handler could reach; built `LiveBridgeTransferAdapter` + a new durable
+  `GcsTransferStateStore` + a `force_transfer_type` metadata override on `TransferHandler` (needed because
+  `classify_transfer_type()` has no bare-chain-name-pair → BRIDGE derivation, confirmed by reading its source
+  directly). Once the sibling's commit landed, wired all three onto `POST /external/instructions` for real: new
+  `LpMintHandler`/`LpBurnHandler` registered in `HandlerRegistry.DEFAULT_HANDLERS`, new
+  `_build_execution_instruction_from_bridge`/`_lp_mint`/`_lp_burn` translation functions, all three added to the
+  dispatch chain, the stale "3 action types stay 501" module docstring/fallback message rewritten. Found + fixed a
+  genuine cross-session conflict: `tests/unit/test_external_instruction_api.py` (stale, 27+ min untouched,
+  mtime-verified dead WIP) had one test asserting BRIDGE still 501s and lacked bridge support on its fake
+  adapter — inherited the file (dead-claim rule), added `execute_bridge_transfer` to the fake, and replaced the
+  stale test with a real `TestBridgeInstructionPath` class plus a corrected "invalid action → 422" test. The same
+  dead WIP also contained a complete, unrelated `_enforce_client_org_binding` fix for this plan's own client_id↔
+  org_id P0 todo (filed by an earlier session in this doc) — shipped it in the same commit rather than leaving it
+  stranded, flipped that todo too. Both repos' `quality-gates.sh` went green only after several real fixes: two
+  methods over the 50-line cap (split into helper methods), 9 E501 line-length violations, 2 new broad-except
+  sites (justified with `# noqa: broad-except` — the storage-client boundary is UTL-abstracted, no
+  `google.cloud` exception types to narrow to), a `CompositeTransferAdapter` back-compat break (made the new
+  `bridge=` constructor param optional, defaulting to an honestly-not-wired `LiveBridgeTransferAdapter(None)`, so
+  a pre-existing direct construction call site didn't crash), and `TransferHandler.estimate_cost()`'s own
+  independent (uncovered by the first fix) call to `classify_transfer_type()` needing the same override. Both
+  repos' quickmerge hit real `unified-api-contracts` dirty-dependency blocks from a concurrent prediction-market-
+  migration session — per the dispatching operator's explicit instruction, waited (a sized background watchdog
+  polling every 60s, never forced/committed foreign work) rather than working around it; both ships landed clean
+  once that session's own commit (`unified-api-contracts@4f25d5f0`) cleared the dependency.
+  Shas: `unified-api-contracts@3204e607e4`, `execution-service@0aa709f076`.

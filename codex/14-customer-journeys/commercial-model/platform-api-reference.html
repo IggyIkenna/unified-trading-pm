@@ -820,12 +820,14 @@
         >
       </div>
       <div class="stat">
-        <span class="v">12 / 16</span
+        <span class="v">15 / 16</span
         ><span class="k"
           >Instruction types routed to real execution today — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
-          UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC route through live execution wiring (BORROW/REPAY wired
-          2026-08-21, AAVE V3 only); QUOTE arms repricing without submitting an order; BRIDGE/LP_MINT/LP_BURN parse as
-          real union members and return an honest 501 — no execution engine built for any of the three yet</span
+          UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC/BRIDGE/LP_MINT/LP_BURN all route through live execution wiring
+          (BORROW/REPAY wired 2026-08-21, AAVE V3 only; BRIDGE/LP_MINT/LP_BURN wired 2026-08-21 — BRIDGE via a real
+          Socket v2 bridge-route aggregator, LP_MINT/LP_BURN via real Uniswap V3 NPM mint/burn, both LIVE-WIRED for
+          one venue each so far); QUOTE is the sole remaining partial case — it arms repricing without submitting an
+          order</span
         >
       </div>
       <div class="stat">
@@ -1085,7 +1087,7 @@
         <i>bool</i>
       </div>
       <div class="callout">
-        <span class="tag">What auth does not do on these three routers, stated exactly</span>
+        <span class="tag">What auth does not do on these two routers, stated exactly</span>
         <p>
           <b class="ev ev-verified">✓ verified</b> On instruments-service, the endpoint itself discards
           <code>AuthContext</code> after the dependency runs (<code>del auth</code>,
@@ -1094,11 +1096,22 @@
           market-tick-data-service the auth dependency is mounted at the router level
           (<code>dependencies=[Depends(_api_auth)]</code>,
           <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:52-56</code>) and no endpoint
-          function receives an <code>AuthContext</code> argument at all — auth is a gate, not a scope. On
-          execution-service, <code>auth.org_id</code> is written to the audit log alongside the instruction
-          (<code>execution_service/api/external_instruction_api.py:144</code>) but is not checked against the
-          instruction's own <code>identity.client_id</code> — the caller-supplied <code>client_id</code> is not
-          validated against the authenticated org in this router.
+          function receives an <code>AuthContext</code> argument at all — auth is a gate, not a scope.
+        </p>
+      </div>
+      <div class="callout">
+        <span class="tag">execution-service binds the caller's org to the instruction's client_id</span>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> <code>POST /external/instructions</code> rejects, HTTP
+          <code>403</code>, the moment the instruction's own <code>identity.client_id</code> names a
+          <code>client_id</code> outside the authenticated caller's own <code>auth.org_id</code> — an external caller
+          can only submit, cancel, or transfer for the one client_id its own org owns. Internal/S2S callers
+          (<code>auth.is_internal</code>) bypass the check, the same precedent client-reporting-api's
+          <code>enforce_entitlement</code> (see <a href="#s5">§05</a>) already established. <b>Source:</b>
+          <code>execution_service/api/external_instruction_api.py</code>,
+          <code>_enforce_client_org_binding()</code>, called once at the top of
+          <code>submit_external_instruction</code> before any action-type branching — one seam covers all 16
+          <code>StrategyInstructionV2</code> action types, not a per-route copy.
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
@@ -1846,29 +1859,41 @@
       >
     </div>
     <p class="lede">
-      One instruction envelope, any asset class — but twelve of its sixteen action types are wired to real execution
-      paths today, while unsupported actions fail honestly.
+      One instruction envelope, any asset class — fifteen of its sixteen action types are wired to real execution
+      paths today, and the last one (QUOTE) arms repricing without submitting an order.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
     </p>
 
     <div class="callout">
       <span class="tag">Read this before anything else on this page</span>
       <p>
-        <b>Twelve action types are wired to real execution paths today.</b> The request body type,
-        <code>StrategyInstructionV2</code>, is a 16-member discriminated union
+        <b>Fifteen of sixteen action types are wired to real execution paths today (2026-08-21).</b> The request body
+        type, <code>StrategyInstructionV2</code>, is a 16-member discriminated union
         (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
         internal DART manual-trade surface uses in production. BORROW/REPAY were wired 2026-08-21 through the same AAVE
         V3 live-dispatch seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE already used
-        (<code>execution_service/engine/handlers/defi_live_dispatch.py::dispatch_borrow_live</code>). Three variants —
-        BRIDGE, LP_MINT, and LP_BURN — parse successfully (they are real, valid members of the union) but return an
-        honest <code>501</code>: not a silent drop, but not the same contract either
-        (<code>external_instruction_api.py:129-136</code>).
+        (<code>execution_service/engine/handlers/defi_live_dispatch.py::dispatch_borrow_live</code>). The last three —
+        BRIDGE, LP_MINT, and LP_BURN — were wired the same day, closing this page's own previously-disclosed gap:
+        <code>BRIDGE</code> routes through <code>TransferHandler</code> via a real <code>SocketBridgeConnector</code>
+        (Socket v2 bridge-route aggregator across Across/Stargate/CCTP/Hop) that already existed in the codebase but
+        had never been wired into any reachable adapter; a successful source-chain broadcast reports
+        <code>PENDING</code>, never a fabricated instant success, since destination-chain settlement is not confirmed
+        synchronously. <code>LP_MINT</code>/<code>LP_BURN</code> route through new
+        <code>LpMintHandler</code>/<code>LpBurnHandler</code> classes calling
+        <code>UniswapConnector.mint_position()</code>/<code>.burn_position()</code> — real Uniswap V3
+        NonfungiblePositionManager mint/decrease-liquidity+collect calls that already existed on that connector, just
+        never had a dispatch-seam consumer. All three are LIVE-WIRED for one venue/protocol each so far (Socket for
+        BRIDGE, Uniswap V3 for LP_MINT/LP_BURN) and fall back to their existing ALPHA_ZERO benchmark-price simulation
+        outside LIVE/MANUAL operational mode, same convention as BORROW/REPAY.
+        Source: <code>execution-service@0aa709f076</code> (BRIDGE/LP_MINT/LP_BURN engines + gate wiring),
+        <code>unified-api-contracts@3204e607e4</code> (OperationType.LP_MINT/LP_BURN parity + JSON round-trip
+        coverage for the three envelope types, which already existed in the schema before this pass).
       </p>
       <p>
-        <code>QUOTE</code> is a third case, distinct from both of the above — worth stating precisely rather than
-        rounding it either way. It does not 501: <code>_register_quote_instruction()</code> is real and runs
+        <code>QUOTE</code> is the one remaining partial case — worth stating precisely rather than rounding it either
+        way. It does not 501: <code>_register_quote_instruction()</code> is real and runs
         (<code>external_instruction_api.py:133-171</code>), arming <code>DeltaProxyRepricer</code> with this
         instrument's delta/gamma via <code>QuoteMaintainer.register_quote_instruction()</code> and returning
         <code>status="REGISTERED"</code>. But it does not place an order either: by the router's own docstring, "the
@@ -1971,8 +1996,10 @@
             <td><code>BRIDGE</code></td>
             <td><code>BridgeInstructionV2</code></td>
             <td>
-              <b class="st st-plan">planned</b> — recognised, honest 501; no cross-chain bridge execution engine exists
-              yet
+              <b class="st st-part">partial</b> — routed through <code>TransferHandler</code> via a real Socket v2
+              bridge-route aggregator (Across/Stargate/CCTP/Hop); source-chain broadcast success reports
+              <code>PENDING</code>, never a fabricated instant success — destination-chain settlement is not confirmed
+              synchronously; falls back to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
           <tr>
@@ -1993,16 +2020,16 @@
             <td><code>LP_MINT</code></td>
             <td><code>LpMintInstruction</code></td>
             <td>
-              <b class="st st-plan">planned</b> — recognised, honest 501; no concentrated-liquidity mint execution
-              engine exists yet
+              <b class="st st-part">partial</b> — routed to live DeFi execution (Uniswap V3 NPM mint only); falls back
+              to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
           <tr>
             <td><code>LP_BURN</code></td>
             <td><code>LpBurnInstruction</code></td>
             <td>
-              <b class="st st-plan">planned</b> — recognised, honest 501; no concentrated-liquidity burn execution
-              engine exists yet
+              <b class="st st-part">partial</b> — routed to live DeFi execution (Uniswap V3 NPM decrease-liquidity +
+              collect only); falls back to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
         </tbody>
@@ -2011,8 +2038,8 @@
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
       <b class="ev ev-verified">✓ verified</b> schemas.py (all 16 variants + the union); execution-service
       <code>execution_service/api/external_instruction_api.py</code> +
-      <code>execution_service/api/external_instruction_defi.py</code> (12 of 16 action types routed to real execution
-      wiring; BRIDGE/LP_MINT/LP_BURN are the honest 501s)
+      <code>execution_service/api/external_instruction_defi.py</code> (15 of 16 action types routed to real execution
+      wiring as of 2026-08-21; QUOTE arms repricing without submitting an order — see above)
     </p>
 
     <details class="ep">
@@ -2245,18 +2272,6 @@
                 <td>Standard FastAPI/Pydantic validation error</td>
               </tr>
               <tr>
-                <td><code>501</code></td>
-                <td>
-                  Parses as <code>BRIDGE</code>, <code>LP_MINT</code>, or <code>LP_BURN</code> — real union members,
-                  none with an execution engine built yet
-                </td>
-                <td class="mono">
-                  "action='BRIDGE' is not yet wired for external submission. TRADE/QUOTE/TRANSFER/CANCEL/SWAP/LEND/
-                  WITHDRAW/STAKE/UNSTAKE/BORROW/REPAY/ATOMIC are the 12 of 16 StrategyInstructionV2 action types wired
-                  today."
-                </td>
-              </tr>
-              <tr>
                 <td><code>400</code></td>
                 <td><code>target_venue</code> missing</td>
                 <td class="mono">"target_venue is required to route a TRADE instruction"</td>
@@ -2324,31 +2339,44 @@
         index below is tagged with whichever of these it calls, verified per-route by reading the function body, not
         assumed from the route's file or prefix.
       </p>
-      <p>Three findings worth flagging on their own:</p>
+      <p>Three findings from a 2026-08-20 audit pass, all fixed 2026-08-21:</p>
       <p>
-        <b class="ev ev-verified">✓ verified</b>
-        <code>GET /api/v1/stream/reports</code> (<code>reports_stream.py</code>) carries
-        <b>no auth dependency at all</b> — it is mounted directly on the FastAPI app outside the
+        <b class="ev ev-verified">✓ verified — fixed 2026-08-21</b>
+        <code>GET /api/v1/stream/reports</code> (<code>reports_stream.py</code>) used to carry
+        <b>no auth dependency at all</b> — it was mounted directly on the FastAPI app outside the
         <code>_authenticated_router</code> wrapper every other route in this service sits behind
         (<code>api/main.py</code>, the
         <code>_authenticated_router = APIRouter(dependencies=[Depends(_api_auth)])</code> block). It is a global
-        server-sent-events fan-out: every subscriber receives every published report event for every client, with no
-        <code>client_id</code> scoping and no token check.
-      </p>
-      <p>
-        <b class="ev ev-verified">✓ verified</b> 13 of the 102 routes call neither <code>enforce_entitlement</code> nor
-        <code>require_internal</code> — <code>alerts.py</code>, <code>compliance.py</code>, <code>documents.py</code>,
-        and <code>docusign.py</code> in full, plus <code>reporting/investor_relations_archive.py</code>. These still sit
-        behind the blanket <code>create_api_auth</code> token check (so an unauthenticated caller is rejected), but any
-        authenticated caller — internal <em>or</em> external, any <code>org_id</code> — can reach them; no per-<code
+        server-sent-events fan-out: every subscriber receives every published report event for every client. Now
+        mounted inside <code>_authenticated_router</code> (blanket token check, 401 without one) and gated
+        <code>require_internal(auth)</code> at the route level — the queue itself still has no per-<code
           >client_id</code
         >
-        scoping was found in this pass. Marked <b class="ev ev-check">? check</b> in the index rather than asserted as a
-        confirmed cross-client leak, since the underlying service call each of these makes was not individually read.
+        scoping, so internal-only is the strictest correct fix rather than a caller-supplied filter.
       </p>
       <p>
-        <b class="ev ev-verified">✓ verified</b> Some of what this surface returns is fixture data, not a real
-        per-client read, independent of the auth/entitlement question above — see the callout after the endpoint index.
+        <b class="ev ev-verified">✓ verified — fixed 2026-08-21</b> The 13 of 102 routes that called neither
+        <code>enforce_entitlement</code> nor <code>require_internal</code> — <code>alerts.py</code>,
+        <code>compliance.py</code>, <code>documents.py</code>, and <code>docusign.py</code> in full, plus
+        <code>reporting/investor_relations_archive.py</code> — now all call one or the other.
+        <code>compliance.py</code>'s 4 routes and 2 of <code>documents.py</code>'s 4 routes (<code>POST
+          /upload-url</code>, <code>GET /</code>) are <code>enforce_entitlement</code>-scoped, since an
+        <code>org_id</code>/<code>client_id</code> parameter already existed on each. <code>alerts.py</code>,
+        <code>documents.py</code>'s <code>DELETE</code> route, <code>docusign.py</code>'s webhook receiver, and
+        <code>reporting/investor_relations_archive.py</code> are <code>require_internal</code> — each has no
+        client-scoping parameter to entitle against (a global alerting-service proxy, an admin-only delete, an
+        external-system webhook, and a cross-client reference catalogue, respectively), so internal-only is the
+        strictest correct gate rather than trusting a caller-supplied <code>org_id</code>.
+        <code>documents.py</code>'s <code>GET /{document_id}/download-url</code> and <code>docusign.py</code>'s two
+        per-document routes resolve the document's real owning org from the shared mock-state store and
+        entitlement-scope to <em>that</em> — falling back to <code>require_internal</code> when the owning org can't
+        be resolved (live-mode uploads don't persist an <code>org_id</code> anywhere yet), rather than trusting a
+        caller-supplied <code>org_id</code> claim.
+      </p>
+      <p>
+        <b class="ev ev-verified">✓ verified — fixed 2026-08-21</b> Some of what this surface returned was fixture
+        data, not a real per-client read, independent of the auth/entitlement question above — see the callout after
+        the endpoint index for what changed.
       </p>
     </div>
 
@@ -2544,18 +2572,45 @@
       <p>
         Verified by reading the three route files most likely to matter first (<code>exports.py</code>,
         <code>performance.py</code>, <code>hwm.py</code>) — not re-verified for every one of the 102 routes below, so
-        treat this as a confirmed sample rather than a full audit. <code>GET /api/v1/exports/trades</code> and
-        <code>GET /api/v1/exports/coin-breakdown</code> return a hardcoded fixture (<code>MOCK_TRADES</code> /
-        <code>MOCK_COIN_BREAKDOWN</code>) <b>unconditionally</b> — not gated by mock mode, not varying by
-        <code>client_id</code> (<code>exports.py:74,140</code>). <code>GET /api/v1/exports/daily-summary</code> and
-        <code>GET /api/v1/exports/hourly-snapshots</code> derive from <code>get_mock_performance_summary()</code> — also
-        fixture-sourced regardless of environment (<code>core/mock_performance_data.py</code>,
-        <code>exports.py:89,108</code>). The four <code>/api/v1/performance/*</code> endpoints (positions, balances,
-        coin-breakdown) fall back to fixtures only when
-        <code>CLOUD_MOCK_MODE=true</code> (<code>performance.py:52,94,126,163</code>) — real in a real deployment.
-        <code>GET /api/v1/exports/daily-equity</code> and <code>GET /api/v1/exports/transfers</code> read real backing
-        stores unconditionally (<code>get_equity_curve</code> / <code>get_transfers</code>). DocuSign envelope status
-        (<code>docusign.py</code>) is also fixture-backed (<code>MOCK_ENVELOPES</code>).
+        treat this as a confirmed sample rather than a full audit.
+      </p>
+      <p>
+        <b class="ev ev-verified">✓ verified — fixed 2026-08-21</b> <code>GET /api/v1/exports/trades</code>,
+        <code>GET /api/v1/exports/coin-breakdown</code>, <code>GET /api/v1/exports/daily-summary</code> and
+        <code>GET /api/v1/exports/hourly-snapshots</code> used to return a hardcoded fixture
+        (<code>MOCK_TRADES</code> / <code>MOCK_COIN_BREAKDOWN</code> / <code>get_mock_performance_summary()</code>)
+        <b>unconditionally</b> — not gated by mock mode, not varying by <code>client_id</code>. Now: <code
+          >/trades</code
+        >
+        reuses the canonical ledger fills (falling back to backfilled history when the ledger has none — the same
+        primary/fallback sources <code>trades.py::get_trade_history</code> uses); <code>/coin-breakdown</code> reuses
+        <code>compute_coin_breakdown</code>, the same per-coin engine <code>performance.py</code>'s real route uses
+        (its own honest column set — the real engine doesn't track entry/current price or cost-basis, so real-mode
+        CSVs don't pad those columns with blanks); <code>/daily-summary</code> reuses
+        <code>compute_monthly_returns</code> over the real equity curve (also its own reduced column set —
+        <code>{month, return_pct}</code> only, since that engine doesn't produce
+        <code>pnl_usd</code>/<code>opening_equity</code>/<code>closing_equity</code>). <code
+          >/hourly-snapshots</code
+        >
+        has no real fix available: no hourly-granularity equity store exists at all (<code>get_equity_curve</code> is
+        daily-only), so real mode returns an explicit "No data: hourly equity snapshots are not yet captured for live
+        clients" rather than relabeling daily data as hourly. All four fall back to the pre-existing fixture only when
+        <code>CLOUD_MOCK_MODE=true</code>, and an empty real result is an explicit "No data" row, never a silent
+        fixture (<code>exports.py</code>).
+      </p>
+      <p>
+        The four <code>/api/v1/performance/*</code> endpoints (positions, balances, coin-breakdown) fall back to
+        fixtures only when <code>CLOUD_MOCK_MODE=true</code> (<code>performance.py:52,94,126,163</code>) — real in a
+        real deployment. <code>GET /api/v1/exports/daily-equity</code> and <code>GET /api/v1/exports/transfers</code>
+        read real backing stores unconditionally (<code>get_equity_curve</code> / <code>get_transfers</code>).
+      </p>
+      <p>
+        <b class="ev ev-verified">✓ verified</b> DocuSign envelope status (<code>GET
+          /api/v1/documents/{document_id}/signature-status</code
+        >, <code>docusign.py</code>) was re-checked in the same 2026-08-21 pass and found <b>already honest</b>: it
+        returns <code>MOCK_ENVELOPES</code>-backed data only when <code>CLOUD_MOCK_MODE=true</code>; the live-mode
+        branch returns an explicit <code>404</code> ("No signature envelope found") rather than the fixture. No code
+        change was needed for this one.
       </p>
     </div>
 
@@ -2571,9 +2626,11 @@
           <b>Reachability legend</b>: <code>External</code> — <code>enforce_entitlement</code>, caller reads only their
           own <code>client_id</code>; <code>Internal</code> — <code>require_internal</code>, external tokens 403
           regardless of <code>client_id</code>; <code>Internal/External*</code> — the function branches on whether a
-          <code>client_id</code> filter is supplied; <code>? check</code> — authenticated-only, no per-route entitlement
-          call found in this pass; <code>Unauthenticated</code> — no auth dependency at all. Purpose is a short
-          paraphrase of the route's own function name, not an expansion of its docstring.
+          <code>client_id</code> filter is supplied; <code>External†</code> — <code>enforce_entitlement</code> scoped
+          to the resource's real owning org resolved from a lookup, not a caller-supplied
+          <code>client_id</code>/<code>org_id</code> parameter, falling back to <code>Internal</code> when that lookup
+          can't resolve an owner. Purpose is a short paraphrase of the route's own function name, not an expansion of
+          its docstring.
         </p>
         <div class="scroll-x">
           <table>
@@ -3102,8 +3159,11 @@
               </tr>
               <tr>
                 <td><code>GET /investor-relations/archive-metadata</code></td>
-                <td>? check</td>
-                <td>Investor-relations archive metadata</td>
+                <td>Internal <span class="tag-ref">fixed 2026-08-21</span></td>
+                <td>
+                  Investor-relations archive metadata — cross-client catalogue, no <code>client_id</code> to entitle
+                  against
+                </td>
               </tr>
               <tr>
                 <td colspan="3">
@@ -3112,40 +3172,44 @@
               </tr>
               <tr>
                 <td><code>POST /upload-url</code></td>
-                <td>? check</td>
-                <td>Create a document upload URL</td>
+                <td>External <span class="tag-ref">fixed 2026-08-21</span></td>
+                <td>Create a document upload URL — entitlement-scoped via the request body's <code>org_id</code></td>
               </tr>
               <tr>
                 <td><code>GET /{document_id}/download-url</code></td>
-                <td>? check</td>
+                <td>External† <span class="tag-ref">fixed 2026-08-21</span></td>
                 <td>Create a document download URL</td>
               </tr>
               <tr>
                 <td><code>GET /</code> (list)</td>
-                <td>? check</td>
-                <td>List documents</td>
+                <td>External <span class="tag-ref">fixed 2026-08-21</span></td>
+                <td>List documents — entitlement-scoped via the existing <code>org_id</code> query param</td>
               </tr>
               <tr>
                 <td><code>DELETE /{document_id}</code></td>
-                <td>? check</td>
-                <td>Delete a document</td>
+                <td>Internal <span class="tag-ref">fixed 2026-08-21</span></td>
+                <td>Delete a document — admin-only, matching the handler's own pre-existing docstring</td>
               </tr>
               <tr>
                 <td><code>POST /api/v1/documents/{document_id}/send-for-signature</code></td>
-                <td>? check</td>
+                <td>External† <span class="tag-ref">fixed 2026-08-21</span></td>
                 <td>Send a document for DocuSign signature — fixture-backed (<code>MOCK_ENVELOPES</code>)</td>
               </tr>
               <tr>
                 <td><code>GET /api/v1/documents/{document_id}/signature-status</code></td>
-                <td>? check</td>
-                <td>Signature status — fixture-backed</td>
+                <td>External† <span class="tag-ref">fixed 2026-08-21</span></td>
+                <td>
+                  Signature status — fixture-backed only in mock mode; live mode already returned an honest
+                  <code>404</code>, see the real-vs-fixture callout above
+                </td>
               </tr>
               <tr>
                 <td><code>POST /api/v1/webhooks/docusign</code></td>
-                <td>? check</td>
+                <td>Internal <span class="tag-ref">fixed 2026-08-21</span></td>
                 <td>
-                  DocuSign webhook receiver — whether this validates a DocuSign signature independent of
-                  <code>create_api_auth</code> was not verified in this pass
+                  DocuSign webhook receiver — no client_id concept on a webhook payload, so internal-only is the
+                  strictest gate; whether this validates a DocuSign signature independent of
+                  <code>create_api_auth</code> is still not verified in this pass
                 </td>
               </tr>
               <tr>
@@ -3153,22 +3217,22 @@
               </tr>
               <tr>
                 <td><code>GET /trade-reporting</code></td>
-                <td>? check</td>
-                <td>Trade reporting</td>
+                <td>External <span class="tag-ref">fixed 2026-08-21</span></td>
+                <td>Trade reporting — entitlement-scoped via the existing <code>org_id</code> query param</td>
               </tr>
               <tr>
                 <td><code>GET /best-execution</code></td>
-                <td>? check</td>
+                <td>External <span class="tag-ref">fixed 2026-08-21</span></td>
                 <td>Best-execution analysis</td>
               </tr>
               <tr>
                 <td><code>GET /positions</code></td>
-                <td>? check</td>
+                <td>External <span class="tag-ref">fixed 2026-08-21</span></td>
                 <td>Large positions</td>
               </tr>
               <tr>
                 <td><code>GET /dashboard</code></td>
-                <td>? check</td>
+                <td>External <span class="tag-ref">fixed 2026-08-21</span></td>
                 <td>Compliance dashboard</td>
               </tr>
               <tr>
@@ -3176,8 +3240,11 @@
               </tr>
               <tr>
                 <td><code>GET /alerts</code></td>
-                <td>? check</td>
-                <td>Proxy alerts feed</td>
+                <td>Internal <span class="tag-ref">fixed 2026-08-21</span></td>
+                <td>
+                  Proxy alerts feed — the alerting-service proxy call carries no <code>client_id</code> filter at
+                  all, so internal-only is the strictest gate
+                </td>
               </tr>
               <tr>
                 <td colspan="3"><b>Reports</b> — reports.py, prefix /api/reports</td>
@@ -3197,8 +3264,11 @@
               </tr>
               <tr>
                 <td><code>GET /api/v1/stream/reports</code></td>
-                <td>Unauthenticated</td>
-                <td>Server-sent events, every report event, every client — see the callout above</td>
+                <td>Internal <span class="tag-ref">fixed 2026-08-21</span></td>
+                <td>
+                  Server-sent events, every report event, every client — no per-client_id scoping in the queue, so
+                  internal-only is the strictest fix; see the callout above
+                </td>
               </tr>
             </tbody>
           </table>
