@@ -235,8 +235,9 @@ impression:
       `/codex/06-coding-standards/` makes a claim this audit's findings contradict (e.g. a doc claiming a
       pattern is "always" applied that a finding shows isn't); correct in place. — unified-trading-pm@9031553091
       + evidence: see Progress Log entry below.
-- [ ] [AGENT] P0. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
-      plan's real landed state once every todo above is done or explicitly re-scoped.
+- [x] ✅ [AGENT] P0. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
+      plan's real landed state once every todo above is done or explicitly re-scoped. — unified-trading-pm@(pending)
+      + evidence: see Progress Log entry below.
 
 ## Progress Log
 
@@ -662,3 +663,19 @@ output. Four new tests in `test_hyperliquid_mock.py`: deadline threads into the 
 omitted when not supplied (unchanged prior behavior); a past deadline is rejected before any network call; a
 deadline further than 300s ahead is rejected. `quality-gates.sh` green (9028 passed, sentinel matched committed HEAD
 before the push-time rebase; QG re-ran and stayed green after).
+
+### 2026-08-21 — slot 21 close-out todo: epic W15 section re-confirmed (all P0 clear)
+
+Re-ran slot 10's confirmation now that the 2 P0s slot-7 flagged as still-open at the time (perp/CLOB
+slippage/deadline bounds line 283; native-REST client-order-id idempotency line 304) have both since landed —
+verified directly via `grep -c '^- \[x\]'`/`'^- \[ \]'` against this file: 44 done / 10 open of 54 todos. Listed
+every remaining `- [ ]` by line: 126 (P1 Orca/Raydium full account derivation), 188 (P1 sports-exchange audit,
+unrun), 192 (P2 sports-unity audit, unrun), 213 (P2 Aave typed-params dead-code decimals), 215 (P2 Morpho
+typed-params dead-code decimals), 217 (P1 Kamino market cross-check), 224 (P1 wire real on-chain calls behind the
+staking fail-closed guards), 226 (P1 EigenLayer approval + Karak vault address), 332 (P1 native rate-limit/
+blocking-sleep hardening), and this close-out todo itself. **Zero open P0s** — every remaining item is P1/P2 and
+each already carries its own explicit scope + deferral rationale in its todo text (dead code confirmed via grep,
+needs a vendored SDK/on-chain account fetch not yet available, etc.), satisfying this todo's own done-when ("done
+or explicitly re-scoped"). Corrected the epic's W15 section in place with this accurate zero-P0 breakdown
+(previously stale at "3 P0 fixes... blocking close-out", written before slot-7's two P0 fixes landed). Checkbox
+flipped. No production code was changed — this is a doc-accuracy confirmation only.

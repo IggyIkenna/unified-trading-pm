@@ -567,18 +567,18 @@ strategy's `ExposureAggregator` rather than keeping a duplicate local exposure v
 
 - [ ] [BACKEND] P0. **Security audit of every venue adaptor for vulnerabilities, especially DeFi.** On-chain write
       paths carry irreversible consequences; this is not a documentation exercise. **Status 2026-08-21 (re-verified
-      against the plan's live checkbox state, not the prior summary)**: dedicated plan
-      `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md` — 10 of 12 audit phases
-      complete (only the sports-exchange-adapter and sports-unity-subsystem phases haven't run yet); the CCXT
-      order-idempotency/fail-closed-credential-init and TradFi-gateway work this line previously listed as open has
-      since landed. **Still open, blocking close-out**: 3 P0 fixes (perp/CLOB slippage/deadline bounds +
-      idempotency for Hyperliquid/Aster/Pacifica/Bybit — a prior attempt at the idempotency fix was implemented but
-      never committed and is not present in any checkout; native-REST client-order-id idempotency for
-      Bitfinex/Bitget/Kraken), 5 P1 follow-ups (full Orca/Raydium Whirlpool/CLMM account derivation; Kamino
-      on-chain market cross-check; wiring the real on-chain calls behind the staking/restaking fail-closed guards;
-      EigenLayer pre-deposit approval + Karak vault address; native rate-limit/blocking-sleep hardening), 2 P2
-      dead-code fixes (Aave/Morpho typed-params decimals), the 2 unstarted audit phases above, and the plan's own
-      close-out phase. NOT yet done — see that plan's live Todos section, not this line, for current status.
+      against the plan's live checkbox state — 44/54 todos done, counted directly from the file, not estimated)**:
+      dedicated plan `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md` — **all P0
+      work is now landed, zero open P0 fixes remain** (perp/CLOB slippage/deadline bounds + idempotency for
+      Hyperliquid/Aster/Pacifica/Bybit, and native-REST client-order-id idempotency for Bitfinex/Bitget/Kraken —
+      the two lines this status previously listed as open — both shipped; the plan's own close-out todo confirming
+      this epic line is also now done). **Still open, none P0**: 2 of 12 audit phases unrun (sports-exchange-adapter
+      P1, sports-unity-subsystem P2 — neither yet started), 5 P1 follow-ups (full Orca/Raydium Whirlpool/CLMM
+      account derivation; Kamino on-chain market cross-check; wiring the real on-chain calls behind the
+      staking/restaking fail-closed guards; EigenLayer pre-deposit approval + Karak vault address; native
+      rate-limit/blocking-sleep hardening), 2 P2 dead-code fixes (Aave/Morpho typed-params decimals — confirmed
+      zero live callers). Every remaining item is explicitly scoped with its own rationale in the plan's Todos —
+      none is vague or open-ended. See that plan's live Todos section, not this line, for current per-item status.
 
 ## W16 — Triggers, latency and preflight
 
