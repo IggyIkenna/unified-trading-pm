@@ -175,6 +175,50 @@ Three audit findings collide with plans that already own those files. Per the fi
       `plans/epics/security_and_cross_cutting_master.md` (888 vs 877 lines, 87 differing) — determine how much is a
       shared epic section template versus genuinely duplicated content, and report before changing anything.
 
+### Findings surfaced during execution (2026-08-21)
+
+- [ ] [AGENT] P0. **Deleting `unified-trading-system-ui/context/` breaks a WORKSPACE-WIDE quality gate.**
+      `unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml` records entries under
+      `unified-trading-system-ui/context/api-contracts/canonical-schemas/crosscutting/errors/__init__.py` and
+      `unified-trading-system-ui/context/internal-contracts/schemas/events.py`. STEP 5.83 (ADAPTER CONTRACT-CALL
+      REGRESSION RATCHET) scans the whole workspace, not one repo, so with `context/` deleted the step hard-fails in
+      EVERY repo's gate — measured: it failed execution-service's otherwise-green run (its own gate body passed,
+      552s). Remove those two baseline entries in the same change that deletes `context/`. Removing entries LOWERS the
+      ratchet, which is the permitted direction. `check_runbook_execution_owner.py` also references the path — check it.
+
+
+- [ ] [OPERATOR] P0. **features-service and e2e-testing are coupled through the filesystem, and it broke 42 tests.**
+      Nine `features-service/tests/*/unit/test_smoke_matrix.py` files `importlib`-load a SIBLING REPO at runtime via
+      `_REPO_ROOT.parent / "e2e-testing" / "scripts" / <family> / "smoke_matrix.py"`, and three PRODUCTION modules
+      (`features_service/{delta_one,sports,commodity}/smoke.py`) do the same; `e2e-testing/scripts/features/run_backfill.py`
+      reaches back the other way. Provenance comment dates the split to 2026-07-31 "per script-homes.md". Measured
+      consequence: this plan's e2e-testing `smoke_matrix.py` consolidation made features-service's gate fail
+      **42 failed / 18,490 passed**, all 42 confined to `tests/{delta_one,multi_timeframe,volatility}/unit/test_smoke_matrix.py`.
+      The loader already knows the sibling can be absent ("e2e-testing sibling not present in this CI checkout"), so
+      these tests silently skip in CI and only bind locally — a check that does not check anything where it matters.
+      This is a cross-repo architectural finding, not a cleanup item: decide whether the coupling is legitimised (a
+      shared harness in UTL, which is a library and therefore legal) or removed.
+- [ ] [AGENT] P1. **Unblock the e2e-testing consolidation without breaking features-service.** The 5 rewritten
+      `scripts/<domain>/smoke_matrix.py` wrappers delegate to `_smoke_matrix_shared.py`, so the module-level symbols the
+      features-service tests assert on are no longer in the wrapper namespace (hence `test_submodule_reexport` failing).
+      Fix: have each wrapper re-export the shared symbols so the loaded module's namespace is unchanged. Do NOT land the
+      e2e-testing change before this, or features-service goes red.
+- [ ] [OPERATOR] P1. **e2e-testing cannot commit — a pre-existing `git stash pop` conflict blocks it.**
+      `e2e-testing/docs/VM_BACKFILL_GUIDE.md` is `UU` with live the git "Updated upstream" / "Stashed changes" marker pair
+      markers, predating this session and owned by whoever holds that stash. Git refuses to commit ANY path while an
+      unmerged entry exists, so this plan's e2e-testing work (-987 lines, gate green) is complete but unshippable.
+      Related signal: 122 stash entries in this slot's `unified-trading-pm` checkout.
+- [ ] [AGENT] P2. **`unified_api_contracts/internal/ml_backup.py` was investigated and NOT deleted** — it is still
+      present (25 KB). Retrieve the reason and either delete it or record why a backup file belongs in the SSOT
+      contracts package.
+- [ ] [DOC] P3. **Correct a false provenance claim before it propagates**: a worker reported `internal/risk.py` carried
+      "a live uncommitted WIP edit from another session (a DERIBIT margin-model addition)". Verified false — the file is
+      not dirty and `DERIBIT` appears 3x in both the working copy and `HEAD`. It is committed code.
+- [ ] [AGENT] P3. **Diagnostic-logging regression accepted during the ConfigReloaderBase migration**: the per-domain
+      `_on_*_reload` callbacks previously logged instrument/venue/flag COUNTS into the `CONFIG_CHANGED` event details;
+      `ConfigReloaderBase._handle_reload` emits only `{domain, service}`. strategy-service made the same trade in
+      `054fae03`. Confirm this is intended fleet-wide or restore the counts in the base class.
+
 ## Verified NOT problems — do not "fix" these
 
 - strategy-service's 18 v2 archetypes already share a real `BaseArchetypeEngineV2` (439 LOC) that is part of the
