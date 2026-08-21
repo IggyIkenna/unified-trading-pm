@@ -203,12 +203,18 @@ REUSES the frameworks that already exist rather than building new ones:
 - [ ] [OPERATOR] P2. Versifi public API docs — none discoverable (checked 2026-08-21; versifi.io has no developer
       section) despite its declared `ws_trades` operation; supply a doc link or credentialed access. Its declaration
       carries an explicit all-None unverified `WsProtocolSpec` until then.
-- [ ] [BACKEND] P1. Census closure — extend the `registry_census.py` drift checks so every venue in
-      `VENUE_TO_ADAPTER_KEY` either carries a populated ws-protocol + error-code declaration OR an explicit honest
-      absence marker (`no_websocket_surface` / `no_published_error_codes`) — silent gaps impossible. Also dedupe the
-      pre-existing duplicate `(venue, code)` keys found 2026-08-21 in the kalshi/hyperliquid/polymarket maps
-      (duplicates are dead code under the linear-scan classify). Done-when — census check green over the full
-      registry and wired into UAC quality gates.
+- [x] [BACKEND] P1. Census closure — ✅ unified-api-contracts@235acfea88. `registry_census.py` checks 7-10 +
+      `errors/_census_registry.py` (5 `ERROR_KEY_ALIASES`: deribit_options/kalshi_perp/polymarket_perp/fx/
+      aave_oracle; 41 `ERROR_CODES_HONEST_ABSENCE` adapter keys — on-chain protocols, oracles, wrapped-staking
+      tokens, jupiter — each with a citation-grade reason; phantom/stale/dangling entries are error-level);
+      66/66 capabilities declare `ws_protocol`. Dedupe: 14 dead-duplicate `(venue, code)` keys purged across
+      kalshi/hyperliquid/polymarket/alchemy/kucoin — every copy carried identical action/retry flags (measured),
+      so classification outcomes are unchanged; kalshi moved from the altdata family into its prediction home
+      (one venue key, one family). Wired as UAC STEP 5.110 (fails the repo on any error-level finding; baseline 0).
+- [ ] [BACKEND] P2. Consolidate the six venue-error keys still declared in two family maps (alchemy altdata+infra,
+      defillama, hyperliquid defi+onchain_perps, kalshi prediction+sports, polymarket prediction+sports, thegraph)
+      into one family each — the census `error_key_multi_family` WARNING names them; first-match order across
+      families is a merge-order accident (the 2026-08-21 tardis shadowing). Done-when — that warning count is 0.
 
 ## Phase C — runtime rotation framework
 
@@ -254,11 +260,15 @@ REUSES the frameworks that already exist rather than building new ones:
       immediately. `ws_feeds.py` gains a uniform base `close()`; `engine/modes/live/data_source.py` feeds ticks to
       an optional session manager. 3 tests prove a dropped private stream terminates resynced, never stale
       (initial-resync-before-first-update, close→rotate→resync-before-next-update ordering, stop semantics).
-- [ ] [BACKEND] P0. Wire the Phase-B error-code registry into every consumer — MTDS shard loops
-      (`classify_venue_error()` per `/codex/04-architecture/shard-level-failure-isolation.md`), instruments-service,
-      execution adaptors, strategy-service balance queries. This EXECUTES `system_readiness_master` W14's "Every
-      venue error code understood across every consumer" P0 — flip that epic checkbox with evidence when this lands.
-      Done-when — a census test asserts zero unmapped codes for registered venues; epic checkbox flipped.
+- [x] [BACKEND] P0. Error-code registry wired into every consumer — ✅ unified-api-contracts@235acfea88. Every
+      consumer family already classifies through the UAC registry (`classify_venue_error` call sites measured
+      2026-08-22: MTDS 117, instruments-service 60, execution-service 85, strategy-service 5 — no per-service
+      tables), so the corpus landed @3b13629f9f reaches them by construction; the done-when artifact is
+      `tests/unit/test_registry_census_ws_resilience.py` — census checks 7-10 assert every adaptered venue
+      resolves a venue-error table (by name, adapter key, or explicit alias) or an explicit honest-absence marker,
+      every capability declares its ws protocol, no dead-duplicate `(venue, code)` keys, and the registries cannot
+      rot (phantom/stale/dangling are errors) — 0 error-level findings over all 187 venues; gated as UAC
+      STEP 5.110. `system_readiness_master` W14 checkbox flipped with this evidence.
 - [ ] [BACKEND] P2. Hoist the ws-resilience symbols onto the sanctioned import facades — export `WsProtocolSpec`
       from UAC's root `unified_api_contracts` facade and the `WsSession*` family from UTL's root facade, then drop
       the three `# noqa: qg-deep-import` markers this phase added (`streaming/ws_session_manager.py`,
@@ -375,6 +385,18 @@ REUSES the frameworks that already exist rather than building new ones:
   standalone reruns = a stable condition, not contention** — that rule is what made me read the traceback instead
   of retrying a third time. deployment-service is gate-green on its own files but tree-blocked by a peer's live
   untracked terraform WIP in the shared slot checkout (protected, not inherited — see Deferred).
+- **2026-08-22 (batch 5 — census closure landed)** — unified-api-contracts@235acfea88 (full QG green 399s incl.
+  the new STEP 5.110). C5 + census-closure flipped; `system_readiness_master` W14 "every venue error code
+  understood" flipped with the census-test evidence. Measured before writing a line of census code: 66/66
+  capabilities carried `ws_protocol` (the ws half was already closed by Phase B); 98/187 venues had no error key
+  by venue or adapter name — 52 of them `NO_ADAPTER_YET` (no producer → no surface yet, already a check-1
+  warning) and 46 adapter keys needing an explicit decision, split 5 aliases / 41 honest absences. **Duplicate
+  keys were cross-FAMILY, not in-file**: kalshi was declared in three family maps (altdata's generic
+  `_rest_macro_errors` expansion, prediction, sports), hyperliquid in defi + onchain_perps, polymarket in
+  prediction + sports, alchemy in altdata + infra — `_merge_venue_error_maps` concatenates, so merge order
+  decided the winner (same class as the tardis shadowing). Removed with a guarded line-based script (exact-one
+  match asserted per spec) rather than 18 hand edits; the remaining non-duplicate cross-family splits now
+  surface as a census WARNING with a P2 consolidation todo.
 
 ## Deferred work after 2026-08-21
 

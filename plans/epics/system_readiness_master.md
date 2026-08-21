@@ -553,11 +553,14 @@ strategy's `ExposureAggregator` rather than keeping a duplicate local exposure v
 
 ## W14 — Exchange contract fidelity
 
-- [ ] [BACKEND] P0. **Every venue error code understood across every consumer** — MTDS, instruments-service, execution
-      adaptors, and strategy-service balance queries. Every request and response schema, code and format.
-      → Executed by `/plans/active/venue_websocket_resilience_and_error_code_mapping_2026_08_21.md` (Phase B
-      exhaustive per-venue error-code research from public API docs + Phase C consumer wiring; that plan flips this
-      checkbox with census-test evidence when the wiring lands).
+- [x] [BACKEND] P0. **Every venue error code understood across every consumer** — ✅ unified-api-contracts@3b13629f9f
+      (exhaustive doc-cited per-venue error tables, ~2,000 codes across CeFi/DeFi/TradFi/sports/prediction/altdata)
+      + unified-api-contracts@235acfea88 (census closure: every adaptered venue resolves a venue-error table or an
+      explicit honest-absence marker, every capability declares its ws protocol, zero dead-duplicate keys —
+      `tests/unit/test_registry_census_ws_resilience.py`, gated as UAC STEP 5.110). Consumers classify through the
+      UAC registry by construction (`classify_venue_error` call sites measured 2026-08-22: MTDS 117,
+      instruments-service 60, execution-service 85, strategy-service 5). Executed by
+      `/plans/active/venue_websocket_resilience_and_error_code_mapping_2026_08_21.md`.
 - [ ] [BACKEND] P0. **Pin the exchange version tested**, so a venue-side version change triggers a **cassette re-run to
       detect drift** — and only then, not on every build.
 - [ ] [OPERATOR] P0. **Test accounts with credentials for each venue** — a prerequisite for the above, and an operator
