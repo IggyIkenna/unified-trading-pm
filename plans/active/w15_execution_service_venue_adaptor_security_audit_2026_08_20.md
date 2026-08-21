@@ -209,7 +209,8 @@ impression:
 - [x] ✅ [BACKEND] P0. Correct CCTP status lookup and enforce attestation timeout/terminal failure semantics; HIGH finding: checklist point 7. — execution-service@004bd5c15c + evidence: see Progress Log 2026-08-21 slot-21 CCTP attestation-timeout entry below.
 - [x] ✅ [BACKEND] P0. Harden Aave lending writes: reject non-positive/non-integral amounts and invalid flash-loan vectors, fail closed instead of simulating success when live credentials/executor are absent, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3, 6, and 7 (`aave.py`, `aave_live.py`). — execution-service@9a2795bea7 + evidence: quality-gates.sh green (152s, sentinel matched committed HEAD); 13 new regression tests (`tests/defi_execution/unit/test_aave_hardening.py`); see Progress Log entry below.
 - [ ] [BACKEND] P2. Fix Aave typed-params entry points (`supply_from_params`, `borrow_from_params`, `repay_from_params`, `flash_loan_from_params`) which unconditionally divide the wei amount by `10**18` regardless of the token's actual decimals -- same bug class as the already-tracked Morpho decimals finding above, but for Aave. Currently dead code (zero callers anywhere in the repo, confirmed via grep), so P2 not P0/P1; MEDIUM finding: checklist point 3 (`aave.py:739,747,755,763` -- the `Decimal(params.amount) / Decimal(10**18)` conversions). (repo: execution-service)
-- [ ] [BACKEND] P0. Harden Morpho Blue writes: validate amount/LLTV/market-id inputs, use configured loan-token decimals rather than unconditional 18-decimal conversion, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3 and 6 (`morpho.py`).
+- [x] ✅ [BACKEND] P0. Harden Morpho Blue writes: validate amount/LLTV/market-id inputs, use configured loan-token decimals rather than unconditional 18-decimal conversion, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3 and 6 (`morpho.py`). — execution-service@77e649239a + evidence: quality-gates.sh green (153s, sentinel matched committed HEAD); 12 new regression tests (`tests/defi_execution/unit/test_morpho_hardening.py`); see Progress Log entry below.
+- [ ] [BACKEND] P2. Fix Morpho typed-params entry points (`supply_from_params`, `borrow_from_params`, `repay_from_params`, `flash_loan_from_params`) which unconditionally divide the wei amount by `10**18` regardless of the loan token's actual decimals -- same bug class as the already-tracked Aave P2 item above, but for Morpho. Currently dead code (zero callers anywhere in the repo, confirmed via grep) and the synthetic `market_id` these methods construct (`f"{loanToken}_{collateralToken}"`) does not match any real `config["morpho_markets"]` key, so the live branch already fails closed via the just-landed "market not found" error regardless; only the backtest-simulation branch is affected. MEDIUM finding: checklist point 3 (`morpho.py:499-524` -- the `Decimal(params.amount) / Decimal(10**18)` conversions). (repo: execution-service)
 - [ ] [BACKEND] P0. Validate Kamino transaction intent before signing: enforce positive amount and address/mint relationships, inspect/allowlist fee payer, programs, accounts, and token-approval scope in API-produced transactions, and add retry idempotency; HIGH findings: checklist points 2, 3, 5, and 6 (`kamino.py`).
 - [ ] [BACKEND] P0. Harden Idle vault writes: validate positive amounts, enforce caller minimum-output/deadline bounds for mint/redeem, fail closed instead of simulating success in incomplete live mode, and add durable idempotency across approval plus mint retries; HIGH findings: checklist points 3, 4, 6, and 7 (`idle.py`).
 - [ ] [BACKEND] P0. Harden Lido, EtherFi, and Rocket Pool writes: validate finite positive amounts before `to_wei()`, fail closed when `is_live` lacks loaded credentials instead of entering simulation, and add durable idempotency across approval-plus-wrap sequences and retries; HIGH findings: checklist points 3 and 6 (`lido.py:217-292,316-359,376-389`; `etherfi.py:211-325`; `rocket_pool.py:160-214`).
@@ -695,3 +696,56 @@ and an ambiguous exception blocks a retry until `clear_stale_operation()` is cal
 before committing, which is the wrong order per RULES.md § 2 and produced a sentinel pinned to the
 pre-fix HEAD; re-ran after committing to pin the correct SHA before shipping). Shipped via
 quickmerge — execution-service@9a2795bea7; post-push ancestry independently verified.
+
+### 2026-08-21 — slot 25 Morpho Blue lending-write hardening
+
+Fixed the two HIGH findings the 2026-08-20 lending audit recorded for `morpho.py`'s live write path
+(`_live_market_call`, `morpho.py:429-454,456-477` in the pre-fix line numbering) — checklist points 3
+(input validation) and 6 (idempotency). The backtest/simulation path (`supply()`/`withdraw()`/`borrow()`/
+`repay()`'s non-live branch) is unaffected by design: the audit's HIGH findings cited only the live path,
+and the simulation path has no wei conversion to get wrong.
+
+- **Point 3 (input validation):** `_LiveMarketConfig` gained a required `loan_token_decimals: int` field —
+  a live call with no `loan_token_decimals` in `config["morpho_markets"][market_id]` now fails closed with
+  an explicit error rather than assuming 18 decimals (the root of the original finding: a six-decimal loan
+  token like USDC would have been encoded at 1e12x the intended on-chain value). New module-level
+  validators — `_validate_morpho_amount()` (finite/positive/precision-bounded-by-decimals, mirrors
+  `aave_live.py:_validate_amount()`), `_validate_lltv()` (WAD-scaled, must satisfy `0 < lltv < 1e18` —
+  Morpho Blue never permits a market at/above 100% LLTV), and `_validate_market_id_bytes32()` (must decode
+  to exactly 32 bytes, replacing the bare `bytes.fromhex()` the finding cited, reused in `get_live_position()`
+  too) — all run before any signing. `_live_market_call()` was split into `_resolve_live_market()`
+  (lookup + validation, raises `ValueError`/`KeyError`) and `_send_market_operation()` (the actual
+  approve-plus-write) to stay under the 50-line method-size cap once the new validation/idempotency logic
+  was added.
+- **Point 6 (durable idempotency):** new `execution_service/defi_execution/protocols/morpho_idempotency.py`
+  module, modeled directly on `aave_idempotency.py` (same `TransferStateStore` Protocol reused from
+  `bridge.py`, config key `transfer_state_store`, namespace `"morpho"`). Each live write computes a
+  per-request `intent_key` (wallet + chain + market_id + operation + wei-amount) and routes through
+  `execute_morpho_op_idempotent()`: a completed prior attempt replays its cached `TxResult` with zero
+  resubmission; a clean returned failure (revert, unknown market) clears the lock so a fresh retry can
+  proceed; an *ambiguous* outcome (an exception escaping the approve/write call) leaves the operation
+  locked and raises `MorphoOperationInFlightError` on the next attempt. `MorphoConnector.clear_stale_operation
+  (intent_key)` is the explicit escape hatch, to be called only after confirming out-of-band (block
+  explorer / wallet nonce history) that a locked attempt never landed. Same disclosed scope boundary as
+  Aave's: no generic receipt-based result-recovery path, in-process + optional durable-store idempotency
+  only.
+
+**Unrelated finding surfaced, tracked rather than inline-fixed (outside this todo's cited scope):**
+`supply_from_params`/`borrow_from_params`/`repay_from_params`/`flash_loan_from_params` (the UAC
+typed-params entry points, `morpho.py:499-524`) unconditionally divide the wei amount by `10**18`
+regardless of the actual loan token's decimals — the same bug class as the already-tracked Aave P2 item,
+now tracked symmetrically for Morpho as a new P2 triage todo above. Confirmed dead code (zero callers via
+grep) and the live branch already fails closed via this fix's "market not found" error (the synthetic
+`market_id` these methods build from raw token addresses does not match a real `morpho_markets` config
+key), so only the backtest-simulation branch is actually affected — latent, not currently exploitable.
+
+12 new regression tests added (`tests/defi_execution/unit/test_morpho_hardening.py`): missing
+`loan_token_decimals` fails closed, non-positive/over-precision amount rejection, zero/at-or-above-WAD
+LLTV rejection, malformed `market_id_bytes32` rejection, configured (non-18) decimals correctly threaded
+into the wei amount sent on-chain, backtest-mode regression check, idempotent replay with zero
+resubmission, a different amount is NOT deduped, a clean revert clears the lock for a fresh retry, and an
+ambiguous exception blocks a retry until `clear_stale_operation()` is called. Full `quality-gates.sh`
+green (153s, sentinel matched the committed HEAD — first pass caught a method-size violation on
+`_live_market_call` at 75 lines against the 50-line cap, fixed via the `_resolve_live_market()`/
+`_send_market_operation()` split above, then re-verified green). Shipped via quickmerge —
+execution-service@77e649239a; post-push ancestry independently verified.
