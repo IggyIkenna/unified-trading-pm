@@ -222,8 +222,18 @@ duplicated.
       misclassified `unexplained`) and is a no-op, never a regression, when the respawn wins first. New test
       asserts the activity event; full quality-gates.sh green.
 - [ ] [INFRA] P3. `death_forensics.check_external_kill`'s EXECVE-based search is structurally blind to AO's own
-      `kill_session()` calls (direct `os.kill()` syscalls, not an execve'd subprocess) — needs a different audit
-      rule type (auditd SIGNAL records) to close, not attempted this session.
+      `_reap_pane_tree` sub-step (direct `os.kill()` syscalls, not an execve'd subprocess) — needs a different audit
+      rule type (auditd SIGNAL records) to close. **Narrowed 2026-08-21**: `kill_session()`'s MAIN teardown IS
+      execve-visible (confirmed live on slot 25 via a real `ausearch` hit on `tmux kill-session`) — only the
+      pane's descendant-process REAPING sub-step stays invisible, a narrower gap than originally stated.
+      **Not implemented this session (deliberately, not just deferred): a real, newly-discovered risk.**
+      This host's auditd retention is already only ~25-30 minutes — 5 files x 8MB, rotating every ~6
+      minutes under this host's real event volume (measured this session investigating two historical
+      deaths). Arming a host-wide SIGNAL watch on every `kill` syscall (not just AO's own) would add
+      meaningfully more audit volume fleet-wide, shrinking that already-tight window further — a real
+      tradeoff between closing this blind spot and making EVERY OTHER forensic investigation on this host
+      (not just AO's) have even less retained history to search. Needs an explicit design/operator decision
+      on that tradeoff before implementing, not a default yes.
 - [ ] [DATA] P3. GLM shared-key blind quota estimator — no clean fix without a real upstream quota endpoint;
       consider pattern-matching the literal `[1308][Usage limit reached...]` 429 body as a stopgap
       classification signal if this recurs at volume.
