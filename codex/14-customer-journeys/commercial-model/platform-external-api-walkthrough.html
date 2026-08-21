@@ -1165,7 +1165,7 @@
       <p style="font-size: 0.9rem; color: var(--ink-3)">
         Source: <code>/codex/09-strategy/operational/paper-batch-live-reconciliation.md</code> — the determinism
         spine SSOT (ε=0 paper↔batch proof; live↔paper delta = execution alpha). See also
-        <a href="#s14">§14</a> (readiness across batch, paper, live).
+        <a href="#s16">§16</a> (the same-code-path guarantee behind it).
       </p>
     </div>
     <p>
@@ -1325,9 +1325,6 @@
       </li>
       <li>
         <a href="#s13"><span class="num">13</span><span class="ttl">Treasury, wallets, transfers</span></a>
-      </li>
-      <li>
-        <a href="#s14"><span class="num">14</span><span class="ttl">Readiness: batch, paper, live</span></a>
       </li>
       <li>
         <a href="#s15"><span class="num">15</span><span class="ttl">Security and the audit record</span></a>
@@ -2325,7 +2322,7 @@
       <p style="font-size: 0.95rem; color: var(--ink-3)">
         Structure shown with representative entries beneath the asset-group headers. Each header's ready / not-ready /
         unverified split is measured — DeFi refreshed 2026-08-19 (a clean re-run with all three service probes
-        reachable; CeFi/TradFi/Sports/Prediction/Unattributed remain the 2026-08-18 pass in <a href="#s14">§14</a>, not
+        reachable; CeFi/TradFi/Sports/Prediction/Unattributed remain the 2026-08-18 pass, not
         re-verified this session). The asset-group-level coverage percentage is now measured (below, 2026-08-19);
         per-venue / per-data-type cells inside each tree remain <b class="pend">pending</b> at that finer grain — the
         hierarchy, grouping and controls are what this draft is asking you to react to. DeFi's chain level is the
@@ -2453,8 +2450,11 @@
           in its dependency chain; and <code>measure_honest_coverage.py</code> (the script that writes that manifest)
           partitions by asset_group structurally — one manifest bucket per asset_group, read from a static per-group
           bucket table, never a per-venue classifier call. <b class="ev ev-verified">✓ verified</b> by reading both call
-          chains, 2026-08-19. Why every group still reads 0 ready is answered once, not per group — see
-          <a href="#s14">§14</a>'s "Reading &quot;ready = 0&quot; correctly".
+          chains, 2026-08-19. Why every group still reads 0 ready is answered once, not per group: every venue is
+          graded against an 8-leg readiness model — declared, instruments-service, market data, processing,
+          features, strategy, execution transfers, execution instruction — and one failing or unchecked leg fails
+          the venue, so a strict grader with checks still being wired up returns zero by construction rather than
+          by defect.
         </p>
       </div>
 
@@ -2651,7 +2651,7 @@
               <span class="nm"><code>BINANCE-FUTURES</code></span
               ><span class="meta"
                 ><b class="rdy" title="captured&gt;0 for all 7 observed data_types">ready</b>
-                <span class="u">(5 data types)</span></span
+                <span class="u">(4 data types)</span></span
               >
             </summary>
             <div class="tree-body">
@@ -2820,40 +2820,6 @@
                       </tr>
                     </tbody>
                   </table>
-                </div>
-              </details>
-              <details class="tree">
-                <summary>
-                  <span class="nm">Unclassified <span class="u">— instrument_type unresolved</span></span
-                  ><span class="meta"><span class="u">1 data type</span></span>
-                </summary>
-                <div class="tree-body">
-                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 0 0 6px">
-                    No roster instrument_type resolved this (venue, data_type) cell against
-                    <code>valid_data_types_for_venue_instrument_type</code> (<code>venue_instrument_type_axis.py</code>)
-                    — a structural classification gap, not a data-coverage gap; the Coverage state below is still the
-                    venue's real measured state.
-                  </p>
-                  <div class="tree-body scroll-x">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Data type</th>
-                          <th>Declared since</th>
-                          <th>Coverage</th>
-                          <th>Granularity</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><code>futures_chain</code></td>
-                          <td>2019-11-17</td>
-                          <td><b class="rdy" title="captured&gt;0 for all 7 observed data_types">ready</b></td>
-                          <td>per chain snapshot</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
                 </div>
               </details>
             </div>
@@ -3681,7 +3647,7 @@
               <span class="nm"><code>BYBIT</code></span
               ><span class="meta"
                 ><b class="rdy" title="captured&gt;0 for all 7 observed data_types">ready</b>
-                <span class="u">(5 data types)</span></span
+                <span class="u">(4 data types)</span></span
               >
             </summary>
             <div class="tree-body">
@@ -3850,40 +3816,6 @@
                       </tr>
                     </tbody>
                   </table>
-                </div>
-              </details>
-              <details class="tree">
-                <summary>
-                  <span class="nm">Unclassified <span class="u">— instrument_type unresolved</span></span
-                  ><span class="meta"><span class="u">1 data type</span></span>
-                </summary>
-                <div class="tree-body">
-                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 0 0 6px">
-                    No roster instrument_type resolved this (venue, data_type) cell against
-                    <code>valid_data_types_for_venue_instrument_type</code> (<code>venue_instrument_type_axis.py</code>)
-                    — a structural classification gap, not a data-coverage gap; the Coverage state below is still the
-                    venue's real measured state.
-                  </p>
-                  <div class="tree-body scroll-x">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Data type</th>
-                          <th>Declared since</th>
-                          <th>Coverage</th>
-                          <th>Granularity</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><code>futures_chain</code></td>
-                          <td>2020-01-01</td>
-                          <td><b class="rdy" title="captured&gt;0 for all 7 observed data_types">ready</b></td>
-                          <td>per chain snapshot</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
                 </div>
               </details>
             </div>
@@ -4580,7 +4512,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm">Futures chain</span><span class="meta"><span class="u">1 data type</span></span>
+                  <span class="nm">Futures chain</span><span class="meta"><span class="u">2 data types</span></span>
                 </summary>
                 <div class="tree-body scroll-x">
                   <table>
@@ -4604,6 +4536,18 @@
                           >
                         </td>
                         <td>tick</td>
+                      </tr>
+                      <tr>
+                        <td><code>futures_chain</code></td>
+                        <td>2019-03-30</td>
+                        <td>
+                          <b
+                            class="nrdy"
+                            title="zero captured for data_types with a non-zero denominator: [&#x27;trades&#x27;, &#x27;trades&#x27;]"
+                            >not-ready</b
+                          >
+                        </td>
+                        <td>per chain snapshot</td>
                       </tr>
                     </tbody>
                   </table>
@@ -4611,7 +4555,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm">Options chain</span><span class="meta"><span class="u">1 data type</span></span>
+                  <span class="nm">Options chain</span><span class="meta"><span class="u">2 data types</span></span>
                 </summary>
                 <div class="tree-body scroll-x">
                   <table>
@@ -4635,6 +4579,18 @@
                           >
                         </td>
                         <td>tick</td>
+                      </tr>
+                      <tr>
+                        <td><code>options_chain</code></td>
+                        <td>2019-03-30</td>
+                        <td>
+                          <b
+                            class="nrdy"
+                            title="zero captured for data_types with a non-zero denominator: [&#x27;trades&#x27;, &#x27;trades&#x27;]"
+                            >not-ready</b
+                          >
+                        </td>
+                        <td>per chain snapshot</td>
                       </tr>
                     </tbody>
                   </table>
@@ -4736,58 +4692,6 @@
                       </tr>
                     </tbody>
                   </table>
-                </div>
-              </details>
-              <details class="tree">
-                <summary>
-                  <span class="nm">Unclassified <span class="u">— instrument_type unresolved</span></span
-                  ><span class="meta"><span class="u">2 data types</span></span>
-                </summary>
-                <div class="tree-body">
-                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 0 0 6px">
-                    No roster instrument_type resolved this (venue, data_type) cell against
-                    <code>valid_data_types_for_venue_instrument_type</code> (<code>venue_instrument_type_axis.py</code>)
-                    — a structural classification gap, not a data-coverage gap; the Coverage state below is still the
-                    venue's real measured state.
-                  </p>
-                  <div class="tree-body scroll-x">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Data type</th>
-                          <th>Declared since</th>
-                          <th>Coverage</th>
-                          <th>Granularity</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><code>futures_chain</code></td>
-                          <td>2019-03-30</td>
-                          <td>
-                            <b
-                              class="nrdy"
-                              title="zero captured for data_types with a non-zero denominator: [&#x27;trades&#x27;, &#x27;trades&#x27;]"
-                              >not-ready</b
-                            >
-                          </td>
-                          <td>per chain snapshot</td>
-                        </tr>
-                        <tr>
-                          <td><code>options_chain</code></td>
-                          <td>2019-03-30</td>
-                          <td>
-                            <b
-                              class="nrdy"
-                              title="zero captured for data_types with a non-zero denominator: [&#x27;trades&#x27;, &#x27;trades&#x27;]"
-                              >not-ready</b
-                            >
-                          </td>
-                          <td>per chain snapshot</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
                 </div>
               </details>
             </div>
@@ -5134,8 +5038,7 @@
             <summary>
               <span class="nm"><code>KALSHI-PERP</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u">— no coverage.json shard cells observed for this venue</span>
+                ><span class="u">coming soon (venue-side onboarding)</span>
                 <span class="u">(1 data type)</span></span
               >
             </summary>
@@ -5158,14 +5061,15 @@
                       <tr>
                         <td><code>perp_funding</code></td>
                         <td>2026-06-03</td>
-                        <td><span class="pend">unverified</span></td>
+                        <td><span class="u">coming soon</span></td>
                         <td>per interval</td>
                       </tr>
                     </tbody>
                   </table>
                   <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
-                    venue.
+                    Capture adapter is built (<code>instruments_service.reference_data.adapters.cefi.kalshi_perp</code>,
+                    <code>market_tick_data_service.live.connectors.kalshi_perp_ws</code>) — live coverage is coming
+                    soon (venue-side onboarding), pending Kalshi-side perpetuals trading rights.
                   </p>
                 </div>
               </details>
@@ -6233,18 +6137,16 @@
             <summary>
               <span class="nm"><code>PACIFICA-SOLANA</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u"
-                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
-                  the 2026-08-19 coverage manifest</span
-                ></span
+                ><span class="u">coming soon (venue-side onboarding)</span></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
-                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
-                instrument-type or data-type breakdown from.
+                Capture adapter is built (<code>instruments_service.reference_data.adapters.cefi.pacifica</code>,
+                <code>market_tick_data_service.live.connectors.pacifica_solana_perp_ws</code>,
+                <code>execution_service.defi_execution.protocols.pacifica</code>) — no data_types are registered yet
+                pending Pacifica-side onboarding, so there is nothing to derive an instrument-type or data-type
+                breakdown from today.
               </p>
             </div>
           </details>
@@ -6252,8 +6154,7 @@
             <summary>
               <span class="nm"><code>POLYMARKET-PERP</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u">— no coverage.json shard cells observed for this venue</span>
+                ><span class="u">coming soon (venue-side onboarding)</span>
                 <span class="u">(1 data type)</span></span
               >
             </summary>
@@ -6276,14 +6177,15 @@
                       <tr>
                         <td><code>perp_funding</code></td>
                         <td>2026-08-07</td>
-                        <td><span class="pend">unverified</span></td>
+                        <td><span class="u">coming soon</span></td>
                         <td>per interval</td>
                       </tr>
                     </tbody>
                   </table>
                   <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
-                    venue.
+                    Capture adapter is built (<code>instruments_service.reference_data.adapters.cefi.polymarket_perp</code>,
+                    <code>market_tick_data_service.live.connectors.polymarket_perp_ws</code>) — live coverage is
+                    coming soon (venue-side onboarding), pending Polymarket-side perpetuals trading rights.
                   </p>
                 </div>
               </details>
@@ -12327,11 +12229,12 @@
         <summary><span class="nm">TradFi</span><span class="meta">0 ready / 8 not-ready / 0 unverified</span></summary>
         <div class="tree-body">
           <p style="font-size: 0.93rem; color: var(--ink-3)">
-            All 8 registry-declared TradFi venues (<code>VENUES_BY_ASSET_GROUP["tradfi"]</code>). Vendor-sourced
+            All 8 registry-declared TradFi venues (<code>VENUES_BY_ASSET_GROUP[“tradfi”]</code>). Vendor-sourced
             (one primary provider, per internal TradFi sourcing documentation); the boundary disclosure differs per
-            dataset and is stated inline where it diverges. <code>FRED</code> carries data types
-            (<code>yield_curve</code>, <code>ohlcv_1d</code>) that the instrument-type roster could not classify — shown
-            under its own “Unclassified” node rather than folded into a category it does not belong to.
+            dataset and is stated inline where it diverges. <code>FRED</code>'s <code>yield_curve</code> and
+            <code>ohlcv_1d</code> data types resolve to the <b>Bond</b> and <b>Index</b> instrument-type buckets
+            respectively, via an explicit venue-scoped classification override
+            (<code>unified-api-contracts@f79cd936</code>).
           </p>
           <details class="tree">
             <summary>
@@ -13312,54 +13215,64 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm">Unclassified <span class="u">— instrument_type unresolved</span></span
-                  ><span class="meta"><span class="u">2 data types</span></span>
+                  <span class="nm">Index</span><span class="meta"><span class="u">1 data type</span></span>
                 </summary>
-                <div class="tree-body">
-                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 0 0 6px">
-                    No roster instrument_type resolved this (venue, data_type) cell against
-                    <code>valid_data_types_for_venue_instrument_type</code> (<code>venue_instrument_type_axis.py</code>)
-                    — a structural classification gap, not a data-coverage gap; the Coverage state below is still the
-                    venue's real measured state.
-                  </p>
-                  <div class="tree-body scroll-x">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Data type</th>
-                          <th>Declared since</th>
-                          <th>Coverage</th>
-                          <th>Granularity</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><code>ohlcv_1d</code></td>
-                          <td>1962-01-02</td>
-                          <td>
-                            <b
-                              class="nrdy"
-                              title="zero captured for data_types with a non-zero denominator: [&#x27;ohlcv_15m&#x27;, &#x27;ohlcv_15m&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_24h&#x27;, &#x27;ohlcv_24h&#x27;]"
-                              >not-ready</b
-                            >
-                          </td>
-                          <td>1d</td>
-                        </tr>
-                        <tr>
-                          <td><code>yield_curve</code></td>
-                          <td>1962-01-02</td>
-                          <td>
-                            <b
-                              class="nrdy"
-                              title="zero captured for data_types with a non-zero denominator: [&#x27;ohlcv_15m&#x27;, &#x27;ohlcv_15m&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_24h&#x27;, &#x27;ohlcv_24h&#x27;]"
-                              >not-ready</b
-                            >
-                          </td>
-                          <td>per curve snapshot</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                <div class="tree-body scroll-x">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Data type</th>
+                        <th>Declared since</th>
+                        <th>Coverage</th>
+                        <th>Granularity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>ohlcv_1d</code></td>
+                        <td>1962-01-02</td>
+                        <td>
+                          <b
+                            class="nrdy"
+                            title="zero captured for data_types with a non-zero denominator: [&#x27;ohlcv_15m&#x27;, &#x27;ohlcv_15m&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_24h&#x27;, &#x27;ohlcv_24h&#x27;]"
+                            >not-ready</b
+                          >
+                        </td>
+                        <td>1d</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+              <details class="tree">
+                <summary>
+                  <span class="nm">Bond</span><span class="meta"><span class="u">1 data type</span></span>
+                </summary>
+                <div class="tree-body scroll-x">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Data type</th>
+                        <th>Declared since</th>
+                        <th>Coverage</th>
+                        <th>Granularity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>yield_curve</code></td>
+                        <td>1962-01-02</td>
+                        <td>
+                          <b
+                            class="nrdy"
+                            title="zero captured for data_types with a non-zero denominator: [&#x27;ohlcv_15m&#x27;, &#x27;ohlcv_15m&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_1s&#x27;, &#x27;ohlcv_24h&#x27;, &#x27;ohlcv_24h&#x27;]"
+                            >not-ready</b
+                          >
+                        </td>
+                        <td>per curve snapshot</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </details>
             </div>
@@ -15100,30 +15013,30 @@
         </summary>
         <div class="tree-body">
           <p style="font-size: 0.93rem; color: var(--ink-3)">
-            All 39 registry-declared sports venues (<code>VENUES_BY_ASSET_GROUP["sports"]</code>). Carries the explicit
+            All 39 registry-declared sports venues (<code>VENUES_BY_ASSET_GROUP["sports"]</code>) at last measurement
+            (2026-08-19) — 6 since retired by 2026-08-21 operator ruling
+            (<code>unified-api-contracts@710db834</code>: BETOPENLY, NOVIG, ONEXBET, PROPHETX, plus BETMGM/BETWAY
+            whose historical-rows disposition is still pending), not yet re-measured. Carries the explicit
             2020-06-06 data floor (<code>sports-2020-06-data-floor.md</code>) — odds data begins at that date, and
             anything before it is excluded from the denominator rather than reported as a gap. 8 venues
             (<code>3ET</code>, <code>BROKER5</code>, <code>CROWN</code>, <code>SBO</code>, <code>SHARPBET</code>,
-            <code>VX</code>, <code>BETDEX</code>, <code>IBC</code>) are bucketed here but absent from both
-            <code>VENUE_DATA_TYPE_CAPABILITIES</code> and the coverage manifest — the same declared-but-uncapabilitied
-            gap <code>PACIFICA-SOLANA</code> shows under CeFi, not unique to one asset group.
+            <code>VX</code>, <code>BETDEX</code>, <code>IBC</code>) are confirmed Unity central-wallet child books
+            with no capture adapter built yet — a different, and different-cause, gap from
+            <code>PACIFICA-SOLANA</code>'s venue-side-onboarding wait under CeFi.
           </p>
           <details class="tree">
             <summary>
               <span class="nm"><code>3ET</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u"
-                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
-                  the 2026-08-19 coverage manifest</span
-                ></span
+                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
-                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
-                instrument-type or data-type breakdown from.
+                A confirmed Unity central-wallet child book (commission terms already negotiated,
+                <code>unity_child_books.py</code>) — no direct capture adapter exists yet
+                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
+                nothing to derive an instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -15167,18 +15080,16 @@
             <summary>
               <span class="nm"><code>BETDEX</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u"
-                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
-                  the 2026-08-19 coverage manifest</span
-                ></span
+                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
-                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
-                instrument-type or data-type breakdown from.
+                A confirmed Unity central-wallet child book (commission terms already negotiated — decentralized
+                betting exchange via Unity, per Unity pricing 2026-04-17), <code>unity_child_books.py</code>) — no
+                direct capture adapter exists yet (<code>venue_adapter_keys.py</code>'s explicit
+                <code>NO_ADAPTER_YET</code> sentinel), so there is nothing to derive an instrument-type or data-type
+                breakdown from.
               </p>
             </div>
           </details>
@@ -15406,41 +15317,19 @@
             <summary>
               <span class="nm"><code>BETOPENLY</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u">— no coverage.json shard cells observed for this venue</span>
-                <span class="u">(1 data type)</span></span
+                ><span class="u">retired 2026-08-21 (operator ruling)</span></span
               >
             </summary>
             <div class="tree-body">
-              <details class="tree">
-                <summary>
-                  <span class="nm">Odds</span><span class="meta"><span class="u">1 data type</span></span>
-                </summary>
-                <div class="tree-body scroll-x">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Data type</th>
-                        <th>Declared since</th>
-                        <th>Coverage</th>
-                        <th>Granularity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><code>odds</code></td>
-                        <td>not declared</td>
-                        <td><span class="pend">unverified</span></td>
-                        <td>per line movement</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
-                    venue.
-                  </p>
-                </div>
-              </details>
+              <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
+                HIGH-confidence removal — canonical venue token and odds_api key existed but were never wired into
+                the live fetch scope, with zero manifest presence of any kind (arbitrage-research vintage). Removed
+                from the registry per 2026-08-21 operator ruling.
+              </p>
+              <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
+                Source: <code>unified-api-contracts@710db834</code> ·
+                <code>/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md</code>.
+              </p>
             </div>
           </details>
           <details class="tree">
@@ -15657,18 +15546,15 @@
             <summary>
               <span class="nm"><code>BROKER5</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u"
-                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
-                  the 2026-08-19 coverage manifest</span
-                ></span
+                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
-                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
-                instrument-type or data-type breakdown from.
+                A confirmed Unity central-wallet child book (commission terms already negotiated,
+                <code>unity_child_books.py</code>) — no direct capture adapter exists yet
+                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
+                nothing to derive an instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -15748,18 +15634,15 @@
             <summary>
               <span class="nm"><code>CROWN</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u"
-                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
-                  the 2026-08-19 coverage manifest</span
-                ></span
+                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
-                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
-                instrument-type or data-type breakdown from.
+                A confirmed Unity central-wallet child book (commission terms already negotiated,
+                <code>unity_child_books.py</code>) — no direct capture adapter exists yet
+                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
+                nothing to derive an instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -15839,18 +15722,15 @@
             <summary>
               <span class="nm"><code>IBC</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u"
-                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
-                  the 2026-08-19 coverage manifest</span
-                ></span
+                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
-                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
-                instrument-type or data-type breakdown from.
+                A confirmed Unity central-wallet child book — IBCBet, Asian handicap specialist, commission terms
+                already negotiated (<code>unity_child_books.py</code>) — no direct capture adapter exists yet
+                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
+                nothing to derive an instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -15976,82 +15856,40 @@
             <summary>
               <span class="nm"><code>NOVIG</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u">— no coverage.json shard cells observed for this venue</span>
-                <span class="u">(1 data type)</span></span
+                ><span class="u">retired 2026-08-21 (operator ruling)</span></span
               >
             </summary>
             <div class="tree-body">
-              <details class="tree">
-                <summary>
-                  <span class="nm">Odds</span><span class="meta"><span class="u">1 data type</span></span>
-                </summary>
-                <div class="tree-body scroll-x">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Data type</th>
-                        <th>Declared since</th>
-                        <th>Coverage</th>
-                        <th>Granularity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><code>odds</code></td>
-                        <td>not declared</td>
-                        <td><span class="pend">unverified</span></td>
-                        <td>per line movement</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
-                    venue.
-                  </p>
-                </div>
-              </details>
+              <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
+                HIGH-confidence removal — canonical venue token and odds_api key existed but were never wired into
+                the live fetch scope, with zero manifest presence of any kind (arbitrage-research vintage). Removed
+                from the registry per 2026-08-21 operator ruling.
+              </p>
+              <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
+                Source: <code>unified-api-contracts@710db834</code> ·
+                <code>/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md</code>.
+              </p>
             </div>
           </details>
           <details class="tree">
             <summary>
               <span class="nm"><code>ONEXBET</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u">— no coverage.json shard cells observed for this venue</span>
-                <span class="u">(1 data type)</span></span
+                ><span class="u">retired 2026-08-21 (operator ruling)</span></span
               >
             </summary>
             <div class="tree-body">
-              <details class="tree">
-                <summary>
-                  <span class="nm">Odds</span><span class="meta"><span class="u">1 data type</span></span>
-                </summary>
-                <div class="tree-body scroll-x">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Data type</th>
-                        <th>Declared since</th>
-                        <th>Coverage</th>
-                        <th>Granularity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><code>odds</code></td>
-                        <td>not declared</td>
-                        <td><span class="pend">unverified</span></td>
-                        <td>per line movement</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
-                    venue.
-                  </p>
-                </div>
-              </details>
+              <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
+                HIGH-confidence removal — canonical venue token and odds_api key existed but were never wired into
+                the live fetch scope, with zero manifest presence of any kind (arbitrage-research vintage). Removed
+                from the registry per 2026-08-21 operator ruling. (The dead <code>OneXBetAdapter</code> class in
+                execution-service and the separate <code>bookmaker_registry.py</code> entry are a follow-on,
+                still-open cleanup — <code>sports_bookmaker_roster_classification_2026_08_21.md</code>.)
+              </p>
+              <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
+                Source: <code>unified-api-contracts@710db834</code> ·
+                <code>/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md</code>.
+              </p>
             </div>
           </details>
           <details class="tree">
@@ -16140,59 +15978,34 @@
             <summary>
               <span class="nm"><code>PROPHETX</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u">— no coverage.json shard cells observed for this venue</span>
-                <span class="u">(1 data type)</span></span
+                ><span class="u">retired 2026-08-21 (operator ruling)</span></span
               >
             </summary>
             <div class="tree-body">
-              <details class="tree">
-                <summary>
-                  <span class="nm">Odds</span><span class="meta"><span class="u">1 data type</span></span>
-                </summary>
-                <div class="tree-body scroll-x">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Data type</th>
-                        <th>Declared since</th>
-                        <th>Coverage</th>
-                        <th>Granularity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><code>odds</code></td>
-                        <td>not declared</td>
-                        <td><span class="pend">unverified</span></td>
-                        <td>per line movement</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
-                    Coverage column for this venue is <b>unverified</b> — no coverage.json shard cells observed for this
-                    venue.
-                  </p>
-                </div>
-              </details>
+              <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
+                HIGH-confidence removal — canonical venue token and odds_api key existed but were never wired into
+                the live fetch scope, with zero manifest presence of any kind (arbitrage-research vintage). Removed
+                from the registry per 2026-08-21 operator ruling.
+              </p>
+              <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
+                Source: <code>unified-api-contracts@710db834</code> ·
+                <code>/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md</code>.
+              </p>
             </div>
           </details>
           <details class="tree">
             <summary>
               <span class="nm"><code>SBO</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u"
-                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
-                  the 2026-08-19 coverage manifest</span
-                ></span
+                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
-                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
-                instrument-type or data-type breakdown from.
+                A confirmed Unity central-wallet child book (commission terms already negotiated,
+                <code>unity_child_books.py</code>) — no direct capture adapter exists yet
+                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
+                nothing to derive an instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -16200,18 +16013,15 @@
             <summary>
               <span class="nm"><code>SHARPBET</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u"
-                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
-                  the 2026-08-19 coverage manifest</span
-                ></span
+                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
-                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
-                instrument-type or data-type breakdown from.
+                A confirmed Unity central-wallet child book (cheapest commissioned book, 0.2% on winnings — commission
+                terms already negotiated, <code>unity_child_books.py</code>) — no direct capture adapter exists yet
+                (<code>venue_adapter_keys.py</code>'s explicit <code>NO_ADAPTER_YET</code> sentinel), so there is
+                nothing to derive an instrument-type or data-type breakdown from.
               </p>
             </div>
           </details>
@@ -16465,18 +16275,16 @@
             <summary>
               <span class="nm"><code>VX</code></span
               ><span class="meta"
-                ><span class="pend">unverified</span>
-                <span class="u"
-                  >— no readiness row produced for this venue token — absent from both VENUE_DATA_TYPE_CAPABILITIES and
-                  the 2026-08-19 coverage manifest</span
-                ></span
+                ><span class="u">confirmed Unity-network sportsbook — capture adapter not yet built</span></span
               >
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
-                Declared in <code>VENUES_BY_ASSET_GROUP</code> but absent from
-                <code>VENUE_DATA_TYPE_CAPABILITIES</code> — no data_types registered, nothing to derive an
-                instrument-type or data-type breakdown from.
+                A confirmed Unity central-wallet child book (cheapest commissioned book, 0.2% on winnings — commission
+                terms already negotiated, <code>unity_child_books.py</code>; distinct from the CBOE VIX futures root
+                sharing this ticker) — no direct capture adapter exists yet (<code>venue_adapter_keys.py</code>'s
+                explicit <code>NO_ADAPTER_YET</code> sentinel), so there is nothing to derive an instrument-type or
+                data-type breakdown from.
               </p>
             </div>
           </details>
@@ -16537,7 +16345,7 @@
           <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
             24 tokens in the 2026-08-19 coverage manifest that neither the manifest's own
             <code>by_asset_group</code> partition nor <code>VENUES_BY_ASSET_GROUP</code> can resolve to one of the five
-            groups above — already present in <a href="#s14">§14</a>'s table but missing from this tree until now, which
+            groups above — already present in the fleet-wide readiness measurement but missing from this tree until now, which
             made this tree's total (264) silently undercount the measured universe (288) by exactly this bucket. Not the
             <code>get_venue_asset_group()</code> defect named in the callout above — that function is not in this path —
             but a real, separate gap worth its own look.
@@ -16588,7 +16396,7 @@
       <p>
         Streaming, on the same schemas as batch. This matters more than it sounds: the live and batch paths are the same
         code, so a strategy developed against history behaves identically against a stream. That property is enforced
-        rather than asserted — see <a href="#s14">readiness</a>.
+        rather than asserted — see <a href="#s16">§16</a>.
       </p>
       <div class="callout">
         <span class="tag">Why batch and live share schemas</span>
@@ -16967,7 +16775,8 @@ Content-Type: application/json
       </div>
       <p style="font-size: 0.93rem; color: var(--ink-3)">
         This is the structural catalogue, not a readiness claim — an archetype existing in the registry is not the same
-        as an archetype being satisfiable on a given venue in a given mode; that check is per <a href="#s14">§14</a>.
+        as an archetype being satisfiable on a given venue in a given mode; that capability audit is planned but not
+        yet built.
       </p>
     </details>
   </section>
@@ -17323,217 +17132,6 @@ Content-Type: application/json
     </details>
   </section>
 
-  <section id="s14">
-    <div class="sec-head">
-      <span class="num">14</span>
-      <h2>Readiness: batch, paper, live</h2>
-      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
-      <b class="own" title="system_readiness_master.md — W1: Readiness derivation and the state dump">owner: W1</b>
-    </div>
-    <p class="lede">
-      Three modes, stated per venue rather than as a platform-wide claim. What separates them is which accounts exist,
-      not which code exists.
-    </p>
-    <details class="sec-body" open>
-      <summary>The mode model and how readiness is derived</summary>
-      <div class="plate">
-        <div class="plate-head">
-          <span class="label">Modes</span
-          ><span class="note">A venue sits at the highest mode whose requirements all hold</span>
-        </div>
-        <div class="plate-body scroll-x">
-          <table>
-            <thead>
-              <tr>
-                <th>Mode</th>
-                <th>Means</th>
-                <th>Needs</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><b>Batch</b></td>
-                <td>Research and backtest against history, honestly</td>
-                <td>No venue credentials</td>
-              </tr>
-              <tr>
-                <td><b>Paper</b></td>
-                <td>
-                  Runs forward without capital at risk. Either against a venue testnet, or simulated through our own
-                  matching
-                </td>
-                <td>Live market data; testnet accounts where they exist</td>
-              </tr>
-              <tr>
-                <td><b>Live</b></td>
-                <td>Real capital</td>
-                <td>Live credentials and funded accounts</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="callout">
-        <span class="tag">Readiness is computed, not declared</span>
-        <p>
-          A venue's mode is derived from checks rather than written down, so it cannot drift as the system changes.
-          Where a check does not yet exist, the venue reports <b>unverified</b> — never a pass. A readiness table that
-          cannot say "I don't know" is not telling you anything.
-        </p>
-      </div>
-      <h3>Why batch and paper must agree</h3>
-      <p>
-        The same code path serves batch and live, and paper is compared against a batch re-run of the same window. If
-        they disagree, that is a defect to fix rather than an expected difference — which is what makes a backtest
-        result meaningful as a forward-looking claim.
-      </p>
-      <p>
-        The mechanism is one transport facade, not a parallel implementation per mode. MTDS, MDPS, features, strategy
-        and execution all publish and read through the UTL <code>EventTransport</code> facade
-        (<code>unified_trading_library.streaming.event_facade</code>): <code>InMemoryTransport</code> backs paper and
-        colocated runs, Pub/Sub backs live — same call sites, same schemas, a different transport underneath. That is
-        what makes <code>paper(W) == batch-rerun(W)</code> an enforceable property rather than a hoped-for one.
-      </p>
-      <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>unified_trading_library/streaming/event_facade.py</code>'s
-        <code>get_transport()</code> dispatch.
-      </p>
-      <h3>Measured readiness — 2026-08-18 <span class="u">(DeFi row refreshed 2026-08-19)</span></h3>
-      <div class="plate">
-        <div class="plate-head">
-          <span class="label">Derived readiness, pipeline legs</span
-          ><span class="note">288 venues × 3 modes = 864 rows</span>
-        </div>
-        <div class="plate-body scroll-x">
-          <table>
-            <thead>
-              <tr>
-                <th>Asset group</th>
-                <th>Ready</th>
-                <th>Not ready</th>
-                <th>Unverified</th>
-                <th>Rows (BATCH)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>CeFi</td>
-                <td>0</td>
-                <td>5</td>
-                <td>19</td>
-                <td>24</td>
-              </tr>
-              <tr>
-                <td>DeFi</td>
-                <td>0</td>
-                <td>180</td>
-                <td>0</td>
-                <td>180</td>
-              </tr>
-              <tr>
-                <td>TradFi</td>
-                <td>0</td>
-                <td>9</td>
-                <td>0</td>
-                <td>9</td>
-              </tr>
-              <tr>
-                <td>Sports</td>
-                <td>0</td>
-                <td>49</td>
-                <td>1</td>
-                <td>50</td>
-              </tr>
-              <tr>
-                <td>Prediction</td>
-                <td>0</td>
-                <td>0</td>
-                <td>1</td>
-                <td>1</td>
-              </tr>
-              <tr>
-                <td>Unattributed</td>
-                <td>0</td>
-                <td>16</td>
-                <td>8</td>
-                <td>24</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="callout">
-        <span class="tag">DeFi readiness — measured 2026-08-19</span>
-        <p>
-          <code>derive_readiness.py --asset-group defi</code>, reading
-          <code>gs://central-element-323112-honest-coverage/2026-08-19/coverage.json</code>, with all three service
-          probes reachable: the <b>strategy</b> leg — a position adapter AND a satisfiable archetype, both required
-          — returns a definitive verdict on every DeFi row today (<code>not_ready</code> on all 180) rather than
-          the <code>unverified</code> bail-out 47 of those rows carried previously. Row count (180) is unchanged;
-          only the split within it moved. CeFi / TradFi / Sports / Prediction / Unattributed above are the
-          2026-08-18 measurement. The separate all-mode, all-group total in <a href="#s17">§17</a> (864 rows —
-          not_ready 844 / unverified 20) is from that same 2026-08-18 pass.
-        </p>
-      </div>
-      <div class="callout">
-        <span class="tag">Readiness applies to archetypes as well as venues</span>
-        <p>
-          A venue has a readiness state; so does a <b>strategy archetype</b>, and so does each
-          <b>(archetype, venue)</b> pair. They are genuinely different questions — an archetype is only usable on a
-          venue whose data satisfies the inputs it declares, so a fully-captured venue with no archetype able to consume
-          it is not a ready venue.
-        </p>
-        <p>
-          <b class="st st-plan">planned</b> — a capability audit deriving archetype readiness across batch, paper and
-          live is specified and not yet built. Until it runs, that axis reports <code>unverified</code> rather than
-          being assumed.
-        </p>
-      </div>
-      <div class="callout">
-        <span class="tag">Reading "ready = 0" correctly</span>
-        <p>
-          <b>Zero venues currently clear the bar, and the bar is ours.</b> A venue is ready only when every leg of an
-          8-leg readiness model — declared, instruments-service, market data, processing, features, strategy, execution
-          transfers, execution instruction — passes a real machine check; one failing or unchecked leg fails the venue.
-          This is not "nothing works"; it is "we grade strictly and have not yet wired every check". Reported plainly,
-          because a readiness model that cannot return zero is not measuring anything.
-        </p>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          Verified against the readiness-state-dump derivation's 8-leg model (<code>declared</code>,
-          <code>instruments_service</code>, <code>market_tick_data</code>, <code>market_data_processing</code>,
-          <code>features</code>, <code>strategy</code>, <code>execution_transfers</code>,
-          <code>execution_instruction</code>) — a different framework from any step-count contract quoted elsewhere.
-        </p>
-        <p>
-          <b>Corrected 2026-08-20</b> — the structural gap behind the prior "execution-instruction is unverified on
-          all 864 rows" claim is fixed: the per-venue-per-mode check now exists
-          (<code>execution_service.readiness.instruction_path</code>) and the dump calls it
-          (<code>unified-trading-pm@8d47cf3393</code>). Re-run and independently re-verified on the <code>defi</code>
-          asset group alone: 540 rows went from blanket-<code>unverified</code> to a real
-          <code>{unverified: 20, ready: 133, not_ready: 387}</code> distribution. The full 864-row fleet-wide number
-          has not been re-derived since this fix landed — stated here rather than guessed, so this page does not
-          quote a number nobody has actually re-run. The strategy leg passes 24 of 864 (pre-fix count, not
-          re-measured either), dominated by archetypes whose input declarations are deliberately incomplete rather
-          than by venues that cannot trade.
-        </p>
-      </div>
-      <div class="callout">
-        <span class="tag">Three known gaps, stated rather than smoothed</span>
-        <p>
-          <b>Path canonicalisation currently fails.</b> A live enumeration on 2026-08-18 found 113 non-canonical entries
-          across the five asset groups (defi 38, sports 71, cefi 1, prediction 1, tradfi 2), most unaccounted for by the
-          accepted-exception registry. A related casing defect is an <em>active writer regression</em> — it grew
-          thirteen-fold — so this is degrading rather than static, and no canonical claim is made anywhere here.
-        </p>
-        <p>
-          <b>Prediction capture has an active outage</b> (8 days and counting at measurement), so its coverage must not
-          be read as steady state. <b>Unattributed venues</b>: 8 appear in the coverage manifest with no resolvable
-          asset group.
-        </p>
-      </div>
-    </details>
-  </section>
-
   <section id="s15">
     <div class="sec-head">
       <span class="num">15</span>
@@ -17685,6 +17283,23 @@ Content-Type: application/json
           ruling). Schemas and contracts do not change between these steps, so beginning at step 1 costs nothing later.
         </p>
       </div>
+      <h3>Why batch and paper must agree</h3>
+      <p>
+        The same code path serves batch and live, and paper is compared against a batch re-run of the same window. If
+        they disagree, that is a defect to fix rather than an expected difference — which is what makes a backtest
+        result meaningful as a forward-looking claim.
+      </p>
+      <p>
+        The mechanism is one transport facade, not a parallel implementation per mode. MTDS, MDPS, features, strategy
+        and execution all publish and read through the UTL <code>EventTransport</code> facade
+        (<code>unified_trading_library.streaming.event_facade</code>): <code>InMemoryTransport</code> backs paper and
+        colocated runs, Pub/Sub backs live — same call sites, same schemas, a different transport underneath. That is
+        what makes <code>paper(W) == batch-rerun(W)</code> an enforceable property rather than a hoped-for one.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Source: <code>unified_trading_library/streaming/event_facade.py</code>'s
+        <code>get_transport()</code> dispatch.
+      </p>
     </details>
   </section>
 
@@ -18209,7 +17824,7 @@ Content-Type: application/json
       </div>
       <h3>Internal: messaging, not a service dependency</h3>
       <p>
-        Strategy's decisions reach execution the same way market data already does (<a href="#s14">§14</a>) — over the
+        Strategy's decisions reach execution the same way market data already does (<a href="#s16">§16</a>) — over the
         UTL <code>EventTransport</code> facade, Pub/Sub-backed, keyed on what the subscriber needs. Two subscriptions,
         not one: execution subscribes to strategy's instruction stream, and separately to the feature groups it needs
         from features-service. A messaging dependency in both cases, never a direct service-to-service call — this
@@ -18749,7 +18364,7 @@ Content-Type: application/x-ndjson
         </div>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
           Fields are the real <code>unified_api_contracts.events.persist.CanonicalPersistEnvelope</code> — one
-          envelope shape, every producer on the event-log spine (<a href="#s14">§14</a>).
+          envelope shape, every producer on the event-log spine (<a href="#s16">§16</a>).
         </p>
       </details>
 
@@ -19633,8 +19248,8 @@ Content-Type: application/json
           A family or archetype existing in this registry is a structural claim, not a readiness claim — the same
           distinction <a href="#s9">§09</a> draws. None of the families above carries a <b class="st st-live">live</b>
           mark, because none can honestly carry one yet: a capability audit deriving archetype readiness across
-          batch, paper and live is <b class="st st-plan">planned</b>, specified and not yet built
-          (<a href="#s14">§14</a>). Until it runs, archetype-level readiness reports <code>unverified</code> rather
+          batch, paper and live is <b class="st st-plan">planned</b>, specified and not yet built.
+          Until it runs, archetype-level readiness reports <code>unverified</code> rather
           than being assumed from the archetype simply existing in the enum.
         </p>
       </div>
