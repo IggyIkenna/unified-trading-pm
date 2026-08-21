@@ -162,7 +162,7 @@ context_scope:
 - [x] ✅ [BACKEND] P0. **Run `quality-gates.sh` (ship mode) over the full changeset** and quickmerge every commit
       — cite `execution-service@<sha>` for each landed unit, per this workspace's evidence-backed-completion
       rule.
-- [ ] [AGENT] P1. **Post-implementation codex audit**: update
+- [x] ✅ [AGENT] P1. **Post-implementation codex audit**: update
       `/codex/04-architecture/cross-domain-state-fabric.md`'s `OrderRecoveryEngine` note (last touched by the
       design plan's own post-design audit todo) to reflect that the persistence gap is now CLOSED, citing the
       landed shas — moving it off the "code that exists, is tested, and is wired to nothing" list entirely if
@@ -188,3 +188,4 @@ context_scope:
 - **2026-08-21, OMS persistence and shared-live wiring shipped**: `execution-service@bc2edc16874a3b0828ef692682b69174ddcab4bf` implements the six order persistence methods, process-shared OMS selection/threading, adapter/recovery regression tests, and venue-label correction. Full `quality-gates.sh` passed (621s); quickmerge ancestry verified on `origin/live-defi-rollout`.
 
 - **2026-08-21, implementation close-out**: `PostgreSQLOrderPersistence` order CRUD, shared startup OMS wiring, adapter lifecycle tests, shared recovery visibility, orchestrator venue-label correction, and full quality-gate verification landed in `execution-service`; the SHA is an ancestor of `origin/live-defi-rollout`.
+- **2026-08-21, post-implementation codex audit:** updated `/codex/04-architecture/cross-domain-state-fabric.md` to remove the stale `OrderRecoveryEngine`/`PostgreSQLOrderPersistence` mirror-failure claim and cite `execution-service@bc2edc16874a3b0828ef692682b69174ddcab4bf`; the real-Postgres integration test remains explicitly tracked as the only open implementation todo.
