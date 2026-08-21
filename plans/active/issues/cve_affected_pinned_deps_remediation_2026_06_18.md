@@ -663,16 +663,11 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       (`8e481d3`) ancestor-or-equal of `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml`
       declares `"pip>=26.2"`, `uv.lock` resolves `pip==26.2`, working tree clean. No new code required — landed
       directly (main/harsh) between the todo's authoring and this pickup.
-- [x] ✅ [SCRIPT] P2. **deployment-api** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). NOTE: this repo also has
+- [ ] [SCRIPT] P2. **deployment-api** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). NOTE: this repo also has
       a pre-existing, unrelated `internal_in_manifest_not_pyproject` (dep: deployment-service) alignment gap surfaced by
       the same `check-dependency-alignment.py` run — out of scope here, diagnose separately. (repo: deployment-api)
-      — deployment-api@9a55210b5a; uv.lock regenerated to resolve pip==26.2, QG green, verified on origin/LDR.
-- [x] ✅ [SCRIPT] P2. **DONE — verified already-landed (2026-08-21, slot-5).** **execution-service** — pip
-      CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: execution-service) — execution-service@6b21d09f
-      ("fix(deps): raise pip floor to >=26.2, closes PYSEC-2026-3721"), verified HEAD ancestor-or-equal of
-      `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml` bumped the existing inline pin
-      in place (`"pip>=26.1.2"` → `"pip>=26.2"`), `uv.lock` resolves `pip==26.2`, working tree clean. No new code
-      required — landed directly (main/harsh) between the todo's authoring and this pickup.
+- [ ] [SCRIPT] P2. **execution-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      execution-service)
 - [ ] [SCRIPT] P2. **features-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
       features-service)
 - [ ] [SCRIPT] P2. **fund-administration-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
