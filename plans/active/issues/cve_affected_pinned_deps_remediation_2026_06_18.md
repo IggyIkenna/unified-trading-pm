@@ -652,7 +652,11 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       new code required, another slot landed this between the todo's authoring and this pickup. The 14-repo fleet
       sweep below + the ignore-drop todo remain open (`QG_PIP_AUDIT_COMMON_IGNORES` still carries the temporary
       `--ignore-vuln PYSEC-2026-3721 --ignore-vuln CVE-2026-13346`, correctly, since not every repo is bumped yet).
-- [ ] [SCRIPT] P2. **alerting-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: alerting-service)
+- [x] ✅ [SCRIPT] P2. **DONE — verified already-landed.** **alerting-service** — pip CVE-2026-13346 bump per recipe
+      above (was 26.1.2). (repo: alerting-service) — alerting-service@56e88093 ("fix(deps): raise pip floor to
+      >=26.2, closes PYSEC-2026-3721"), verified HEAD ancestor-or-equal of `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor`; `pyproject.toml` declares `"pip>=26.2"`, `uv.lock` resolves `pip==26.2`. No new
+      code required — landed directly (main/harsh) between the todo's authoring and this pickup.
 - [ ] [SCRIPT] P2. **client-reporting-api** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
       client-reporting-api)
 - [ ] [SCRIPT] P2. **deployment-api** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). NOTE: this repo also has
