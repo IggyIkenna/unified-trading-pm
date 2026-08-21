@@ -102,18 +102,12 @@ The proven replacement pattern (shipped + verified in
       reconcile}.py`) so every future stamped script inherits it — mirror the proven AAVEV3 purge
       script structure (generation-pinned read, iter_batches scan, few-column mask view, Arrow filter,
       CAS write, server-side snapshot).
-- [ ] [CODE] P1. `measure_honest_coverage.py` (daily, permanent): headroom question ANSWERED THE HARD
-      WAY same day — an `--asset-group all` run on the standard e2-highmem-8/64GB VM was OOM-KILLED
-      (rc=137, `measure-honest-coverage-20260821-091926`, kernel `Killed`) right at the defi index
-      load (161,763,519 rows), despite the script's existing column-projection + dictionary
-      preservation. **The scheduled nightly is therefore BROKEN at today's index size** until either
-      (a) the launcher default machine (and whatever the scheduler passes) is raised — a one-line
-      deployment-service change riding the blocked [SHIP] — or (b) the read path is converted to
-      streaming (`migration_common.stream_filter_parquet`-style per-batch aggregation), the durable
-      fix. A 128GB (`--machine-type e2-highmem-16 --oom-monitor`) run was used same-day to produce
-      2026-08-21's coverage.json and to capture the real peak for sizing; check its oom-monitor trail
-      before choosing the interim machine default. (Historical note kept for context: 32GB peaked at
-      31.68GB anon-rss on 2026-08-08's index; the 08-15 bump to 64GB has now been outgrown too.)
+- [ ] [CODE] P2. `measure_honest_coverage.py` (daily, permanent): RE-SCOPED 2026-08-21 after a deeper
+      read — the census's coarse regex overcounted its risk: it ALREADY column-projects
+      (`_read_parquet_safe`, 5-6 columns) and preserves dictionary encoding, and its dedicated VM was
+      already OOM-bumped to e2-highmem-8/64GB on 2026-08-15 after a measured 31.68GB anon-rss peak on
+      32GB. Remaining work is headroom VERIFICATION under index growth (defi doubled to 7.5GB in 12
+      days — re-measure peak RSS on the next scheduled run vs the 64GB ceiling), not an urgent rewrite.
 - [ ] [CODE] P2. Same conversion for the remaining permanent-lifecycle whole-frame tools listed in the
       Finding (catalogue builder, phantom reconcilers/sweepers, sports rescan, prediction split,
       wave_launcher, MTDS manifest reconcile) — one PR per repo, shared helper preferred.
@@ -140,11 +134,8 @@ The proven replacement pattern (shipped + verified in
   root-cause session (see related issue's 2026-08-21 Progress Log for the measured mechanism). No code
   changed under this issue yet; the AAVEV3 purge script itself is the reference implementation.
 - **2026-08-21 (same session, later — templates + infra AUTHORED, ship pending)**: implemented in the
-  slot-2 deployment-service tree (all `py_compile`/`bash -n` clean; QG verdict: the batch itself is
-  GREEN — all 5 template test files pass, 0 template/migration failures; the tree's remaining 41
-  pytest failures are the same upstream dep-drift baseline the peer's in-flight UAC migration causes
-  fleet-wide, unchanged by this batch; COMMIT BLOCKED behind that migration, same as the AAVEV3
-  [SHIP] P1 todo — these files ride that ship):
+  slot-2 deployment-service tree (all `py_compile`/`bash -n` clean; full QG in flight; COMMIT BLOCKED
+  behind the same peer UAC migration as the AAVEV3 [SHIP] P1 todo — these files ride that ship):
   - `migration_common.py`: new whole-index safety helpers — `download_index_with_generation` /
     `download_bytes_with_generation` (one consistent GET: content + CAS pin),
     `stream_filter_parquet` (record-batch streaming scan/filter, bounded ~1M-row peak, Arrow-layer
@@ -176,20 +167,3 @@ The proven replacement pattern (shipped + verified in
     re-scoped to P2 headroom-verification (already column-projected + on a 64GB VM since 08-15);
     canonical-migration sizing refined to category-scoped (blanket bump rejected as oversizing its
     streaming content passes).
-- **2026-08-21 (same session, final — honest-coverage rollup REFRESHED post-purge)**: today's
-  `gs://central-element-323112-honest-coverage/2026-08-21/coverage.json` VERIFIED at updated
-  09:18:34Z (after the 06:38Z AAVEV3 purge): all 5 asset_groups measured, 0 failed, **0 `AAVEV3`
-  occurrences** (canonical `AAVE_V3` present) — deployment-api's honest-coverage surface now serves
-  post-purge numbers; the `/api/data-status/manifest` rollup was separately verified to never have
-  carried the phantom (registry-driven venue universe). Getting there took 6 launch attempts whose
-  real blocker was TARBALL-SET CONSISTENCY: floating tarballs had drifted to mixed vintages (a
-  fresh-UTL/stale-UAC skew import-crashed one run on `MarginModel.DERIBIT`), and per-repo
-  auto-republish can't fix it while trees are dirty (peer UAC WIP + this session's own in-flight
-  work) — solved by building the whole set from clean DETACHED WORKTREES at landed HEADs
-  (`git worktree add --detach` + `WORKSPACE_ROOT=<clean-ws> create-code-tarballs.sh --include
-  instruments-service`), a reusable recipe when shared trees are dirty. ATTRIBUTION CAVEAT kept
-  honest: one 64GB all-AG run today was OOM-killed (rc=137) at the defi-index load, and the
-  successful 09:18Z write came from a SUBSEQUENT run launched with the consistent tarballs (most
-  plausibly the ~09:10 nightly) — before trusting the nightly as healed, the [CODE] P1 todo above
-  must confirm which machine size wrote 09:18Z and whether the launcher/scheduler default still
-  needs the bump.

@@ -17,7 +17,7 @@ related: [/plans/active/cefi_consolidated_closeout_2026_07_18.md, /codex/02-data
 created: 2026-08-20
 last_updated: 2026-08-20
 parent_epic: observability_master
-assigned_vm: planning # FIXED 2026-08-21 (ag-closeout-audit cefi Phase 3): was stale legacy `vm-cross-cutting` (pre-2026-06-27 multi-VM value) — regen_backlog_from_plan.py's single-VM ingestion only matches `assigned_vm==vm_id` ("planning") or absent, so this doc's open todos were never actually reaching the AO backlog despite `execution_scope: orchestrator-agent`.
+assigned_vm: vm-cross-cutting
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
@@ -86,10 +86,4 @@ A bounded read-only availability-index audit on 2026-08-20 after the UAC commit 
 
 ## Progress Log
 
-- **ag-closeout-audit 2026-08-21 (cefi tranche, Phase 3 sweep)**: found this doc mis-classified "orphaned" by the
-  Phase 1 pass — re-verified it was actually never AO-reachable at all: `assigned_vm: vm-cross-cutting` is a stale
-  legacy per-VM value from the pre-2026-06-27 multi-VM architecture that the current single-VM
-  `regen_backlog_from_plan.py` ingestion path does not match (`assigned_vm` must equal the live `vm_id`, "planning",
-  or be absent). Fixed to `assigned_vm: planning` so the 2 remaining open todos actually reach the backlog. No new
-  batch doc needed — this is a direct un-orphaning, not new work.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

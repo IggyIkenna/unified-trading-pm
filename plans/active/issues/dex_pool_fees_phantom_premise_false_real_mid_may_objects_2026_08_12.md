@@ -17,7 +17,7 @@ summary: >-
   7 BALANCER rows have a canonical `dex_pool_state` twin (`swap_fees` on all 7 days) -> retire-as-superseded is feasible
   after content-verify; the 14 CURVE rows have NO `dex_pool_state` twin on those days -> their fee data may be the only
   copy and must be migrated or kept, never flipped to `attempted_failed`.
-status: resolved
+status: open
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -53,9 +53,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by: >-
-  All 21 rows retired-as-superseded (7 BALANCER market-tick-data-service@ad0db52396, 14 CURVE
-  market-tick-data-service@0e9de0cb). Doc-correction todo closed 2026-08-21 (ag-closeout-audit defi Phase 2).
+resolved_by:
 depends_on: []
 context_scope:
   [
@@ -67,9 +65,6 @@ context_scope:
     market-tick-data-service/scripts/one_offs/retire_dex_pool_fees_legacy_captured_rows_2026_08_12.py,
   ]
 ---
-
-> **✅ ARCHIVED 2026-08-21** — all 3 todos resolved, doc unlocked. Archived via the ag-closeout-audit defi Phase 2
-> sweep after `check_archive_candidates` flagged it. See `resolved_by:` above.
 
 # `dex_pool_fees` retirement premise is FALSE — 21 real objects exist (2026-08-12 finding)
 
@@ -191,13 +186,9 @@ Operator confirmed **A** on BLK-9aed224f (2026-08-12): retire all 14 CURVE rows 
       `fees_usd == `daily_supply_revenue_usd`). Applied via `retire_dex_pool_fees_legacy_captured_rows_2026_08_12.py
       --apply` (reversible`captured→attempted_failed`, no row/object deleted): RETIRED 14, EXCLUDED 0. Round-trip verify: 0 remaining captured `dex_pool_fees`CURVE rows. Consolidator was already PAUSED (precondition met), left as-is (the later "Resume the consolidator" todo owns it). Snapshot`_index/snapshots/pre_dex_pool_fees_retire_*.parquet`+ `.dex_pool_fees_retire.bak`
       written pre-write.
-- [x] ✅ [DATA] P2. **DONE 2026-08-21 (ag-closeout-audit Phase 2 sweep).** Correct the now-disproven "0 objects for its
-      entire lifetime / phantom rows only" claim. The current plan's todo-7 (`defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`,
-      archived) already carries an inline correction immediately after its own false premise (line 161: "The 'phantom
-      rows only' premise was FALSE..."), so no edit was needed there. Added a correction banner to the top of
-      `plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md` (the 2026-08-04 sample covered
-      day=2026-06..08 only; the mid-May objects were never probed), pointing back to this doc for the full disproof.
-      (repo: unified-trading-pm)
+- [ ] [DATA] P2. Correct the now-disproven "0 objects for its entire lifetime / phantom rows only" claim in the current
+      plan's todo-7 premise + the archived `defi_dex_pool_fees_retirement_recommendation_2026_08_04.md` (the 2026-08-04
+      sample covered day=2026-06..08 only; the mid-May objects were never probed). (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -235,7 +226,3 @@ Operator confirmed **A** on BLK-9aed224f (2026-08-12): retire all 14 CURVE rows 
   operator-confirmed disposition. Consolidator resumed (ENABLED). Ship: `market-tick-data-service@ad0db52396`.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **ag-closeout-audit 2026-08-21 (defi tranche, Phase 2 sweep)**: closed the sole remaining todo (doc-correction) —
-  added a correction banner to `plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md`
-  pointing at this doc's disproof; the sibling archived retirement plan already carried an inline self-correction.
-  All todos on this doc are now done — eligible for archival on the next hygiene sweep.

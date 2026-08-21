@@ -990,11 +990,3 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
   sports K1K2 precedent) rather than risk a rushed live write against a 1h-estimated task that is actually a multi-day
   migration. No live changes made.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
-
-## Residual open work (tracked, not prose-only)
-
-- [ ] [SCRIPT] P2. **N5r/N6r (e) — apply + post-verify.** Extracted to
-      `/plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e), still open there
-      as of 2026-08-21 (gated on its own (c) launcher-VM step) — close by confirming that todo landed, then flip both.
-
-- **ag-closeout-audit 2026-08-21**: added a real tracked checkbox for the delegated residual (was prose-only).

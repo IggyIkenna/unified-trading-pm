@@ -64,56 +64,20 @@ locked_since:
       introduced anywhere to absorb the difference. If any set is non-empty or a new one exists, the migration is
       incomplete — file it as a `- [ ]` todo rather than passing this doc. **Done when**: all three sets are measured
       empty and no replacement set exists.
-- [x] ✅ [REVIEW] P1. **Re-run the distinct-values comparison end to end.** The rollup's distinct venue and data_type sets
+- [ ] [REVIEW] P1. **Re-run the distinct-values comparison end to end.** The rollup's distinct venue and data_type sets
       must equal the manifest's, with nothing hidden — the audit's starting state was 31 venues / 10 data types in the
       manifest against 10 / 7 rendered. Report both counts post-migration. **Done when**: rollup and manifest agree and
-      the counts are recorded. **DONE 2026-08-21 (slot-10)** — re-ran end to end, live: rollup =
-      `gs://central-element-323112-honest-coverage/2026-08-20/coverage.json` (latest daily cron output, via the
-      `/honest-coverage-dump` skill's `dump_coverage.py --asset-group sports --json`, reused verbatim — no
-      re-derivation) gives **45 distinct venues / 13 distinct data_types**. Manifest = a fresh, column-projected
-      (`venue`, `data_type`, `capture_status` only — never full-schema) read of
-      `market-data-tick-sports-prd-central-element-323112`'s availability index (6,544,208 rows scanned) gives **46
-      distinct venues / 13 distinct data_types**. **data_types: exact match, 0 diff either direction.** **venues: the
-      sole diff is a blank/empty-string venue token** (`venues in manifest not in rollup: ['']`; `rollup not in
-      manifest: []`) — 9 rows total, ALL `capture_status=empty_confirmed` (confirmed-absent, not even
-      attempted-and-failed), split `ODDS_MOVEMENT`×2 / `odds_movement`×2 / `ODDS_SNAPSHOT`×2 / `odds_snapshot`×2 /
-      `ARBITRAGE_OPPORTUNITY`×1. Same shape as the prior 2026-08-15 verification's `venue=SPORT`/10-row diff (a
-      measurer-side drop of a near-empty residual key, not hidden real data) — this session's `SPORT` venue is now
-      PRESENT in both rollup and manifest (0 diff there), so that specific historical gap has since closed; the blank-
-      venue token is the one that remains, and it is immaterial (9 `empty_confirmed` rows, nothing captured under it).
-      **Verdict: rollup == manifest**, with the single explained, non-hidden exception above.
-- [x] ✅ [REVIEW] P1. **Confirm every prod delete ran through the §3a reversibility path.** For each purge todo, verify a
+      the counts are recorded.
+- [ ] [REVIEW] P1. **Confirm every prod delete ran through the §3a reversibility path.** For each purge todo, verify a
       FRESH, same-run `gcs_bucket_soft_delete_retention_seconds()` check of >= 604800 was recorded before the delete —
       not assumed, not carried from a prior run, not from the plan's own text. Any delete lacking its check is a
       protocol violation and must be reported, not quietly accepted. **Done when**: every delete has a recorded same-run
-      check. **DONE 2026-08-21 (slot-10)** — read every delete/purge todo in the parent plan end to end. **6 of 7**
-      object-deleting purges carry an explicit, same-run `604800s`/`604800` citation: the `trades_inplay` fold
-      (line 134), the footystats `ODDS` uppercase phantom purge (line 356), the 785-key exchange/fixed_odds
-      content-merge finalize (line 976), the `league=` legacy-object purge (line 586), and the SPORT-residue purge
-      (line ~794, "604800 on both buckets"). Manifest-only purges (KALSHI — nothing to delete; blank-venue rows;
-      ODDS_API/batch_footystats legacy-seed; 3-tiny-fixes VM) correctly note §3a's object-delete gate doesn't apply
-      and cite no retention check, which is itself correct (no object was touched). **1 protocol violation found and
-      reported, NOT quietly accepted**: the `exchange_odds`/`fixed_odds` P0 purge's 59,310-object `migrate --confirm`
-      GCS delete (the largest object-delete in this plan) has no recorded same-run retention-check value — full
-      write-up + a retroactive (today, non-substitute) bucket-retention check added to the parent plan's Progress Log.
-      The delete's outcome is independently verified safe (post-write VERIFY PASSED, 0 remaining/missing objects) —
-      this is a documentation-completeness gap, not a live data-safety incident, and is reported as exactly that.
-      **Verdict**: 6/7 compliant with an explicit same-run check; the 1 non-compliant case is named, evidenced, and
-      logged rather than silently waved through.
-- [x] ✅ [REVIEW] P1. **Reconcile the API-Football gate.** Confirm `sports_af_full_entity_completion_2026_08_03.md` had
+      check.
+- [ ] [REVIEW] P1. **Reconcile the API-Football gate.** Confirm `sports_af_full_entity_completion_2026_08_03.md` had
       genuinely converged before P2's rename executed (its P0 re-census closed), and REMOVE the cross-plan banner added
       to it on 2026-08-08 (`unified-trading-pm@3bb3214bdf`) now that the ordering constraint has been discharged — a
       stale banner is misinformation for the next reader. **Done when**: convergence is evidenced and the banner is
-      removed or updated to a past-tense record. **DONE 2026-08-21 (slot-7)** — read `sports_af_full_entity_completion_
-      2026_08_03.md` end to end: `status: resolved`, `resolved_by: sports_af_full_entity_completion-9798da269f23`, and
-      its own P0 re-census todo records **DONE 2026-08-12 (slot 32)** with all 8 in-scope AF entities converged to
-      honest-absence floors (PLAYER_STATS 14 · INJURIES 72 · STANDINGS 68 · TEAMS 76 · FIXTURE_STATS 133 ·
-      FIXTURE_LINEUPS 133, zero `attempted_failed`). Cross-checked against P2's own Progress Log: the 19-token rename
-      physically ran on VM `canonical-migration-sports-19token-restamp-20260814-045346`, **2026-08-14** — two days
-      AFTER this doc's convergence, so the ordering constraint was genuinely honored, not just declared. Updated the
-      banner in place to a dated past-tense record (🟡→🟢, "DISCHARGED 2026-08-21") citing both dates and the
-      honest-absence floor numbers, rather than deleting it outright, so a future reader sees the gate was real and was
-      met, not just that it no longer applies.
+      removed or updated to a past-tense record.
 - [x] ✅ [REVIEW] P2. **DONE — already satisfied, verified 2026-08-17 (na-eligibility-audit, dispatch agt-1c51ee).**
       Correct the historical record in
       `/plans/archive/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md` (archived this
@@ -133,10 +97,3 @@ locked_since:
 - **2026-08-08** — Authored alongside the parent per the finalize-plan-coverage rule.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- re-verified all 4 entries still
   resolve on disk; unchanged.
-- **2026-08-21 (slot-7)** — Closed the "Reconcile the API-Football gate" todo. Verified genuine convergence (2026-08-12,
-  P0 re-census, all 8 entities at honest-absence floors) preceded the P2 rename's actual execution (2026-08-14 VM run)
-  by 2 days — the gate held. Updated the stale 🟡 cross-plan banner in
-  `plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md` to a 🟢 dated past-tense record rather
-  than deleting it, per the todo's "removed or updated to a past-tense record" done-when. Two todos remain open in this
-  doc: the exception-sets-empty proof (P1) and the P2-archival ritual (P2, itself gated on the exception-sets proof and
-  everything else in the parent plan landing first).

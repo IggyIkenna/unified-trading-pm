@@ -291,8 +291,7 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       full onboarding is real feature work, properly scoped as its own follow-up:
       `issues/defi_plasma_chain_onboarding_gap_2026_07_26.md` (not attempted here — identity resolution was this todo's
       actual scope).
-- [ ] [SCRIPT] P1. **➡️ EXTRACTED → plans/active/defi_satellite_ao_dispatch_batch19_2026_08_21.md (2026-08-21,
-      ag-closeout-audit Phase 3 sweep).** RECLASSIFIED 2026-08-08 — axis decision already ruled, only mechanical UAC registration remains.**
+- [ ] [SCRIPT] P1. **RECLASSIFIED 2026-08-08 — axis decision already ruled, only mechanical UAC registration remains.**
       Original text (kept for context): "PARTIALLY FIXED 2026-07-21 (Track 6,
       `defi_consolidated_closeout_2026_07_18.md`) — user-facing symptom resolved via a deployment-api-local stopgap, UAC
       declaration still open." `deployment-api@427ede5` adds a supplemental whitelist

@@ -58,14 +58,6 @@ drift_direction: advance-code
 
 # Prediction live VMs resolve their instrument universe once at boot and never refresh it
 
-> **➡️ EXTRACTED 2026-08-21 (ag-closeout-audit prediction tranche, Phase 3)** — all 3 open todos below (Root cause A's
-> wiring fix + Root cause B's two todos) were extracted verbatim into
-> `/plans/active/prediction_satellite_ao_dispatch_batch16_2026_08_21.md` (currently `status: draft`, pending operator
-> promotion to `active` before AO dispatch). This doc's own repeated na-eligibility-audit "redirect to
-> `cross_ag_live_capture_parity_2026_08_14.md`" disposition never actually resolved to dispatched work — that redirect
-> target is itself a local/NA coordination doc, not an AO-dispatched covering plan. Original todos left in place below
-> (not deleted) so this doc's own history/evidence stays intact; do not re-extract once batch16 is promoted.
-
 ## Root cause A — the hot-reload path exists but is never wired into the live CLI entrypoint (both venues)
 
 `LiveWebsocketRunner.run()` (`market_tick_data_service/live/websocket_runner.py:325-390`) only resolves the IS
@@ -174,11 +166,3 @@ and is flagged, not diagnosed further, here.
   redirects to an instruments-service investigation blocked on trigger-log access this session doesn't have. A
   redirect banner means the dispatch mechanism would be wrong even though the todo text reads boundable — flipping
   `assigned_vm` here would misroute the work, per the never-re-litigate-a-redirect rule. Doc stays NA.
-- **ag-closeout-audit 2026-08-21 (prediction tranche, Phase 3 sweep)**: the "redirect means don't reclassify this
-  doc" reasoning above is correct as far as it goes, but it left a gap: the redirect target
-  (`cross_ag_live_capture_parity_2026_08_14.md`) is ITSELF `assigned_vm: NA` / `execution_scope: local-only`, so
-  nobody was actually AO-dispatched to do the underlying fix — a mutual-pointer stalemate between two NA docs, not a
-  real handoff. Resolved by extracting the 3 concrete fixes (unchanged, still owned/cited here) into a NEW satellite
-  AO-dispatch batch — see the `➡️ EXTRACTED` banner at the top of this doc. This doc itself stays `assigned_vm: NA`
-  (its own dispatch-mechanism concern from the audits above still holds); the extracted batch carries the actual
-  dispatchable work.

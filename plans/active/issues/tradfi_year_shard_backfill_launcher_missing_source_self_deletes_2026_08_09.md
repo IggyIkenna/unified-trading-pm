@@ -18,7 +18,7 @@ summary: >-
   `launch-tradfi-forward-poll.sh`: `VM_TASK=mtds-backfill` (the only branch that builds `--source`) +
   `VM_SOURCE=databento`. Fix applied + committed same-session as part of unblocking batch6 todo #2; re-launch confirmed
   VMs surviving past the previous failure window.
-status: resolved
+status: open
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -47,12 +47,7 @@ estimate_class: bug
 estimate_baseline: 0.3
 calibrated_ai_days: 0.2
 assigned_role: infra
-resolved_by: >-
-  All 6 action items closed. Primary fix deployment-service@c99ab99b8 (VM_TASK/VM_SOURCE routing) +
-  deployment-service@be6d4669 (manifest count-check query fix) + deployment-service@77a95833 (watcher
-  year-scoping + coverage-gated flip) + deployment-service@1dbd6026 (VM_FORCE_WINDOW wiring). Sole remaining
-  P1 action item closed 2026-08-21 (ag-closeout-audit tradfi Phase 2 sweep) on tradfi_satellite_ao_dispatch_batch13_2026_08_13.md's
-  2026-08-15 re-measurement superseding evidence (2025 81.6%, 2026 77.5% captured; no further backfill needed).
+resolved_by:
 locked_by:
 depends_on: [tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09]
 gate_on_depends: true
@@ -72,10 +67,6 @@ context_scope:
 # issue doc's own decision rule), and every other todo in this doc is already `[x]`, so whole-doc gating is safe
 # (nothing else is over-gated).
 ---
-
-> **✅ ARCHIVED 2026-08-21** — all 6 action items resolved, doc unlocked. Archived via the ag-closeout-audit tradfi
-> Phase 2 sweep after `check_archive_candidates` flagged it (0 open todos). See `resolved_by:` above for the
-> consolidated evidence trail.
 
 # tradfi year-shard backfill launcher missing --source — self-deletes within minutes
 
@@ -215,17 +206,7 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
 
 ## Action items
 
-- [x] ✅ [DATA] P1. **RESOLVED 2026-08-15 via `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s independent
-      re-measurement — the gap this item narrowed itself to is closed; no launcher retry needed.** Batch13's P0
-      MVP-backfill-readiness-gate todo re-measured CME S&P500-underlying coverage by year against the live PROD
-      manifest and found this doc's own "2025 confirmed 0% / 2026 73% partial" finding STALE: fresh counts show 2025
-      captured=1,010/1,238 (81.6%) and 2026 captured=605/781 (77.5%) — consistent with every other year 2020-2024 (all
-      77-93% captured). Batch13's explicit conclusion: "no new backfill VM launch was needed... all 6 MVP cells already
-      carry real, current, materially-complete manifest-counted coverage." The gap closed via the ongoing
-      wave-launcher-cron + in-scope CME campaign relaunches between 2026-08-09 and 2026-08-15, not via this doc's own
-      ES_OPT-specific watcher (which was never confirmed to complete — see Progress Log below). Flipping this checkbox
-      on that superseding evidence rather than leaving it open pending a specific watcher-run that the broader coverage
-      already made moot. **UPDATE 2026-08-19 (plan_reconciler, epic-scoped tradfi_master pass): the `BLOCKED-ON` gate below
+- [ ] [DATA] P1. **UPDATE 2026-08-19 (plan_reconciler, epic-scoped tradfi_master pass): the `BLOCKED-ON` gate below
       is now CLEARED** — `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` flipped
       `status: resolved` this pass (both its action items `[x]`, its 2026-08-17 entry confirms zero `tradfi-bf-*`
       VMs remain fleet-wide and the `wave_launcher.py` out-of-scope cron stays PAUSED). The singleton-lock
@@ -525,8 +506,3 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **ag-closeout-audit 2026-08-21 (tradfi tranche, Phase 2 sweep)**: flipped the sole remaining `[DATA] P1` action item
-  to `[x]` — re-verified `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s 2026-08-15 re-measurement (2025 81.6%,
-  2026 77.5% captured, consistent with every other year) genuinely supersedes and closes this item's own narrower
-  "2025=0%/2026=73%" gap; batch13's own explicit verdict is "no new backfill VM launch was needed." This is citation
-  drift, not real remaining work — this doc's checkbox was simply never flipped when batch13 landed.

@@ -249,9 +249,7 @@ had the adopted values live, only the non-live `tradfi_instrument_universe.py` c
       `EXCHANGE_CODE_TO_NAME` SSOT question) is scoped to cover CBOE's `VIX → VX`/`VX.FUT` case alongside CME's, and a
       fresh CBOE force-leg re-verification shows a genuine (non-stale) `0 records` → nonzero transition. Not
       AO-dispatchable — blocked on the same operator SSOT decision as §4, not a worker-determinable fact.
-- [ ] [DATA] P1. ➡️ EXTRACTED → `plans/active/tradfi_satellite_ao_dispatch_batch20_2026_08_21.md` todo 1 (2026-08-21,
-      ag-closeout-audit tradfi tranche, Phase 3 sweep — draft, pending operator review before dispatch). **NEW
-      2026-08-07 (operator sign-off recorded — agent-executable, full pipeline: measure, migrate, purge
+- [ ] [DATA] P1. **NEW 2026-08-07 (operator sign-off recorded — agent-executable, full pipeline: measure, migrate, purge
       duplicates).** Converge existing GCS chain-bundle + manifest data onto the registry values just shipped above,
       mirroring `tradfi_manifest_content_recovery_completion_2026_07_24.md`'s Surface A-D `-USD@LIN` migration playbook
       (dry-run measure → review → `--apply`, never a blind rewrite). Two candidate populations (see the "Follow-up this
@@ -298,9 +296,7 @@ had the adopted values live, only the non-live `tradfi_instrument_universe.py` c
       `derive_canonical_id_for_row`'s caller is confirmed to no longer need it (e.g. superseded by the raw-symbol
       chain-bundle migration itself) — then the skip marker is removed and the test re-asserted green.
 
-- [ ] [DATA] P2. ➡️ EXTRACTED → `plans/active/tradfi_satellite_ao_dispatch_batch20_2026_08_21.md` todo 2 (2026-08-21,
-      ag-closeout-audit tradfi tranche, Phase 3 sweep — draft, pending operator review before dispatch). **NEW
-      2026-08-15 (found while verifying the P0 MVP backfill readiness gate,
+- [ ] [DATA] P2. **NEW 2026-08-15 (found while verifying the P0 MVP backfill readiness gate,
       `tradfi_phase_d_terminal_gate_2026_07_24.md`).** `batch11`'s claimed fix (`MTDS@3cec6a00`,
       "`_canonical_underlying_to_raw_databento()` shipped in `pipeline_e2e_check.py` — covers CME (standard + MICRO-
       prefix → M-prefixed raw) and CBOE VIX→VX") is genuinely shipped code but is **DEAD CODE — never called from
@@ -560,15 +556,3 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   but doc-level-gated by todos 1/3 per the whole-doc rule (extraction remains an `/ag-closeout-audit` recommendation,
   not executed here); todo 3 stays OPERATOR_QUESTION; todo 4 (dead-code wiring fix) stays a bounded fix the doc's own
   08-15 marker already confirmed is not blocking real MVP backfills. `assigned_vm` unchanged.
-- **ag-closeout-audit 2026-08-21 (tradfi tranche, Phase 3 sweep)**: acted on the 2026-08-08 pass's own recommendation
-  ("recommend the next /ag-closeout-audit tradfi pass draft it explicitly"). Extracted todo 2 (GCS/manifest
-  measure-and-migrate convergence) and todo 4 (dead-code wiring fix) verbatim into
-  `plans/active/tradfi_satellite_ao_dispatch_batch20_2026_08_21.md` (draft, pending operator review before
-  dispatch) — both re-verified genuinely still open and bounded before extraction. Todo 1 (CBOE/VX
-  DEPENDENCY_BLOCKED) and todo 3 (OPERATOR_QUESTION, already extracted to
-  `tradfi_chain_bundle_reverse_derivation_ao_dispatch_2026_08_16.md`) are unaffected — this doc stays
-  `assigned_vm: NA` since no whole-doc reclassify applies (per-todo extraction only, matching this skill's own
-  mechanism). Note for a future pass: this doc's `parent_epic: security_and_cross_cutting_master` looks like the
-  same asset-group-specific-content mistag class fixed elsewhere this session (`asset_group: [tradfi]` content
-  should route to `tradfi_master`) — not fixed here, out of this pass's Phase-2 mechanical-hygiene-flags scope, but
-  flagged for the next sweep.

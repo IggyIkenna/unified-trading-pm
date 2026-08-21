@@ -994,7 +994,3 @@ returns < 604800, the delete falls back to approve-executes and the todo must st
 - **context-scout 2026-08-20**: rebuilt context_scope (2 entries) — 25/26 todos now done; the sole remaining item
   (P0 BLOCKED-OPERATOR-DECISION) points only to `sports-data-types-catalog.md`'s correction banner and the
   eventual phantom-row cleanup's delete-safety protocol. Dropped 4 entries mapped to now-completed re-stamp/purge work.
-- **2026-08-21 (slot-10, REVIEW — finalize plan item 3, §3a audit)**: the `exchange_odds`/`fixed_odds` P0 purge's
-  59,310-object GCS delete (line ~892) is missing its same-run §3a retention-check citation — full write-up in
-  `/plans/active/issues/sports_p2_exchange_fixed_odds_purge_missing_same_run_retention_citation_2026_08_21.md`
-  (doc-size guard: this file is at the 1000-line hard cap, detail lives in the issue doc, not here).

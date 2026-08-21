@@ -104,36 +104,10 @@ framing) + 8 Unity child books registered 2026-08-17 (`cross_cutting_satellite_a
 
 ## Todos
 
-- [x] [OPERATOR] P2. Rule on the 4 HIGH-confidence removal candidates (BETOPENLY, NOVIG, ONEXBET, PROPHETX) — remove
+- [ ] [OPERATOR] P2. Rule on the 4 HIGH-confidence removal candidates (BETOPENLY, NOVIG, ONEXBET, PROPHETX) — remove
       the venue tokens, or keep them declared with an honest reason (e.g. future-planned direct-API integration)?
-      — resolved by 2026-08-21 operator ruling in `code_readiness_t2_refdata_marketdata_2026_08_19.md`: REMOVE ALL 6.
-- [x] [OPERATOR] P3. Judgment call on BETMGM/BETWAY — worth re-adding to the live odds_api fetch scope (both have
-      real if weak historical capture), or also propose for removal? — resolved: removal, per same ruling.
-- [x] [BACKEND] P1. **2026-08-21 removal shipped — wave-1a registry lane only, `unified-api-contracts@710db834`.**
-      This doc's odds_api/manifest-only classification did not surface that the same 6 tokens also live in a
-      SEPARATE registry family: `unified_api_contracts/canonical/domain/bookmaker_registry.py` +
-      `canonical/domain/sports/{_registry_us,_registry_exchanges,_registry_intl_scrapers,odds_api_mapping}.py` +
-      `registry/venue_manifest/betting_sports.py` + `registry/sports_bookmaker_league_coverage.py` +
-      `unified_api_contracts/external/{onexbet,betway}/*` + `normalize_utils/sports.py` — none of these were in
-      the T2 plan's enumerated surface list. Cross-repo grep found `execution-service` has a REAL import-time
-      binding on ONEXBET specifically: `sports_execution/adapters/bookmaker_api/onexbet.py` does
-      `BOOKMAKER = BOOKMAKER_REGISTRY["onexbet"]` at MODULE level (imported transitively via
-      `sports_execution/adapters/__init__.py`) — removing the `"onexbet"` key from `bookmaker_registry.py` would
-      raise `KeyError` at import time in execution-service, a cross-repo break. (The `OneXBetAdapter` class itself
-      is confirmed dead/unrouted per `sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md` finding 11 —
-      `SportsHandler.BOOKMAKER_VENUES` is empty — but the import still executes.) Per this session's dispatch
-      instructions ("if any live code binds them, STOP and report instead of shipping a break"), that second
-      family was left untouched — only the originally-enumerated wave-1a lane
-      (`venue_constants.py`/`_sports_venue_constants.py`/`market_data_categories.py`/`venue_adapter_keys.py`/
-      `_odds_api_maps.py`/`registry/__init__.py`/`capability_declarations/_sports.py`/`venue_granularity_seed.py`
-      + `tests/unit/test_venue_adapter_keys.py`/`tests/unit/test_data_status_registries.py`) was removed and
-      shipped, confirmed genuinely removal-safe by a repo-wide grep across execution-service,
-      market-tick-data-service, instruments-service that found zero consumers of those specific module/exported-set
-      names. `quality-gates.sh --no-fix` green (13458 passed, 0 failed) before commit. Next-pass follow-up filed as
-      new todos in the T2 plan (`code_readiness_t2_refdata_marketdata_2026_08_19.md`): (a) regenerate
-      `openapi/capability-manifest.json` + `openapi/venue-coverage-report.md` (still list the 6 removed venues, no
-      in-repo generator script found), (b) the coordinated two-repo removal of the `bookmaker_registry.py` family
-      (execution-service's dead `OneXBetAdapter` retires first, then `"onexbet"` comes out of the registry).
+- [ ] [OPERATOR] P3. Judgment call on BETMGM/BETWAY — worth re-adding to the live odds_api fetch scope (both have
+      real if weak historical capture), or also propose for removal?
 - [ ] [BACKEND] P3. Resolve the Unity 15-book-vision vs `unity_child_books.py` contradiction (PINNACLE, CROWN) —
       update whichever source is stale, cite the resolution.
 - [ ] [BACKEND] P3. Resolve the Betfair-family ↔ Unity "BETFAIR" child-book mapping ambiguity.

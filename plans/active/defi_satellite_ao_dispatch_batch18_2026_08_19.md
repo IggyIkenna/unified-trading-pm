@@ -194,12 +194,6 @@ drift_direction: advance-code
   `pendle_venue_onboarding_2026_08_16.md`) and excluded here to avoid duplication. 9 items cleared the conflict-check
   cleanly and are extracted above. `status: draft` per the skill's safety rail — flipping to `active` is an operator
   decision, not made here.
-- **ag-closeout-audit 2026-08-21 (defi tranche, Phase 2 sweep)**: re-verified per the parked doc's "2 batch plans
-  stuck status: draft for days" hygiene flag. Content still current — spot-checked 2 of the 9 extracted items
-  (todo 1's cited MTDS fix `market-tick-data-service@4925f88d73` and todo 4's operator ruling) against their source
-  docs, no drift found. Per this doc's own Progress Log entry above, flipping `status: draft` -> `active` is
-  explicitly an operator decision, not made here. Flagging for operator attention: this batch has sat
-  `status: draft` since 2026-08-19 (2 days) despite being fully conflict-checked and ready to dispatch.
 
 **Codex SSOTs**: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`,
 `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, `plans/active/task_template.md` §4.

@@ -801,12 +801,13 @@ next auto-dispatched task doesn't sit stranded.
 
 ## What this role does NOT do
 
-- **Auth gap RESOLVED 2026-08-21 (slot-16)**: the 401 is scoped to the public HTTPS URL
-  (`https://api.agent-orchestrator.odum-research.com`) only — `POST`s against `http://localhost:8765` (the colocated
-  endpoint from line 56/72 above) succeed with NO bearer token, confirmed against a live `/done` call in this same
-  session. **Recovery path for a resumed/mid-compaction session with no cached `$TOKEN`**: use `$SERVER_URL =
-http://localhost:8765` for every subsequent call in the session instead of the public URL — no `/api/auth/login` or
-  credential re-derivation needed when colocated on the orchestrator VM.
+- **STALE as of 2026-08-18 (slot-15) — server is in strict mode, NOT `ALLOW_ANONYMOUS`**: an unauthenticated
+  `POST /api/slots/<id>/heartbeat` against `https://api.agent-orchestrator.odum-research.com` now returns
+  `401 {"detail":"login required (no bearer token)"}`. Every curl in this file needs
+  `-H "Authorization: Bearer $TOKEN"`; a resumed/mid-compaction session that never ran a fresh `/boot` in this context
+  has no `$TOKEN` and cannot self-service one — this needs a documented recovery path (re-`/boot`? a
+  `/api/auth/login` call? re-derive from a stored per-slot credential?). Not yet root-caused; flagging rather than
+  guessing at a fix here.
 - Does NOT read the retired workspace docs. `AGENT_ONBOARDING.md` + `LEDGER.md` are RETIRED (the dashboard is
   authoritative). The full workspace `cursor-configs/CLAUDE.md` auto-loads via the repo symlink.
 

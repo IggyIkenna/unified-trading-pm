@@ -67,9 +67,6 @@ after confirming no external consumer exists; do not stand up a long-lived deplo
 corpus despite documenting nine live production-broken endpoints; per the HARD RULE "every follow-up is a `- [ ]`
 todo, never prose."
 
-**➡️ EXTRACTED 2026-08-21 (ag-closeout-audit, infra tranche Phase 3) — all 11 todos below →
-`plans/active/infra_satellite_ao_dispatch_batch2_2026_08_21.md` todos 1-11.**
-
 - [ ] [BACKEND] P1. Fix `calculate_shards` — CLI/library transport per the `create_deployment()` reference fix, live
       callers `deployment_manager.py:200,320`.
 - [ ] [BACKEND] P1. Fix `get_data_status` — live callers `routes/data_status_helpers.py:43` and UI `DataStatusTab.tsx`

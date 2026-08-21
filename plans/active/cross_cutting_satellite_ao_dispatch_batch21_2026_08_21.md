@@ -95,20 +95,18 @@ source: >-
 
 ## From `execution_state_does_not_survive_restart_2026_08_20.md`
 
-- [x] ✅ [REVIEW] P1. **Rename or gut `execution-service/execution_service/pre_crash_checkpoint.py`.** It checkpoints — execution-service@f89497a825 + evidence: sanctioned tests slice passed (8,909 passed, 22 skipped, 1 XPASS; 82.68% coverage) and lint-codex slice passed; quickmerge execution-service content checks passed, while its shared adapter-contract post-check reported 2 unrelated UI baseline regressions
+- [ ] [REVIEW] P1. **Rename or gut `execution-service/execution_service/pre_crash_checkpoint.py`.** It checkpoints
       nothing (a SIGTERM handler + an 85%-RSS watchdog, both converging on one `logger.critical` + `sys.exit()` —
       no state serialization, nothing reads it back) — the name asserts a guarantee the file does not provide.
       Rename to something accurate (e.g. `crash_alert.py`/`oom_watchdog.py`) or gut the misleading docstring/name.
       No behavior change. Done when: the file's name/docstring no longer implies state checkpointing. Source:
       `execution_state_does_not_survive_restart_2026_08_20.md` todo "Rename or gut pre_crash_checkpoint.py".
-- [x] ✅ [AGENT] P1. **Enumerate execution-service classes with tests but no non-test instantiation.** AST-based
-      scan (916 production classes; 161 have test-side constructor calls but zero non-test instantiation) — full
-      list, methodology, and caveats filed in `execution_state_does_not_survive_restart_2026_08_20.md`'s new
-      "Findings — execution-service classes with tests but zero non-test instantiation" section. Notable
-      side-finding: corrected that same doc's own "OrderRecoveryEngine has zero production call sites" row — it is
-      now wired (`live_execution_handler.py:136,189-222`), so it correctly does NOT appear in the 161. Follow-up
-      per-class triage tracked as a new REVIEW P2 todo in the source doc, not done here (report-only scope).
-      Evidence: unified-trading-pm@<pending>. Source:
+- [ ] [AGENT] P1. **Enumerate execution-service classes with tests but no non-test instantiation.** This issue's
+      own finding is "the fourth instance of one pattern" (`TransferCoordinator`, `HealthFactorMonitor`,
+      `QuoteHandler` deleted, `OrderRecoveryEngine`) — a repeatable, scriptable check (grep every class definition,
+      confirm at least one non-test constructor call site exists somewhere in the repo) that belongs in the
+      quality gate, not in another one-off audit. Report the full list; do not fix any findings, just enumerate.
+      Done when: a list of classes with tests but zero non-test instantiation is on record. Source:
       `execution_state_does_not_survive_restart_2026_08_20.md` todo "Enumerate execution-service classes with
       tests but no non-test instantiation".
 - [ ] [REVIEW] P2. **Close the audit's own open questions** — read in full and report ABSENT/PRESENT (with
@@ -130,17 +128,13 @@ source: >-
 
 ## From `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`
 
-- [x] ✅ [REVIEW] P1. **Audit every MTDS connector for which timestamp meaning it writes today** — roughly 65
+- [ ] [REVIEW] P1. **Audit every MTDS connector for which timestamp meaning it writes today** — roughly 65
       connector files exist, the source doc's own audit sampled about a dozen (Databento=exchange time,
       Binance-spot-book/Hyperliquid=arrival time). Classify each remaining connector as exchange-time,
       arrival-time, or unclear/needs-code-owner-input. Pure classification, no schema change. Done when: every
       connector file has a recorded classification. Source:
       `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md` todo "Audit every connector for which
-      meaning it writes today". **Done 2026-08-21** — all 65 connector files classified (37 exchange-time w/
-      arrival fallback, 11 pure arrival-time, 2 mixed-path needing code-owner input, 15 BLOCKED-* scaffolds with no
-      live emission yet). Full table + methodology filed in
-      `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new "Findings — full connector
-      timestamp-semantics audit (2026-08-21)" section. Evidence: unified-trading-pm@c81b5881d8.
+      meaning it writes today".
 - [ ] [REVIEW] P1. **Close or supersede `resolve_mtds_ts_event_timestamp_naming_collision`** — this exact
       timestamp collision was already identified and named in-code (referenced in `symbol_rules.py` comments) but
       never closed. Find the reference, establish whether that prior work was descoped, forgotten, or partially
@@ -177,9 +171,6 @@ source: >-
 
 ## Progress Log
 
-- **2026-08-21 (slot-16)** — Closed the MTDS-connector-timestamp-audit todo. All 65 connector files classified
-  (37 exchange-time w/ arrival fallback, 11 pure arrival-time, 2 mixed-path, 15 BLOCKED-* scaffolds). Evidence in
-  `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new Findings section.
 - **2026-08-21**: drafted by na-eligibility-audit (cross-cutting tranche, batch 2 of 3). All 10 items conflict-
   checked against every existing cross-cutting satellite batch (1b, 13-20) and the consolidated closeout — no
   duplication found.

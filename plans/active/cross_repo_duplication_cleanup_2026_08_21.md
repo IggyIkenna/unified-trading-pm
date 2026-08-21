@@ -108,11 +108,11 @@ Three audit findings collide with plans that already own those files. Per the fi
 
 - [ ] [AGENT] P0. Delete `unified_api_contracts/internal/ml_backup.py` — a 742-line checked-in backup file inside the
       SSOT contracts package. Verify zero importers first (grep + lazy re-export map in `internal/__init__.py`).
-- [x] ✅ [AGENT] P0. SHIPPED unified-api-contracts@e9bc03a915 — DELETED outright (zero importers) rather than shimmed; the no-shims gate rejected the shim. Also fixed a real double-dot relative-import bug in `sports/bookmaker.py`. Original: Collapse `canonical/domain/bookmaker_registry.py` and `canonical/domain/sports/bookmaker_registry.py`
+- [ ] [AGENT] P0. Collapse `canonical/domain/bookmaker_registry.py` and `canonical/domain/sports/bookmaker_registry.py`
       — 867 vs 868 lines with **1 differing line**. Keep one canonical definition, re-export from the other path.
-- [x] ✅ [AGENT] P1. SHIPPED unified-api-contracts@e9bc03a915 — the one test importer was repointed to `internal/sports.py` first. Original: Delete `internal/domain/features_sports/storage.py` — shasum-identical, zero-importer copy of
+- [ ] [AGENT] P1. Delete `internal/domain/features_sports/storage.py` — shasum-identical, zero-importer copy of
       `internal/sports.py`; its sibling `__init__.py` docstring already says the real storage types live elsewhere.
-- [x] ✅ [AGENT] P2. SHIPPED unified-api-contracts@e9bc03a915 — consolidated, keeping the 2 risk_service-unique classes local. Original: Reconcile `internal/risk.py` (1,061 lines) against `internal/domain/risk_service/risk.py` (579
+- [ ] [AGENT] P2. Reconcile `internal/risk.py` (1,061 lines) against `internal/domain/risk_service/risk.py` (579
       lines, 532 differing) — determine which is authoritative and re-export rather than duplicate.
 
 ### features-service
@@ -127,10 +127,10 @@ Three audit findings collide with plans that already own those files. Per the fi
 
 ### execution-service — matching engines explicitly out of scope
 
-- [x] ✅ [AGENT] P1. SHIPPED execution-service@959c045e9 — kept the `utils/validation/` copy; the deleted one still returned legacy `"swaps"` instead of `"dex_swaps"`, so this was a correctness choice. Original: Merge `execution_service/validation/instruction_validator.py` and
+- [ ] [AGENT] P1. Merge `execution_service/validation/instruction_validator.py` and
       `execution_service/utils/validation/instruction_validator.py` — 570 vs 561 lines, 59 differing. Pick one home,
       re-point importers.
-- [x] ✅ [AGENT] P1. SHIPPED execution-service@959c045e9 — DELETED (2,030 LOC). Evidence: zero production importers, live Deribit path runs via `trade_execution/factory.py` to `DeribitCCXTAdapter`, no importlib/config/UAC dynamic resolution, and sibling `venues/{hyperliquid,uniswap,lido,morpho,etherfi}.py` were already deleted for the same reason. Original: Runtime-registration check on `execution_service/venues/` (2,030 LOC). Only importers found are
+- [ ] [AGENT] P1. Runtime-registration check on `execution_service/venues/` (2,030 LOC). Only importers found are
       tests and benchmarks, and it duplicates `defi_execution/connectors/` class-for-class — but it contains an
       `initializer.py`, so confirm nothing registers it dynamically before deleting. If the check is inconclusive,
       file an issue doc rather than deleting.
@@ -153,7 +153,7 @@ Three audit findings collide with plans that already own those files. Per the fi
 
 ### ml-service + e2e-testing
 
-- [x] ✅ [AGENT] P1. SHIPPED ml-service@cfc2540d5e (net -45; gate GATE_EXIT=0, sentinel==HEAD). Original: ml-service — collapse `ml_service/{inference,training}/auth_s2s.py` and adopt UTL
+- [ ] [AGENT] P1. ml-service — collapse `ml_service/{inference,training}/auth_s2s.py` and adopt UTL
       `ConfigReloaderBase` for both `config_reloaders.py` copies (16 differing lines out of 112).
 - [ ] [AGENT] P1. e2e-testing — collapse the 5 `scripts/*/smoke_matrix.py` copies (52-127 shared blocks pairwise) into
       one parameterised module driven by a domain table.
@@ -272,64 +272,3 @@ Three audit findings collide with plans that already own those files. Per the fi
       (last true regen 2026-05-16, reverted the same day in `91e45bdf`). The `uic-openapi-sync.yml` template fix has
       landed but `rollout-workflow-templates.sh` was NOT run, so the live per-repo workflow still carries the old
       fallback.
-
-### Exact contract for the e2e-testing wrapper fix (derived 2026-08-21, do not re-derive)
-
-The 42 features-service failures are `AttributeError`s: the new wrappers expose only `DomainSmokeConfig` and
-`main`, but `features-service/tests/*/unit/test_smoke_matrix.py` loads the wrapper via `importlib` and calls
-module-level symbols with the ORIGINAL (config-free) signatures. Measured call sites vs shared signatures:
-
-| Test calls on the loaded module      | Shared function in `scripts/_smoke_matrix_shared.py`                    |
-| ------------------------------------ | ----------------------------------------------------------------------- |
-| `mod._viable_cells(None)`            | `_viable_cells(cfg, filter_asset_group)` — L127                         |
-| `mod._build_cli_invocation(ag, date)`| `_build_cli_invocation(cfg, asset_group, date)` — L137                  |
-| `mod._test_bucket("p", cat)`         | `_test_bucket(cfg, project_id, asset_group)` — L150                     |
-| `mod._run_cell(asset_group=…, …)`    | `_run_cell(cfg, asset_group, date, project_id, dry_run)` — L280         |
-| `mod.run_matrix(asset_group_filter=…)`| `run_matrix(...)` — L313                                                |
-| `mod.SUPPORTED_ASSET_GROUPS`         | `CONFIG.supported_asset_groups`                                         |
-
-So a plain re-export is NOT enough — the signatures differ by the leading `cfg`. Each wrapper must bind its own
-CONFIG (e.g. `functools.partial(_shared._viable_cells, CONFIG)`) and define `SUPPORTED_ASSET_GROUPS`. Check
-`mock.patch` targets still resolve after binding — several tests patch `_invoke_cli`, and a `partial` is not a
-function object.
-
-- [ ] [AGENT] P1. Apply the binding above to all 5 e2e-testing wrappers, then re-gate features-service. BLOCKED
-      until the `docs/VM_BACKFILL_GUIDE.md` unmerged entry is resolved — git refuses to commit any path in that repo
-      while it exists.
-
-### BLOCKER: unified-api-contracts cannot gate green — cause is NOT this plan's diff (2026-08-21)
-
-UAC's work is complete (-1,551 lines, shim removed, package imports verified with all 78 BOOKMAKER_REGISTRY
-entries) but `quality-gates.sh --no-fix` exits 1 on two violations, neither introduced by this plan:
-
-- [ ] [OPERATOR] P1. **STEP 5.96 blank-asset_group: 4 new violations, baseline 0, introduced by commit
-      `e48adfa3` "refactor: centralize deployment observability contracts"** — another session's hoist of
-      `cloud_run_job_registry.py` + `deployment_classification.py` into UAC (the same hoist this plan recommended
-      for the deployment-api import fix). **Three of the four are FALSE POSITIVES.**
-      `scripts/quality_gates/check_no_blank_asset_group.py:52` is
-      `_BLANK_PATTERN = re.compile(r'asset_group\s*=\s*(?:""|\'\')')` searched against `raw_line` (L118) with no
-      comment/docstring awareness, so it flags PROSE: `cloud_run_job_registry.py:24` (docstring),
-      `:122` (a `#` comment), `deployment_classification.py:150` (docstring). Only
-      `cloud_run_job_registry.py:70` (`asset_group="",`) is real code, and that one is a legitimate cross-asset
-      T+1 recon job that wants the documented `# noqa: blank-asset-group  <reason>` opt-out.
-      Two candidate fixes: (a) make the checker token-aware (skip COMMENT/STRING tokens via `tokenize`) — a
-      fleet-wide enforcement change, should be deliberate; (b) noqa the one real callsite and accept prose
-      false-positives. NOT done here: patching a shared gate checker unilaterally while other sessions gate
-      against it is not a safe autonomous act.
-- [ ] [OPERATOR] P2. **900-line cap**: `unified_api_contracts/internal/architecture_v2/__init__.py` is 1,423 lines,
-      from commit `d44de9fb` "feat(uac): add authorized control instructions". Also pre-existing to this plan.
-
-**Consequence**: UAC (-1,551) is unshippable, and because quickmerge's pre-flight refuses any repo whose path
-dependency is dirty, ml-service (-45) and execution-service (-4,378) are blocked behind it despite both being
-gate-verified.
-
-### Blocker corrections (2026-08-21, later)
-
-- [x] ✅ **STEP 5.96 resolved itself upstream — the escalation above is STALE.** Re-applying the edits against the
-      pulled content produced ZERO changes; another session had already fixed it. No operator action needed.
-- [x] ✅ **The 2 "failing" UAC tests were host-contention timeouts, not defects.**
-      `tests/test_cassette_orphan_checker.py` needs ~183s; the gate runs pytest with `--timeout=150`. Both passed in
-      isolation. At load average 94 they timed out; at load 27 the full gate passed clean (GATE_EXIT=0).
-- [ ] [AGENT] P2. **Two UAC tests sit above the gate's per-test timeout under load** — `test_cassette_orphan_checker.py`
-      (~183s vs `--timeout=150`). This surfaces as phantom red for anyone gating on a busy host. Either speed the scan
-      up or give that module a longer timeout.

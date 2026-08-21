@@ -148,21 +148,6 @@ EXTENDED/PACIFICA/LIGHTER as defi → 1,802 contaminant defi `_index` rows; they
 (adapters relocated `adapters/defi/`→`adapters/cefi/`) and the contaminant rows purged. SSOT:
 `plans/active/instruments_foundation_completeness_2026_06_24.md`.
 
-**KALSHI-PERP/POLYMARKET-PERP carry a BLANK `chain` — they are genuinely chainless, not a defect (operator ruling
-2026-08-21, `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md`).** Unlike the other
-CeFi on-chain perps above (HYPERLIQUID/ASTER/EXTENDED/LIGHTER, each a real settlement chain), KALSHI-PERP and
-POLYMARKET-PERP are CFTC-regulated crypto perpetual exchanges with **no underlying blockchain at all** — they're
-captured through `market-tick-data-service`'s DeFi-shaped `perp_funding_handler.py`/`_defi_manifest.py` recorder for
-implementation convenience, not because they're chain-bound. That recorder's `_build_row_key` enforces a hard
-"A4-full" invariant (every DeFi-family shard carries a non-blank `chain`, `BlankChainError` otherwise) — correct for
-every genuinely chain-bound venue, but a category error for these two. The manifest's real capture history confirms
-this: 100% of every real `(venue=KALSHI-PERP, data_type=perp_funding)` row ever recorded carries `chain=""`. The fix
-(`market-tick-data-service@f7cdd18b21`) adds a small, explicit `_CHAINLESS_VENUES` allowlist to `_build_row_key`
-(`{"KALSHI-PERP", "POLYMARKET-PERP"}`) so a blank chain is accepted for exactly these two, while the A4-full invariant
-stays a real guarantee for every other DeFi-family shard. **Pattern for a future chainless CeFi venue piggy-backing on
-this recorder**: add it to `_CHAINLESS_VENUES`, not a per-venue hardcoded non-blank workaround stamp — the latter is
-the anti-pattern this ruling retired.
-
 ## `dex_pool_state` = EVM + Solana pool-state UNION under one data_type (CHANGE — operator-noted 2026-06-01)
 
 After the collapse, **`data_type=dex_pool_state` carries BOTH EVM pools and Solana pools under a single name** — it is a

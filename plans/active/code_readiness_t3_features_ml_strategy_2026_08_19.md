@@ -254,31 +254,12 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Walkthrough feedback 2026-08-21 — strategy cluster (operator feedback on platform-external-api-walkthrough.html; verified against strategy-service HEAD 2026-08-21)
 
-- [x] [BACKEND] P0. Strategy wizard external endpoint — **done**, `deployment-api@8e26e27915`. Built
-      `POST /api/strategy/wizard/{create,validate,deploy}` in `deployment-api/deployment_api/routes/
-      strategy_wizard.py` (authenticated via `_authenticated_router`; `deploy` additionally gated on
-      `Permission.DEPLOY_TRIGGER`, mirroring `strategy_backtest_launch.py`'s existing RBAC pattern), registered
-      in `main.py`. No service->service dependency: deployment-api never imports strategy_service — the
-      integration seam is the same GCS object strategy-service's `strategy_config_loader.load_strategy_config_gcs`
-      already reads (`configs/strategies/{strategy_id}.json` in the strategy-store bucket). `create` returns a
-      config-shape stub for a `StrategyArchetype` (UAC enum); `validate` structurally checks archetype-membership
-      + JSON-well-formedness with no write; `deploy` re-validates then `upload_bytes`s to that GCS path and
-      returns the `config_uri`. Deep archetype-param-schema validation (`PARAM_SCHEMA_REGISTRY`,
-      strategy-service-internal) deliberately stays strategy-service-side via the existing
-      `get_strategy_params`/`WizardParamPayloadError` seam. Request/response examples are in every route's
-      docstring (see file — create/validate/deploy each show a full example request + response). **Hot config
-      reload documented alongside, no new endpoint** (T5 hand-off): the write-side contract is the same GCS
-      object; `strategy_service/config_reloaders.py`'s `DomainConfigReloader` polls `StrategyDomainConfig` and
-      atomic-swaps only `SAFE_STRATEGY_RELOAD_FIELDS` (`strategy_params`), rejecting anything outside that
-      allow-list via `UnsafeConfigChangeError` (previous config stays active) — request = GCS write, response =
-      next reload tick's accept/reject, observable via strategy-service `log_event`. 9 new tests in
-      `tests/unit/test_strategy_wizard.py`, all QG-green. Shipping this hit two real blockers along the way,
-      both filed/resolved separately: a dirty `unified-api-contracts` dependency (transient, another concurrent
-      session's WIP) and a genuine regression from `unified-api-contracts@4f25d5f0` breaking
-      `deployment-api/deployment_api/services/prediction_catalogue.py` at import time (filed
-      `/plans/archive/issues/deployment_api_prediction_catalogue_broken_by_uac_category_deletion_2026_08_21.md`,
-      resolved + archived by a separate session at `deployment-api@9947cc40ae`) — see Progress Log for the full
-      trace on both.
+- [ ] [BACKEND] P0. Strategy wizard external endpoint — verified 2026-08-21: NO external HTTP wizard route
+      exists in deployment-api or strategy-service. Build it (wizard create/validate/deploy as an authenticated
+      external API), with documented request/response examples. Hot config reload is already fully built both
+      sides (`strategy_service/config_reloaders.py` + per-domain reloaders; `execution_service/
+      config_reloaders.py`, `v2/policy_reloader.py`) — expose/document its request-response pattern alongside,
+      hand examples to T5.
 - [x] [BACKEND] P1. Add `staking_pnl` as a first-class dimension in `_PNL_DIMENSIONS` — **done**,
       `strategy-service@21937bb2cf`. `_PNL_DIMENSIONS` grew from 11 to 12 (`staking_pnl` added); it is
       accumulated as its own dimension (no longer silently mixed into whichever of carry/residual a caller
@@ -914,39 +895,9 @@ across all 7 protocols.
   deployment_api/vm_utils.py tests/unit/test_strategy_wizard.py'` once `unified-api-contracts` is clean — code is
   complete and gate-green, this is purely a dependency-repo contention wait, not remaining implementation work.
 
-- [x] [BACKEND] P0. Ship the already-built, already-QG-green strategy wizard external endpoint — **done**,
-      `deployment-api@8e26e27915`. Landed once the P0 prediction_catalogue.py regression (see Progress Log entry
-      below) was resolved by another session at `deployment-api@9947cc40ae` and the repo's gate went green again
-      (5427 tests passed per the coordinator's signal, independently re-confirmed here by re-running
-      `quality-gates.sh --no-fix` myself after `git pull --ff-only` before shipping, since HEAD had moved past
-      my prior sentinel). Walkthrough-feedback checkbox above flipped with this sha.
-
-## Progress Log — 2026-08-21 wave-1c, ship completion
-
-Coordinator signaled the P0 issue doc (`deployment_api_prediction_catalogue_broken_by_uac_category_deletion_2026_08_21.md`)
-was resolved + archived at `deployment-api@9947cc40ae` (catalogue facet now projects from canonical
-`PredictionUnderlying` per an operator ruling; a config-descriptor int-encoding issue found alongside was pinned
-too). Verified independently rather than trusting the signal blind: `git pull --ff-only` (already at
-`9947cc40ae`), confirmed my WIP untouched (`strategy_wizard.py`/`main.py`/`vm_utils.py`/`test_strategy_wizard.py`
-still present exactly as left), re-ran `quality-gates.sh --no-fix` myself (HEAD had moved past my prior sentinel,
-so Pass-1's sentinel-verification would otherwise have refused Pass-2) — green, `exited with code 0`. Shipped:
-`deployment-api@8e26e27915`. Both wizard-endpoint todos above flipped with this sha.
-
-**Update 2026-08-21 (same session, following a coordinator signal that `unified-api-contracts@4f25d5f0` had
-landed and cleared the earlier dirty-dep block)**: `git pull --ff-only` + re-gated deployment-api (HEAD had moved
-since the prior sentinel) — the dirty-dep blocker IS clear, but `4f25d5f0` itself (a DIFFERENT, deliberate `feat!`
-that deleted `PredictionMarketCategory`/`category_for_group`, tracked `[x]` done in
-`walkthrough_feedback_remediation_2026_08_19.md` with "Manifest supersession flagged to T2 (no-migration scope
-here)") broke `deployment-api/deployment_api/services/prediction_catalogue.py` at import time — that module is
-imported eagerly by `tests/unit/conftest.py`, so `quality-gates.sh` now fails at pytest COLLECTION for the entire
-deployment-api suite, not just prediction code. Confirmed via `git show 4f25d5f0` that the deleted helpers have no
-same-shape successor (`underlying_for_group()` returns fine-grained per-asset `PredictionUnderlying`, not the old
-7-value coarse bucket) — a correct fix is a real design decision (keep old bucket semantics via a new
-locally-owned mapping table, or redesign the catalogue's category filter/facets around the two-axis model, and
-possibly update deployment-ui too), genuinely out of this session's scope/visibility, so NOT attempted here.
-Filed `/plans/archive/issues/deployment_api_prediction_catalogue_broken_by_uac_category_deletion_2026_08_21.md`
-(`unified-trading-pm@49ce8f2fcf`) with the full trace + two candidate fix options for whoever picks it up.
-**Net effect on this todo: still code-complete + still blocked, but now on a DIFFERENT, more specific reason** —
-not `unified-api-contracts` dirty-state, but a real (if narrow, single-consumer) regression in deployment-api
-itself that needs a design call before `quality-gates.sh` can go green again. The exact ship command from the
-entry above is unchanged and still correct once the P0 issue doc is resolved.
+- [ ] [BACKEND] P0. Ship the already-built, already-QG-green strategy wizard external endpoint
+      (`deployment-api/deployment_api/routes/strategy_wizard.py` + `main.py` + `vm_utils.py` noqa fix +
+      `tests/unit/test_strategy_wizard.py`, all uncommitted in the deployment-api working tree) — blocked only on
+      `unified-api-contracts` (a deployment-api path-dependency) being clean, not on any remaining code work. Run
+      the exact `quickmerge.sh` command in the Progress Log entry above once that dependency is clean, then flip
+      the walkthrough-feedback checkbox above with the landed sha.

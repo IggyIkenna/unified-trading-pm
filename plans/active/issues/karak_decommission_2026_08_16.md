@@ -32,7 +32,7 @@ execution_scope: local-only
 tags: [defi, karak, decommission, restaking, venue-removal]
 priority: P1
 source: operator-request-2026-08-16
-parent_epic: defi_master # corrected 2026-08-21 (ag-closeout-audit defi tranche, Phase 2 sweep) -- was security_and_cross_cutting_master; Karak is a single DeFi restaking venue decommission (asset_group already corrected to [defi] 2026-08-19), matching this doc's own asset_group correction
+parent_epic: security_and_cross_cutting_master
 related:
   [
     /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,

@@ -52,23 +52,23 @@ recon), 12 (git-stash/autostash hazard).
 | `carry_staked_basis_funding_scan_experiment_2026_06_16.md` | ~24 research todos gated on v9-migration sequencing |
 | `citadel_paper_batch_live_reconciliation_2026_06_19.md` | wallet hard-stop + real ML-feature work |
 | `code_readiness_five_agent_coordinator_2026_08_19.md` + `t1-t5` (~78 items) | uses a different, legitimate dispatch mechanism (operator-launched interactive slots), not neglect |
-| `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md` | dependency-blocked — **re-verified 2026-08-21**: sole open item (1.5b column pruning) gated on `features_service_e2e_pipeline_test_2026_05_26.md`, which is still `status: active` with real open Track-1 remainder as of its own 2026-08-09 entry — gate NOT lifted, still genuinely dependency-blocked |
-| `cross_ag_live_capture_parity_2026_08_14.md` | claimed only by draft batch19 — **re-verified 2026-08-21**: read all 7 open items directly. The one apparent bounded candidate ("file the IS BYBIT daily-catalog publish-timing gap as its own instruments-service issue") is **already a todo inside `cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md`** (line ~100) — not missing coverage, just sitting in an unpromoted `status: draft` batch. The other 6 items are genuinely OPERATOR-paired ("do both together or neither"), a still-diagnosing-chain wait-then-check, or open-ended engineering design ("give consumers a projected/filtered read path") per na-eligibility-audit's own 2026-08-21 re-assessment. Zero new extractable items found. |
+| `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md` | dependency-blocked |
+| `cross_ag_live_capture_parity_2026_08_14.md` | claimed only by draft batch19 |
 | `cross_venue_funding_reversion_research_2026_07_24.md` | 13 research todos |
 | `daily_trading_analyst_llm_job_design_2026_07_29.md` | build-phase todos |
-| `data_completion_to_100_all_ag_2026_06_21.md` | ~5-6 substantively resolved (checkboxes unflipped), ~3 uncovered — **light-checked 2026-08-21**: 9 open items grepped (cefi backfill, IS-store backfill, cross-data_type completeness, DeFi catalogue MVP filter, DeFi honest-absence, CF-11 swallow-fixes, QG 5.70 regression restore, features-service category=defi ban) — each reads as substantial per-AG data/build work, not a mechanical checkbox-flip; not deep-read line-by-line, left for a future pass with more budget |
+| `data_completion_to_100_all_ag_2026_06_21.md` | ~5-6 substantively resolved (checkboxes unflipped), ~3 uncovered |
 | `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md` | operator HARD RULE items |
-| `data_pipeline_alerts_batch_remediation_2026_07_15.md` | claimed only by draft batch19 — **re-verified 2026-08-21**: sole open item is the 24h-observation-window todo; na-eligibility-audit reaffirmed it blocked the SAME day (2026-08-21) — the real gate is "underlying sports/tradfi/cefi conditions actually clear", not pure elapsed time, still unmet. No new extractable item. |
-| `data_pipeline_completion_2026_08_21.md` (7 items) | fresh, no batch has picked up the new set — **re-verified 2026-08-21**: all 7 open items grepped directly — 2 explicit `[OPERATOR]` sign-off items, 5 `[BACKEND]`/`[DATA]` items each phrased as a root-cause investigation or a cross-archetype design/build ("resolve the transitive closure per archetype", "root-cause the stray-tuple count growth") — genuinely too-large/design-needed, not mechanical |
+| `data_pipeline_alerts_batch_remediation_2026_07_15.md` | claimed only by draft batch19 |
+| `data_pipeline_completion_2026_08_21.md` (7 items) | fresh, no batch has picked up the new set |
 | `instruments_completion_tracker_2026_07_06.md` | investigation + NA-gate pointers |
 | `instruments_foundation_completeness_2026_06_24.md` / `_phase0_cross_cutting` | GATE 0 not signed off |
 | `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` | irreversible single-walk, KEEP-NA 7+ rounds |
 | `is_catalogue_g1_root_audit_log_2026_07_24.md` | gated on IS backfill/UAC/v9 |
 | `ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md` | recursive benchmark re-runs |
-| `blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md` | 5 per-handler async-ification items — **re-verified 2026-08-21**: now 4 open (1 more, lst_rates, shipped 2026-08-21 since Phase-1). Read the doc's own repeated na-eligibility-audit history (6 passes through 2026-08-21, same day): every pass independently concludes the remaining items need real per-handler correctness judgment (an async-ification design call, a stage-module extraction refactor, a call-chain signature change) — not a mass mechanical edit. Confirmed, not extracted. |
-| `capability_wizard_analysis_findings_2026_06_11.md` | F1-F3/F7/F10-F13/F16-F19/F46 still open — **light-checked 2026-08-21**: sole open checkbox is `[BLOCKED-CREDENTIALS]` (F46, perp `place_order` scaffolds) — genuinely operator/credential-gated, matches taxonomy |
+| `blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md` | 5 per-handler async-ification items |
+| `capability_wizard_analysis_findings_2026_06_11.md` | F1-F3/F7/F10-F13/F16-F19/F46 still open |
 | `ci_reconcile_overnight_batch_2026_08_11.md` | BLOCKED-PERMISSIONS, no self-service IAM |
-| `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` | partially worked, sequenced infra items remain — **re-verified 2026-08-21**: sole open item still GATED on `defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`'s own `[SCRIPT]` re-retirement todo — read that doc's latest entries, "GATE STILL NOT MET" as of its most recent 2026-08-17 sessions, still `status: open`. Blocker has NOT shipped/resolved. Note: this doc's own `assigned_vm: planning` (already AO-dispatch-eligible directly, no satellite batch needed) makes "orphaned" a loose fit here regardless of the gate. |
+| `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` | partially worked, sequenced infra items remain |
 
 ### Batch 3-4 (docs #65-128)
 | Doc | Taxonomy |
@@ -129,49 +129,17 @@ recon), 12 (git-stash/autostash hazard).
 
 ## Mechanical hygiene flags
 
-- ✅ `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`: 0 open checkboxes is a false-completion — real
-  work lives in `defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` (outside covering set). **FIXED
-  2026-08-21**: re-verified the delegated todo (e) is still genuinely open, added a real tracked `- [ ]` checkbox
-  pointing to it (was prose-only in the summary before).
-- ✅ `w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`: duplicate `## Progress Log` H2 header from
-  concurrent-editing. **FIXED 2026-08-21**: removed the duplicate header, merged into one Progress Log section.
-- ✅ `walkthrough_feedback_remediation_2026_08_21.md`: unfilled `<shipping-sha>` placeholder in checkbox citations
-  (parked doc said 4; a direct `grep -c` found 5). **FIXED 2026-08-21**: `git blame`d each placeholder line to its
-  real landing commit and filled in the actual short shas (`b8f4fea784` ×4, `62828f01cb` ×1); re-verified
-  `grep -c shipping-sha` now returns 0.
-- ⬜ `context_scout_stale_citations_and_doc_drift_2026_08_20.md`'s real coverage came from the **ao** tranche's batch,
-  not any cross-cutting batch — cross-tranche attribution nuance, not a gap. **Re-verified 2026-08-21**: confirmed
-  its own Disposition section already correctly points every extracted finding at
-  `/plans/active/ao_satellite_ao_dispatch_batch2_2026_08_21.md` — no fix needed in the target doc, this flag was
-  purely informational.
-- ✅ `cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md` / `batch20_2026_08_19.md` — both `status: draft`,
-  never promoted; their `_finalize` companions are `status: active` and structurally can never complete. **FIXED
-  2026-08-21**: flipped both `_finalize` docs' `status: active` → `blocked` (their sole `gate_on_depends: true`
-  target stays draft, so they cannot complete — `blocked` states the real reason instead of the misleading
-  `active`). Re-flip to `active` once an operator promotes batch19/batch20. **Not fixed** (out of mechanical-fix
-  scope, needs an operator call): whether to actually promote batch19/batch20 themselves — both contain real,
-  already-vetted, conflict-checked bounded work from 2026-08-19 that has sat undispatched for 2+ days.
+- `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`: 0 open checkboxes is a false-completion — real
+  work lives in `defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` (outside covering set).
+- `w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`: duplicate `## Progress Log` H2 header from
+  concurrent-editing.
+- `walkthrough_feedback_remediation_2026_08_21.md`: unfilled `<shipping-sha>` placeholder in 4 checkbox citations.
+- `context_scout_stale_citations_and_doc_drift_2026_08_20.md`'s real coverage came from the **ao** tranche's batch,
+  not any cross-cutting batch — cross-tranche attribution nuance, not a gap.
+- `cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md` / `batch20_2026_08_19.md` — both `status: draft`,
+  never promoted; their `_finalize` companions are `status: active` and structurally can never complete.
 
 ## Progress Log
 
 - **2026-08-21**: Doc created directly from the 2026-08-21 /ag-closeout-audit cross-cutting Phase-1 sweep (6
   batches, the largest tranche). No mechanical fixes applied yet.
-- **ag-closeout-audit 2026-08-21 (cross-cutting tranche, Phase 2+3 sweep)**: Phase 2 — applied all 5 mechanical
-  hygiene fixes (4 real edits + 1 confirmed-no-op), see updated flags above with per-item evidence. Phase 3 — did a
-  full re-verification pass over every row in the Batch 1-2 orphan table (24 rows): deep-read 6 candidate docs in
-  full (`cross_ag_live_capture_parity`, `data_pipeline_alerts_batch_remediation`,
-  `blocking_gcs_writes_on_event_loop_cross_asset_group`, `colocated_feature_pipeline_in_memory_handoff`,
-  `defi_cefi_venue_chain_axis_contamination` + its gating sibling doc, `data_pipeline_completion_2026_08_21`),
-  light-checked 2 more via grep (`data_completion_to_100_all_ag`, `capability_wizard_analysis_findings`), and
-  trusted the remaining ~16 rows' already-precise one-line gates (operator ruling / research-class / irreversible
-  single-walk — unambiguous gate types that don't need a re-verify-shipped check). **Result: zero new
-  genuinely-bounded AO-dispatch candidates found** — the one apparent candidate (file the IS BYBIT daily-catalog
-  publish-timing gap as its own issue) turned out to already be a todo inside the still-`draft`
-  `cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md`, not missing coverage. See the updated table rows
-  above for full per-doc evidence. **No new batch23 doc created** — there was nothing genuinely bounded and
-  uncovered to put in one. **NOT REACHED this session**: Batch 3-4 (docs #65-128, ~24 rows) and Batch 5-6 (docs
-  #129-166, ~38 rows) of the orphan table were not re-verified at all — a future session should pick up there.
-  **Big finding surfaced**: batch19 and batch20 (both real, conflict-checked, already-vetted work from
-  2026-08-19) have sat `status: draft`/undispatched for 2+ days with their gated `_finalize` companions
-  incorrectly reading `status: active` (now corrected to `blocked`, see above) — worth an operator look at
-  promoting them rather than continuing to mine for new extractions when known-good work already sits unshipped.

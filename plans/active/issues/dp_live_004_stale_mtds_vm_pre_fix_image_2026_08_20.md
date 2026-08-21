@@ -18,9 +18,6 @@ related:
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/dp_live_004_bybit_futures_book_snapshot_unproductive_2026_08_21.md,
-    /plans/archive/issues/dp_live_004_bybit_stale_vm_relaunch_required_2026_08_20.md,
-    /plans/archive/issues/dp_live_004_bybit_vm_stale_tarball_2026_08_20.md,
   ]
 created: 2026-08-20
 author: data_pipeline_failure (slot 32, escalation agt-0d8048)
@@ -47,20 +44,6 @@ source: DP-LIVE-004 / DP_CRON_DID_NOT_FIRE (mtds-live-cefi-consolidated-20260817
 ---
 
 # DP-LIVE-004 BYBIT-FUTURES book shard is running a pre-fix image
-
-> **CONSOLIDATED 2026-08-21 (ag-closeout-audit cefi tranche, Phase 3)**: this is the same incident as 3 sibling
-> docs, filed independently by 4 different escalation dispatches, none cross-referencing each other, all naming the
-> identical VM (`mtds-live-cefi-consolidated-20260817-025031`), the identical root cause (stale runtime predates
-> `market-tick-data-service@5f88715e4b`), and the identical recommended action (cycle the VM through the registered
-> launcher, then verify a real captured row). This doc is now the CANONICAL one (it already carried the correct
-> `assigned_vm: planning` / `execution_scope: orchestrator-agent` dispatch frontmatter; the other 3 were either
-> `execution_scope: local-only` or a stale `assigned_vm: vm-cross-cutting` legacy value that the single-VM AO
-> ingestion path does not match, so none of them were actually reachable by AO dispatch). The other 3 are marked
-> `status: superseded` and redirected here — their own evidence/detail is kept, not deleted:
-> `/plans/active/issues/dp_live_004_bybit_futures_book_snapshot_unproductive_2026_08_21.md`,
-> `/plans/archive/issues/dp_live_004_bybit_stale_vm_relaunch_required_2026_08_20.md`,
-> `/plans/archive/issues/dp_live_004_bybit_vm_stale_tarball_2026_08_20.md`. A single consolidated Todos section
-> (below) replaces the 4 separate un-dispatched recommendations.
 
 ## What was found
 
@@ -99,30 +82,8 @@ revision) contains the filter and verify at least one real
 `captured` BYBIT-FUTURES row for `book_snapshot_5`; then close the related
 follow-up in `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`.
 
-## Todos
-
-- [ ] [OPERATOR] P1. Cycle the singleton `mtds-live-cefi-consolidated-*` VM through the registered launcher
-      (`deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh`) onto the current MTDS tarball (contains
-      `market-tick-data-service@5f88715e4b`, the BYBIT-FUTURES subscribe-universe filter that excludes `SPOT_PAIR`).
-      Controlled cutover only — do **not** `--force` while the current VM is RUNNING and do **not** stop/delete it
-      until the replacement is verified (the launcher's singleton guard + the other CeFi streams it is actively
-      writing depend on this). Done when: the replacement VM reaches `RUNNING` with a current code-provenance
-      marker (tarball refreshed after 2026-08-20T22:15Z / contains `5f88715e4b` or a descendant).
-- [ ] [DATA] P1. After the cycle, verify at least one real `captured` `BYBIT-FUTURES`/`book_snapshot_5` row in the
-      new per-VM manifest shard (direct GCS/manifest read, never a fabricated/placeholder row). Never reclassify the
-      existing all-`empty_confirmed`/`SOURCE_RETURNED_ZERO` rows without this proof. If the fresh runtime is still
-      unproductive, inspect Bybit subscribe acknowledgements/rejections and file a follow-up code issue rather than
-      muting DP-LIVE-004. Once verified, close the related follow-up in
-      `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`.
-
 ## Progress Log
 
-- **ag-closeout-audit 2026-08-21 (cefi tranche, Phase 3 sweep)**: consolidated this doc's 3 sibling near-duplicates
-  (identical VM + root cause + recommended action, filed by 4 independent escalation dispatches with zero
-  cross-referencing) into this canonical doc — added `related:` links, a consolidation banner, and the 2 tracked
-  `- [ ]` todos above (previously all 4 docs carried only unactionable prose "Recommended decision" text, and this
-  doc specifically had zero `- [ ]` todos despite `assigned_vm: planning`, so nothing was actually dispatchable).
-  Marked the 3 siblings `status: superseded` + `superseded_by:` pointing here, with their own evidence kept intact.
 - 2026-08-20 (slot 32, escalation `agt-0d8048`): confirmed the MTDS worktree is
   clean and current on `live-defi-rollout`; inspected commit
   `5f88715e4b` and its book-connector tests; inspected the live VM and found the

@@ -112,12 +112,10 @@ CI-firefighter actively diagnosing a live blocking wall), not a silent bump.
       qg-host-governor.sh:659) apparently already exists to detect exit 137 under this cap — confirm it actually
       surfaces a clear message in quickmerge's own stdout/log (not just a code comment) for every repo, not just the
       basedpyright case the existing comment describes.
-      **➡️ EXTRACTED 2026-08-21 (ag-closeout-audit, infra tranche Phase 3) → `plans/active/infra_satellite_ao_dispatch_batch2_2026_08_21.md` todo 14.**
 - [ ] [SCRIPT] P3. **Check whether other repos on this shared host have a similarly stale (>20% under-measured)
       baseline** that would silently fail the same way on their next quickmerge — `scripts/dev/qg_resource_baseline.json`
       is the full committed set; a bulk `--force` re-measure sweep (or at least a report of current vs.
       committed-baseline deltas without forcing) would catch this class before it blocks someone else's push.
-      **➡️ EXTRACTED 2026-08-21 (ag-closeout-audit, infra tranche Phase 3) → `plans/active/infra_satellite_ao_dispatch_batch2_2026_08_21.md` todo 15.**
 
 ## CORRECTION (2026-08-20, same session, after landing the actual fix) — the real blocker was NOT the memory baseline
 

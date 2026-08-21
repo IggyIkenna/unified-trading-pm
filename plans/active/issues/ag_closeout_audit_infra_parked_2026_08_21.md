@@ -45,13 +45,13 @@ context_scope: [/plans/active/issues/ag_closeout_audit_cross_tranche_big_finding
 | `codex_violations_ratchet_to_five_2026_06_10.md` | Phase 3 schema-provenance migration, needs dedicated design pass |
 | `compute_flexible_cud_sizing_analysis_2026_08_16.md` | 2 date-gated re-checks (~1-2wk, ≥2026-09-15) |
 | `deployment_network_egress_ingress_observability_2026_08_18.md` | gated on GCP support case (Flow Logs anomaly) |
-| `issues/agent_orchestrator_pytest_cov_silent_death_under_host_load_2026_08_20.md` | ✅ **EXTRACTED 2026-08-21 (Phase 3)** → `infra_satellite_ao_dispatch_batch2_2026_08_21.md` todos 12-13 (both bounded todos; the doc's own open-ended host-level investigation stays in-doc) |
-| `issues/agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md` | RSS-doubling investigation stays orphaned (open-ended); ✅ **EXTRACTED 2026-08-21 (Phase 3)** → `infra_satellite_ao_dispatch_batch2_2026_08_21.md` todos 14-15 (the 2 bounded diagnosability/sweep todos) |
+| `issues/agent_orchestrator_pytest_cov_silent_death_under_host_load_2026_08_20.md` | wire workaround into QG permanently |
+| `issues/agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md` | RSS-doubling investigation |
 | `issues/agent_orchestrator_quickmerge_orphan_reap_kills_interactive_background_2026_08_20.md` | **live infra hazard**: any quickmerge/QG run near ~340s can silently die (tmux-session exemption doesn't fire for interactive sessions) |
 | `issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` | see cross-tranche big findings item 12 |
 | `issues/check_line_caps_sh_whitespace_only_exemption_false_positive_2026_08_19.md` | frontmatter/claim mismatch (see hygiene flags) |
 | `issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md` | DISABLE_AUTOUPDATER policy tradeoff |
-| `issues/deployment_service_client_broken_functions_2026_08_20.md` | ✅ **EXTRACTED 2026-08-21 (Phase 3)** → `infra_satellite_ao_dispatch_batch2_2026_08_21.md` (all 11 todos) |
+| `issues/deployment_service_client_broken_functions_2026_08_20.md` | 9 live-broken function fixes + 2 dead-code removals |
 | `issues/deployment_service_preexisting_qg_failures_sync_configs_hardcoded_project_id_2026_08_19.md` | prose-only remaining work (never converted to `- [ ]`) |
 | `issues/deployment_service_prod_terraform_drift_2026_08_07.md` | forward-pointer to t1_recon duplicate-module doc |
 | `issues/deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md` | canonical-module choice + import env-gating risk |
@@ -93,23 +93,3 @@ context_scope: [/plans/active/issues/ag_closeout_audit_cross_tranche_big_finding
 
 - **2026-08-21**: Doc created directly from the 2026-08-21 /ag-closeout-audit infra Phase-1 sweep (3 batches). No
   mechanical fixes applied yet.
-- **2026-08-21 (Phase 3, AO-dispatch batch drafting)**: re-verified this doc's own mechanical-hygiene flags — the
-  `check_line_caps_sh_whitespace_only_exemption_false_positive_2026_08_19.md` false-reclassification-claim fix and
-  the `deployment_service_preexisting_qg_failures_sync_configs_hardcoded_project_id_2026_08_19.md` prose-to-
-  checkbox conversion were both already applied by an earlier session today (both live-verified: the former's
-  `assigned_vm` is `NA` and `infra_satellite_ao_dispatch_batch1_2026_08_21.md`'s own text already carries the
-  correction; the latter now has a real `- [ ] [ENG] P2` checkbox). Read 6 of the ~36 `orphaned_never_touched`
-  rows in full: 2 genuinely bounded docs found and extracted —
-  `deployment_service_client_broken_functions_2026_08_20.md` (all 11 todos) and 2 bounded todos each from
-  `agent_orchestrator_pytest_cov_silent_death_under_host_load_2026_08_20.md` and
-  `agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md` — all 15 → `infra_satellite_ao_dispatch_batch2_
-  2026_08_21.md` (+ gated finalize twin, `infra_satellite_ao_dispatch_batch2_finalize_2026_08_21.md`, given the
-  batch size). `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`'s remaining item (fix-direction
-  2) re-confirmed still a genuine direction-decision fork per its own na-eligibility-audit history;
-  `prod_terraform_drift_backlog_reconcile_2026_07_24.md`'s flagged checkbox-split issue confirmed already
-  self-resolved in-doc (the crash-loop-alert-policy remainder is explicitly consolidated + tracked in the
-  dedicated sibling doc `cloud_run_crash_loop_alert_policy_invalid_metric_2026_08_20.md`, which is itself already
-  `assigned_vm: planning` — not a true NA orphan, no extraction needed);
-  `qg_host_adaptive_resource_governor_2026_07_14.md` (referenced while scoping the QG-baseline items) reconfirmed
-  as an explicit operator-ruled LOCAL/human design plan, not AO-eligible. Did NOT reach the remaining ~30 orphan
-  rows — explicitly not exhaustively re-verified this pass.

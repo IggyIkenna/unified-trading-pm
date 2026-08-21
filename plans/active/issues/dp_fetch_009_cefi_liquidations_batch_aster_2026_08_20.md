@@ -20,13 +20,12 @@ related:
 parent_epic: observability_master
 source:
   - DP-FETCH-009 escalation agt-9d9a98 (2026-08-20)
-assigned_vm: planning # FIXED 2026-08-21 (ag-closeout-audit cefi Phase 3): was stale legacy `vm-cross-cutting` (pre-2026-06-27 multi-VM value) — regen_backlog_from_plan.py's single-VM ingestion only matches `assigned_vm==vm_id` ("planning") or absent, so this doc's open todo was never actually reaching the AO backlog despite `execution_scope: orchestrator-agent`.
+assigned_vm: vm-cross-cutting
 created: 2026-08-20
 priority: P1
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
-assigned_role: data_pipeline_failure
 drift_direction: advance-code
 depends_on: []
 context_scope:
@@ -74,12 +73,6 @@ empty/captured rows; retain existing historical failures for separate reclassifi
 
 ## Progress Log
 
-- **ag-closeout-audit 2026-08-21 (cefi tranche, Phase 3 sweep)**: found this doc mis-classified "orphaned" by the
-  Phase 1 pass — re-verified it was actually never AO-reachable at all: `assigned_vm: vm-cross-cutting` is a stale
-  legacy per-VM value from the pre-2026-06-27 multi-VM architecture that the current single-VM
-  `regen_backlog_from_plan.py` ingestion path does not match. Fixed to `assigned_vm: planning` (+ added the missing
-  `assigned_role: data_pipeline_failure`, mirroring its sibling doc) so the remaining Tardis code-274 lockout
-  investigation todo actually reaches the backlog. No new batch doc needed — this is a direct un-orphaning.
 - 2026-08-20: Falsified the initial ASTER omission hypothesis against the authoritative UAC
   registry and the existing MTDS ASTER batch-filter regression test. No code fix shipped; the
   alert's candidate breakdown is required to continue safely.
