@@ -153,7 +153,7 @@ Three audit findings collide with plans that already own those files. Per the fi
 
 ### ml-service + e2e-testing
 
-- [ ] [AGENT] P1. ml-service — collapse `ml_service/{inference,training}/auth_s2s.py` and adopt UTL
+- [x] ✅ [AGENT] P1. SHIPPED ml-service@cfc2540d5e (net -45; gate GATE_EXIT=0, sentinel==HEAD). Original: ml-service — collapse `ml_service/{inference,training}/auth_s2s.py` and adopt UTL
       `ConfigReloaderBase` for both `config_reloaders.py` copies (16 differing lines out of 112).
 - [ ] [AGENT] P1. e2e-testing — collapse the 5 `scripts/*/smoke_matrix.py` copies (52-127 shared blocks pairwise) into
       one parameterised module driven by a domain table.
