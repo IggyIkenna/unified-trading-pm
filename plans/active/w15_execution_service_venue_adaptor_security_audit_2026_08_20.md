@@ -305,11 +305,19 @@ No code was changed or tests run for this read-only audit. The HIGH findings req
       retrying; do not discard invalid/missing IDs or allow a fresh retry to double-place an order; HIGH finding:
       checklist point 6 (bitfinex_native.py:337-368, bitget_native.py:274-318,
       kraken_rest_adapter.py:293-476, kraken_futures_orders.py:49-143).
-- [ ] [BACKEND] P0. Make Kraken Spot/Futures response-envelope parsing fail closed and require a validated order
+- [x] ✅ [BACKEND] P0. Make Kraken Spot/Futures response-envelope parsing fail closed and require a validated order
       result before constructing NEW/CANCELLED/AMENDED success results; malformed or empty payloads must be reported
       as failures, not interpreted as success; HIGH finding: checklist point 7
       (kraken_rest_transport.py:107-130,177-199, kraken_rest_adapter.py:344-362,390-412,472-476,
-      kraken_futures_orders.py:123-143).
+      kraken_futures_orders.py:123-143). — execution-service@d34123b207 + evidence: new `_require_spot_txid`/
+      `_require_spot_cancel_count`/`_require_spot_amend_id`/`_require_futures_status` validators in
+      `kraken_rest_transport.py`, wired into Spot AddOrder/CancelOrder/AmendOrder and Futures sendorder/
+      cancelorder/editorder (the last of which previously never even inspected the transport result); removed the
+      client_order_id-as-order_id fallback on a missing txid/sendStatus; 6 new regression tests in
+      `test_kraken_adapter.py` (empty-result and rejected-status cases for both Spot and Futures) plus 1 pre-existing
+      testnet-routing test fixture updated to carry a valid `sendStatus.status` now that it's enforced;
+      quality-gates.sh green (196s, sentinel matched committed HEAD; 9009 passed, 0 failed); post-push ancestry
+      verified.
 - [ ] [BACKEND] P1. Remove credential-derived key prefixes from native rate-limit identity/error text, replace
       blocking sleeps in async adapter paths with a non-blocking mechanism, and surface callback failures through
       stream health state; MEDIUM findings (_rate_limit.py:91-92,136-138,185-205,
