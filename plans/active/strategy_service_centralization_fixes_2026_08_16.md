@@ -448,27 +448,33 @@ logic and that no second archetype could ever want. That must be stated, not ass
       [strategy_service_reference_constants_inventory_2026_08_21](/plans/active/strategy_service_reference_constants_inventory_2026_08_21.md).
       Every candidate probed for a real SSOT by content/vocabulary, not name similarity, per the `_STAKING_PROTOCOL_CHAIN`
       measurement-trap lesson above.
-- [x] ✅ [BACKEND] P1. **Migrate the unambiguous ones — DONE 2026-08-21, zero rows qualified.** Every candidate that
-      looked plausible on name alone (venue lists, LST lists, chain lists) was checked against its real UAC
-      counterpart by content and confirmed to be archetype-specific *curation* layered on top of UAC data (matching
-      the `_ALLOWED_CHAINS` precedent), not a duplicate of it. No candidate has both an unambiguous destination and a
-      confirmed-real, already-existing SSOT to receive it — the one genuine literal duplicate
-      (`_STAKING_PROTOCOL_CHAIN`) was already fixed by the exemplar todo above before this audit ran. No code changed
-      by this todo; see the sibling doc's Summary section for the full reasoning.
-- [ ] [OPERATOR] P1. **Rule on the ambiguous ones** — 5 clusters (10 table rows) surfaced by the inventory above,
-      full list + one recommendation each in
+- [x] ✅ [BACKEND] P1. **Migrate the unambiguous ones — DONE 2026-08-21, revised same day.** Zero candidates had both
+      an unambiguous destination AND a confirmed-real, already-existing EXTERNAL SSOT (every venue/LST/chain list
+      that looked plausible on name alone was checked by content and confirmed to be archetype-specific *curation*
+      layered on top of UAC data, matching the `_ALLOWED_CHAINS` precedent, not a duplicate of it — the one genuine
+      external-SSOT duplicate, `_STAKING_PROTOCOL_CHAIN`, was already fixed by the exemplar todo above). **Correction
+      to the first pass of this todo**: `_MONTH_ABBREV` (byte-identical across `carry_and_yield/dated_contract_resolver.py`
+      and `vol_trading/atm_straddle_resolver.py`) was initially left AMBIGUOUS on the reasoning "no SSOT exists to
+      migrate to" — that conflates "no pre-existing external SSOT" with "no valid destination"; the parent plan's
+      own destination #4 (centralized domain module) needs only a genuine multi-consumer need within the domain,
+      which this had. Migrated to new shared module
+      `strategy_service/engine/strategies/v2/dated_symbol_conventions.py::MONTH_ABBREV`; both local dicts deleted
+      (no shims), new unit tests added. Evidence: `strategy-service` quickmerge pending as of this write, blocked on
+      unrelated dirty deps in `unified-trading-library`/`unified-api-contracts` owned by other concurrent sessions
+      (not force-pushed through); will land once those clear. See sibling doc's revised Summary section.
+- [ ] [OPERATOR] P1. **Rule on the ambiguous ones** — 4 clusters (8 table rows, revised 2026-08-21 after
+      `_MONTH_ABBREV` moved from this list to MIGRATED above) surfaced by the inventory above, full list + one
+      recommendation each in
       [strategy_service_reference_constants_inventory_2026_08_21](/plans/active/strategy_service_reference_constants_inventory_2026_08_21.md)'s
       Summary section: (1) `_FAMILY_TO_ASSET_GROUP` — fold into UAC asset_group taxonomy vs. keep as a narrow
       routing-key derivation (recommend: keep local, it's a 3-entry publish-path routing key, not general reference
-      data); (2) `_MONTH_ABBREV` ×2 byte-identical duplicate, no UTL SSOT exists (recommend: new shared module under
-      `carry_and_yield/`, not UTL — it's Deribit-symbol-grammar-specific, not generic); (3) `_STRIKE_INCREMENT` —
-      plausible instruments-service reference data, no confirmed SSOT (recommend: ask instruments-service whether it
-      already owns strike-grid data before building a new registry); (4) `_LP_CONCENTRATED_POOLS` — pool contract
-      addresses, no confirmed UAC LP-pool registry (recommend: build one in UAC only if a second consumer emerges —
-      currently single-consumer); (5) stablecoin-preference cluster (`_STABLE_PREFERENCE` / `_PERP_MARGIN_STABLE_PREFERENCE`
-      ×2 / `_STABLECOINS`, near-identical values across 3 files) — recommend consolidating to one local shared
-      constant in `carry_and_yield/` regardless of the operator's UAC-vs-local ruling, since the duplication is
-      intra-repo either way.
+      data); (2) `_STRIKE_INCREMENT` — plausible instruments-service reference data, no confirmed SSOT (recommend:
+      ask instruments-service whether it already owns strike-grid data before building a new registry); (3)
+      `_LP_CONCENTRATED_POOLS` — pool contract addresses, no confirmed UAC LP-pool registry (recommend: build one in
+      UAC only if a second consumer emerges — currently single-consumer); (4) stablecoin-preference cluster
+      (`_STABLE_PREFERENCE` / `_PERP_MARGIN_STABLE_PREFERENCE` ×2 / `_STABLECOINS`, near-identical values across 3
+      files) — recommend consolidating to one local shared constant in `carry_and_yield/` regardless of the
+      operator's UAC-vs-local ruling, since the duplication is intra-repo either way.
 - [x] ✅ [BACKEND] P1. **Fix the exemplar — DONE 2026-08-21, `strategy-service@1ea9d0b170`.**
       `_STAKING_PROTOCOL_CHAIN` was already gone (shipped earlier this session,
       `strategy-service@8a7f80e8`) — replaced with UAC's `get_chain_for_protocol()`. Verified live
@@ -510,6 +516,21 @@ logic and that no second archetype could ever want. That must be stated, not ass
   produced (`_STAKING_PROTOCOL_CHAIN`) was already fixed by the exemplar todo before this audit ran, so Task 2 (the
   "migrate the unambiguous ones" todo) had no rows to act on. No strategy-service code changed this session — this
   was inventory + classification only, per both todos' own done-when bars.
+- **2026-08-21 (interactive session, continued — correction)** — Re-read the inventory above's `_MONTH_ABBREV` row
+  (#29/#67) and found the "0 MIGRATE targets" conclusion conflated "no pre-existing external SSOT" with "no valid
+  destination": `_MONTH_ABBREV` is a confirmed byte-identical dict duplicated verbatim across
+  `carry_and_yield/dated_contract_resolver.py:75` and `vol_trading/atm_straddle_resolver.py:37`, and the parent
+  plan's own destination #4 ("centralized domain module — genuinely code-derived, but needed by many archetypes in
+  that domain") applies without requiring a pre-existing module to migrate into. Executed the migration: new module
+  `strategy_service/engine/strategies/v2/dated_symbol_conventions.py::MONTH_ABBREV`, both local dicts deleted (no
+  shims), both resolvers re-import under the original private name so existing call sites/tests are unchanged, new
+  unit tests added (`tests/unit/engine/strategies/v2/test_dated_symbol_conventions.py`). `quality-gates.sh` green
+  (6470 passed, 0 failed; first run hit a transient >300s wall-clock resource-drift gate from host contention,
+  clean retry passed). Quickmerge attempted twice, both blocked by pre-flight on unrelated dirty deps in
+  `unified-trading-library`/`unified-api-contracts` (another concurrent session's in-progress WS-session-manager /
+  error-code work) — not force-pushed through per the multi-agent-safety rule against touching foreign uncommitted
+  work; will retry quickmerge once those clear. Updated the sibling inventory doc's #29/#67 rows and Summary, and
+  this plan's Task 2 checkbox + `[OPERATOR]` cluster list, to match (5→4 clusters, 10→8 ambiguous rows).
 - **2026-08-18 (slot 5, backend_engineer)** — Resolved the P0 reconciliation todo. Read the actual call graph
   (`risk.py::update_lending_positions()` already chains `DeFiHealthAggregator.aggregate()` into
   `emit_margin_event_for_health()`) rather than trusting either module's docstring. A and B are not independent
