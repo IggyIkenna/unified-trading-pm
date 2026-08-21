@@ -51,6 +51,7 @@ context_scope:
     deployment-service/terraform/gcp/live_event_log/main.tf,
     deployment-service/terraform/gcp/live_event_log/warm_sink.tf,
     deployment-service/terraform/gcp/live_event_log/bq_external.tf,
+    deployment-service/terraform/gcp/live_event_log/strategy_atomic_instruction.tf,
     execution-service/execution_service/api/external_instruction_api.py,
     execution-service/execution_service/adapters/defi_adapter.py,
     execution-service/execution_service/v2/account_orchestrator.py,
@@ -123,19 +124,21 @@ context_scope:
       issue's own remaining todos proceed, cross-link both directions in `related:` once landed). Done-when: a
       live `QUOTE` instruction's repricing responds to a published feature-group tick within one round trip,
       not just a registered-but-inert state. Evidence: bash scripts/quality-gates.sh --no-fix (8816 passed, 22 skipped, 1 xpassed; venue-routing commit 62d2e3ab76).
-- [x] [BACKEND] P0. Sink every strategy-emitted instruction consumed by the new subscriber to GCS, one record at
+- [ ] [BACKEND] P0. Sink every strategy-emitted instruction consumed by the new subscriber to GCS, one record at
       a time, via the EXISTING event-log shard pipeline (reuse, do not invent a parallel writer) — queryable via
       the same BigQuery external-table pattern other shard types already use. Distinct from market-tick-data
       aggregation (a separate axis). Done-when: one consumed instruction produces one queryable GCS row with a
       manifest entry, verified via a real read-back, not just a written-file check. The `atomic_instruction`
       `SINK_MATRIX` entry already exists; this todo adds the matching Pub/Sub topic, warm-GCS subscription, and
       BigQuery external table so the canonical envelope published by strategy-service is durably queryable. —
-      **SHIPPED 2026-08-21**: `unified-api-contracts@96ce5bdd6e` adds focused SINK_MATRIX coverage;
-      `deployment-service@9f602e64aa` adds the wildcard `atomic_instruction` Pub/Sub topic, never-expiring warm GCS
-      subscription, and BigQuery external table over the existing event-log sink. Evidence: UAC quality-gates green
-      (214s), deployment-service quality-gates green (246s), UAC focused suite 27 passed, compactor suite 6 passed,
-      `tofu fmt -check` passed; `tofu validate` was unavailable because the Google provider 7.43.0 is not cached
-      locally.
+      **PARTIAL 2026-08-21**: `unified-api-contracts@96ce5bdd6e` adds focused SINK_MATRIX coverage;
+      `deployment-service@9f602e64aa` adds the wildcard sink contract. Live inspection then showed that
+      `PubSubTransport` publishes/reads concrete `persist-{cefi|defi|prediction}-atomic-instruction` topics, so
+      `deployment-service/terraform/gcp/live_event_log/strategy_atomic_instruction.tf` adds those 3 topics, 3
+      execution-reader subscriptions, and 3 warm-GCS subscriptions; applied live with 9 adds and 0 destroys.
+      Remaining DoD: a real strategy-emitted instruction must produce a warm-GCS object and then permit creation of
+      the autodetected external table. A synthetic publish was intentionally not performed because the reader is a
+      live execution destination; current warm prefixes are empty and no real read-back is claimed.
 
 ### Instruction action vocabulary
 
