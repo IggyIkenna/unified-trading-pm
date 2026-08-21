@@ -224,3 +224,5 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
 - **na-eligibility-audit 2026-08-17** [body-hash:554d56e76da47c1b]: KEEP-NA, valid — Reaffirmed. Sole open item (S3-b, sports dual entrypoint fold-vs-bless, line 155) remains an unresolved operator/design adjudication with two named options and no decided answer, reaffirmed unresolved across 7 prior audit passes through 2026-08-16 plus a dedicated finalize-pass re-check. Doc stays assigned_vm: NA.
 - **context-scout 2026-08-17**: populated context_scope (4 entries).
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; sole open item (S3-b, sports
+  dual-entrypoint fold-vs-bless) remains an unresolved operator/design adjudication, no new ruling found.

@@ -148,7 +148,6 @@ for x in d['tranches']['T5-readiness-observability-presentations']['docs']:
 Then the tail. A doc flagged `excluded_data_movement: true` is skipped per the standing rules above; open its
 todos only to confirm they are data-movement, then leave it.
 
-
 ## Inbound requests
 
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
@@ -293,6 +292,9 @@ todos only to confirm they are data-movement, then leave it.
       `batch=wired` rather than `deployed`.
 
 ## Todos
+
+- [ ] [AGENT] P0. Execute the presentation cluster of the 2026-08-21 walkthrough feedback, tracked in
+      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (moved: line cap).
 
 ### W1 — readiness derivation and the state dump
 
@@ -962,39 +964,6 @@ the todo checkboxes themselves; only genuinely-still-open items stay here)
 call, a VM-launch decision, or someone else's AO-dispatched work landing first. Nothing here is actionable by simply
 spending more session time on it.
 
-## Lessons carried forward (2026-08-20)
+## Lessons carried forward
 
-- **`bash cmd 2>&1 | tee LOG | tail -N` silently discards `cmd`'s real exit code** — the pipeline returns `tail`'s
-  status. Confirmed live: `false | tee x | tail -5; echo $?` → `0`. This explains most of this session's own
-  "exited with code 0 but the banner said FAILED" confusion, including in `quickmerge_exit_zero_on_failed_regate_
-  and_silent_directory_files_2026_08_20.md`'s own Defect 1 evidence — re-measure with `${PIPESTATUS[0]}` before
-  trusting a piped exit code again.
-- **A diagnostic grep pattern is never exhaustive.** `ruff format --check` fails with `Would reformat: <path>`,
-  matching neither `❌` nor `FAILED`/`ERROR`/`E `. When a "REAL failure" banner fires with no visible evidence,
-  run each formatter/linter standalone against the exact files being shipped rather than trusting a keyword grep
-  over the full log a second time.
-- **Extending an existing check's dimensionality surfaces latent gaps in how it handles missing data.** Adding
-  MANUAL as a 4th mode wasn't itself risky, but it immediately exposed `execution_instruction()` conflating
-  "probe measured none" with "probe never had this field at all" — a real overclaim (`not_ready` instead of
-  `unverified`) that existed for the 3 original modes too, just never triggered because every mode DID have a
-  probe field. Adding an axis is a free correctness test for the axes that already existed.
-- **A stash-quarantine collision is recoverable if the diff is a clean superset** — verified via
-  `diff stash-version current-version` showing ONLY your own additions missing, nothing else different, before
-  restoring. Don't restore blind even when you're confident; the check costs one command.
-- **SHA ancestry doesn't survive a squash-style LDR→main promote** — `git merge-base --is-ancestor <sha> origin/main`
-  can report "not an ancestor" for a fix that genuinely IS live, because "Option-B direct" promotes rewrite history.
-  Content-diff the actual file against the target ref instead; that's what settled the `dp_cron_did_not_fire`
-  serving-revision question this session, not ancestry.
-- **A large-corpus bookkeeping triage parallelizes safely as read-only fan-out + serial human apply.** 15 sub-agents
-  (3 waves of ≤5) each read ~20-25 docs in full and reported proposed old/new diffs — none edited or shipped. This
-  let the expensive part (read + cross-check every doc) run in parallel on a live shared checkout without any
-  concurrent-write collision risk, while I stayed the sole writer/shipper. Yield was consistently low (~24 real
-  fixes across 352 docs) because this corpus already runs recurring audit skills — that's the correct outcome, not
-  a wasted pass; the value was catching the ~24 genuine misses those recurring audits don't check for.
-- **Even a pure checkbox-flip can trip `check_line_caps.sh` if the file was already over cap before you touched
-  it** — the fix is never "shrink my edit," it's recognizing a pre-existing structural blocker and routing around
-  it (revert, track the specific fix content as its own todo so it isn't lost, don't force through the gate).
-- **Re-run the gate after editing evidence text, not just before shipping** — citing a regex pattern inside
-  backticks in `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`'s evidence tripped the exact
-  prosewrap-padding bug that same doc tracks. Caught by re-running `check_prosewrap_padding.sh` standalone before
-  the ship attempt, not by the ship gate itself catching it first.
+Moved verbatim to `/plans/active/code_readiness_t5_progress_history_2026_08_21.md` (parent at the 1000-line hard cap).

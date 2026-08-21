@@ -93,22 +93,21 @@ on one active issue doc). This doc captures what's NOT auto-fixable this run.
       all 1,115 (real cost, full closure). [WORKER REC: B -- cheap, non-zero progress, leaves the genuinely-expensive
       796-doc content-authoring gap as an explicit, visible accepted-debt line rather than either silently doing 3
       days of archive-doc archaeology or silently doing nothing].
-- [ ] [OPERATOR] P2. **Resolve `plan-completion-and-archival-discipline.md`'s archival-path self-consistency gap.**
-      Step 6 (current line ~68-70) claims: "this doc previously contradicted itself... the authoritative, internally
-      consistent SSOT for issue-doc archival path, stated unambiguously" -- asserting a clean two-way split (issue
-      docs -> flat `plans/archive/issues/`; everything else -> dated `plans/archive/<YYYY_MM>/`). But the SAME doc's
-      own worked examples (current lines ~172, ~259) cite real files that exist ONLY at a third, undescribed hybrid
-      form: `plans/archive/<YYYY_MM>/issues/`. Verified on disk (2026-08-17): 316 issue docs currently live at this
-      exact third form fleet-wide (vs 1,513 at the flat form, 0 at a bare-dated non-issues form). Options: (A) the
-      third form is actually fine/intentional (a dated-cohort issues subfolder) -- update the doc to describe THREE
-      valid forms instead of claiming two, and stop citing worked examples that contradict its own stated rule; (B)
-      the third form is drift that should be migrated to the flat form -- file a bounded migration (316 `git mv`s +
-      referrer sweep) and keep the doc's two-way claim as the enforced target. [Not resolving this myself -- picking
-      between "316 files are fine as-is" and "316 files need migrating" is an archival-convention authority call
-      squarely adjacent to plan_reconciler's corpus, not a docs-retrieval-layer correctness call this skill can settle
-      by reading the doc harder.] Cross-ref: `issue-doc-lifecycle.md`'s parallel state-machine table has the same
-      softer gap (states the flat rule as unambiguous while its own cited corpus measurement shows ~17% of issue docs
-      aren't there) -- supporting evidence, not an independent second finding.
+- [x] [OPERATOR] P2. **Resolve `plan-completion-and-archival-discipline.md`'s archival-path self-consistency gap.**
+      **FOUND ALREADY RESOLVED 2026-08-21 (T5)**: this finding (filed 2026-08-17) rediscovered a question already
+      settled one day earlier — `/plans/archive/issues/archive_path_convention_dated_subfolder_vs_flat_issues_contradiction_2026_08_16.md`
+      (resolved `unified-trading-pm@c92b0a49eb`, 2026-08-16) explicitly ruled option (A) from this item's own text:
+      the dated-cohort `plans/archive/<YYYY_MM>/issues/` form is real, GRANDFATHERED legacy (296 docs at the time,
+      now 359), flat `plans/archive/issues/` is canonical for NEW `doc_type: issue` archivals going forward, and
+      both SSOTs were corrected to state the split explicitly. The worked-example citations this finding flagged are
+      exactly the kind of historical-evidence prose citation the doc's own step-5 text explicitly sanctions ("citing
+      an archived plan as historical evidence... is the CORRECT end-state"), not a live contradiction. **Real,
+      actionable fallout from re-verifying this**: 2 docs archived earlier in this same session
+      (`manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`,
+      `prosewrap_padding_baseline_climbing_recheck_2026_08_16.md`) had used the legacy dated form for a NEW
+      archival, violating the already-ruled convention — corrected via `git mv` to flat `plans/archive/issues/`,
+      referrers fixed in `plan_reconciler_findings_cross_cutting_2026_08_19.md` and
+      `worker_slot_account_exhaustion_no_rotation_2026_08_19.md`.
 - [ ] [DOCS] P3. **2 new genuinely-dead body-links, not covered by the sibling 2026-08-02 tracking doc** (verified via
       `find` across the whole repo, not just grep-0 -- resolution algorithm per `check_doc_body_links.py::_resolve()`):
   - `/codex/14-customer-journeys/shared-core/strategy-version-governance.md` cites

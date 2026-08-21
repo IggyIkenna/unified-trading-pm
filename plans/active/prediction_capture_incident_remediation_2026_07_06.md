@@ -550,3 +550,6 @@ orchestrator-dispatched).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.
 - **na-eligibility-audit 2026-08-19** [body-hash:b21bdecd942fd8b9]: KEEP-NA, valid — Full re-read (552 lines), confirms exactly 7 open checkboxes, all tagged `[DESCOPED-NOT-MVP 2026-07-14]`/`[RESOLVED-BY-RULING 2026-07-14]` under the dated 2026-07-14 operator ruling (Kalshi/Polymarket perps prod access not MVP). Citation-hold class (a), reaffirmed across 7+ prior passes (2026-07-30 through 2026-08-17). Doc stays assigned_vm: NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; all 7 open todos remain
+  banner-tagged `[DESCOPED-NOT-MVP 2026-07-14]`/`[RESOLVED-BY-RULING 2026-07-14]` under the dated 2026-07-14
+  operator ruling (Kalshi/Polymarket perps prod access not MVP) — citation-hold class (a), unchanged.

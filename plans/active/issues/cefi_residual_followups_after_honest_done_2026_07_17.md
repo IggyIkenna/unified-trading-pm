@@ -785,3 +785,6 @@ pairs stay honest-unresolved (reported, never guessed).
 - **na-eligibility-audit 2026-08-19** [body-hash:f3740568247b5936]: KEEP-NA, valid — Full re-read (2 Read calls, offset-continued, 785 lines). Confirms exactly 5 open checkboxes, grep-verified (the 586 marker-less-rows `[OPERATOR]` item; the features raw-groups schema-shape design gap + its dependent OOM-bound item; the Parquet CONTENT backfill + its Progress-Log-discipline sibling, both already correctly citation-fixed to the live in-flight `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`). All operator-gated/dependency-blocked or already-duplicated-elsewhere. Reaffirms the 2026-08-16 full-read verdict.
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries) — all existing entries still resolve and remain
   accurate for the doc's remaining open scoping/operator-gated items.
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms 2026-08-19 verdict; 5 open items unchanged (586
+  marker-less catalogue rows OPERATOR-gated, features raw-schema design gap + dependent OOM-bound item, Parquet
+  CONTENT backfill + Progress-Log-discipline sibling, both citation-fixed to the live in-flight fleet doc).
