@@ -104,7 +104,12 @@ The proven replacement pattern (shipped + verified in
       reconcile}.py`) so every future stamped script inherits it — mirror the proven AAVEV3 purge
       script structure (generation-pinned read, iter_batches scan, few-column mask view, Arrow filter,
       CAS write, server-side snapshot).
-- [ ] [CODE] P1. `measure_honest_coverage.py` (daily, permanent): headroom question ANSWERED THE HARD
+- [x] [CODE] P1. ✅ INTERIM RESOLVED 2026-08-21 — launcher default raised e2-highmem-8 -> e2-highmem-16
+      (128GB, the size that succeeded same-day while 64GB OOM'd) in `deployment-service@6ef5ba27c2`;
+      GCS launcher copy republished same hour so the 00:30 UTC nightly picks it up. Residuals: the
+      usage-comment at the launcher's line ~31 still says highmem-8 (fix with the next DS touch), and
+      the durable streaming conversion moved into the [CODE] P2 conversion todo below. Original:
+      `measure_honest_coverage.py` (daily, permanent): headroom question ANSWERED THE HARD
       WAY same day — an `--asset-group all` run on the standard e2-highmem-8/64GB VM was OOM-KILLED
       (rc=137, `measure-honest-coverage-20260821-091926`, kernel `Killed`) right at the defi index
       load (161,763,519 rows), despite the script's existing column-projection + dictionary
@@ -119,7 +124,9 @@ The proven replacement pattern (shipped + verified in
       31.68GB anon-rss on 2026-08-08's index; the 08-15 bump to 64GB has now been outgrown too.)
 - [ ] [CODE] P2. Same conversion for the remaining permanent-lifecycle whole-frame tools listed in the
       Finding (catalogue builder, phantom reconcilers/sweepers, sports rescan, prediction split,
-      wave_launcher, MTDS manifest reconcile) — one PR per repo, shared helper preferred.
+      wave_launcher, MTDS manifest reconcile) PLUS `measure_honest_coverage.py` (its 2026-08-21
+      interim was a machine bump to 128GB; at the index's measured doubling rate that buys months,
+      not years) — one PR per repo, shared helper preferred.
 - [ ] [DESIGN] P2. Decide the shared-helper home (UTL `manifest_index_io`-style:
       `stream_availability_index(bucket, columns, batch_size)` + `rewrite_availability_index_cas(...)`)
       and whether a QG ratchet should ban NEW whole-frame index reads in `scripts/` (baseline-only-down,
@@ -139,6 +146,23 @@ The proven replacement pattern (shipped + verified in
       `KEEP_VM=true` → `VM_SHUTDOWN_ON_COMPLETION=false` + `keep=true` label). Generalize `KEEP_VM=true` (shutdown=false + `keep=true` label) from
       `launch-defi-aavev3-bare-alias-purge-vm.sh` into `lib/launcher_common.sh` so any launcher gets a
       supervised-diagnostic mode without a per-copy edit.
+
+- [ ] [INFRA] P1. Code-tarball publish pipeline hardening (2026-08-21 incident — fleet-wide VM-boot
+      breaker, root-caused by measurement): the 14:08Z republish wave shipped `deployment-service` /
+      `unified-api-contracts` tarballs built on a Mac WITHOUT `COPYFILE_DISABLE` and WITHOUT excluding
+      `.claude/` — thousands of AppleDouble `._*` members (+ a swept-in `.claude/worktrees/<agent>/`
+      tree) made GNU tar on the VM emit enough warnings that the bootstrap's
+      `tar xf ... 2>&1 | head -5 || true` SIGPIPE'd tar mid-extraction -> truncated tree without
+      `pyproject.toml` -> `pip_install_or_fail` FATAL -> the zombie-watchdog VM booted daemon-less
+      TWICE (13:5x boot: DS tarball; 14:13 reset boot: UAC tarball; a clean-tree republish restored
+      coverage the same hour — the fleet had NO zombie watchdog for ~30 min). Fixes: (a)
+      `create-code-tarballs.sh` must set `COPYFILE_DISABLE=1` + exclude `.claude/`, and REFUSE to
+      publish a tarball containing `._*` members (a post-build scratch-venv install self-check would
+      have caught every variant); (b) same script crashed on unset `GCP_PROJECT_ID` mid-run yet still
+      exited 0 — make it fail loudly; (c) the VM bootstraps' `tar xf ... 2>&1 | head -5` pattern must
+      not let head's SIGPIPE truncate extraction (log to file, tail the file — same class as the
+      2026-08-16 `pip_install_or_fail` fix, one seam earlier: launch-vm-zombie-watchdog.sh's heredoc +
+      grep the sibling setup-*.sh bootstraps for the same pattern).
 
 ## Progress Log
 
