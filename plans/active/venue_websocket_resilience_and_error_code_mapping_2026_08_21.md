@@ -226,15 +226,26 @@ REUSES the frameworks that already exist rather than building new ones:
       (`/codex/03-observability/data-feed-sla-registry.md`). Done-when — action lands + invariant checks green.
       Progress 2026-08-21 — UAC half LANDED @3b13629f9f: two-verb vocabulary documented on the field, the 6
       ws-sourced CeFi venues bound to `rotate-websocket:<source>`, `ActionType.ROTATE_WEBSOCKET`, the verb-aware
-      invariant test + dependency-revocation policies. UTL (`ws_rotation_request` sentinel + watchdog
-      consumption + `RecoveryScriptRegistry` entry), deployment-service (`scripts/recovery/rotate_websocket.py`)
-      and alerting-service (`feed_refetch_rules` resolves the bound action from the contract) are authored +
-      gated, shipping next — flip on their SHAs.
+      invariant test + dependency-revocation policies. UTL LANDED unified-trading-library@4fb84f00fe
+      (`ws_rotation_request` sentinel + watchdog consumption + `RecoveryScriptRegistry` entry + the freezegun
+      conftest fix); alerting-service LANDED alerting-service@adef9eb372 (`feed_refetch_rules` resolves the bound
+      action from the contract; `ROTATE_WS_{feed_id}` confirm-string). deployment-service
+      (`scripts/recovery/rotate_websocket.py` + 8 tests, gate-green on its own files) is BLOCKED on a peer's live
+      untracked `terraform/gcp/pnl_attribution_scheduler.tf` failing the Cloud-Run-job registry guard in the shared
+      checkout — flip once it ships.
 - [ ] [BACKEND] P0. Adopt the session manager in MTDS live capture (`market_tick_data_service/live/`) for every
       ws-sourced live feed; gap accounting stays within the existing 4-category stale-not-missing semantics
       (`/codex/05-infrastructure/live-pipeline-architecture.md`) — a rotation gap is recorded honestly, never
       silently spanned. Done-when — rotation exercised against at least one real venue in paper mode with the
       backfilled gap rows manifest-verified (zero silent loss).
+      Progress 2026-08-22 — code LANDED market-tick-data-service@a06c346ee0: `live/_ws_session_bridge.py`
+      (one WsSessionManager per shard; venue spec + freshness-derived thresholds with a conservative
+      `max(60s, 4×max_age)` rotation floor; single-connector break-then-make with the venue's
+      duplicate-subscription fact honestly downgraded at the session layer; the bridge's rotation flag OR-ed into
+      the runner's STALE-window marking; rotation-request sentinel keyed by feed id; WS_ROTATION_* emission),
+      wired by default in the websocket-streaming handler; 6 unit tests incl. the runner-level
+      STALE-after-rotation proof. Still owed for the flip: the paper-mode rotation run with manifest-verified
+      gap rows.
 - [x] 4. ✅ [BACKEND] P0. Execution private-stream staleness + position resync — execution-service@42e54a11f8 +
       full `quality-gates.sh --no-fix` green pre-commit. `trade_execution/private_stream_guard.py`
       (`PrivateStreamGuard`) wraps any `BaseOrderFeedHandler` with the UTL `WsSessionManager` and enforces the
@@ -253,31 +264,41 @@ REUSES the frameworks that already exist rather than building new ones:
       the three `# noqa: qg-deep-import` markers this phase added (`streaming/ws_session_manager.py`,
       `execution_service/trade_execution/private_stream_guard.py`, `engine/modes/live/data_source.py`). Done-when —
       top-level imports in all three consumers; deep-import checks green with zero noqas from this plan.
+- [ ] [BACKEND] P2. Harden UAC against the freezegun × lazy-registry import trap — `coverage_exclusions.py`
+      validates `verified_at` against `datetime.now()` at IMPORT time, and `registry.__getattr__`'s lazy exports
+      get force-imported by freezegun's module-attribute walk under a frozen clock (found 2026-08-21: it aborted
+      `freeze_time` half-applied and froze every later test in a UTL xdist worker). UTL's `tests/conftest.py` now
+      excludes `unified_api_contracts` from freezegun's walk; the UAC-side fix is to make that validation lazy or
+      injectable (off import time) so no repo's `freeze_time` can trip it. Done-when — a UAC test freezes time at
+      2026-01-01, imports `coverage_exclusions`, and nothing raises.
 
 ## Phase D — alerting + kill-switch wiring (existing frameworks only)
 
-- [ ] [BACKEND] P1. `AlertRule` entries in the UAC-driven routing table (`/codex/03-observability/alerting.md`) for —
-      feed-stale-detected (warn tier), rotation-performed (log/digest tier, state-transition dedup — never
-      every-tick), rotation-failed-after-retries (paging tier), private-stream-resync-failed (critical). Done-when —
-      rules land with tiers per the alerting SSOT + a delivery test per rule.
-      Progress 2026-08-21 — UAC codes/rules + delivery tests LANDED @3b13629f9f
-      (`test_ws_resilience_alert_rules.py` — first-match resolution per event; the feed-stale tier verified
-      riding the existing DATA_STALE / FEED_UNHEALTHY rules, so no new code was needed for it); the
-      MTDS/execution emission wiring ships with those repos — flip on their SHAs.
-- [ ] [BACKEND] P1. Kill-switch escalation — extend `/codex/04-architecture/autonomous-recovery-matrix.md` —
-      rotation itself is a protective autonomous action (always allowed); repeated rotation failure or
-      position-staleness beyond a configured bound on a live-trading venue escalates to the per-venue-scoped
-      protective kill (arming autonomous, resume per the matrix's auto-recovery rules). Done-when — matrix doc
-      updated in the same shipping window + the escalation path implemented and covered by a test.
+- [x] [BACKEND] P1. `AlertRule` entries — ✅ unified-api-contracts@3b13629f9f (codes + rules + delivery tests) +
+      execution-service@c23b10c01b + market-tick-data-service@a06c346ee0 (emission wiring). `WS_ROTATION_COMPLETED`
+      (INFO, log-only — one event per rotation EPISODE, never per-tick), `WS_ROTATION_FAILED` (HIGH, pages),
+      `PRIVATE_STREAM_RESYNC_FAILED` (CRITICAL, pages), each with a first-match delivery test
+      (`tests/internal/unit/test_ws_resilience_alert_rules.py`) and a dependency-revocation policy; the
+      feed-stale-detected tier was verified to ride the EXISTING criticality-tiered DATA_STALE / FEED_UNHEALTHY
+      rules (no new code needed, test asserts they resolve specifically). Emitted by the MTDS ws-session bridge
+      and the execution `PrivateStreamGuard` via `log_event`.
+- [x] [BACKEND] P1. Kill-switch escalation — ✅ execution-service@c23b10c01b + unified-trading-pm@8d35ca1cae (same
+      shipping window). `PrivateStreamGuard`: ≥3 consecutive rotation failures OR ≥3 consecutive REST-resync
+      failures on a venue emit `KILL_SWITCH_VENUE_DISCONNECT` (the existing VENUE-scope `triggers_kill_switch`
+      rule publishes the KillSwitchEvent — arming autonomous; resume per the matrix, never the guard); a failed
+      resync also withholds every update from that connection generation. 3 new tests prove paging-then-recovery,
+      sustained-failure escalation with zero yields, and rotation-failure escalation. Rotation itself stays a
+      protective autonomous action. Matrix: G8 row + three "Alerting Channels by Severity" rows.
 
 ## Phase E — post-phase codex audit
 
-- [ ] [DOC] P1. Update every codex contract this plan changes — `/codex/03-services/venue-capability-registry.md`
-      (new ws-protocol axis), `/codex/03-observability/data-feed-sla-registry.md` (rotate action),
-      `/codex/04-architecture/autonomous-recovery-matrix.md` (escalation rows),
-      `/codex/04-architecture/defi-execution-overview.md` (DefiErrorCode growth) — and author the framework's own
-      codex SSOT under `codex/04-architecture/` (venue-websocket-resilience). Done-when — every doc named here
-      updated or created in the same shipping window as the code it describes.
+- [x] [DOC] P1. Codex audit — ✅ unified-trading-pm@8d35ca1cae, same shipping window as the code.
+      `venue-capability-registry.md` (§ Websocket-protocol axis), `data-feed-sla-registry.md` (two-verb
+      vocabulary, rotate Layer-0 script, consumers row), `autonomous-recovery-matrix.md` (G8 + channel rows),
+      `defi-execution-overview.md` (published-table registry vs the 35-code runtime enum), NEW SSOT
+      `/codex/04-architecture/venue-websocket-resilience.md` (authoritative for the ws-protocol axis, the rotation
+      policy and the rotate-websocket Layer-0 action), two alerting playbooks (`ws_rotation_failed.md`,
+      `private_stream_resync_failed.md`) and the RB-CONN-001 rotate step.
 
 ## Success criteria
 
@@ -338,18 +359,35 @@ REUSES the frameworks that already exist rather than building new ones:
   `WsProtocolSpec` hardened with `extra="forbid"` so the whole class fails at import. Also authored + gated
   this wave (shipping as their gates clear): UTL C2 sentinel, execution guard Phase-D escalation, MTDS C3
   bridge, alerting resolver, deployment-service Layer-0 script, the Phase E codex set.
+- **2026-08-21 (batch 4 — service repos landed)** — unified-trading-library@4fb84f00fe (C2 sentinel + watchdog
+  consumption + registry entry + freezegun fix), execution-service@c23b10c01b (Phase D guard escalation),
+  alerting-service@adef9eb372 (bound-action resolver + rotate confirm-string), unified-trading-pm@8d35ca1cae
+  (Phase E codex set). **Every downstream gate hit a closed-set guard my new members violated — all working as
+  designed**: the ActionType count test (UAC), one dependency-revocation policy per AlertCode (UAC), one
+  confirm-string template per ActionType (alerting `gateway/manual_action_endpoint.py`), imports-inside-functions
+  plus the 900-line file / 50-line method caps (MTDS — the legacy tick sink + blob-path builder were extracted to
+  `live/_tick_sink.py`, runner 929 → 829 lines). **The UTL failure was NOT a flake**: freezegun's
+  `freeze_time().start()` walks every loaded module's attributes; UAC `registry.__getattr__` lazy exports made
+  that walk force-import `coverage_exclusions` under the frozen 2026-05-08 clock → its import-time `verified_at`
+  validation raised → the freeze aborted half-applied → FakeDatetime leaked into the whole xdist worker (polars
+  "expected datetime, got object" in write_gate). Fix: `freezegun.configure(extend_ignore_list=
+  ["unified_api_contracts"])` in UTL `tests/conftest.py`; UAC-side hardening is a P2 todo above. **Two identical
+  standalone reruns = a stable condition, not contention** — that rule is what made me read the traceback instead
+  of retrying a third time. deployment-service is gate-green on its own files but tree-blocked by a peer's live
+  untracked terraform WIP in the shared slot checkout (protected, not inherited — see Deferred).
 
 ## Deferred work after 2026-08-21
 
-| Item                                                        | State / why deferred                                                                                 | Blocked on                    |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------- |
-| UTL / execution / MTDS / alerting / deployment ships         | authored + smoke-green; gates running/queued (≤2 concurrent), serial quickmerge                      | gate results — this session   |
-| C2 + Phase D + Phase E flips; PM docs batch                 | flip on the SHAs above as each repo lands                                                            | the ships above               |
-| C3 paper-mode rotation verification                         | code landed (bridge + runner); done-when needs a real paper-mode run with manifest-verified gap rows | MTDS ship, then a runtime run |
-| C5 consumer wiring + W14 epic flip + census closure         | error corpus now landed; census test + dedupe (kucoin 109000/163000, kalshi/hyperliquid/polymarket)  | next UAC batch                |
-| Phase B residuals: binance-futures codes, curve 403,        | P2 todos above; browser-session retrievals                                                           | nothing (versifi: operator)   |
-| PROTOCOL_CAPABILITIES (P1), polymarket-perps probe, versifi |                                                                                                      |                               |
-| Facade hoist (P2)                                           | drop the 3 `qg-deep-import` noqas once symbols reach the root facades                                | nothing                       |
+| Item                                                        | State / why deferred                                                                                                                                                                           | Blocked on                                                   |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| deployment-service `rotate_websocket` ship                  | gate-green on its own files; the TREE gate fails on a PEER's live untracked `terraform/gcp/pnl_attribution_scheduler.tf` (mtime 22:44Z, the code_readiness_t3 session) — protected, not inherited | the peer committing + registering their tf (not mine to do) |
+| C2 flip                                                     | UAC/UTL/alerting halves landed; flips on the deployment SHA                                                                                                                                    | the deployment ship above                                    |
+| C3 paper-mode rotation verification                         | code landed (bridge + runner); done-when needs a real paper-mode run with manifest-verified gap rows                                                                                           | MTDS ship, then a runtime run                                |
+| C5 consumer wiring + W14 epic flip + census closure         | error corpus landed; census test + dedupe (kucoin 109000/163000, kalshi/hyperliquid/polymarket)                                                                                                 | next UAC batch                                               |
+| Phase B residuals: binance-futures codes, curve 403,        | P2 todos above; browser-session retrievals                                                                                                                                                     | nothing (versifi: operator)                                  |
+| PROTOCOL_CAPABILITIES (P1), polymarket-perps probe, versifi |                                                                                                                                                                                                |                                                              |
+| Facade hoist (P2); UAC freezegun hardening (P2)             | tracked todos above                                                                                                                                                                            | nothing                                                      |
 
-Recommended next — land UTL (standalone gate rerun in flight), then the four service repos, then the C5/census UAC
-batch; the C3 paper-mode run is the remaining runtime-verification gate before the rule-9 report.
+Recommended next — land MTDS, then the C5/census UAC batch (the remaining P0); the C3 paper-mode run is the
+remaining runtime-verification gate before the rule-9 report; deployment-service ships whenever the peer clears
+their tf.
