@@ -22,14 +22,12 @@ related:
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     /plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md,
-    /plans/active/issues/model_capability_aware_dispatch_audit_2026_08_21.md,
   ]
 created: 2026-05-30
 authoritative_for:
   [
     agent-orchestrator AutoSpawn worker-spawn architecture,
     agent-orchestrator multi-provider account-pick round-robin dispatch,
-    agent-orchestrator capability-tier dispatch preference,
   ]
 referenced_by:
   [
@@ -47,8 +45,6 @@ code_refs:
     agent-orchestrator/server/config.py,
     agent-orchestrator/server/tmux_pruner.py,
     agent-orchestrator/server/server.py,
-    agent-orchestrator/server/model_tier.py,
-    agent-orchestrator/server/escalation.py,
   ]
 ---
 
@@ -234,59 +230,6 @@ absorbing new selections (measured: one account took 92 selections in 60 minutes
 
 Full root-cause narrative + live evidence for all of the above:
 `plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`.
-
----
-
-## Capability-tier dispatch preference (2026-08-21)
-
-Everything above is headroom-only — until 2026-08-21, dispatch never considered whether a candidate
-account's underlying MODEL was strong enough for the task, only whether it had rate-limit headroom.
-`model_tier.capability_tier(provider, variant) -> int` now gives 3 tiers (`STRONG` / `WEAK_VERIFIED` /
-`UNVERIFIED`), synthesized from a real 6-model bake-off
-(archived `plans/archive/2026_08/multi_provider_model_capability_bakeoff_2026_08_19.md`; full per-model
-reasoning `plans/active/issues/model_capability_aware_dispatch_audit_2026_08_21.md`): Anthropic +
-DeepSeek + `gemini`/`3.5-flash-lite` are `STRONG`; `glm` is `WEAK_VERIFIED` (Easy-tier-verified only);
-everything else (Gemini 3.7-flash, `gemma-self-hosted`, Codex/Luna) is `UNVERIFIED` — each blocked by a
-distinct, already-diagnosed infra bug in the bake-off, not a real capability finding, so it's a living
-ranking, not a final one.
-
-**Mechanism — a PREFERENCE via `exclude_ids`, not a new sort or a hard filter.** `autospawn.
-low_capability_account_ids(session)` returns every account below `STRONG`. A capability-sensitive
-caller does a 2-pass select: pass 1 passes `exclude_ids = <its own round-robin exclusion, if any> |
-low_capability_account_ids(...)` (biasing toward strong-tier accounts); pass 2, only on a `None` result,
-retries with the capability exclusion dropped (full pool, graceful fallback — dispatch must never stall
-just because the smarter pool happens to be exhausted). Reuses the exact `exclude_ids` machinery bugs
-4a/5 already built, rather than threading a new preference parameter through `_pick_headroom_account`'s
-~9 internal call sites — a deliberately smaller, safer diff for a same-day, easily-reversible change.
-
-**Wired into exactly 2 callers today** (both judgment-heavy, not mechanical): `escalation.escalate()`
-(a CI-escalation diagnoses+fixes a real CI/CD wall) and `autospawn.ensure_review_agents()` (review is a
-judgment role). `model_strict=True` callers skip the capability-fallback retry too — strict means
-exactly one search attempt total, same contract `select_account_with_non_strict_retry` already
-enforces for its own substitution retry. **Class-A backlog dispatch (`_run_one_tick`/`_resume_pass`)
-is deliberately UNCHANGED** — stays capability-agnostic, fair-spread across every headroom account
-regardless of model strength, since routine backlog work isn't presumed to need a stronger model.
-
-**Distinct from `model_tier.equivalence_class()`/`models_are_substitutable()`** — those govern
-cross-model SUBSTITUTION eligibility (is model B an acceptable retry-swap for model A), a blunter,
-codebase-wide question; `capability_tier()` governs ROUTING PREFERENCE (which of several
-already-eligible accounts to try first) and is opt-in per caller. `equivalence_class()` was
-deliberately left as its pre-existing flat placeholder — merging the two is future work once the
-preference mechanism has run long enough to trust folding it into substitution eligibility too.
-
-**Audit finding, fixed in the same change**: `ensure_review_agents()`'s `for slot_id in sorted
-(review_ids):` loop had the identical bug-4a/5 batch-pile-up shape (multiple accounts picked in one DB
-session before any spawn commits) with **zero** `exclude_ids` — dormant today (`ORCHESTRATOR_REVIEW_
-SLOTS` defaults to 1 slot) but real the moment a second review slot is configured. Fixed alongside the
-capability-preference wiring (`review_picked` threaded across the loop, mirroring `_run_one_tick`/
-`_resume_pass`). A full dispatch-catalog audit (every `select_account_for_spawn`-family call site)
-confirmed this was the only unfixed instance of the pattern; no separate/alternate account-selection
-mechanism exists anywhere in the fleet outside this one shared picker family.
-
-Evidence: `agent-orchestrator@36d56d8638`, `quality-gates.sh` green (5309 passed / 4 skipped / 0
-failed, coverage 86.07% above the 85.86% ratchet baseline; one transient coverage-ratchet flake on an
-earlier run, reproduced clean twice more on the identical tree — a pre-existing test-run variance, not
-a real regression, confirmed via a before/after per-line coverage diff on all 3 touched files).
 
 ---
 

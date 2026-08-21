@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, deploy-currency, ao-self-pull, dirty-gate, kimi-removal, silent-alert-failure]
 related:
   [
-    /plans/archive/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
+    /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
     /plans/active/issues/plan_reconciler_full_corpus_sweep_2026_08_20.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
@@ -49,7 +49,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/archive/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
+    /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
     /plans/active/issues/plan_reconciler_full_corpus_sweep_2026_08_20.md,
     agent-orchestrator/scripts/ao-self-pull.sh,
   ]
@@ -58,10 +58,6 @@ source: >-
   fix (agent-orchestrator@965259913c) had reached the live orchestrator; the root checkout's HEAD
   had not moved, which led to /var/log/ao-self-pull.log and git status on the root clone.
 ---
-
-> **🟢 ARCHIVED 2026-08-21** — all todos resolved and evidence-backed (root wedge cleared by the
-> operator's own session; the shared `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` gap it surfaced fixed in
-> [[ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30]]).
 
 # ao-self-pull.sh wedged by uncommitted Kimi-removal WIP — fleet-wide deploy currency frozen
 
@@ -158,18 +154,11 @@ of the silence unchanged the whole time.
       stale). `git merge-base --is-ancestor 965259913c HEAD` on the root checkout confirms TRUE — this session's own
       CI-escalation-reserve fix reached live along with everything else queued behind the wedge.
       `/tmp/ao-self-pull-dirty.ticks` is gone (counter cleared). Fully live, verified.
-- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-21 (interactive session, slot 17).** This wedge was a
-      recurrence of the same failure class as
-      [[ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30]] — root cause of the shared
-      "no webhook" symptom found and fixed in that doc: `ao-self-pull.sh` reads
-      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` from `.env.local` specifically, which never had the line,
-      even though the secret existed in GCP Secret Manager all along and was already wired into
-      `orchestrator.service`'s own systemd environment (so the main server's alerts were fine, only
-      this one script's wedge-alert was silently broken). Fixed by appending the value to
-      `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/.env.local`; verified via a live
-      test POST (HTTP 200, landed in `#agent-orchestrator-alerts`) and by re-running
-      `ao-self-pull.sh`'s own extraction logic against the updated file. Full detail in that doc's
-      now-closed todo. Repo: agent-orchestrator, host-level.
+- [ ] [OPERATOR] P2. This wedge is a recurrence of the same failure class as
+      `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` — consider raising the priority on that
+      doc's still-open `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` secret-lookup todo (currently held on the missing
+      credential), since it has now masked two separate live deploy-freeze incidents (07-30, and this one — both
+      ran 50min+ fully unpaged). Cross-referenced only, not duplicated here. Repo: agent-orchestrator, host-level.
 - [x] [BACKEND] P2. ✅ **DONE 2026-08-21.** Root cause of the mis-location itself: an interactive session's own
       delegated sub-agent was given a `WorkingDirectory`-style path
       (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator` — the root clone, and coincidentally also
