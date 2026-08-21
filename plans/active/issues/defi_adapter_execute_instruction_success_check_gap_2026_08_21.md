@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [defi, fabricated-success, live-money-risk, financial-correctness, defi-adapter]
 related:
   [
-    /plans/archive/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md,
+    /plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md,
     /codex/04-architecture/defi-execution-overview.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]

@@ -172,21 +172,6 @@ drift_direction: advance-code
 
 ## Progress Log
 
-- **2026-08-21 ~17:2x London (todo 6 root-fix FULLY SHIPPED both layers)** — instruments-service@0020df5f
-  (`capability-gated expected-universe seeding for perp data_types`, landed on LDR, content-verified on origin: the
-  `_defi_perp_capable_protocols()` gate is present) + unified-api-contracts@4b06013aea (earlier). NOTE the recovery
-  detail: the first IS quickmerge exited 12 having SWEPT the fix into `stash@{0}` (ahead=0 trap) — recovered via
-  `git checkout 'stash@{0}' -- <files>` then re-shipped `--isolated` successfully. Remaining half of todo 6: purge the
-  EXISTING blanket perp-stamp rows (forward seeding now stops; historical rows still in the index).
-- **2026-08-21 ~17:2x London (todo 7 ship leg done; todo 3 purge in flight)** — deployment-service launcher fix landed
-  on origin (module-style `-m market_tick_data_service.scripts.*` invocation; old tarball file path 404'd on the VM).
-  VM launch attempt 2 was aborted by the stale-UAC-tarball freshness gate (co-occupant WIP, since cleared) — relaunch
-  pending after the current uplink-heavy purge completes. Todo 3 purge: Kleene-mask fix VERIFIED (pass 1 matched
-  EXACTLY the expected 4,834 phantom rows); attempts 2/3 died on 600s GCS read-timeouts (saturated uplink), attempt 5
-  got through download+delete but died re-UPLOADING the 7.5GB snapshot — script patched to SERVER-SIDE
-  `copy_blob` snapshots (zero egress, generation-pinned); attempt 7 running with a pause→apply→resume consolidator
-  bracket. MTDS ship (todos 1+2): size-gate fix applied (`scan_and_rebuild` 213L→~196L via `_log_retired_skip` +
-  `_covered_key` extraction); quickmerge attempt 4 mid-re-gate (pytest ~80%).
 - **2026-08-21 ~15:15 London (todos 1+2 CODE-COMPLETE, ship pending)** — mtds@d188fb2e (LOCAL commit, 10 files
   +557/-29; NOT yet on LDR — quickmerge dirty-deps-blocked, see choke point below). Root causes: (1)
   `_lending_grain.py:141-145` `_PROTOCOL_TO_CANONICAL_VENUE` mapped kamino_lending/solend/marginfi to GLUED

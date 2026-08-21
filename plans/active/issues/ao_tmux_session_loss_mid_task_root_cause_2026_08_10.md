@@ -476,13 +476,6 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
         still never actually completed for this cluster, and even if it had, its regex requires an explicit
         `-9`/`-KILL` token that a bare `pkill -f "<name>"` (default SIGTERM) would never carry — tracked as its own
         todo in the new doc.
-- [x] ✅ [INVESTIGATE] P1. **Remaining models (Gemini, Claude sub-accounts, GLM, Gemma) — ROOT-CAUSED 2026-08-21.**
-      Full findings, evidence, fixes, and follow-up todos moved to a dedicated doc to keep this one under its line
-      cap: `/plans/active/issues/fleet_wide_mid_task_death_root_cause_2026_08_21.md`. One-line headline: the
-      pkill-guard fix above already explains 98.6% of the single biggest remaining unexplained population
-      fleet-wide (214 events, 4 Claude sub-accounts); a fleet-wide classification-gap fix
-      (`agent-orchestrator@dc1d273f89`) and a follow-up batch (`agent-orchestrator@0704ed0a47`, closing 2 more
-      classification-gap events + a fleet-wide `ausearch` PATH bug) both shipped.
 
 ## Progress Log
 
@@ -945,9 +938,3 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   `/plans/active/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md`, not merged here to keep this
   doc's size in check). The Cluster-B finding is the single most consequential discovery of this whole investigation
   thread — a fleet safety mechanism believed fixed since 2026-08-14 has been silently non-functional the entire time.
-- **2026-08-21 (continued, separate session, ultracode Workflow)**: swept every remaining model (Gemini, Claude
-  sub-accounts, GLM, Gemma) for the same mid-task-death class. Full findings + fixes in the new, dedicated
-  `/plans/active/issues/fleet_wide_mid_task_death_root_cause_2026_08_21.md` (split out to keep this doc under its
-  line cap, same reason Cluster B was split out above) — headline: the pkill-guard fix above already explains 98.6%
-  of the biggest remaining unexplained population fleet-wide, plus 2 more classification-gap fixes and a
-  fleet-wide forensics PATH bug shipped (`agent-orchestrator@dc1d273f89`, `@0704ed0a47`).
