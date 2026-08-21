@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: Quality Gate Hardening — Cloud Agnostic + Protocol Enforcement
-summary: Harden STEP 5.10/5.11 from soft-warn to hard-fail; audit all repos for cloud SDK violations; fix all Category A/B/C
-  violations; wire gates into quickmerge CI.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +12,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-06"
+overview:
+  Harden STEP 5.10/5.11 from soft-warn to hard-fail; audit all repos for cloud SDK violations; fix all Category A/B/C
+  violations; wire gates into quickmerge CI.
 todos:
   - {
       id: p0-scan-category-a,

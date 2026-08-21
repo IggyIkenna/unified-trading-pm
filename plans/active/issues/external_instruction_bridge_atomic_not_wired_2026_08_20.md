@@ -91,9 +91,3 @@ The parent plan originally assumed BRIDGE and ATOMIC were both ready for the sam
       real per-leg order placement, partial-fill/compensation handling per `AtomicExecutionMode`), then wire
       `ATOMIC` on the same surface. This is a genuinely new execution-engine design effort, not a translation shim
       — should likely be its own dedicated plan, not a todo folded into a translation-wiring pass.
-
-## Progress Log
-
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — both open todos are brand-new execution-engine design +
-  build efforts (a real BridgeHandler, a real live multi-leg execution engine for ATOMIC), each explicitly framed
-  in-doc as needing its own dedicated plan, not mechanical wiring. Cross-cutting tranche, batch 2 of 3.

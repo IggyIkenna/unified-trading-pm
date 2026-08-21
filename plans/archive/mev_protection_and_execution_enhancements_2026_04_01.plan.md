@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: mev-protection-and-execution-enhancements
-summary: MEV protection framework (Flashbots pipes, private mempool), execution algo comparison, basis trade dynamic coin
-  selection
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -16,6 +15,9 @@ remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 superseded_by: [consolidated_defi_data_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
+overview:
+  MEV protection framework (Flashbots pipes, private mempool), execution algo comparison, basis trade dynamic coin
+  selection
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

@@ -34,7 +34,6 @@ related:
   - /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md
   - /plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md
   - /plans/active/issues/agent_orchestrator_qg_cancel_notifier_same_sha_rerun_gap_2026_08_20.md
-  - /plans/active/issues/publish_package_semver_tag_race_breaks_consumer_builds_2026_08_20.md
 created: 2026-08-20
 author: cloud-build-failure-watcher escalation (cicd, slot-11)
 parent_epic: ci_master

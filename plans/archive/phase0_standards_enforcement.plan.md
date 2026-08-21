@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: Phase 0 — System-Wide Standards Enforcement
-summary: 'Establish a verified baseline across all repos before any hardening work begins.
-
-  Every repo must meet minimum standards (coverage, file/function/method/class size,
-
-  Python version, strict type checking, no os.getenv, cloud-agnostic I/O, no GCS* protocol names,
-
-  no cross-service imports). Failures are fixed immediately (if trivial) or tracked in
-
-  QUALITY_GATE_BYPASS_AUDIT.md. Phase 0 blocks Phase 1, Phase 2, and Phase 3 — must pass
-
-  before any hardening work starts. Run in tier order (T0 first), parallel within each tier.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -21,6 +11,19 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-05"
+overview: "Establish a verified baseline across all repos before any hardening work begins.
+
+  Every repo must meet minimum standards (coverage, file/function/method/class size,
+
+  Python version, strict type checking, no os.getenv, cloud-agnostic I/O, no GCS* protocol names,
+
+  no cross-service imports). Failures are fixed immediately (if trivial) or tracked in
+
+  QUALITY_GATE_BYPASS_AUDIT.md. Phase 0 blocks Phase 1, Phase 2, and Phase 3 — must pass
+
+  before any hardening work starts. Run in tier order (T0 first), parallel within each tier.
+
+  "
 todos:
   - {
       id: p0-t0-parallel,

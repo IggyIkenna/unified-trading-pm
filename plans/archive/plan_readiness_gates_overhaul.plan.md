@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: plan-readiness-gates-overhaul
-summary: Introduce 3-tier readiness gates (Code/Deployment/Business) into every plan; add ai/ vs active/ split; propagate
-  rules to all agent contexts
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
+overview: Introduce 3-tier readiness gates (Code/Deployment/Business) into every plan; add ai/ vs active/ split; propagate rules to all agent contexts
 type: infra
 epic: none
 completion_gates: {code: C5, deployment: none, business: none}

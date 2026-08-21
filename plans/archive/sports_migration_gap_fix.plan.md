@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: Sports Migration Gap Fix
-summary: Fix remaining gaps from sports-betting-services-previous migration. Part A (batch) COMPLETE. Part B (live mode)
-  — scraper adapters, API contracts, live features, paper trading, deployment config.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-02'
+overview: Fix remaining gaps from sports-betting-services-previous migration. Part A (batch) COMPLETE. Part B (live mode) — scraper adapters, API contracts, live features, paper trading, deployment config.
 todos:
 - {id: b1-scraper-adapters, content: B1 — Scraper adapters in USEI; validate CSS selectors; website version fingerprinting; Playwright in base image, status: in_progress}
 - {id: b2-api-contracts, content: 'B2 — API contracts and schemas for live (CanonicalOdds, progressive stats, OddsType)', status: completed}

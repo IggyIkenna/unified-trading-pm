@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: audit-remediation-2026-03-11
-summary: 'Remediation of 6 FAILs surfaced by the 2026-03-11 full parallel audit (17 sections, 6 agents). Two items were
-  false positives (float fields fixed in c76695a; UI vitest already installed). This plan tracks the 5 concrete items: SSOT-INDEX
-  registration, strategy-service CI integration tests, base-service.sh CI env var enforcement, VCR cassette coverage for
-  29 missing venues, and type:ignore enumeration.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -14,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
+overview: 'Remediation of 6 FAILs surfaced by the 2026-03-11 full parallel audit (17 sections, 6 agents). Two items were false positives (float fields fixed in c76695a; UI vitest already installed). This plan tracks the 5 concrete items: SSOT-INDEX registration, strategy-service CI integration tests, base-service.sh CI env var enforcement, VCR cassette coverage for 29 missing venues, and type:ignore enumeration.'
 type: infra
 epic: epic-infra
 completion_gates: {code: C5, deployment: none, business: none}

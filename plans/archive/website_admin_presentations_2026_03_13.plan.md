@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: website-admin-presentations-2026-03-13
-summary: 'Add secure portal section to odum-research-website with role-based presentation access. Roles: admin (all), board
-  (strategic decks), client:{slug} (product-specific e.g. Elysium DeFi), shareholder, accounting (financials), operations
-  (company docs), investor (investment mgmt + doc upload). Auth via unified-admin-ui/packages/core (Google OAuth + Cognito).'
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
+overview: 'Add secure portal section to odum-research-website with role-based presentation access. Roles: admin (all), board (strategic decks), client:{slug} (product-specific e.g. Elysium DeFi), shareholder, accounting (financials), operations (company docs), investor (investment mgmt + doc upload). Auth via unified-admin-ui/packages/core (Google OAuth + Cognito).'
 type: code
 epic: epic-website
 superseded_by: website_master_2026_03_13

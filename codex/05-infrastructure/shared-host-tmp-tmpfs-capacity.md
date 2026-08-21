@@ -3,16 +3,12 @@ doc_type: codex-ssot
 title: Shared-host /tmp tmpfs capacity — root cause + routing convention + reaper
 summary: >-
   SSOT for the shared orchestrator host's `/tmp` mount being a fixed RAM-backed tmpfs that has repeatedly hit 100% and
-  broken unrelated pytest runs fleet-wide with "No space left on device". Root cause is ACCUMULATION of orphaned
-  scratch across at least two distinct offender classes (not sizing — the tmpfs was already resized ~4x and still
-  saturates): (1) large one-off parquet scratch from instruments-service writers, and (2) — added 2026-08-21 —
-  scratch from `PrivateTmp=yes` systemd units (e.g. codex-bridge.service) whose whole process tree writes into an
-  isolated `/tmp` namespace the original reaper couldn't see. Fix at the root — (1) the recurring instruments-service
-  writers route their large parquet staging to a non-tmpfs scratch dir (`$HOME/.cache/instruments-scratch`,
-  mirroring the `$HOME/.cache/qg-tmp` scratchpad convention), and (2) a liveness-gated TTL reaper
-  (`cleanup-stale-tmp-parquet-scratch.sh` + cron, now sub-hourly) reclaims orphans on the root disk, any residual
-  one-off `/tmp` parquet scratch, AND — via a second, name-unrestricted sweep — the entire contents of any discovered
-  `PrivateTmp` service namespace. Includes the sizing decision rationale (RAM headroom check) and the
+  broken unrelated pytest runs fleet-wide with "No space left on device". Root cause is ACCUMULATION of large one-off
+  parquet scratch (not sizing — the tmpfs was already resized ~4x and still saturates). Fix at the root — (1) the
+  recurring instruments-service writers route their large parquet staging to a non-tmpfs scratch dir
+  (`$HOME/.cache/instruments-scratch`, mirroring the `$HOME/.cache/qg-tmp` scratchpad convention), and (2) a
+  liveness-gated TTL reaper (`cleanup-stale-tmp-parquet-scratch.sh` + cron) reclaims orphans on the root disk AND any
+  residual one-off `/tmp` parquet scratch. Includes the sizing decision rationale (RAM headroom check) and the
   multi-agent-safety ownership rule for cleanup.
 status: current
 nature: ssot
@@ -29,7 +25,8 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-08-10
-authoritative_for: [
+authoritative_for:
+  [
     shared-host /tmp tmpfs capacity root cause + the large-parquet-scratch routing convention + the TTL reaper that
     enforces it,
   ]
@@ -39,7 +36,7 @@ referenced_by:
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
   ]
 owner:
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-10
 code_refs:
   [
     instruments-service/scripts/enumerate_expected_universe.py,
@@ -104,9 +101,7 @@ the reaper below), never on the RAM-backed tmpfs.
 ### 2. Reap orphans + residual one-off `/tmp` scratch (belt-and-suspenders)
 
 `unified-trading-pm/scripts/dev/cleanup-stale-tmp-parquet-scratch.sh` (cron:
-`install-cleanup-stale-tmp-parquet-scratch-cron.sh`) runs TWO sweeps per invocation:
-
-**Sweep 1 (original)** — both:
+`install-cleanup-stale-tmp-parquet-scratch-cron.sh`) sweeps both:
 
 - `${HOME}/.cache/instruments-scratch` — orphans left behind by a SIGKILLed run,
 - `/tmp` — any one-off ad-hoc parquet scratch that still defaults there,
@@ -116,43 +111,6 @@ for the offender name-globs (`*.parquet`, `enum-univ-*`, `enum-shard-*`, `cefi-c
 `kalshi_*.json`), **liveness-gated** (never touches a file with an open handle — `fuser`), TTL default 6h, dry-run
 supported. Deliberately excludes `pytest-of-*` (owned by `cleanup-stale-qg-tmp.sh`) and `claude-*`
 (`cleanup-stale-claude-session-tmp.sh`).
-
-**Sweep 2 (added 2026-08-21, distinct offender class)** — a `PrivateTmp=yes` systemd unit
-(e.g. `codex-bridge.service`, a Codex/Luna-backed agent bridge) gives its whole process
-tree an isolated `/tmp` namespace bind-mounted at the host path
-`/tmp/systemd-private-<boot-id>-<unit>-<random>/tmp`. Every descendant of that unit's
-`/tmp` writes lands there instead of the shared `/tmp` — including full
-`quickmerge --isolated` worktrees (`qm-iso-*`), `prek` scratch, and QG scratch, whenever
-that unit's children run those tools (e.g. an agent session shipping code). Sweep 1 never
-sees these paths — they're invisible unless you glob for `systemd-private-*` dirs
-specifically. Confirmed live 2026-08-21: one such dir alone held the ENTIRE 8G tmpfs
-(17895 files, accumulated over the unit's 18h uptime with zero reaping) and caused live
-`sqlite3.OperationalError: database or disk is full` on `orchestrator.service`. Sweep 2
-discovers every `systemd-private-*/tmp` root under `/tmp` and reaps its ENTIRE contents by
-age + liveness — no name-glob restriction, because that root is by construction nothing
-but transient scratch for one unit's child processes (enumerating every tool a
-Codex-driven session might invoke would be permanent whack-a-mole); `tmux-*` is the one
-denylisted name (a live tmux server socket dir, not scratch). TTL default 60min via
-`--private-tmp-min-age`, same liveness gate as sweep 1.
-
-**Root privilege requirement (2026-08-21)**: the outer `systemd-private-*` directory is
-`drwx------ root:root` — confirmed live that the non-root `ubuntu` operator account
-(the ONLY account this script's own cron is allowed to install under, per its root-refusal
-guard) cannot traverse into it at all, so sweep 2 is a structural no-op under the
-operator's own crontab. Sweep 2 can only ever do anything when this script runs as root.
-The fix is a SEPARATE root-owned systemd timer + oneshot service invoking this same
-script (reusing its liveness-gated sweep-2 logic, not systemd-tmpfiles' pure-mtime
-cleanup) — NOT a change to the operator cron's privilege level. See
-`/plans/active/issues/ao_tmp_tmpfs_full_sqlite_disk_full_errors_2026_08_21.md` for the
-install status.
-
-**Cadence (revised 2026-08-21)**: the cron interval is now 15 minutes by default (was 6h)
-— sweep 1's own 6h min-age threshold means most 15-min firings are cheap no-ops for that
-class, but sweep 2 needs sub-hourly cadence given how fast a `PrivateTmp` unit can
-accumulate. `install-cleanup-stale-tmp-parquet-scratch-cron.sh --interval N` accepts N<60
-(minute-of-hour cron syntax) or N>=60 (original hour-granularity syntax, kept for any
-existing hour-multiple install). This governs the operator-level sweep-1 cron; the
-root-owned sweep-2 timer (above) has its own, separately-installed cadence.
 
 ### 3. Why not just resize (the sizing decision)
 

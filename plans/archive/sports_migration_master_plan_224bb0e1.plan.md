@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: Sports Migration Master Plan
-summary: Single comprehensive plan for sports betting migration. Architecture alignment (UIC/AC, interfaces-only auth),
-  data layer separation (reference vs features vs market), sports-as-adapter pattern, batch-live symmetry, unified CLI,
-  70% test coverage, full provider registry, arbitrage+ML pipeline. Merged from sports_migration_master_plan_9b2acc2e.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -21,6 +19,10 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-04"
+overview:
+  Single comprehensive plan for sports betting migration. Architecture alignment (UIC/AC, interfaces-only auth), data
+  layer separation (reference vs features vs market), sports-as-adapter pattern, batch-live symmetry, unified CLI, 70%
+  test coverage, full provider registry, arbitrage+ML pipeline. Merged from sports_migration_master_plan_9b2acc2e.
 todos:
   - {
       id: phase-0-arch-alignment,

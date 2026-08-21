@@ -1,13 +1,7 @@
 ---
 doc_type: plan
 title: plan-d-testnet-stress-testing
-summary: 'Backend-only: seed determinism (seed=42), scenario expansion (BAD_SCHEMA, ERROR_STORM, FLASH_CRASH), error code
-
-  stress tests (all 18 canonical + 13 DeFi codes), performance regression gates (PerformanceGate/MemoryGate in CI),
-
-  synthetic load generator (45->1K->10K instruments), and error classification re-audit (aave_plasma bug, missing
-
-  venue maps, QG enforcement). Goal: no meaningful difference between testing mock and live.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -17,6 +11,16 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-21"
+overview: "Backend-only: seed determinism (seed=42), scenario expansion (BAD_SCHEMA, ERROR_STORM, FLASH_CRASH), error
+  code
+
+  stress tests (all 18 canonical + 13 DeFi codes), performance regression gates (PerformanceGate/MemoryGate in CI),
+
+  synthetic load generator (45->1K->10K instruments), and error classification re-audit (aave_plasma bug, missing
+
+  venue maps, QG enforcement). Goal: no meaningful difference between testing mock and live.
+
+  "
 type: mixed
 epic: epic-code-completion
 locked_by:

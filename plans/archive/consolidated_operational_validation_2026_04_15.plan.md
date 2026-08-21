@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: consolidated-operational-validation
-summary: 'Consolidated remaining operational, E2E, and infrastructure validation work from 4 source plans.
-
-  Covers: cluster E2E tests, pipeline scheduling gaps, QG sweeps, data type cleanup, trade booking QG.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,11 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-16"
+overview: "Consolidated remaining operational, E2E, and infrastructure validation work from 4 source plans.
+
+  Covers: cluster E2E tests, pipeline scheduling gaps, QG sweeps, data type cleanup, trade booking QG.
+
+  "
 type: mixed
 epic: epic-deployment
 reconciliation_status: yaml_to_markdown_converted

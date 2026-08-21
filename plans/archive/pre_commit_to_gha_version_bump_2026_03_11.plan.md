@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: pre-commit-to-gha-version-bump
-summary: Remove the local bump-library-version pre-commit hook from all 65 repos (it caused PATCH double-bumps before the
-  GHA MINOR/MAJOR bump fired) and fix staging-to-main.yml to dispatch the dependency-update cascade after staging→main promotion
-  (previously the cascade never fired because version-bump.yml skips chore(release) merge commits).
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -26,6 +24,7 @@ superseded_note: 'PARTIALLY SUPERSEDED 2026-03-13. The hook removal (rollout-rem
   on staging. See full_autonomous_agent_ci todo: fix-semver-agent-template-staging-trigger.
 
   '
+overview: Remove the local bump-library-version pre-commit hook from all 65 repos (it caused PATCH double-bumps before the GHA MINOR/MAJOR bump fired) and fix staging-to-main.yml to dispatch the dependency-update cascade after staging→main promotion (previously the cascade never fired because version-bump.yml skips chore(release) merge commits).
 type: infra
 epic: epic-infra
 completion_gates: {code: C3, deployment: none, business: none}

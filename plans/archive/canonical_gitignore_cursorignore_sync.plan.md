@@ -1,13 +1,7 @@
 ---
 doc_type: plan
 title: Canonical .gitignore / .cursorignore Sync
-summary: 'Update the canonical .gitignore and .cursorignore files in unified-trading-pm, then
-
-  propagate them to all 55 git repos in the workspace. The canonical files are the SSOT —
-
-  all repos must align to them. Repo-specific exception sections are preserved per-repo.
-
-  A durable sync script is created so future canonical changes propagate with one command.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -27,6 +21,15 @@ archiveReason: 'Partially implemented. Sync script exists: scripts/workspace/syn
   Repo-specific exceptions (data/sample, sample_data, data/sample_features) not in script.
 
   Dry-run/apply flags, old-style upgrade, untrack-ignored-files, and full propagate not done.
+
+  '
+overview: 'Update the canonical .gitignore and .cursorignore files in unified-trading-pm, then
+
+  propagate them to all 55 git repos in the workspace. The canonical files are the SSOT —
+
+  all repos must align to them. Repo-specific exception sections are preserved per-repo.
+
+  A durable sync script is created so future canonical changes propagate with one command.
 
   '
 todos:

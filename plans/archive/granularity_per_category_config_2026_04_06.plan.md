@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: granularity-per-category-config
-summary: Declare base granularity per category/data_type in UAC; MDPS uses it for smart aggregation and timeframe validation
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-14'
+overview: Declare base granularity per category/data_type in UAC; MDPS uses it for smart aggregation and timeframe validation
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

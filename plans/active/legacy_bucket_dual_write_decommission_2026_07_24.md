@@ -277,7 +277,3 @@ HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mir
 - **na-eligibility-audit 2026-08-17** [body-hash:c5427bf439e4e9ef]: KEEP-NA, valid -- Reaffirmed KEEP-NA by 3 prior na-eligibility-audit passes (2026-07-30, 2026-08-07, 2026-08-08 round7 RECLASSIFY sweep). Independently re-verified: every remaining open todo is gated -- 4 items sequenced behind per-AG L3 canonicalisation plans reaching C-GREEN (this plan explicitly coordinates, does not seed); 2 items are prod-bucket deletes, a human-only hard stop per the delete-safety protocol; 1 item is explicitly redirected to a different owning plan (bigquery_feature_ml_compute_engine_option_2026_06_08.md, per the doc's own 'Deferred work -- migrated to:' section); 1 item is an explicit open migrate-vs-retire decision.
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — re-affirms 4 prior
-  na-eligibility-audit passes (2026-07-30 through 2026-08-17). All 8 open todos remain gated behind per-AG L3
-  canonicalisation plans reaching C-GREEN (this plan only coordinates, does not seed), prod-bucket deletes
-  (human-only hard stop), or an explicit migrate-vs-retire decision. No change since the last pass.

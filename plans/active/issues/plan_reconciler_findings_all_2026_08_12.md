@@ -601,11 +601,11 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       unified-api-contracts@31b4ad958e, strategy-service@ac5cab7edb x2, unified-trading-pm@144a18fed5, all landed
       2026-08-14). Source doc's checkboxes corrected in the same pass. Also fixing this line's own path drift: the
       doc lives at `plans/active/issues/...` (open, never archived), not `plans/archive/issues/...` as cited above.
-- [x] ✅ [DOC] P3. **DONE — verified 2026-08-21 (na-eligibility-audit).** (codex-drift)
-      `plans/archive/2026_08/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md` — 9-state-vs-7-state
-      enum mismatch is now RESOLVED + ARCHIVED: `code_readiness_t4_execution_settlement_2026_08_19.md` landed the
-      full rollout (`execution-service@35f0bfb1b` rename, `execution-service@69a9a088be` regression test); the
-      source doc itself was archived 2026-08-21 with both its own remaining todos closed on the same evidence.
+- [ ] [DOC] P3. (codex-drift) plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md —
+      9-state-vs-7-state enum mismatch, unresolved (related to the P1 fixed this run). **Still open (checked
+      2026-08-16)**: operator RULED 2026-08-06 (option A, advance the contract), confirmed 2026-08-12 — but the actual
+      code implementation + `test_state_machine.py` regression test are still open todos, direction settled, work not
+      yet landed.
 - [x] ✅ [REVIEW] P3. (ao-readiness) plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md —
       133M-row manifest prod-write todo tagged `[SCRIPT]` not `[OPERATOR]` (has substantial safety machinery, likely low
       risk). **DONE (verified 2026-08-16)**: the todo already states inline "(No `[OPERATOR]` tag needed — self-justified

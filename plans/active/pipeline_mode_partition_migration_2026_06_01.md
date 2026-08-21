@@ -203,9 +203,3 @@ archived 2026-06-01 doc — corrected in the table above and Phase 1 below.
   plan's scope, flagged for the other plan's own maintainers): `instruments_store_cf_canonicalization_single_walk_
   2026_07_24.md`'s "C0" checkbox still reads `[ ]` open for cefi/tradfi even though live GCS shows those two AGs
   already carry the partition — a cross-plan doc-drift, not resolved here (collision risk).
-
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — sole open item
-  (prediction instruments-bucket gap) is already correctly cross-referenced to
-  `instruments_store_cf_canonicalization_single_walk_2026_07_24.md`'s own "C0" todo as the live tracked owner, with
-  an explicit "do NOT open a second walk here (single-walk discipline)" note — no citation fix needed, already
-  self-consistent.

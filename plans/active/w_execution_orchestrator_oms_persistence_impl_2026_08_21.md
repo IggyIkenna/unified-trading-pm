@@ -103,22 +103,22 @@ context_scope:
       (`engine/orchestrator.py`), defaulting to a fresh `UnifiedOrderManager(InMemoryOrderPersistence())` when
       not supplied — mirrors `OrderBook.__init__`'s own existing default-constructible pattern
       (`engine/startup/order_recovery.py`). Implements design plan todo 7 (test strategy). — execution-service@f4cb199b48 + evidence: quality-gates.sh passed; quickmerge ancestry verified.
-- [x] ✅ [BACKEND] P0. **Wire `oms.create_order()`/`update_order_status()` calls into `OrderAdapter.submit_order()`**
+- [ ] [BACKEND] P0. **Wire `oms.create_order()`/`update_order_status()` calls into `OrderAdapter.submit_order()`**
       at the exact points the design plan's Progress Log names — `create_order` immediately before the
       existing `_log_order_created()` call, `update_order_status` immediately after `_log_post_submit_audit`'s
       existing status branch (FILLED/REJECTED/else-SUBMITTED). Wrap both in the fail-open
       `try/except (ConnectionError, OSError, RuntimeError, TimeoutError)` contract from design plan todo 4 —
       `logger.error` + `log_event("OMS_WRITE_FAILED", ...)`, no re-raise, venue call proceeds regardless.
-      Implements design plan todos 2 and 4. — execution-service@4e915b637a + evidence: full quality-gates.sh passed (8,892 passed, 22 skipped, 1 xpassed); gitleaks passed.
-- [x] ✅ [BACKEND] P0. **Wire `oms.update_order_status(order_id, "CANCELLED")` into `OrderAdapter.cancel_order()`
+      Implements design plan todos 2 and 4.
+- [ ] [BACKEND] P0. **Wire `oms.update_order_status(order_id, "CANCELLED")` into `OrderAdapter.cancel_order()`
       AFTER `self.venue_client.cancel_order(...)` returns, never before** — the in-flight-vs-confirmed fix
       named in the design plan's Progress Log (distinct from, and does not touch, the existing pre-confirmation
       GCS audit-log write, which stays as-is per that same entry). Same fail-open wrapping as the prior todo.
-      Implements design plan todo 2. — execution-service@4e915b637a + evidence: full quality-gates.sh passed (8,892 passed, 22 skipped, 1 xpassed); gitleaks passed.
-- [x] ✅ [BACKEND] P1. **Wire `oms.update_order_quantity_price(...)` into `OrderAdapter.amend_order()` AFTER venue
+      Implements design plan todo 2.
+- [ ] [BACKEND] P1. **Wire `oms.update_order_quantity_price(...)` into `OrderAdapter.amend_order()` AFTER venue
       confirmation** (matches that method's existing "audit log after, not before" convention). Depends on
       Phase A todo 2 landing first (same-file, sequential within this plan — see `sequential` note below applies
-      only within this phase; Phase A/B are otherwise independent files). Implements design plan todo 2. — execution-service@4e915b637a + evidence: full quality-gates.sh passed (8,892 passed, 22 skipped, 1 xpassed); gitleaks passed.
+      only within this phase; Phase A/B are otherwise independent files). Implements design plan todo 2.
 
 ### Phase C — thread one shared OMS instance from startup
 
@@ -177,7 +177,3 @@ context_scope:
   every schema/hook-point/interface decision above is copied verbatim from that plan's 2026-08-21 Progress Log
   entry, not re-derived. `gate_on_depends: true` holds every todo here until that design plan's own tasks are
   `done` in the AO backlog (they are, as of this plan's authoring — the design plan closed same-session).
-- **2026-08-21, Phase B lifecycle hooks shipped**: `OrderAdapter` now persists PENDING before venue submission,
-  records FILLED/REJECTED/SUBMITTED after post-submit auditing, updates CANCELLED only after venue confirmation,
-  and mirrors confirmed amend quantity/price; all OMS writes are loud but fail-open. Landed as
-  `execution-service@4e915b637a` after full quality gates and gitleaks passed.

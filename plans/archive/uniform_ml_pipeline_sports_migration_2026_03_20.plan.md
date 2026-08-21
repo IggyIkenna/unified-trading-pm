@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: uniform-ml-pipeline-sports-migration-2026-03-20
-summary: Uniform 5+1 phase training pipeline (TradFi/CeFi/DeFi/Sports); CosmicTrader sports migration into UTS. Phase 1
-  SSOT is unified-internal-contracts (not UCI). HyperparameterConfig discriminated union requires explicit model_type —
-  no implicit default; migrate all serialized configs.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,9 @@ scope: [engineer, admin]
 tags: [ml, sports, pipeline, migration, architecture]
 related: []
 created: '2026-03-21'
+overview: 'Uniform 5+1 phase training pipeline (TradFi/CeFi/DeFi/Sports); CosmicTrader sports migration into UTS. Phase 1 SSOT is unified-internal-contracts (not UCI). HyperparameterConfig discriminated union requires explicit model_type — no implicit default; migrate all serialized configs.
+
+  '
 type: code
 epic: epic-code-completion
 priority: P0

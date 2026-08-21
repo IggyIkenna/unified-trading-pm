@@ -1,7 +1,17 @@
 ---
 doc_type: plan
 title: defi-rollout-backend-2026-03-21
-summary: 'Consolidated backend remediation plan aggregating all open items from 25 active plans (2026-03-21 audit).
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-api]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+overview: 'Consolidated backend remediation plan aggregating all open items from 25 active plans (2026-03-21 audit).
 
   Excludes frontend-only, presentation, and website plans. Excludes prod-only items (marked BLOCKED).
 
@@ -15,16 +25,9 @@ summary: 'Consolidated backend remediation plan aggregating all open items from 
 
   Organized by dependency tier: T0 libraries -> T1 interfaces -> T2 services -> T3 cross-cutting -> T4 testing.
 
-  ~355 actionable items for dev/staging; ~15 blocked (prod/human-only).'
-status: complete
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-api]
-scope: [engineer, admin]
-tags: []
-related: []
-created:
+  ~355 actionable items for dev/staging; ~15 blocked (prod/human-only).
+
+  '
 type: mixed
 epic: epic-code-completion
 locked_by:

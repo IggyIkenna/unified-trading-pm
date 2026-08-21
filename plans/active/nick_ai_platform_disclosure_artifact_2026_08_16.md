@@ -446,8 +446,3 @@ sections added (§18-§24 + §1 MDPS/features-service intermediary), and the evi
 (per-todo evidence in the nickai child plan). The "Operator review before send" P0 gate below remains the standing
 pre-send check — this remediation pass does not authorise sending the document anywhere.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — 4 open P0 items, all
-  client-disclosure content-authoring/review work: re-grading every section mark against a stricter operator-ruled
-  "live" definition, grounding-or-cutting an unsupported forward-looking claim (needs a citation-basis decision, not
-  bounded implementation), building the artifact, and an explicit `[REVIEW]` "Operator review before send" gate.
-  Correctly stays human-judgment work for a counterparty-facing disclosure document.

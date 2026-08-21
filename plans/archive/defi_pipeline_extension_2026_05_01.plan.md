@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: defi-pipeline-extension-2026-05-01
-summary: Volatility-derived max-leverage primitive + leveraged funding-arb + 5 derivable archetype engines (LP concentrated/pool/vault,
-  MEV liquidation-bundle/JIT/backrun) + sandwich theoretical, with venue/chain coverage backfill and codex enhancement
+summary:
 status: complete
 nature: record
 asset_group: ALL
@@ -24,6 +23,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-01
 plan_type: mixed
 owner: ikenna
+overview:
+  Volatility-derived max-leverage primitive + leveraged funding-arb + 5 derivable archetype engines (LP
+  concentrated/pool/vault, MEV liquidation-bundle/JIT/backrun) + sandwich theoretical, with venue/chain coverage
+  backfill and codex enhancement
 type: mixed
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: D2, business: B3 }

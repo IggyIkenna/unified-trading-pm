@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: defi-e2e-pipeline-completion
-summary: Complete DeFi pipeline E2E testing across all 7 layers (instruments → tick data → processing → features → strategy
-  → execution → monitoring). Fix remaining data issues, expand venue coverage from 3 to 12, test all 15 DeFi strategies
-  including Solana/BTC/L2/cross-chain, and wire strategy→execution with Tenderly pre-simulation.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-28'
+overview: Complete DeFi pipeline E2E testing across all 7 layers (instruments → tick data → processing → features → strategy → execution → monitoring). Fix remaining data issues, expand venue coverage from 3 to 12, test all 15 DeFi strategies including Solana/BTC/L2/cross-chain, and wire strategy→execution with Tenderly pre-simulation.
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout
@@ -53,3 +52,4 @@ todos:
 - {id: e2e-full-pipeline-run, content: "- [ ] [AGENT] P0. Full E2E pipeline run: instruments → MTDS → MDPS → features-onchain → strategy → execution → alerting.\n  All 12 venues, aave-lending strategy end-to-end. Document results in e2e-testing/docs/defi/.\n", status: pending}
 - {id: e2e-issues-doc-final, content: "- [ ] [AGENT] P1. Final update of e2e-testing/docs/defi/issues.md with all findings.\n  Update e2e-testing/docs/architecture.md with pipeline flow diagrams.\n  Create e2e-testing/docs/defi/strategy-coverage.md mapping 15 strategies → test status.\n", status: pending}
 ---
+

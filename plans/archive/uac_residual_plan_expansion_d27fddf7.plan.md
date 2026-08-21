@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: UAC Residual Plan Expansion
-summary: Expand the UAC residual plan with full provider manifest schema (testnet, data_type, keys checklist), SSOT alignment,
-  cursor rules, and API contracts docs. Verify superseded plans are archived. Single consolidated plan for all remaining
-  UAC refactors.
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-14'
+overview: Expand the UAC residual plan with full provider manifest schema (testnet, data_type, keys checklist), SSOT alignment, cursor rules, and API contracts docs. Verify superseded plans are archived. Single consolidated plan for all remaining UAC refactors.
 todos: []
 isProject: false
 ---

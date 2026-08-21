@@ -31,8 +31,8 @@ related:
 created: 2026-08-21
 author: agent
 parent_epic: security_and_cross_cutting_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
@@ -120,15 +120,3 @@ in a different, already-shipped code path this pass deliberately did not touch.
   after the SWAP/LEND/WITHDRAW/STAKE/UNSTAKE live-dispatch change (`execution-service@4af3715497`) deliberately
   avoided routing through this buggy layer. Root-caused with exact line citations (`defi_adapter.py:379`,
   `:385`), not guessed.
-- **na-eligibility-audit 2026-08-21**: RECLASSIFY (whole-doc) `assigned_vm: NA` → `planning`. All 3 open todos are
-  bounded/deterministic: todo 1 is a well-specified bug fix mirroring an already-correct sibling pattern
-  (`defi_live_dispatch.py::dispatch_swap_live`) with an explicit regression-test ask; todo 2 is a bounded
-  investigation (read `_execute_lending()` with the same precision, fix the same bug class if confirmed, file a
-  narrower follow-up if the shape differs); todo 3 is a bounded audit (trace whether `ManualOperationHandler`'s
-  `DEFI_VENUES` branch has ever surfaced a stuck `tx_hash="pending"` in production). No open design/judgment call.
-  Conflict-checked: grepped `plans/active/` for `_execute_swap`/`execute_instruction`/`defi_adapter.py` —
-  `defi_adapter_dead_code_audit_2026_07_24.md` covers a DIFFERENT method (the now-removed public
-  `execute_swap`/`execute_lend`/`execute_stake` dead-code duplicates, not the private `_execute_swap()` this
-  doc's bug lives in); `code_readiness_t4_execution_settlement_2026_08_19.md` has zero mentions of
-  `defi_adapter.py`. No genuine conflict found. `execution_scope` corrected to `orchestrator-agent` to match.
-  Cross-cutting tranche, batch 2 of 3.

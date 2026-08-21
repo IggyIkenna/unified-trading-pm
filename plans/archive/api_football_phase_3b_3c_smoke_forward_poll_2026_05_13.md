@@ -1,13 +1,7 @@
 ---
 doc_type: plan
 title: api_football_phase_3b_3c_smoke_forward_poll
-summary: 'Execute api_football Phase 3.B + 3.C — live-API smoke test and EPL forward-poll
-
-  verification of the flattened normalizers (shipped Phase 1-3 on 2026-05-08).
-
-  Verify per-row output shape matches expected column count + row grain; verify
-
-  features-sports calculators can read the new schema without NaN bloat.'
+summary:
 status: complete
 nature: record
 asset_group: [sports]
@@ -17,6 +11,15 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-13
+overview: 'Execute api_football Phase 3.B + 3.C — live-API smoke test and EPL forward-poll
+
+  verification of the flattened normalizers (shipped Phase 1-3 on 2026-05-08).
+
+  Verify per-row output shape matches expected column count + row grain; verify
+
+  features-sports calculators can read the new schema without NaN bloat.
+
+  '
 type: code
 deadline: 2026-05-14 EOD
 estimate_class: infra

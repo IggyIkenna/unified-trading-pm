@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: plan-i-client-reporting-docs
-summary: 'Client-facing business services: document management, invoicing, MiFID compliance reporting, DocuSign integration,
-  and client-reporting-api enhancement — sits outside the core trading system'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
+overview: 'Client-facing business services: document management, invoicing, MiFID compliance reporting, DocuSign integration, and client-reporting-api enhancement — sits outside the core trading system'
 type: mixed
 epic: epic-code-completion
 locked_by:

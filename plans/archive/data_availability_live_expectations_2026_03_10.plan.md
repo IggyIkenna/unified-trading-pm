@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: data-availability-live-expectations-2026-03-10
-summary: Add per-source freshness contracts, FreshnessMonitor base class in UTL, per-service freshness gates in strategy/execution,
-  alerting integration, and daily completeness check — so stale data is detected within 60 second in live mode.
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
+overview: Add per-source freshness contracts, FreshnessMonitor base class in UTL, per-service freshness gates in strategy/execution, alerting integration, and daily completeness check — so stale data is detected within 60 second in live mode.
 type: code
 epic: epic-code-completion
 superseded_by: defi_keys_data_integration_2026_03_13

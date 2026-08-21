@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: dag-hybrid-uml-plan
-summary: Apply DAG-first refactor with UML protocol-based storage decoupling (Option 1) and hybrid live coupling policy,
-  then synchronize manifest/codex/rules/plan before broad testing.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-02-28"
+overview:
+  Apply DAG-first refactor with UML protocol-based storage decoupling (Option 1) and hybrid live coupling policy, then
+  synchronize manifest/codex/rules/plan before broad testing.
 todos:
   - {
       id: dag-ssot-align,

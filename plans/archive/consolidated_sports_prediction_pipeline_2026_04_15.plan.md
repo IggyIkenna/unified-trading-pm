@@ -1,11 +1,7 @@
 ---
 doc_type: plan
 title: consolidated-sports-prediction-pipeline
-summary: 'Consolidated remaining work from 8 sports + prediction plans into a single tracking plan.
-
-  Covers: sports batch E2E, Polymarket prediction wiring, sports integrations 01-06, sports ML training.
-
-  Source plans retained for history; remaining todos tracked here.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -15,6 +11,13 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-16"
+overview: "Consolidated remaining work from 8 sports + prediction plans into a single tracking plan.
+
+  Covers: sports batch E2E, Polymarket prediction wiring, sports integrations 01-06, sports ML training.
+
+  Source plans retained for history; remaining todos tracked here.
+
+  "
 type: mixed
 epic: epic-code-completion
 reconciliation_status: yaml_to_markdown_converted

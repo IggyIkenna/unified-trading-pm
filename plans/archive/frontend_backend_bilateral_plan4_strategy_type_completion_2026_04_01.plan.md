@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: frontend-backend-bilateral-plan4-strategy-type-completion
-summary: Wire orphaned strategy code, complete DeFi/sports/ML type usage, export undocumented strategies, connect risk profiles
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,6 +11,8 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-03"
+overview:
+  Wire orphaned strategy code, complete DeFi/sports/ML type usage, export undocumented strategies, connect risk profiles
 type: code
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: none, business: none }

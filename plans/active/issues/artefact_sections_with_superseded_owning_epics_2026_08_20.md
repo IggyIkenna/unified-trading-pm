@@ -84,8 +84,3 @@ also means T7b will try to reconcile these sections against an owner that does n
 **2026-08-20 — filed.** Nothing changed. Found by deriving an artefact-section-to-epic mapping by hand; there is no
 machine-readable relation that would have surfaced it automatically, which is tracked separately as the coverage-map
 todo on the artefacts plan.
-
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — all 3 open todos are genuine judgment work (establish
-  whether a successor epic exists per the two superseded epics' `superseded_by` frontmatter, assign an owner per
-  the epic-assignment rule, record the resolution once the artefact-to-epic map exists) — none is a bounded,
-  worker-determinable outcome without an epic-ownership decision first. Cross-cutting tranche, batch 2 of 3.

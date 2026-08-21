@@ -167,10 +167,3 @@ it in `/codex/05-infrastructure/per-tab-worktrees.md`.
       2026-08-20 measurement, with the per-file probe snippet and the new directory-refusal behavior noted.
 
 - **context-scout 2026-08-20**: populated context_scope (6 entries).
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — 2 open items on the
-  fleet's shared ship script (`scripts/quickmerge.sh`). Todo 1 (exit-0-on-failed-re-gate) was investigated
-  2026-08-20 and found genuinely uncertain — the specific traced path already propagates correctly, and whether a
-  further code change is needed hinges on re-measuring without a `| tail` pipe confound; not closeable without that
-  re-measurement. Todo 3 (stop the recovery/quarantine path reverting unstaged edits) offers 2 alternative fixes
-  ("or name every file it restores") needing a judgment pick, on code every agent's ship path depends on. Both stay
-  appropriately human-supervised given the blast radius; no conflicting active doc found.

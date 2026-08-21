@@ -204,18 +204,6 @@ a verdict). Heaviest:
       already deleted upstream, no action needed. Checkbox stays OPEN — the campaign-gated DELETE cohort
       (instruments-service 64 / MTDS 22) is still blocked on the manifest-canonicalisation campaigns per this item's own
       gating rule; only the immediately-safe sub-list is done.
-
-      **Re-verified 2026-08-21 (cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md stall-audit) — the
-      plan-archival half of the campaign gate is now met fleet-wide; the orphan-sweep half is not, checkbox correctly
-      stays open.** All 7 `*_manifest_canonicalisation_2026_06_01.md` plans (sports/cefi/tradfi/defi/prediction/
-      downstream_services/instruments) have left `plans/active/`. New nuance not previously recorded: 6 of 7 carry
-      `status: superseded` (only `instruments_manifest_canonicalisation` is `status: complete`) — "superseded" is
-      ambiguous as to whether the campaign genuinely finished (safe to treat as archived-for-gating-purposes) or
-      continued under a replacement plan (campaign scripts might still be needed) — a judgment call left for whoever
-      executes this item, not resolved here. Even if resolved favorably for every AG, this item's own text requires a
-      real **GCS-orphan-sweep per script** before any delete, which has not been run for either cohort (instruments-
-      service 64 / MTDS 22) — so the checkbox correctly stays open regardless of the plan-archival finding. No scripts
-      touched, no deletions made.
 - [ ] [AUDIT] P2. **DEPRECATE remediation** — fix the ~10 KEEP/PROMOTE scripts carrying the cloud-discipline gap (UCI
       `get_storage_client`/`gcs_*` + `resolve_bucket_name` + `GCP_PROJECT_ID` via `UnifiedCloudConfig`):
       strategy-service DeFi tracers, `seed_demo_client`, `run_client_reporting_cutover`, `run_amm/lending_validation`,
@@ -279,15 +267,6 @@ a verdict). Heaviest:
 
 ## Progress Log
 
-- **2026-08-21 (stall-audit re-verification, dispatched from `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s
-  gated `[SCRIPT] P2` todo)**: checked whether Phase-1's Delete-EXECUTION item could now be closed. Confirmed all 7
-  manifest-canonicalisation campaign plans have archived (plan-archival gate condition met fleet-wide), but flagged a
-  new ambiguity (6/7 are `status: superseded`, not `complete`/`resolved`) and confirmed the GCS-orphan-sweep half of
-  the gate has not been run for either cohort — see the dated note on the Delete-EXECUTION todo above. Did not attempt
-  the sweep or any deletion (real per-script judgment + infra verification, explicitly this doc's own GATED + REVIEWED
-  scope, not mechanical). This doc's remaining open items (Delete-EXECUTION, DEPRECATE-remediation, the folded-in
-  `[SCRIPT] P1` enforcement-checker item) are unchanged and still block
-  `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s own last open todo from closing.
 - **2026-08-11 (slot 3, interactive) — D16's `scripts/**` carve SCOPE is SUPERSEDED (operator ruling 2026-08-10).** The
   Phase-3 D16 todo above records the carve as all-repos blanket `scripts/**`, ratified 2026-08-08. That scope is now
   NARROWED: the exempt set is exactly `scripts/quality_gates/`, `scripts/quality-gates-base/`, `scripts/hooks/`,

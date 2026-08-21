@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: unified-backtest-pipeline-wiring
-summary: Wire all standalone backtest engines into the unified pipeline. Batch=live same code path — strategy interacts
-  with execution-service (matching engine), position-balance-monitor, risk-and-exposure, pnl-attribution in BOTH modes.
-  Delete inline settlement. Covers sports (backtest_engine.py, sports_backtest_runner.py) and DeFi (colocated_engine.py).
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,11 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-17"
+overview:
+  Wire all standalone backtest engines into the unified pipeline. Batch=live same code path — strategy interacts with
+  execution-service (matching engine), position-balance-monitor, risk-and-exposure, pnl-attribution in BOTH modes.
+  Delete inline settlement. Covers sports (backtest_engine.py, sports_backtest_runner.py) and DeFi
+  (colocated_engine.py).
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

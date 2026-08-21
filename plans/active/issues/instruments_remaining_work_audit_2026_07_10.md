@@ -849,6 +849,3 @@ Script:
   themselves operator-gated; not a single determinable outcome.
 - **context-scout 2026-08-17**: re-verified context_scope (6 entries), unchanged.
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries).
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed unchanged. Self-declared "HISTORICAL SNAPSHOT...
-  discoverability index, not a live tracker"; sole open todo is still an umbrella over 6 independently-scoped major
-  workstreams, several operator-gated, not a single determinable outcome. Cross-cutting tranche, batch 2 of 3.

@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: elysium-defi-presentation-2026-03-10
-summary: Create a standalone HTML presentation for Elysium Capital demonstrating DeFi strategies, 14 supported protocols,
-  backtest results, and the elysium-defi-system-fork deliverable
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
+overview: Create a standalone HTML presentation for Elysium Capital demonstrating DeFi strategies, 14 supported protocols, backtest results, and the elysium-defi-system-fork deliverable
 type: business
 epic: epic-business
 superseded_by: presentations_2026_03_13

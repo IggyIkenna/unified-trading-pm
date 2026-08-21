@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: UAC Package Reorganization
-summary: Rename `unified_api_contracts_external` to `external` and move root-level modules into logical subdirectories,
-  then update all downstream consumers across ~25 repos. Coordination with mode_config_env and SIT plans is required.
+summary:
 status: partially_complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-14'
+overview: Rename `unified_api_contracts_external` to `external` and move root-level modules into logical subdirectories, then update all downstream consumers across ~25 repos. Coordination with mode_config_env and SIT plans is required.
 todos:
 - {id: phase1-rename-move, content: 'Rename external, create config/registry, move files', status: completed}
 - {id: phase1-modes, content: Add modes (live/historical) to provider_api_versions.yaml, status: completed}

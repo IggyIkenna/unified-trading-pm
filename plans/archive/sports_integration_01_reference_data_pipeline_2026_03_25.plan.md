@@ -1,13 +1,7 @@
 ---
 doc_type: plan
 title: sports-integration-01-reference-data-pipeline
-summary: 'instruments-service --asset-group SPORTS produces ALL reference data with cross-provider
-
-  mapping tables in GCS hive format. Fixes European league season param, adds standings,
-
-  injuries, fixture details, and cross-provider TeamMapping/FixtureMapping tables.
-
-  Downstream services (FSS, ML) use these mappings to resolve provider-specific IDs.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -21,6 +15,15 @@ remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_
 superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.plan.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
+overview: 'instruments-service --asset-group SPORTS produces ALL reference data with cross-provider
+
+  mapping tables in GCS hive format. Fixes European league season param, adds standings,
+
+  injuries, fixture details, and cross-provider TeamMapping/FixtureMapping tables.
+
+  Downstream services (FSS, ML) use these mappings to resolve provider-specific IDs.
+
+  '
 type: code
 epic: epic-code-completion
 completion_gates: {code: C4, deployment: D1, business: B1}

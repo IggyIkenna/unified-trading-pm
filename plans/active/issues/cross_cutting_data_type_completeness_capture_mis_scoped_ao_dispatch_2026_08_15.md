@@ -112,21 +112,11 @@ progress that no single plan tracks to completion.
 
 ## Todos
 
-- [x] ✅ [DATA] P2. **EXTRACTED 2026-08-21** — the blocking fix (`axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`)
-      is now archived/resolved (`deployment-api@82b0469a7e`), unblocking this measurement. Extracted to
-      `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` item 1 for AO dispatch (na-eligibility-audit,
-      cross-cutting tranche, batch 2 of 3).
+- [ ] [DATA] P2. Once `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`'s fix lands, re-run the
+      `get_data_status_turbo_impl(service="market-tick-data-handler", include_sub_dimensions=True)` measurement above
+      per asset_group and report real per-venue/per-data_type completeness gaps for non-`trades` data_types.
 - [ ] [DATA] P3. From that report, draft per-AG (or per-venue) bounded `assigned_vm: planning` backfill todos for any
       genuine gaps found — do not re-open this todo's original umbrella scope.
-
-## Progress Log addendum
-
-- **na-eligibility-audit 2026-08-21**: RECLASSIFY (per-todo split) — the blocking sibling doc
-  (`axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`) is now archived/resolved, unblocking todo 1
-  (a bounded measure-and-report task). Extracted to `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`
-  item 1. Todo 2 (draft per-AG backfill todos from the results) stays `assigned_vm: NA` — explicitly sequenced
-  behind todo 1's own not-yet-produced output. Doc's own `assigned_vm: NA` unchanged. Cross-cutting tranche,
-  batch 2 of 3.
 
 ## Progress Log
 

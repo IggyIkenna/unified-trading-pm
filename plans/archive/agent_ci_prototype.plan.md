@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: agent-ci-prototype
-summary: Prototype autonomous agent CI pipeline for market-tick-data-service. Agent bootstraps a full workspace, runs the
-  canonical audit, unit tests, quality gates, and quickmerge to auto-merge to main when CI passes.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-06'
+overview: Prototype autonomous agent CI pipeline for market-tick-data-service. Agent bootstraps a full workspace, runs the canonical audit, unit tests, quality gates, and quickmerge to auto-merge to main when CI passes.
 todos:
 - {id: create-github-workflow, content: 'Create .github/workflows/agent-audit.yml in market-tick-data-service: workflow_dispatch trigger, clones all sibling deps + pm + codex into ephemeral workspace, sets GH_TOKEN from GH_PAT secret, installs Python 3.13 + uv + claude-code-sdk, runs scripts/run-agent.sh', status: completed}
 - {id: create-quality-gates, content: 'Create market-tick-data-service/scripts/quality-gates.sh adapted from quality-gates-service-template.sh with SERVICE_NAME=market-tick-data-service, SOURCE_DIR=market_tick_data_service, all 8 LOCAL_DEPS wired', status: completed}

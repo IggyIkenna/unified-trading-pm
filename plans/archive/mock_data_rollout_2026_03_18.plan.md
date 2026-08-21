@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: mock-data-rollout-2026-03-18
-summary: Wire SyntheticDataGenerator + MockStateStore into all services, create dependency-ordered seed orchestration, generate
-  1-year mock data to dev GCS, add APY→index conversion utility, and validate full-stack mock mode. Covers 27 repos across
-  6 phases with upstream validation at each layer boundary.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-20'
+overview: 'Wire SyntheticDataGenerator + MockStateStore into all services, create dependency-ordered seed orchestration, generate 1-year mock data to dev GCS, add APY→index conversion utility, and validate full-stack mock mode. Covers 27 repos across 6 phases with upstream validation at each layer boundary.
+
+  '
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

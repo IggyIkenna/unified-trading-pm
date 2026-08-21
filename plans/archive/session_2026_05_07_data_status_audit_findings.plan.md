@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: session_2026_05_07_data_status_audit_findings
-summary: Thin wrapper-tracker for the 2026-05-07 deployment-ui data-status audit. Closes when all referenced line-items
-  in the asset_group / manifest_migration master plans complete. Does NOT define new work — every finding folds into an
-  existing master plan; this file just gives the operator a single deployment-UI surface to check progress against.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -17,6 +15,10 @@ related:
     /plans/archive/api_football_minimal_flattening_removal_2026_05_07.md,
   ]
 created: "2026-05-07"
+overview:
+  Thin wrapper-tracker for the 2026-05-07 deployment-ui data-status audit. Closes when all referenced line-items in the
+  asset_group / manifest_migration master plans complete. Does NOT define new work — every finding folds into an
+  existing master plan; this file just gives the operator a single deployment-UI surface to check progress against.
 type: wrapper
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: D3, business: none }

@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: Board Presentations Suite — Odum Research
-summary: Build a suite of 10 company-grade board presentations (Reveal.js HTML) covering all 9 business lines of the unified
-  trading system. Presentations are semi-technical, targeting professional/institutional board-level audience. Includes
-  smoke test suite (Playwright) to catch rendering and syntax errors.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
+overview: Build a suite of 10 company-grade board presentations (Reveal.js HTML) covering all 9 business lines of the unified trading system. Presentations are semi-technical, targeting professional/institutional board-level audience. Includes smoke test suite (Playwright) to catch rendering and syntax errors.
 todos:
 - {id: create-theme-css, content: 'Create assets/theme.css — premium dark theme (deep navy #0a0f1e, gold #d4af37, electric blue #00d4ff). Typography: Inter headings, JetBrains Mono labels.', status: completed}
 - {id: create-00-master, content: 'Create 00-master.html — master board deck (~26 slides). Platform thesis, client lifecycle funnel, TAM across all 8 lines, revenue stack, shared infra moat, AI-native ops, system quality, ask/next steps.', status: completed}

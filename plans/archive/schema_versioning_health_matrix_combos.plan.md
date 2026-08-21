@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: schema_versioning_health_matrix_combos
-summary: 'Three complementary schema enhancements: (1) Combo/parlay bet support with negative-price handling for American
-  moneyline and options combos; (2) Provider API version manifest + SVG health matrix; (3) CI schema validation (Option
-  B) owned by interface repos that hold VCR cassettes and API auth.'
+summary:
 status: DONE
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-03-06
+overview: 'Three complementary schema enhancements: (1) Combo/parlay bet support with negative-price handling for American moneyline and options combos; (2) Provider API version manifest + SVG health matrix; (3) CI schema validation (Option B) owned by interface repos that hold VCR cassettes and API auth.
+
+  '
 ---
 
 # Schema Versioning, Health Matrix & Combo Bets Plan

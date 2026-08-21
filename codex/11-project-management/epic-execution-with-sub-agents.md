@@ -3,7 +3,7 @@ doc_type: codex-ssot
 title: Epic Execution with Sub-Agents
 summary:
   Codex quick-reference to `plans/epics/README.md` (the epic-flow SSOT) — what an epic is, the audit→active-plan→epic
-  flow, epic vs active-plan frontmatter requirements, the epic×tier registry, and the audit lifecycle.
+  flow, epic vs active-plan frontmatter requirements, the epic×tier registry, and epic audit-lifecycle table.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -31,7 +31,7 @@ referenced_by:
     plans/epics/strategy_master.md,
   ]
 owner:
-last_reviewed: 2026-08-21
+last_reviewed: 2026-05-22
 code_refs:
 ---
 
@@ -43,16 +43,14 @@ The epic-flow SSOT lives at `plans/epics/README.md`. It covers:
 
 - What an epic is (planning orchestrator for one persistent code surface; everlasting)
 - The audit → active plan → epic flow (planning VM produces audits; gaps become active plans; epics absorb them)
-- Epic frontmatter (no date suffix; no `estimate_*` fields; required `name`, `title`, `priority`, and `status`)
+- Epic frontmatter (no date suffix; no `estimate_*` fields; required `assigned_vm` + `tier` + `priority`)
 - Active plan frontmatter (required `parent_epic:` — orphans are review-blocking)
 - Priority blocks within an epic (P0/P1/P2/P3 sections — VM workers pick up in priority order)
-- 22-epic × 6-tier registry (regenerated 2026-08-19)
-- Historical 10-VM topology, superseded by the single `planning` VM and role-based dispatch
+- 19-epic × 5-tier registry + 10-VM topology mapping
 - Lifecycle (active / paused / cancelled — NEVER "complete")
 - Migration discipline (splits / consolidates / renames)
 
-Historical VM topology details are retained in [`/plans/epics/orchestrator_master.md`](/plans/epics/orchestrator_master.md);
-do not use the per-epic VM model for dispatch.
+Full VM topology details: [`/plans/epics/orchestrator_master.md`](/plans/epics/orchestrator_master.md).
 
 ---
 
@@ -61,10 +59,22 @@ do not use the per-epic VM model for dispatch.
 **SSOT for how**: [`../../plans/audit/README.md`](../../plans/audit/README.md) **SSOT for flow diagram**:
 `plans/epics/README.md` § "The audit → active plan → epic flow"
 
-Audits are periodic planning-VM reviews. Timestamped findings land in `plans/audit/results/<slug>_YYYY_MM_DD.md`,
-and gaps become active plans carrying `parent_epic:`; completed result snapshots archive after their findings ship.
-Audit instructions are embedded in each epic file directly. Audit scripts and data in `plans/audit/results/` are
-permanent infrastructure.
+Every epic has a corresponding audit instruction file that documents _how_ to audit it:
+
+| What                                          | Where                                                              | Lifecycle                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Audit instruction templates (how-to per epic) | `plans/audit/instructions/<epic_slug>_audit_instructions.md`       | **Everlasting** — never archived; updated when epic scope changes     |
+| Audit result snapshots (timestamped findings) | `plans/audit/results/<slug>_YYYY_MM_DD.md`                         | **One-shot** — archives when all findings are `- [x]` in parent plans |
+| Audit scripts + data files                    | `plans/audit/results/*.py / *.csv / *.parquet`                     | **Permanent** analytics infrastructure                                |
+| Who runs audits                               | Planning VM (Ikenna + Harsh, Opus 4.7 1M context)                  | Per `plans/epics/README.md` flow                                      |
+| Minimum cadence                               | Monthly per epic + event-driven triggers (new venue, QG RED, etc.) | See instruction file `## Triggers`                                    |
+
+**Epic creation rule**: when a new epic is created in `plans/epics/`, a corresponding
+`plans/audit/instructions/<new_epic_slug>_audit_instructions.md` MUST be created in the same commit. An epic without an
+instruction file is **review-blocking** — same rule as orphan active plans.
+
+**Audit hygiene** (planning VM cadence): (a) any result with all findings shipped → archive to `results/archive/`; (b)
+monthly: review instruction files for epic scope drift; (c) `diff` epics vs instructions to find missing files.
 
 ---
 
