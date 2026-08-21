@@ -67,30 +67,30 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.52.8",
+    "batch-live-reconciliation-service": "0.52.12",
     "deployment-api": "0.96.1",
-    "deployment-service": "0.156.1",
+    "deployment-service": "0.156.2",
     "deployment-ui": "0.1.0",
     "execution-service": "0.97.1",
     "features-service": "0.94.8",
     "fund-administration-service": "0.12.8",
     "ibkr-gateway-infra": "0.5.3",
-    "instruments-service": "0.105.1",
+    "instruments-service": "0.105.2",
     "market-tick-data-service": "0.148.10",
     "system-integration-tests": "0.15.6",
-    "unified-api-contracts": "0.159.0",
+    "unified-api-contracts": "0.159.1",
     "unified-trading-library": "0.93.2",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.32.6",
-    "e2e-testing": "0.41.43",
+    "e2e-testing": "0.41.44",
     "agent-orchestrator": "0.100.52",
     "greeks-service": "0.18.77",
     "trading-agent-service": "0.13.23",
     "strategy-service": "0.85.0",
     "ml-service": "0.58.59",
-    "alerting-service": "0.66.18",
+    "alerting-service": "0.66.19",
     "unified-trading-api": "0.4.2",
-    "client-reporting-api": "0.33.1"
+    "client-reporting-api": "0.33.3"
   },
   "repositories": {
     "alerting-service": {
@@ -2249,18 +2249,18 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.93.2.dev1+g737f6f8a8",
-      "published_at": "2026-08-21T10:49:26Z",
+      "version": "0.93.3.dev1+gcf686f7b9",
+      "published_at": "2026-08-21T12:54:14Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.158.1.dev1+gae56a4f9f",
-      "published_at": "2026-08-21T11:46:00Z",
+      "version": "0.159.1",
+      "published_at": "2026-08-21T12:54:21Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.105.1",
-      "published_at": "2026-08-21T11:45:07Z",
+      "version": "0.105.2.dev1+ga40a4922a",
+      "published_at": "2026-08-21T12:51:54Z",
       "registry": "artifact-registry"
     }
   }
