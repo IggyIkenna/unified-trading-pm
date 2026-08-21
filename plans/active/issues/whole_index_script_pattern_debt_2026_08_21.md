@@ -102,12 +102,18 @@ The proven replacement pattern (shipped + verified in
       reconcile}.py`) so every future stamped script inherits it — mirror the proven AAVEV3 purge
       script structure (generation-pinned read, iter_batches scan, few-column mask view, Arrow filter,
       CAS write, server-side snapshot).
-- [ ] [CODE] P2. `measure_honest_coverage.py` (daily, permanent): RE-SCOPED 2026-08-21 after a deeper
-      read — the census's coarse regex overcounted its risk: it ALREADY column-projects
-      (`_read_parquet_safe`, 5-6 columns) and preserves dictionary encoding, and its dedicated VM was
-      already OOM-bumped to e2-highmem-8/64GB on 2026-08-15 after a measured 31.68GB anon-rss peak on
-      32GB. Remaining work is headroom VERIFICATION under index growth (defi doubled to 7.5GB in 12
-      days — re-measure peak RSS on the next scheduled run vs the 64GB ceiling), not an urgent rewrite.
+- [ ] [CODE] P1. `measure_honest_coverage.py` (daily, permanent): headroom question ANSWERED THE HARD
+      WAY same day — an `--asset-group all` run on the standard e2-highmem-8/64GB VM was OOM-KILLED
+      (rc=137, `measure-honest-coverage-20260821-091926`, kernel `Killed`) right at the defi index
+      load (161,763,519 rows), despite the script's existing column-projection + dictionary
+      preservation. **The scheduled nightly is therefore BROKEN at today's index size** until either
+      (a) the launcher default machine (and whatever the scheduler passes) is raised — a one-line
+      deployment-service change riding the blocked [SHIP] — or (b) the read path is converted to
+      streaming (`migration_common.stream_filter_parquet`-style per-batch aggregation), the durable
+      fix. A 128GB (`--machine-type e2-highmem-16 --oom-monitor`) run was used same-day to produce
+      2026-08-21's coverage.json and to capture the real peak for sizing; check its oom-monitor trail
+      before choosing the interim machine default. (Historical note kept for context: 32GB peaked at
+      31.68GB anon-rss on 2026-08-08's index; the 08-15 bump to 64GB has now been outgrown too.)
 - [ ] [CODE] P2. Same conversion for the remaining permanent-lifecycle whole-frame tools listed in the
       Finding (catalogue builder, phantom reconcilers/sweepers, sports rescan, prediction split,
       wave_launcher, MTDS manifest reconcile) — one PR per repo, shared helper preferred.
@@ -134,8 +140,11 @@ The proven replacement pattern (shipped + verified in
   root-cause session (see related issue's 2026-08-21 Progress Log for the measured mechanism). No code
   changed under this issue yet; the AAVEV3 purge script itself is the reference implementation.
 - **2026-08-21 (same session, later — templates + infra AUTHORED, ship pending)**: implemented in the
-  slot-2 deployment-service tree (all `py_compile`/`bash -n` clean; full QG in flight; COMMIT BLOCKED
-  behind the same peer UAC migration as the AAVEV3 [SHIP] P1 todo — these files ride that ship):
+  slot-2 deployment-service tree (all `py_compile`/`bash -n` clean; QG verdict: the batch itself is
+  GREEN — all 5 template test files pass, 0 template/migration failures; the tree's remaining 41
+  pytest failures are the same upstream dep-drift baseline the peer's in-flight UAC migration causes
+  fleet-wide, unchanged by this batch; COMMIT BLOCKED behind that migration, same as the AAVEV3
+  [SHIP] P1 todo — these files ride that ship):
   - `migration_common.py`: new whole-index safety helpers — `download_index_with_generation` /
     `download_bytes_with_generation` (one consistent GET: content + CAS pin),
     `stream_filter_parquet` (record-batch streaming scan/filter, bounded ~1M-row peak, Arrow-layer
