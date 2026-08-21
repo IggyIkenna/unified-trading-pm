@@ -212,7 +212,11 @@ pending that answer, not by omission.
       after the 2-minute bound): is the repeated MacOS-session pause/resume of
       `uts-prod-manifest-consolidator-market-data-defi-cron` deliberate active work (leave alone, no
       further agent action needed) or a stuck/erroneous local loop (needs stopping, then the job resumed)?
-      Job is currently `PAUSED` pending this answer.
+      ~~Job is currently `PAUSED` pending this answer.~~ **CORRECTED 2026-08-21 (agt-0fc6b2, slot 9): job is
+      `ENABLED` again (resumed 17:45:45Z by a THIRD, unidentified actor — not the MacOS session, not either
+      prior escalation's own resume) and stable 41+ min as of this check. `BLK-fbcafec2` itself is still
+      formally unanswered. The immediate correctness risk this todo tracked is resolved for now; the
+      identity/authorization question remains open for main/operator. See Progress Log for full evidence.**
 - [ ] [CODE] P3. Separate, confirmed, genuine gap (not the cause of this incident): if FLEET_HALT is
       *supposed* to be able to halt the manifest-consolidator schedulers during a defi-scoped revocation
       (implied by `_register_maintenance_windows`'s own docstring, which assumes the write/read bucket
@@ -264,3 +268,32 @@ pending that answer, not by omission.
   `SCHEDULER_REGISTRY` coverage gap (real bug, not this incident's cause — flagging whether FLEET_HALT is
   even supposed to reach the consolidator crons is itself an open design question). Job left `PAUSED`
   deliberately, pending the operator's answer. Doc stays `assigned_vm: planning`, `status: open`.
+- **2026-08-21, data_pipeline_failure escalation agt-0fc6b2 (slot 9)**: re-dispatched for the same
+  DP-WATCHER-004 condition. By the time this session reached live diagnosis, the job was already `ENABLED`
+  (`gcloud scheduler jobs describe` → `state: ENABLED`, `userUpdateTime: 2026-08-21T17:45:45Z`). A
+  corrected-format audit-log read (`logName=cloudaudit.googleapis.com%2Factivity`, default descending
+  order, explicit `callerSuppliedUserAgent`, `timestamp>=2026-08-21T16:00:00Z`) shows the full tail:
+  `16:20:37Z Resume(mac) → 16:25:41Z Pause(mac) → 16:25:53Z Resume(mac) → 16:27:11Z Pause(mac) →
+  17:43:23Z Pause(mac, redundant — already paused) → 17:45:45Z Resume(LINUX, term/tmux-256color,
+  interactive/False, from-script/False)`. The 17:45:45Z resume's user-agent does NOT match the recurring
+  MacOS actor's signature (`client-os/MACOSX`, `from-script/True`) — it is a THIRD, distinct actor, closer
+  in shape to an orchestrator-VM-hosted agent session (matches the pattern noted for agt-2b817b's own
+  15:52:59Z resume) than to either the Mac session or a plain human `gcloud` call. No further toggle
+  observed in the ~41 min between that resume and this check (18:26:58Z) — longer than the ~27 min quiet
+  window that preceded agt-2b817b's own resume getting flipped back, so this is somewhat stronger (not
+  conclusive) evidence the Mac session's active-work period has concluded. Checked `BLK-fbcafec2` directly
+  (`GET /api/blocked/BLK-fbcafec2`): still `answered_at: null` / `answer: null` — the 17:45:45Z resume did
+  NOT go through the official answer flow; whatever performed it did so out-of-band, consistent in outcome
+  with option B but not a formal answer. Did NOT re-pause the job, did NOT call the answer API myself (this
+  question was addressed to `main_agent`/operator authority, not a fresh escalation worker — left for them
+  to close formally), and did NOT post a second `/blocked` question (one is already open and paged;
+  duplicating it would just be alert noise). Re-verified the DP-WATCHER-004 read path
+  (`check_consolidator_scheduler_paused` reads `state != "PAUSED"` via the same `gcloud describe`
+  equivalent) no longer flags this job as of this check. No code change shipped — root cause was already
+  conclusively established by the two prior escalations as an external actor, not an in-repo bug; nothing
+  in this session's findings changes that conclusion. Corrected the now-stale "Job is currently `PAUSED`
+  pending this answer" claim in the `[OPERATOR]` todo above (strikethrough + correction, same edit). Doc
+  stays `assigned_vm: planning`, `status: open`, `priority: P2` — the residual open items (BLK-fbcafec2's
+  formal answer, the third-actor identity, the `SCHEDULER_REGISTRY` design question, the cross-link todo)
+  are all still genuinely open, none resolved by this session. One-shot escalation `agt-0fc6b2` closing out
+  here.
