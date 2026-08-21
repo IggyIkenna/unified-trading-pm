@@ -231,9 +231,10 @@ impression:
 
 ### Close-out
 
-- [ ] [AGENT] P0. Post-phase codex audit — check whether any codex doc under `/codex/04-architecture/` or
+- [x] ✅ [AGENT] P0. Post-phase codex audit — check whether any codex doc under `/codex/04-architecture/` or
       `/codex/06-coding-standards/` makes a claim this audit's findings contradict (e.g. a doc claiming a
-      pattern is "always" applied that a finding shows isn't); correct in place.
+      pattern is "always" applied that a finding shows isn't); correct in place. — unified-trading-pm@(pending)
+      + evidence: see Progress Log entry below.
 - [ ] [AGENT] P0. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
       plan's real landed state once every todo above is done or explicitly re-scoped.
 
@@ -422,3 +423,33 @@ try/except per adapter) to keep every adapter's `_place_order_live`/`_execute_li
 matched committed HEAD post-rebase; 8991 passed, 0 regressions across the full existing CCXT adapter test
 suite -- the idempotency wrapper only triggers reconciliation on a genuine retry of the same intent_key,
 so every first-submission test path is unaffected); post-push ancestry independently verified.
+
+### 2026-08-21 — slot 3 post-phase codex audit
+
+Swept `/codex/04-architecture/` and `/codex/06-coding-standards/` for claims this plan's accumulated findings
+contradict. Grepped both directories for the claim shapes findings would plausibly break — `idempoten*`,
+`slippage`, `unlimited/infinite approv*`, `nonce`, and any `always`/`every adapter`/`every connector`/`all
+adapters` phrasing — then read every DeFi/CeFi-execution-adjacent hit in full (`defi-execution-overview.md`,
+`interface-credential-convention.md`, `adapter-dead-code-and-fallback-ban.md`). The idempotency/credential/
+approval-scope claims found (`transfer-coordinator.md`, `oms-protocol-and-state-machine.md`,
+`kill-switch-event-bus.md`, `interface-credential-convention.md` §"Credential fetch") describe OTHER
+subsystems (TransferCoordinator, OMS, kill-switch bus, the SM credential-fetch contract itself) that this
+audit didn't touch and aren't contradicted.
+
+**One genuine contradiction found and corrected**, verified against the live code, not just this plan's prose:
+`defi-execution-overview.md` § "Connector liveness standard" claimed "Solana connectors inherit
+`BaseSolanaConnector` (`solana_base.py`); they are live today, but the same declaration should be mirrored
+there when that tree is next touched." Both halves were stale. `grep -n "class.*Connector"` across
+`execution_service/defi_execution/protocols/{jito,jito_restaking,solblaze,orca,raydium,marinade}.py` shows
+`JitoConnector`/`JitoRestakingConnector`/`SolBlazeConnector` inherit `BaseConnector` directly, not
+`BaseSolanaConnector` — and per this plan's own slot-13 staking/restaking audit entry above, all three are
+`supports_live=False` (simulation-only) by design (their target programs need an `spl-stake-pool` SDK / Anchor
+IDL decoder this repo doesn't yet depend on), not merely un-mirrored. Only `OrcaConnector`/`RaydiumConnector`/
+`MarinadeConnector` actually inherit `BaseSolanaConnector` and declare `supports_live = True`. Separately,
+`solana_base.py:73-79` already declares `supports_live: bool = False` mirroring `BaseConnector`'s default — the
+mirroring the doc said was "still pending" has already landed. Rewrote the paragraph in place to name the real
+three-vs-three split, why the simulation-only trio stays that way, and that the mirroring is done — no
+speculative claim added, every statement traced to a `grep`/file-read done this session.
+
+No production code was changed (doc-only correction). Codex fix not yet shipped as of this entry — see the
+close-out todo above for the commit SHA once quickmerge lands.
