@@ -110,3 +110,59 @@ drift_direction: none
   `_CATALOGUE_KNOWN_CHAINS is KNOWN_CHAINS` → True, `ASTER` present, `STARKNET` absent. This is a real behaviour
   change to the catalogue read-side venue split, in the correcting direction.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+
+- 2026-08-20/21 — **[FROM-T5] 7 `not_consumed` values from the epic's "No orphans" DoD item — full record,
+  CLOSED.** Moved here verbatim from the parent plan's own todo (now `[x]` there with a short pointer back to
+  this entry) because the resolved detail was long enough to threaten the parent's 1000-line cap.
+
+  Original ask (2026-08-20): 7 `not_consumed` values from the epic's "No orphans" DoD item — 5 data_types + 3
+  instrument_types, all in T2's repos. Measured 2026-08-20 via the `/shard-utilisation-sweep` skill
+  (registry-backed consumption verdict, never a delete suggestion) against `coverage.json` date=2026-08-20:
+  registry vocabulary coverage confirmed adequate for tradfi (9/13, 69%) and prediction (2/4, 50%) before
+  calling these absences meaningful — not disjoint-vocabulary noise like the DeFi/sports findings in the same
+  sweep (those separately noted as `unverified`, not orphans).
+
+  **data_type**, absent from the registry's declared vocabulary for their asset_group: `tradfi/macro_result`
+  (14 cells), `tradfi/yield_curve` (9), `tradfi/ohlcv_1d` (9), `tradfi/futures_chain` (2),
+  `prediction/prediction_canonical_question_group` (4), `prediction/market_lifecycle` (4) +
+  `prediction/MARKET_LIFECYCLE` (2, its own uppercase duplicate).
+
+  **instrument_type**: `tradfi/nan` (63 cells), `tradfi/UNKNOWN` (1), `prediction/nan` (1).
+
+  **PARTIAL 2026-08-20 — instrument_type half resolved, data_type half still open.** Traced via a dedicated
+  investigation, not guessed: `tradfi/nan` + `prediction/nan` were a genuine WRITE-TIME defect —
+  `market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py`'s
+  `_resolve_instrument_type_column()` cast an already-present `instrument_type` column via `.astype(str)` with
+  no null guard, so a NaN/None/`pd.NA` cell rendered as the literal string `"nan"` and became a real
+  hive-partition segment + manifest row_key value — the write-side counterpart of a gap
+  `measure_honest_coverage.py`'s own `_casefold_instrument_type_series` already defended against on the read
+  side. Fixed with `.fillna("")` before the cast, 4 new regression tests (null/NaN/pd.NA/unaffected-real-value
+  cases), 39/39 passing. Evidence: `market-tick-data-service@79ce0c89`.
+  `tradfi/UNKNOWN` is **NOT a defect** — confirmed sanctioned, documented vendor pass-through
+  (`unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py:1089-1095`: Databento's
+  `stype_out=UNKNOWN` for continuous/calendar-spread futures contracts, already in `CONTRACT_REGISTRY`); the
+  `not_consumed` verdict here is a vocabulary-registry mismatch in the sweep's checked source
+  (`VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` doesn't mirror `CONTRACT_REGISTRY`'s sanctioned `UNKNOWN`
+  entries), not a data problem.
+
+  **RESOLVED 2026-08-21 — all 5 data_types + the casing question triaged, evidence-cited (general-purpose
+  sub-agent investigation).** 4 are SANCTIONED-UNREGISTERED (real, actively-written data_types simply missing
+  from `unified_api_contracts.registry.market_data_categories.VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` — the
+  same false-positive class `tradfi/UNKNOWN` already was): `tradfi/yield_curve` (active writers
+  `fred_adapter.py:423`/`ecb_adapter.py:189`, missing from the `("tradfi","bond")` frozenset), `tradfi/ohlcv_1d`
+  (same writers, missing from `("tradfi","index")`), `tradfi/futures_chain` (a real BUNDLED_DATA_TYPE — the
+  `("tradfi","futures_chain")` entry doesn't self-include its own name, unlike its sibling
+  `("tradfi","options_chain")` which does), `prediction/prediction_canonical_question_group` (active writers in
+  both `instruments-service` and MTDS, but the ONLY `("prediction", …)` registry key deliberately excludes
+  cluster-grain data_types — needs a NEW bundle-grain key, not an edit to the existing one). 1 is a genuine,
+  correctly-unregistered non-issue: `tradfi/macro_result` — no live writer anywhere (0 hits), the registry's
+  own comment already documents why it's kept-not-deleted (legacy manifest rows only); adding it to the
+  registry would misrepresent it as consumed. **`MARKET_LIFECYCLE`/`market_lifecycle` — not a live bug.**
+  Neither literal is written today; the real, current writer emits a THIRD, already-renamed value
+  (`prediction_market_lifecycle`). Both flagged casings are legacy pre-rename artifacts, already handled by an
+  explicit 3-way alias list (`instruments-service/scripts/pipeline_e2e_check.py:211`) and independently
+  explained by the ALREADY-FIXED 2026-08-19/20 level-5 case-folding defect (`instruments-service@2b482a1247`) —
+  no further action needed. All 4 registry-fix recommendations are precise (file:line + exact frozenset to
+  extend) but land in `unified-api-contracts` — T1's repo, filed to
+  `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md` Inbound requests, not
+  implemented here.

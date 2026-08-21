@@ -173,49 +173,14 @@ todos only to confirm they are data-movement, then leave it.
       another. A mirrored copy does not receive the SCROLL/PLASMA fix and will drift again — these should import
       the UAC set. Not touched by T1: they are your repo.
 
-- [ ] [FROM-T5] P2. **7 `not_consumed` values from the epic's "No orphans" DoD item — 5 data_types + 3
-      instrument_types, all in your repos.** Measured 2026-08-20 via the `/shard-utilisation-sweep` skill
-      (registry-backed consumption verdict, never a delete suggestion) against `coverage.json` date=2026-08-20:
-      registry vocabulary coverage confirmed adequate for tradfi (9/13, 69%) and prediction (2/4, 50%) before
-      calling these absences meaningful — this is not disjoint-vocabulary noise like the DeFi/sports findings in
-      the same sweep (those are separately noted as `unverified`, not orphans).
-
-      **data_type**, absent from the registry's declared vocabulary for their asset_group:
-      `tradfi/macro_result` (14 cells), `tradfi/yield_curve` (9), `tradfi/ohlcv_1d` (9), `tradfi/futures_chain`
-      (2), `prediction/prediction_canonical_question_group` (4), `prediction/market_lifecycle` (4) +
-      `prediction/MARKET_LIFECYCLE` (2, its own uppercase duplicate — worth checking whether that's a casing
-      drift of the same value before treating both as separate orphans).
-
-      **instrument_type**: `tradfi/nan` (63 cells), `tradfi/UNKNOWN` (1), `prediction/nan` (1) — the `nan`/
-      `UNKNOWN` values read like a writer emitting a missing-value sentinel into a real column rather than a
-      genuine orphaned category; check the writer before assuming any of these are dead data.
-
-      T5 does not have write access to instruments-service/market-tick-data-service to investigate further. Full
-      sweep output (all axes, incl. the DeFi/sports vocabulary-coverage gaps that are NOT orphans):
-      `/plans/active/code_readiness_t5_readiness_observability_presentations_2026_08_19.md`'s "No orphans" todo.
-
-      **PARTIAL 2026-08-20 — instrument_type half resolved, data_type half still open.** Traced via a dedicated
-      investigation, not guessed: `tradfi/nan` + `prediction/nan` were a genuine WRITE-TIME defect —
-      `market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py`'s
-      `_resolve_instrument_type_column()` cast an already-present `instrument_type` column via `.astype(str)` with
-      no null guard, so a NaN/None/`pd.NA` cell rendered as the literal string `"nan"` and became a real
-      hive-partition segment + manifest row_key value — the write-side counterpart of a gap
-      `measure_honest_coverage.py`'s own `_casefold_instrument_type_series` already defended against on the read
-      side. Fixed with `.fillna("")` before the cast, 4 new regression tests (null/NaN/pd.NA/unaffected-real-value
-      cases), 39/39 passing. Evidence: `market-tick-data-service@79ce0c89`.
-      `tradfi/UNKNOWN` is **NOT a defect** — confirmed sanctioned, documented vendor pass-through
-      (`unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py:1089-1095`: Databento's
-      `stype_out=UNKNOWN` for continuous/calendar-spread futures contracts, already in `CONTRACT_REGISTRY`); the
-      `not_consumed` verdict here is a vocabulary-registry mismatch in the sweep's checked source
-      (`VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` doesn't mirror `CONTRACT_REGISTRY`'s sanctioned `UNKNOWN`
-      entries), not a data problem — worth a follow-up to the sweep tool itself if it keeps false-flagging this,
-      not tracked as a new todo here since it's a single already-understood cell.
-      **Still open**: the 5 `data_type` findings (`tradfi/macro_result`, `tradfi/yield_curve`, `tradfi/ohlcv_1d`,
-      `tradfi/futures_chain`, `prediction/prediction_canonical_question_group`) and the
-      `market_lifecycle`/`MARKET_LIFECYCLE` casing-drift question — confirmed the lowercase `market_lifecycle` is
-      the real writer value (`instruments-service/instruments_service/engine/orchestrator/writers.py`'s
-      `_write_market_lifecycle`, GCS prefix `market_lifecycle/by_canonical_group`); the uppercase variant's source
-      was not located.
+- [x] ✅ [FROM-T5] P2. 7 `not_consumed` values from the epic's "No orphans" DoD item (5 data_types + 3
+      instrument_types). **RESOLVED 2026-08-21** — full record (measurement, root causes, evidence, the
+      registry-fix recommendations filed to T1) moved to
+      `/plans/active/code_readiness_t2_progress_history_2026_08_20.md` (line-cap pressure). Short version: 4
+      sanctioned-unregistered (real writers, just missing from UAC's `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`
+      — filed to T1), 1 genuinely dead (`tradfi/macro_result`, correctly left unregistered), the
+      `MARKET_LIFECYCLE`/`market_lifecycle` casing question was a non-issue (already-fixed case-folding defect,
+      not a live writer conflict).
 
 ## Todos
 
