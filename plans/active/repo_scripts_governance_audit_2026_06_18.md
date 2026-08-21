@@ -216,6 +216,25 @@ a verdict). Heaviest:
       real **GCS-orphan-sweep per script** before any delete, which has not been run for either cohort (instruments-
       service 64 / MTDS 22) — so the checkbox correctly stays open regardless of the plan-archival finding. No scripts
       touched, no deletions made.
+
+      **Ambiguity RESOLVED 2026-08-21 (second pass, operator-requested).** All 6 "superseded" plans were superseded
+      by an administrative fold-in (`mtds_consolidation_foldin_mapping_2026_07_12.md`, 2026-07-13), not by
+      completion — only their OPEN todos migrated verbatim into successor `data_completion_<ag>_2026_07_15.md`
+      docs; closed work stayed closed, open work carried forward unfinished. Per-campaign verdict, read against
+      each successor's own current todo/Progress Log state: **cefi — genuinely done** (`data_completion_cefi_
+      2026_07_15.md`, `status: complete`, archived). **prediction — AG's own canon-walk scope done**, though its
+      successor doc stays active carrying unrelated downstream_services items. **tradfi — NOT done** (v9
+      instruments-store walk still gated/unrun as of 2026-08-06). **downstream_services — NOT done** (all 5 core
+      deliverables still `[ ]`, zero progress since the 2026-07-13 fold-in). **defi — PARTIALLY done** (core C0
+      walk only flipped 2026-08-16; C2/C3/C4/C9/C11 + several G-items remain open). **sports — NOT done**
+      (`sports_consolidated_closeout_2026_07_19.md` still has dozens of open todos; a casing migration shipped
+      2026-07-22 had to be discovered wrong and reverted through 2026-07-28). So even the plan-archival half of
+      the gate is LESS satisfied than the first pass found — 4 of 6 non-instruments/cefi AGs have genuine
+      unfinished canonicalisation work, meaning campaign-gated scripts in those AGs plausibly remain load-bearing
+      (`defi_*_2026_06_01.py`, `migrate_legacy_solana_defi_to_canonical.py`, `gate3_solana_manifest_reconcile.py`
+      named explicitly in the original characterization's Finding 1). Combined with the GCS-orphan-sweep never
+      having run for either cohort, this item cannot close on either ground today. No scripts touched, no
+      deletions made — investigation only.
 - [ ] [AUDIT] P2. **DEPRECATE remediation** — fix the ~10 KEEP/PROMOTE scripts carrying the cloud-discipline gap (UCI
       `get_storage_client`/`gcs_*` + `resolve_bucket_name` + `GCP_PROJECT_ID` via `UnifiedCloudConfig`):
       strategy-service DeFi tracers, `seed_demo_client`, `run_client_reporting_cutover`, `run_amm/lending_validation`,
@@ -279,6 +298,13 @@ a verdict). Heaviest:
 
 ## Progress Log
 
+- **2026-08-21 (second pass, operator-requested resolution of the "superseded" ambiguity)**: read all 6
+  `status: superseded` campaign plans' successor docs in full plus the fold-in mapping doc that explains the
+  supersession. Verdict: 2 of 6 (cefi fully, prediction's own AG scope) are genuinely done; 4 of 6 (tradfi,
+  downstream_services, defi, sports) carry real, unfinished canonicalisation work carried forward from the
+  2026-07-13 fold-in, not completed — see the dated resolution note on the Delete-EXECUTION todo above. The
+  GCS-orphan-sweep half of the gate still has never run for either cohort. Net: this item's checkbox correctly
+  stays open — if anything, more clearly blocked than the first pass found, not less.
 - **2026-08-21 (stall-audit re-verification, dispatched from `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s
   gated `[SCRIPT] P2` todo)**: checked whether Phase-1's Delete-EXECUTION item could now be closed. Confirmed all 7
   manifest-canonicalisation campaign plans have archived (plan-archival gate condition met fleet-wide), but flagged a
