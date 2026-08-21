@@ -333,3 +333,23 @@ gate-verified.
 - [ ] [AGENT] P2. **Two UAC tests sit above the gate's per-test timeout under load** — `test_cassette_orphan_checker.py`
       (~183s vs `--timeout=150`). This surfaces as phantom red for anyone gating on a busy host. Either speed the scan
       up or give that module a longer timeout.
+
+## Progress Log — /autonomous continuation (2026-08-21)
+
+- **e2e-testing stash conflict RESOLVED.** `docs/VM_BACKFILL_GUIDE.md` was a diff3 three-way where BOTH sides made
+  the identical change (relocating the launcher paths from `e2e-testing/scripts/common/` to
+  `deployment-service/scripts/vm/` per script-homes.md); they differed only in markdown table padding. Resolved to
+  upstream, then content-survival-verified per rule 4: both relocated paths present, zero stale
+  `e2e-testing/scripts/common/` references, zero markers, zero unmerged index entries. The repo is committable again.
+- **Cross-repo coupling FIXED (the 42 features-service failures).** Added a domain-bound public surface to all 5
+  consolidated e2e-testing wrappers: `SUPPORTED_ASSET_GROUPS`, `SERVICE_MODULE`, `SMOKE_FEATURE_GROUP`,
+  `ALL_ASSET_GROUPS`, `build_parser`, `_viable_cells`, `_build_cli_invocation`, `_test_bucket`,
+  `_verify_gcs_parquet`, `_verify_test_manifest`, `_run_cell`, `run_matrix` — each binding this domain's CONFIG so
+  the pre-consolidation signatures are preserved. Plain re-exports were NOT sufficient: the shared engine takes
+  `cfg` as its first parameter.
+- **Verified empirically, not by reasoning**: 42/42 previously-failing tests pass; 117/117 smoke_matrix tests pass
+  across all 8 families; all 5 production `features_service/<domain>/smoke.py` modules import with correct
+  asset-group counts (commodity 1, cross_instrument 3, delta_one 4, multi_timeframe 3, volatility 2).
+- **Decision (rule 2, no operator ask)**: kept the coupling working rather than reverting the consolidation. The
+  coupling itself stays tracked as the P0 architectural item — the right long-term fix is hoisting a shared harness
+  into `unified_trading_library/testing/` (legal: UTL is a library, not a service).
