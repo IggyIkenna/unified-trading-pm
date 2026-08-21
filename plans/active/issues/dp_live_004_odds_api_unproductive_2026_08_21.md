@@ -50,4 +50,8 @@ Diagnose the live runner and Odds API shard end to end. Preserve `attempted_fail
 
 ## Todos
 
-- [ ] [CODE] P1. Diagnose and fix the unproductive `ODDS_API` sports live shard in `market-tick-data-service`; verify the connector, subscription universe, runner fanout, and manifest status for VM `mtds-live-sports-odds-api-odds-20260816-145019` (event `DP-LIVE-004`, registry `DP-LIVE-004`).
+- [x] [CODE] P1. Diagnose and fix the unproductive `ODDS_API` sports live shard in `market-tick-data-service`; verify the connector, subscription universe, runner fanout, and manifest status for VM `mtds-live-sports-odds-api-odds-20260816-145019` (event `DP-LIVE-004`, registry `DP-LIVE-004`). — `market-tick-data-service@e00fc618` + Evidence: terminal historical HTTP-401 handling and focused regression tests are on `origin/live-defi-rollout`; `bash scripts/quality-gates.sh --no-fix` passed (57s).
+
+## Progress Log
+
+- 2026-08-21 — Verified the current integration branch already contains the root-cause fix (`e00fc618`): `OddsApiKeyExhaustedError` treats historical HTTP 401 as terminal, so the backfill records `attempted_failed` instead of fabricating `SOURCE_RETURNED_ZERO` and stops re-draining the shared key. Focused tests cover 401, transient 500, and proven 200-empty behavior. Full quality gates passed. Live capture remains operator-gated on the exhausted/rotated `odds-api-key` and a refresh of the pre-fix VM; no placeholder data was written.
