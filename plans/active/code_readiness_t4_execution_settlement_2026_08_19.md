@@ -232,21 +232,40 @@ todos only to confirm they are data-movement, then leave it.
       execution-service today). Whichever tranche has capacity first can open the UTL `EventTransport` subscription
       on the execution side (subscribing to strategy's instruction stream + the features-service groups it needs)
       — don't let it stall waiting on the other.
-- [ ] [FROM-T1] P2. **Ceffu integration** — `execution-service/execution_service/transfer_coordinator.py` is
-      confirmed the target (the artefact cites it directly). It's a stub pending its API spec; build the full code
-      path behind the provider interface, credential-gated, never descope. Do NOT invent a distinct Ceffu custody
-      member — the artefact already lists Ceffu alongside Copper/manual-transfer/prime-broker eligibility on
-      `VenueCapabilityV2.transfer_capability` (shipped `unified-api-contracts@45a545e5ad`).
+- [ ] [FROM-T1] P2. **Ceffu integration** — **re-checked 2026-08-21 during the walkthrough-feedback transfer-path
+      consolidation (`plans/active/walkthrough_feedback_remediation_2026_08_21.md` todo 1); this item's target file
+      citation is now STALE and its "ZERO Ceffu/Copper code" claim was already incomplete when written — corrected
+      below. Verdict is UNCHANGED (still genuinely blocked), but for a narrower, more accurate reason.**
 
-      **Checked 2026-08-20, genuinely not actionable yet — not the same blocker as BLOCKED-CREDENTIALS.**
-      `transfer_coordinator.py` has ZERO Ceffu/Copper/prime-broker code today — only a generic `TransferHandler`
-      Protocol and one concrete `_SubaccountMoveHandler` (Binance/OKX only). A conforming Ceffu handler needs
-      Ceffu's actual REST/API surface (endpoints, auth scheme, request/response shapes) to implement correctly —
-      this todo's own text already says "pending its API spec," meaning the spec doesn't exist in this workspace
-      at all, not just missing credentials. Building a `TransferHandler`-conforming class without it would mean
-      inventing an interface with no basis to verify against — real risk of shipping something plausible-looking
-      but wrong for a CUSTODY integration. Deliberately not attempted rather than guessed. `BLOCKED` on the actual
-      Ceffu API spec landing somewhere in this workspace (not a credential ask — a documentation ask).
+      `execution-service/execution_service/transfer_coordinator.py` — the file this item cited — was DELETED
+      2026-08-21 (consolidated onto `engine/handlers/transfer_handler.py` per operator ruling; that legacy
+      coordinator had ZERO production construction sites workspace-wide, confirmed before deletion). The claim
+      "ZERO Ceffu/Copper/prime-broker code today" was true of THAT file specifically but was never true of the
+      system as a whole: the OTHER, real dispatch path (`engine/handlers/transfer_handler.py`'s `TransferHandler`)
+      already has FULL custody-provider wiring, verified end-to-end 2026-08-21:
+      `TransferHandler._execute_custody_transfer` / `_execute_onchain_transfer` → `self._adapter.execute_onchain_transfer()`
+      → (when `create_transfer_adapter()` builds the LIVE/MANUAL composite adapter)
+      `LiveCustodyTransferAdapter.execute_onchain_transfer()` → `self._custody.create_transfer()` →
+      `execution_service.custody.factory.get_custody_provider()`, which DOES support `provider="ceffu"`
+      (`custody/factory.py:109-118`, constructing a real `CeffuCustodyProvider`). The wiring/interface work is
+      DONE — a CUSTODY_TRANSFER or ON_CHAIN instruction routed with `custody_provider="ceffu"` genuinely reaches
+      `CeffuCustodyProvider.create_transfer()`.
+
+      **What's still actually blocked**: `execution_service/custody/ceffu.py`'s `CeffuCustodyProvider` is an
+      honest STUB — every method (`sign_transaction`/`get_balance`/`create_transfer`/`list_wallets`/OES surface/
+      direct-custody surface) raises `NotImplementedError` pending POD's CEFFU institutional API spec (endpoints,
+      auth scheme, sandbox URL — the module's own docstring: "Until POD delivers the spec... every async method
+      raises NotImplementedError"). This is the SAME blocker as before — a documentation/spec gap, not a
+      credentials gap — but the scope is now precisely "implement `custody/ceffu.py`'s real REST calls," not
+      "build a TransferHandler-conforming class from scratch" (that class already exists and already routes to
+      Ceffu correctly once the provider is configured). `custody/ceffu.py`'s own docstring already anticipated
+      this: "the eventual real implementation drops in without service churn" — confirmed true.
+
+      `BLOCKED` on the actual Ceffu API spec landing somewhere in this workspace (not a credential ask — a
+      documentation ask). No code change needed here beyond the real Ceffu REST implementation once the spec
+      lands; do NOT invent a distinct Ceffu custody member — the artefact already lists Ceffu alongside
+      Copper/manual-transfer/prime-broker eligibility on `VenueCapabilityV2.transfer_capability` (shipped
+      `unified-api-contracts@45a545e5ad`).
 - [x] ✅ [FROM-T5] P0. **Shipped — `execution-service@7202047877`.** Expose a real per-venue instruction-path check in `execution-service` — this is the leg the
       readiness dump names as the structural reason its rows cannot confirm execution readiness. T5 has done the
       groundwork and needs only the venue-aware surface; the shape asked for is deliberately minimal.
@@ -729,12 +748,14 @@ todos only to confirm they are data-movement, then leave it.
       `execution_service_policy_and_fill_model_gaps_2026_08_19.md`'s Progress Log ("§ A/C/D/H strategy-owned:
       ... transfer-emit netting") — so the "emit" decision is out of this repo's scope entirely, not merely
       unbuilt here. **Custody routing** is genuinely execution-service's to build, but is the SAME blocker the
-      `[FROM-T1]` Ceffu-integration todo above already tracks: `transfer_coordinator.py` has a real
-      `TransferHandler` protocol + one concrete `_SubaccountMoveHandler` (Binance/OKX only), but building a
-      real Ceffu/Copper custody-routing handler needs the actual Ceffu API spec, which does not exist in this
-      workspace (not a credentials gap — a documentation gap). Real next step once unblocked: build the custody
-      routing half against whichever real transfer-provider spec lands first, wire it into
-      `TransferCoordinator.register_handler()`; the netting half needs a strategy-service-side design session
+      `[FROM-T1]` Ceffu-integration todo above already tracks — **corrected 2026-08-21**: the custody-routing
+      handler already exists and is real (`engine/handlers/transfer_handler.py`'s `TransferHandler`, consolidated
+      onto after `transfer_coordinator.py`'s deletion; venue-agnostic via `VENUE_WALLET_CAPABILITIES`, not a
+      Binance/OKX-only allowlist), and it already reaches `custody/factory.py`'s `provider="ceffu"` branch
+      correctly. Only `custody/ceffu.py`'s REST implementation is pending the actual Ceffu API spec, which does
+      not exist in this workspace (not a credentials gap — a documentation gap). Real next step once unblocked:
+      implement `custody/ceffu.py`'s real HTTP calls against whichever spec lands — no new wiring needed, the
+      dispatch path already routes there; the netting half needs a strategy-service-side design session
       this tranche cannot self-serve (cross-repo, cross-team boundary).
 - [x] ✅ [BACKEND] P2. **Closed — all 4 sub-items resolved.** Close the batch-live-reconciliation-service, fund-administration-service, greeks-service and
       client-reporting-api items in this tranche's allocation. **fund-administration-service: zero docs allocated**
@@ -961,13 +982,13 @@ checkboxes above, not duplicated here)
 | item | state | why |
 |---|---|---|
 | Kill-switch/flatten-position as instructions | `[FROM-T1]` | waiting on T1 landing `KILL_SWITCH`/`FLATTEN_POSITION` on `StrategyInstructionType`; T4's answer already given |
-| Ceffu integration | `[FROM-T1]` | genuinely no Ceffu API spec exists anywhere in the workspace — a docs gap, not credentials |
+| Ceffu integration | `[FROM-T1]` | corrected 2026-08-21: wiring already reaches CeffuCustodyProvider via TransferHandler; only ceffu.py's REST impl is pending — genuinely no Ceffu API spec exists anywhere in the workspace, a docs gap not credentials |
 | Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | superseded Q12-Q16 → now `execution_delta_proxy_repricer_generalization_2026_08_18.md` §15, still open |
 | 9-state order lifecycle full unification | open P0 | terminal-state-never-overwritten validation shipped `execution-service@69a9a088be`; full vocabulary de-dup (oms.py/persistent_oms.py duplicate files) still open |
 | BATCH settlement gap | open P1, 3/5 done | `CONVERT_DUST`/`WITHDRAW`/`REPAY` closed; `LP_MINT`/`LP_BURN` `BLOCKED-` on T1 landing the UAC schema (shape already specified on T1's plan) |
 | execution-policy/fill-model-gaps (own doc) | 7/13 closed | remaining 6 are real design gaps or out-of-repo-scope, see the doc directly |
 | Per-venue scope-key provisioning | open P2 | checked exhaustively, genuinely unbounded, no new action found |
-| Transfer netting + custody routing | open P1 | two independent blockers: netting decision is strategy-service-owned; custody routing shares the Ceffu-spec gap |
+| Transfer netting + custody routing | open P1 | two independent blockers: netting decision is strategy-service-owned; custody-ROUTING itself is done (TransferHandler reaches Ceffu correctly, corrected 2026-08-21) — only ceffu.py's REST impl shares the Ceffu-spec gap |
 | AccountInstruction RBAC | open P2, audit half done | audit shipped `execution-service@d162dd6793`; authorization half needs a role registry neither this repo nor UAC define |
 | State recovery | spun to dedicated plan | `w_state_recovery_real_wiring_2026_08_20` — Phase 1+2 shipped real, Phase 3 correctly blocked behind a new design-only plan (`w_execution_orchestrator_oms_persistence_2026_08_20`) rather than wired unsafely |
 | W14 exchange-version pinning | spun to dedicated plan | `w14_execution_service_exchange_version_pinning_and_cassette_drift_2026_08_20` |

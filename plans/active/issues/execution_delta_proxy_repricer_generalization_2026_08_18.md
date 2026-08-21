@@ -60,6 +60,7 @@ related:
     /plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md,
     /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
+    /plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md,
     /plans/epics/system_readiness_master.md,
   ]
 locked_by:
@@ -569,12 +570,14 @@ POST_ONLY as two independently composable fields.
       above. Extend UAC's `QuoteInstruction` narrowly, or author the new asset-group-agnostic schema proposed in
       this doc — and decide whether it should literally extend `order_semantics.py`'s `VenueOrderSemantics` pattern
       rather than live as a separate module. Real design call, not mechanical — resolve locally first.
-- [ ] [BACKEND] P1. **Rebuild the strategy-side QUOTE-instruction receipt path.** Register directly against
-      `QuoteMaintainer.register_quote_instruction()` per its own docstring guidance, not a resurrected router. Lets
-      `MARKET_MAKING` archetypes populate `DeltaProxyParams` even before the schema extension lands.
-- [ ] [BACKEND] P1. **Build the live underlying-tick ingestion loop** via the standard `EventTransport` facade,
-      driving `QuoteMaintainer.on_underlying_tick()`. Wiring, not new data-access infrastructure — candidate feeds
-      already exist (`l2_depth_provider.py`, venue websockets).
+- [x] ✅ [BACKEND] P1. Rebuild the strategy-side QUOTE-instruction receipt path. **FOUND ALREADY DONE 2026-08-21**:
+      `_register_quote_instruction()` calls `get_quote_maintainer().register_quote_instruction(envelope)` on every
+      QUOTE receipt — execution-service@dc4fad8de7/980a6ad0e.
+- [x] ✅ [BACKEND] P1. Build the live underlying-tick ingestion loop. **DONE, execution-service@0be361333**
+      (predates this session) — `FeatureTickSubscriber` drives `on_underlying_tick()` per tick. **This session
+      closed the remaining gap** (no-churn order-state memoization). Code complete + tested, NOT YET shipped —
+      blocked on an unrelated dep conflict; see `/plans/active/walkthrough_feedback_remediation_2026_08_21.md`
+      Progress Log.
 - [ ] [BACKEND] P2. **Extend the contract with real distinct-underlying delta/gamma**, sourced from `greeks-service`
       (real Black-Scholes greeks, currently written to `LedgerRow.option_delta`/`gamma` and consumed by nothing).
       Depends on the design todo above.
@@ -635,10 +638,10 @@ POST_ONLY as two independently composable fields.
       coefficient, applied against the RAW single-instrument/single-venue position) on the shared envelope,
       generalizing off `QuoteInstruction.skew_on_inventory` rather than inventing new shape. **Note 2026-08-19 (later
       revision): now likely per-vector-entry (judgment call 16), not per-instruction — unresolved.**
-- [ ] [AGENT] P2. **Trace whether `HealthFactorMonitor`/`DeleverageExecutor` are wired to a real production
+- [x] ✅ [AGENT] P2. **EXTRACTED 2026-08-21 → batch21.** Trace whether `HealthFactorMonitor`/`DeleverageExecutor` are wired to a real production
       entrypoint** (service bootstrap constructing the monitor per-chain; a real Pub/Sub subscription calling
       `deleverage_executor.handle()`) or are declared-but-unwired like the rest of this issue's findings.
-- [ ] [BACKEND] P3. **Fix the stale `_SCE_1H` suffix on DeFi strategy_ids** (`carry_staked_basis.yaml` and siblings)
+- [x] ✅ [BACKEND] P3. **EXTRACTED 2026-08-21 → batch21.** Fix the stale `_SCE_1H` suffix on DeFi strategy_ids** (`carry_staked_basis.yaml` and siblings)
       — DeFi is never SAME_CANDLE_EXIT per `hold-policy.md`; rename to the correct hold-policy abbreviation across
       the config, `close_all/__init__.py`'s dispatch dict, and `close_all/carry_staked_basis.py`'s `STRATEGY_ID`
       constant together (a rename needs every consumer migrated in the same change).
@@ -655,11 +658,10 @@ POST_ONLY as two independently composable fields.
       `RuleEvalContext` fields**, given the confirmed-2026-08-19 finding that `preflight_gate.py` has zero
       `ExposureAggregator` imports — either wire it to the real aggregator, or document the independent
       computation explicitly so the two same-named fields stop reading as one source of truth.
-- [ ] [INFRA] P2. **Provision the EventTransport seam's `-reader` pull subscriptions** (`persist-{ag}-{dt}-reader`)
-      — confirmed absent 2026-08-19 (measurement run, slot 14): production `persist-*` topics carry only
-      `warm-sink-*` GCS push subscriptions, so `PubSubTransport.read()` fails against them today. Includes
-      provisioning the missing `persist-all-atomic-instruction` topic (already a known codex gap) so the
-      strategy→execution seam is actually readable in live.
+- [ ] [INFRA] P2. **Provision the remaining EventTransport seam `-reader` pull subscriptions**
+      (`persist-{ag}-{dt}-reader`) for generic matrix shards. W22 provisioned the concrete atomic-instruction
+      execution readers for `cefi`, `defi`, and `prediction`, plus their warm-GCS and BigQuery surfaces; the
+      remaining generic readers still need provisioning before every `PubSubTransport.read()` consumer is live.
 - [ ] [REVIEW] P2. **Re-evaluate the BACKRUN / LIQUIDATION_BUNDLE "12s block budget is generous enough" reasoning
       with the measured transport cost** — measured 2026-08-19 (slot 14, `unified-trading-library@418ce99c`):
       EventTransport `PubSubTransport` publish→receive round-trip ~2.2–2.7s median / ~4.7–5.0s p95 / ~4.9–5.0s max
@@ -995,3 +997,4 @@ remain OPEN** — carried into the codex doc's section 10.
 - [ ] [REVIEW] P1. **Add a reorg row to the DeFi failure matrix and audit barrier-1 dedup keys for the reorg trap** —
       a key on `tx_hash` alone wrongly suppresses the same transaction re-included under a different block hash.
       Measured 2026-08-20: `reorg` has ZERO hits across execution-service, strategy-service and features-service.
+- **na-eligibility-audit 2026-08-21** (line-cap-constrained, doc at 997/1000L): RECLASSIFY (per-todo split) — 2 pure investigation/rename items (the `_SCE_1H` rename, tracing whether HealthFactorMonitor/DeleverageExecutor are wired to production) extracted to `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`; everything else stays `assigned_vm: NA` per the dispatching orchestrator's explicit caution against a naive whole-doc reclassify on this hub doc. Doc's own `assigned_vm: NA` unchanged. Cross-cutting tranche, batch 2 of 3.

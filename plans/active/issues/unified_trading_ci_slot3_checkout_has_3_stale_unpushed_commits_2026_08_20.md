@@ -105,3 +105,6 @@ are plausible without reading the actual workflow content and the commits' own d
   equivalent-content commits already on `origin/live-defi-rollout`; resolved via rebase (git's built-in
   equivalent-commit detection dropped all 3 automatically). Checkout now `ahead=0 behind=0`. Sole remaining todo
   is the P3 OPERATOR monitor-design question — genuinely their call, not resolved here.
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — sole open item is
+  explicitly `[OPERATOR]`-tagged ("consider whether a periodic sweep should catch this... genuinely their call").
+  No change since filing.

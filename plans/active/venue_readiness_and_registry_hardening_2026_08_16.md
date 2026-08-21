@@ -579,13 +579,19 @@ These are the LOCAL half of the split — an AO worker cannot settle them alone,
       `unified-api-contracts/scripts/generate_venue_universe_denominator.py` — re-run it, the count moves every time
       either registry changes. **W4/W5 are now unblocked.** SHIPPED —
       `unified-api-contracts@e7ee398117`.
-- [ ] [AGENT] P1. **Declare capability for the 8 undeclared DeFi venues found by the denominator script.**
-      `ALCHEMY-{ARBITRUM,BASE,ETHEREUM,OPTIMISM,POLYGON}` (gas-fee oracle spellings) and
-      `FLUID-ARBITRUM`/`SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` are registered in `ALL_DEFI_VENUES` but have no
-      entry in `VENUE_DATA_TYPE_CAPABILITIES`, so they're invisible to the (venue, data_type) denominator and to
-      `generate_venue_consumability_report.py`'s step-17 sweep. Add capability records for each (data_types per the
-      MTDS sub-bucket that already backfills them — gas-fees for the Alchemy spellings, dex-swaps/dex-pools for
-      Fluid/Sushiswap) so the denominator and the consumability report both see them.
+- [x] ✅ [AGENT] P1. **PARTIAL — the 3 conflict-free venues extracted to
+      `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` item 3 (na-eligibility-audit 2026-08-21,
+      cross-cutting tranche); the 5 Alchemy venues stay BLOCKED-OPERATOR-DECISION, correcting my own
+      over-broad first pass at this extraction.** `FLUID-ARBITRUM`/`SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM`
+      are clean (registered in `ALL_DEFI_VENUES`, no `VENUE_DATA_TYPE_CAPABILITIES` entry, no conflicting shipped
+      fix) — extracted. `ALCHEMY-{ARBITRUM,BASE,ETHEREUM,OPTIMISM,POLYGON}` are NOT extracted: the 2026-08-17
+      na-eligibility-audit pass (line below) already found these 5 directly contradict a shipped fix
+      (`unified-api-contracts@21a7e5c305`, 2026-08-09) that deliberately DELETED these exact composite-spelling
+      keys as phantom declarations no writer can match — re-adding them needs an explicit decision from the
+      operator between OPTION A (teach the denominator to resolve gas_fees via bare-venue+chain-column grain,
+      matching the shipped design) and OPTION B (deliberately re-declare a different-shaped record with a
+      cross-reference to the removal) — see the 2026-08-17 na-eligibility-audit finding two lines below for the
+      full evidence trail. Stays open here, `assigned_vm: NA`, BLOCKED-OPERATOR-DECISION.
 - [x] ✅ [AGENT] P1. **Readiness state — RULED 2026-08-16 (operator): DERIVED from the contract steps.** Not declared,
       and not a hybrid. A declared state rots, and a stale `LIVE-READY` is precisely the claim-exceeds-measurement
       failure this workspace bans. **The binding consequence**: every contract step must become genuinely
@@ -876,6 +882,15 @@ actionable P0.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 6 open checkboxes (grep matches Phase-0's 6); every item is either explicitly [OPERATOR]-tagged, already PARKED by two same-day 2026-08-17 na-eligibility-audit passes on THIS exact doc.
 
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): RECLASSIFY (per-todo split), corrected
+  mid-pass. First pass extracted the full "8 undeclared DeFi venues" todo without re-reading this doc's own
+  2026-08-17 audit history first — the 2026-08-17 pass had already found 5 of the 8 (the Alchemy gas-fee-oracle
+  spellings) conflict with a shipped fix that deliberately removed those exact keys, and PARKED that item
+  BLOCKED-OPERATOR-DECISION. Caught before shipping this pass's final report: narrowed the extraction to only the
+  3 conflict-free venues (Fluid/Sushiswap) in `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` item 3;
+  the 5 Alchemy venues stay on this doc, `assigned_vm: NA`, BLOCKED-OPERATOR-DECISION per the 2026-08-17 finding.
+  Doc's other 5 open items stay NA unchanged (operator sign-off gate, venue_universe SSOT consolidation deferred to
+  W4, 3 umbrella completion-bar items spanning ~7 repos — none single-outcome/bounded).
 
 ## Deferred work after 2026-08-16
 
@@ -891,7 +906,7 @@ RULED and W3 as resolved (folded into an existing plan, no new plan needed). Rew
 | W5 "smoke-test bar" child plan | **Corrected 2026-08-20**: DOES exist (`plans/active/venue_smoke_test_bar_2026_08_16.md`, 9 open/1 done todos + a gated finalize plan) — the "not forked yet" claim was itself stale | ✅ Unblocked 2026-08-16 — same resolution as W4; per F-G31-3, still sat at `status: draft` (undispatchable) 4 days past its own unblock condition — separately corrected in that doc |
 | "Error-code SSOT shape" design ruling (L321) | ✅ RULED 2026-08-16 | Extend `classify_venue_error()` into a (venue, code) registry — see L397-403 |
 | "Config-abstraction target shape" design ruling (L325) | ✅ RULED 2026-08-16 | One `config.py` per service, domain-split only when cap-forced — see L404-410 |
-| "Declare capability for the 8 undeclared DeFi venues" (P1, new) | Not started | Actionable now — Alchemy gas-fee-oracle spellings + Fluid/Sushiswap-Arbitrum need `VENUE_DATA_TYPE_CAPABILITIES` entries |
+| "Declare capability for the 8 undeclared DeFi venues" (P1, new) | ✅ PARTIAL — 3/8 extracted 2026-08-21, 5/8 BLOCKED-OPERATOR-DECISION | 3 conflict-free venues (Fluid/Sushiswap) → `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` item 3; 5 Alchemy venues need an operator ruling per the 2026-08-17 conflict finding above |
 
 **Recommended next item**: **W4 "venue e2e wiring"** (`venue_e2e_wiring_2026_08_16.md`) — its universe-definition
 blocker is resolved (192 declared venues / 353 (venue, data_type) pairs is the real denominator, per

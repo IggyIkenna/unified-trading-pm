@@ -109,22 +109,29 @@ real fix is to never load the whole manifest per request.
       serves every filter-free request (incl. full-history) cheaply today — no new precompute job needed. Its
       documented gap (row-filtered / venue-filtered requests bypass it, `any_row_filter` in `manifest.py`) is
       pre-existing and out of this plan's scope. See 2026-08-20 Progress Log entry.
-- [ ] [UI] P2. **Lift the 90-day default** — once the backend is bounded/precomputed, allow full-history windows in the
+- [x] ✅ [UI] P2. **Lift the 90-day default** — once the backend is bounded/precomputed, allow full-history windows in the
       UI without the OOM-guard stopgap; add a pw:L2 regression spec for a full-history render. **Scope note (2026-08-20):
       the "All" full-history preset already exists (`deployment-ui/src/components/DataStatusTab.tsx`,
       `FULL_HISTORY_START_DATE`) as an explicit one-click action, and the operator's 2026-07-14 ruling
       (`data-status-default-range.spec.ts`) deliberately keeps 90-day as the silent DEFAULT — this todo does NOT
       require changing `DEFAULT_LOOKBACK_DAYS`, only proving the "All" preset renders reliably + adding its pw:L2
-      spec.** Done-when: a `pw:L2` regression spec exercises the "All" preset at full history and passes.
+      spec.** Done-when: a `pw:L2` regression spec exercises the "All" preset at full history and passes. —
+      deployment-ui@18ba0178; evidence: `tests/e2e/data-status-default-range.spec.ts` covers the explicit "All"
+      preset, asserts no request fires until "Check Status", and verifies the full-history request uses
+      `start_date=2018-01-01`; source implementation is `DataStatusTab.tsx`.
 - [ ] [BACKEND] P2. **Load-test at full history** — prove a full-history cell-grid request stays within Cloud Run memory
       at production concurrency (cite memory p99 + latency); retire the per-request OOM guard. **Do not mark this done
       on Bound alone** — see the full-history limitation recorded in the 2026-08-20 Progress Log entry; this gate is
       honestly unmet until either todo 8 (streaming aggregation) ships or a real production load test proves the
       worst-case (MTDS/cefi full-history + venue filter, or stale-rollup fallback at full-history) stays under the
       4 GiB limit.
-- [ ] [REVIEW] P2. **Post-phase codex audit** — update `deployment-observability.md` with the new cell-grid
+- [x] ✅ [REVIEW] P2. **Post-phase codex audit** — update `deployment-observability.md` with the new cell-grid
       architecture; confirm no plan↔codex drift. Sequenced AFTER todo 3 actually ships (premature before then —
-      the codex doc must describe shipped behavior, not a design decision alone).
+      the codex doc must describe shipped behavior, not a design decision alone). Done: added a "Bounded date-window
+      read on the live-build fallback" paragraph under § "deployment-api cache & memory architecture", citing
+      deployment-api@777f1fa531 and restating the plan's own not-a-full-history-fix caveat so the codex doc doesn't
+      overclaim. — unified-trading-pm@6804f35e8d (shipped same session as todo 3, before the na-eligibility-audit
+      reclassification pass landed — this checkbox lagged that shipment, not redone).
 - [ ] [BACKEND] P1. **Phase 2 — row-group-streamed full-history aggregation** — `date_window` pushdown (todo 3) does
       NOT bound a genuinely full-history request: pyarrow row-group pushdown only skips groups entirely OUTSIDE the
       window, and cefi/MTDS-scale manifests have row groups spanning 2-2.5 calendar years each (measured,

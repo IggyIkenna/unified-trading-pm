@@ -87,9 +87,9 @@ after those gates fail closed on the `No active venues`/zero-row case.
       object against the applicable UAC machine oracle or Sports writer template, and fails closed when no object/row is
       produced (repo: market-tick-data-service) — market-tick-data-service@01745226fa + QG=11102 passed, 28 skipped, 1 xpassed, 19 warnings; runtime report
       `data_pipeline_e2e_check_mtds_2025_12_20.md` (`canonical_no_matching_objects_in_test_bucket`, fail-closed).
-- [ ] [DATA] P1. Reconcile the 96 observed Sports `(venue, data_type)` cells absent from the UAC registry against the
-      canonical venue/data-type declarations; either register them with source-scoped capabilities or classify them as
-      legacy/non-canonical observations (repo: unified-api-contracts).
+- [x] [DATA] P1. Reconcile the 96 observed Sports `(venue, data_type)` cells absent from the UAC registry against the
+      canonical venue/data-type declarations; classify derived/retired data types and accepted legacy/source-scoped
+      observations without widening canonical bookmaker capabilities (repo: unified-api-contracts) — unified-api-contracts@a78f07dce0; QG=passed.
 - [ ] [BACKEND] P1. Preserve a per-unit result schema containing row count, canonical-path verdict, manifest shard-atom
       verdict, `capture_status`, source, and the exact no-active-venue/zero-row reason so an exit code of zero cannot be
       mistaken for a passing smoke test (repo: market-tick-data-service).
@@ -111,3 +111,5 @@ after those gates fail closed on the `No active venues`/zero-row case.
 
 - **2026-08-20 — slot-18:** Final scoped quickmerge landed on LDR as `market-tick-data-service@01745226fa`; full QG passed with 11,102 tests passed, 28 skipped, 1 xpassed, and 19 warnings.
 - **2026-08-20 — slot-7:** Shipped the generator-scoped Sports mode as `--generator-scoped-sports`; it loads exactly the 39 UAC work-list rows, preserves venue/data-type filters, and logs observed PROD cells outside the generator without widening the denominator. Quickmerge verified `market-tick-data-service@aaa0c8b1b6` on LDR; full QG passed with 11,104 tests passed, 28 skipped, 1 xpassed, and 19 warnings.
+
+- **2026-08-21 — slot-10:** Reconciled the observed Sports registry gaps in `unified-api-contracts`: canonical bookmaker/data-type capabilities remain unchanged; derived/retired data types and accepted legacy, source-scoped, writer-residue, empty-residue, and cross-asset observations are classified explicitly. Full quality gates passed (tests, type check, Codex compliance); quickmerge landed the commit on LDR.

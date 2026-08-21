@@ -212,15 +212,12 @@ context_scope:
       /plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md. Blocked on:
       bridge-protocol selection.
 - [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — Wire `ATOMIC` through the existing `InstructionRouter.route_signal()` multi-leg dispatch; `execution-service@1636abd22e` translates each leg into the shared execution contract and returns per-leg results. Evidence: `bash scripts/quality-gates.sh --no-fix` (ALL QUALITY GATES PASSED, 934s); direct HTTP verification returned `200 COMPLETED_SUCCESS` with 2 per-leg results. The real venue-side atomic/compensation engine remains tracked in `/plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md`.
-- [ ] [BACKEND] P0. Add `KILL_SWITCH`/`FLATTEN_POSITION` as `InstructionActionV2` members — **coordinate with
-      T1** (owns `unified-api-contracts`) for the schema addition; this tranche does not add UAC members
-      directly. Each instruction carries an authorization field mirroring `AccountInstruction.authorization_id`.
-      Once the schema lands, wire the execution-service handler as a THIN translation into the existing
-      `kill_switch.py`/`AccountInstructionOrchestrator.CLOSE_ALL` machinery — never a second, independently-
-      authorized implementation of the same capability. Done-when: an authorized external KILL_SWITCH/
-      FLATTEN_POSITION instruction produces the identical effect as the existing internal
-      `POST /kill-switch/activate` / `POST /account/instruction` (CLOSE_ALL) calls, verified by a test asserting
-      both paths converge on the same underlying call.
+- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — Add `KILL_SWITCH`/`FLATTEN_POSITION` as coordinated `InstructionActionV2`
+      members in unified-api-contracts and route authorized external controls through the existing kill-switch and
+      `AccountInstructionOrchestrator.CLOSE_ALL` primitives. Evidence: unified-api-contracts@d44de9fb21351b2bdae1e78c32334c1272777678,
+      execution-service@bc2edc16874a3b0828ef692682b69174ddcab4bf; `bash scripts/quality-gates.sh --no-fix` passed (execution-service: 8896 passed,
+      22 skipped, 1 xfailed; UAC gate: ALL QUALITY GATES PASSED, 0 type errors). Regression coverage:
+      `tests/unit/api/test_external_control_instruction.py` and UAC control-instruction contract tests.
 
 ### Deployment topology and external hosting
 
@@ -247,10 +244,12 @@ context_scope:
 
 ### Close-out
 
-- [ ] [AGENT] P0. Post-phase codex audit — update `/codex/02-data/live-data-persistence-and-event-log.md` and
-      `/codex/04-architecture/tier-and-import-architecture.md` if this plan's messaging-bridge implementation
-      changes anything either doc currently states as unbuilt; cross-link the delta-proxy issue doc both
-      directions once the features-service subscription todo lands.
+- [x] [AGENT] P0. ✅ Post-phase codex audit — updated `/codex/02-data/live-data-persistence-and-event-log.md` with
+      the measured Pub/Sub reader, atomic-instruction subscriber, Terraform, and warm/BQ surfaces; the tier/import
+      SSOT had no stale messaging claim. Cross-linked and narrowed the remaining generic-reader todo in
+      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` —
+      unified-trading-pm@20ef76d216 + Evidence: PM diff review; `e2e-testing/tests/unit/test_atomic_instruction_live_routing_seam.py`
+      and deployed `api.main` wiring verified.
 - [ ] [AGENT] P0. Confirm the epic's own W22 section (`/plans/epics/system_readiness_master.md`) reflects this
       plan's real landed state once every todo above is done or explicitly re-scoped — the epic's todos should
       point here, not duplicate the detail.

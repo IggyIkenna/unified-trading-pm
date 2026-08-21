@@ -287,3 +287,10 @@ unblocked on a CI runner.
   `supersede-check`'s coverage, filed alongside the same day's UAC publish-ordering-race root-cause deep-dive in
   [/plans/active/issues/cloud_build_uac_publish_ordering_race_recurrence_strategy_service_2026_08_20.md](/plans/active/issues/cloud_build_uac_publish_ordering_race_recurrence_strategy_service_2026_08_20.md)).
   This entry IS the link-back fix for that doc's `asset_group: [ci]` family membership.
+- **ci_reconciler 2026-08-21**: filed
+  [/plans/active/issues/deployment_service_historical_quickmerge_bypass_backlog_2026_08_21.md](/plans/active/issues/deployment_service_historical_quickmerge_bypass_backlog_2026_08_21.md)
+  — `deployment-service` carries a 19-commit-remaining, month-old, multi-identity strict-quickmerge bypass backlog
+  (dated 2026-07-09 through 2026-07-20, 7+ distinct slot/host identities), the same shape as the sibling
+  `mtds_is_historical_quickmerge_bypass_backlog_2026_08_16.md` finding — not currently blocking a live promote PR,
+  needs an operator bulk-bless/re-ship/show-and-wait decision per `/ci-reconcile` §4's size/authorship gate. This
+  entry IS the link-back fix for that doc's `asset_group: [ci]` family membership.

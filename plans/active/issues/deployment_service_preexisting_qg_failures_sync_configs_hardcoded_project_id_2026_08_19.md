@@ -113,7 +113,19 @@ non-hard-failing check in the sweep, or was masked by the item-1 failure abortin
 fixing it properly is still a judgment call (whether the hardcoded ID is acceptable in test fixtures or needs a
 shared constant) outside the migration-canonicalization plan's scope. Needs its own pass.
 
+## Todos
+
+- [ ] [ENG] P2. **Resolve the hardcoded `central-element-323112` prod project ID** in
+      `deployment-service/tests/unit/test_data_pipeline_monitors.py` and
+      `deployment-service/tests/unit/test_consolidator_watchdog_vm_wiring.py` (many separate line hits in each file).
+      Judgment call: decide whether a hardcoded prod project ID is acceptable in test fixtures as-is, or needs a
+      shared constant/fixture. Done when: the QG hardcoded-project-id check passes clean for both files, or an
+      explicit exemption is recorded with rationale.
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 0 open checkboxes (grep-verified, matches Phase-0=0) — the doc uses pure prose, no checkbox syntax at all. Item 1 (fallback-import baseline overage) is fully resolved and shipped.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **ag-closeout-audit 2026-08-21 (infra tranche hygiene fix)**: converted item 2's prose-only "still open" claim into
+  a real `- [ ] [ENG] P2` checkbox — the doc previously carried zero checkbox syntax despite describing genuine open
+  work, a HARD RULE violation (every deferral must be a tracked `- [ ]`, not prose).

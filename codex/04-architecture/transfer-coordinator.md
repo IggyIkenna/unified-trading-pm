@@ -32,7 +32,21 @@ last_reviewed: 2026-05-20
 code_refs:
 ---
 
-# TransferCoordinator
+# TransferCoordinator (SUPERSEDED — see below)
+
+> **SUPERSEDED 2026-08-21.** `execution_service.transfer_coordinator.TransferCoordinator` was DELETED during the
+> walkthrough-feedback transfer-path consolidation
+> (`plans/active/walkthrough_feedback_remediation_2026_08_21.md` todo 1, operator ruling). It had ZERO production
+> construction sites workspace-wide (only its own unit tests built one) -- the class this whole doc describes was
+> real, tested, and permanently dormant. Everything below this banner is now HISTORICAL RECORD of a design that was
+> superseded, not the current architecture. **Current SSOT: `engine/handlers/transfer_handler.py`'s `TransferHandler`**
+> -- the OTHER, fuller path this doc's own "Status" section (below) already flagged as reaching further (all 5
+> `BusTransferType`s it dispatches wired, venue-agnostic `SUBACCOUNT_MOVE` via `VENUE_WALLET_CAPABILITIES`, real
+> `CUSTODY_TRANSFER` routing to Copper/Ceffu/CloudKMS, `REBALANCE` dispatch added 2026-08-21). Its cross-client
+> exception relocated to `execution_service.isolation_policy.CrossClientTransferForbiddenError` +
+> `assert_transfer_intent_client_allowed()` (preserved for whichever future `TransferIntent` bus consumer wires up --
+> none exists in production today, same as before). See `/codex/04-architecture/client-funds-isolation.md`'s
+> code-level invariants table for the current citation.
 
 ## Overview
 
@@ -54,17 +68,19 @@ undone is narrower and different: **`execution_service.transfer_coordinator.Tran
 production construction sites workspace-wide** (verified by grep — not imported, not built, not referenced in `app.py`
 or any wiring module; only its own unit tests construct it). It is a real, tested, dormant class — see
 `/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md`'s IMPLEMENTATION STATUS box for the matching
-producer-side gap ("nothing emits `TransferIntent` in production").
+producer-side gap ("nothing emits `TransferIntent` in production"). **2026-08-21: this dormancy is why the
+class was deleted rather than extended -- see the SUPERSEDED banner above.**
 
 ---
 
-## Location
+## Location (historical -- file deleted 2026-08-21)
 
-`execution-service/execution_service/transfer_coordinator.py`
+~~`execution-service/execution_service/transfer_coordinator.py`~~ -- deleted. Current dispatch lives in
+`execution-service/execution_service/engine/handlers/transfer_handler.py`.
 
 ---
 
-## Routing table
+## Routing table (historical -- reflects the deleted class, not current TransferHandler dispatch)
 
 **Table below is design intent — `_ensure_default_handlers()` only registers `SUBACCOUNT_MOVE`; every other row has NO
 handler wired.** Calling `.execute()` with any other `transfer_type` today raises `KeyError` ("No handler registered").
@@ -76,6 +92,13 @@ handler wired.** Calling `.execute()` with any other `transfer_type` today raise
 | `DEFI_WITHDRAW`                | design intent: `defi_execution/protocols/<protocol>/withdraw()` — no handler registered in code today                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `BRIDGE`                       | **corrected 2026-08-19** — the module docstring names `execution_service.v2.handlers.BridgeHandler` as the target; **that module and class do not exist anywhere in the workspace** (`v2/handlers.py` is not a real file; `BridgeHandler` has zero definitions — fabricated/stale). The real live-capable bridge connectors are `SocketBridgeConnector`/`CCTPBridgeConnector` (`defi_execution/protocols/bridge.py`, `cctp.py`) — real, tested, but zero production call sites today. See `/codex/04-architecture/transfer-architecture.md` § "Bridging execution reality" for the decided `BridgeRouter` architecture that will wire `BRIDGE` for real. |
 | `SUBACCOUNT_MOVE`              | Only wired handler — `_SubaccountMoveHandler`, Binance + OKX only; `NotSupportedTransferError` for all others, named successor `subaccount_transfers_phase_2_2026_06_01.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+
+**Current `TransferHandler` dispatch (2026-08-21)**: `SUBACCOUNT_MOVE` -> `_execute_internal_transfer`
+(venue-agnostic, `VENUE_WALLET_CAPABILITIES`), `CEX_WITHDRAW` -> `_execute_cex_withdrawal` (live CCXT), `ON_CHAIN`
+-> `_execute_onchain_transfer`, `CUSTODY_TRANSFER` -> `_execute_custody_transfer` (Copper/Ceffu/CloudKMS via
+`custody/factory.py`), `REBALANCE` -> `_execute_rebalance_transfer` (added 2026-08-21; dispatch-wired but
+`classify_transfer_type()` never emits `REBALANCE` today -- no producer signal exists yet, a genuinely open design
+question, not guessed at), `BRIDGE` -> still a fail-loud stub.
 
 ---
 

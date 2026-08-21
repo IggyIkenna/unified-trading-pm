@@ -260,10 +260,16 @@ todos only to confirm they are data-movement, then leave it.
       sides (`strategy_service/config_reloaders.py` + per-domain reloaders; `execution_service/
       config_reloaders.py`, `v2/policy_reloader.py`) — expose/document its request-response pattern alongside,
       hand examples to T5.
-- [ ] [BACKEND] P1. Add `staking_pnl` as a first-class dimension in `_PNL_DIMENSIONS`
-      (`position/core/pnl_attribution_aggregator.py:13` — today staking folds into carry/residual). Existing
-      set (delta/gamma/theta/vega/rho, funding, basis, interest_rate, carry, fx, residual) is the real list —
-      hand to T5 so the PnL-attribution section enumerates actual dimensions.
+- [x] [BACKEND] P1. Add `staking_pnl` as a first-class dimension in `_PNL_DIMENSIONS` — **done**,
+      `strategy-service@21937bb2cf`. `_PNL_DIMENSIONS` grew from 11 to 12 (`staking_pnl` added); it is
+      accumulated as its own dimension (no longer silently mixed into whichever of carry/residual a caller
+      happened to pick) and, since UAC's `PortfolioPnLAttribution` has no dedicated `staking_pnl` field yet
+      (a cross-repo unified-api-contracts schema change, out of this wave's scope), deterministically folded
+      into `carry_pnl` on construction via a new `_UAC_FOLD_TARGET` map — documented in-code so the fold-in is
+      dropped once UAC ships the field. 2 new tests: `test_staking_pnl_is_first_class_dimension_folded_into_carry`,
+      `test_staking_pnl_defaults_to_zero_when_unspecified`; existing `test_all_11_dimensions_sum` updated to
+      assert `len(_PNL_DIMENSIONS) == 12`. Real list for T5's PnL-attribution section: delta/gamma/theta/vega/rho,
+      funding, basis, interest_rate, carry, fx, residual, staking (staking folds into carry pending UAC field).
 
 ### Archetype code completeness — the headline number
 
@@ -347,19 +353,24 @@ todos only to confirm they are data-movement, then leave it.
       needs a human design pass on features-service's per-candidate feature-naming before it can be broken into
       AO-dispatchable todos. Evidence:
       `/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`.
-- [ ] [OPERATOR] P1. **Re-triaged 2026-08-21 — this is operator-gated, not directly buildable.** The issue doc's
-      own "Recommendation" section (unresolved) asks the operator to decide scope FIRST: build now vs. later, all
-      19 archetypes vs. the 7 already-drivable ones, and separately whether to reconcile strategy-service's catalog
-      against UAC's `archetype_leg_spec_seeds` (recommended approach: (A) a diff/gate-fail script, NOT full
-      regeneration — ~0.5-1 AI-day once approved). The 3-layer design (dynamic ADV-based candidate discovery /
-      archetype-level allow-block-list / per-strategy-instance filter) is already fully sketched and
-      operator-specified verbatim — once scope is picked, this is a real, scoped, buildable task, just not one to
-      start without that pick. Evidence: `/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`.
-- [ ] [OPERATOR] P1. **Re-triaged 2026-08-21 — operator-gated.** Todo 1 of the issue doc is explicitly `[OPERATOR]`:
-      decide whether to generalize `venue_capabilities.py`'s pattern to the other 8 strategy families (grow the
-      registry) or accept hardcoded catalog literals as deliberate for families where venue support rarely
-      changes — a real, unresolved architecture call, not a default-yes. Todos 2-3 (audit + regression check) are
-      textually gated on that decision and correctly un-dispatchable until it lands. Evidence:
+- [x] ✅ [BACKEND] P1. **Corrected 2026-08-21 — the prior re-triage was stale, citing an OLD, superseded
+      "Recommendation" section.** Re-read the full issue doc: it has a `RESUME POINT 2026-07-23` addendum
+      (below the stale Recommendation section) recording the operator's verbatim-quoted 3-layer target
+      architecture AND an operator-approved build plan, "Build plan — 'complete the orphaned archetypes'
+      (operator-approved 2026-07-23, in progress)" — and every single todo in that build plan (Phases 0-5,
+      Layer-1 ADV-ranked candidate discovery, Layer-3 curtailment mechanism, both side-decisions) is `[x]`,
+      shipped 2026-07-23 through 2026-07-26, weeks before this plan existed. Grepped the whole doc for any
+      remaining `- [ ]` — zero. This item is fully done, not operator-gated; nothing to re-ask. Evidence:
+      `/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`. Follow-up: that
+      issue doc looks archival-eligible (every todo done, unlocked) — worth a dedicated archival pass, not done
+      here to stay scoped to this correction.
+- [x] ✅ [BACKEND] P1. **Corrected 2026-08-21 — the prior re-triage was stale.** The issue doc already carries an
+      `## OPERATOR RULING 2026-08-21` section (citing `/codex/04-architecture/cross-domain-state-fabric.md` §12,
+      R17 — ONE declarative capability-gated resolver, generalized to every
+      family, fail-closed) that closes exactly this decision — the todo just hadn't been retagged. Fixed
+      directly in the issue doc: todo 1 flipped `[x]` citing the ruling, the venue-literal audit (todo 2) is
+      also done (`pm@0fa40df01d`, 2 real drift findings — CME event root symbols, Phoenix stale listing), and
+      the resolver-build + regression-check todos are now `[AGENT]`-actionable, no longer blocked. Evidence:
       `/plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md`.
 
 - [ ] [BACKEND] P1. Delete entries from `clients_yaml_coverage.PENDING_CROSS_REPO_WAIVER` as T5 lands each
@@ -395,10 +406,23 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W7 — centralisation and anti-drift
 
-- [ ] [BACKEND] P1. Migrate the 69 module-level reference-shaped constants to one of the four centralisation
-      destinations. Evidence: `/plans/active/strategy_service_centralization_fixes_2026_08_16.md`.
-- [ ] [BACKEND] P1. Finish wiring the asset-group-agnostic position-risk core.
-- [ ] [BACKEND] P1. Complete the lazy/scoped loading refactor on the strategy-service side. Evidence:
+- [ ] [BACKEND] P1. **Re-scoped 2026-08-21 — tracked in the same sibling plan as the W9/W10/W13
+      pointer above, not a separate build.** The 69-constant migration is
+      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md`'s own W7 section (4 open
+      todos there: inventory all 69, migrate the unambiguous ones, an `[OPERATOR]` ruling on
+      ambiguous ones, fix the exemplar). Work it from that plan — see this file's own
+      Progress Log for what "fix the exemplar" already turned out to be partially done by an
+      earlier fix this session.
+- [ ] [BACKEND] P1. **Re-scoped 2026-08-21 — same sibling plan.** "Position-risk core" wiring is
+      that plan's `DeFiHealthAggregator`/`MarginEvent` reconciliation work (the same 15-open,
+      `sequential: true` chain the W9/W10/W13 row above already points to) — not a separate T3
+      build. See the W9/W10/W13 row above for current status; do not track separately here.
+- [x] ✅ [BACKEND] P1. **Verified 2026-08-21 — the strategy-service side is already done; what remains
+      is UAC-scoped, not T3's to build.** `lazy_scoped_loading_refactor_2026_08_16.md` has exactly 2
+      open todos, both explicitly about `unified-api-contracts`'s `registry/__init__.py`/
+      `internal/__init__.py`/`internal/architecture_v2/__init__.py` (already "in progress 2026-08-20"
+      per its own text) — zero open todos reference strategy-service's `factory.py`, confirming that
+      layer landed. Cross-repo (T1's tranche), correctly not touched here. Evidence:
       `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md`.
 
 ### W9, W10, W13 — balances, risk, exposure, PnL
@@ -490,11 +514,56 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W16, W18 — preflight and canonical output paths
 
-- [ ] [BACKEND] P0. Build the universal fail-closed startup readiness check — a strategy missing a required input
-      fails REGISTRATION, not a live run. Missing or stale data fails closed by default (RULED).
-- [ ] [BACKEND] P0. Land canonical output paths for strategy-service (W18), coordinating with T1's `PATH_REGISTRY`
-      `mode=` fix so batch/paper/live no longer collide.
-- [ ] [BACKEND] P1. Build trigger, latency-tracing and staleness-SLA mechanisms (W16) — "specified, not built".
+- [ ] [BACKEND] P0. **Re-scoped 2026-08-21 — real, ruled, but its own "first concrete instance" ties
+      directly to the stalled sibling plan.** Epic spec (`system_readiness_master.md` line 571-584):
+      RULED 2026-08-18 — every archetype needs a NAMED startup-readiness check covering position/
+      PnL/risk/venues/every market-data type it consumes, both presence AND freshness, fail-closed
+      by default; done-when is explicit. The epic's own text names its first concrete instance as
+      `strategy_service_centralization_fixes_2026_08_16.md`'s DeFi health-factor gates — the same
+      15-open-todo, `sequential: true`, AO-stalled-5-days plan already flagged above (W9/W10/W13
+      row). Building the GENERIC per-archetype mechanism before that first instance lands risks
+      designing against an unproven shape; land the health-factor instance first (via that sibling
+      plan), then generalize. Not attempted this session for the same reason: competes for session
+      time with this plan's own ~15 remaining directly-owned todos, and the real unlock is picking
+      up the sibling plan, not a fresh parallel mechanism here.
+- [x] ✅ [BACKEND] P0. **Partially shipped 2026-08-21 — `unified-trading-library@78f7e269c2` +
+      `strategy-service@42fedf7966`.** W18 (epic line 601-605) asks for one grammar across
+      strategy-service's 5 emission datasets (`positions`/`pnl_attribution`/`risk_metrics`/
+      `strategy_orders`/`strategy_instructions`). Audited all 5: `strategy_instructions` already
+      had the full reference shape (`client_id`/`strategy_id`/`day`/`mode`); `positions` correctly
+      uses a different axis (`account_key`/`snapshot_type`, no strategy identity — genuinely not a
+      dialect gap); the other 3 (`strategy_orders`, `pnl_attribution`, `risk_metrics`) had NO
+      `client_id=` segment at all — fixed to match the reference shape, dropping the redundant
+      `by_date/` literal in the process for full consistency. Grepped every repo for real callers
+      before changing anything: `strategy_orders` has zero fleet-wide callers (dead code, safe);
+      `pnl_attribution` has exactly one real writer (`pnl/cli/main.py`'s cross-strategy batch,
+      updated to `client_id="all"` matching its own existing `strategy_id="all"` convention) and 3
+      readers (UTL `strategy.py`/`pnl.py`/`risk.py` domain clients, all updated with a `"*"`
+      wildcard default); `risk_metrics` has a real READER (`RiskDomainClient.get_risk_metrics()`)
+      but **no writer anywhere in the workspace** — flagged as its own separate finding, not fixed
+      here (out of scope for a path-grammar change). Also corrected a stale docstring in UTL's
+      `strategy.py` claiming `write_instructions` bypasses `PATH_REGISTRY` — fixed earlier this
+      session (`strategy-service@8a7f80e8`), the comment was never updated. Both repos'
+      `quality-gates.sh --no-fix` green (UTL: 0 failures; strategy-service: full whole-tree codex
+      compliance clean — an earlier attempt hit 3 failures in files this change never touched,
+      traced to a race with a concurrent quickmerge push, not a real blocker, confirmed by the
+      clean retry). **Remaining W18 scope, not done here**: the `risk_metrics`-has-no-writer gap
+      (needs its own scoping — is risk_metrics meant to be computed live, or was a writer just
+      never built?), and confirming no OTHER strategy-service emission type exists outside these 5
+      PATH_REGISTRY entries (e.g. account balances, once W9 lands, will need the same grammar
+      applied from the start rather than retrofitted).
+- [ ] [OPERATOR] P1. **Re-triaged 2026-08-21 — the real scope is massively larger and design-gated,
+      not directly buildable.** Read the epic's own W16 spec (`plans/epics/system_readiness_master.md`
+      line 562-593) — this is 2 genuinely separate things bundled under one line: (a) latency-tracing
+      (time-data-received/time-data-sent per artefact) — small, mechanical, likely buildable, but
+      needs its own scoping pass to find where to hook it; (b) the "generic price-sensitivity contract
+      for fast execution-side repricing" — `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`,
+      a 998-line, 3-service, 11-open-judgment-call design doc, explicitly `assigned_vm: NA`/
+      `KEEP-NA` because it's live execution-critical-path (order pricing/repricing) machinery —
+      building this blind would mean inventing trading-mechanics decisions unilaterally, exactly
+      what that doc's own judgment-call list repeatedly flags as not-AO-dispatchable. Do NOT build
+      (b) without operator resolution of its judgment calls; (a) is a real, separately-scoped
+      follow-up worth splitting out.
 
 ### Position adapters and venue coverage
 
@@ -783,3 +852,52 @@ license to skip verification — the RADIANT-has-no-pools and poolMeta-has-no-LT
 hitting the live API before writing code, not from assuming the DefiLlama pattern would generalize cleanly
 across all 7 protocols.
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 3 of the operator-slot-launched code-readiness series (same Launch-prompts mechanism). Remaining open items mix explicit `[OPERATOR]`-tagged re-triaged items, an operator decision already made 2026-08-20 requiring downstream build work, per-protocol DeFi feature-producer research explicitly requiring real governance-parameter data ('checked DefiLlama's real poolMeta field... it isn't there, so risk_params correctly stays AAVE-only pending real per-protocol governance-parameter research, not built on a guess'), and a large W-item build backlog (PnL surfaces, universal fail-closed startup check, canonical output paths). None clears the whole-doc RECLASSIFY bar; operator-slot dispatch design also precludes AO-backlog eligibility.
+
+## Progress Log — 2026-08-21 wave-1c (walkthrough feedback, strategy cluster)
+
+- **`staking_pnl` first-class dimension — done + shipped**, `strategy-service@21937bb2cf`. See flipped checkbox
+  above for detail; QG green, 2 new tests + 1 updated assertion.
+- **Strategy wizard external endpoint — built, tested, `quality-gates.sh` green, NOT YET SHIPPED (blocked on an
+  unrelated dirty dependency, see below)**. Built `deployment-api/deployment_api/routes/strategy_wizard.py`:
+  `POST /api/strategy/wizard/{create,validate,deploy}`, authenticated (`_authenticated_router` + `X-API-Key`/
+  Firebase bearer), `deploy` additionally gated on `Permission.DEPLOY_TRIGGER` (mirrors
+  `strategy_backtest_launch.py`'s existing RBAC pattern). Registered in `deployment_api/main.py`. Architecture:
+  deployment-api does NOT import strategy_service (no service->service dep, verified no prior import existed
+  either) — the integration seam is the GCS object strategy-service's `strategy_config_loader
+  .load_strategy_config_gcs` already reads (`gs://{strategy-store bucket}/configs/strategies/{strategy_id}.json`).
+  `create` returns a config-shape stub for a given `StrategyArchetype` (UAC enum, no strategy-service import
+  needed); `validate` structurally checks archetype-membership + JSON-well-formedness with no write; `deploy`
+  re-validates then `upload_bytes`s to that exact GCS path and returns the `config_uri`. Deep archetype-param
+  schema validation (`PARAM_SCHEMA_REGISTRY`, strategy-service-internal) deliberately stays strategy-service-side
+  on load via the existing `get_strategy_params`/`WizardParamPayloadError` seam — documented in the module
+  docstring, not duplicated here. Request/response examples are in every route's docstring (see file). **Hot
+  config reload documented alongside** (no new endpoint — it doesn't need one): the write-side contract is the
+  same GCS object; `strategy_service/config_reloaders.py`'s `DomainConfigReloader` polls `StrategyDomainConfig`
+  and atomic-swaps only `SAFE_STRATEGY_RELOAD_FIELDS` (`strategy_params`), rejecting (previous config stays
+  active) anything outside that allow-list via `UnsafeConfigChangeError` — this is the "request/response pattern"
+  for T5 to hand off: request = GCS write, response = next reload tick's accept/reject, observable via
+  strategy-service `log_event`. 9 new tests in `tests/unit/test_strategy_wizard.py` (create stub + 422,
+  validate valid/invalid/empty-id, deploy success/422-no-write/502-on-storage-failure) — all GCS calls mocked.
+  Also fixed 2 real gate violations found running the full-tree gate: STEP 5.12b hardcoded `gs://` literal in my
+  own docstrings/Field descriptions (reworded, no literal scheme string) and STEP 5.5 broad-except baseline drift
+  in `deployment_api/vm_utils.py:381` (pre-existing, unrelated to this todo, `# noqa: broad-except` with reason —
+  the site is a documented best-effort confirm-poll, not a new bug) — both needed for a green tree, `--files`
+  scoped to exactly these 4 touched files.
+  **Ship blocked**: `quickmerge.sh` pre-flight repeatedly failed on deployment-api's path-dependency
+  `unified-api-contracts` having uncommitted changes from another live concurrent session (confirmed live via
+  `.py` mtime <60s at time of check, then again minutes later on a DIFFERENT larger diff — a prediction-market
+  schema refactor touching 20+ files, still in flight as of this entry) — per workspace rules this is NOT mine to
+  touch (not my scoped repo, not my task, live-session WIP). Retried twice (once after `unified-api-contracts`
+  briefly cleared for the `strategy-service` ship, once after a `deployment-service` dirty-dep also cleared) —
+  blocked again both times by `unified-api-contracts` picking up new unrelated WIP. **Follow-up**: retry
+  `cd deployment-api && bash scripts/quickmerge.sh "feat(strategy-wizard): add authenticated wizard
+  create/validate/deploy API" --agent --files 'deployment_api/routes/strategy_wizard.py deployment_api/main.py
+  deployment_api/vm_utils.py tests/unit/test_strategy_wizard.py'` once `unified-api-contracts` is clean — code is
+  complete and gate-green, this is purely a dependency-repo contention wait, not remaining implementation work.
+
+- [ ] [BACKEND] P0. Ship the already-built, already-QG-green strategy wizard external endpoint
+      (`deployment-api/deployment_api/routes/strategy_wizard.py` + `main.py` + `vm_utils.py` noqa fix +
+      `tests/unit/test_strategy_wizard.py`, all uncommitted in the deployment-api working tree) — blocked only on
+      `unified-api-contracts` (a deployment-api path-dependency) being clean, not on any remaining code work. Run
+      the exact `quickmerge.sh` command in the Progress Log entry above once that dependency is clean, then flip
+      the walkthrough-feedback checkbox above with the landed sha.

@@ -1007,3 +1007,12 @@ M6/M7/T+1/M8.
 - **context-scout 2026-08-17**: re-verified context_scope (6 entries) -- unchanged.
 - **context-scout 2026-08-20**: re-verified context_scope (6 entries) -- all 6 paths re-confirmed on disk, unchanged.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — P0 foundation/gate plan (single-walk discipline, gates all per-AG v9 --apply migrations, explicitly KEPT STANDALONE by a 2026-07-13 operator ruling); of 7 open todos 4 are genuine multi-repo build/design work. (3/7 items tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for next-run reassessment.)
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — re-affirms 3 prior passes
+  (2026-08-01, 08-07, 08-17). 6 open todos: M6/M7/T+1 are real cross-repo build work with multi-branch state-machine
+  design spanning batch-live-reconciliation-service/strategy/MTDS/alerting-service (M6/T+1 have partial 2026-08-20
+  shipments with explicitly-remaining cross-repo consumer wiring); the `_merge_dataframes` dedup-key fix has a
+  documented failed-and-reverted prior attempt (naive keying breaks the failed→captured state machine); M8 cadence
+  is a P0 design item with an explicit ORTHOGONAL-axis constraint. The 3 previously-flagged
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE items were not independently re-assessed as bounded this pass either (per-AG
+  stamping / cadence-writer-stamp / doc-coherence sweep) given the same cross-AG code-shape-variance and sprawling-
+  scope concerns the 2026-08-17 pass recorded — kept NA rather than committing to an under-confident split.

@@ -59,7 +59,7 @@ created_per: plans/archive/issues/codex_audit_execution_2026_05_12.md EX-24
 > confirmed by reading `base.py` directly and by runtime introspection (`sorted(m.name for m in OrderStatus)` returns
 > all 9 names). `PENDING`/`OPEN` survive only as transitional aliases (`OrderStatus.PENDING is OrderStatus.PENDING_NEW`
 > is `True`) pending consumer migration — see
-> `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`. `OrderState` as a standalone symbol
+> `/plans/archive/2026_08/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`. `OrderState` as a standalone symbol
 > still does not exist anywhere; keep writing code against `OrderStatus`.
 
 UAC SSOT (shipped): `unified_api_contracts.canonical.domain.execution.base.OrderStatus`.

@@ -97,6 +97,17 @@ children.
       per-AG copies rather than one cross-cutting metric, and cefi's own G1.2 status is `[~]` PARTIAL — the thin-day
       verdict is not yet wired into the capture-time write path (a partial venue day still risks writing as `captured`
       rather than routing to `attempted_failed` at write time). Leaving `[ ]` open.
+      **Re-checked 2026-08-21 (T2 audit, this annotation was stale) — cefi/defi now genuinely generalised into ONE
+      script, but tradfi/sports/prediction still don't exist, and write-time enforcement still doesn't.**
+      `instruments-service@139fbfff` (2026-08-15) replaced the 2 separate per-AG scripts with one
+      `cumulative_drawdown_guard_2026_08_15.py --asset-group {defi,cefi}`, now relocated to
+      `deployment-service/scripts/migrations/instruments-service/` and running on a DAILY 07:00 UTC schedule
+      (`cefi_drawdown_guard_scheduler.tf`; a 2026-08-16 follow-up fixed a broken filename reference in that
+      scheduler). Still genuinely missing: tradfi/sports/prediction have no `instrument_count`-shaped series to run
+      this metric against at all (a real design gap, not a scripting gap — filed as its own follow-up, not
+      re-derived here), and the metric is still read-only/report-only — the write-time
+      `captured`-vs-`attempted_failed` routing decision it should gate still doesn't exist. Leaving `[ ]` open;
+      genuinely tractable next step is the write-time wiring, now that the metric itself runs daily for 2/5 AGs.
 - [ ] [DESIGN] P1. **Expected-universe ORACLE design (§2.1)** — the `depth_coverage` denominator: (a) per-instrument
       true genesis from **venue truth** (not circular first-seen); (b) **time-varying futures expiry/listing rules** per
       venue, versioned by effective-date, in UAC. Ship **Tier-A proxy** first (labelled), **Tier-B truth** is the
@@ -121,6 +132,15 @@ children.
       canonical-form work, and a separate cefi finding (G1.3 follow-up) notes the guard "must treat split↔glued as
       equivalent" for on-chain-perp venues **until** it is aligned — i.e. describes a future state, not a live guard.
       Leaving `[ ]` open.
+      **Re-checked 2026-08-21 (T2 audit, this annotation is stale) — the ε=0 reconciliation guard now EXISTS and IS
+      wired into QG, deliberately scoped to one cell.** `deployment-api@4bb3fbe` (2026-08-15) shipped
+      `deployment-api/scripts/check_drilldown_reconciliation_guard.py`, wired into `quality-gates.sh` (line 243) —
+      an independent raw-GCS-vs-manifest recompute, ε=0. By explicit design (single-walk discipline) it covers
+      exactly ONE reference cell (cefi `BINANCE-FUTURES`/`trades`), not every cell — multi-cell/multi-AG extension
+      and the `#data-pipeline-alerts` watchdog wiring are still open, tracked as follow-up in that script's own
+      docstring, not re-derived here. Item (1) (UI renders SSOT, never recomputes) and item (3) (per-cell
+      click→GCS traceability) were not separately re-verified this pass. Leaving `[ ]` open — genuinely partial,
+      not unbuilt.
 - [x] ✅ [SCRIPT] P0. **DONE 2026-08-09/16 (batch2 reconciliation)** — Verification discipline: captured∩expected
   KEY-OVERLAP gate, not raw count (§6.1/§6.3) — `instruments-service@ef635e32`
   (`scripts/backfill_completion_key_overlap_gate_2026_08_09.py`: `evaluate_backfill_completion()` requires both

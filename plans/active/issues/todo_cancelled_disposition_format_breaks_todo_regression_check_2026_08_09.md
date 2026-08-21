@@ -17,7 +17,7 @@ summary: >-
   unresolved and will bite the next agent who follows task_template.md's own documented convention literally.
 status: open
 nature: issue
-asset_group: [ci, ao]
+asset_group: [ao]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
@@ -173,3 +173,6 @@ documented as the correct mechanism in `task_template.md` and still not exempted
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ce5bc82e1f9d8389]: KEEP-NA, valid — 2 of 3 original items already shipped+verified; sole remaining item self-flags as needing design judgment on cross-file correlation logic, not a mechanical one-liner, ruled KEEP-NA twice already.
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — re-affirms prior verdict; the sole open item (Finding-J archival-extraction cross-file conservation fix for `check_todo_regression.sh`) still self-flags as needing "design judgment on the cross-file correlation logic, not a mechanical one-liner."
+- **ag-closeout-audit 2026-08-21 (ci tranche hygiene fix)**: dropped stale `ci` tag from `asset_group` — every
+  na-eligibility-audit pass on this doc (2026-08-09/10/17/21) has run under the `ao` tranche only, and the sole
+  remaining open item is scoped to `check_todo_regression.sh`/plan-hygiene mechanics under `agent_operating_framework_master`, not CI.

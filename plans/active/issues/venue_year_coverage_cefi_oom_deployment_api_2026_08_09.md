@@ -731,3 +731,17 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   new finding rather than any previously-shipped fix (all four prior fixes confirmed live and holding).
 
 - **2026-08-20**: Closed the new provenance-breakdown abort site by shipping `deployment-api@efd52b2b49`. The implementation keeps one defensive copy and mutates derived columns in place, eliminating the duplicate `.assign()` allocations. Syntax/diff checks passed; full `quality-gates.sh` passed; quickmerge verified the SHA on `origin/live-defi-rollout`. Local pandas benchmarking was unavailable because this slot initially lacked an environment with pandas; the code path was validated by the repository test suite in the quality gate.
+- **2026-08-21 (correction, T1 slice)**: The two entries above dated **2026-08-19 (slot 7, backend_engineer)** and
+  **2026-08-20 (T1 slice, infra re-verification)** both asserted `deployment-api@a69dad3` was "confirmed" merged/live,
+  each via `git diff origin/main origin/live-defi-rollout -- <files>` returning empty. **That check is
+  insufficient** — it only proves the two branches agree with each other, not that either one actually contains
+  `a69dad3`'s content; if both independently lack the commit, the diff is still empty. Direct re-verification
+  (`git merge-base --is-ancestor a69dad3 origin/live-defi-rollout`, run fresh in a live deployment-api checkout)
+  confirms `a69dad3` is genuinely **NOT** an ancestor — it exists only on the orphaned
+  `origin/wip-preserve/orchestrator-slot-7-a69dad3` branch. This does not change this issue's own resolution: the
+  `deployment-api@efd52b2b49` fix immediately below (independently confirmed a real ancestor) closed the abort site
+  those two entries were chasing through a different mechanism (removing redundant DataFrame copies, not
+  parallelizing row-group reads) — the live code today carries no `ThreadPoolExecutor` at all. Left the original two
+  entries' text unedited above per this workspace's no-silent-correction rule; see
+  [venue_year_coverage_a69dad3_never_merged_ssot_contradiction_2026_08_20.md](/plans/archive/issues/venue_year_coverage_a69dad3_never_merged_ssot_contradiction_2026_08_20.md)
+  for the full investigation trail.

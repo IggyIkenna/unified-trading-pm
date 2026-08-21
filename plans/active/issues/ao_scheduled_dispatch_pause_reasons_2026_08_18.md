@@ -185,6 +185,30 @@ itself "done," so the next natural tick after unpause dispatches normally with n
   2026-08-18/19/20), reinforcing the schema-fix todo. `ao_watchdog` confirmed NOT paused (resumed 2026-08-19).
   Updated the section + flipped the todo checkbox. No schema change made here (that's the separate open
   `[SCRIPT] P2` todo).
+- **2026-08-21 (slot 17, interactive) — attempted backfill found the reason field is IMMUTABLE-ONCE-SET BY
+  DESIGN, not a bug (self-correction, same session)**: attempted to backfill the `reason`/`paused_at` fields for
+  all 6 currently-paused modes via `POST /api/scheduled-dispatch/{mode}/pause?reason=...` (using the reasons
+  already recorded by hand in this doc). All 6 calls returned `200 {"status": "paused", ...}`, but a follow-up
+  `GET /api/scheduled-dispatch/status` showed every mode's `reason` still reading `"Reason not recorded"`. First
+  read this as a bug in `set_paused()` (only writes `reason` on the unpaused→paused transition) and shipped a
+  fix widening it to update the reason on an already-paused mode — but before landing it, found
+  `tests/test_scheduled_dispatch_pause.py::test_repause_preserves_original_reason_and_timestamp` (present since
+  the original `agent-orchestrator@4bff9c1532`/`68ab5da1` schema-fix commit) **explicitly asserts the opposite**:
+  a repause with a different reason must leave the original untouched. This is deliberate, tested design, not an
+  oversight — reverted the code fix (and the test file I'd mistakenly overwritten while adding my own tests;
+  restored via `git checkout HEAD --`). **Practical consequence**: none of the 6 live-paused modes' reasons can
+  be corrected/refreshed via the API without an actual resume→re-pause state transition (a real, if brief,
+  behavior change — the mode would be dispatchable again for whatever gap exists between the two calls). The
+  reasons this doc records by hand (see the sections above) remain the durable, correct source of truth; the
+  live `pause_details` API field for these 6 modes will keep reading `"Reason not recorded"` unless/until an
+  operator explicitly resumes+re-pauses each one with a reason attached. Not attempting that state transition
+  here without an explicit operator go-ahead, since two of the affected modes (`ci_reconcile`, `reconcile`) have
+  real dispatch consequences. Also flagged live: the `reconcile` mode's recorded reason (operators running
+  plan_reconciler manually due to account exhaustion ~2026-08-19) may be STALE — a live check the same session
+  found the fleet substantially recovered (24/48 slots idle, only 3-4/27 accounts genuinely constrained). Asked
+  the operator whether to resume it; they said leave it paused for now. `ci_reconcile`'s CURRENT re-pause reason
+  (resumed once 2026-08-18, then re-paused again without a recorded reason) is genuinely unknown — recorded as
+  such rather than guessed.
 
 ## MEASURED UPDATE 2026-08-19 — the paused set has grown from 3 to 7, and `ci_reconcile` is paused again
 
@@ -229,7 +253,8 @@ dispatch"` — consistent with the account snapshots seen the same hour
       "status":"active"}` and the persisted registry re-read confirms it is gone from the paused
       set (6 remain: ag_closeout, cefi_mtds_smoke, ci_reconcile, na_eligibility, reconcile,
       report). It was the urgent one — it is the fleet's own daily health check
-      (`/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md` wired its timer),
+      (`/plans/archive/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md` wired its timer, now archived —
+      timer confirmed live 2026-08-21),
       so while it was paused nothing was running the check that would have surfaced the other six.
       **RESOLVED 2026-08-20 (operator ruling on todo
       ao_scheduled_dispatch_pause_reasons-53b859c93847 — source:
@@ -251,3 +276,11 @@ dispatch"` — consistent with the account snapshots seen the same hour
       three `plan_health`-family jobs above sat queued ~20h on 2026-08-19 with `no free configured
       slot` / `no headroom account`, and nothing paged. Distinct from the pause question — these
       modes are enabled and still not running. (repo: agent-orchestrator)
+- [ ] [OPERATOR] P3. Decide whether the reason field's immutable-once-set design (tested,
+      intentional — see the 2026-08-21 Progress Log entry above) should change to allow an explicit
+      reason to update an already-paused mode's stored reason. If yes: widen `set_paused()`, update
+      `test_repause_preserves_original_reason_and_timestamp` to match the new contract (not just
+      delete it), add a regression test for the update path, ship via quickmerge with
+      quality-gates.sh green. If no: this todo closes as "confirmed intentional, no change" — the
+      6 live-paused modes' reasons stay hand-recorded in this doc only, never correctable via the
+      live API short of an actual resume→re-pause. (repo: agent-orchestrator)
