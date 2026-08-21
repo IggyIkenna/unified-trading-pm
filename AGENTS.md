@@ -69,7 +69,9 @@ bash scripts/quality-gates.sh
 bash scripts/quickmerge.sh "your message" --agent   # ALWAYS --agent in Claude Code / CI
 ```
 
-- `--to-staging` flag for breaking changes (`feat!:` commits) → staging → SIT → main
+- Quickmerge lands on LDR (`live-defi-rollout`); default promote is LDR→`main` DIRECT (staging DORMANT). `--to-staging`
+  is a no-op today (kept for backwards compat) — do not rely on it for breaking changes. A major/breaking bump or an
+  operator decision routes through staging instead; see `codex/08-workflows/ci-cd-flow.md` for the current gate set.
 - `--agent --skip-typecheck` for max speed (lint + format + codex only)
 - Staging lock: `staging_status.locked=true` in manifest = SIT running, do not merge to main
 
@@ -147,7 +149,8 @@ bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh --repo <na
 ## Commits & Versions
 
 - Conventional commits: `feat:`, `fix:`, `chore:`, `feat!:` (breaking)
-- `feat/*` → QG only, no PR | breaking → `--to-staging` | `main` → always stable
+- `feat/*` → QG only, no PR | most commits → LDR → `main` direct (auto-promote) | breaking/major → staging (operator
+  or major-bump path) | `main` → always stable
 - **Never bump versions manually** — GitHub Action bumps on merge to main only
 - All repos pre-stable: `0.x.x` until first successful CI merge to main
 

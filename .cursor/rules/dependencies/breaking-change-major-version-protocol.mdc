@@ -23,8 +23,11 @@ CODEX: 06-coding-standards/feature-branch-workflow.md, 04-architecture/TIER-ARCH
 
 Ask: **"Would a consumer's existing code, without any changes on their side, fail basedpyright type check, fail unit tests, or produce incorrect behavior after I merge this?"**
 
-- YES → `feat!:` or `BREAKING CHANGE:` — use `--to-staging` in quickmerge
-- NO  → `feat:` (new capability) or `fix:` (bug fix) — PR goes directly to main
+- YES → `feat!:` or `BREAKING CHANGE:` — a major/breaking bump routes through staging (KEPT +
+  REVERSIBLE for exactly this case) via an operator decision, not the `--to-staging` flag — that flag is a
+  no-op today (kept for backwards compat). See `cursor-configs/CLAUDE.md` § "Git discipline + shipping
+  pipeline" / `codex/08-workflows/ci-cd-flow.md` for the current routing mechanism.
+- NO  → `feat:` (new capability) or `fix:` (bug fix) — lands on LDR, auto-promotes LDR→main direct
 
 The **cascade is selective**: only repos that actually import the changed repo receive a
 `dependency-update` dispatch from PM. A T5 change only cascades to repos whose
@@ -190,8 +193,9 @@ bash scripts/quickmerge.sh "feat!(unified-domain-client): rename instrument_key 
 # Major bump — breaking message bus schema
 bash scripts/quickmerge.sh "feat!(unified-trading-library): rename UPLOAD_STARTED event to DATA_BROADCAST"
 
-# Major bump — use --to-staging (breaking change path): cascade through staging, SIT validates, then main
-bash scripts/quickmerge.sh "feat!(unified-market-interface): remove legacy API" --to-staging
+# Major bump — breaking change path routes through staging via operator decision (--to-staging is a
+# no-op today; do not pass it expecting it to route anywhere — see CLAUDE.md's shipping-pipeline section)
+bash scripts/quickmerge.sh "feat!(unified-market-interface): remove legacy API"
 
 # Major bump with dep-branch isolation (when deps also have local changes, feature mode only)
 bash scripts/quickmerge.sh "feat!(unified-market-interface): remove legacy API" --dep-branch "feat/v2-adapters"
@@ -240,8 +244,8 @@ by the actual dependency graph in `workspace-manifest.json`, not by tier level a
 **PM's role:** PM receives the version-bump dispatch, updates the manifest, and dispatches
 `dependency-update` to direct dependents of the changed repo. Each hop in the cascade only
 touches repos with a dependency edge to the changed thing. SIT (last in topological order)
-serves as the final convergence validator. Once SIT passes, staging-to-main promotes all
-staging versions to stable.
+serves as the final convergence validator. Once SIT passes, staging→main promotes the staged
+versions to stable — the same reversible staging path, not the default LDR→main auto-promote route.
 
 ---
 
