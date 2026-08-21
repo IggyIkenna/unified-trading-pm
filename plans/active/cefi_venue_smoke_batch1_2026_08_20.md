@@ -11,7 +11,7 @@ scope: [engineer]
 tags: [venue-readiness, smoke-test, cefi, ao-dispatch, satellite-batch]
 related: [/plans/active/venue_smoke_test_bar_2026_08_16.md, /plans/active/venue_smoke_test_bar_finalize_2026_08_16.md, /plans/active/cefi_consolidated_closeout_2026_07_18.md]
 created: "2026-08-20"
-last_updated: "2026-08-20"
+last_updated: "2026-08-21"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -39,7 +39,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Execution attempt complete — gate RED, not a false pass.** The canonical CeFi report measured `total=294`, `passed=3`, `failed=76`, `skipped=215`; the staging catalogue and terminal VM evidence are retained, while `no_captured_data_for_cell`, Tardis contention, and canonical-object failures remain tracked in [/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md]. The no-zero-row-success contract is therefore not yet satisfied.
+- [ ] [BACKEND] P0. **Execution attempt complete — gate RED, not a false pass.** The final staging CeFi report measured `total=294`, `passed=7`, `failed=79`, `skipped=208`; the staging catalogue and terminal VM evidence are retained, while `no_parquet_under`, self-deleted-VM/no-exit-status, and canonical-object failures remain tracked in [/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md]. The no-zero-row-success contract is therefore not yet satisfied.
 - [ ] [BACKEND] P1. Record one testnet verdict for every CeFi venue, including simulation where no venue testnet exists; Gate: every distinct venue in the live work list has a verdict.
 - [ ] [BACKEND] P1. Add or run testnet smoke coverage where credentials are available or provisionable and record an honest unavailable result for the remainder; file an operator credential request when a credential gap is confirmed. Gate: every attempted path has a measured terminal result.
 - [ ] [BACKEND] P1. Track every failed or absent CeFi row with its source and data type; Gate: no failure is hidden behind a declared-absence or expected-unattempted status.
@@ -76,3 +76,14 @@ P0 contract. The P0 checkbox therefore remains unchecked; missing rows require b
 and per-cell terminal evidence. Details: [/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md].
 
 **2026-08-20 — resumed execution attempt 2 (slot 14).** Re-running the UAC generator measured 73 CeFi rows. The staging-configured MTDS driver started with `--legs force,skip,canonical --mvp-only --require-captured --auto-day --bundle --wall-clock-timeout-sec 14400`; phase-0 consolidation succeeded (`shards=4`, `rows_in=111855`, `rows_out=109308`). The run launched and polled staging test-bucket VMs through native-REST CeFi cells, but no terminal CeFi report was produced: the launcher later failed its code-tarball freshness republish with `printf: write error: No space left on device` and refused to launch unverified code. The exact driver was then stopped after SIGTERM when the retry loop continued against the full staging launch path. This attempt is execution evidence only; it does not satisfy the P0 row-level contract, and the P0 checkbox remains open. The unrelated `data_pipeline_e2e_check_mtds_2026_08_20.md` audit artifact is a Prediction run and is not CeFi evidence.
+
+**2026-08-21 — terminal correction for resumed staging run (slot 14).** The preserved driver
+`pipeline-e2e-check-mtds-20260820-2217-cefi` eventually reached a real terminal state rather than remaining an
+unreported launch: remote `/tmp/vm-exec-5628.exit_status` is `1`, the driver log records `118` shard launches and
+`136` poll ticks, and the report was written at 2026-08-21T00:24:08Z. Its measured result is `total=294`,
+`passed=7`, `failed=79`, `ambiguous=0`, `skipped=208`. The report includes real `no_parquet_under` failures,
+`vm_self_deleted_no_exit_status` failures, and a canonical negative result for the raw
+`LIGHTER-ZKSYNC:PERPETUAL:ARM.parquet` object; therefore this is a valid RED terminal result, not a zero-row success.
+The P0 checkbox remains open pending bounded per-cell remediation. Evidence: VM log
+`gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260820-2217-cefi/run.log`;
+report `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`.
