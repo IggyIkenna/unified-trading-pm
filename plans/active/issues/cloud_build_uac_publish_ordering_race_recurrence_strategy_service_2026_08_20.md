@@ -27,7 +27,7 @@ status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
-repos: [strategy-service, unified-api-contracts, unified-trading-pm, market-data-processing-service, trading-agent-service]
+repos: [strategy-service, unified-api-contracts, unified-trading-pm, market-data-processing-service]
 scope: [engineer, admin]
 tags: [ci, cloud-build, publish-ordering, artifact-registry, unified-api-contracts, race-condition, live-incident]
 related:
@@ -323,20 +323,3 @@ gated primary fix. No operator review recorded yet as of this pass (doc is 1 day
   doc's own root-cause section, the fix belongs in `update-repo-version.yml`'s `resolve-gate`, not in any consumer
   repo. Not implementing here — the doc's P2 "Implement" todo is still operator-review-gated; this entry is
   additional evidence for whoever picks that up, not a new investigation. Escalation closed.
-- **2026-08-21 (cicd slot-31, escalation `agt-568ea1`)** — Another sibling of the SAME 2026-08-21 `0.159.0` floor wave
-  as the MDPS entry above, this time `trading-agent-service`. `cloud-build-failure-watcher` paged for build
-  `ccd69f30-9d09-40f8-a384-9261d3e408d7` (main @ `35be999b`, 2026-08-21T12:32:01Z, region asia-northeast1) — docker
-  step 6 `uv pip install`: "× No solution found ... trading-agent-service==0.13.23 depends on
-  unified-api-contracts>=0.159.0,<1.0.0" while AR's newest wheel at that moment was `0.158.1.dev1+gae56a4f9f`
-  (`0.159.0` published ~3.7 min later at 12:36:34Z). Same repo also hit the PRIOR floor race earlier the same day:
-  build `eb5be051-8c32-4d47-820a-5b59540b345a` (main @ `9de11645`, 2026-08-21T10:22:34Z) failed on
-  `unified-api-contracts>=0.158.0` vs. only `<=0.157.1.dev1+g615972874` available — that one self-healed on its own
-  next natural trigger (`55cf8fd5`, 11:07:01Z, SUCCESS) with no manual re-run needed. For the 12:32 failure: did NOT
-  need a manual re-run either — by the time this escalation was triaged (~15:25Z), two later natural builds had
-  already gone SUCCESS on their own (`ff19a6d9` 14:30:06Z, `294fee39` 14:38:27Z, both against `>=0.159.0` — current AR
-  head is `0.161.1`). Verified LIVE: current `live-defi-rollout` `pyproject.toml` already carries the correct
-  `unified-api-contracts>=0.159.0,<1.0.0` constraint (no drift), `origin/repo-blockers` has no open entry for
-  `trading-agent-service`, and the most recent build is green — no code change needed, no re-run needed, nothing to
-  ship. Root cause identical to every other entry in this doc: the fix belongs in `update-repo-version.yml`'s
-  `resolve-gate`, not in any consumer repo; this entry is additional evidence for the still operator-review-gated P2
-  "Implement" todo, not a new investigation. Escalation closed.

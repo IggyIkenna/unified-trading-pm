@@ -48,7 +48,7 @@ context_scope:
     agent-orchestrator/server/tmux_pruner.py,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     /plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md,
-    /plans/archive/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md,
+    /plans/active/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md,
   ]
 ---
 
