@@ -57,4 +57,9 @@ simulated upstream failure still creates `attempted_failed`.
 
 ## Todos
 
-- [ ] [CODE] P1. Ship and verify the fan-out control-buffer fix in `market-tick-data-service` — escalation `agt-a1445b`.
+- [x] [CODE] P1. Ship and verify the fan-out control-buffer fix in `market-tick-data-service` — `market-tick-data-service@9097603c86` + Evidence: `bash scripts/quality-gates.sh --no-fix` passed (11,108 passed, 28 skipped, 82.02% coverage); targeted DP-LIVE-004 read-only check returned `fired=[]` for VM `mtds-live-sports-odds-api-odds-20260816-145019` and showed fresh bookmaker captures through 2026-08-21T01:07:14Z.
+
+## Progress Log
+
+- 2026-08-21T01:07Z — Read the exact per-VM shard from `market-data-tick-sports-prd-central-element-323112` under an 8 GiB/30-second bound. The ODDS_API source group was credited with bookmaker fan-out capture through 01:07:14Z; `check_live_capture_productivity(..., dry_run=True)` returned `fired=[]`. Healthy control buffers are no longer reported as unproductive, while the shipped regression covers preservation of upstream failure recording.
+- [ ] [DOCS] P3. Archive this resolved issue under `plans/archive/issues/` after the completion checkbox is shipped.
