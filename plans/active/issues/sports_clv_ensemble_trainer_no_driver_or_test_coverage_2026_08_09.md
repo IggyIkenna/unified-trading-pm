@@ -20,7 +20,7 @@ priority: P1
 tags: [sports, ml, clv, trainer, driver, test-coverage]
 related:
   [
-    /plans/archive/issues/sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md,
+    /plans/active/issues/sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md,
     /plans/archive/2026_08/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]

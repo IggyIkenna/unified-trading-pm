@@ -268,7 +268,7 @@ spelling variant survives, which is the entire point of the panel". It does not.
       now emit T-6h/T-2h feature rows — `features-service@3394de8`. Retrain + measured delta remains OPEN — blocked on
       the sports ensemble trainer being hardcoded to `model_2a` only (no models have ever trained end-to-end at
       T-1h/T-10m either); see
-      `/plans/archive/issues/sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` for the
+      `/plans/active/issues/sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` for the
       generalize-then-retrain follow-up todos. Checkbox stays unflipped until the retrain half lands.
 - [x] ✅ [CODE] P1. **Switch `verify_ml_readiness.py` to the precedented aggregate >=95% pass bar** (operator ruling
       2026-08-08), replacing the strict per-day gate that fails near-empty FIFA-international-break days on an exact

@@ -19,7 +19,7 @@ summary: >-
   `2026-07-30` through the present moment (`2026-08-01T14:00Z`, ~1h20m after the tarball was finally rebuilt) — the fix
   never reached production because the `LONG_LIVED_LIVE` VM was never relaunched. See "## CONFIRMED — 2026-08-01
   manifest check" below for the full breakdown + the new `[INFRA] P0` relaunch todo.
-status: archived
+status: open
 nature: issue
 asset_group: [cefi]
 stage: [live]
@@ -42,6 +42,7 @@ drift_direction: advance-code
 source: [code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01-worker]
 resolved_by:
 locked_by:
+archive_exempt: true
 context_scope:
   [
     /codex/05-infrastructure/vm-tarball-deployment.md,
@@ -52,12 +53,6 @@ context_scope:
   ]
 depends_on: []
 ---
-
-> **ARCHIVED** — 2026-08-21. All todos + follow-ups done (VM relaunched, ASTER SUBSCRIBE-frame/connection-cap bugs and
-> the DERIBIT id-format drift all root-caused and fixed with regression tests, 2 pre-existing chronic findings filed
-> separately). The durable operational fact this incident established — `LONG_LIVED_LIVE` VMs never self-refresh a
-> stale tarball — is now captured in `/codex/05-infrastructure/vm-tarball-deployment.md`. `archive_exempt` bridge
-> dropped.
 
 # code-tarball-refresh stale window — cefi live-capture correctness risk (2026-08-01)
 

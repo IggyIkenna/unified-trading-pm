@@ -139,7 +139,7 @@ The full `run.log` also shows a very high volume of `WARNING MDPS canonical_writ
 failed ... MalformedRowKeyError: shard-atom field 'instrument_id' was explicitly passed as empty` — recurring on
 essentially every `(day, timeframe, data_type)` combination processed all year (non-fatal; the run continued). This
 did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap above) and already has references in
-`plans/active/data_completion_tradfi_2026_07_15.md` and `plans/archive/issues/tradfi_vix_full_history_backfill_2026_08_10.md`
+`plans/active/data_completion_tradfi_2026_07_15.md` and `plans/active/issues/tradfi_vix_full_history_backfill_2026_08_10.md`
 — not re-diagnosed here; flagged only so a future reader doesn't re-discover it from scratch and assume it's new.
 
 ## What this worker did NOT do

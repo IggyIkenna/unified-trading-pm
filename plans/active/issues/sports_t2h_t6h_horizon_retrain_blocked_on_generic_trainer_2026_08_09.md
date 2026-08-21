@@ -6,7 +6,7 @@ summary: >-
   T-6h/T-2h MODEL horizon declaration shipped in ml-service + features-service; the retrain-and-measure half of the plan
   todo is blocked because the sports ensemble trainer is hardcoded to model_2a and no horizon other than T-24h has ever
   trained end-to-end.
-status: archived
+status: open
 nature: record
 asset_group: [sports]
 stage: [features]
@@ -25,6 +25,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true
 context_scope:
   [
     /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
@@ -34,10 +35,6 @@ context_scope:
     ml-service/ml_service/training/app/training/sports_ensemble_trainer.py,
   ]
 ---
-
-> **ARCHIVED** — 2026-08-21. All todos done (trainer generalized past `model_2a`; the 5-VM retrain ran and measured a
-> real coverage delta once the upstream `odds_targets` backfill gap closed). The `archive_exempt` bridge (set
-> 2026-08-09, meant to be dropped as the very next commit) had gone stale for ~12 days; dropped here.
 
 ## What I found
 
