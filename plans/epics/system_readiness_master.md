@@ -742,11 +742,11 @@ two ways: we host it, or they run our container themselves. Surfaced while audit
 [`platform-external-api-walkthrough.html`](/codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html)
 §25 for [`client_artefact_remediation_nickai_2026_08_18.md`](/plans/active/client_artefact_remediation_nickai_2026_08_18.md).
 
-- [ ] [BACKEND] P0. **Strategy → execution instruction delivery over messaging, not a service dependency.** Same
-      UTL `EventTransport` facade market data already uses — Pub/Sub-backed, keyed on what the subscriber needs.
-      A direct service-to-service call is explicitly out — this is a T4 service boundary.
-- [ ] [BACKEND] P0. **Features-service → execution subscription.** Execution subscribes to only the feature groups
-      it needs, not a broadcast of everything features-service produces.
+- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — execution-service@79e951ea (subscriber) + execution-service@99962afa1f (startup wiring).
+      Strategy instructions now reach execution through the UTL `EventTransport` facade, not a service dependency;
+      Evidence: both commits exist and are ancestors of `origin/live-defi-rollout`, with the source plan evidence from `bash scripts/quality-gates.sh --no-fix`. Source: `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`.
+- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-20 — execution-service@f0a33fd3d8 + execution-service@62d2e3ab76.
+      Execution subscribes only to the feature groups it needs; Evidence: both commits exist and are ancestors of `origin/live-defi-rollout`, with the source plan evidence from `bash scripts/quality-gates.sh --no-fix`. Source: `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`.
 - [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — execution-service@c6b8bd02ad. Every strategy-emitted instruction is persisted one-by-one through the existing manifest/shard pipeline; Evidence: bash scripts/quality-gates.sh --no-fix (8877 passed, 22 skipped, 1 xpassed; isolated quickmerge gate green).
       Queryable through the existing BigQuery external-table pattern; distinct from market-tick-data aggregation (W2/W3), a separate axis.
 - [ ] [BACKEND] P0. **Three execution-service deployment topology, one schema, protocol per deployment**:
