@@ -218,8 +218,9 @@ independently verified and the code fix now makes that state self-consistent wit
 **Not investigated / left open (separate, smaller, not blocking)**: the deployment-drift question in the original
 "Not investigated further" section below (whether the previously-deployed MTDS build was behind `fb32fb65`) no longer
 needs resolving — the code fix supersedes it either way. HYPERLIQUID's own observed `chain=""` in production
-(un-ruled-on) is noted in the code comment for whoever next touches that venue; not filed as its own issue doc since
-it's low-urgency (HYPERLIQUID's chain value, unlike KALSHI-PERP's, doesn't block any currently-open todo).
+(un-ruled-on) was initially left as only a code comment + this note, not a tracked follow-up — a hard-rule violation
+(prose-only follow-up) caught in review. **Filed properly 2026-08-21**:
+`issues/defi_cefi_hyperliquid_perp_funding_manifest_chain_contradiction_2026_08_21.md`, with a tracked `- [ ]` todo.
 
 ## Progress Log
 
