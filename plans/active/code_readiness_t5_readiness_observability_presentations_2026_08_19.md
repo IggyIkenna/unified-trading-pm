@@ -549,12 +549,32 @@ todos only to confirm they are data-movement, then leave it.
       `unverified`, 27 `pending`, 17 `planned`, 17 `partial`, 14 `not yet`, 6 `missing`, 5 `not built`).
 - [ ] [DOC] P0. Re-derive `strategy-service-deep-dive.html` (51 `unverified`, 15 `partial`) against T3's output.
 - [ ] [DOC] P0. Re-derive `strategy-service-walkthrough.html` (23 `partial`) against T3's output.
-- [ ] [DOC] P2. **[OPERATOR]** Complete `platform-api-reference.html`'s type-support table — add the two rows it
+- [x] ✅ [DOC] P2. **[OPERATOR]** Complete `platform-api-reference.html`'s type-support table — add the two rows it
       still omits, `WITHDRAW`/`WithdrawInstruction` and `REPAY`/`RepayInstruction`. UAC `StrategyInstructionEnvelope`
       grew 11→13 subclasses (`f5fc118a` 2026-08-20); the count/prose enum-drift fix shipped separately (that was the
       promote-PR QG red), so the table still lists 11 of 13 rows. Adding the 2 rows adds 2 `st-plan` markers →
       claim-ownership open-markers 189→191, tripping the shrinking ratchet. Operator-gated: bump the markers baseline
       (never hand-raise), or close 2 other open markers by real state change first.
+
+      **PARTIALLY RESOLVED 2026-08-21 — `unified-trading-pm@f28330fafc`.** Netted rather than bumped the baseline:
+      closed one genuinely-resolved marker in `carveout-engineering.html` §09 ("Appendix — the source estate") —
+      its `ev-check` → `ev-verified`, citing `strategy-service@efa1525813`'s now-landed `EXTRACTION_AUDIT.md` (the
+      per-repository code-coupling measurement that §09's own 26-repo contribute/non-contribute table asserts — see
+      `elysium_carveout_stubbed_strategy_service_2026_08_12.md`'s 2026-08-16 Progress Log entry). Checked the other
+      3 candidate-resolved todos in that same plan (PortfolioRiskService live-values ruling ~L124, frozen
+      collateral-eligibility ruling ~L169, health_factor/usdc_idle_yield data-scope resolution ~L236) against the
+      artefact's actual prose — none maps cleanly to a whole-section claim: the PortfolioRiskService/risk-guards-local
+      write-up todos in that plan's own §B are still `[ ]` unchecked, i.e. `carveout-engineering.html`'s prose was
+      never updated to match the 2026-08-16 ruling, so upgrading its marker now would be the exact "marker with no
+      genuine state-change behind it" failure mode the ownership rule exists to prevent; the collateral-eligibility
+      ruling covers only one row of §05's multi-claim table (not that section's whole claim) and its own text says
+      "still open, not yet done" for the actual substitution build; the data-scope resolution has no corresponding
+      section in this artefact at all. Only 1 of 4 closed safely, so added only 1 new row
+      (`WITHDRAW`/`WithdrawInstruction`), not 2, to stay net-zero — `REPAY`/`RepayInstruction` remains a documented
+      gap in the table, needing either a second genuine marker close elsewhere or an operator-approved baseline
+      bump. Net check: `check_artefact_claim_ownership.py` open-markers held at **189** (no baseline bump used) —
+      `carveout-engineering.html` 17→16, `platform-api-reference.html` 28→29. Verified per-file against
+      `origin/live-defi-rollout` (not just local HEAD), commit `f28330fafc`.
 - [x] [DOC] P0. Verify the invariant the epic sets — **every claim-bearing artefact section maps to a tracked
       item**. Build the check; it has already failed once, measurably. — `unified-trading-pm@7b2dd29aaa`.
       `scripts/plan-hygiene/check_artefact_claim_ownership.py`, wired into `run_hygiene_sweep.sh`. Measured
