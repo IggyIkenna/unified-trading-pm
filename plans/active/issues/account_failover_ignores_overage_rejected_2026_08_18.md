@@ -77,7 +77,7 @@ context_scope:
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     agents/main.md,
     agent-orchestrator/server/server.py,
-    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
+    /plans/archive/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
     /plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md,
   ]
 ---

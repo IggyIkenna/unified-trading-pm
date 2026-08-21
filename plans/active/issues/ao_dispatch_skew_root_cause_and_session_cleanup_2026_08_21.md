@@ -35,7 +35,7 @@ related:
   [
     /plans/active/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md,
     /plans/active/issues/account_failover_ignores_overage_rejected_2026_08_18.md,
-    /plans/active/issues/ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md,
+    /plans/archive/issues/ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md,
     /plans/active/issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
