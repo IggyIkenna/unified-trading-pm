@@ -126,12 +126,16 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       own justification ("a new VM-launch decision... not a bounded verification outcome") misapplied the runbook's
       default posture. Resume from each shard's own checkpoint/progress state if the script supports it, otherwise
       re-run those date ranges from scratch. **Done when**: all 21 shards' `run.log` show the terminal summary (feeds
-      directly into the P2 todo below).
+      directly into the P2 todo below). **EXTRACTED → `cefi_satellite_ao_dispatch_batch20_2026_08_16.md`** (same
+      live destination as the P2 todo below's open `[SCRIPT] P2` corpus-wide re-verify+relaunch todo; status: active;
+      "settle 44/44, flip both target docs, delete the migration script" — subsumes this original 21-shard-relaunch
+      recommendation now that later waves + shard 24's 2026-08-15 completion have moved the count forward; do not
+      re-dispatch both).
 - [ ] [SCRIPT] P2. BLOCKED-ON:cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31 (still
-      open — slot-4 confirmed round-3 remains in flight, see below). **EXTRACTED 2026-08-18 (plan_reconciler,
-      hedge-pointer confirmed)**: this exact todo (re-run the corpus-wide grep across all 44 shards, flip both
-      target docs, delete the migration script) is now the LIVE dispatchable copy at
-      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md`'s open `[SCRIPT] P2` todo ("Re-run the corpus-wide GCS
+      open — slot-4 confirmed round-3 remains in flight, see below). **EXTRACTED `cefi_satellite_ao_dispatch_batch20_2026_08_16.md`**
+      (2026-08-18, plan_reconciler, hedge-pointer confirmed): this exact todo (re-run the corpus-wide grep across all
+      44 shards, flip both target docs, delete the migration script) is now the LIVE dispatchable copy at that plan's
+      open `[SCRIPT] P2` todo ("Re-run the corpus-wide GCS
       VM-log grep (Script 1, cefi content-migration summary) across all 44 cefi-content-migration shards...") —
       neither this doc nor `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`
       (its BLOCKED-ON target) previously reflected the extraction, so both still read as independently open. This

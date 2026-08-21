@@ -31,10 +31,12 @@ tags: [billing-waste, vm-launcher, runaway, duplicate-launch, hyperliquid, cefi,
 related:
   [
     /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
-    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/archive/issues/cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md,
     /plans/active/issues/cefi_hl_aster_vm_resource_downsize_2026_08_10.md,
   ]
+  # 2026-08-21 (archival sweep): dropped cefi_hl_aster_batch_data_gaps_2026_06_22 (archived to plans/archive/issues/,
+  # fully resolved — durable facts already in /codex/02-data/cefi-capture-universe.md +
+  # /codex/05-infrastructure/manifest-consolidator-ssot.md).
 created: 2026-08-16
 author: unknown
 parent_epic: mtds_mdps_master

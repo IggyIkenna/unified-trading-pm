@@ -40,9 +40,10 @@ tags:
     venue-decomposition,
   ]
 related:
-  [
-    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-  ]
+  []
+  # 2026-08-21 (archival sweep): dropped cefi_hl_aster_batch_data_gaps_2026_06_22 (archived to plans/archive/issues/,
+  # fully resolved — durable facts already in /codex/02-data/cefi-capture-universe.md +
+  # /codex/05-infrastructure/manifest-consolidator-ssot.md, not re-cited here to avoid the archived-ref ratchet).
   # 2026-08-19 (na-eligibility-audit): dropped 3 archived-plan citations to satisfy the archive-safety-ratchet gate
   # — all 3 remain preserved as inline body citations (cefi_completion_program in the opening context blockquote;
   # cefi_mtds_writer_raw_symbol.../phantom_captures_cefi in the "Residuals" section's own item detail lines).
