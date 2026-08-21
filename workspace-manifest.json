@@ -87,7 +87,7 @@
     "greeks-service": "0.18.77",
     "trading-agent-service": "0.13.20",
     "strategy-service": "0.82.2",
-    "ml-service": "0.58.56",
+    "ml-service": "0.58.57",
     "alerting-service": "0.66.16",
     "unified-trading-api": "0.4.2",
     "client-reporting-api": "0.32.85"
