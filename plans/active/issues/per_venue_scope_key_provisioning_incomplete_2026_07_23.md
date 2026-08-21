@@ -74,7 +74,7 @@ Aster, Upbit, Kraken, Bitfinex, Bitget). Verified live against GCP Secret Manage
 | ------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Binance                         | ✅ Yes                         | `binance-{read,trade,write}-api-key` (+ secret siblings for read/trade)                                                                                                                                                                                                                                                                                                      |
 | Deribit                         | ✅ Yes                         | `deribit-{read,trade,write}-api-key` (+ secret siblings for read/trade)                                                                                                                                                                                                                                                                                                      |
-| Bybit                           | 🟡 Code ready, not provisioned | Currently one unscoped `bybit-api-key`/`bybit-api-secret`; execution-service now prefers `bybit-trade-api-key`/`bybit-trade-api-key-secret` and falls back to the unscoped pair automatically — see checklist below                                                                                                                                                          |
+| Bybit                           | 🟡 Half-provisioned 2026-08-21 | `bybit-trade-api-key` now EXISTS in GSM (created since the table above was last verified) but `bybit-trade-api-key-secret` does NOT — execution-service's fallback requires BOTH scoped values non-None before using them, so it correctly still falls back to the unscoped `bybit-api-key`/`bybit-api-secret` pair today (both present, verified working via a live probe 2026-08-21/22). See checklist below — only the `-secret` half remains. |
 | OKX                             | ❌ Different model             | `exec-{client}-okx-*` (client-scoped only, no pooled/house key at all) — the read/trade/write split doesn't apply the same way to a client-scoped venue; needs its own design, not a copy of the Binance/Deribit pattern                                                                                                                                                     |
 | Hyperliquid                     | ❌ Different model             | One wallet-style JSON blob `hyperliquid-trade-key` (EIP-712 agent-wallet signing, not a REST key pair) — "read vs. trade vs. withdraw" would need a different mechanism (e.g. separate agent wallets with different on-chain authorizations), not three secrets                                                                                                              |
 | Aster                           | ❌ No execution adapter at all | `aster-api-key`/`aster-secret-key` exist in GCP but are consumed ONLY for MTDS market-data collection — `execution-service`'s venue-dispatch (`factory.py`'s `CCXT_VENUES`/`DIRECT_REST_VENUES`/`TRADFI_VENUES`) has no `aster` entry and no `aster_*.py` adapter file exists. Scope separation is moot until an execution adapter is built — see the build-scope note below |
@@ -90,8 +90,10 @@ Create these two secrets in GCP Secret Manager (project `central-element-323112`
 to **trading permissions only, no withdrawal permission** (the whole point of the split — a compromised trade-scope key
 can't move funds out):
 
-- `bybit-trade-api-key` — the new key's API key value
-- `bybit-trade-api-key-secret` — the new key's API secret value
+- `bybit-trade-api-key` — the new key's API key value — **DONE, exists in GSM as of 2026-08-21** (verified via
+  `gcloud secrets versions list`, ENABLED, non-empty).
+- `bybit-trade-api-key-secret` — the new key's API secret value — **still absent as of 2026-08-21/22** (confirmed:
+  `gcloud secrets versions list bybit-trade-api-key-secret` returns `NOT_FOUND`). Only this half remains.
 
 No code change or deploy is needed once these exist — `execution-service`'s `_load_venue_trade_credentials` already
 checks for them first and only falls back to the current unscoped `bybit-api-key`/`bybit-api-secret` if they're absent
@@ -147,7 +149,8 @@ All three are real design/priority calls, not something determinable from code o
 - [x] [AGENT] P2. **Wire Bybit's trade-scope credential lookup with safe fallback** — execution-service
       `_load_venue_trade_credentials` now prefers `bybit-trade-api-key`/`-secret`, falls back to the unscoped pair; 3
       new unit tests.
-- [ ] [HUMAN] P1. **Create `bybit-trade-api-key`/`bybit-trade-api-key-secret` in GCP** per the checklist above — the
+- [ ] [HUMAN] P1. **Create `bybit-trade-api-key-secret` in GCP** (the paired `bybit-trade-api-key` now exists,
+      confirmed 2026-08-21 — see checklist above; only the `-secret` half remains) per the checklist above — the
       one remaining step to actually complete Bybit's scope split. **RULED 2026-07-28** (applying the operator's
       general theme — recurring cost here is $0, this is a security-hardening control reducing a compromised-key's
       blast radius, and the theme favors full completion of exactly this kind of item — DIRECTION APPROVED, proceed).
@@ -274,3 +277,15 @@ All three are real design/priority calls, not something determinable from code o
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; 3 open items unchanged (Bybit key
   creation needs the operator's own exchange login; OKX/Hyperliquid scope-separation design call approved-to-build
   but still unscoped; Upbit/Kraken/Bitfinex/Bitget provisioning is an open priority call).
+- **D12/D19 dispatch, execution-service (slot 6) 2026-08-21/22**: Live-verified this doc's central Bybit claim
+  against real GCP Secret Manager state (never printed secret values, only presence/`gcloud secrets versions
+  list` state + a direct call to `_CredentialsMixin._load_venue_trade_credentials(config, "bybit")`). Two findings:
+  (1) `bybit-trade-api-key` now EXISTS (was absent when this doc's table was last verified 2026-07-23) — the Bybit
+  provisioning checklist above and the `[HUMAN] P1` todo text updated to reflect only the `-secret` half remains.
+  (2) Confirmed live, end-to-end, that the scoped-name fallback works exactly as designed: since
+  `bybit-trade-api-key-secret` is still absent, `_load_venue_trade_credentials` logged
+  `"Bybit trade-scope secret 'bybit-trade-api-key' not found -- falling back to unscoped 'bybit-api-key'"` and
+  returned both values non-empty from the unscoped `bybit-api-key`/`bybit-api-secret` pair — the exact behavior this
+  doc's "Bybit — provisioning checklist" section already documented, now confirmed against live GSM state rather
+  than just read from the code. No code change needed; this was a verification pass (D12/D19 operator-ruling
+  dispatch), not a new fix.
