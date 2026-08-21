@@ -129,7 +129,8 @@ count/ratio).
       by `SUPERSEDED_BY_REASON_PREFIX`). **DONE** this session (agt-c57d2e, slot 6) —
       `market-tick-data-service/scripts/reclass_defi_uniswap_v3_schema_validation_failed_stale_2026_08_17.py`,
       shipped `market-tick-data-service@1b620c5485`. Repo: market-tick-data-service.
-- [ ] [SCRIPT] P2. Run the reclass script's `--apply` pass (todo above) on a dedicated VM, not the shared host —
+- [ ] [SCRIPT] P2. **➡️ EXTRACTED → plans/active/defi_satellite_ao_dispatch_batch19_2026_08_21.md (2026-08-21,
+      ag-closeout-audit Phase 3 sweep).** Run the reclass script's `--apply` pass (todo above) on a dedicated VM, not the shared host —
       the defi index is ~159M rows / ~6.8GiB, too large for a full read/write on this host per the heavy-I/O HARD
       RULE. Gate `--apply` on a fresh reversibility check (`softDeletePolicy.retentionDurationSeconds` on the
       target bucket) per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a before running. This is

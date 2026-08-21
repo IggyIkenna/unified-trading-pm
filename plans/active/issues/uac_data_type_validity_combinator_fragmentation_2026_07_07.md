@@ -280,6 +280,14 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **ag-closeout-audit 2026-08-21 (defi tranche, Phase 2 sweep)**: re-verified the flagged VM state.
+  `gcloud compute instances list --filter="name~mtds-oracle-prices-backfill"` still returns zero instances (6 days
+  after the last 2026-08-15 checkpoint, 1 day after the prior 2026-08-20 read-only check below) — no change since
+  that check. Not investigated further (still outside this sweep's repo/scope ownership; the "Verify … reached a
+  terminal state" todo below remains the owning done-when for whoever picks this up next). Also noted a possible
+  entanglement worth flagging: `defi_oracle_prices_onchain_branch_retry_starvation_2026_08_16.md`'s own 2 open P2
+  todos are separately gated on "once VM `mtds-oracle-prices-backfill` completes" — both docs are waiting on the
+  same underlying terminal-state determination; resolving it once would unblock both.
 - **2026-08-20 (T1 slice, read-only check)** — `gcloud compute instances list --filter="name~mtds-oracle-prices-backfill"`
   returns **zero instances** — the VM is not running, 5 days after the last (6th-launch) checkpoint below. Not
   investigated further (this doc's 2 remaining opens are `market-tick-data-service` VM-ops work, outside T1's repo

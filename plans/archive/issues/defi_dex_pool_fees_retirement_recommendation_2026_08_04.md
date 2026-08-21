@@ -103,6 +103,14 @@ fee accrual can compute it from these two already-canonical corpora rather than 
 separately-backfilled third corpus — the same principle the operator applied to `gas_fees` in this same session (gas
 cost is engineered from gas units × static per-tx complexity, not a separately-backfilled "total gas fee" series).
 
+> **CORRECTION (2026-08-12, ag-closeout-audit 2026-08-21 Phase 2 sweep applied this banner)**: this doc's DIAG todo
+> below concluded the `dex_pool_fees` corpus held "0 objects under any sampled day... across 10+ days spanning
+> 2026-06 through 2026-08" — that sample never probed `day=2026-05-16..22`, where 21 real captured objects (3 pools,
+> CURVE ×2 + BALANCER ×1) actually live. The "0 objects for its entire lifetime" claim below is FALSE. Full
+> disproof + resolution: `/plans/active/issues/dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md`
+> (all 21 rows were subsequently retired as content-redundant with canonical `dex_pool_state` twins, operator-confirmed
+> BLK-9aed224f — the retirement OUTCOME this doc recommended still stands, only the "0 objects" premise was wrong).
+
 ## Todos
 
 - [x] [DIAG] P2. Verify the script's own stated unblocking condition: does `dex_pool_state` (or `dex_pool_swaps`)

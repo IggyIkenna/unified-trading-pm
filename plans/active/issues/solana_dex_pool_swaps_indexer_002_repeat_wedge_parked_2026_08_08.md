@@ -14,7 +14,7 @@ summary: >-
   `auto_unpark__solana_dex_pool_swaps_indexer-002`) to stop the churn while this is root-caused.
 status: open
 nature: issue
-asset_group: [defi]
+asset_group: [ao] # corrected 2026-08-21 (ag-closeout-audit defi tranche, Phase 2 sweep) -- was [defi]; content is a fleet-wide agent-orchestrator tmux crash-loop/dispatch bug, not defi-data-specific (repos: [agent-orchestrator] already correctly scoped) -- mistagged so the defi tranche's own closeout audit kept surfacing it as a false orphan
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

@@ -140,7 +140,8 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    `test_resolve_shard_day_bounds_scan_to_lookback` + streamed-read coverage shipped in the same commit).
    **Evidence: market-data-processing-service@6ee153a0, unified-trading-library@11f1ebd1 — both verified on
    origin/live-defi-rollout by direct code read.**
-- [ ] [DATA] P1. Still open. Now that (1)/(2) have landed, re-run DEFI's `--legs force,skip --require-captured
+- [ ] [DATA] P1. **➡️ EXTRACTED → plans/active/defi_satellite_ao_dispatch_batch19_2026_08_21.md (2026-08-21,
+   ag-closeout-audit Phase 3 sweep).** Still open. Now that (1)/(2) have landed, re-run DEFI's `--legs force,skip --require-captured
    --auto-day` matrix again to get a REAL (non-"PROVED NOTHING") verdict, then consolidate all 5 AGs' reports per
    `data_pipeline_check_mdps_features_2026_07_20.md`'s open todo. **2026-08-17 note**: the plan's own CEFI driver
    (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) was STILL RUNNING (not terminal) as of this check — do not
