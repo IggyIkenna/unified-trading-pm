@@ -288,9 +288,9 @@ exercised different strings, so a green suite carried no signal about the live p
       currently no monitor that would have caught 22h of total unavailability.
 - [ ] [INFRA] P2. **Reload the proxy on config change** (systemd path unit or an
       `ao-self-pull.sh`-style hook), so a committed config edit cannot sit unloaded for a day.
-- [ ] [OPERATOR] P2. **Resolve the quarantined slot WIP.** Re-investigated 2026-08-21 ~19:20
-      UTC (read-only, nothing touched) — the picture has changed since the original diagnosis;
-      only 2 of the 5 slots still need a decision:
+- [x] [OPERATOR] P2. **Resolve the quarantined slot WIP.** Re-investigated 2026-08-21 ~19:20
+      UTC — the picture had changed since the original diagnosis; only 2 of the 5 slots still
+      needed a decision, both now resolved operator-directed discard (details below):
       - **Slots 8, 9 — SELF-RESOLVED, no action needed.** Both now `working` real AO tasks
         (`cefi_venue_smoke_batch1…`, `w15_execution_service_venue_adaptor_security_audit…`);
         every repo checked is clean, `ahead=0`. The originally-reported "features-service 2
@@ -299,41 +299,42 @@ exercised different strings, so a green suite carried no signal about the live p
         (`cross_cutting_satellite_ao_dispatch_batch22…`) with a LIVE `.agent-claim`
         (`expires_at` ~1h out at check time). Its 17 dirty `unified-trading-pm` files are that
         task's in-progress edits (plan/codex doc updates), not abandoned WIP — leave alone.
-      - **Slot 11 — still open, recommend DISCARD, needs operator sign-off.** AO shows `idle`,
-        no `.agent-claim`. `unified-trading-pm`: 1021 dirty files, 10 unresolved `UU` conflicts
-        (`plans/active/INDEX.md` + 9 others, all docs/plans — no source code). Staged-vs-HEAD
-        is **1009 files, +7877/-45788 lines** — a huge NET DELETION (workflow files, cursor
-        rules, config), the opposite shape of "someone's real feature work." `git reflog`
-        shows **three separate `chore(orphan-wip): inherited WIP from predecessor on slot 11`**
-        auto-commits already stacked (2026-08-20 13:59/14:43/15:33), i.e. this is accumulated
-        cruft from repeated auto-inherit cycles that nobody ever resolved, not one person's
-        WIP. A `pull --rebase --autostash` ran against this checkout ~19:20:46 UTC (3 min
-        before this check) and reproduced the identical 10 conflicts — confirms nothing is
-        actively resolving them. Also found a **stale `quickmerge-commit.lock`** (mtime
-        2026-08-20 02:49, ~41h old) — a crashed quickmerge's leftover lock, should be removed
-        regardless of the WIP decision. Recommend: discard the working tree/index back to
-        `origin/live-defi-rollout` and delete the stale lock. Not done unilaterally — the
-        evidence is why, the operator makes the call.
-      - **Slot 16 — still open, needs a decision, NOT the top-level checkout.** The slot's own
-        repos are clean; the WIP is inside a git worktree, `oms-wt.oc3YkB`
-        (`execution-service`, branch `live-defi-rollout`, worktree of the slot-16
-        `execution-service` clone). This is substantial, plausibly real feature work: ~140
-        files touched (new `execution_service/venues/` module — deribit adapters/registry/
-        initializer — plus wide edits across `defi_execution/protocols/`, `trade_execution/
-        adapters/`, and matching test files), one file (`pyproject.toml`) mid-conflict from a
-        `git stash pop` (an "Updated upstream" vs "Stashed changes" conflict, in git's usual
-        triple-angle-bracket form). The
-        `execution-service` stash list carries a matching entry twice
-        (`orchestrator-slot-16-w_execution_orchestrator_oms_persistence_impl-f377dd868710`, once
-        on branch `slot16-oms-persistence`, once on `live-defi-rollout`) plus 8 other
-        `qm-iso-evac-*`/autostash entries from today (04:17-06:26 UTC) that look like quickmerge
-        isolation-evacuation debris, not intentional work. Also found **5 `prunable` isolated
-        quickmerge worktrees** under `/tmp/qm-iso-*` (detached HEAD, git already flags them
-        removable via `git worktree prune`) — safe cleanup regardless of the OMS decision.
-        Recommend: resolve the single `pyproject.toml` conflict and evaluate whether the
-        venues/OMS-persistence work is finished and ready to ship, or triage-diff it against
-        current `live-defi-rollout` to see if it's already superseded — genuinely needs a
-        human look at the diff before deciding keep-vs-discard, this is not a mechanical call.
+      - **Slot 11 — RESOLVED 2026-08-21, operator-directed discard.** `git reset --hard` is
+        hard-blocked host-wide by `agent-orchestrator/scripts/hooks/block_destructive_commands.py`
+        for any worker regardless of authorization, so the reversible path it recommends was
+        used instead: the 12 unmergeable conflict paths (10 `UU` + 1 `DU` + 1 `UD`) were
+        resolved individually to HEAD (2 didn't exist in HEAD at all, so those resolved as
+        deletions), then the remaining 1009-file changeset was `git stash push`ed rather than
+        destroyed — parked as `stash@{0}` on that checkout, recoverable if ever needed. Stale
+        `quickmerge-commit.lock` removed. Verified clean: `git status` empty, `ahead=0`.
+      - **Slot 16 — RESOLVED 2026-08-21, operator-directed discard, cross-checked against 2
+        independent prior AO investigations first.** Before acting, read
+        `plans/active/issues/foreign_isolated_worktree_nested_in_wrong_slot_blocks_done_gate_2026_08_21.md`
+        — this exact worktree (`oms-wt.oc3YkB`) had ALREADY been investigated twice (slot-16,
+        slot-14, same day) and concluded: (a) despite the `slot16-oms-persistence` branch name,
+        its staged content is unrelated DeFi-transfer/bridge/repricer work, NOT the OMS-
+        persistence plan's own files; (b) the real OMS-persistence work is separately, fully
+        shipped and verified on origin
+        (`w_execution_orchestrator_oms_persistence_impl_2026_08_21.md`, all todos done,
+        `execution-service@bc2edc16874a3b0828ef692682b69174ddcab4bf` confirmed ancestor of
+        `origin/live-defi-rollout`) — so nothing valuable was at risk either way; (c) file
+        mtimes were already measured 6h+ stale with a frozen diff across multiple checks
+        spanning 1hr+; (d) the doc's own recommendation was operator-authorized stash. A fresh
+        check confirmed the same state persists, now 8h+ stale (mtime unchanged at 11:47 vs a
+        19:50 check), byte-identical 160-file staged diff, and no live process (the one
+        `pgrep` hit was a self-match on my own command's search-string argument — the exact
+        false-positive trap that doc's own earlier entry had already identified and corrected).
+        Content check (not just filenames): `-w`-vs-normal diff showed <0.3% whitespace noise
+        (159/160 files carry real content changes) — genuinely substantive code (a new
+        `execution_service/venues/` Deribit facade module, an idempotency-module-removal
+        refactor across DeFi protocols) but with **no backing plan anywhere** (`grep`'d every
+        active plan for `deribit`/`execution_service/venues` — no hits describing this work) —
+        unverifiable against any design intent for a live-money execution service. Resolved:
+        `pyproject.toml`'s trivial conflict (a version-pin mismatch, `>=0.159.0` vs stale
+        `>=0.154.0`) taken to HEAD, remainder `git stash push`ed (parked as `stash@{0}` on the
+        `execution-service` worktree, recoverable). Also pruned 5 `prunable` isolated-
+        quickmerge worktree registrations (`git worktree prune`, dirs already gone — pure
+        bookkeeping cleanup, no content touched).
 - [ ] [BACKEND] P3. **A plan declares a role that does not exist.** The regen loop logs:
       `resolved task role 'worker # was: data (not a valid agents/*.md registry entry; corrected
       na_eligibility_audit 2026_08_19)' is not a defined agent role — its tasks will be

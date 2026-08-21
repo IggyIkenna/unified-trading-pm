@@ -240,6 +240,9 @@ duplicated.
       `status: disabled` for both post-call. This stops the respawn-failure loop above from recurring; the
       credential-provisioning ask itself is unchanged and still needs the operator. Re-enable each only after
       its `~/.claude-accounts/<id>.env` exists and `claude setup-token` has been run.
+      **Operator asked directly 2026-08-21 (continued)**: chose "defer for now" — both accounts stay disabled,
+      no further action from either side until revisited. Not stale; explicitly reviewed and deferred, not
+      forgotten.
 - [ ] [BACKEND] P2. **NEW, found 2026-08-21 while live-validating the day's fixes on slots 3/4/25**: a normal,
       already-correctly-tagged intentional teardown can still misclassify as "unexplained" if the IMMEDIATE
       respawn attempt that follows it fails/stalls long enough to push `tmux_pruner`'s actual detection past
