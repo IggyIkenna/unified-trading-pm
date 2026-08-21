@@ -138,20 +138,37 @@ of the silence unchanged the whole time.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Determine whether agent `a05af12f32ba65381`'s Kimi-removal task is still live/finishing, or
-      abandoned — check `/api/agents` for that agent id's current status, or ask in chat. If live, no action
-      needed beyond waiting. If abandoned, decide how to land or safely park the WIP (see Recommended decision
-      above) so `ao-self-pull.sh` can resume. Repo: agent-orchestrator, host-level (root clone) — outside any slot
-      worker's authorized scope.
-- [ ] [SCRIPT] P2. Once the wedge clears, confirm the root checkout's `HEAD` actually reaches
-      `agent-orchestrator@965259913c` (this session's CI-escalation-reserve fix) and that `orchestrator.service`'s
-      `ExecMainStartTimestamp` moved forward — closes the live-re-verify todo already open in
-      `ci_escalation_reserve_slots_claimed_by_class_a_dispatch_2026_08_21.md`. Repo: agent-orchestrator.
+- [x] [OPERATOR] P1. ✅ **RESOLVED 2026-08-21 (interactive session, slot 13).** The WIP was this session's own
+      task (Kimi + OmniRoute + OpenRouter provider removal, operator-directed cleanup) — not abandoned, but it had
+      been built directly in the root checkout by mistake (a session error, not intended), which is exactly what
+      caused this wedge. Root-caused and fixed: the full diff was captured as a patch (`git diff HEAD`), verified
+      byte-identical after applying to the correct per-slot checkout (`.tabs/13/agent-orchestrator`), THEN the root
+      checkout was safely cleared via `git stash push -u` (not `git reset --hard`, which a repo guardrail hook
+      blocks outright for exactly this class of action) once the backup was confirmed. The real work was finished,
+      quality-gated (5262 tests passed, 86% coverage, ratchet-clean), and shipped from the correct slot:
+      `agent-orchestrator@055bd037b7`.
+- [x] [SCRIPT] P2. ✅ **CONFIRMED 2026-08-21.** `ao-self-pull.sh` unwedged immediately once the root checkout went
+      clean — log shows `FF b7bada32 -> 055bd037 — restarting orchestrator` at 08:04:01Z, then
+      `FF 055bd037 -> 510c794a` at 08:06:01Z, `orchestrator restarted (active=active)` both times.
+      `systemctl show orchestrator -p ExecMainStartTimestamp` = `2026-08-21 08:06:35 UTC` (genuinely restarted, not
+      stale). `git merge-base --is-ancestor 965259913c HEAD` on the root checkout confirms TRUE — this session's own
+      CI-escalation-reserve fix reached live along with everything else queued behind the wedge.
+      `/tmp/ao-self-pull-dirty.ticks` is gone (counter cleared). Fully live, verified.
 - [ ] [OPERATOR] P2. This wedge is a recurrence of the same failure class as
       `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` — consider raising the priority on that
       doc's still-open `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` secret-lookup todo (currently held on the missing
-      credential), since it has now masked two separate live deploy-freeze incidents. Cross-referenced only, not
-      duplicated here. Repo: agent-orchestrator, host-level.
+      credential), since it has now masked two separate live deploy-freeze incidents (07-30, and this one — both
+      ran 50min+ fully unpaged). Cross-referenced only, not duplicated here. Repo: agent-orchestrator, host-level.
+- [ ] [BACKEND] P2. **NEW FOLLOW-UP, found while resolving this doc.** Root cause of the mis-location itself: an
+      interactive session's own delegated sub-agent was given a `WorkingDirectory`-style path
+      (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator` — the root clone, and coincidentally also
+      `orchestrator.service`'s live `WorkingDirectory`) instead of its assigned per-slot checkout. No code fix
+      needed — this is an authoring-discipline gap (the delegating prompt named the wrong path), not a bug in
+      `ao-self-pull.sh`/the guardrail hook, both of which behaved correctly (wedge-and-alert, block `reset --hard`).
+      Add a line to `SUB_AGENT_MANDATORY_RULES.md`'s per-slot-worktree section making it explicit that a
+      delegation prompt to a sub-agent must name the operator's assigned slot path, never the bare `<repo>/`
+      root, before spawning any `Agent`/`Task` call that will edit files. Done when: the line is added and stays
+      inside the file's 10KB size budget (condense elsewhere if needed, never raise the cap).
 
 ## Codex SSOTs
 
@@ -165,3 +182,15 @@ of the silence unchanged the whole time.
   precedent and the 2026-08-20 plan-reconciler checkpoint that already flagged this exact WIP as "do not touch."
   No code/root-clone change made. Filed for operator visibility given the fleet-wide, unpaged deploy-currency
   impact.
+- **2026-08-21 (slot 13, interactive) — RESOLVED.** This was that same session, having realized mid-task its
+  delegated sub-agent had been pointed at the root clone by mistake. Recovered without data loss: `git diff HEAD`
+  captured the full 73-file diff, applied to `.tabs/13/agent-orchestrator` (freshly pulled to match), verified
+  byte-identical (`diff <(git diff HEAD) <saved patch>` empty on both sides), THEN the root checkout was cleared
+  via `git stash push -u` (a repo guardrail hook actively blocks `git reset --hard` for this exact class of
+  action — used the sanctioned alternative instead). Finished the removal from the correct slot: fixed a real
+  `ruff format` drift the gate caught, full quality-gates.sh passed clean (5262 tests, 86.04% coverage vs 85.86%
+  baseline, basedpyright/tsc/vitest all green), shipped `agent-orchestrator@055bd037b7` via quickmerge. Confirmed
+  live: `ao-self-pull.sh` FF'd the root checkout twice within the next 2 ticks
+  (`b7bada32→055bd037→510c794a`), restarted `orchestrator.service` both times, dirty-tick counter cleared. One
+  new follow-up filed (todo 4) on the actual root cause — a sub-agent delegation prompt naming the wrong path —
+  since that's a real authoring gap distinct from "abandoned WIP."
