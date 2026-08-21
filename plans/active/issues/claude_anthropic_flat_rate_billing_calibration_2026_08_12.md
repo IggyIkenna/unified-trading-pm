@@ -41,7 +41,7 @@ context_scope:
     /plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md,
   ]
 created: 2026-08-12
-last_updated: 2026-08-18
+last_updated: 2026-08-21
 parent_epic: orchestrator_master
 priority: P2
 assigned_vm: NA
@@ -404,3 +404,12 @@ investigation the next time an account is onboarded.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:f719f529dda6fdcb]: KEEP-NA, valid — explicit dated operator ruling (2026-08-13): entire initiative is human-driven, proceed only in operator-present sessions, covers the dispatch mechanism for the whole doc even for individually-bounded-looking items. Reconfirms the 2026-08-17 na-eligibility-audit verdict verbatim.
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — explicit dated operator ruling (2026-08-13): entire initiative is human-driven, proceed only in operator-present sessions; covers the dispatch mechanism for the whole doc including individually-bounded-looking items. Reaffirms the 2026-08-19 verdict verbatim.
+
+- **2026-08-21 — ruling D1 (Stale meta-doc disposition)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve all — repeated audits agree these are churn, not live tasks; the two
+  keep-open items and the one split are the only exceptions. This doc is judged one of the "keep-open" exceptions,
+  not churn: unlike the other 9 docs D1 affects (audit-of-audit / stale-index meta-docs), this doc carries a live,
+  substantive, still-open operator-facing investigation (the sub-d ~1047x boost-multiplier outlier, explicitly
+  flagged as "worth flagging to the operator directly, not just filed as a curiosity") and a pending window-reset
+  re-run — neither reads as churn. No todo touched; doc stays open exactly as-is. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

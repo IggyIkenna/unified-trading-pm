@@ -43,7 +43,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-08
+last_updated: 2026-08-21
 locked_since:
 context_scope:
   [
@@ -98,19 +98,14 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
       review)**: the flip commit `unified-trading-pm@d875b73ed3` is on `origin/live-defi-rollout`; the Progress Log
       comparison carries concrete measured data for BOTH named tasks across all four dimensions (prompt-size tables,
       tool-call patterns, `du -sm` repo sizes, ~12GB worktree) plus the dispatch-ordering + temporal-overlap findings.
-- [ ] [OPERATOR] P2. **CHECKED 2026-08-09 (operator, interactive session) — LEAN UNPARK, best odds of the 3 sibling
-      parked tasks, not a guarantee.** `agent-orchestrator@dd01255` (cited by one prior sub-agent pass) does NOT apply
-      here — it fixes chat-loop-role (review/main) liveness, not standard worker dispatch. The relevant fix is
-      `agent-orchestrator@e32d962` (TmuxPruner has-session debounce), confirmed live — and unlike
-      `defi_compute_gcp_migration-009`, occurrences 1+2 in the table above ARE the exact classic
-      `forced_precompact`→`forced_compact`→silent signature that fix targets. Occurrence 3 (slot 3,
-      `slot_resume_skipped`, no forced_compact) is a different, still-unexplained variant, so this isn't a clean "root
-      cause fixed" — but 2 of 4 failures matching a now-live fix is meaningfully better evidence than
-      `defi_compute_gcp_migration-009`'s 3/3 unfixed-signature record. **I can't call
-      `POST /api/backlog/citadel_satellite_ao_dispatch_batch1-004/unpark` from this interactive session — no write
-      access to the orchestrator API from this checkout.** Operator: trigger the unpark via the dashboard directly if
-      you agree with this read; if it re-wedges, that itself is useful evidence the residual (occurrence-3-shaped)
-      mechanism is still live.
+- [ ] [SCRIPT] P2. **Unpark `citadel_satellite_ao_dispatch_batch1-004` per D49 ruling** (ADOPTED-REC 2026-08-21,
+      "Unpark now — strongest evidence of any parked sibling"): call
+      `POST /api/backlog/citadel_satellite_ao_dispatch_batch1-004/unpark` and monitor the re-dispatch. Context:
+      `agent-orchestrator@e32d962` (TmuxPruner has-session debounce) is confirmed live and fixes the exact
+      classic `forced_precompact`→`forced_compact`→silent signature occurrences 1+2 hit; occurrence 3
+      (`slot_resume_skipped`, no forced_compact) is a different, still-unexplained variant. Done when: the unpark
+      call succeeds and the task either completes a boot→work→done cycle (see todo below) or, if it re-wedges,
+      that is logged as evidence the occurrence-3-shaped mechanism is still live.
 - [ ] [REVIEW] P3. Once unparked and re-dispatched, independently verify via `GET /api/activity` (filtered client-side
       by `task_id`, the `task=` query param does not actually filter server-side — confirmed 2026-08-08) that it
       completes a full boot->work->done cycle without re-wedging. Repo: unified-trading-pm (verification + checkbox flip
@@ -225,3 +220,7 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
 - **plan-reconcile ao 2026-08-18 (hunter #6)**: live AO backlog check via `/check-agent-orchestrator` (SSM, read-only) for `citadel_satellite_ao_dispatch_batch1-004` returned 0 matching tasks in the current backlog dump (which only surfaces `queued`/`dispatched`/`done`/`blocked`/`cancelled`, not a `parked` status) — inconclusive on its own (a proxy, not proof of resolution per CLAUDE.md's measurement-claims-discipline), so no checkbox touched on this basis. Merged the duplicate `## Progress log`/`## Progress Log` headers into one section (structural cleanup only, no content change).
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — both remaining items ([OPERATOR] unpark decision, [REVIEW] post-unpark verification) still need an operator-only dashboard action this class of session has no write access to trigger; unchanged since 2026-08-18. The 2026-08-18 plan-reconcile live-backlog check remains inconclusive on task status (a proxy, not proof, per measurement-claims-discipline) — no basis to treat as moot.
+
+- **2026-08-21 — ruling D49 (Unpark citadel batch1-004)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Unpark now — strongest evidence of any parked sibling. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
