@@ -31,6 +31,7 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+archive_exempt: true
 context_scope:
   - /plans/active/sports_venue_smoke_batch1_2026_08_20.md
   - /plans/active/venue_smoke_test_bar_2026_08_16.md
@@ -90,9 +91,14 @@ after those gates fail closed on the `No active venues`/zero-row case.
 - [x] [DATA] P1. Reconcile the 96 observed Sports `(venue, data_type)` cells absent from the UAC registry against the
       canonical venue/data-type declarations; classify derived/retired data types and accepted legacy/source-scoped
       observations without widening canonical bookmaker capabilities (repo: unified-api-contracts) — unified-api-contracts@a78f07dce0; QG=passed.
-- [ ] [BACKEND] P1. Preserve a per-unit result schema containing row count, canonical-path verdict, manifest shard-atom
+- [x] [BACKEND] P1. Preserve a per-unit result schema containing row count, canonical-path verdict, manifest shard-atom
       verdict, `capture_status`, source, and the exact no-active-venue/zero-row reason so an exit code of zero cannot be
-      mistaken for a passing smoke test (repo: market-tick-data-service).
+      mistaken for a passing smoke test (repo: market-tick-data-service) — unified-trading-library@9325fe00d8 (adds
+      `capture_status`/`source` to `ShardCheckResult`, round-tripped through JSON merge + rendered in the markdown
+      table) + market-tick-data-service@f88dfdbd19 (always propagates capture_status/source from the manifest row,
+      even on the failure path; surfaces the manifest's classified `error_reason` or, when no manifest row was ever
+      written, greps the VM's `run.log` for the orchestrator's own exact "No active venues" line); full QG passed on
+      both repos.
 
 ## Progress Log
 
@@ -113,3 +119,24 @@ after those gates fail closed on the `No active venues`/zero-row case.
 - **2026-08-20 — slot-7:** Shipped the generator-scoped Sports mode as `--generator-scoped-sports`; it loads exactly the 39 UAC work-list rows, preserves venue/data-type filters, and logs observed PROD cells outside the generator without widening the denominator. Quickmerge verified `market-tick-data-service@aaa0c8b1b6` on LDR; full QG passed with 11,104 tests passed, 28 skipped, 1 xpassed, and 19 warnings.
 
 - **2026-08-21 — slot-10:** Reconciled the observed Sports registry gaps in `unified-api-contracts`: canonical bookmaker/data-type capabilities remain unchanged; derived/retired data types and accepted legacy, source-scoped, writer-residue, empty-residue, and cross-asset observations are classified explicitly. Full quality gates passed (tests, type check, Codex compliance); quickmerge landed the commit on LDR.
+
+- **2026-08-21 — slot-7:** Closed the last open todo. Traced the finding to its root: `_verify_batch_shard`'s per-VM
+  manifest read (`_read_per_vm_batch_row`) already resolved the unit's real `capture_status`/`error_reason` but
+  discarded both on the failure path (only used inside the `write_verified` branch), and there was no path at all to
+  surface the orchestrator's own diagnostic line for the genuine "no manifest row written" case (the exact
+  `No active venues for date=... asset_groups=[...]` finding from 2026-08-20 above). Added `capture_status`/`source`
+  as dedicated `ShardCheckResult` fields (`unified-trading-library@9325fe00d8`, additive/back-compat defaults, so
+  every other `pipeline_e2e_check` caller — instruments-service, features-service, market-data-processing-service —
+  is unaffected), then wired MTDS's batch verifier (`market-tick-data-service@f88dfdbd19`) to (1) always propagate
+  capture_status/source from the per-VM manifest row regardless of write_verified, (2) append the manifest's own
+  classified `error_reason` to `reason` when a row exists, and (3) grep the VM's `run.log` for the orchestrator's
+  exact "No active venues" WARNING when no manifest row was ever written at all — closing the exact gap this issue's
+  first finding identified (a zero-exit VM with `No active venues` in its log previously left no trace of that reason
+  in the report). Full quality gates passed on both repos (UTL 129s, MTDS 43s via content-sentinel reuse of the
+  genuine full run); both SHAs verified post-push ancestors of `origin/live-defi-rollout` via quickmerge's own
+  ancestry check. Added/updated unit tests: UTL round-trips `capture_status`/`source` through the JSON merge path;
+  MTDS covers the 3-tuple `_read_per_vm_batch_row` return shape, the new `_extract_no_active_venues_reason` grep
+  helper, and `_verify_batch_shard`'s exact-reason surfacing on both the log-grep and manifest-error_reason paths.
+  All four todos in this issue doc are now closed — archiving in a follow-up commit per the cross-repo
+  flip-then-archive rule (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); `archive_exempt:
+  true` set on this flip-only commit as the sanctioned bridge, dropped in the immediately-following `git mv` commit.
