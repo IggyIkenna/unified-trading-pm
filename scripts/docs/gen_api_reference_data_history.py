@@ -11,11 +11,13 @@ from __future__ import annotations
 import html
 from collections import defaultdict
 
-from unified_api_contracts.canonical.crosscutting.defi import ChainKind
-from unified_api_contracts.registry.market_data_categories import VENUE_DATA_TYPE_CAPABILITIES
-from unified_api_contracts.registry.sports_bookmaker_league_coverage import BOOKMAKER_LEAGUE_COVERAGE
-from unified_api_contracts.registry.venue_asset_group import classify_venue_asset_group
-from unified_api_contracts.registry.venue_instrument_type_axis import venue_instrument_type_triples
+from unified_api_contracts import ChainKind
+from unified_api_contracts.registry import (
+    BOOKMAKER_LEAGUE_COVERAGE,
+    VENUE_DATA_TYPE_CAPABILITIES,
+    classify_venue_asset_group,
+    venue_instrument_type_triples,
+)
 
 triples, unresolved = venue_instrument_type_triples()
 
