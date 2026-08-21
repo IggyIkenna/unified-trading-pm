@@ -180,11 +180,28 @@ _run_hook() {
     # excluding jq's own directory wholesale (rather than filtering it out
     # of $PATH) would also drop any co-located tool (tmux lives next to jq
     # in /usr/local/bin on this host), breaking the very signals under test.
-    local fakebin tool p
+    local fakebin tool p sysdir
     fakebin="${BATS_TEST_TMPDIR}/fakebin"
     mkdir -p "${fakebin}"
     for tool in pgrep lsof ps awk readlink tmux cat tr; do
         p="$(command -v "${tool}" 2>/dev/null)" || continue
+        # Prefer the real system binary over unified-trading-pm's own pkill-guard PATH wrapper
+        # (scripts/hooks/pkill-guard-bin/) when that's what `command -v` resolves to on this
+        # host: the wrapper is itself a `#!/usr/bin/env bash` script that needs bash+env on
+        # PATH, which this curated no-jq fixture deliberately excludes -- symlinking it in
+        # breaks with "bash: No such file or directory" for an unrelated reason (this test
+        # exercises the HOOK's jq-fallback logic, not the guard's interaction with a
+        # stripped-down PATH).
+        case "${p}" in
+            */pkill-guard-bin/*)
+                for sysdir in /usr/bin /bin /usr/local/bin; do
+                    [ -x "${sysdir}/${tool}" ] && {
+                        p="${sysdir}/${tool}"
+                        break
+                    }
+                done
+                ;;
+        esac
         ln -sf "${p}" "${fakebin}/${tool}"
     done
     # Without jq the hook can't parse the stdin JSON payload at all (by

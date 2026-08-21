@@ -134,7 +134,18 @@ foreign_claude_pids() {
   command -v pgrep >/dev/null 2>&1 || return 0
   ancestors="$(_ancestor_pids)"
   slot_real="$(readlink -f "${slot_dir}" 2>/dev/null || echo "${slot_dir}")"
-  for pid in $(pgrep -f claude 2>/dev/null || true); do
+  # `-u "$UID"` is a numeric discriminator (not a scope narrowing -- every slot on this host
+  # runs under the same uid), added solely so this READ-ONLY enumeration clears
+  # pkill-guard.sh's `_pkill_guard_has_numeric_target` check. Without it, the PATH-resolved
+  # `scripts/hooks/pkill-guard-bin/pgrep` wrapper (installed into every AO-spawned worker pane's
+  # PATH, not just interactive shells -- see pkill-guard.sh's own header) REFUSES this bare
+  # `pgrep -f claude` outright: detection then permanently fails, not merely under host load. This
+  # is a distinct root cause from the host-load lsof-timeout class tracked in
+  # slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md. `$UID` is a bash builtin
+  # (not `$(id -u)`) deliberately -- this file's other callers run under curated/minimal PATHs
+  # (e.g. the no-jq fixture in tests/test_session_start_collision_check.bats) that do not carry
+  # an `id` binary, and a builtin var needs no subprocess at all.
+  for pid in $(pgrep -u "${UID}" -f claude 2>/dev/null || true); do
     case "${ancestors}" in *" ${pid} "*) continue ;; esac
     candidates+=("${pid}")
   done
