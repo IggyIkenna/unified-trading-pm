@@ -827,7 +827,7 @@
       <span>Platform API reference</span>
       <span class="sep">/</span>
       <span>Companion to the integration guide</span>
-      <span class="conf">As of 2026-08-21</span>
+      <span class="conf">Measured 2026-08-20</span>
     </div>
 
     <h1>The platform API <span class="light">— every endpoint, real parameters, real responses</span></h1>
@@ -840,9 +840,11 @@
     </p>
 
     <div class="legend">
+      <span><b class="st st-part">partial</b> built, reachable for some or all cases described</span>
+      <span><b class="st st-plan">planned</b> specified or requested, not yet built</span>
       <span
-        >Statuses on this page describe built capability, read from source; <b class="st st-live">live</b> marks are
-        reserved for capital-validated deployments and appear once a counterparty is trading.</span
+        >No <b class="st st-live">live</b> mark appears on this page — live requires validation with real capital, and
+        nothing in this system has that yet, regardless of how complete the code is.</span
       >
     </div>
     <div class="legend">
@@ -864,7 +866,7 @@
       <div class="stat">
         <span class="v">5</span
         ><span class="k"
-          >Services expose a counterparty surface — discovery, market data, execution, reporting and signal leasing</span
+          >Services expose a counterparty surface — one of them (strategy-service) not reachable by anyone yet</span
         >
       </div>
       <div class="stat">
@@ -884,19 +886,20 @@
       <div class="stat">
         <span class="v">15 / 16</span
         ><span class="k"
-          >Instruction types routed to real execution — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
-          UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC/BRIDGE/LP_MINT/LP_BURN route through live execution wiring
-          (lending and credit via AAVE V3; BRIDGE via the Socket v2 route aggregator spanning Across, Stargate,
-          CCTP and Hop; LP_MINT/LP_BURN via Uniswap V3 position management, with additional venues activated on
-          demand); QUOTE registers the instrument for continuous quoting — its tick-driven loop submits and
-          updates the live order as the underlying moves</span
+          >Instruction types routed to real execution today — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
+          UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC/BRIDGE/LP_MINT/LP_BURN all route through live execution wiring
+          (BORROW/REPAY wired 2026-08-21, AAVE V3 only; BRIDGE/LP_MINT/LP_BURN wired 2026-08-21 — BRIDGE via a real
+          Socket v2 bridge-route aggregator, LP_MINT/LP_BURN via real Uniswap V3 NPM mint/burn, both LIVE-WIRED for
+          one venue each so far); QUOTE is the sole remaining partial case — its registration call never places an
+          order inline, but its tick-driven loop (wired 2026-08-21) submits/updates the live order asynchronously as
+          the underlying moves</span
         >
       </div>
       <div class="stat">
-        <span class="v">3</span
+        <span class="v">0</span
         ><span class="k"
-          >Signal payload depths a leased slot can be entitled at — MINIMAL, STANDARD, RICH — with per-counterparty
-          activation completed at onboarding</span
+          >Counterparties who can authenticate to strategy-service's signal-leasing API today — both seeded
+          counterparties are pre-activation ahead of the stated 2026-09-01 launch window</span
         >
       </div>
     </div>
@@ -973,76 +976,9 @@
     </div>
   </header>
 
-  <section id="about">
-    <div class="sec-head">
-      <span class="num">§</span>
-      <h2>About Odum Research</h2>
-    </div>
-    <p class="lede">
-      Odum Research is the firm behind this platform — an investment-management and quantitative-research business
-      that researches, backtests and runs trading strategies across CeFi, DeFi, TradFi, sports and prediction
-      markets, and makes the same infrastructure available to counterparties who want to allocate to it, lease its
-      signals, or run their own strategy on it. Odum has been under an ongoing strategy-building consultancy
-      engagement with a client for over a year; that same client is separately negotiating bespoke execution
-      services on this platform — DeFi strategies today, CeFi expected to follow.
-    </p>
-    <p>
-      <a href="https://www.odum-research.com/" target="_blank" rel="noopener">odum-research.com</a> ·
-      <a href="https://www.odum-research.com/who-we-are" target="_blank" rel="noopener">who we are</a> ·
-      <a href="https://www.odum-research.com/odum-tearsheet-5cda11d0928332808a3fcd57.html" target="_blank" rel="noopener"
-        >live tear sheet</a
-      >
-      — all on the same site, no separate login between them.
-    </p>
-    <div class="keypoints">
-      <div>
-        <b>1 — Allocate</b>
-        <span
-          >Deploy into Odum's investment-management business; one strategy live today with a verifiable track
-          record (tear sheet above), more on offer toward year-end.</span
-        >
-      </div>
-      <div>
-        <b>2 — Signals</b>
-        <span
-          >Lease a signal slot — <a href="#s6">§06</a> below is the literal integration contract: full schema,
-          pull/push, acknowledgement.</span
-        >
-      </div>
-      <div>
-        <b>3 — Run in your ecosystem</b>
-        <span
-          >A carved-out strategy for full ownership, or build-and-license on bespoke terms — any strategy, any
-          asset group, negotiated case by case.</span
-        >
-      </div>
-    </div>
-    <p>
-      We research and backtest every strategy for the client before it goes live, and promotion does not rewrite
-      the code that produced the backtest — it runs it: <code>paper(W)</code> equals <code>batch-rerun(W)</code>
-      trade-for-trade (ε=0 proof), down to latency assumptions and book-triggered events, with execution alpha
-      measured as the one intentional delta at the live fill boundary
-      (<code>/codex/09-strategy/operational/paper-batch-live-reconciliation.md</code>). Taking a strategy live means
-      moving it onto that same proven infrastructure, not migrating to a different stack.
-    </p>
-    <p>
-      DART — Data Analytics Research Terminal — is the same in-house research/backtest/paper/live terminal Odum
-      runs its own strategies on, shareable with clients; see
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §dart.
-    </p>
-    <p style="font-size: 0.9rem; color: var(--ink-3)">
-      Full narrative version of all three engagement models, plus DeFi liquidity-pool engagement detail: see
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §about/§engage/
-      §research-service/§dart/§defi-lp.
-    </p>
-  </section>
-
   <nav class="contents">
     <h2>Contents</h2>
     <ol>
-      <li>
-        <a href="#about"><span class="num">§</span><span class="ttl">About Odum Research</span></a>
-      </li>
       <li>
         <a href="#s0"><span class="num">00</span><span class="ttl">How to read this</span></a>
       </li>
@@ -1128,6 +1064,12 @@
     <div class="sec-head">
       <span class="num">01</span>
       <h2>Authentication</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="Owns unified-trading-library/cloud_interface/api_auth.py, the shared auth dependency this section documents."
+        >owner: code_readiness_t1_contracts_library_externalapi_2026_08_19</b
+      >
     </div>
     <p class="lede">
       All three services gate their counterparty routers with the same shared dependency —
@@ -1252,59 +1194,6 @@
         </p>
       </div>
       <div class="callout">
-        <span class="tag">Rate limiting — a per-tier token bucket, keyed off subscription_tier, built on both routers</span>
-        <p>
-          <b class="ev ev-verified">✓ verified</b> Every endpoint on instruments-service's and market-tick-data-service's
-          external routers now calls <code>enforce_rate_limit(auth)</code> before its own entitlement check. Mechanics
-          mirror strategy-service's signal-leasing <code>RateLimiter</code> (<a href="#s26">§26</a>) — a lazy,
-          wall-clock-refilled token bucket, one token consumed per allowed call, never raising — but each service ships
-          its OWN local implementation (no service→service import). The bucket is keyed per <code>org_id</code>, sized
-          by the caller's CURRENT <code>subscription_tier</code> resolved fresh on every call (a tier change takes
-          effect on the next request, no restart). Internal/S2S callers (<code>auth.is_internal</code>) bypass
-          entirely — same precedent as the entitlement seams above. An exhausted bucket responds
-          <code>429</code> with a <code>Retry-After</code> header (whole seconds, a conservative estimate of when the
-          next token is available) rather than a bare rejection.
-        </p>
-        <div class="scroll-x">
-          <table>
-            <thead>
-              <tr>
-                <th>Tier</th>
-                <th>Requests / second</th>
-                <th>Burst capacity</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>enterprise</code></td>
-                <td>50</td>
-                <td>100</td>
-              </tr>
-              <tr>
-                <td><code>data-pro</code></td>
-                <td>20</td>
-                <td>40</td>
-              </tr>
-              <tr>
-                <td><code>data-basic</code></td>
-                <td>5</td>
-                <td>10</td>
-              </tr>
-              <tr>
-                <td><code>free</code> (also the fallback for an unset/unrecognised tier)</td>
-                <td>1</td>
-                <td>5</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          Identical defaults on both services today — a single config table, editable independently per service.
-          <b>Source:</b> <code>instruments-service/instruments_service/api/rate_limit.py</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/rate_limit.py</code>.
-        </p>
-      </div>
-      <div class="callout">
         <span class="tag">execution-service binds the caller's org to the instruction's client_id</span>
         <p>
           <b class="ev ev-verified">✓ verified</b> <code>POST /external/instructions</code> rejects, HTTP
@@ -1334,6 +1223,12 @@
     <div class="sec-head">
       <span class="num">02</span>
       <h2>Instruments API — instruments-service</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="Reference-data completeness for the canonical instrument/venue registry."
+        >owner: instruments_master</b
+      >
     </div>
     <p class="lede">
       Two endpoints over the already-written <code>instrument_availability</code> catalogue — a query and a bulk parquet
@@ -1346,6 +1241,7 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/v1/instruments</code>
         <span class="ep-purpose">Query the instrument catalogue by asset group, venue, and instrument type</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <h3>Parameters</h3>
@@ -1397,17 +1293,7 @@
                 <td>query</td>
                 <td>integer</td>
                 <td class="opt">optional</td>
-                <td>Row cap per page, default <code>2000</code>, min <code>1</code>, max <code>20000</code> — unchanged
-                  by pagination below; use <code>/bulk</code> for the complete corpus rather than paging</td>
-              </tr>
-              <tr>
-                <td><code>cursor</code></td>
-                <td>query</td>
-                <td>string</td>
-                <td class="opt">optional</td>
-                <td>Opaque continuation token from a prior page's <code>next_cursor</code> — resumes the walk beyond
-                  <code>limit</code> rows on the same <code>asset_group</code>/<code>venue</code>/<code>instrument_type</code>
-                  and the day it was minted for</td>
+                <td>Row cap, default <code>2000</code>, min <code>1</code>, max <code>20000</code></td>
               </tr>
             </tbody>
           </table>
@@ -1425,29 +1311,8 @@
           "instrument_id": "BINANCE-SPOT:SPOT_PAIR:ETHUSDT", "venue": "BINANCE-SPOT", "instrument_type": "SPOT_PAIR" } ]
           }
         </div>
-        <div class="code-label">Example response — 200, truncated at limit (pagination)</div>
-        <div class="code">
-          { "asset_group": "cefi", "day": "2026-08-18", "venue": "BINANCE-SPOT", "instrument_type": "SPOT_PAIR",
-          "venues_scanned": 1, "row_count": 5, "truncated": true, "instruments": [ "&lt;5 rows&gt;" ], "next_cursor":
-          "eyJhc3NldF9ncm91cCI6ImNlZmkiLi4ufQ" }
-        </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b class="ev ev-verified">✓ verified</b> <code>next_cursor</code> is present only when <code>truncated</code>
-          is <code>true</code> — an opaque base64 token (asset_group/venue/instrument_type/day/offset, JSON-encoded);
-          pass it back verbatim as <code>cursor</code> to fetch the next page. Row order is stable for a given (day,
-          asset_group, venue, instrument_type) — the underlying shards are already-written, immutable parquet files —
-          so a fixed-day walk never skips or duplicates a row across pages. A <code>cursor</code> minted for different
-          query params, or paired with an explicit <code>day</code> that conflicts with the cursor's pinned day, 400s
-          rather than silently resolving the wrong page.
-          <b>Source:</b>
-          <code>instruments-service/instruments_service/api/routers/external.py</code> (<code>_encode_cursor</code> /
-          <code>_decode_cursor</code>), <code>instruments-service/instruments_service/engine/orchestrator/catalogue_query.py</code>
-          (offset walk, <code>limit + 1</code> peek for an honest <code>truncated</code>).
-        </p>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b class="ev ev-check">? check</b>
-          <b class="own" title="Reference-data completeness for the canonical instrument/venue registry.">owner: instruments_master</b>
-          The <code>instruments</code> row shape is whatever columns the underlying
+          <b class="ev ev-check">? check</b> The <code>instruments</code> row shape is whatever columns the underlying
           <code>instruments.parquet</code> shard carries —
           <code>query_instruments</code>
           (<code>instruments-service/instruments_service/engine/orchestrator/catalogue_query.py:112-169</code>)
@@ -1469,22 +1334,15 @@
             <tbody>
               <tr>
                 <td><code>400</code></td>
-                <td>Unknown <code>asset_group</code>, bucket resolution failed, or an invalid/mismatched
-                  <code>cursor</code></td>
+                <td>Unknown <code>asset_group</code>, or bucket resolution failed</td>
                 <td class="mono">
-                  "Unknown asset_group 'xyz' — expected one of ['cefi', 'defi', 'prediction', 'sports', 'tradfi']" or
-                  "invalid cursor" or "cursor does not match the requested asset_group/venue/instrument_type"
+                  "Unknown asset_group 'xyz' — expected one of ['cefi', 'defi', 'prediction', 'sports', 'tradfi']"
                 </td>
               </tr>
               <tr>
                 <td><code>401</code> / <code>403</code></td>
                 <td>Auth — see <a href="#s1">§01</a></td>
                 <td>—</td>
-              </tr>
-              <tr>
-                <td><code>429</code></td>
-                <td>Per-tier rate limit exhausted — see <a href="#s1">§01</a></td>
-                <td class="mono">"Rate limit exceeded for subscription_tier='…'" + <code>Retry-After</code> header</td>
               </tr>
               <tr>
                 <td><code>500</code></td>
@@ -1503,6 +1361,7 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/v1/instruments/bulk</code>
         <span class="ep-purpose">Stream the matched shards as one combined parquet file</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <h3>Parameters</h3>
@@ -1578,11 +1437,6 @@
                 <td>—</td>
               </tr>
               <tr>
-                <td><code>429</code></td>
-                <td>Per-tier rate limit exhausted — see <a href="#s1">§01</a></td>
-                <td class="mono">"Rate limit exceeded for subscription_tier='…'" + <code>Retry-After</code> header</td>
-              </tr>
-              <tr>
                 <td><code>404</code></td>
                 <td>No matching day partition or shard</td>
                 <td class="mono">
@@ -1635,6 +1489,12 @@
     <div class="sec-head">
       <span class="num">03</span>
       <h2>Market data API — market-tick-data-service</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="Adding a live-feed leg to market_tick_data (currently batch-only)."
+        >owner: system_readiness_master</b
+      >
     </div>
     <p class="lede">
       Three endpoints under one router-level auth gate — what's captured, and two ways to get it out: a bounded "list,
@@ -1647,6 +1507,7 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/external/market-data/availability</code>
         <span class="ep-purpose">What's captured for an (asset_group, venue, data_type)</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <h3>Parameters</h3>
@@ -1720,9 +1581,7 @@
           "…": "…" } }
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b class="ev ev-check">? check</b>
-          <b class="own" title="Live-feed and coverage-envelope completeness for market_tick_data_service.">owner: system_readiness_master</b>
-          The response envelope (the keys above) is verified directly against
+          <b class="ev ev-check">? check</b> The response envelope (the keys above) is verified directly against
           <code>external.py:144-158</code>. The <em>contents</em> of <code>summary</code> / <code>venue_summary</code> /
           <code>venue_data_type_summary</code> are opaque — they are passed through verbatim from the daily
           <code>coverage.json</code> rollup written by
@@ -1744,11 +1603,6 @@
                 <td><code>401</code> / <code>403</code></td>
                 <td>Auth — see <a href="#s1">§01</a> (router-level gate)</td>
                 <td>—</td>
-              </tr>
-              <tr>
-                <td><code>429</code></td>
-                <td>Per-tier rate limit exhausted — see <a href="#s1">§01</a></td>
-                <td class="mono">"Rate limit exceeded for subscription_tier='…'" + <code>Retry-After</code> header</td>
               </tr>
               <tr>
                 <td><code>422</code></td>
@@ -1782,6 +1636,7 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/external/market-data/delivery/batch</code>
         <span class="ep-purpose">Daily batch parquet — list the shard's objects, then stream one by path</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <h3>Parameters</h3>
@@ -1837,16 +1692,6 @@
                   Exact object path from a prior listing call — set to stream that object's bytes instead of listing
                 </td>
               </tr>
-              <tr>
-                <td><code>cursor</code></td>
-                <td>query</td>
-                <td>string</td>
-                <td class="opt">optional</td>
-                <td>
-                  Opaque continuation token from a prior page's <code>next_cursor</code> — resumes a listing truncated
-                  past the object-count cap. Ignored when <code>file</code> is set.
-                </td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -1862,25 +1707,6 @@
           "&lt;resolved tick-data bucket&gt;", "objects": [ { "file": "&lt;opaque internal object path — round-trip
           verbatim, do not parse&gt;", "size": 4831201 } ], "truncated": false }
         </div>
-        <div class="code-label">Response — 200, truncated (more objects than fit one page)</div>
-        <div class="code">
-          { "asset_group": "cefi", "venue": "BINANCE-FUTURES", "data_type": "trades", "date": "2026-08-17", "bucket":
-          "&lt;resolved tick-data bucket&gt;", "objects": [ "&lt;up to 200 entries&gt;" ], "truncated": true,
-          "next_cursor": "cmF3X3RpY2tfZGF0YS9ieV9kYXRlLi4u" }
-        </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b class="ev ev-verified">✓ verified</b> <code>next_cursor</code> is present only when <code>truncated</code>
-          is <code>true</code> — base64 of the last-returned object's name (padding stripped). Pass it back as
-          <code>cursor</code> to resume a lexicographically-ordered walk from that boundary (GCS
-          <code>start_offset</code> semantics under the hood — inclusive; the boundary object itself is skipped on
-          the next page since it was already returned). <code>truncated</code> now also fires when the raw-scan bound
-          is hit before the 200-object match cap, not only the match cap itself — a listing that previously reported
-          <code>truncated: false</code> after scanning 4,000 non-matching objects without reaching 200 matches now
-          correctly reports <code>true</code>. A <code>cursor</code> that fails to decode, or does not itself look
-          like an object name for the requested asset_group/venue/data_type/date shard, 400s.
-          <b>Source:</b> <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>
-          (<code>_encode_cursor</code> / <code>_decode_cursor</code> / <code>_list_matching_objects</code>).
-        </p>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           <code>file</code> is an internal object path and not part of the documented contract — its structure may
           change without notice. Treat it as an opaque token: pass it back exactly as received in step 2, never parse or
@@ -1915,22 +1741,14 @@
                 <td>—</td>
               </tr>
               <tr>
-                <td><code>429</code></td>
-                <td>Per-tier rate limit exhausted — see <a href="#s1">§01</a></td>
-                <td class="mono">"Rate limit exceeded for subscription_tier='…'" + <code>Retry-After</code> header</td>
-              </tr>
-              <tr>
                 <td><code>422</code></td>
                 <td>Unknown <code>asset_group</code></td>
                 <td class="mono">Same shape as availability above</td>
               </tr>
               <tr>
                 <td><code>400</code></td>
-                <td><code>file</code> does not belong to the requested shard, or an invalid/mismatched <code>cursor</code></td>
-                <td class="mono">
-                  "file does not belong to the requested asset_group/venue/data_type/date shard" or "invalid cursor" or
-                  "cursor does not match the requested asset_group/venue/data_type/date shard"
-                </td>
+                <td><code>file</code> does not belong to the requested shard</td>
+                <td class="mono">"file does not belong to the requested asset_group/venue/data_type/date shard"</td>
               </tr>
               <tr>
                 <td><code>404</code></td>
@@ -1954,6 +1772,7 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/external/market-data/delivery/stream</code>
         <span class="ep-purpose">NDJSON stream of near-real-time envelopes over the shared event transport</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <h3>Parameters</h3>
@@ -2045,11 +1864,6 @@
                 <td>—</td>
               </tr>
               <tr>
-                <td><code>429</code></td>
-                <td>Per-tier rate limit exhausted — see <a href="#s1">§01</a></td>
-                <td class="mono">"Rate limit exceeded for subscription_tier='…'" + <code>Retry-After</code> header</td>
-              </tr>
-              <tr>
                 <td><code>422</code></td>
                 <td>
                   Unknown <code>asset_group</code>, bad <code>after</code> timestamp, or bad <code>topology</code>
@@ -2131,60 +1945,62 @@
     <div class="sec-head">
       <span class="num">04</span>
       <h2>Instructions API — execution-service</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="Non-TRADE instruction actions (swap/lend/borrow/stake/...) return HTTP 501; strategy-service's own signal-leasing surface is documented separately in §06."
+        >owner: execution_master</b
+      >
     </div>
     <p class="lede">
-      One instruction envelope, any asset class — all sixteen of its <code>StrategyInstructionV2</code> action
-      types execute for real through this endpoint today.
+      One instruction envelope, any asset class — fifteen of its sixteen action types are wired to real execution
+      paths today, and the last one (QUOTE) arms repricing and reaches the venue asynchronously through its own
+      tick-driven loop, never inline in its own response.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
     </p>
 
     <div class="callout">
       <span class="tag">Read this before anything else on this page</span>
       <p>
-        <b>All sixteen of sixteen <code>StrategyInstructionV2</code> action types execute for real through this
-        endpoint (2026-08-21).</b> The request body type is a 16-member discriminated union
+        <b>Fifteen of sixteen action types are wired to real execution paths today (2026-08-21).</b> The request body
+        type, <code>StrategyInstructionV2</code>, is a 16-member discriminated union
         (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
-        internal DART manual-trade surface uses in production. BORROW/REPAY route through the same AAVE V3
-        live-dispatch seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE use
-        (<code>execution_service/engine/handlers/defi_live_dispatch.py::dispatch_borrow_live</code>). BRIDGE,
-        LP_MINT and LP_BURN route the same way: <code>BRIDGE</code> through <code>TransferHandler</code> via a real
-        <code>SocketBridgeConnector</code> (Socket v2 bridge-route aggregator across Across/Stargate/CCTP/Hop) — a
-        successful source-chain broadcast reports <code>PENDING</code>, never a fabricated instant success, since
-        destination-chain settlement is not confirmed synchronously; <code>LP_MINT</code>/<code>LP_BURN</code>
-        through <code>LpMintHandler</code>/<code>LpBurnHandler</code> calling
+        internal DART manual-trade surface uses in production. BORROW/REPAY were wired 2026-08-21 through the same AAVE
+        V3 live-dispatch seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE already used
+        (<code>execution_service/engine/handlers/defi_live_dispatch.py::dispatch_borrow_live</code>). The last three —
+        BRIDGE, LP_MINT, and LP_BURN — were wired the same day, closing this page's own previously-disclosed gap:
+        <code>BRIDGE</code> routes through <code>TransferHandler</code> via a real <code>SocketBridgeConnector</code>
+        (Socket v2 bridge-route aggregator across Across/Stargate/CCTP/Hop) that already existed in the codebase but
+        had never been wired into any reachable adapter; a successful source-chain broadcast reports
+        <code>PENDING</code>, never a fabricated instant success, since destination-chain settlement is not confirmed
+        synchronously. <code>LP_MINT</code>/<code>LP_BURN</code> route through new
+        <code>LpMintHandler</code>/<code>LpBurnHandler</code> classes calling
         <code>UniswapConnector.mint_position()</code>/<code>.burn_position()</code> — real Uniswap V3
-        NonfungiblePositionManager mint/decrease-liquidity+collect calls. All five DeFi-execution action types above
-        plus BRIDGE/LP_MINT/LP_BURN are LIVE-WIRED for one venue/protocol each so far (AAVE V3, Lido, Uniswap V3,
-        Socket) and fall back to their existing ALPHA_ZERO benchmark-price simulation outside LIVE/MANUAL
-        operational mode. <code>QUOTE</code> is the fifteenth: it registers delta-proxy repricing synchronously
-        (<code>_register_quote_instruction()</code>, <code>external_instruction_api.py:133-171</code>) and reaches
-        the venue asynchronously through its own tick-driven loop rather than inline in its own response — see the
-        tick-loop paragraph below. Source: <code>execution-service@0aa709f076</code> (BRIDGE/LP_MINT/LP_BURN engines
-        + gate wiring), <code>unified-api-contracts@3204e607e4</code> (OperationType.LP_MINT/LP_BURN parity + JSON
-        round-trip coverage for the three envelope types, already present in the schema).
+        NonfungiblePositionManager mint/decrease-liquidity+collect calls that already existed on that connector, just
+        never had a dispatch-seam consumer. All three are LIVE-WIRED for one venue/protocol each so far (Socket for
+        BRIDGE, Uniswap V3 for LP_MINT/LP_BURN) and fall back to their existing ALPHA_ZERO benchmark-price simulation
+        outside LIVE/MANUAL operational mode, same convention as BORROW/REPAY.
+        Source: <code>execution-service@0aa709f076</code> (BRIDGE/LP_MINT/LP_BURN engines + gate wiring),
+        <code>unified-api-contracts@3204e607e4</code> (OperationType.LP_MINT/LP_BURN parity + JSON round-trip
+        coverage for the three envelope types, already present in the schema).
       </p>
       <p>
-        The sixteenth member, <code>ControlInstruction</code> (action ∈
-        <code>{KILL_SWITCH, FLATTEN_POSITION}</code>), now dispatches too (2026-08-21).
-        <code>KILL_SWITCH</code> activates the durable kill switch directly — protective arming only; there is no
-        resume/unkill path reachable from this or any external endpoint, that stays an internal, human-gated
-        operation. <code>FLATTEN_POSITION</code> delegates to the existing authorized
-        <code>AccountInstructionOrchestrator.CLOSE_ALL</code> path, the same role-authorization gate every
-        internal account instruction goes through, not a bypass. Both actions require a non-empty
-        <code>authorization_id</code>, rejected otherwise. <b>Source:</b>
-        <code>execution_service/api/external_instruction_api.py</code>, <code>_submit_control_instruction()</code>,
-        wired into <code>submit_external_instruction</code>'s dispatch chain —
-        <code>execution-service@b49a3f1a96</code>.
+        <code>QUOTE</code> is the one remaining partial case — worth stating precisely rather than rounding it either
+        way. It does not 501: <code>_register_quote_instruction()</code> is real and runs
+        (<code>external_instruction_api.py:133-171</code>), arming <code>DeltaProxyRepricer</code> with this
+        instrument's delta/gamma via <code>QuoteMaintainer.register_quote_instruction()</code> and returning
+        <code>status="REGISTERED"</code> immediately — the response itself never carries an order, by design (it is
+        a synchronous registration call, not a placement call).
       </p>
       <p>
         <b class="ev ev-verified">✓ verified</b> A live tick-ingestion loop is wired:
         <code>FeatureTickSubscriber</code> (execution-service@0be361333), started from the <code>api.main</code>
         lifespan, reads the standard <code>EventTransport</code> facade and calls
         <code>QuoteMaintainer.on_underlying_tick()</code> on every subscribed tick. That method reprices every armed
-        instrument tracking the ticked underlying and submits BUY@bid / SELL@ask LIMIT orders to the venue
-        (execution-service@56d6e7480e), <b>only when the resulting bid/ask/size order state actually
+        instrument tracking the ticked underlying and submits BUY@bid / SELL@ask LIMIT orders to the venue — as of
+        2026-08-21 (execution-service@56d6e7480e), <b>only when the resulting bid/ask/size order state actually
         differs</b> from what was last submitted, so a tick that doesn't move the quantized price is a no-op rather
         than a duplicate order. A cached quote can genuinely reach a venue without a new strategy instruction; the
         still-open gap is upstream of this loop — distinct-underlying quotes (options hedged against a different
@@ -2207,112 +2023,121 @@
           <tr>
             <td><code>TRADE</code></td>
             <td><code>TradeInstruction</code></td>
-            <td>Parses and executes, routed to <code>LiveOrchestrator</code></td>
+            <td><b class="st st-part">partial</b> — parses and executes, routed to <code>LiveOrchestrator</code></td>
           </tr>
           <tr>
             <td><code>SWAP</code></td>
             <td><code>SwapInstruction</code></td>
-            <td>Routed to live DeFi execution (Uniswap V3/V2); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (Uniswap V3/V2); falls back to
+              simulation outside LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>LEND</code></td>
             <td><code>LendInstruction</code></td>
-            <td>Routed to live DeFi execution (AAVE V3); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3); falls back to simulation
+              outside LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>BORROW</code></td>
             <td><code>BorrowInstruction</code></td>
             <td>
-              Routed to live DeFi execution (AAVE V3); falls back to simulation outside LIVE/MANUAL mode
+              <b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3, wired 2026-08-21); falls back
+              to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
           <tr>
             <td><code>WITHDRAW</code></td>
             <td><code>WithdrawInstruction</code></td>
-            <td>Routed to live DeFi execution (AAVE V3); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3); falls back to simulation
+              outside LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>STAKE</code></td>
             <td><code>StakeInstruction</code></td>
-            <td>Routed to live DeFi execution (Lido); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (Lido); falls back to simulation outside
+              LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>UNSTAKE</code></td>
             <td><code>UnstakeInstruction</code></td>
-            <td>Routed to live DeFi execution (Lido); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              <b class="st st-part">partial</b> — routed to live DeFi execution (Lido); falls back to simulation outside
+              LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>REPAY</code></td>
             <td><code>RepayInstruction</code></td>
             <td>
-              Routed to live DeFi execution (AAVE V3) — same seam as <code>BORROW</code> above; falls back to
-              simulation outside LIVE/MANUAL mode
+              Routed to live DeFi execution (AAVE V3, wired 2026-08-21) — same seam as <code>BORROW</code> above; falls
+              back to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
           <tr>
             <td><code>QUOTE</code></td>
             <td><code>QuoteInstruction</code></td>
             <td>
-              Arms delta-proxy repricing synchronously (<code>status: "REGISTERED"</code>); a wired tick-ingestion
-              loop (<code>feature_tick_subscriber.py</code>, see the callout above) asynchronously submits/updates
-              the live order as the underlying moves, publishing only when the desired order state changes
+              <b class="st st-part">partial</b> — arms delta-proxy repricing (<code>status: "REGISTERED"</code>); the
+              registration call is synchronous-only, but a wired tick-ingestion loop
+              (<code>feature_tick_subscriber.py</code>, see §04) asynchronously submits/updates the live order as the
+              underlying moves, publishing only when the desired order state changes
             </td>
           </tr>
           <tr>
             <td><code>TRANSFER</code></td>
             <td><code>TransferInstructionV2</code></td>
             <td>
-              Routed through live transfer execution; DeFi-to-DeFi and binance/deribit/bybit/aster CeFi withdrawals
-              resolve real credentials today, other CEX withdraw venues return an honest failure with a real error
-              rather than a fabricated success
+              <b class="st st-part">partial</b> — routed through live transfer execution; DeFi-to-DeFi and
+              binance/deribit/bybit/aster CeFi withdrawals resolve real credentials today, other CEX withdraw venues
+              return an honest failure with a real error rather than a fabricated success
             </td>
           </tr>
           <tr>
             <td><code>BRIDGE</code></td>
             <td><code>BridgeInstructionV2</code></td>
             <td>
-              Routed through <code>TransferHandler</code> via a real Socket v2 bridge-route aggregator
-              (Across/Stargate/CCTP/Hop); source-chain broadcast success reports <code>PENDING</code>, never a
-              fabricated instant success — destination-chain settlement is not confirmed synchronously; falls back
-              to simulation outside LIVE/MANUAL mode
+              <b class="st st-part">partial</b> — routed through <code>TransferHandler</code> via a real Socket v2
+              bridge-route aggregator (Across/Stargate/CCTP/Hop); source-chain broadcast success reports
+              <code>PENDING</code>, never a fabricated instant success — destination-chain settlement is not confirmed
+              synchronously; falls back to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
           <tr>
             <td><code>ATOMIC</code></td>
             <td><code>AtomicInstruction</code></td>
-            <td>Routed as a multi-leg order through the live instruction router</td>
+            <td><b class="st st-part">partial</b> — routed as a multi-leg order through the live instruction router</td>
           </tr>
           <tr>
             <td><code>CANCEL</code></td>
             <td><code>CancelInstruction</code></td>
             <td>
-              Cancels open orders on this router's own tracked orchestrators for either scope: a single instruction
-              (<code>cancel_scope=SINGLE</code>) or every open order across venues for one strategy instance
-              (<code>cancel_scope=ALL_FOR_STRATEGY_INSTANCE</code>)
+              <b class="st st-part">partial</b> — cancels open orders on this router's own tracked orchestrators for
+              either scope: a single instruction (<code>cancel_scope=SINGLE</code>) or every open order across venues
+              for one strategy instance (<code>cancel_scope=ALL_FOR_STRATEGY_INSTANCE</code>, wired 2026-08-21)
             </td>
           </tr>
           <tr>
             <td><code>LP_MINT</code></td>
             <td><code>LpMintInstruction</code></td>
             <td>
-              Routed to live DeFi execution (Uniswap V3 NPM mint only); falls back to simulation outside
-              LIVE/MANUAL mode
+              <b class="st st-part">partial</b> — routed to live DeFi execution (Uniswap V3 NPM mint only); falls back
+              to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
           <tr>
             <td><code>LP_BURN</code></td>
             <td><code>LpBurnInstruction</code></td>
             <td>
-              Routed to live DeFi execution (Uniswap V3 NPM decrease-liquidity + collect only); falls back to
-              simulation outside LIVE/MANUAL mode
-            </td>
-          </tr>
-          <tr>
-            <td><code>KILL_SWITCH</code> / <code>FLATTEN_POSITION</code></td>
-            <td><code>ControlInstruction</code></td>
-            <td>
-              Activates the durable kill switch (protective arming only) or delegates to the existing authorized
-              <code>AccountInstructionOrchestrator.CLOSE_ALL</code> path — see the callout above
+              <b class="st st-part">partial</b> — routed to live DeFi execution (Uniswap V3 NPM decrease-liquidity +
+              collect only); falls back to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
         </tbody>
@@ -2321,43 +2146,10 @@
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
       <b class="ev ev-verified">✓ verified</b> schemas.py (all 16 variants + the union); execution-service
       <code>execution_service/api/external_instruction_api.py</code> +
-      <code>execution_service/api/external_instruction_defi.py</code> (all 16 of 16 action types routed to real
-      execution through this endpoint)
+      <code>execution_service/api/external_instruction_defi.py</code> (15 of 16 action types routed to real execution
+      wiring as of 2026-08-21; QUOTE arms repricing synchronously, its tick-driven loop submits/updates the live
+      order asynchronously — see above)
     </p>
-
-    <div class="callout">
-      <span class="tag">Any asset group, including decentralized liquidity — LP is just an instruction</span>
-      <p>
-        <code>LP_MINT</code>/<code>LP_BURN</code> above are not a special integration path — they are strategy
-        instructions on the same envelope as everything else on this page. Concentrated-liquidity position
-        management on Uniswap V3 is live across five EVM chains (Ethereum, Arbitrum, Base, Optimism, Polygon)
-        alongside an already-broad DeFi execution roster (AAVE V3 lending, Lido staking, and connectors spanning
-        yield, restaking and Solana DEXs). More protocols and pools are added on demand — a client either
-        parametrizes an LP/yield instruction against our existing execution, or we custom-build the specific
-        integration. Full list:
-        <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §defi-lp.
-      </p>
-    </div>
-    <div class="callout">
-      <span class="tag">Dual authorization on treasury movements, and custody that adapts to the client</span>
-      <p>
-        The number of independent, HMAC-signed approvals a withdrawal needs before it executes scales with the
-        client's configured tier — SMALL needs 1, MEDIUM needs 2, LARGE needs 3 — accumulated server-side until
-        quorum is reached; a duplicate approval or one submitted after quorum is already met is rejected outright,
-        not silently accepted
-        (<code>deployment-api/deployment_api/routes/client_treasury.py::approve_withdrawal</code>, signed via
-        <code>execution_service.custody.withdrawal_signing.sign_withdrawal_approval()</code>). For MEDIUM and
-        LARGE that is genuine multi-person sign-off enforced server-side, not policy alone. Underneath it, the
-        signing surface itself is pluggable and declared per deployment rather than hardcoded — HSM-backed
-        cloud-KMS envelope encryption is shipped, and Copper MPC custody is the production provider for every DeFi
-        chain and non-Binance CeFi venue — so integrating a client's own custodian or wallet arrangement is a
-        deployment-time configuration choice within an existing extension point, not a platform rebuild.
-      </p>
-      <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>,
-        <code>execution-service/execution_service/engine/handlers/transfer_handler.py::TransferHandler</code>.
-      </p>
-    </div>
 
     <details class="ep">
       <summary>
@@ -2366,6 +2158,7 @@
         <span class="ep-purpose"
           >Submit one StrategyInstructionV2 envelope — see the support table above for which action types execute</span
         >
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <h3>
@@ -2430,8 +2223,8 @@
                 <td><code>"LONG"</code> | <code>"SHORT"</code> | <code>"FLAT"</code> | null</td>
                 <td class="opt">optional*</td>
                 <td>
-                  *<code>LONG</code>/<code>SHORT</code> required — a <code>FLAT</code>/unset direction 400s with an
-                  explicit error naming the required field
+                  *<code>LONG</code>/<code>SHORT</code> only — <code>FLAT</code>/unset 400s (position-aware sizing isn't
+                  wired here)
                 </td>
               </tr>
               <tr>
@@ -2535,9 +2328,7 @@
         <div class="code-label">Example response — 200</div>
         <div class="code">{ "instruction_id": "instr-8f3a2e10", "status": "FILLED", "detail": { "…": "…" } }</div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b class="ev ev-check">? check</b>
-          <b class="own" title="Instruction-response envelope typing for execution-service's external surface.">owner: execution_master</b>
-          The response envelope (<code>instruction_id</code> / <code>status</code> /
+          <b class="ev ev-check">? check</b> The response envelope (<code>instruction_id</code> / <code>status</code> /
           <code>detail</code>) is verified — <code>ExternalInstructionResponse</code>,
           <code>external_instruction_api.py:63-68</code>. The contents of <code>detail</code> are whatever
           <code>ManualOperationHandler.execute()</code> returns, passed through verbatim (<code>result</code> dict, line
@@ -2629,10 +2420,16 @@
     <div class="sec-head">
       <span class="num">05</span>
       <h2>Client Reporting API — client-reporting-api</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="client-reporting-api owns NAV/PnL/HWM/attribution reader correctness."
+        >owner: global_ledger_pnl_attribution_master</b
+      >
     </div>
     <p class="lede">
-      The client-reporting API exposes <b>102 routes</b> across 24 route modules for reports, statements, exports
-      and document signing, gated by the same shared
+      A large external surface not previously documented here, confirmed directly against the router source:
+      <b>102 routes</b> across 24 route modules, gated by the same shared
       <code>create_api_auth("client-reporting-api")</code> dependency as §01, plus a second, per-route layer this
       service adds on top — entitlement scoping tied to <code>client_id</code>.
       <code>client-reporting-api/client_reporting_api/api/main.py</code> and
@@ -2651,20 +2448,26 @@
         index below is tagged with whichever of these it calls, verified per-route by reading the function body, not
         assumed from the route's file or prefix.
       </p>
+      <p>Three items identified and corrected as of 2026-08-21:</p>
       <p>
-        <code>GET /api/v1/stream/reports</code> (<code>reports_stream.py</code>) is mounted inside
-        <code>_authenticated_router</code> — the same
-        <code>_authenticated_router = APIRouter(dependencies=[Depends(_api_auth)])</code> block
-        (<code>api/main.py</code>) every other route in this service sits behind, so it gets the blanket token check
-        (401 without one) — and additionally gated <code>require_internal(auth)</code> at the route level. It is a
-        global server-sent-events fan-out — every subscriber receives every published report event for every
-        client, and the queue itself carries no per-<code>client_id</code> scoping — so internal-only is the
-        strictest correct gate rather than a caller-supplied filter.
+        <b class="ev ev-verified">✓ verified — fixed 2026-08-21</b>
+        <code>GET /api/v1/stream/reports</code> (<code>reports_stream.py</code>) used to carry
+        <b>no auth dependency at all</b> — it was mounted directly on the FastAPI app outside the
+        <code>_authenticated_router</code> wrapper every other route in this service sits behind
+        (<code>api/main.py</code>, the
+        <code>_authenticated_router = APIRouter(dependencies=[Depends(_api_auth)])</code> block). It is a global
+        server-sent-events fan-out: every subscriber receives every published report event for every client. Now
+        mounted inside <code>_authenticated_router</code> (blanket token check, 401 without one) and gated
+        <code>require_internal(auth)</code> at the route level — the queue itself still has no per-<code
+          >client_id</code
+        >
+        scoping, so internal-only is the strictest correct fix rather than a caller-supplied filter.
       </p>
       <p>
-        Every one of the 102 routes calls <code>enforce_entitlement</code> or <code>require_internal</code>.
-        <code>alerts.py</code>, <code>compliance.py</code>, <code>documents.py</code>, and <code>docusign.py</code>
-        in full, plus <code>reporting/investor_relations_archive.py</code>, all call one or the other.
+        <b class="ev ev-verified">✓ verified — fixed 2026-08-21</b> The 13 of 102 routes that called neither
+        <code>enforce_entitlement</code> nor <code>require_internal</code> — <code>alerts.py</code>,
+        <code>compliance.py</code>, <code>documents.py</code>, and <code>docusign.py</code> in full, plus
+        <code>reporting/investor_relations_archive.py</code> — now all call one or the other.
         <code>compliance.py</code>'s 4 routes and 2 of <code>documents.py</code>'s 4 routes (<code>POST
           /upload-url</code>, <code>GET /</code>) are <code>enforce_entitlement</code>-scoped, since an
         <code>org_id</code>/<code>client_id</code> parameter already existed on each. <code>alerts.py</code>,
@@ -2691,6 +2494,7 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/api/v1/exports/daily-equity</code>
         <span class="ep-purpose">Daily equity curve with TWR, drawdown and transfer-adjusted returns, as CSV</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <p>
@@ -2772,6 +2576,7 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/api/v1/clients/{client_id}/hwm-timeline</code>
         <span class="ep-purpose">High-water-mark / performance-fee crystallization events for one client</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <h3>Parameters</h3>
@@ -2834,9 +2639,8 @@
             <code>CLOUD_MOCK_MODE=true</code> (<code>UnifiedCloudConfig().is_mock_mode()</code>), this endpoint returns
             three fixed demo rows (<code>_mock_hwm_timeline</code>, <code>hwm.py:30-63</code>) regardless of the real
             client. Otherwise it reads <code>read_fee_recognition_rows(client_id, date_from, date_to)</code> —
-            <code>read_fee_recognition_rows(client_id, date_from, date_to)</code> (<code>core/hwm_reader.py</code>)
-            — a real GCS-backed reader over <code>FeeRecognitionRow</code> parquet shards emitted by the UTL
-            <code>HWMCrystallizer</code>, not a fixture.
+            <code>core/hwm_reader.py</code>, not independently read, so its backing data source carries a
+            <b class="ev ev-check">? check</b> rather than a confirmed real-data claim.
           </p>
         </div>
         <h3>Errors</h3>
@@ -2874,6 +2678,11 @@
 
     <div class="callout">
       <span class="tag">Which routes return real data vs. fixture data — measured, not assumed</span>
+      <p>
+        Verified by reading the three route files most likely to matter first (<code>exports.py</code>,
+        <code>performance.py</code>, <code>hwm.py</code>) — not confirmed for every one of the 102 routes below, so
+        treat this as a confirmed sample rather than exhaustive verification.
+      </p>
       <p>
         <b class="ev ev-verified">✓ verified — fixed 2026-08-21</b> <code>GET /api/v1/exports/trades</code>,
         <code>GET /api/v1/exports/coin-breakdown</code>, <code>GET /api/v1/exports/daily-summary</code> and
@@ -3114,22 +2923,22 @@
               <tr>
                 <td><code>GET /trades</code></td>
                 <td>External</td>
-                <td>Trade history CSV — real ledger fills, with backfilled-history fallback; see callout above</td>
+                <td>Trade history CSV — fixture data unconditionally, see callout above</td>
               </tr>
               <tr>
                 <td><code>GET /daily-summary</code></td>
                 <td>External</td>
-                <td>Monthly returns CSV over the real equity curve</td>
+                <td>Daily P&amp;L summary CSV — fixture data unconditionally</td>
               </tr>
               <tr>
                 <td><code>GET /hourly-snapshots</code></td>
                 <td>External</td>
-                <td>Hourly equity CSV — explicit "No data" until hourly snapshots are captured (daily equity is the real grain)</td>
+                <td>Hourly equity CSV — fixture data unconditionally</td>
               </tr>
               <tr>
                 <td><code>GET /coin-breakdown</code></td>
                 <td>External</td>
-                <td>Per-coin P&amp;L CSV — real per-coin engine, same as the performance route</td>
+                <td>Per-coin P&amp;L CSV — fixture data unconditionally</td>
               </tr>
               <tr>
                 <td><code>GET /daily-equity</code></td>
@@ -3581,53 +3390,50 @@
     <div class="sec-head">
       <span class="num">06</span>
       <h2>Signal-leasing API — strategy-service</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md — SSOT for the counterparty registry, entitlement profiles, and rate-limit configuration this section documents"
+        >owner: signal-broadcast-architecture</b
+      >
     </div>
     <p class="lede">
-      The Signal Leasing surface is the outbound stream of the platform's own <code>StrategyInstructionEnvelope</code>
-      emissions (strategy-service's polymorphic v2 instruction schema — <code>TradeInstruction</code>,
-      <code>SwapInstruction</code>, <code>LendInstruction</code>, and siblings), delivered to a counterparty at their
-      entitled payload depth: pull it via REST or receive it pushed to your webhook, then acknowledge it.
-      <code>strategy-service/strategy_service/signal_broadcast/</code> (15 modules: <code>router.py</code>,
+      Corrected from an earlier version of this page, which stated strategy-service exposes no counterparty surface. It
+      does: a signal-leasing REST-pull/webhook-push surface, mounted at <code>/signal_broadcast</code> in
+      <code>strategy_service/api/main.py</code>, built and wired end-to-end. The honest qualifier is not "does it exist"
+      — it does — but "can anyone reach it": today, no.
+      <code>strategy-service/strategy_service/signal_broadcast/</code> (13 modules: <code>router.py</code>,
       <code>transport.py</code>, <code>emitter.py</code>, <code>credentials.py</code>, <code>audit.py</code>,
       <code>broadcaster.py</code>, <code>config.py</code>, <code>config_reloaders.py</code>,
-      <code>envelope_projection.py</code>, <code>live_publish.py</code>, <code>failure_isolation.py</code>,
-      <code>observability_ingest.py</code>, <code>observability_readers.py</code>, <code>observability_stores.py</code>,
-      <code>__init__.py</code>) plus the schema layer in
+      <code>failure_isolation.py</code>, <code>observability_ingest.py</code>, <code>observability_readers.py</code>,
+      <code>observability_stores.py</code>, <code>__init__.py</code>) plus the schema layer in
       <code>unified-api-contracts/unified_api_contracts/internal/domain/signal_broadcast/</code> (counterparty registry,
-      entitlements, rate limits, payload envelope) is built and wired end-to-end, source to acknowledgement.
+      entitlements, rate limits, payload envelope).
     </p>
 
     <div class="callout">
-      <span class="tag">Complete surface — activation is a per-counterparty onboarding step</span>
+      <span class="tag">Built and wired — operationally dark until 2026-09-01</span>
       <p>
         <b class="ev ev-verified">✓ verified</b>
-        Emission source: <code>GroupBRunner</code> (the same paper/live tick runtime every archetype runs through)
-        forwards every emitted <code>StrategyInstructionEnvelope</code> to a
-        <code>signal_broadcast_publisher</code> seam (<code>engine/backtest/runner.py:213,271-272</code>) wired at the
-        real, CLI-reachable <code>--operation paper-run</code> call site
-        (<code>cli/handlers/paper_run_handler.py</code>, via
-        <code>signal_broadcast/live_publish.make_signal_broadcast_publisher</code>). Depth-filter projection:
-        <code>signal_broadcast/envelope_projection.base_payload_from_instruction()</code> maps the real envelope
-        (direction, reference/stop/take-profit prices, deadline, archetype identity) onto the
-        <code>base_payload</code> shape <code>SignalRouter.build_payload()</code> already projects to
-        <code>MINIMAL</code>/<code>STANDARD</code>/<code>RICH</code> per counterparty entitlement — the same
-        depth-projection code the 6 endpoints below serve from.
+        <code>unified_api_contracts/internal/domain/signal_broadcast/registry.py</code> seeds exactly two
+        counterparties, both explicitly overriding <code>Counterparty.status</code>'s own <code>ACTIVE</code> default to
+        the pre-activation member <code>is_counterparty_active()</code> requires them NOT to be
+        (<code>counterparty.py:71</code>): <code>counterparty-stub-1</code> (STANDARD payload depth,
+        <code>default</code> rate-limit profile) and <code>counterparty-stub-2</code> (MINIMAL payload depth,
+        <code>minimal</code> rate-limit profile). Their <code>endpoint</code> URLs are placeholders
+        (<code>https://webhook.example.invalid/…</code>) — "real webhook URLs + Secret Manager references are injected
+        at deploy time by deployment-service" per the registry's own module docstring, and have not been. The registry's
+        own <code>_LAUNCH_WINDOW_START</code> constant records the target launch date, <b>2026-09-01T00:00:00Z</b> —
+        reaching that date does not by itself flip <code>status</code>; nothing in this module or its callers reads the
+        clock, so activation is a deploy-time code change, not a scheduled cutover.
       </p>
       <p>
-        <b class="ev ev-verified">✓ verified</b>
-        Activation is a config row, not a code change: <code>Counterparty.status</code> is the sole gate
-        (<code>is_counterparty_active()</code>, <code>counterparty.py:71</code>) — <code>transport.py</code>'s
-        <code>_authenticate()</code> checks it before anything else and <code>entitled_slots_for()</code> returns an
-        empty set for a non-<code>ACTIVE</code> counterparty. The registry's <code>CounterpartyEntitlement.active_from</code>/
-        <code>active_to</code> fields exist solely for billing/audit provenance (per the registry module's own
-        docstring) — nothing in the module or its callers reads the clock and compares against them; no scheduled
-        cutover flips a counterparty live. <code>unified_api_contracts/internal/domain/signal_broadcast/registry.py</code>
-        currently seeds two staging counterparties (<code>counterparty-stub-1</code>, STANDARD depth,
-        <code>default</code> rate-limit profile; <code>counterparty-stub-2</code>, MINIMAL depth, <code>minimal</code>
-        rate-limit profile) with real webhook URLs + Secret Manager references injected at deploy time by
-        deployment-service. Onboarding a counterparty is flipping its <code>status</code> to <code>ACTIVE</code> and
-        provisioning its endpoint — the same registry-row step every counterparty in production goes through, not a
-        platform gap.
+        This is not a soft gate — it is enforced on every request. <code>transport.py</code>'s own
+        <code>_authenticate()</code> checks <code>is_counterparty_active(cp)</code> before anything else and 403s
+        immediately if the counterparty is not <code>ACTIVE</code>; separately,
+        <code>entitled_slots_for()</code> returns an empty set for any non-<code>ACTIVE</code> counterparty. No
+        counterparty can authenticate against this surface today, full stop — the endpoints below are documented as
+        <b>built, not as reachable</b>.
       </p>
     </div>
 
@@ -3728,6 +3534,7 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/signal_broadcast/emissions</code>
         <span class="ep-purpose">Pull signal emissions for a leased slot since a given time</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <h3>Parameters</h3>
@@ -3748,7 +3555,7 @@
                 <td>query</td>
                 <td>string</td>
                 <td class="req">required</td>
-                <td>Must be an <code>ACTIVE</code> counterparty (onboarded at deploy time)</td>
+                <td>Must be an <code>ACTIVE</code> counterparty — none exist today</td>
               </tr>
               <tr>
                 <td><code>since</code></td>
@@ -3768,9 +3575,10 @@
           </table>
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          Response is <code>_EmissionEnvelope{"emissions": [...]}</code> (<code>transport.py</code>), wrapping
-          <code>SignalPayload</code>-shaped records from <code>EmissionRingBuffer.fetch()</code> — see the payload
-          depth tiers table above for the record shape.
+          <b class="ev ev-check">? check</b> Response is
+          <code>_EmissionEnvelope{"emissions": [...]}</code> (<code>transport.py</code>) wrapping
+          <code>SignalPayload</code>-shaped records from <code>EmissionRingBuffer.fetch()</code> — the exact
+          per-emission wrapper fields beyond the payload shape documented above have not been independently read.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -3785,7 +3593,7 @@
             <tbody>
               <tr>
                 <td><code>403</code></td>
-                <td>Counterparty unknown or not <code>ACTIVE</code></td>
+                <td>Counterparty unknown or not <code>ACTIVE</code> — currently every counterparty</td>
                 <td class="mono">"unknown or inactive counterparty"</td>
               </tr>
               <tr>
@@ -3810,6 +3618,7 @@
         <span class="method method-post">POST</span>
         <code class="ep-path">/signal_broadcast/acknowledge</code>
         <span class="ep-purpose">Acknowledge receipt (or failure) of one emission</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <h3>Request body</h3>
@@ -3859,12 +3668,14 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/signal_broadcast/delivery-health</code>
         <span class="ep-purpose">Delivery-health snapshot for this counterparty</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <p>
           Parameter: <code>counterparty_id</code> (query, required). Response:
-          <code>DeliveryHealthEnvelope{"health": …}</code>, a real Pydantic envelope wrapping
-          <code>DeliveryHealthTracker.snapshot()</code>'s output. Same 403/401/503 auth errors as above.
+          <code>DeliveryHealthEnvelope{"health": …}</code> from <code>DeliveryHealthTracker.snapshot()</code> —
+          <b class="ev ev-check">? check</b>, the fields inside <code>health</code> were not independently read this
+          pass. Same 403/401/503 auth errors as above.
         </p>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py:483-491</p>
       </div>
@@ -3875,14 +3686,15 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/signal_broadcast/backtest-paper-live</code>
         <span class="ep-purpose">Batch/paper/live reconciliation rows, scoped to this counterparty's leased slots</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <p>
           Parameter: <code>counterparty_id</code> (query, required). Response:
           <code>BacktestPaperLiveEnvelope{"rows": …}</code> — filtered server-side to
           <code>cp.allowed_slots</code> (<code>BacktestPaperLiveStore.rows_for(counterparty_id, entitled_slots=…)</code
-          >), so a counterparty cannot read reconciliation rows for a slot it is not entitled to. Same 403/401/503
-          auth errors as above.
+          >), so a counterparty cannot read reconciliation rows for a slot it is not entitled to. Row shape
+          <b class="ev ev-check">? check</b>, not independently read. Same 403/401/503 auth errors as above.
         </p>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py:493-503</p>
       </div>
@@ -3893,12 +3705,13 @@
         <span class="method method-get">GET</span>
         <code class="ep-path">/signal_broadcast/pnl-attribution</code>
         <span class="ep-purpose">Read PnL-attribution rows previously reported for this counterparty</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <p>
           Parameter: <code>counterparty_id</code> (query, required). Response:
-          <code>PnlAttributionEnvelope{"rows": …}</code> from <code>PnlAttributionStore.rows_for()</code>. Same
-          403/401/503 auth errors as above.
+          <code>PnlAttributionEnvelope{"rows": …}</code> from <code>PnlAttributionStore.rows_for()</code>. Row shape
+          <b class="ev ev-check">? check</b>. Same 403/401/503 auth errors as above.
         </p>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py:505-512</p>
       </div>
@@ -3909,6 +3722,7 @@
         <span class="method method-post">POST</span>
         <code class="ep-path">/signal_broadcast/pnl-attribution</code>
         <span class="ep-purpose">Report PnL-attribution rows back for this counterparty (opt-in)</span>
+        <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <p>
@@ -4009,9 +3823,9 @@
           <tr>
             <td><code>501</code></td>
             <td>
-              Not currently reachable — every <code>StrategyInstructionV2</code> member dispatches for real as of
-              2026-08-21; kept as a defensive fallback for any future unmapped action, never a silently-dropped
-              instruction (see §04)
+              Recognised but not wired for external submission — 13 of the 16 instruction types (TRADE executes;
+              QUOTE registers synchronously and its tick-driven loop asynchronously submits/updates live orders as
+              the underlying moves — see §04; it does not 501)
             </td>
             <td>Instructions POST</td>
           </tr>

@@ -102,33 +102,12 @@ path (never hand-edit per-repo copies).
 
 ## Todos
 
-- [x] ✅ [BACKEND] P2. **Add `tags: ["v*"]` to the per-repo `publish-package.yml` trigger** — unified-api-contracts@42e319f5,
-      unified-trading-pm@template-fix (see Progress Log). Correction: `rollout-workflow-templates.sh`'s `TEMPLATE_DIR`
-      (`scripts/workflow-templates/`) does NOT include a `publish-package.yml.tmpl` — this workflow is manually
-      `cp`'d per repo per its own header comment, not rolled out by that script. The canonical source-of-truth copy
-      is `unified-trading-pm/scripts/propagation/templates/publish-package.yml` (also fixed).
-- [ ] [BACKEND] P2. **Propagate the `tags: ["v*"]` fix to every OTHER wheel-publishing repo's own
-      `.github/workflows/publish-package.yml` copy** (e.g. unified-trading-library, unified-cloud-interface) — only
-      `unified-api-contracts` was fixed live (2026-08-21, it was the repo causing this instance's failure). No
-      automated rollout script covers this file (confirmed: not in `rollout-workflow-templates.sh`'s
-      `TEMPLATE_DIR`), so this is manual per-repo `cp` from the now-fixed
-      `scripts/propagation/templates/publish-package.yml`.
+- [ ] [BACKEND] P2. **Add `tags: ["v*"]` to the per-repo `publish-package.yml` trigger** (or have semver-agent dispatch
+      the publish with the minted version) so a release wheel is published after the tag lands. Edit the template +
+      roll out via `rollout-workflow-templates.sh`; verify with the next breaking release. Repo: unified-trading-pm
+      (template) + every wheel-publishing repo.
 
 ## Progress Log
-
-- **2026-08-21 (cicd escalation agt-0efe8e, slot-32·planning)** — Recurrence for strategy-service (build
-  17377c02 FAILURE, then re-queued build 541345c5 also FAILURE, both on `unified-api-contracts>=0.159.0` vs
-  GAR's `0.158.1.dev1+gae56a4f9f`). Confirmed same race: UAC tag `v0.159.0` existed (`ae56a4f9f`) but the wheel
-  never published. Immediate unblock: manually re-dispatched `publish-package` repository_dispatch for
-  `unified-api-contracts@ae56a4f9f` → `0.159.0` published to AR (`2026-08-21T12:36:34Z`); re-triggered
-  `strategy-service-build` trigger (`9caa93b0-bb1d-4052-a928-c262e76ff7ef`) →
-  **`Evidence: cloudbuild=97f20649-1503-4dec-9120-3d3b3060a612` — SUCCESS**, fresh `strategy-service:latest`
-  digest pushed. Root-cause fix (this doc's sole todo, previously unimplemented) applied and shipped:
-  added `tags: ["v*"]` to `unified-api-contracts/.github/workflows/publish-package.yml`
-  (`Evidence: unified-api-contracts@42e319f5` via quickmerge) and to the canonical template
-  `unified-trading-pm/scripts/propagation/templates/publish-package.yml`. No open repo-blockers found
-  (`GET /api/repo-blockers` → `{"open": []}`). Fleet-wide propagation to every other wheel-publishing repo's
-  own copy remains open — see corrected todo above.
 
 - **2026-08-20 (cicd escalation agt-18cf35, slot-7·planning)** — Diagnosed, fixed, verified. Root-caused the
   instruments-service prod build failure to the publish/semver tag race above; re-published
