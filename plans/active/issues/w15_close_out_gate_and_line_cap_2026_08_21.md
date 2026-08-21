@@ -103,6 +103,12 @@ real headroom for the 11 open todos' own eventual Progress Log entries.
 - [ ] [AGENT] P2. Once the 11 items listed under "What I found" are all done or explicitly re-scoped, re-run
       the close-out gate-check (`grep -n "^- \["` against the plan, cross-check the epic's W15 section is still
       accurate) and flip both close-out checkboxes. (repo: unified-trading-pm)
+      **Re-checked 2026-08-21 (slot 19), gate still NOT met**: 6 of the original 11 items were already
+      done/re-scoped, and the sports-exchange audit phase (one of the 2 remaining unstarted phases) has now been
+      completed (see the plan's own Progress Log for the full checklist writeup) — but that audit surfaced 3 new
+      genuine P0 findings (tracked as new triage todos in the plan) plus the sports-unity phase is still fully
+      unstarted, so the close-out checkboxes in both this doc and the plan stay `[ ]`. Current blocker count: 5
+      (4 new triage todos + the sports-unity audit phase), down from 11. Re-run again once those clear.
       **➡️ DUPLICATE OF** `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`'s own
       close-out todo (2026-08-21 dedup pass, verified `status: active`, its close-out checkbox confirmed still `[ ]`
       per that plan's own 2026-08-21 Progress Log) — the same gate-check + checkbox-flip is tracked there.
