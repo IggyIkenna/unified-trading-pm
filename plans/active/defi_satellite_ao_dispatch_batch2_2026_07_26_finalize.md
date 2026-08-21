@@ -88,7 +88,7 @@ context_scope:
       `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s own identical `status: active` choice).
       `lst_rate_honest_coverage_2026_07_21.md`'s Phase 5 #2 item correctly stays open/unflipped — batch2's own citing
       todo explicitly verified-but-declined to force-close it (backfill genuinely not done yet). Evidence:
-      unified-trading-pm@\<pending\>.
+      unified-trading-pm@832b8de031.
 - [ ] [REVIEW] P1. **Re-check the 3 conflict-gated + 11 operator-gated + 3 time-gated + 1 too-large-or-risky + 2
       human-only Deferred items from batch2's own doc**, now that time has passed and batch2's own todos have landed.
       For each of the 20 Deferred items: re-read the specific gating ground to check if it has since cleared — if so,
