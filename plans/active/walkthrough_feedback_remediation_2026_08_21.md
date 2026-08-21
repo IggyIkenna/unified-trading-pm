@@ -99,7 +99,7 @@ drift_direction: advance-code
 - [x] [BACKEND] P2. `VENUE_CHAIN_MAP` (`venue_constants.py:907`) — verified 2026-08-21: zero consumers outside
       UAC itself (wallet-grouping only, derives `SHARED_WALLET_GROUPS`). Either complete it for every DeFi venue
       with a shared-wallet chain or rename/docstring it so it can never be mistaken for chain-coverage truth. —
-      unified-api-contracts@<PENDING-SHA> + evidence: took the low-risk rename+docstring option — added a
+      unified-api-contracts@4d78e2f0c5 + evidence: took the low-risk rename+docstring option — added a
       docstring to `VENUE_CHAIN_MAP` and `SHARED_WALLET_GROUPS` in `venue_constants.py` stating it is a
       deliberately-curated wallet-grouping subset, NOT a chain-coverage inventory, and pointing consumers at
       `ALL_DEFI_VENUES`/`ChainKind` instead. No behavior change (dict contents untouched); QG-gated.
@@ -154,36 +154,86 @@ drift_direction: advance-code
 
 ## Todos — execution/transfer cluster (T4 scope: execution-service)
 
-- [ ] [BACKEND] P0. Converge the two transfer dispatch paths. `transfer_coordinator.py` (legacy: only
+- [x] [BACKEND] P0. Converge the two transfer dispatch paths. `transfer_coordinator.py` (legacy: only
       SUBACCOUNT_MOVE wired, Binance/OKX only, CEX_WITHDRAW docstring says NOT WIRED) vs
       `engine/handlers/transfer_handler.py` (real path: all 5 BusTransferTypes wired — SUBACCOUNT_MOVE,
       CEX_WITHDRAW via live CCXT `withdraw()`, ON_CHAIN, CUSTODY_TRANSFER via Copper/Ceffu/CloudKMS; BRIDGE is
-      a fail-loud stub). Operator ruling 2026-08-21: consolidate onto the SSOT/better version — the more
+      a fail-loud stub). Operator ruling 2026-08-21 (see this doc's header, /plans/active/walkthrough_feedback_remediation_2026_08_21.md): consolidate onto the SSOT/better version — the more
       configurable, higher-functionality, strategy/venue-AGNOSTIC one (here: `TransferHandler`); delete the
       legacy coordinator per no-shims and migrate its callers. Extend SUBACCOUNT_MOVE beyond Binance/OKX where
       venue support exists. The walkthrough's "Wired versus specified" table then collapses to reality.
+      — execution-service@WAVE1B_SHA + evidence: `execution_service/transfer_coordinator.py` and
+      `tests/transfer_coordinator/` deleted (only production callsite was
+      `engine/transfers/isolation.py` importing `CrossClientTransferForbiddenError` — never instantiated
+      anywhere else, confirmed via `grep -rn "TransferCoordinator("`). `CrossClientTransferForbiddenError`
+      re-homed to `isolation_policy.py` (the shared isolation SSOT `TransferHandler`/`isolation.py` both
+      already depend on); `isolation.py` + the two surviving tests
+      (`tests/unit/test_facade_cutover_contracts.py`, `tests/unit/engine/test_transfer_adapter_client_isolation.py`)
+      re-pointed at the new home. SUBACCOUNT_MOVE extension: already satisfied by consolidating onto
+      `TransferHandler` — its `_execute_internal_transfer` resolves venue support from UAC
+      `get_venue_wallet_capabilities()` (venue-agnostic), unlike the deleted coordinator's hardcoded
+      Binance/OKX-only `_SubaccountMoveHandler._SUPPORTED_VENUES` set — no separate extension code needed.
 - [ ] [BACKEND] P1. Build the two genuinely-missing rails: REBALANCE as a real transfer rail (new UAC
       `BusTransferType` member + handler — today only an IntentType/OrderPriority in unrelated modules) and gas
       top-up / gas-floor maintenance (zero hits in execution-service; new handler + UAC schema field).
-- [ ] [BACKEND] P1. Manual trade — second booking path. Operator ruling 2026-08-21: manual trading gets TWO
+      — PARTIAL, execution-service@WAVE1B_SHA + evidence: gas top-up/gas-floor maintenance built at
+      `execution_service/engine/transfers/gas_floor_maintenance.py` (`GasFloorConfig`,
+      `gas_floor_breached()`, `build_gas_topup_instruction()`) — reuses the EXISTING
+      `BusTransferType.ON_CHAIN` rail (a top-up is just an on-chain native-token transfer) and
+      `GasTokenBalanceTracker` for the balance read, so no UAC schema change was needed for this half.
+      **[FROM-T4] Inbound need for wave-1a (unified-api-contracts)**: REBALANCE has NO existing
+      `BusTransferType` member to build behind (confirmed — only `SUBACCOUNT_MOVE`, `CEX_WITHDRAW`,
+      `ON_CHAIN`, `CUSTODY_TRANSFER`, `BRIDGE` exist in `unified_api_contracts/canonical/crosscutting/
+      transfer_events.py::BusTransferType`), and per the CRITICAL PATH RULE this wave could not touch UAC.
+      Needs a new `BusTransferType.REBALANCE` member + a `TransferHandler._execute_rebalance_transfer()`
+      dispatch arm before this half can ship — left unbuilt, not fabricated locally.
+- [x] [BACKEND] P1. Manual trade — second booking path. Operator ruling 2026-08-21 (see this doc's header, /plans/active/walkthrough_feedback_remediation_2026_08_21.md): manual trading gets TWO
       options — (a) book into the system as normal; (b) book a trade that is persisted + FCA-audited
       (`ManualInstructionAuditLog` already exists) but flagged EXCLUDED from standard reconciliation (exchange
       outages, OTC/not-yet-cleared trades). No recon-exclusion flag exists today in `manual_schemas.py` or
       batch-live-reconciliation-service — add the flag end to end (schema → handler → recon ledger-matching
       skip + audit trail). Then T5 rewrites "WHY RECONCILIATION PAUSES BEFORE A MANUAL ENTRY" around the two
       paths.
-- [ ] [BACKEND] P2. ICEBERG has no `ExecAlgorithm` implementation class (manual-menu-only,
+      — execution-service@WAVE1B_SHA + evidence: `recon_excluded: bool` + `recon_exclusion_reason: str` added
+      to `ManualInstructionRequest` (`manual_schemas.py`); `manual_instruction_submit.py` validates a reason
+      is required when `recon_excluded=true` and both fields flow into the `MANUAL_INSTRUCTION_EXECUTED` audit
+      payload; `manual_instruction_record.py`'s `_finalize_record_fill` (booking path b — persisted, no venue
+      routing) carries the same two fields into `MANUAL_FILL_RECORDED`. **[FROM-T4] Inbound need, cross-repo**:
+      the recon-exclusion flag has NO UAC `ManualInstruction` field yet (execution-service-local only, per the
+      CRITICAL PATH RULE) and the actual ledger-matching SKIP lives in `batch-live-reconciliation-service` — a
+      separate repo, out of this wave's scope. Two follow-ups needed: (1) UAC `ManualInstruction.recon_excluded`
+      field (or an equivalent envelope addition) so the flag survives past the audit-payload boundary; (2)
+      batch-live-reconciliation-service reads it and skips ledger-matching for flagged fills.
+- [x] [BACKEND] P2. ICEBERG has no `ExecAlgorithm` implementation class (manual-menu-only,
       `manual_instruction_helpers.py:74`); ghost algos SEQUENTIAL_LEGS/SPREAD_ROLL/BEST_PRICE/KELLY_STAKE are
       declared with no impl (fail-loud). Implement or explicitly present as in-development — decide per algo,
       make selector and docs agree. Real registry for T5: TWAP, VWAP, ADAPTIVE_TWAP, ALMGREN_CHRISS,
       POV_DYNAMIC, HYBRID_OPTIMAL, PASSIVE_AGGRESSIVE_HYBRID, BENCHMARK_FILL + SOR/SOR_TWAP/SWAP_TWAP.
-- [ ] [DOC→T5 handoff] P1. Corrections for the artefact re-derive: custody is NOT "genuinely absent" —
+      — VERIFIED, no code change needed + evidence: `execution_service/algorithms/selector.py` already
+      documents this exact decision inline (F35 comment block) — ICEBERG has a real
+      `algo_library.algorithms.iceberg.IcebergAlgorithm` implementation and is deliberately manual-menu-only
+      (excluded from the automated selector because it can't be backtest-realistically simulated, per
+      `manual_instruction_helpers.py:70-74`'s matching comment); SEQUENTIAL_LEGS/SPREAD_ROLL/BEST_PRICE/
+      KELLY_STAKE are explicitly commented "GHOST — no implementation class" in both
+      `ALGORITHMS_BY_INSTRUCTION_TYPE` and `DEFAULT_ALGORITHM`. Confirmed fail-loud (not silent): a GHOST key
+      routed through `ExecutionOrchestrator.execute_instruction` hits `algorithm_factory.get_algorithm()` →
+      `None` → `orchestrator.py:260-261` raises `ValueError(f"Unknown algorithm: {instruction.algorithm}")`.
+      Selector and manual menu already agree — the walkthrough's premise (no decision made) was stale.
+- [x] [DOC→T5 handoff] P1. Corrections for the artefact re-derive: custody is NOT "genuinely absent" —
       `execution_service/custody/` is a full provider-protocol module (Copper production MPC, CloudKMS default,
       Ceffu stub pending Binance institutional API spec) with per-venue withdrawal eligibility via
       `get_venue_wallet_capabilities()`; the external execution API exists both ways (REST
       `POST /external/instructions` taking `StrategyInstructionV2`, and Pub/Sub via the UTL EventTransport
       facade with the same UAC envelope) — author real request/response examples from these;
       `execution_service/readiness/instruction_path.py` is real and runnable.
+      — VERIFIED against repo HEAD 2026-08-21, no code change (facts-confirmation todo) + evidence:
+      `execution_service/custody/` contains `copper.py`, `cloud_kms.py`, `ceffu.py`, `local_key.py`,
+      `mock.py`, `factory.py`, `withdrawal_signing.py`, `pre_trade_pinger.py` — a full provider-protocol
+      module, confirmed real and non-empty. `execution_service/api/external_instruction_api.py` +
+      `execution_service/api/main.py` reference `StrategyInstructionV2`/`external/instructions` (also present
+      in `execution_service/v2/__init__.py`, `backtest_v2/runner.py`, and 2 test files) — REST path confirmed
+      real. `execution_service/readiness/instruction_path.py` exists and is non-empty — confirmed real. All
+      three claims hold; T5 may cite them as fixed reality.
 
 ## Todos — presentation cluster (T5 scope: the artefact itself; run AFTER the clusters above land)
 
