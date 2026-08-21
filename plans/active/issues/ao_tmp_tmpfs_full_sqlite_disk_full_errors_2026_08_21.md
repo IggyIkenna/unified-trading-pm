@@ -101,11 +101,11 @@ Codex-SSOT updated in the same commit: `/codex/05-infrastructure/shared-host-tmp
 ## Not yet done
 
 - [x] [INFRA] P0. Identify what's actually filling the 8GB `/tmp` tmpfs and clear/rotate it — see Resolution above.
-- [ ] [INFRA] P1. Once cleared, decide whether 8GB is simply undersized for this host's real tmpfs usage (raise the
-      cap) or whether something is genuinely leaking/not cleaning up after itself into `/tmp` (fix the leak) —
-      don't just clear it once and let it silently refill. Partially addressed by the sub-hourly root timer above,
-      but the underlying question (should `codex-bridge.service` even have `PrivateTmp=yes`, given it now needs a
-      second privileged reaper to compensate for the isolation it creates?) is still open.
+- [x] N. ✅ [INFRA] P1. Decided 2026-08-21 per D36 ruling (ADOPTED-REC, autonomous-dispatch authority: "Keep the
+      reaper — shipped and verified; revisit only on recurrence"): keep `codex-bridge.service`'s `PrivateTmp=yes`
+      and the sub-hourly root-owned reaper timer as the standing fix; do not raise the 8GB cap or remove
+      `PrivateTmp` pre-emptively. Revisit only if the tmpfs-full condition recurs. Ledger: D36,
+      /plans/active/issues_corpus_completion_dispatch_2026_08_21.md.
 - [ ] [INFRA] P2. Commit the new `tmp-privatetmp-reaper.service`/`.timer` unit files + an install script into
       agent-orchestrator (matching the existing `codex-bridge.service` checked-in-unit-file pattern) so this is
       reproducible/version-controlled rather than a hand-deployed VM snowflake — currently only live via direct SSM
@@ -133,3 +133,6 @@ Codex-SSOT updated in the same commit: `/codex/05-infrastructure/shared-host-tmp
   `/codex/05-infrastructure/per-tab-worktrees.md`) discarded the uncommitted edits once; recovered by reconstructing
   from conversation context and committing immediately. Live-verified: `/tmp` 100%→71% used mid-sweep, zero false
   removals (liveness-gate held), codex-bridge.service itself never touched/restarted throughout.
+- **2026-08-21 — ruling D36 (tmpfs sizing vs PrivateTmp)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Keep the reaper — shipped and verified; revisit only on recurrence. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

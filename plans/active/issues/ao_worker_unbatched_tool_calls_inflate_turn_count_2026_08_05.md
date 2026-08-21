@@ -29,6 +29,7 @@ related:
     /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
   ]
 created: 2026-08-05
+last_updated: 2026-08-21
 author: ikennaigboaka [interactive session]
 parent_epic: orchestrator_master
 priority: P2
@@ -85,9 +86,12 @@ them"), but the instruction is not being followed in practice, at least in this 
       `agents/worker.md`'s STEP 1 (the exact boot-sequence reads the original sample caught firing sequentially), plus a
       tight cross-referencing one-liner in `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (budget-constrained —
       9832/10240 bytes after the edit, so it points back to worker.md's example rather than duplicating it).
-  - [ ] [INFRA] P3. **Consider a soft turn-count circuit breaker** — no mechanism today stops a task at 150-200+ turns;
-        a checkpoint/flag past a threshold would catch both this batching gap and any genuine stuck loop, and composes
-        with the existing `deepseek_flash_ab_routing_test_2026_08_05.md` quality-audit's turn-count metric.
+  - [ ] [INFRA] P3. Per D37 ruling (ADOPTED-REC 2026-08-21: "Monitoring-only first — cheapest, reversible, sizes
+        the threshold with real data"): build a monitoring-only turn-count signal (log + surface a warning past a
+        chosen threshold, e.g. 150-200 turns) — no enforcement/kill yet, just visibility to size a real threshold
+        from live data before ever building an enforced circuit breaker. Composes with the existing
+        `deepseek_flash_ab_routing_test_2026_08_05.md` quality-audit's turn-count metric. Done-when: the monitoring
+        signal is live and at least one real threshold-crossing has been observed and recorded.
 
 ## Codex / related
 
@@ -197,3 +201,6 @@ them"), but the instruction is not being followed in practice, at least in this 
   `ao_satellite_ao_dispatch_batch7_2026_08_06.md`.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item ("consider a soft turn-count circuit breaker") is an unscoped design fork with no committed threshold/mechanism, unchanged since 2026-08-10.
+- **2026-08-21 — ruling D37 (Turn-count circuit breaker)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Monitoring-only first — cheapest, reversible, sizes the threshold with real
+  data. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

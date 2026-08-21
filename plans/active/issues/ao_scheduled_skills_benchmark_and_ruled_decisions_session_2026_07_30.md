@@ -32,7 +32,7 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.5
 assigned_role: NA
 drift_direction: flat
-last_updated: 2026-08-16
+last_updated: 2026-08-21
 source: ["2026-07-30 AO scheduled-skills benchmark + ruled-decisions execution session"]
 resolved_by:
 locked_by:
@@ -244,16 +244,13 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   done-but-unchecked, 25 zero-checkbox, 56 AO-readiness, 16 codex-drift findings — 4 days stale as of this check, and
   that doc is itself still being actively re-verified piecemeal by today's sharded runs (multiple "verified
   2026-08-16" entries already present in it as of this check).
-- [ ] [SCRIPT] P2. **New finding 2026-08-16 (from the batch21 plan-reconcile re-ask above)**: verify whether
-      `/plan-reconcile` SKILL.md's documented weekly Sun-Fri-sharded/Saturday-unsharded cadence is actually
-      implemented anywhere (the dispatched job logic, not the timer unit) — the installed
-      `agent-orchestrator/scripts/install-plan-reconciler-timer.sh` OnCalendar spec (`*-*-* 0/2:${FIRE_MINUTE}:00
-      UTC`) fires every 2 hours with no visible day-of-week gate at the timer level, so either (a) the day-of-week
-      branch lives in the dispatched job and just wasn't inspected this pass, or (b) the documented weekly quiet-day
-      design was never wired into the installed job and every 2-hourly fire is sharded, meaning a genuinely clean SOLO
-      whole-corpus run can currently only happen via a manual operator-paused window. **Done when**: the actual branch
-      is located (or confirmed absent) and, if absent, either implemented or SKILL.md corrected to match reality.
-      Repo: agent-orchestrator (timer/dispatch logic) or unified-trading-pm (SKILL.md, if it's the doc that's stale).
+- **[SCRIPT] P2. CANCELLED — SUPERSEDED 2026-08-21 (D1 ruling, ADOPTED-REC 2026-08-21, autonomous-dispatch
+  authority: "approve all — repeated audits agree these are churn, not live tasks"): closing as churn — this is
+  recursive meta-work about the scheduled-skills family's own cadence, the same class 5+ na-eligibility-audit
+  passes (2026-08-01 through 08-17) already judged non-bounded/non-executable. Original ask preserved for history:
+  verify whether `/plan-reconcile` SKILL.md's documented weekly Sun-Fri-sharded/Saturday-unsharded cadence is
+  actually implemented (the installed `install-plan-reconciler-timer.sh` OnCalendar fires every 2h with no visible
+  day-of-week gate) — either the branch lives in the dispatched job unexamined, or the design was never wired in.**
 - [ ] [SCRIPT] P1. **Scope narrowed 2026-08-19 (plan_reconciler, cross-cutting) — the Phase-0 half is already
       delivered, contradicting this todo's own unqualified framing below.** The 2026-08-16
       `/na-eligibility-audit` Phase-0 steady-state benchmark (449 `assigned_vm: NA` docs / 1,516 open todos /
@@ -300,7 +297,11 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       `git pull --ff-only` before reading/writing this checkout (in which case this is transient and self-healing) or
       whether dispatched workers can silently operate against/commit on top of a badly stale tree. Worth a quick read of
       one scheduled skill's SKILL.md STEP 0 to confirm, and if there's no pre-work pull, add one.
-- [ ] [DOC] P2. Update the published benchmark artifact
+- **[DOC] P2. CANCELLED — SUPERSEDED 2026-08-21 (D1 ruling, ADOPTED-REC 2026-08-21, autonomous-dispatch
+  authority: "approve all — repeated audits agree these are churn, not live tasks"): closing the remaining
+  "final status of every ruled decision" half as churn — a full ledger-reconciliation re-pass over this
+  already-40-decision doc is exactly the recursive meta-work class D1 rules on.** Original ask + partial-progress
+  evidence preserved below for history. Update the published benchmark artifact
       (`https://claude.ai/code/artifact/246c4f9a-c3c8-4643-b099-d7023f7c17a4`) with the clean re-run numbers once both
       of the above land, and with the final status of every ruled decision above (shipped / still-open /
       superseded-by-concurrent-work). — **Partially done 2026-08-17 (batch21_finalize todo 1, slot 26)**: the
@@ -317,7 +318,8 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       whoever owns it) with a note on the new page pointing back to it for provenance. **Still open**: the
       "final status of every ruled decision above" half — that's a separate, much larger ledger-reconciliation ask
       than batch21_finalize todo 1's narrower "cite the two fresh reports" scope; left for whoever next works this
-      checkbox (or a dedicated follow-up) to do a full pass over every ruled decision in this doc.
+      checkbox (or a dedicated follow-up) to do a full pass over every ruled decision in this doc. **CLOSED per D1
+      2026-08-21 — see the CANCELLED marker above.**
 - [x] [OPERATOR] P2. **4 timer-script edits were NEVER APPLIED** (agent-orchestrator repo) — `TimeoutStartSec` bump
       2450->6000 for `plan-reconciler.timer`, cadence change hourly->every-2h for `plan-reconciler`/
       `ag-closeout-auditor`/`na-eligibility-auditor` (the latter two offset to even/odd hours so their 9-concurrent
@@ -431,3 +433,9 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 - **na-eligibility-audit 2026-08-17** [body-hash:ee8d243f1bd1ccae]: KEEP-NA, valid -- Session-checkpoint ledger with FOUR consecutive na-eligibility-audit reaffirmations (2026-08-01, 08-03, 08-06, 08-07) all concluding the remaining items are soft/low-value internal benchmark re-run asks, none independently worker-executable. The two benchmark re-run todos (263, and by extension 253/292's cadence-audit item) are recursive meta-work about this very skill family, explicitly judged non-bounded by the same audit type across 4 rounds. Item 292's own prior citation (2026-08-03 entry, this same cross-cutting tranche) explicitly found the fix 'touches every scheduled skill's boot sequence' -- a multi-file change to live-dispatch-critical-path AO scheduling code, matching the bounded-outcome-bar caution against treating a clean-sounding todo as bounded when it is actually fleet-wide. Item 301 is explicitly gated on the other two landing first.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — reaffirms the chain of 5 prior audit passes (2026-08-01 through 08-17), unchanged: session-checkpoint ledger whose remaining open items (two internal benchmark re-run asks recursively about this very skill family, a PM-checkout-staleness follow-up that touches every scheduled skill's live-dispatch-critical boot sequence — explicitly not a small fix, and a benchmark-artifact-update item gated on the other two) are none independently worker-executable as a bounded outcome.
+- **2026-08-21 — ruling D1 (Stale meta-doc disposition)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve all — repeated audits agree these are churn, not live tasks; the two
+  keep-open items and the one split are the only exceptions. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. Applied: cancelled the cadence-audit
+  finding and the benchmark-artifact "final status" half as churn (see Todos above). The PM-checkout-staleness
+  follow-up (a real fleet-wide boot-sequence fix, not churn) is left open as one of the "keep-open" exceptions.
