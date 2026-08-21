@@ -144,7 +144,7 @@ ten below were rejected on numbers that were available before signup, and three 
 | **Kimi K2.6**           | ❌ rejected                 | $0.95/$4.00, 80.2%, 262K ctx — above DeepSeek on price, below on benchmark and context. No distinct hypothesis.                                                                                                                                                                                                                     |
 
 > **🟡 Kimi conclusion partially superseded 2026-08-16** — see
-> `/plans/active/kimi_gemma_provider_onboarding_2026_08_16.md`. The per-token dominance finding above likely still
+> `/plans/archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md`. The per-token dominance finding above likely still
 > holds (pending live re-verification, not assumed) — this is NOT a reversal of that number. What changed is the
 > **distinct hypothesis** this table's own selection rule requires (§ "The selection rule this register produced"
 > below): Moonshot offers a flat-rate/subscription "max plan" capacity tier with no DeepSeek equivalent at any price
@@ -164,7 +164,7 @@ The operator's candidate list was **gemini · deepseek · kimi · glm · qwen ·
 | gemini      |  ✅   |   ✅    | free key; Flash serves, `gemini-3.1-pro-preview` 429s on free-tier quota       |
 | deepseek    |  ✅   |   ✅    | paid, `DEEPSEEK_OK` routed in 1,979 ms — the incumbent                         |
 | glm (`zai`) |  ✅   |   ❌    | key valid, zero balance (`1113`) — one top-up from working                     |
-| kimi        |  ❌   |    —    | not wired; register recommends against on price (pricier than DeepSeek, no edge) — 🟡 revisited 2026-08-16 on a capacity/max-plan hypothesis instead, see `/plans/active/kimi_gemma_provider_onboarding_2026_08_16.md` |
+| kimi        |  ❌   |    —    | not wired; register recommends against on price (pricier than DeepSeek, no edge) — 🟡 revisited 2026-08-16 on a capacity/max-plan hypothesis instead, see `/plans/archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md` |
 | qwen        |  ❌   |    —    | not wired; register recommends against (3.4× input / 5× output vs DeepSeek)    |
 | openai      |  ❌   |    —    | not wired; **deferred, not rejected** — the 272K long-context cliff, see below |
 

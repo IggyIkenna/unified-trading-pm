@@ -587,7 +587,7 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. **BLOCKED-UPSTREAM (T1/UAC), reconciliation half DONE.** Complete the `InstrumentRecord` schema
       ADD/REMOVE reconciliation against adapter kwargs and flip `extra='forbid'`. Adapter kwargs are silently
       dropped on mismatch today. Evidence:
-      `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`.
+      `/plans/archive/2026_08/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`.
       **2026-08-20 (T2, `/autonomous`)** — the reconciliation half is fully done, this tranche's own work: all 6
       systemically-dropped kwargs dispositioned (5 REMOVE incl. this session's `min_order_size`, 1 rename-fix),
       every caller fixed (`instruments-service@ee2d6c75`, `@588f35aeb0`). What remains is ONLY the

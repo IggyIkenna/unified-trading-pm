@@ -24,7 +24,7 @@ tags: [agent-orchestrator, autospawn, account-failover, fleet-capacity]
 related:
   [
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
-    /plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md,
+    /plans/archive/2026_08/multi_provider_model_capability_bakeoff_2026_08_19.md,
     /plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/archive/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md,
@@ -194,7 +194,7 @@ stated, including gemini-flash-lite-class models as valid substitutes for non-st
 A model with no equivalent anywhere doesn't need special-case "globally-unique" machinery
 (superseding the todo below that assumed it would) — it's simply alone in its own equivalence class
 once the registry exists. **Real eval-backed clustering already has a plan, found 2026-08-19**:
-`/plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md` (slot-1, active) runs 6
+`/plans/archive/2026_08/multi_provider_model_capability_bakeoff_2026_08_19.md` (slot-1, active) runs 6
 non-Anthropic models (2x Gemini, 2x GLM, Gemma, Codex/Luna — Claude tiers deferred to a later pass)
 against 36 real backlog-task attempts, scored + profiled per (model, complexity-tier) — its
 Progress Log's synthesized summary table is what should eventually replace this flat placeholder
@@ -343,7 +343,7 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
       update the equivalence-class registry built above, not a fresh benchmark. Repo:
       agent-orchestrator.
 - [x] [OPERATOR] P3. **Future eval-benchmark plan — found 2026-08-19, already exists and is
-      active**: `/plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md` (slot-1).
+      active**: `/plans/archive/2026_08/multi_provider_model_capability_bakeoff_2026_08_19.md` (slot-1).
       Superseded this todo's original "not yet scoped" framing — see the todo directly above for
       the concrete follow-through once it completes.
 

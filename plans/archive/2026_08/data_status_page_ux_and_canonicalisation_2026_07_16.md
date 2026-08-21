@@ -56,7 +56,7 @@ depends_on:
 source: operator request 2026-07-16 (data-status page review) + multi-agent audit workflow wf_872e8051-00a
 context_scope:
   [
-    /plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md,
+    /plans/archive/2026_08/instrument_record_schema_completeness_extra_forbid_2026_07_18.md,
     /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/availability-manifest-and-data-status.md,
@@ -266,7 +266,7 @@ catalogue browser — completed checkbox evidence". The still-open todo (the `In
 side-discovery) stays below, unmoved.
 
 - [x] ✅ [DATA] P3. **DEDUPED 2026-08-02 — resolved-by-reference, not by completion.** This finding already has its own
-      proper home: `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md` (filed the same day,
+      proper home: `/plans/archive/2026_08/instrument_record_schema_completeness_extra_forbid_2026_07_18.md` (filed the same day,
       same operator ruling) tracks the actual `extra='forbid'` + workspace-grep + prediction-title remediation work end
       to end (currently 4 open todos there). Closing the duplicate pointer here to stop double-bookkeeping the same
       finding in two docs — see that plan for live status, not this one. DECIDED (operator 2026-07-18: extra='forbid' +

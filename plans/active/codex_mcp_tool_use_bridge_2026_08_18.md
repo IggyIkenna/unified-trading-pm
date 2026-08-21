@@ -16,7 +16,7 @@ tags: [agent-orchestrator, codex, luna, mcp, tool-use, model-routing, multi-prov
 related:
   [
     /plans/active/codex_luna_flex_bridge_2026_08_14.md,
-    /plans/active/kimi_gemma_provider_onboarding_2026_08_16.md,
+    /plans/archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md,
     /codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md,
   ]
 created: "2026-08-18"
