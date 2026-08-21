@@ -192,12 +192,17 @@ source: >-
       (market-tick-data-service@8addeac2). Full evidence in
       `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`'s new "Findings — sibling
       parameter audit (2026-08-21)" section. Evidence: unified-trading-pm@<pending>.
-- [ ] [AGENT] P2. **Sweep the three external routers for silent-no-op parameters generally**
+- [x] ✅ [AGENT] P2. **Sweep the three external routers for silent-no-op parameters generally**
       (`instruments-service/.../external.py`, `market-tick-data-service/.../external.py`,
       `execution-service/.../external_instruction_api.py`) — a parameter accepted, silently ignored, and returning
       200 is indistinguishable from a working one. Pure investigation/report, no fix. Done when: each router has a
       recorded list of any silent-no-op parameters found (or a clean verdict). Source:
-      `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md` todo 3.
+      `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md` todo 3. **Done 2026-08-21** —
+      instruments-service + MTDS routers CLEAN; execution-service `external_instruction_api.py` NOT CLEAN, 3
+      confirmed silent-no-op fields (`TradeInstruction.stop_loss_price`/`take_profit_price`,
+      `BridgeInstructionV2.bridge_hint`, `QuoteInstruction.skew_on_inventory`). Full evidence in
+      `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`'s new "Findings — general sweep of
+      the three external routers for silent-no-op parameters (2026-08-21)" section. Evidence: unified-trading-pm@<pending>.
 
 ## From `main_backmerge_backmerge_cycle_reverts_caller_stub_comment_fix_2026_08_20.md`
 

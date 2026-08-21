@@ -145,8 +145,35 @@ jobs:
           # A mismatch against the payload is a real provenance problem (the dispatch asked for
           # one version, the tree builds another), but the WHEEL is the truth — publish that and
           # make the disagreement loud rather than silently relabelling.
+          #
+          # SPLIT INTO TWO CASES 2026-08-21 (ci_reconciler). This used to `::warning::` on EVERY
+          # mismatch and publish the mislabelled wheel regardless — which is precisely how a
+          # tagged release silently ends up with no wheel at all. Measured: unified-api-contracts
+          # v0.157.0 + v0.158.0 have NO wheel in AR (it went 0.157.1.dev1 → 0.158.1.dev1 →
+          # 0.159.0), and unified-trading-library published only `.devN` for 11 of its last 12
+          # tags. Consumers are pinned to the RELEASE floor by the version-bump fan-out, so each
+          # lost release wheel breaks every dependent repo's image build on a version that will
+          # never resolve — discovered hours later via a failed Cloud Build instead of here.
+          #
+          #   - `.devN`/unknown PAYLOAD  → the ordinary commit-push run, firing before the tag
+          #     exists. Publishing a devN there is correct and expected; stays a warning.
+          #   - CLEAN RELEASE payload    → the tag-push run. If it cannot build the matching
+          #     wheel, the release is LOST. Fail loudly (this workflow already pages #ci-failures
+          #     on failure) rather than publishing a devN nobody can consume.
           if [ "$BUILT_VERSION" != "$VERSION" ]; then
-            echo "::warning::Version mismatch — dispatch payload=$VERSION, built wheel=$BUILT_VERSION. Publishing the BUILT version."
+            case "$VERSION" in
+              *.dev*|unknown|"")
+                echo "::warning::Version mismatch — dispatch payload=$VERSION, built wheel=$BUILT_VERSION. Publishing the BUILT version (dev-hint payload = normal commit-push path)."
+                ;;
+              *)
+                echo "::error::Release wheel NOT produced — dispatch named release $VERSION but the build produced $BUILT_VERSION."
+                echo "  Refusing to publish: $VERSION would never reach Artifact Registry, and every consumer the"
+                echo "  version-bump fan-out pins to >=$VERSION would fail its image build on an unresolvable version."
+                echo "  Usual cause: the checkout's HEAD is AHEAD of the v$VERSION tag, so hatch-vcs computes a .devN."
+                echo "  Recovery: re-dispatch publish-package with commit_sha = the v$VERSION tag target."
+                exit 1
+                ;;
+            esac
           fi
           echo "built_version=$BUILT_VERSION" >> "$GITHUB_ENV"
 
@@ -288,8 +315,7 @@ jobs:
     if: always()
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message:
-        "Package publish | ${{ github.event.client_payload.repo }} v${{ github.event.client_payload.version }} |
+      message: "Package publish | ${{ github.event.client_payload.repo }} v${{ github.event.client_payload.version }} |
         Registry: asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries"
       # This job runs IN unified-trading-pm; the alert is ABOUT the published repo
       # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).

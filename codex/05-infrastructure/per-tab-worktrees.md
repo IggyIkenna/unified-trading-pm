@@ -1285,22 +1285,45 @@ or the child PID) — never a bare `pkill -f <script-basename>` / `pkill <name>`
 DIFFERENT slot's live QG run. Two same-day recurrences (2026-07-28, slots 13 and 5) proved a RULES.md prose addendum
 alone does not prevent the mistake under time pressure — enforcement moved from documentation to a mechanical guard.
 
-**Fix**: `scripts/hooks/pkill-guard.sh` defines `pkill()`/`pgrep()` shell functions that shadow the real binaries —
-ALLOW an exact numeric `-g/-G/-P/-s/-U/-u/-T` target, or a pattern containing the caller's own `.tabs/<N>/` cwd
-substring (derived from `$PWD`); REFUSE (one-line stderr explanation, exit 1) any bare name/pattern lacking both. This
-is a footgun-guard, not a security boundary — `command pkill ...` / an absolute path deliberately bypasses it (same as
-any bash wrapper function), and it cannot intercept a non-shell caller (e.g. a Python `subprocess.run(["pkill", ...])`).
+**Current mechanism (recurrence #4 fix, 2026-08-21) — a PATH-prepended BINARY wrapper, not a shell function.**
+`scripts/hooks/pkill-guard-bin/{pkill,pgrep}` are thin executable scripts (prepended onto `PATH` ahead of the real
+`/usr/bin/pkill`/`pgrep`) that source `pkill-guard.sh`'s check logic and fall through to the real binary when safe.
+This same check logic (ALLOW an exact numeric `-g/-G/-P/-s/-U/-u/-T` target, or a pattern containing the caller's own
+`.tabs/<N>/` cwd substring derived from `$PWD`; REFUSE — one-line stderr explanation, exit 1 — any bare name/pattern
+lacking both) is unchanged from the original design; what changed is HOW it's installed, because both earlier
+approaches were dead-on-arrival for the exact case that matters most:
 
-**Install**: `scripts/dev/install-pkill-guard-shell-env.sh` writes a managed block into `~/.bashrc`/`~/.zshrc` (mirrors
-the uv-cache / gcloud-SDK installers above). Slot-aware: safe to run from inside any `.tabs/<N>/unified-trading-pm`
-clone — it strips the `.tabs/<N>/<repo>` suffix so the sourced guard-lib path always resolves against the CANONICAL root
-clone, staying valid host-wide regardless of which slot ran the installer. Run ONCE per shared host; idempotent (safe to
-re-run — a re-run just replaces the managed block in place). Verify in a NEW interactive shell:
-`pkill -f quality-gates.sh` → `REFUSED: ...`; a `.tabs/<N>/`-scoped `-f` pattern or a numeric `-g` target passes through
-to the real binary unchanged.
+- **Recurrence #3's fix** (2026-08-14, superseded) sourced `pkill()`/`pgrep()` shell FUNCTIONS directly into every
+  AO-spawned worker pane's `bash_cmd` (replacing an even earlier per-host `~/.bashrc`/`~/.zshrc` install, which never
+  reached a pane that hadn't sourced it).
+- **Recurrence #4** (2026-08-21) found that sourced-function approach was ITSELF dead-on-arrival for any real agent
+  Bash-tool-call `pkill`: `tmux_spawn.py`'s `_start_session` ends every pane's shell command in `exec claude ...`,
+  and `exec` REPLACES the shell process image — a shell FUNCTION cannot survive that (only inherited environment
+  variables and `PATH`-resolved executables do), and the guard script never did `export -f` regardless. So `type
+pkill` inside the pane's own shell showed the guard function, but the moment `claude` execs and a tool call opens a
+  FRESH subshell to run `pkill`, that subshell's `type pkill` resolves straight to `/usr/bin/pkill` — the exact
+  real-world topology every agent Bash tool call runs under, which the recurrence-#3 verification never actually
+  tested (it checked same-shell sourcing, not survival across `exec` + a fresh subshell).
+- A `PATH`-prepended binary wrapper survives both problems by construction — `PATH` is an inherited environment
+  variable (survives `exec`), and the wrapper is a real executable (no shell-function inheritance question at all).
+  Verified live against the real topology: `source guard export → exec into a stand-in process → invoke pkill from a
+FRESH subshell of that exec'd process` — a bare `pkill -f "vite"` is refused end-to-end through that exact chain.
 
-Full incident history (two recurrences + root cause + rollout verification):
-`plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`.
+This is a footgun-guard, not a security boundary — `command pkill ...` / an absolute path deliberately bypasses it,
+and it cannot intercept a non-shell caller (e.g. a Python `subprocess.run(["pkill", ...])`).
+
+**Complementary, independent improvement (2026-08-21)**: `agent-orchestrator/server/death_forensics.py`'s
+`check_external_kill` (a SEPARATE, after-the-fact forensics checker that greps auditd for evidence a death was an
+external kill, not a live guard) had its own gap in the same incident class — its regex required an explicit
+`-9`/`-KILL`/`-SIGKILL` token for ANY of `kill`/`pkill`/`killall`, making a bare `pkill -f "<name>"` (default SIGTERM,
+the exact shape of every recurrence above) structurally invisible to it. Widened so `pkill`/`killall` match
+unconditionally regardless of signal (`kill` itself stays gated on an explicit signal flag, since a bare `kill <pid>`
+targeting one already-known PID is common and benign) — `agent-orchestrator@31c90ca3c1`.
+
+Full incident history: `plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md` (original),
+`plans/archive/issues/pkill_broad_pattern_vite_cross_slot_kill_recurrence3_2026_08_14.md` (recurrence #3, see its own
+2026-08-21 correction banner), `plans/archive/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md`
+(recurrence #4 — the mechanism described above).
 
 ## Dashboard e2e ports are slot-namespaced (fixed 2026-08-07)
 

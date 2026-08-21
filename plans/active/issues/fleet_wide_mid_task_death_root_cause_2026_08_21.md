@@ -27,7 +27,7 @@ tags: [multi-agent-safety, agent-orchestrator, dispatch, death-forensics, classi
 related:
   [
     /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
-    /plans/active/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md,
+    /plans/archive/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md,
     /plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md,
   ]
 created: "2026-08-21"
@@ -209,11 +209,18 @@ duplicated.
       run. Shipped in the same commit as above.
 - [x] ✅ [INFO] P2. Gemini proxy model-name mismatch — confirmed already fixed independently
       (`agent-orchestrator@bee25ba8`); no action needed here.
-- [ ] [INFRA] P2. Identify the exact event type AO's generic heartbeat-staleness watchdog emits when it
-      force-kills a slot whose account is frozen by an account-wide Claude session-limit hit (distinct from
-      `worker_account_unusable_killed` — the generic staleness path, not the headroom-failover one), and add it
-      to `_INTENTIONAL_TEARDOWN_SIGNAL_EVENTS`. Affects `sub-d-odum1default`/`sub-f-odum2default` per this
-      investigation's sample.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-21** — `agent-orchestrator@31c90ca3c1`. Found: no such event_type existed at
+      all (a genuine gap, not just a missing tuple entry) — `worker_liveness_watchdog.py`'s
+      `_resume_or_fresh_respawn` kills the old session then tries to `--resume` on the SAME account (correct for
+      an ordinary heartbeat-silence, wrong when the account is frozen); the resume-spawn raises, and the except
+      branch wrote `status="killed"` with ZERO `activity_log` signal anywhere on that path. Added a
+      `"heartbeat_resume_respawn_failed"` `log_activity()` call there and to the classifier tuple. Note: a
+      pre-existing comment on the tuple called this exact case (grouped with 3 siblings) "inert" to add, reasoning
+      the old session name gets overwritten by a fresh respawn before `tmux_pruner` ever sees it — but
+      `tmux_session` is never cleared in that except branch, so it's a genuine RACE, not a guarantee; this fix
+      only helps the sub-case where `tmux_pruner`'s tick wins the race (a real row IS produced and was
+      misclassified `unexplained`) and is a no-op, never a regression, when the respawn wins first. New test
+      asserts the activity event; full quality-gates.sh green.
 - [ ] [INFRA] P3. `death_forensics.check_external_kill`'s EXECVE-based search is structurally blind to AO's own
       `kill_session()` calls (direct `os.kill()` syscalls, not an execve'd subprocess) — needs a different audit
       rule type (auditd SIGNAL records) to close, not attempted this session.

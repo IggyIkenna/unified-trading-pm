@@ -12,7 +12,7 @@ source:
   - /plans/active/sports_venue_smoke_batch1_2026_08_20.md
   - /plans/active/venue_smoke_test_bar_2026_08_16.md
   - unified-api-contracts/scripts/generate_venue_smoke_test_work_list.py
-status: open
+status: resolved
 nature: issue
 parent_epic: security_and_cross_cutting_master
 priority: P0
@@ -30,8 +30,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
-archive_exempt: true
+resolved_by: slot-7
 context_scope:
   - /plans/active/sports_venue_smoke_batch1_2026_08_20.md
   - /plans/active/venue_smoke_test_bar_2026_08_16.md
