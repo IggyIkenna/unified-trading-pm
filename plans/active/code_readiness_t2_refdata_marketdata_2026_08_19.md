@@ -881,8 +881,26 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/archive/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`. Evidence:
       `deployment-service@9ae1a78e9e` (the launcher), VM run.log content quoted above, full Progress Log in the
       archived issue doc.
-- [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
+- [x] ✅ [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag. 31 docs in your allocation are flagged `excluded_data_movement` — confirm and leave them.
+      **2026-08-21 — audited all 31, not just trusted the flag.** Pulled the full list from
+      `plans/audit/results/code_readiness_allocation_2026_08_19.json` and grepped every open todo across all 31
+      for anything NOT tagged `[DATA]`/`[VM]`/`[OPERATOR]`/`[SCRIPT]` (the expected data-movement tag set) — a
+      real check, since a `[CODE]`/`[BACKEND]` tag under an `excluded_data_movement`-flagged doc would be a
+      genuine miscategorization worth surfacing. Found 8 such lines across 5 docs; read each in context. 7 are
+      correctly excluded despite the tag: relaunch actions mistagged `[CODE]`/`[INFRA]` instead of `[DATA]`/`[VM]`
+      (`defi_legacy_fold_relaunch...`'s "Relaunch `launch-backfill-...`" and its 2 diagnostic-only P3
+      investigate items), conditional/gated diagnostics (`dp_vm_001_mdps_defi_2022_exit_nonzero_singledate_hang`'s
+      P2 is explicitly "once run.log is reproducible"; `dp_vm_001_mdps_sports_2026_staleness_guard...`'s P3 is
+      "investigate", not fix), and a review-gate (`dp_vm_003_..._finalize`'s P3, gated on its own parent doc's
+      sole todo). **1 genuine miscategorization found, NOT fixed this pass** —
+      `dp_vm_001_mdps_defi_2026_lock_ttl_staleness_budget_mismatch_2026_08_15.md`'s P1 "Align the staleness-alert
+      budget" is real, actionable CODE (raise the MDPS/fleet-watcher staleness-alert budget to `>=9000s` to match
+      `CONSOLIDATOR_LOCK_TTL_SECONDS`, OR lower the TTL back toward the 300s default) — but it spans
+      `deployment-service` + `unified-trading-library` (T1's repo) and is a genuine A-vs-B trade-off needing
+      current shard-volume data to judge correctly, not a mechanical 2-minute fix. Left open in its own issue
+      doc at its stated P1, not force-implemented here. The other 26 docs' open todos are unambiguously
+      `[DATA]`/`[VM]`/`[OPERATOR]`/`[SCRIPT]` — confirmed correctly excluded.
 - [x] ✅ [AGENT] P0. Post-phase codex audit across `/codex/02-data/` for every contract you changed.
       **2026-08-21 — checked `honest-coverage-model.md`'s "coverage.json v2 schema" section (`authoritative_for`
       that exact schema) against every field this tranche shipped this session; found 2 real gaps, fixed both.**
