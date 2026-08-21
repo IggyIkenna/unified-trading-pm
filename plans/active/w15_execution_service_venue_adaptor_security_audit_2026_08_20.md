@@ -220,7 +220,7 @@ impression:
 - [x] ✅ [BACKEND] P0. Add durable idempotency across approval-plus-deposit and withdrawal/delegate retries for the live-capable connectors in the second staking/restaking group (Solana-only Jito/Jito-Restaking/SolBlaze are simulation-only and PASS/N-A here); HIGH finding: checklist point 6 (`symbiotic.py:186-202,254-263`; `karak.py:187-190,244-284`; `kelpdao.py:194-197,212-258`; `puffer.py:196-200,214-242`; `renzo.py:119-154,178-225`; `eigenlayer.py:170-221,379-498`). — execution-service@652b5157 (+ prerequisite commit debdf9f7) + evidence: reused `staking_idempotency.py` as-is (generic signature already covers this group) for symbiotic/karak/kelpdao/puffer/renzo's approve/deposit/withdraw live paths (all via the shared `BaseConnector.sign_and_send_transaction()`); wrapped EigenLayer's `_execute_live_deposit`/`_execute_live_queue_withdrawal` at their own normalized-`TxResult` boundary (extracted `_queue_withdrawal_live()` to keep the wrapped closure's shares-decrement from double-firing on a cache-replayed retry, and to stay under the 50-line method cap); 22 new regression tests in `tests/defi_execution/unit/test_second_staking_group_idempotency.py` (retry-replay-no-resubmit, clean-revert-allows-retry, ambiguous-exception-blocks-until-cleared per connector); quality-gates.sh green (313s, sentinel matched committed HEAD); post-push ancestry independently verified. (repo: execution-service)
 - [x] ✅ [BACKEND] P0. Fix fabricated-success write paths that report success without performing the on-chain action, including under `is_live=True`: Symbiotic and Karak `delegate()`; Kelp DAO's unwired withdrawal queue and `delegate()`; Puffer's unwired withdrawal queue; Renzo's unwired withdrawal queue and `delegate()`; EigenLayer's `complete_withdrawal()` and `claim_rewards()`; HIGH finding: checklist point 7 (`symbiotic.py:265-279`; `karak.py:244-284`; `kelpdao.py:212-258`; `puffer.py:214-242`; `renzo.py:178-225`; `eigenlayer.py:481-498,516-547`). — execution-service@862d5377b2 + evidence: quality-gates.sh green (227s, sentinel matched committed HEAD); 14 new regression tests in `tests/defi_execution/unit/test_second_staking_group_honest_error_handling.py`; see Progress Log entry below. (repo: execution-service)
 - [ ] [BACKEND] P1. Wire the real on-chain calls the fail-closed guards above stand in for: Symbiotic/Karak/KelpDAO/Renzo `delegate()` (no network/operator-delegation contract call exists in any of the four), KelpDAO/Puffer/Renzo's own withdrawal-queue contracts (delayed exit, not instant redeem), and EigenLayer's `completeQueuedWithdrawals()` (needs the full on-chain `Withdrawal` struct -- delegatedTo/nonce/startBlock -- tracked from the `queue_withdrawal()` step, which this connector does not currently retain) plus `RewardsCoordinator.processClaim()`. Each currently fails closed (`success: False`) in live mode rather than fabricating success, pending a verified ABI/contract address per protocol -- do not fabricate one without a verifiable source. (repo: execution-service)
-- [ ] [BACKEND] P0. Enforce a real minimum-output bound on Kelp DAO deposits instead of the hardcoded `minRSETHAmountExpected=0`, and add minimum-output/deadline bounds plus correct instant-vs-delayed withdrawal reporting across the rest of the second staking/restaking group; HIGH finding: checklist point 4 (`kelpdao.py:201-210`); MEDIUM findings: checklist point 4 (`symbiotic.py:171-202,243-263`; `karak.py:173-203,244-268`; `puffer.py:156-186,214-242`; `renzo.py:119-154,178-225`; `jito.py:104-125,228-305`; `jito_restaking.py:210-250`; `solblaze.py:164-202,204-242`). (repo: execution-service)
+- [x] ✅ [BACKEND] P0. Enforce a real minimum-output bound on Kelp DAO deposits instead of the hardcoded `minRSETHAmountExpected=0`, and add minimum-output/deadline bounds plus correct instant-vs-delayed withdrawal reporting across the rest of the second staking/restaking group; HIGH finding: checklist point 4 (`kelpdao.py:201-210`); MEDIUM findings: checklist point 4 (`symbiotic.py:171-202,243-263`; `karak.py:173-203,244-268`; `puffer.py:156-186,214-242`; `renzo.py:119-154,178-225`; `jito.py:104-125,228-305`; `jito_restaking.py:210-250`; `solblaze.py:164-202,204-242`). — execution-service@6067a94382 (+ 419efe9e, 68f5c85c) + evidence: quality-gates.sh green (170s, sentinel matched committed HEAD); see Progress Log entry below. (repo: execution-service)
 - [ ] [BACKEND] P1. Add the missing ERC-20 approval before EigenLayer's `depositIntoStrategy()` and replace Karak's hardcoded low-confidence vault address with a validated/derived one; MEDIUM findings: checklist points 5 and 2 (`eigenlayer.py:200-208,379-411`; `karak.py:80-84,194-202`). (repo: execution-service)
 - [x] ✅ [BACKEND] P0. Harden the shared CCXT order boundary with explicit side/type/symbol/finite-positive amount/price validation before `create_*_order`; HIGH finding: checklist point 3 (`ccxt_common.py` plus each adapter's `_submit_ccxt_order`). — execution-service@3685010a0f + evidence: quality-gates.sh green (233s, sentinel matched committed HEAD; 8952 passed); shared `validate_ccxt_order_params()` in `ccxt_common.py` called from all 8 adapters' `_submit_ccxt_order()`; 42 new regression tests in `tests/trade_execution/unit/test_ccxt_order_validation.py`; see Progress Log entry below.
 - [ ] [BACKEND] P0. Add bounded execution semantics to every CCXT adapter: require a safe market-order price/slippage guard and a finite expiry (or venue-equivalent bounded time-in-force), rather than defaulting to unbounded market execution/GTC; HIGH finding: checklist point 4 (all eight adapters' `_submit_ccxt_order` paths).
@@ -929,3 +929,64 @@ each adapter's own `_submit_ccxt_order()` actually invokes the validator (not ju
 is correct in isolation), asserting zero `create_market_order`/`create_limit_order` calls on
 rejection. Full `quality-gates.sh` green (233s, sentinel matched the committed HEAD; 8952 passed).
 Shipped via quickmerge — execution-service@3685010a0f; post-push ancestry independently verified.
+
+### 2026-08-21 — slot 23 second staking group min-output/deadline bounds + honest delay reporting
+
+Fixed the "Enforce a real minimum-output bound on Kelp DAO deposits..." P0 todo, closing the
+checklist-point-4 HIGH finding on `kelpdao.py` and the MEDIUM findings on the rest of the second
+staking/restaking group.
+
+**KelpDAO (HIGH, real on-chain fix)**: `deposit()`/`_deposit_live()` no longer pass a hardcoded
+`minRSETHAmountExpected=0` to `LRTDepositPool.depositAsset()`. A new `resolve_min_output()`/
+`resolve_output_bounds()` helper pair in `_evm_generic.py` resolves a real floor from the caller's
+`min_rseth_out` or a `max_slippage_bps`-derived default off the tracked `_rseth_per_eth` rate, wired
+directly into the on-chain call. Honest scope limitation stated in the docstring: no on-chain
+LRTOracle read exists here, so the floor prices off the last-known/tracked rate, not a live
+per-block oracle call.
+
+**Rest of the group (MEDIUM)**: added the same caller `min_*_out`/`max_slippage_bps`/`deadline`
+parameters to symbiotic/karak/puffer/renzo's `deposit()`+`withdraw()` and jito/jito_restaking/
+solblaze's `stake()`+`unstake()` (or `deposit()`+`withdraw()` for jito_restaking), enforced
+pre-broadcast via the same shared helper. Puffer's floor uses the real `get_exchange_rate()`
+on-chain read; the rest (no oracle wired) price off their tracked simulation rate, stated honestly
+in each docstring.
+
+**Honest instant-vs-delayed withdrawal reporting**: `jito.py`/`jito_restaking.py`/`solblaze.py`
+previously hardcoded `withdrawal_delay=0` on every unstake/withdraw despite each module's own
+docstring documenting a delayed/cooldown route this connector cannot verify is actually avoided
+(no on-chain read of stake-pool reserve liquidity / NCN cooldown / secondary-market liquidity
+exists in any of the three). Added an `instant: bool = False` parameter -- defaults to a
+conservative delay estimate (`_JITO_EPOCH_DELAY_SECONDS`/`_NCN_COOLDOWN_SECONDS_APPROX`/
+`_SOLBLAZE_EPOCH_DELAY_SECONDS`, each an explicitly-flagged approximation, not a verified on-chain
+value); `instant=True` is available for a caller who has independently confirmed the fast path.
+
+**Concurrent-edit note**: this exact file set (`symbiotic.py`/`karak.py`/`kelpdao.py`/`puffer.py`/
+`renzo.py`/`jito.py`/`jito_restaking.py`/`solblaze.py`/`_evm_generic.py`) was being edited by two
+other slots in parallel on the checklist-point-6 (idempotency) and point-7 (fail-closed) todos while
+this unit was in flight. `git pull --rebase --autostash` surfaced real conflicts twice (kelpdao.py's
+`_deposit_live` needed the idempotency wrapper AND the min-output wiring merged together; puffer.py/
+renzo.py's `withdraw()` docstrings needed both the fail-closed note and the bounds note merged) --
+resolved by hand, keeping both sides' content per the append-don't-replace rule, then re-verified
+`quality-gates.sh` green after each merge. Two small follow-up commits were needed to keep
+`_deposit_live()`/`withdraw()` under the 50-line method cap after the merges (extracted a
+`_finalize_deposit_result()` module-level helper for KelpDAO; trimmed the Puffer/Renzo docstrings).
+
+Also found (and restored, not committed) a stray pre-existing staged revert on this exact plan
+doc in this slot's PM worktree at session start -- the index held an uncommitted partial revert of
+the two most-recently-landed checkboxes above (idempotency + fail-closed) plus deletion of their
+Progress Log entries, matching the same "large apparent partial revert" class the 2026-08-21 slot-5
+CCTP entry above already diagnosed in this same worktree. Restored with
+`git restore --staged --worktree` to this file only, confirmed it now matches
+`origin/live-defi-rollout` byte-for-byte before editing; did not touch the ~63 other dirty files
+still present in this worktree (out of this unit's scope).
+
+23 new regression tests: `tests/unit/test_evm_generic_bounds.py` (the shared helper's slippage/
+deadline/floor validation, unit-level), plus per-connector additions to
+`tests/unit/test_kelpdao_connector.py` (asserts the resolved `min_rseth_wei` is wired into the real
+`depositAsset()` call args and is never 0), `test_jito_connector.py`,
+`test_jito_restaking_connector.py`, and `test_solblaze_connector.py` (each connector's honest
+non-zero default delay plus the `instant=True` override). `quality-gates.sh` full run green (170s,
+sentinel matched committed HEAD); shipped via quickmerge —
+execution-service@6067a94382 (+ 419efe9e "enforce real min-output/deadline bounds", 68f5c85c
+"keep KelpDAOConnector._deposit_live under the method-size cap"); post-push ancestry independently
+verified.
