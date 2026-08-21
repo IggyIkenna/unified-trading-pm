@@ -331,10 +331,23 @@ code" detail + the tradfi historical progress log; `depends_on` the Phase-0 chil
         it confidently.
       - Catalogue leg otherwise CLEAN: 236 live CBOE rows (COMBO 143, FUTURE 83, INDEX 10), **zero**
         `SPOT_PAIR` rows — the 91-SPOT_PAIR pollutant is gone from the catalogue.
-      **Net: CBOE's real remaining gap, if any, is the ~17-row VIX-cash-INDEX manifest bookkeeping — NOT the
-      VX futures, which are correctly live and must stay that way.** Did not attempt any purge (GCS/manifest
-      deletes are operator-gated); left `[ ]` open. `/data-status` UI surface and `cefi`-domain
-      equity-perp-singles legs not checked this pass.
+      **CBOE VIX-cash-INDEX manifest rows — PURGED 2026-08-21, operator-directed (explicit "purge them, we
+      don't want them" ruling after the re-measurement above).** Confirmed no GCS objects existed behind any
+      of the 17 rows (all `row_count=0`, none `captured`) — a manifest-only purge, nothing to delete on the
+      GCS leg. Built `deployment-service/scripts/migrations/instruments-service/
+      purge_cboe_vix_cash_index_manifest_rows_2026_08_21.py` mirroring the canonical CAS-write pattern
+      (`purge_deprecated_etf_manifest_rows_2026_05_16.py`) plus the mandatory 2026-08-15 manifest-write
+      coordination gate (`_assert_consolidator_paused` hard-abort check, matching
+      `retire_dex_pool_fees_all_captured_rows_2026_08_12.py`'s worked example). Sequence executed and verified
+      at each step: paused `uts-prod-manifest-consolidator-market-data-tradfi-cron`, dry-run confirmed exactly
+      the same 17 rows (none `captured` — the script hard-aborts if any matched row carries `captured`, as a
+      safety net), `--apply` succeeded via CAS write (`if_generation_match`, no race — new generation
+      returned), resumed the consolidator, then a FRESH read (new generation, not cached) confirmed 0 matching
+      rows remain out of 14,475,101 total tradfi manifest rows. Evidence:
+      `deployment-service@<pending-ship>`. This closes CBOE's remaining gap on the retirement-completeness
+      DoD's "manifest rows" leg — real VX futures data (`instrument_type=FUTURE`, `futures_chain` bundle,
+      24,504 `captured` rows) is untouched, exactly as it must be. `/data-status` UI surface and `cefi`-domain
+      equity-perp-singles legs still not checked this pass.
 
 ---
 
