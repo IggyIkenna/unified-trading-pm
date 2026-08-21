@@ -427,11 +427,7 @@ todos only to confirm they are data-movement, then leave it.
       formula from schema-carried values. Also documented `refresh_cadence_ms` as the STRATEGY-side cadence
       specifically — the issue is explicit that conflating it with execution's faster tick-driven loop is a design
       error. 5 tests incl. a JSON round-trip (the instruction crosses the EventTransport seam).
-- [ ] [BACKEND] P0. **UNBLOCKED 2026-08-21 in DIRECTION, shape governed by the fabric SSOT**: operator answered the
-      legacy Q12-Q16 set (vector one home; per-entry matrix incl. optional theta; venue nested per-instrument;
-      per-entry credit/trigger/coefficient) — but Q12-Q16 were superseded by the factor-state model, so the
-      implementation shape is `/codex/04-architecture/cross-domain-state-fabric.md` (R1-R16 snapshot/factor
-      contract), with those answers as constraints. Position vectors are RESOLVED (fabric R22, reconfirmed by operator 2026-08-21); still open: the five Wave-0 rulings. Add `reference_position` to `StrategyInstructionEnvelope`. **The shape this
+- [ ] [BACKEND] **BLOCKED-OPERATOR** P0. Add `reference_position` to `StrategyInstructionEnvelope`. **The shape this
       todo names (`dict[venue, Decimal]`, "same shape as the existing price leg") is SUPERSEDED** — the source issue
       carries a dated correction banner from a later same-day operator revision ruling that shape incomplete: it
       solves the venue axis but not the INSTRUMENT axis, since a strategy instance holds a universe of instruments.
@@ -441,8 +437,7 @@ todos only to confirm they are data-movement, then leave it.
       literal text would ship the rejected shape; implementing the vector would answer five questions explicitly
       reserved for the operator. **Needs: a ruling on Q12-Q16**, then this becomes a bounded code task.
       Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
-- [ ] [BACKEND] P0. **UNBLOCKED 2026-08-21 in direction, same fabric-SSOT governance as above** (credit is per-entry,
-      optional, strategy-owned — consistent with the fabric contract's `c_i` term). Add the `credit` leg to `StrategyInstructionEnvelope`. Formerly same gate as
+- [ ] [BACKEND] **BLOCKED-OPERATOR** P0. Add the `credit` leg to `StrategyInstructionEnvelope`. Same gate as
       `reference_position` above — Q14 asks whether `credit` varies per-entry or is one policy shared across the
       vector, which cannot be answered without first resolving Q12 (where the vector lives). Landing `credit` as a
       flat envelope field now would re-commit the exact scalar-shape regression the operator caught. Note the
@@ -471,12 +466,6 @@ todos only to confirm they are data-movement, then leave it.
       SSOT and the map is its projection, so amending it is a codex change first. Filed as a `[FROM-T1]` P2
       question on T4's plan rather than guessed at. Evidence:
       `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
-### Walkthrough feedback 2026-08-21
-
-- [ ] [AGENT] P0. Execute the registry cluster of the 2026-08-21 walkthrough feedback, tracked in
-      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (todos live there — this plan is
-      over the line cap).
-
 ### W5 — venue registry completeness
 
 - [ ] BLOCKED-OPERATOR-DECISION [BACKEND] P0. Populate `VenueCapabilityV2.collateral_rules` / `MarginSpec` for
@@ -585,8 +574,7 @@ todos only to confirm they are data-movement, then leave it.
       (`unified-api-contracts@34b81221ef`) all shipped; a 4th file not in the original plan
       (`unified_api_contracts/__init__.py` itself,
       the top-level package root — its `_VENUES` eager-import loop needs hand-written design, not the mechanical
-      converter) discovered and partially done. **Operator ruled 2026-08-21: YES, convert the root too — write
-      the public-API import-parity test first, then the hand-designed lazy root.** Real measured win once all land: 1,766→1,295 modules (~27%) on
+      converter) discovered and partially done. Real measured win once all land: 1,766→1,295 modules (~27%) on
       `from unified_api_contracts.internal import StrategyArchetype`.
 - [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
       (`[FROM-T2]` above). **2026-08-20: investigated and designed, not yet implemented.** Read the real
@@ -995,4 +983,3 @@ todos only to confirm they are data-movement, then leave it.
       is now clean fleet-wide — T2 finished the last one (`min_order_size`, zero consumers, removed from all 5
       call sites, `instruments-service@588f35aeb0`). Full disposition history + evidence:
       `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`. P3, not blocking.
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 1 of the operator-slot-launched code-readiness series (see the coordinator doc's Launch-prompts mechanism — paste-into-a-slot + `/autonomous`, not AO-backlog dispatch); actively worked, extensive shipped-commit evidence throughout. Remaining open items mix genuine operator-gated design questions (Q12-Q16 reference-position/credit shape ruling via the cross-domain-state-fabric SSOT, W5 collateral/margin data explicitly requiring real per-venue research — 'T1 will not invent financial risk parameters'), a kill-switch/flatten-position design call held pending T4's answer, an un-started wizard UI item, and standing tail-closure/codex-audit/marker-confirmation todos gated on the rest of the tranche completing. None clears the whole-doc RECLASSIFY bar.

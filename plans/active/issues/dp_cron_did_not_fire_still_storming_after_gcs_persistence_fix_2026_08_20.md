@@ -211,6 +211,3 @@ so they are recorded here and tagged for the owning tranche rather than acted on
   above. Todos 4 (reconcile the 3 predecessor docs' stale `status: open`) and 5 (route the capture gaps to the
   owning data tranche) not attempted this pass — left genuinely open, not T5's to force per the standing
   no-data-movement rule and this doc's own scope.
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — 2 open items (todo 4: reconcile 3 predecessor docs' stale
-  status; todo 5: route the CME/sports-odds live capture gaps to the owning data tranche) touch docs/tranches
-  outside this cefi-tranche dispatch's own write scope — left open, not this pass's to force.

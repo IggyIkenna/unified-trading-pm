@@ -22,8 +22,8 @@ related:
 created: "2026-08-18"
 author: plan_reconciler
 parent_epic: sports_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P3
 estimate_class: refactor
 estimate_baseline_ai_days: 0.2
@@ -57,10 +57,3 @@ standard declared template) but not a false-failure risk (just a coarser check).
       produces a real (not vacuously-empty) declared-violations verdict, and no new false failures appear across a
       spot-checked sample of days.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (1 entry)
-- **na-eligibility-audit 2026-08-21**: RECLASSIFY (whole-doc) → `assigned_vm: planning` — sole open todo is a
-  mechanical scope-tightening of `_declared_violations()` mirroring the already-shipped 2026-08-10
-  `_measured_root()`/`_valid_timeframes()` fix, with an explicit machine-checkable done-when (a real, non-vacuous §3B
-  verdict + no new false failures on a spot-checked sample). No design/judgment call. Conflict-check clear: grepped
-  `plans/active/` for `_declared_violations()` and this file was the only hit — no existing `assigned_vm: planning`
-  doc already claims this ground. `doc_type: issue`, so no companion finalize plan required per task_template.md's
-  exemption.

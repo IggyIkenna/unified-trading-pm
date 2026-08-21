@@ -454,7 +454,3 @@ code-fix task). A data_engineering slot with a full session budget should:
   doc's own scope, and a live-manifest re-verify is real work, not a citation check).
 - **na-eligibility-audit 2026-08-17** [body-hash:2d1aa09a741708c7]: KEEP-NA, stale-items — todo #4's blocker doc independently re-verified resolved (status:resolved, all checkboxes [x]) but deliberately left open pending a VM-dispatch/archived-plan-flip decision per the 2026-08-16 session. Recommend a future pass: cheap re-verify of pending_fetch==0 for footystats MATCHES/PREDICTIONS/ODDS, then close todo #4 + likely archive this doc.
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reconfirmed, sole open todo #4 unchanged since the 2026-08-17
-  marker. Did not perform the recommended cheap live re-verify (pending_fetch==0 for MATCHES/PREDICTIONS/ODDS) this
-  pass — that is a live manifest measurement, not a doc-validity check; leaving the 2026-08-17 recommendation
-  standing for whoever next picks this doc up (likely closes todo #4 + archives).

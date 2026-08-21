@@ -125,12 +125,3 @@ without first doing the deeper dive below.
 ## Progress Log
 
 - **context-scout 2026-08-19**: populated/refreshed context_scope (4 entries).
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2, first audit pass — doc filed 2026-08-19): KEEP-NA, valid.
-Both open todos are explicitly conditional/investigation work, not bounded specs: todo 1 fires only "on a 3rd
-occurrence" of this exact `OSError: cannot send (already closed?)` signature and requires live diagnostic judgment
-(correlate xdist worker interleaving or reproduce locally to localize the failing test/fixture) with a fleet-wide
-escalation branch if unlocalizable; todo 2 asks to "confirm whether `systemd-run` is expected to be available" on
-the `glue` runner pool — an open factual question with no stated resolution path yet. Conflict-checked: grepped
-`plans/active/issues/*.md` for "cannot send (already closed" — no other doc has recorded a 3rd occurrence as of this
-pass, so todo 1's trigger condition is not yet met. No `assigned_vm` change.

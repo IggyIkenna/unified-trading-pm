@@ -173,20 +173,13 @@ not just noting.
       657 lines and growing — worth the same treatment eventually, but that's a fresh observation, not this todo's
       scope; not opening a new todo for it here since nothing is currently blocked.) No code change; no further split
       needed right now.
-- [x] ✅ [DATA] P2. **New, opened by the P1 cost-quantification finding above.** The retry storm's real, expensive cost
+- [ ] [DATA] P2. **New, opened by the P1 cost-quantification finding above.** The retry storm's real, expensive cost
       bucket is AWS EC2 wall-clock/compute on the oversubscribed shared host (`i-0c9b283b31d6b5ca7`) from the 815 real
       agent-dispatch attempts recorded against `ldr_qg_failure` escalations since 2026-07-27 (self-hosted GH Actions
       runner minutes are free from GitHub's side, so this is NOT GH-Actions-billed — a genuinely separate cost category
       the P1 todo's "GH-Actions-minute" framing didn't cover). Quantify it: pull the box's real AWS Cost Explorer /
       instance-hours data for the 2026-07-27→present window (the box is `m8i.4xlarge`, on-demand or reserved — check
-      which) and estimate **DONE 2026-08-14 (`ci_satellite_ao_dispatch_batch13_2026_08_13.md`, slot 11, infra — citation
-      corrected 2026-08-21, na-eligibility-audit wave 2: this doc's own checkbox was never flipped despite the batch
-      closing it 7 days earlier).** `ce:*` DENIED for the worker AWS identity (pre-documented, non-self-fixable drift);
-      used the CUR→Athena billing stack instead (same live data). Real totals: 394.97 instance-hours / $374.41 BoxUsage
-      spend over 07-27→08-13; retry-storm-attributable slice (resize-up fix window, 07-27→08-07) = $267.90 real spend vs
-      $144.37 steady-state baseline → **retry-storm-attributable extra AWS EC2 compute cost ≈ $123.53** (≈$11.23/day
-      while active, not sustained — reverted after 11 days). >12x larger than the existing GH-Actions-dollar figure
-      (~$90/mo if sustained), confirming this was the bigger, previously-unquantified cost bucket. Full evidence:
+      which) and estimate
       $ cost attributable to the retry-storm's share of CPU/wall-clock vs. steady-state baseline
       usage. Done when: a real $
       figure (not assumed) is added alongside this doc's existing GH-Actions-dollar figure, so the two cost buckets can

@@ -291,7 +291,7 @@ Tracked as checkboxes per the workspace HARD RULE, grouped by why each wasn't fi
 
 - [ ] [DOCS] P3. 2 more docs cite the stale `infrastructure_master` epic name
       (`deployment_network_egress_ingress_observability_2026_08_18.md`,
-      `/plans/archive/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`) — both `asset_group:
+      `/plans/archive/2026_08/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`) — both `asset_group:
       [infrastructure]`, a sibling `infra`-tranche worker's population.
 - [ ] [DOCS] P3. `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md:113` delete-risk tagging — read the
       full todo (only open checkbox in a 749L doc): already largely self-mitigated (the delete portion is

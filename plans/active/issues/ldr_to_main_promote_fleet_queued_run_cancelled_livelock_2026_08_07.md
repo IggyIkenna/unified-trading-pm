@@ -345,13 +345,3 @@ out with GitHub's run retention; re-attempt the purge after that.
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Doc has materially changed since its last dated audit passes (2026-08-07, 08-09): both DEVOPS P2 monitor-hardening todos and the semver-agent-regression/glue-pool-starvation todos those audits scoped are now `[x]` RESOLVED (2026-08-16 plan_reconciler entries), and an entirely new 'Fleet-wide zombie-queued-run purge' section + todo was added 2026-08-10, so those prior verdicts are stale as to current content and were re-derived fresh here. Item 1 (60-min clean-CI-window bar before declaring...
 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — live-reverified, not inferred. Sole open
-todo (`[OPERATOR] P3`, re-attempt `gh run cancel`/delete on the 3 wedged `strategy-service` runs once GitHub's
-retention ages them out) re-tested live this pass: `gh run list --repo IggyIkenna/strategy-service --status queued`
-still shows all 3 runs (31164709790, 31164709402, 31164709423) queued at **328h6m** age (13.7 days, up from the
-original 2026-08-07 filing); re-attempted both `gh api ... /cancel` (HTTP 500, "Failed to cancel workflow run") and
-`gh api -X DELETE` (HTTP 403, "Could not delete the workflow run") on all 3 — identical failure signature to the
-doc's original evidence, no change. GitHub's retention has not yet aged these out. Genuinely still not resolvable;
-todo stays open, correctly OPERATOR-tagged and P3 (doc's own text: "purely cosmetic... provably cannot trip either
-standing monitor"). No `assigned_vm` change.

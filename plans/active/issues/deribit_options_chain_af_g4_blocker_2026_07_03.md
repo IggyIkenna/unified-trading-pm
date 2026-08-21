@@ -265,6 +265,3 @@ argument for that issue's Option A). Cross-linked from there.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-19** [body-hash:8f46aa4e51f16a68]: N/A — 0 open checkboxes (the sole historical item is a non-checkbox CANCELLED/SUPERSEDED disposition marker, not a tracked todo). `archive_exempt: true` carries a same-day (2026-08-19, plan_reconciler) inline justification confirming this is correct: the doc's own body explicitly states the real fix is still gated on Track-2's open re-verify todo, genuinely not done. No verdict action needed beyond this confirmation.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — 0 open checkboxes (sole historical item is the
-  CANCELLED/SUPERSEDED disposition marker); `archive_exempt: true` justification from 2026-08-19 confirmed still
-  accurate — real fix still gated on Track-2's open re-verify todo.

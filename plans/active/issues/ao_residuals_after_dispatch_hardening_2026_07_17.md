@@ -219,8 +219,7 @@ source:
       which is why three table/tree attempts were rejected. Needs `GET /api/backlog/graph` behind it. **Gate**: design
       received → implemented → the relation a table cannot express (one prereq gating tasks in multiple plans) is
       visible in one view.
-- [ ] [INFRA] P2. BLOCKED-ON:l2_book_microstructure_capture_2026_07_13 returning to `assigned_vm: planning`
-      (currently swept into the fleet-wide dispatch pause). ⚠️ **RE-SCOPED 2026-07-23 — the original measurement is now VOID; do NOT close this as fixed.**
+- [ ] [INFRA] P2. ⚠️ **RE-SCOPED 2026-07-23 — the original measurement is now VOID; do NOT close this as fixed.**
       Re-measured on the migrated live DB: only **1** `l2_book%` task row survives
       (`l2_book_microstructure_capture-001`, `done`), while the plan still shows **2 open todos**. That looks like the
       same divergence, only worse — **but it is not evidence any more**: the plan is now `assigned_vm: NA` (swept into
@@ -295,10 +294,3 @@ source:
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:2c7f98d3f07fe05b]: KEEP-NA, valid — item 1 is live-tracked verbatim in the active epic `escalation_and_disaster_recovery_master`'s own todo list (checkbox stays open only as a pointer, per a 2026-08-07 citation-fix); item 2 is explicitly scoped as a future-plan recommendation, not this doc's own execution; item 3 is void pending a retest-gate condition.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. The doc has converged to a single
-  open todo (items 1-4 — the escalation-route collision, `ORCHESTRATOR_DB_PATH`, the 2026-07-12 degradation onset,
-  and the backlog-relations UI — all closed `[x]` by 2026-08-19). The sole remaining item (item 5, the l2_book
-  reopen-drop re-test gate) stays void pending its explicit re-test condition: directly checked
-  `plans/active/l2_book_microstructure_capture_2026_07_13.md` — still `status: active`, `assigned_vm: NA`, so the
-  plan has not returned to `assigned_vm: planning` and the gate this todo names has genuinely not opened yet. Doc
-  stays `assigned_vm: NA`.

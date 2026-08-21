@@ -99,14 +99,9 @@ context_scope:
       via `git status`), so a surgical `related:`-only edit risked entangling with live WIP this session didn't
       own — deliberately left for whoever actually works this batch (with a fresh look at what's still dirty then).
 
-- [x] [SCRIPT] P2. ✅ Batch 8 shipped: removed or repointed 22 verified archived-plan `related:` entries across the active corpus; live checker 637 → 629 and ratchet baseline 630 → 629. Remaining corpus cleanup stays tracked in the source issue.
+- [ ] [SCRIPT] P2. Continue the corpus cleanup from the current ratchet, processing the next verified batch of archived-plan `related:` entries and lowering the baseline until the source issue is resolved.
 
 ## Progress Log
-- **slot-8 2026-08-20 (continuation batch):** Removed 24 verified stale archived-plan `related:` pointers from five clean active plans after reviewing each archived target and confirming the referring document retained the durable evidence in its body. The live checker measured 606 citations (630 before this continuation), and `--update-baseline` lowered the ratchet from 608 to 606; the scoped archive-safety gate is clean and the corpus cleanup remains open.
-
-- **slot-8 2026-08-20 (ninth execution batch):** Removed 21 redundant archived-plan `related:` entries from four clean active plans (`bucket_fold_features_2026_07_17.md` 5, `data_completion_to_100_all_ag_2026_06_21.md` 6, `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` 5, and `artifact_pipeline_observability_2026_07_17.md` 5). Each target was reviewed: the referring plan already retained the durable evidence in its body or existing codex/active references; no new codex migration was needed. The scoped archive-safety gate is clean. Live checker count and ratchet baseline are now 608 (629 → 608); corpus cleanup remains open.
-
-- **slot-8 2026-08-20 (eighth execution batch):** Removed or repointed 22 verified archived-plan `related:` entries across 10 active plans, preserving load-bearing body evidence and leaving unresolved launcher and CeFi dependency pointers intact; repointed deployment and launcher references to existing codex SSOTs. The live checker measured 629 citations and `--update-baseline` lowered the ratchet from 630 to 629; scoped archive-safety gate is clean.
 
 - **na-eligibility-audit 2026-08-18** (infra tranche, dispatch agt-6a3d46): drafted. RECLASSIFY_SPLIT of
   `issues/archival_referrer_codex_redirect_bulk_cleanup_2026_08_17.md` todo 1 — conflict-check clear (grepped every
@@ -152,10 +147,3 @@ context_scope:
 
 - **slot-22 2026-08-20 (fifth execution batch)**: Removed 25 redundant archived-plan `related:` citations from three clean active plans after confirming every archived basename remained in that referring document body as source evidence: `prediction_consolidated_closeout_2026_07_18.md` (9), `cross_cutting_consolidated_closeout_2026_07_25.md` (9), and `cross_cutting_closeout_observability_and_monitoring_2026_08_09.md` (7). No codex migration was needed; no pointers lacking body evidence were removed. Re-ran the checker: live count 668 (the prior 694 measurement moved during concurrent cleanup), below the prior baseline 671; `--update-baseline` lowered the ratchet to 668. The corpus-wide cleanup todo remains open.
 - **slot-22 2026-08-20 (sixth execution batch)**: Removed 4 redundant archived-plan `related:` citations from four clean active plans (`solana_dex_pool_swaps_indexer_2026_08_08.md`, `cross_ag_live_capture_parity_2026_08_14.md`, `deployment_registry_firestore_p5_verify_2026_07_14.md`, and `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`) after confirming each archived basename was already retained in the referring document body, source, or dependency context. No codex migration was needed. The live checker measured 653 citations; `--update-baseline` lowered the ratchet 657 → 653. The corpus-wide cleanup todo remains open.
-- **2026-08-21 (slot-13 independent review)**: Re-ran the corpus checker and verified the completed execution records against
-  the source dispatch prompt. Commit ancestry confirms the recorded ratchet sequence landed: `dc035f9345` (925→761),
-  `d18da53741` (761→671), `b410cecc0c` (671→665), `e328346250` (665→664), `9ceb806a92` (664→657),
-  `7db1d460fd` (657→631), and `f8e5f113b5` (631→605). The current live result is 607 citations with baseline 605
-  (checker exit 1), so no baseline update or completion claim is warranted; the corpus cleanup remains open.
-
-- **slot-13 2026-08-21 (independent finalize review)**: Re-verified both checked batch-19 todos against the source dispatch procedure and their shipping commits (`9ceb806a92`, `f8e5f113b5`). After a fresh pull to `live-defi-rollout` at `b1652d244a`, the full checker measured 607 citations against baseline 605 (exit 1); the scoped `--only` check for this batch plan, its finalize companion, and the source issue was clean (exit 0). The corpus cleanup remains open and the baseline was intentionally not raised or rewritten.

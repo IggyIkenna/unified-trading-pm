@@ -862,18 +862,6 @@ code-complete, and is it on this list".
 
 ## Progress Log
 
-**2026-08-21 — W11 order-lifecycle / state-recovery: OMS-persistence design closed.**
-`w_execution_orchestrator_oms_persistence_2026_08_20` closed all 10 design todos same-session — the write
-contract, persistence backend (`PostgreSQLOrderPersistence`, a real but 100%-stub class), schema, and
-hot-path latency tradeoff for making `ExecutionOrchestrator`'s live order-submission path durably persist
-into an OMS are all decided (full spec: that plan's 2026-08-21 Progress Log entry). Follow-up implementation
-plan authored: `/plans/active/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md` (+ finalize). The
-"Execution carries full order lifecycle, state recovery, reconciliation and manual trade on every venue"
-checkbox above stays open — design is not implementation — but the design blocker `w_state_recovery_real_wiring
-_2026_08_20`'s own Close-out section named (nothing in the live order-submission path durably persists order
-state, so `OrderRecoveryEngine`'s `OrderBook` is structurally guaranteed empty at every restart) now has a
-concrete, scoped implementation plan closing it, not an open design question.
-
 **2026-08-17 — authored.** Formalised from an operator brain-dump covering the full readiness surface, with a hard
 target of 2026-08-25. Deliberately cross-product rather than per-asset-group: the existing `defi_master` and siblings
 own their own rollouts, while this epic owns the invariants that apply across all of them. AO and CI/CD are excluded

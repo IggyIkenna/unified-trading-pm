@@ -29,6 +29,7 @@ tags: [sports, prediction, live-mode, activation-chain, readiness-ladder, mtds, 
 related:
   [
     plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
+    /plans/archive/2026_08/sports_group_c_execution_backtest_harness_2026_07_21.md,
     plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
     plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
@@ -39,6 +40,10 @@ related:
     /codex/04-architecture/promote-workflow-architecture.md,
     /codex/04-architecture/backtest-groups.md,
     plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
+    /plans/archive/2026_07/data_completion_sports_history_2026_07_24.md,
+    /plans/archive/2026_08/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
   ]
 created: "2026-07-21"
 last_updated: "2026-07-29"

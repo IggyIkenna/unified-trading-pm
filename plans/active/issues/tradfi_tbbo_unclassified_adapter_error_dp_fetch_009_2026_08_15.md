@@ -333,8 +333,3 @@ answer):**
   which of the two fix paths is intended (a scoped design note pinning one approach would likely clear it) rather
   than re-flagging indefinitely. `assigned_vm` unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Todo (`classify_venue_error()` provider-vs-market-venue
-  key mismatch) stays flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE but not promoted — the two candidate fixes are a real
-  design choice (scoped registry alias vs. a cross-cutting provider-tag threading change to shared shard-level-failure
-  machinery), not pure execution. The `[OPERATOR]` disposition-decision todo stays genuinely gated. `assigned_vm`
-  unchanged.

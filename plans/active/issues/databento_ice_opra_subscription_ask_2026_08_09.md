@@ -124,6 +124,3 @@ incur real metered billing the moment they're queried.
   `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py` directly). `assigned_vm`
   unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries) — added the tradfi-databento-sourcing-ssot codex SSOT this ask is gated on; normalized to bracket format
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Both todos remain a billing/subscription decision
-  (`CREDENTIAL_BLOCKED`) plus its contingent code follow-up; no content change since the 08-18 pass. `assigned_vm`
-  unchanged.

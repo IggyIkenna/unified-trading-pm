@@ -932,7 +932,3 @@ sports/prediction-track blocker.
   indent-agnostic). `archive_exempt: true` still correctly routes the archival decision to `/archive-candidates-audit`
   (complex referrer graph), not this skill. Doc stays NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
-- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, valid — 0 open checkboxes re-confirmed live
-  (`grep -cE '^\s*- \[ \]'` = 0). `archive_exempt: true` (0 open todos, marquee plan, complex referrer graph;
-  archival is `/archive-candidates-audit`'s remit, not this skill's — correctly not actioned here). Doc stays NA, not
-  reclassify-eligible.

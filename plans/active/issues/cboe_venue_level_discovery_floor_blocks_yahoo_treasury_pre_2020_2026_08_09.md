@@ -166,6 +166,3 @@ urgency, and warrants its own scoped implementation + test pass.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) — added `engine/orchestrator/__init__.py`
   (market-tick-data-service), the file the doc's own body names as `is_venue_available()`'s home and the actual fix
   target of the still-open P3 relaunch todo; the 2 codex entries re-verified, unchanged.
-- **na-eligibility-audit 2026-08-21**: KEEP-NA-STALE (already-duplicated), reaffirmed. Sole open todo's citation to
-  `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` todo 2 remains current (status: active, operator-narrowed to
-  `--start-floor 2018-01-01`). `assigned_vm` unchanged.

@@ -228,4 +228,3 @@ an unbounded time until whatever eventually reaps the tmux session catches up.
   6-succeed/~28-fail pattern) instead of the earlier, vaguer "sandbox network policy inconsistency"
   framing.
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries).
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — first audit pass. All 4 open items are genuine research/investigation work (root-cause Codex's native-vs-MCP tool-selection logic, live multi-step reproduction, a new stuck-loop detector design, a role-scope judgment call) requiring either OpenAI SDK docs research or a live reproduction, not mechanical fixes; overlaps with the sibling `codex_native_cli_vs_bridge_architecture_decision_2026_08_20.md`'s own pending [OPERATOR] gate on whether a research spike is even warranted.

@@ -747,7 +747,3 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   (now `assigned_vm: planning`, actively AO-dispatched) and `consolidator_throughput_backlog_monitor_2026_07_09.md`
   (`status: active` with its own open todos) -- both cited inline in the checkbox's own note. `assigned_vm` unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
-- **na-eligibility-audit 2026-08-21**: KEEP-NA-STALE (already-duplicated), reaffirmed. Sole open todo still bundles
-  the archived rc137 leg (struck inline) with 2 independently-owned legs — `tradfi_backfill_oom_remediation_2026_06_24.md`
-  (`assigned_vm: planning`) and `consolidator_throughput_backlog_monitor_2026_07_09.md` (`status: active`, own open
-  todos) — no independent worker-determinable content of its own. `assigned_vm` unchanged.

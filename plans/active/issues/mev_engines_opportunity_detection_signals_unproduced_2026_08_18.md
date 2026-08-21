@@ -213,4 +213,3 @@ specific feature key, not a corpus-wide sweep.
 - **context-scout 2026-08-20**: rebuilt context_scope (6 entries) — fingerprint-matched to
   `defi_catalog_engine_config_key_contract_drift_2026_07_23.md` (same `liq_candidate_debt_amount_<id>`/
   `liq_candidate_liq_bonus_pct_<id>` finding, independently documented in both docs).
-- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; 4 remaining open items (todos 3-6) each self-declare an unresolved design question (opportunity-detection calculator derivation, candidate-identification producer, downstream registry declaration gated on those) — genuine build/design work, not bounded, consistent with the 2026-08-18 RECLASSIFY-split verdict that already extracted the 2 bounded confirm-tasks to batch17 (archived). Doc stays `assigned_vm: NA`.

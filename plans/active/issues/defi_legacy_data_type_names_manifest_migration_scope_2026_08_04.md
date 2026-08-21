@@ -292,4 +292,3 @@ context_scope:
 - **context-scout 2026-08-17**: re-scouted; context_scope unchanged (6 entries), still accurate — all 6 still resolve
   and cover the sole remaining open item (the `dex_swaps` → `dex_pool_swaps` content migration, still gated on a
   five-part delete-safety proof).
-- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — sole open item (`dex_swaps` → `dex_pool_swaps` real content migration) remains DEPENDENCY_BLOCKED / judgment-heavy per the 2026-08-17 verdict: the recent-window gap cluster is root-caused and closed, but the broader OLD/scattered 2023-era legacy-only content (up to 84% on some venue/chain pairs) still needs its own five-part delete-safety proof before any GCS-level change. Doc stays `assigned_vm: NA`.

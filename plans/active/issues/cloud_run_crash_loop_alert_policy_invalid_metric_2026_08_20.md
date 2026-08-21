@@ -110,44 +110,8 @@ detection-layer intent of "2+ restarts / 15m"):
 The metric-selection is a small design call; Option A is the recommendation. Either way the config change must ship
 with a verified `ENV=prod tofu plan` showing zero diff for the affected resource(s).
 
-## Addendum 2026-08-21 — 2 of the 3 target services do not exist under these names at all
-
-Independently re-confirmed the invalid-metric root cause this session (same finding, different investigation: real
-`metricDescriptors` API query, 25-26 `run.googleapis.com/container/*` types, no `restart_count`) — consolidating here
-rather than duplicating. **New finding neither this doc nor the original `prod_terraform_drift_backlog_reconcile_2026_07_24.md`
-todo had**: before any metric fix matters, `gcloud run services list --project=central-element-323112` (default
-region, no filter) shows **`market-data-query-service` and `central-market-data-tardis-loader` are not currently
-deployed Cloud Run services** — only `uts-prod-data-status-rollup-svc` is real. A separate service,
-`run-jobs-tardis-data-loader`, IS live and sounds like a plausible successor to the tardis-loader target, but grepping
-the entire `deployment-service/terraform/gcp/*.tf` tree for either name (`central-market-data-tardis-loader` or
-`run-jobs-tardis-data-loader`) finds it referenced NOWHERE outside `cloud_run_service_liveness.tf` itself — so there is
-no in-repo evidence of a rename, and `run-jobs-tardis-data-loader` isn't terraform-managed at all (deployed
-out-of-band, same pattern as the DP audit jobs' runtime deploys).
-
-**Why this matters for the recommended fix**: Option A's `google_logging_metric` would filter on
-`resource.labels.service_name` — building one for a service name that doesn't exist produces a metric that creates
-successfully and simply never has data, which is the EXACT silent-failure mode this doc's own Option A is trying to
-avoid for the crash-loop signal itself. The memory-high and instance-zero policies for these same 2 services are
-ALREADY live in prod (confirmed via `gcloud monitoring policies list` per this doc's own Progress Log) and have
-presumably been silently monitoring nothing since they were created — a materially bigger, already-existing gap than
-the crash-loop 404 alone.
-
-**Before implementing Option A, resolve**: (1) was `market-data-query-service` decommissioned/renamed/merged into
-another live service (`features-service`/`client-reporting-api` are plausible candidates by function, not confirmed),
-and (2) is `run-jobs-tardis-data-loader` genuinely the successor to `central-market-data-tardis-loader`, or an
-unrelated service that happens to share "tardis" in its name. This is a real judgment call needing either operator
-input or a deeper fleet-deploy-mechanism audit — not resolved here, and NOT mechanically AO-dispatchable as-is until
-the target identity question is answered (the existing todo below still stands for `uts-prod-data-status-rollup-svc`,
-the one confirmed-real target).
-
 ## Todos
 
-- [ ] [OPERATOR] P1. **Resolve target-service identity for 2 of the 3 monitored names before any metric fix ships**:
-      confirm whether `market-data-query-service` was decommissioned/renamed/merged (candidates: `features-service`,
-      `client-reporting-api` — not verified) and whether `run-jobs-tardis-data-loader` (the one live service with a
-      similar name/purpose) is genuinely `central-market-data-tardis-loader`'s successor. The memory-high +
-      instance-zero policies for both are ALREADY live in prod monitoring nothing under these names — this is a
-      standing, silent gap independent of the crash-loop metric bug below. Source: this doc's 2026-08-21 addendum.
 - [ ] [INFRA] P2. Rework `google_monitoring_alert_policy.cloud_run_service_crash_loop`
       (`deployment-service/terraform/gcp/cloud_run_service_liveness.tf:135`) onto a real metric — recommended: add a
       `google_logging_metric` (`logging.googleapis.com/user/cloud_run_crash_loop`) counting Cloud Run

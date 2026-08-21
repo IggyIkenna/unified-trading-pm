@@ -106,7 +106,7 @@ Run first, in order, over the live PM tree:
   `--strict` (ignore the ratcheted baseline) to see the TRUE current staleness count across all 4 cutover-critical dirs,
   not just "no new regression." Report the gap between strict-count and baseline as a Phase-5 finding, never silently
   absorbed.
-- `python3 scripts/docs/gen_doc_index.py` — smoke-run the generator itself; a non-zero exit here means the L0
+- `.venv/bin/python scripts/docs/gen_doc_index.py` — smoke-run the generator itself; a non-zero exit here means the L0
   index is not buildable at all, which is more urgent than any downstream drift check.
 - `python3 scripts/quality_gates/check_doc_body_links.py` (no args = full corpus) — inline markdown BODY link existence
   check (frontmatter path-refs are already covered inside `check_frontmatter_schema.py` above, via

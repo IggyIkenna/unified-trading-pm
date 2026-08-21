@@ -65,11 +65,9 @@ source: >-
       not resolve it. Done-when: the operator question is re-surfaced with current status. Evidence: issue marker
       records `unified-trading-pm@fc45e105a9` (root-cause), `unified-trading-pm@70fc5408f1` (fix + importer audit),
       and the remaining operator decision.
-- [x] ✅ [DOC] P2. Check each of batch16's 3 source docs — if reconciliation (todo 1 above) left any of them with
+- [ ] [DOC] P2. Check each of batch16's 3 source docs — if reconciliation (todo 1 above) left any of them with
       zero open todos, run the standard 6-step archival ritual on that source doc too. Done-when: each source
       doc's open-todo count is confirmed, and any genuinely-zero doc is archived.
-      Evidence: confirmed open todos remain in all three sources: stash issue 3, hash issue 1, venue-readiness 6;
-      no source doc was eligible for archival.
 - [ ] [DOC] P3. Run the standard 6-step archival ritual on `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`
       itself once every todo above is done and all 5 of its own items are `[x]`. Done-when: batch16 is archived
       with corpus-wide referrer-path fixup complete.
@@ -82,5 +80,3 @@ source: >-
   `na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md`, this finalize plan's own todo 2 explicitly
   re-checks (its remaining `[OPERATOR]` todo 3 for a since-cleared gate once items 3-4 land), plus the
   archival-discipline and commit-push-flip codex SSOTs.
-- **2026-08-21 (review, slot 13)**: checked all three batch16 source docs after reconciliation; each retains open
-  work (3 / 1 / 6 unchecked todos respectively), so no source-doc archival ritual was applicable.

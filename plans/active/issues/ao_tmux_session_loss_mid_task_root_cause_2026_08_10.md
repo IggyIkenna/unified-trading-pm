@@ -256,8 +256,7 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [x] [INFRA] P0. Root-caused + fixed why no death ever produced a forensic artifact — SHIPPED 2026-08-12 (LimitCORE).
 - [x] [INVESTIGATE] P0. First two valid core-dump tests, both empty — real evidence, folded into final root cause.
 - [x] [INVESTIGATE] P0. Two more bursts, 2026-08-12 19:45:24Z — folded into the eventual root-cause evidence chain.
-- [x] ✅ [INFRA] P2. **Audit DONE 2026-08-19** (see the embedded findings below — one exposure found,
-      `run-e2e-backend-chat.sh`; fixing it is not yet its own tracked item). Audit other repos for the SAME unscoped-tmux-fixture anti-pattern the bats suite had (any test
+- [ ] [INFRA] P2. Audit other repos for the SAME unscoped-tmux-fixture anti-pattern the bats suite had (any test
       touching real tmux sessions needs its OWN isolated `TMUX_TMPDIR`, never the ambient/inherited one) — this class of
       bug is not unique to `test_slot_git_status_claim_heartbeat.bats`, just the one that happened to be caught.
     - **Workspace Audit Findings (2026-08-19)**:
@@ -298,8 +297,7 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [ ] [OPERATOR] P2. Once `sweep_orphan_tmux_servers`'s dry-run logging shows zero false positives across a real
       observation window on the live fleet (same graduation bar the existing per-claude-process sweep already cleared),
       flip `tuning.orphan_tmux_server_sweep_dry_run` to live.
-- [x] ✅ [INFRA] P3. **DONE** — `unified-trading-pm@897067dc0b` widens the display grep to match the same
-      classification vocabulary (in-code comment cites the fix explicitly). quickmerge's retry-regate has a real display bug (found 2026-08-13, not fixed this session): the
+- [ ] [INFRA] P3. quickmerge's retry-regate has a real display bug (found 2026-08-13, not fixed this session): the
       failure-COUNT grep matches broad vocabulary (`❌|FAILED|ERROR|E `) but the failure-DISPLAY grep only matches
       literal `❌`, so a real failure using different vocabulary (e.g. a plain `ruff format --check` failure) correctly
       blocks the ship while showing nothing about why — cost real diagnostic time twice in a row before being traced by
@@ -816,4 +814,3 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   the original kill-server root cause — worth re-reading live transcripts for future unexplained-death
   investigations before assuming a fresh mechanism, since plan-doc content alone already proved insufficient once
   (the "no shared task trigger" negative result two todos above, superseded by this entry).
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — active live-incident investigation, 10 open items spanning genuine unresolved root-cause work (death #2 at 14:30:28 still unexplained), an [OPERATOR]-gated dry-run graduation, and several judgment-bearing follow-ups; converges with the 2026-08-19 verdict, no content drift changing the disposition.

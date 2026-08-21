@@ -669,8 +669,3 @@ where it writes.
   real requests, not universally. GLM — still inside its 5-hour lockout, **11h38m remaining** at check time,
   resets 2026-08-20T00:22:34Z.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — doc's own frontmatter/Why section
-  explicitly rules this a HUMAN plan ("scoring needs human/review-agent judgment... not bounded deterministic work
-  an isolated AO worker could complete alone"). Both remaining open items (direct diff-vs-diff comparison on the 2
-  shared Hard tasks; synthesize the final per-model/per-tier summary + routing recommendation) require exactly that
-  judgment. No bounded item found.

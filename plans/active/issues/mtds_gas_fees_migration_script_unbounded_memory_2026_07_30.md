@@ -271,4 +271,3 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   class if armed), but the remaining decision (arm it, and at what cap) is a live production-safety sizing call,
   genuinely operator-gated, not worker-determinable alone. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; both remaining open items stay genuine design forks (ManifestWriter safety-check warn-vs-refuse choice; per-slot RSS ceiling arm/cap sizing — a live production-safety config decision, operator-gated per the 2026-08-19 live-verification). Doc stays `assigned_vm: NA`.

@@ -104,11 +104,6 @@ is independently shippable, no need to clear all 925 in one pass.
 > shrinking the ratchet steadily, not perfection on the first pass.
 
 ## Progress log
-- **slot-8 2026-08-20 (continuation batch):** Removed 24 verified stale archived-plan `related:` pointers from five clean active plans after reviewing each archived target and confirming the referring document retained the durable evidence in its body. The live checker measured 606 citations (630 before this continuation), and `--update-baseline` lowered the ratchet from 608 to 606; the scoped archive-safety gate is clean and the corpus cleanup remains open.
-
-- **slot-8 2026-08-20 (ninth execution batch):** Removed 21 redundant archived-plan `related:` entries from four clean active plans after reviewing each archived target and confirming the referring document already retained the durable evidence or an existing codex/active replacement. The scoped gate is clean; live checker count and ratchet baseline are now 608 (629 → 608). The corpus cleanup remains open.
-
-- **slot-8 2026-08-20:** Batch 8 shipped in the satellite tracker: 22 archived-plan `related:` entries were removed or repointed across 10 active plans after direct target/status review; live checker and ratchet baseline are now 629, with the scoped gate clean. The corpus cleanup remains open.
 
 - 2026-08-17 (claude): rule sharpened in codex, ratchet built + wired into `quality-gates.sh` (`--only`-scoped, zero
   added cost on unrelated pushes), baseline seeded at 925. This doc filed as the tracked dispatch target — cleanup work
@@ -162,11 +157,3 @@ is independently shippable, no need to clear all 925 in one pass.
 - **slot-22 2026-08-20 (sixth execution batch)**: Removed 4 redundant archived-plan `related:` citations from four clean active plans after confirming each archived basename was already retained in the referring document body, source, or dependency context; no codex migration was needed. The isolated ship tree contains this batch only; the verified batch count is 653 (657 → 653). The cleanup todo remains open.
 
 - **slot-22 2026-08-20 (seventh execution batch)**: Removed 26 redundant archived-plan `related:` citations from 12 clean active plans after the scoped gate exposed three additional stale pointers in `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`; each basename remained in prose, source, or dependency evidence, and no codex migration was needed. The live checker measured 631 citations and `--update-baseline` lowered the ratchet 634 → 631; the cleanup todo remains open.
-- **2026-08-21 (slot-13 independent review)**: Verified the completed batch-19 records against this dispatch prompt and
-  confirmed the landed ratchet commits in ancestry: `dc035f9345` (925→761), `d18da53741` (761→671), `b410cecc0c`
-  (671→665), `e328346250` (665→664), `9ceb806a92` (664→657), `7db1d460fd` (657→631), and `f8e5f113b5` (631→605).
-  A fresh run at current HEAD `3598b265dc` reports 607 citations against baseline 605 and exits 1. This is a measured
-  two-citation regression, not a reason to raise the shrinking baseline; the corpus cleanup and this issue todo 1
-  remain open, and no terminal-state or zero-count claim is made.
-
-- **slot-13 2026-08-21 (independent finalize review)**: Re-verified the completed batch-19 evidence against this issue dispatch prompt and confirmed the batch and finalize documents scoped `check_active_refs_archived_plans.py --only` check is clean. The fresh corpus-wide run measured 607 citations versus the shrinking baseline 605 (exit 1), so the baseline was not updated or raised. This issue remains open; the residual cleanup is not at its terminal state.

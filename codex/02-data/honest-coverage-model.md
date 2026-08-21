@@ -179,22 +179,9 @@ projection:
 >   headline shard count against it is a separate, operator-gated step, because per
 >   `/plans/epics/system_readiness_master.md` § W3 a denominator change lands as a dated supersession, never a silent
 >   edit.
-> - **`league_id` — PROJECTION resolved 2026-08-20, GATE still open.** Operator ruling: fold `league_id` into the
->   FULL primary shard atom `(venue, instrument_type, data_type, league_id)`, not a lighter drill-down. Shipped as
->   level 5e, `by_venue_instrument_type_data_type_league` (`instruments-service@6056d46d5c`,
->   `unified-trading-pm@25b428ee8f`) — this is the projection/read side, and it is what a consumer sees in
->   `coverage.json`.
->   **Still open, and NOT a code-effort gap**: the Layer-1 enumeration-completeness GATE
->   (`instruments-service/scripts/check_enumeration_completeness.py` + `expected_universe.py::_expected_sports()`)
->   still computes its EXPECTED/ENUMERATED denominator at the coarser `(venue, instrument_type, data_type)` grain —
->   confirmed by reading the code, not assumed (2026-08-21 investigation). It cannot see a venue that has one league
->   fully captured and every other league untouched; `instrument_gates_download` stays a coarser, honest LOWER
->   BOUND, same as before this session. Closing this requires a new authoritative "expected leagues per bookmaker
->   venue" source — none exists today: `unified_api_contracts.registry.sports_per_source_rules` covers the
->   reference-data sources (understat/footystats/api_football), a different surface from the MTDS odds venues Honest
->   Coverage reads; each odds adapter (e.g. `market-tick-data-service`'s `odds_api_adapter.py`) resolves its own
->   fetch-time league scope ad hoc, with no shared cross-venue registry to read back from. Tracked as
->   `plans/active/code_readiness_t2_refdata_marketdata_2026_08_19.md`'s shard-atom-identity todo.
+> - **`league_id` — STILL OPEN.** No league axis exists anywhere in the payload, though both this atom and the W3
+>   ruling name it. Sports contributes 822 cells across 46 venues with leagues entirely uncollapsed into them. Whether
+>   league belongs on the shard atom or stays a drill-down is denominator-defining and therefore an operator decision.
 
 `instrument_type` is a **real lowercase writer-grain column** (`spot`, `perpetuals`, `options_chain`, `futures_chain`,
 `pool`, `lending`, `prediction_market`, …) — NOT the UPPERCASE catalogue enum. The v2 harness MUST read

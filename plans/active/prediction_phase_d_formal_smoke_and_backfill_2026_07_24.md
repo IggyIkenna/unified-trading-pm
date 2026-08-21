@@ -309,7 +309,3 @@ context_scope:
   open (that doc independently re-verified this same run: 4 open todos, P0 migration item still unchecked). All 5
   items here reduce to that same unfinished gate. Doc stays NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).
-- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, valid — `depends_on:
-  [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` re-confirmed live still open (prerequisite
-  independently re-verified this same run: 4 open todos, P0 migration item still unchecked, Phase-B `--apply` still
-  not started). All 5 open items here reduce to that same unfinished gate. Doc stays NA.

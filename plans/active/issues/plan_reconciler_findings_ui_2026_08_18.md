@@ -268,11 +268,3 @@ where warranted, 9 grace-protected as context only.
   git's autostash-reapply raised a textual conflict since both are independent Progress Log appends anchored at the
   same point; resolved by keeping both, na-eligibility-audit's first since it read the doc before this entry existed.)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21 (ui tranche)**: KEEP-NA, valid — reconfirmed. This is a completed
-  plan_reconciler run report (dispatch `agt-2a424e`, 19 edits applied), not a checkbox-tracked work doc — 0 open
-  `- [ ] [TAG] P<n>.` items, only "Filed" prose notes for follow-up. Per the successor doc's own Phase -1
-  reconciliation (`plan_reconciler_findings_ui_2026_08_19.md`, same day+1), this doc is explicitly "not archivable
-  this run" — 2 of its 4 Filed items are still genuinely open (the context-scout bullet-marker bug, outside
-  `plans/**`; the AO-backlog-status check for the P0 finalize doc's dispatch inactivity, inconclusive so far) and 2
-  more remain routed/low-priority. Deferring to that more recent, dedicated assessment rather than re-litigating
-  archival here. No reclassification.

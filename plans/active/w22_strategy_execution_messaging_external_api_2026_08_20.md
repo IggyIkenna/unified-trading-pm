@@ -127,63 +127,21 @@ context_scope:
 
 ### Instruction action vocabulary
 
-- [x] [BACKEND] P0. Build the DeFiAdapter lazy-construct-and-cache factory (see "What's already real" above for
-      the exact pattern to model). Done-when: a real (paper-mode, non-network) construction round-trip proves the
-      factory returns a working `DeFiAdapter` without requiring the caller to hold wallet credentials directly. —
-      execution-service@4af3715497 (2026-08-21). Turned out to substantially already exist
-      (`execution_service.cli.handlers.live_execution_handler.get_defi_adapter_singleton()`, already real, already
-      used by `ManualOperationHandler.get_or_create_defi_adapter()`) — new module
-      `execution_service/adapters/defi_live_wiring.py::build_defi_execution_wiring()` is the HTTP-surface-facing
-      caller of that SAME factory (a second caller, not a second implementation), with the added safety property
-      that LIVE/MANUAL mode never leaves the wired adapter `None` (an empty-but-real `DeFiAdapter()` substitutes
-      when Secret Manager credentials can't be resolved, so a genuinely live-mode dispatch always reaches an
-      honest per-connector FAILED, never silently falls back to simulation). Evidence: bash
-      scripts/quality-gates.sh --no-fix (8872 passed, 22 skipped, 1 xpassed, 89 warnings in 237.24s; sentinel=4af371549778653f8240e1f3ca5ebb32a37e44f6).
-- [x] [BACKEND] P0. Wire `SWAP`/`LEND`/`WITHDRAW`/`STAKE`/`UNSTAKE` on `POST /external/instructions`, converting
-      each `StrategyInstructionV2` variant (`SwapInstruction`/`LendInstruction`/`WithdrawInstruction`/
-      `StakeInstruction`/`UnstakeInstruction`) into the internal `ExecutionInstruction` type and routing through a
-      new `defi_adapter=` injection seam on `SwapHandler`/`LendHandler`/`StakeHandler` (mirrors
-      `TransferHandler`'s existing `adapter=` pattern — NOT literally `DeFiAdapter.execute_instruction()` as
-      originally worded here; that method has its own fabricated/degraded-success gap, found mid-implementation
-      and filed separately: `/plans/active/issues/defi_adapter_execute_instruction_success_check_gap_2026_08_21.md`,
-      deliberately not fixed in this change to avoid widening its blast radius onto `DeFiAdapter`'s already-shipped
-      internal-manual-API consumer). Done-when: each of the 5 actions produces a real (non-mock) settlement result
-      over HTTP, both the real-credentials-present and no-credentials-honest-FAILED paths tested. — this todo's
-      wording named BORROW instead of WITHDRAW; BORROW/REPAY (`BorrowHandler`) is tracked as its own follow-up
-      below, explicitly out of scope for this change per the dispatching operator's instruction.
-      execution-service@4af3715497 (2026-08-21):
-      `execution_service/engine/handlers/defi_live_dispatch.py` (new — real connector dispatch, Uniswap V3/V2 for
-      SWAP, AAVE V3 for LEND/WITHDRAW, Lido for STAKE/UNSTAKE; other real-but-differently-shaped `DeFiAdapter`
-      connectors like Morpho/EtherFi honestly FAIL rather than guess at an untaught call shape — tracked as a P2
-      follow-up in the resolved issue doc), `swap_handler.py`/`lend_handler.py`/`stake_handler.py`
-      (`defi_adapter=` param, default `None` preserves existing simulation behavior byte-for-byte),
-      `handler_registry.py` (`defi_adapter=` threading, SWAP/LEND/WITHDRAW/STAKE/UNSTAKE only — never
-      BorrowHandler), `external_instruction_api.py` (5 new translation functions + `_submit_defi_instruction()`,
-      module docstring updated to 9/13 wired). Tests: `tests/unit/test_defi_live_dispatch.py` (new),
-      `test_handler_registry.py::TestHandlerRegistryDefiAdapterWiring` (new),
-      `test_external_instruction_api.py`'s new `TestSwapInstructionPath`/`TestLendInstructionPath`/
-      `TestStakeInstructionPath` (each with an honest-FAILED-not-fabricated landmine test, mirroring
-      `TestTransferInstructionPath`'s). Full resolution record:
-      `/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md` § "Resolution
-      2026-08-21". Evidence: bash scripts/quality-gates.sh --no-fix (8872 passed, 22 skipped, 1 xpassed, 89 warnings in 237.24s; sentinel=4af371549778653f8240e1f3ca5ebb32a37e44f6).
-- [ ] [BACKEND] P1. Wire `BORROW`/`REPAY` on `POST /external/instructions` through an analogous `defi_adapter=`
-      injection seam on `BorrowHandler` — split out of the combined todo above (deliberately out of scope for the
-      2026-08-21 change per explicit operator instruction: "do not touch BorrowHandler, stop and report if scope
-      would expand there"). `AAVEConnector.borrow()`/`repay()` are the real, already-live-capable connector
-      methods to call — same connector `defi_live_dispatch.py` already resolves for LEND/WITHDRAW, so this is a
-      direct structural mirror of the LEND/WITHDRAW half of the work just shipped, not new design. Tracked in
-      detail: `/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`'s own
-      Follow-ups.
-- [x] [BACKEND] P0. Wire `TRANSFER`/`CANCEL` on the same surface — **shipped execution-service@3af76e1a01**
-      (2026-08-20, `instruction_router.py`/`external_instruction_api.py`/`transfer_handler.py`/`deribit.py`/
-      `run_phase3c.py`/`tests/unit/test_external_instruction_api.py`, verified ancestor of
-      `origin/live-defi-rollout`, full `quality-gates.sh` green: 8841 passed). The unrelated pre-existing
-      bridge.py/cctp.py function-size QG gate that blocked the first several ship attempts was independently
-      resolved by the domain owner (`execution-service@8b87a17a5`/`3f54ca206`) mid-session — reconciled via two
-      `git pull --ff-only` + conflict-resolution rounds (always deferring to the domain owner's landed version
-      over this session's own stopgap fixes in bridge.py/cctp.py/capture_golden_swaps.py/validate_uniswap_fills.py/
-      test_order_recovery.py, per the "defer to the real owner's context" pattern this session applied
-      throughout). `CANCEL`
+- [ ] [BACKEND] P0. Build the DeFiAdapter lazy-construct-and-cache factory (see "What's already real" above for
+      the exact pattern to model). New module or extend `execution_service/adapters/defi_adapter_factory.py`
+      (does not exist yet — name it this unless a better home is found). Done-when: a real (paper-mode,
+      non-network) construction round-trip proves the factory returns a working `DeFiAdapter` without requiring
+      the caller to hold wallet credentials directly.
+- [ ] [BACKEND] P0. Wire `SWAP`/`LEND`/`BORROW`/`STAKE`/`UNSTAKE` on `POST /external/instructions`, converting
+      each `StrategyInstructionV2` variant (`SwapInstruction`/`LendInstruction`/`BorrowInstruction`/
+      `StakeInstruction`/`UnstakeInstruction` — all already real UAC dataclasses, no contract gap) into the
+      engine's `Instruction` type and routing through the new DeFiAdapter factory's `execute_instruction()`
+      (mirrors `_build_strategy_instruction_from_trade()`'s existing TRADE-conversion pattern in
+      `external_instruction_api.py`). Done-when: each of the 5 actions produces a real (non-mock) settlement
+      result over HTTP in paper mode, not a 501.
+- [x] [BACKEND] P0. Wire `TRANSFER`/`CANCEL` on the same surface — execution-service@instruction_router.py+
+      external_instruction_api.py (2026-08-20, ready to ship, blocked only on an unrelated pre-existing function-size QG gate on
+      bridge.py/cctp.py, tracked separately). `CANCEL`
       reuses the existing `order_tracker`-based cancel path `/manual/cancel` already established — done, tested
       (`TestCancelInstructionPath`). `TRANSFER` routes through the real `build_transfer_wiring()` ->
       `HandlerRegistry`/`InstructionRouter` -> `TransferHandler` chain (NOT `TransferCoordinator` as originally

@@ -572,9 +572,3 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   deliberate human-attended session.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- re-verified all 4 still resolve; unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — re-affirms the 2026-08-18 verdict.
-  The sole open item (dirty-worktree stash-and-proceed dispatch-hook + retention-sweep implementation) was already
-  conflict-checked against `ao_satellite_ao_dispatch_batch22_2026_08_16.md`, which deliberately excluded this exact
-  item from batch-extraction citing the standing caution that fleet-wide boot/dispatch-critical-path TEXT changes
-  (the worker prompt template + dispatch hook every slot spawn reads on its first message) need a deliberate,
-  human-attended session, not casual batch-extraction. Does not clear the RECLASSIFY bar today.

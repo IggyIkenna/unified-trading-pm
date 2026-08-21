@@ -681,6 +681,3 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   done-when (not silently dropped). No code changed — doc-only correction.
 - **na-eligibility-audit 2026-08-16** [body-hash:75d2d3b5e85aa8bb]: KEEP-NA, valid — Full end-to-end read (689 lines) confirms this remains a genuinely mixed operator-judgment index/tracker doc over the instruments-service reference-data docs audit.
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; genuinely mixed operator-judgment
-  index/tracker doc across 5 asset groups, sole tracked checkbox is open-ended meta-tracking over dozens of prose
-  findings including an explicit §E "operator decisions required" section.

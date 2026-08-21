@@ -31,7 +31,11 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch-logic, gate_on_depends, plan-discipline, recurring-bug, finalize-plan]
 related:
   [
-    /plans/active/ao_consolidated_closeout_2026_08_12.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
+    /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
+    /plans/archive/issues/gate_on_depends_noop_on_local_only_upstream_2026_07_21.md,
+    /plans/archive/issues/gate_on_depends_noop_on_assigned_vm_na_upstream_2026_07_21.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-25"
 author: unknown
@@ -829,4 +833,3 @@ duplicating a new issue doc. Skipping via `reason_code: GATED` per this doc's es
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:1e6c12c7e9789219]: KEEP-NA, valid — grep_open_todo_count mismatch (6 vs 1) explained: 5 of 6 hits are a quoted upstream doc's checkboxes inside a fenced code block (self-documented known tooling artifact, na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md), not this doc's own todos. Doc cites the 2026-07-31 operator directive routing AO-machinery/dispatch-logic docs to execution_scope:local-only (4+ citations, most recently 2026-08-17); sole open todo is deep unresolved dispatcher-internals investigation, consistent with 6+ prior audit passes.
 - **context-scout 2026-08-20**: re-verified context_scope (5 entries), unchanged.
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — re-read end-to-end. The sole real open todo (root-cause the "zero-derived-parent-row" third dispatch-gate mechanism, 2 competing unconfirmed hypotheses — status:draft-upstream non-derivation vs. markdown-bold/indented-sub-bullet derivation-regex edge cases — still under active investigation per the 2026-08-09 recurrence note) is live-dispatch-critical-path agent-orchestrator machinery under the standing 2026-07-31 operator directive routing AO-machinery/dispatch-logic docs to `execution_scope: local-only`. Consistent with 7+ prior audit passes.

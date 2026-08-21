@@ -133,5 +133,3 @@ already-credentialed Odds-API/footystats path). Once provisioned:
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reconfirmed (6th round), unchanged: OPERATOR scope decision
-  (Sportradar's role vs Odds-API/footystats overlap) + CREDENTIAL_BLOCKED ($499/mo vendor key, no GSM secret).

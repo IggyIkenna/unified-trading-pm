@@ -179,11 +179,3 @@ automatic fleet-wide safety net that investigation's stated intent was.
   path) citing a specific OOM-regression-risk code comment. No content change since; doc has no `last_updated` field so
   this refresh anchors the next incremental diff.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
-- **na-eligibility-audit 2026-08-21 (ui tranche)**: KEEP-NA, valid — reconfirmed independently (fresh read, not
-  copied forward). The single `[HUMAN] P2` todo is still a genuine unresolved architecture trade-off (reuse the
-  existing 45s-TTL `_load_inventory()` endpoint, accepting its `_census_pool` cost, vs. build a narrower
-  alert-check-only path that skips the full cloud-fan-out census) with a stated concurrency-risk rationale
-  (`deployments_inventory.py`'s `max_workers=1` refresh-serialization invariant) — not a mechanically-resolvable
-  default. 6th consecutive audit/reconcile pass (na-eligibility-audit ×4, plan_reconciler ×2 — most recently
-  `plan_reconciler_findings_ui_2026_08_18.md` Filed item 4, "confirmed still accurate, not superseded") reaching the
-  same verdict; no content drift found this pass. No reclassification.

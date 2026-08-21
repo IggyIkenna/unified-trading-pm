@@ -605,7 +605,7 @@ returns < 604800, the delete falls back to approve-executes and the todo must st
 
 - [x] ✅ [DATA] P0. **RESOLVED 2026-08-20 — re-stamp premise is FALSE (nothing to re-stamp), so the todo is moot;
       the real "wire up vs retire" question underneath it got operator sign-off (wire up) in a separate tracked doc**:
-      `/plans/archive/issues/sports_odds_movement_snapshot_candle_wireup_2026_08_20.md` (full verification + decision).
+      `/plans/active/issues/sports_odds_movement_snapshot_candle_wireup_2026_08_20.md` (full verification + decision).
 - [x] ✅ [REVIEW] P1. **Assert the vocabulary has collapsed to TWO types — REVISED 2026-08-15.** Live census (slot-20):
       tick bucket ✓ `odds`/`odds_horizon_bucket`/unchanged `arbitrage_opportunity`. **Gap**: IS-bucket SSOT manifest
       still carries 43,726 captured `trades` mirror rows untouched by the P0 restamp — issue doc

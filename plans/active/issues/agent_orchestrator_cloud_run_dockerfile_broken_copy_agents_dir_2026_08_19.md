@@ -34,8 +34,8 @@ source: >-
   agents/`) before filing.
 resolved_by:
 locked_by:
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
@@ -103,13 +103,3 @@ now.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
 - **2026-08-20**: referrer-path fixup — the AO plan above archived (`plans/archive/2026_08/`, all 5 phases done);
   `related:`/`context_scope:` repointed to its new path.
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: RECLASSIFY (whole-doc) — first audit pass for this doc. All 3
-  open todos are fully bounded/deterministic: (1) determine whether the Dockerfile is built anywhere live (grep
-  `.github/workflows/`/`cloudbuild.yaml` trigger config + check run history — a mechanical check with a factual
-  answer), (2) fix the broken `COPY agents/` step per the current read-the-file architecture (read
-  `server/prompts.py`'s docstring, then make the Dockerfile match — no open design call, the target architecture
-  is already documented), (3) cross-check the archived deployment plan's text for the same stale reference once
-  resolved (mechanical grep). No judgment/operator-gated fork anywhere in the doc. Conflict-check: grepped
-  `plans/active/` for "COPY agents"/"agent_orchestrator_cloud_run_dockerfile" — zero hits outside this doc itself.
-  Flipped `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`; `assigned_role: infra`
-  was already correct.

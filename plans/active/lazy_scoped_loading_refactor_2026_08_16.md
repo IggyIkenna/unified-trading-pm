@@ -195,14 +195,10 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
       `plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`. **Lesson**: do
       not edit ANY file in a repo while that repo has a non-`--isolated` quickmerge in flight, even a
       `--files`-scoped one touching a different file — wait for it to land first.
-      **Converter script**: promoted to `unified-api-contracts/scripts/lazify_init.py` — no longer scratchpad-only;
-      smoke-tested against `registry/__init__.py` post-promotion (reproduces 584 lazy exports / 62 source modules,
-      matching the already-shipped file). `unified-api-contracts@c1b4c3cf0a` (2026-08-20) was a concurrent slot-6
-      session's first promotion of the same scratchpad script (un-refactored, 323 lines) — it failed the C901
-      complexity gate (61 > 26) plus 4 other lint findings and was superseded same-day by
-      `unified-api-contracts@6ec3f5b866`, which refactors `main()` into focused helpers and is verified
-      byte-for-byte behavior-identical to the original via diffed output on the same input file. Cite `6ec3f5b866`
-      for the current committed content.
+      **Converter script**: promoted to `unified-api-contracts/scripts/lazify_init.py` —
+      `unified-api-contracts@c1b4c3cf0a` (2026-08-20, pre-compact sweep) — no longer scratchpad-only; smoke-tested
+      against `registry/__init__.py` post-promotion (reproduces
+      584 lazy exports / 62 source modules, matching the already-shipped file).
 - [ ] [AGENT] P0. **Prove the end state with a scoped-build test** — construct a deployment declaring only
       `CARRY_BASIS_PERP` + `CARRY_STAKED_BASIS` (the contracted archetypes) and assert the loaded-module set excludes
       the families it does not use. This is the test that makes the carve-out's laziness verifiable rather than claimed.
@@ -429,8 +425,7 @@ down" narrative.
   touch the `_VENUES` loop or its 37 external modules, so none carry this risk. The measured 27% import-cost
   reduction already reported is real and already landed; only the 4th file's OWN portion remains undone.
   **Converter script** (fixed, both bugs above patched): promoted to `unified-api-contracts/scripts/lazify_init.py`
-  — `unified-api-contracts@6ec3f5b866` (2026-08-20; supersedes the concurrent-session `c1b4c3cf0a` promotion of the
-  same un-refactored script — see the entry above) — no longer scratchpad-only, both fixes are baked into the
+  — `unified-api-contracts@c1b4c3cf0a` (2026-08-20) — no longer scratchpad-only, both fixes are baked into the
   committed version.
 - **2026-08-20, later same day — correction to the entry above: the `_VENUES` hypothesis was WRONG, and (the
   important part) the already-shipped code is confirmed NOT affected.** Bisected properly instead of assuming:
