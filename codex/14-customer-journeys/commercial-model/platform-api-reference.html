@@ -802,7 +802,7 @@
       <div class="stat"><span class="v">3</span><span class="k">Services expose a counterparty surface</span></div>
       <div class="stat"><span class="v">6</span><span class="k">Endpoints documented below</span></div>
       <div class="stat">
-        <span class="v">1 / 13</span><span class="k">Instruction types that execute — the rest return HTTP 501</span>
+        <span class="v">1 / 15</span><span class="k">Instruction types that execute — the rest return HTTP 501</span>
       </div>
       <div class="stat">
         <span class="v">0</span><span class="k">Services with no counterparty surface at all (strategy-service)</span>
@@ -1736,7 +1736,7 @@
       <span class="tag">Read this before anything else on this page</span>
       <p>
         <b>Only <code>TRADE</code> is wired end-to-end.</b> The request body type, <code>StrategyInstructionV2</code>,
-        is a 13-member discriminated union
+        is a 15-member discriminated union
         (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:373-385</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
@@ -1822,7 +1822,7 @@
       </table>
     </div>
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
-      <b class="ev ev-verified">✓ verified</b> schemas.py (all 13 variants + the union);
+      <b class="ev ev-verified">✓ verified</b> schemas.py (all 15 variants + the union);
       external_instruction_api.py:110-136 (the 501 branch)
     </p>
 
@@ -2025,7 +2025,7 @@
               <tr>
                 <td><code>422</code></td>
                 <td>
-                  Body doesn't match any of the 13 <code>StrategyInstructionV2</code> variants (e.g. an
+                  Body doesn't match any of the 15 <code>StrategyInstructionV2</code> variants (e.g. an
                   <code>action</code> value like <code>CONVERT_DUST</code>/<code>LP_MINT</code> that exists on
                   <code>InstructionActionV2</code> but has no envelope in the union at all)
                 </td>
@@ -2139,7 +2139,7 @@
           <tr>
             <td><code>422</code></td>
             <td>
-              Request validation failed — bad enum value, or a body that matches none of the 13 instruction variants
+              Request validation failed — bad enum value, or a body that matches none of the 15 instruction variants
             </td>
             <td>Market-data (asset_group / topology / after), instructions POST</td>
           </tr>
@@ -2150,7 +2150,7 @@
           </tr>
           <tr>
             <td><code>501</code></td>
-            <td>Recognised but not wired for external submission — 12 of the 13 instruction types</td>
+            <td>Recognised but not wired for external submission — 14 of the 15 instruction types</td>
             <td>Instructions POST</td>
           </tr>
           <tr>
