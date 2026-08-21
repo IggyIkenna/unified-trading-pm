@@ -17,7 +17,6 @@ tags: [data-pipeline, dp-live-004, bybit-futures, stale-tarball, live-capture]
 related:
   - /plans/active/issues/mtds_live_cefi_redeploy_cold_start_is_universe_gap_2026_08_17.md
   - /plans/active/cross_ag_live_capture_parity_2026_08_14.md
-  - /plans/active/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md
 created: "2026-08-21"
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -102,11 +101,7 @@ external action and is not performed by this escalation without that decision.
       `SPOT_PAIR` errors appear in any Bybit log (unlike the old VM). **Old VM
       left RUNNING/undeleted** — the decommission half of this todo is NOT done;
       see the new todo below for why.
-- [ ] [INFRA-or-BACKEND] P1. **DUPLICATE OF `/plans/active/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md`
-      todo 2** (the canonical, already-consolidated doc for this same VM/incident; verified status: open,
-      not archived) — this todo's diagnostic progress feeds that doc's own "verify a real captured row / if
-      unproductive, inspect subscribe acks" open todo directly; do not diagnose independently in both places.
-      **NEW FINDING 2026-08-21 (slot-3, infra) — investigate
+- [ ] [INFRA-or-BACKEND] P1. **NEW FINDING 2026-08-21 (slot-3, infra) — investigate
       why BYBIT-FUTURES produces ZERO captured rows on the new VM despite the
       filter fix being present and the universe resolving correctly.** On
       `mtds-live-cefi-consolidated-20260821-200626`, the per-VM manifest
@@ -148,19 +143,6 @@ external action and is not performed by this escalation without that decision.
 
 ## Progress Log
 
-- **dedup pass 2026-08-21**: This is the SAME incident (identical VM `mtds-live-cefi-consolidated-20260817-025031` →
-  identical replacement VM `mtds-live-cefi-consolidated-20260821-200626`, identical root cause — stale pre-filter
-  BYBIT tarball predating `market-tick-data-service@5f88715e4b`) as the already-canonical, already-consolidated doc
-  `dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md` (which itself absorbed 3 other independent filings of this
-  exact finding on 2026-08-21, but did not yet reference this specific file) — a 4th, previously-uncaught duplicate
-  of that same pattern. Marked the sole overlapping open todo `DUPLICATE OF` that canonical doc's own open todo 2
-  (kept `status: open` here rather than a whole-doc `superseded` flip, since todo 1's decommission step and this
-  doc's own ruled-out-causes diagnostic detail are not literally duplicated there yet — nothing archived by this
-  pass). **Not lost**: this doc's own diagnostic progress feeds the canonical doc's open todo 2 directly —
-  specifically, this doc already ruled out universe resolution and `canonical_instrument_id` shape as causes for
-  BYBIT-FUTURES' zero-capture symptom on the *new* (post-fix) VM, narrowing the remaining hypothesis space to the
-  connector's runtime subscribe-set/websocket-ack behavior. Whoever next picks up the canonical doc's todo 2 should
-  read this doc's "NEW FINDING 2026-08-21" todo in full rather than re-deriving those ruled-out causes from scratch.
 - **2026-08-21 (data-pipeline-failure escalation `agt-2bf629`)**: Read-only
   inspection of the live VM proved the running package predates
   `market-tick-data-service@5f88715e4b`; logs show `SPOT_PAIR` subscriptions.

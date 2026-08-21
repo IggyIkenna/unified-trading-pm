@@ -24,10 +24,8 @@ tags: [vm-launcher, backfill, performance, catalogue, did-we-reload-the-code, ce
 related:
   [
     /plans/archive/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
-  # 2026-08-21 (archival sweep): dropped cefi_hl_aster_batch_data_gaps_2026_06_22 (archived to plans/archive/issues/,
-  # fully resolved — durable facts already in /codex/02-data/cefi-capture-universe.md +
-  # /codex/05-infrastructure/manifest-consolidator-ssot.md).
 created: 2026-07-20
 author: unknown
 parent_epic: security_and_cross_cutting_master
@@ -53,6 +51,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
     market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
 ---
 

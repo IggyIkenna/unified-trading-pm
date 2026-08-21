@@ -462,47 +462,19 @@ logic and that no second archetype could ever want. That must be stated, not ass
       (no shims), new unit tests added. Evidence: `strategy-service` quickmerge pending as of this write, blocked on
       unrelated dirty deps in `unified-trading-library`/`unified-api-contracts` owned by other concurrent sessions
       (not force-pushed through); will land once those clear. See sibling doc's revised Summary section.
-- [ ] [OPERATOR] P1. **Rule on the ambiguous ones — REVISED 2026-08-21 (interactive session), 3 clusters (4 rows)
-      remain after this session's prep work + the stablecoin cluster's migration below.** Full detail in
+- [ ] [OPERATOR] P1. **Rule on the ambiguous ones** — 4 clusters (8 table rows, revised 2026-08-21 after
+      `_MONTH_ABBREV` moved from this list to MIGRATED above) surfaced by the inventory above, full list + one
+      recommendation each in
       [strategy_service_reference_constants_inventory_2026_08_21](/plans/active/strategy_service_reference_constants_inventory_2026_08_21.md)'s
       Summary section: (1) `_FAMILY_TO_ASSET_GROUP` — fold into UAC asset_group taxonomy vs. keep as a narrow
       routing-key derivation (recommend: keep local, it's a 3-entry publish-path routing key, not general reference
-      data — unchanged, no prep work needed here); (2) `_STRIKE_INCREMENT` — **CHECKED 2026-08-21, not just
-      recommended**: grepped instruments-service's `reference_data/` in full for `strike_increment`/`strike_step`/
-      `strike_interval`/`tick_size` — no static strike-GRID registry exists there. The only related mechanism is
-      `reference_data/schemas.py::CanonicalOptionsChain` (`strikes: list[Decimal]`), populated by
-      `adapters/cefi/deribit_options_adapter.py` from Deribit's LIVE instrument list — a different shape (real
-      listed strikes fetched from the venue, not a static rounding-increment table) and not a drop-in migration
-      target for `_STRIKE_INCREMENT`'s actual use (cheaply rounding an arbitrary spot price to a plausible ATM
-      strike). Operator decision needed: keep the static local grid (cheapest, matches current use) vs. invest in
-      wiring a live-strikes lookup instead; (3) `_LP_CONCENTRATED_POOLS` — pool contract addresses, no confirmed
-      UAC LP-pool registry (recommend: build one in UAC only if a second consumer emerges — currently
-      single-consumer, unchanged). **(4) Stablecoin-preference cluster — RESOLVED, removed from this list**: the
-      recommendation ("consolidate intra-repo regardless of the UAC ruling, since the duplication is intra-repo
-      either way") was genuinely unconditional on the operator ruling, so it was executed this session rather than
-      left pending — see the done todo below.
-- [x] ✅ [BACKEND] P1. **NEW 2026-08-21 — Consolidate the stablecoin-preference cluster. CODE DONE, quickmerge
-      PENDING (same dirty-deps block as the two todos above).** New shared module
-      `strategy_service/engine/strategies/v2/stablecoin_conventions.py` with `STABLE_PREFERENCE` (`("USDC", "USDT",
-      "FDUSD")`) and `PERP_MARGIN_STABLE_PREFERENCE` (`("USDC", "USDT")`). Both consumers —
-      `target_universe/catalog_staked_basis.py`'s `_STABLE_PREFERENCE`/`_PERP_MARGIN_STABLE_PREFERENCE` and
-      `carry_and_yield/staked_basis.py`'s `_STABLECOINS`/`_PERP_MARGIN_STABLE_PREFERENCE` — now import from the
-      shared module under their original private names (no call-site changes needed); `_STABLECOINS` is now
-      `frozenset(_STABLE_PREFERENCE)` (a membership-set view of the same ordered tuple) instead of a second
-      hand-written literal. 4 near-duplicate constants → 2 canonical ones. Syntax-verified
-      (`ast.parse`) and confirmed via `python3 -c` that the module-level-constant regex count drops from 76 raw
-      matches (the inventory doc's pre-session count) to 74 post-consolidation (net -2, matching 3 local copies
-      removed + 2 shared constants added, `-1` from the raw-match baseline already having drifted since
-      2026-08-16 — see the sibling inventory doc's own "count discrepancy" section). `quality-gates.sh --no-fix`
-      ran clean through LINT/TESTS for these files (the one lint hit, `ruff --fix`'d, was import-ordering on the
-      two edited consumer files — no logic change); a later full-tree QG run hit an unrelated pre-existing E501 in
-      `strategy_service/pnl/adapters/domain_adapter.py`, confirmed (via `git diff origin/live-defi-rollout`) to be
-      uncommitted WIP from the concurrent T3 session's PnL-surfaces work
-      (`code_readiness_t3_features_ml_strategy_2026_08_19.md`'s W9/W10/W13 section) sharing this checkout, not this
-      session's own files — per the multi-agent-safety rule against touching foreign uncommitted work, left
-      untouched. Quickmerge attempted twice, both blocked at the pre-flight dep-check on the same unrelated dirty
-      `unified-trading-library`/`unified-api-contracts` changes as the `_MONTH_ABBREV` and regression-gate todos —
-      will retry once those clear.
+      data); (2) `_STRIKE_INCREMENT` — plausible instruments-service reference data, no confirmed SSOT (recommend:
+      ask instruments-service whether it already owns strike-grid data before building a new registry); (3)
+      `_LP_CONCENTRATED_POOLS` — pool contract addresses, no confirmed UAC LP-pool registry (recommend: build one in
+      UAC only if a second consumer emerges — currently single-consumer); (4) stablecoin-preference cluster
+      (`_STABLE_PREFERENCE` / `_PERP_MARGIN_STABLE_PREFERENCE` ×2 / `_STABLECOINS`, near-identical values across 3
+      files) — recommend consolidating to one local shared constant in `carry_and_yield/` regardless of the
+      operator's UAC-vs-local ruling, since the duplication is intra-repo either way.
 - [x] ✅ [BACKEND] P1. **Fix the exemplar — DONE 2026-08-21, `strategy-service@1ea9d0b170`.**
       `_STAKING_PROTOCOL_CHAIN` was already gone (shipped earlier this session,
       `strategy-service@8a7f80e8`) — replaced with UAC's `get_chain_for_protocol()`. Verified live
@@ -515,22 +487,10 @@ logic and that no second archetype could ever want. That must be stated, not ass
       its own codex spec (`carry-staked-basis.md § allowed_chains`). Added an explicit
       "stays local, here's why" comment to the constant itself rather than leaving the verdict
       implicit, per this todo's own done-when bar.
-- [x] ✅ [BACKEND] P2. **Gate the regression — CODE DONE 2026-08-21, quickmerge PENDING (blocked on dirty
-      deps, same pattern as the `_MONTH_ABBREV` migration above).** New module
-      `strategy_service/engine/strategies/v2/reference_constant_gate.py`, mirroring `catalog_engine_coverage.py`'s
-      (A4) shape: `module_level_reference_constants()` scans `engine/strategies/` with the same regex the W7 audit
-      itself used, `REFERENCE_CONSTANT_BASELINE` is the 74-entry set measured immediately after this session's
-      stablecoin consolidation (see below), `new_reference_constants()` is the diff a brand-new, never-classified
-      constant shows up in. Two tests
-      (`tests/unit/engine/strategies/v2/test_reference_constant_gate.py`): `test_no_new_reference_shaped_constants`
-      (the FAIL direction) and `test_baseline_is_a_subset_of_measured_reality` (shrink-only enforcement, same
-      pattern as A4's `test_baseline_is_a_subset_of_measured_reality`). Verified locally: `measured == baseline`,
-      0 new, 0 stale. **Not a hard zero** (per this todo's own done-when) — the baseline still carries the 62
-      correctly-STAYS-LOCAL constants and the still-open ambiguous clusters; only a genuinely NEW addition trips
-      it. Quickmerge blocked twice on the same unrelated dirty deps
-      (`unified-trading-library`/`unified-api-contracts`, another concurrent session's WS-session-manager /
-      error-code work) that already blocked the `_MONTH_ABBREV` quickmerge above — not force-pushed through, will
-      retry once those clear.
+- [ ] [BACKEND] P2. **Gate the regression.** A check that fails when a new module-level reference-shaped constant
+      naming venues/chains/tokens/protocols appears under `engine/strategies/`. Baseline it at the post-migration
+      count and ratchet DOWN only, per the workspace's shrinking-baseline convention — a hard zero would block
+      legitimately-local constants.
 
 - [ ] [BACKEND] P2. **Collapse the per-domain config-reloader and S2S-auth boilerplate** (added 2026-08-21, provenance
       `/plans/active/cross_repo_duplication_cleanup_2026_08_21.md`). `strategy_service/{pnl,position,risk}/auth_s2s.py`
@@ -542,39 +502,6 @@ logic and that no second archetype could ever want. That must be stated, not ass
 
 ## Progress Log
 
-- **2026-08-21 (interactive session, continued — ambiguous-cluster prep + regression gate)** — Two-task session:
-  (1) prep work for the `[OPERATOR]` "Rule on the ambiguous ones" todo (still open, cannot be resolved without an
-  operator ruling): checked instruments-service for a strike-increment/strike-grid registry for cluster 2
-  (`_STRIKE_INCREMENT`) — none exists; the only related mechanism (`CanonicalOptionsChain`, live Deribit strike
-  enumeration) is a different shape, not a migration target. Executed the stablecoin-preference cluster
-  4 consolidation (recommended "regardless of the operator's UAC-vs-local ruling" in the inventory doc, so genuinely
-  not gated): new `stablecoin_conventions.py` module, both consumers switched to import from it, 4 near-duplicate
-  constants → 2 canonical ones. Remaining ambiguous: 3 clusters / 4 rows (`_FAMILY_TO_ASSET_GROUP`,
-  `_STRIKE_INCREMENT`, `_LP_CONCENTRATED_POOLS`), still needs the operator.
-  (2) Per this plan's own `sequential: true` rule, worked the first open todo after the ambiguous-cluster todo in
-  file order: "Gate the regression" (P2, BACKEND) — built `reference_constant_gate.py`, mirroring A4's
-  `catalog_engine_coverage.py` shape (measured-set / shrink-only baseline / two tests), baselined at 74 post-
-  consolidation entries, verified 0 new / 0 stale locally.
-  **Shipping status — all three changes are CODE-COMPLETE and locally QG-clean but NOT YET PUSHED**: quickmerge
-  (`--agent --files ...`) was attempted twice and blocked both times at the pre-flight dep-check on uncommitted
-  changes in `unified-trading-library`/`unified-api-contracts` (another concurrent session's WS-session-manager /
-  error-code work) — the exact same blocker the earlier `_MONTH_ABBREV` migration in this session hit. Per the
-  multi-agent-safety rule against touching foreign uncommitted work, not force-pushed through; will retry once
-  those deps clear. A full-tree `quality-gates.sh` run separately hit an unrelated pre-existing E501 in
-  `strategy_service/pnl/adapters/domain_adapter.py` — confirmed via `git diff origin/live-defi-rollout` to be
-  uncommitted WIP from the concurrent T3 session sharing this checkout (the PnL-surfaces work
-  `code_readiness_t3_features_ml_strategy_2026_08_19.md` W9/W10/W13 explicitly points at this plan for), not this
-  session's own files — left untouched, not fixed.
-  **Next-in-sequence for whoever picks this up**: two things need attention, not one. (a) In this plan's own file
-  order counting only forward from where this session worked, the next OPEN todo is "Collapse the per-domain
-  config-reloader and S2S-auth boilerplate" (P2, BACKEND, near the end of the doc). (b) **But strictly by raw file
-  position, several older open todos sit EARLIER than the ambiguous-cluster todo this session anchored on** — the
-  `/positions/health` schema-mapping design (P3), the `monitor_handler.py` CeFi-loop per-client config (P2), the
-  config-loader unification correction (P2), the mode-aware-dispatch `[OPERATOR]` design (P2), the codex-doc update
-  (P3), and the two `[AGENT]` P2 todos (CeFi/TradFi archetype inventory, TradFi margin registry) — none of those
-  were touched this session (out of this session's explicit scope), so a strict reading of `sequential: true`
-  "work in file order" would put one of THOSE first, not the config-reloader-collapse todo. Flagging both readings
-  rather than silently picking one.
 - **2026-08-21 (interactive session)** — Completed the W7 inventory + migration todos. Grepped all module-level
   reference-shaped constants under `strategy_service/engine/strategies/`: 72 distinct candidates (76 raw grep
   matches, 3 index duplicates, minus `_ALLOWED_CHAINS` already covered by the exemplar todo above), not the

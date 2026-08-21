@@ -46,10 +46,8 @@ tags:
 related:
   [
     /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
-  # 2026-08-21 (archival sweep): dropped cefi_hl_aster_batch_data_gaps_2026_06_22 (archived to plans/archive/issues/,
-  # fully resolved — durable facts already in /codex/02-data/cefi-capture-universe.md +
-  # /codex/05-infrastructure/manifest-consolidator-ssot.md).
 created: 2026-07-17
 author: unknown
 parent_epic: manifest_master
@@ -71,6 +69,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py,
     unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
     unified-api-contracts/scripts/check_coverage_floor_registry_drift.py,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
     /plans/active/issues/hyperliquid_backfill_runaway_duplicate_launch_billing_waste_2026_08_16.md,
   ]
