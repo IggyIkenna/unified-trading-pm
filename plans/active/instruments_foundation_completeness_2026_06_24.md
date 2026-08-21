@@ -301,6 +301,25 @@ code" detail + the tradfi historical progress log; `depends_on` the Phase-0 chil
       un-deleted INDEX (VIX cash — adapter still creates it) + 9 stray VX; cefi-domain equity-perp singles if any. DoD:
       each pollutant verified absent on all 4 legs (pause-consolidator → snapshot → filter → resume for the manifest
       leg).
+      **ICE: fully verified clean, all legs** — `instruments-service@42cf8ba5` (2026-08-16), see this doc's own
+      history/other todos. **CBOE: re-measured 2026-08-21 (T2), catalogue leg CLEAN, manifest leg NOT — precise
+      counts differ from the 2026-06-24 estimate.** Catalogue leg (`prod/catalog.parquet`, tradfi-prd bucket):
+      236 live CBOE rows total (COMBO 143, FUTURE 83, INDEX 10), **zero** `SPOT_PAIR` rows, **zero** VX-matching
+      FUTURE rows, and the 10 live INDEX rows are all yield/treasury symbols (`^FVX`/`^IRX`/`^TNX`/`^TYX`/`2YY=F`
+      + their `USxxY` aliases) — no VIX-cash row present. The 91-SPOT_PAIR / 9-stray-VX pollutants are gone from
+      the catalogue; the "5 un-deleted INDEX (VIX cash)" pollutant is also gone from the catalogue specifically
+      (a DIFFERENT set of 10 INDEX rows is legitimately live today).
+      **Manifest leg still carries VIX/VX bookkeeping rows** — `market-data-tick-tradfi-prd` bucket,
+      `venue=CBOE, instrument_type=INDEX`: 7,615 rows across 57 unique `instrument_id`s match `VIX`/`VX`
+      (`CBOE:INDEX:VIX-USD`, `CBOE:INDEX:VX.FUT-USD`, plus dozens of `VX/<month><yr>:1:S - VX<n>/<month><yr>:1:B`
+      calendar-spread combos). **Reassuring measurement**: `capture_status` for every one of these 7,615 rows is
+      `empty_confirmed` (5,223) or `expected_unattempted` (2,392) — **zero `captured` rows** — so no live pollutant
+      DATA exists, only manifest bookkeeping entries for instruments that are correctly never captured. Retirement
+      is functionally safe (nothing is served/counted as real coverage) but not yet complete on this leg per the
+      DoD's own bar ("gone… not just de-enumerated") — the rows still physically exist in the manifest. Did not
+      attempt the pause-consolidator→snapshot→filter→resume purge (GCS/manifest deletes are operator-gated per
+      this tranche's standing rules); left `[ ]` open, CBOE's remaining gap is now precisely scoped rather than
+      an estimate. `/data-status` UI surface and `cefi`-domain equity-perp-singles legs not checked this pass.
 
 ---
 
