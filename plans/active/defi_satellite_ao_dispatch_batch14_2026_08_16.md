@@ -237,3 +237,9 @@ already decided):
   entirely per a standing explicit operator ruling. Paired with
   `defi_satellite_ao_dispatch_batch14_2026_08_16_finalize.md` (`status: active`, gated via `depends_on` +
   `gate_on_depends: true`) in the same turn.
+- **ag-closeout-audit 2026-08-21 (defi tranche, Phase 2 sweep)**: re-verified per the parked doc's "2 batch plans
+  stuck status: draft for days" hygiene flag. Content still current (spot-checked against source docs' own
+  2026-08-20/21 Progress Log entries, no drift found). Per this doc's own Progress Log entry above, flipping
+  `status: draft` -> `active` is explicitly an operator decision, not a hygiene fix — not made here. Flagging for
+  operator attention: this batch has sat `status: draft` since 2026-08-16 (5 days) despite being fully
+  conflict-checked and ready to dispatch.

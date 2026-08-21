@@ -2,7 +2,8 @@
 doc_type: issue
 title: DP-LIVE-004 BYBIT-FUTURES remains on a pre-fix live VM
 summary: The active consolidated CeFi VM still runs the pre-5f88715e4b MTDS image, so BYBIT-FUTURES book_snapshot_5 remains unproductive until a safe VM cycle.
-status: open
+status: superseded
+superseded_by: [dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20]
 nature: process
 asset_group: [cefi]
 stage: [meta]
@@ -29,6 +30,11 @@ context_scope:
     deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
   ]
 ---
+
+> **SUPERSEDED 2026-08-21 (ag-closeout-audit cefi tranche, Phase 3 sweep)**: consolidated into
+> `/plans/active/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md` — same VM
+> (`mtds-live-cefi-consolidated-20260817-025031`), same root cause (`5f88715e4b`), same recommended action. This
+> doc's own evidence/detail is kept for provenance; the tracked `- [ ]` todos live on the canonical doc now.
 
 ## What I found
 

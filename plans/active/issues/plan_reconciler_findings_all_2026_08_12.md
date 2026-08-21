@@ -696,7 +696,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
 - [x] ✅ [REVIEW] P3. (ao-readiness) plans/archive/2026_08/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md —
       bundled ready-and-blocked halves in one todo. **DONE (verified 2026-08-16)**: doc archived, 0 open todos — moot.
 - [x] ✅ [REVIEW] P3. (ao-readiness)
-      plans/active/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md —
+      plans/archive/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md —
       non-dispatchable marker may not match the AO regex. **RESOLVED (2026-08-16)**: `BLOCKED-ON:` is deliberately
       OUTSIDE `_BLOCKED_TOKEN_RE` — it's verify.py's separate, deliberately-dispatchable "real work, temporarily blocked
       on another owner's in-flight fix" marker family (confirmed correct fit for this exact todo's content on

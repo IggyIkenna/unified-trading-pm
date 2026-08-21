@@ -901,3 +901,22 @@ across all 7 protocols.
       `unified-api-contracts` (a deployment-api path-dependency) being clean, not on any remaining code work. Run
       the exact `quickmerge.sh` command in the Progress Log entry above once that dependency is clean, then flip
       the walkthrough-feedback checkbox above with the landed sha.
+
+**Update 2026-08-21 (same session, following a coordinator signal that `unified-api-contracts@4f25d5f0` had
+landed and cleared the earlier dirty-dep block)**: `git pull --ff-only` + re-gated deployment-api (HEAD had moved
+since the prior sentinel) — the dirty-dep blocker IS clear, but `4f25d5f0` itself (a DIFFERENT, deliberate `feat!`
+that deleted `PredictionMarketCategory`/`category_for_group`, tracked `[x]` done in
+`walkthrough_feedback_remediation_2026_08_19.md` with "Manifest supersession flagged to T2 (no-migration scope
+here)") broke `deployment-api/deployment_api/services/prediction_catalogue.py` at import time — that module is
+imported eagerly by `tests/unit/conftest.py`, so `quality-gates.sh` now fails at pytest COLLECTION for the entire
+deployment-api suite, not just prediction code. Confirmed via `git show 4f25d5f0` that the deleted helpers have no
+same-shape successor (`underlying_for_group()` returns fine-grained per-asset `PredictionUnderlying`, not the old
+7-value coarse bucket) — a correct fix is a real design decision (keep old bucket semantics via a new
+locally-owned mapping table, or redesign the catalogue's category filter/facets around the two-axis model, and
+possibly update deployment-ui too), genuinely out of this session's scope/visibility, so NOT attempted here.
+Filed `/plans/active/issues/deployment_api_prediction_catalogue_broken_by_uac_category_deletion_2026_08_21.md`
+(`unified-trading-pm@49ce8f2fcf`) with the full trace + two candidate fix options for whoever picks it up.
+**Net effect on this todo: still code-complete + still blocked, but now on a DIFFERENT, more specific reason** —
+not `unified-api-contracts` dirty-state, but a real (if narrow, single-consumer) regression in deployment-api
+itself that needs a design call before `quality-gates.sh` can go green again. The exact ship command from the
+entry above is unchanged and still correct once the P0 issue doc is resolved.

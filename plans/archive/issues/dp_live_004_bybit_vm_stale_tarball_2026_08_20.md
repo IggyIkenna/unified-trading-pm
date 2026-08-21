@@ -5,7 +5,8 @@ title: >-
 summary: >-
   The BYBIT-FUTURES book_snapshot_5 shard on mtds-live-cefi-consolidated-20260817-025031 remains unproductive
   because that VM booted before the shipped SPOT_PAIR subscription filter; current source already contains the fix.
-status: open
+status: superseded
+superseded_by: [dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20]
 nature: process
 asset_group: [cefi]
 stage: [live, meta]
@@ -30,6 +31,11 @@ context_scope:
 ---
 
 # DP-LIVE-004 BYBIT-FUTURES book_snapshot_5 stale-runtime capture gap
+
+> **SUPERSEDED 2026-08-21 (ag-closeout-audit cefi tranche, Phase 3 sweep)**: consolidated into
+> `/plans/active/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md` — same VM
+> (`mtds-live-cefi-consolidated-20260817-025031`), same root cause (`5f88715e4b`), same recommended action. This
+> doc's own evidence/detail is kept for provenance; the tracked `- [ ]` todos live on the canonical doc now.
 
 ## What I found
 

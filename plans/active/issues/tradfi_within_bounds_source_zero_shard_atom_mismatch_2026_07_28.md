@@ -274,9 +274,17 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
       exists for the same underlying/date; 6-tuple `covered_keys` (added `underlying`) in both
       `rebuild_tradfi_manifest.py` and `_rebuild_tradfi_cf11.py`. Regression coverage:
       `tests/unit/test_rebuild_tradfi_manifest_cf11.py` (14 tests, re-verified green 2026-07-30).
-- [ ] [DATA] P2. Reconcile the `BASE_ASSET`/manifest `underlying` string-naming drift found incidentally during the
+- [x] ✅ [DATA] P2. Reconcile the `BASE_ASSET`/manifest `underlying` string-naming drift found incidentally during the
       cross-check (`HEATING-OIL`/`HEATINGOIL`/`HO`, `NAT-GAS`/`NAT-GAS-HH`/`NATGAS`, and similar) if it is found to
       cause its own denominator/accounting issues. Repo: `market-tick-data-service` / `unified-api-contracts`.
+      **ALREADY DONE (verified 2026-08-15, slot-20, backend_engineer, via `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`)** —
+      pre-existing fix, no new code needed: `market-tick-data-service@b63200a7` (2026-08-09) already wires
+      `unified_api_contracts.resolve_tradfi_underlying_to_root()`/`canonical_tradfi_underlying()` into
+      `retire_tradfi_cf11_bundle_grain_shard_atom_mismatch_2026_07_30.py`'s key comparison, so every recognised
+      spelled/short-code/hyphenated variant of the same root collides on one key. Covered by
+      `unified-api-contracts/tests/unit/test_tradfi_underlying_canonicalization.py`. See batch13's own todo (Source: this
+      doc) for the full write-up, including one residual out-of-scope dead-code finding (unused shadow dict in
+      `tradfi_instrument_universe.py`, zero live impact, not fixed).
 - [ ] [DATA] P2. Re-measure the `DP_RUN_MOSTLY_EMPTY` CME `ohlcv_1s`/`ohlcv_1m` ratio after todo 1 lands, to confirm the
       alert's denominator is no longer inflated by this false-positive population. Repo: `market-tick-data-service`.
 
@@ -394,3 +402,13 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
 - **na-eligibility-audit 2026-08-21**: KEEP-NA-STALE (already-duplicated), reaffirmed (11th consecutive pass). Todo
   1's citation to `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` remains accurate. Todo 3 (naming-drift
   reconcile) stays conditionally-scoped; todo 4 stays sequenced after todo 1. `assigned_vm` unchanged.
+- **ag-closeout-audit 2026-08-21 (tradfi tranche, Phase 2 sweep)**: flipped todo 3 (`BASE_ASSET`/underlying naming-drift
+  reconcile) to `[x]` — re-verified `market-tick-data-service@b63200a7` + the `tradfi_symbology.py` resolver wiring is
+  live and covered by tests, per `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s own "ALREADY DONE" verification
+  (2026-08-15, slot-20). **Correction to the parked audit doc's claim**: `ag_closeout_audit_tradfi_parked_2026_08_21.md`
+  described this doc as "both substantively resolved via batch13" (paired with the year-shard doc below) — that
+  overstates it. Batch13 only resolved THIS doc's todo 3. Todo 1 (the ~81K-row `--apply`, operator-approved
+  2026-08-07 but not yet run) and todo 4 (re-measure `DP_RUN_MOSTLY_EMPTY` after todo 1 lands) remain genuinely open,
+  real, uncovered work — todo 1 is still only duplicated (not executed) in
+  `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`. Doc stays `assigned_vm: NA` on the standing KEEP-NA-STALE +
+  operator-gate grounds (unchanged).

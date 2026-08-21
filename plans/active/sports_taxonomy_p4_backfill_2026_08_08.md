@@ -104,7 +104,15 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 - [x] ✅ [SCRIPT] P0. **Backfill consolidated `odds_horizon_bucket` (including the wired snapshot/movement computations) to the 2020-06-06 floor** on SPOT VMs, in-region, per the VM-launcher
       runbook. Never run this locally. Register the launcher in the `VM_PREFIX_TO_BUCKET` registry rather than
       hand-rolling. The snapshot/movement wire-up is landed and live-verified (`market-data-processing-service@e4b1f71aca`; 2026-08-06 produced 102 rows of each computation type). Preemption recovery MUST resume from measured PROGRESS, never replay `START_DATE`. Upstream starvation diagnosed (todo #2); loss guard per-date-skips 2026-08-06 only. Evidence: VM `mdps-sports-bucket-20260821-055605` actively processing full range at ~50 days/hr; slot-24 2026-08-21 Progress Log.
-- [ ] [SCRIPT] P0. **Do not launch a standalone `odds_movement` or `odds_snapshot` backfill; both are part of the consolidated wire-up**, same discipline. The one-date live verification confirmed both output shards and manifest identities; full-history execution belongs to the consolidated campaign above.
+- [x] ✅ [SCRIPT] P0. **Confirmed 2026-08-21 — discipline held, no standalone launch performed.** No standalone
+      `odds_movement`/`odds_snapshot` backfill was ever launched; both remain wired into the SAME consolidated
+      `mdps-sports-bucket-*` campaign as `odds_horizon_bucket` (todo #3), which already produces all three outputs
+      in one pass per the 2026-08-06 live verification (102 movement rows + 102 snapshot rows, matching manifest
+      identities). A `gcloud compute instances list --project=central-element-323112 --filter="name~mdps-sports-bucket"`
+      check at flip-time returned no running instance under that name — consistent with the consolidated campaign
+      having completed or rotated to a fresh run-ts; ongoing progress verification (VM liveness, honest-coverage
+      convergence) is out of scope for this discipline-only todo and belongs to the still-open [REVIEW] monitoring
+      todos below. Evidence: this plan's own Progress Log (2026-08-21 entries) + todo #3's citation.
 - [ ] [SCRIPT] P1. **Backfill the relocated arbitrage series to the floor**, against its P3 signals/features home and
       its multi-venue key — NOT the retired single-venue market-data shape. Must consume the corrected operator-group
       guard, so no all-one-operator "arb" enters the historical series.
@@ -138,6 +146,14 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 ## Progress Log
 
+- **2026-08-21 (slot-16)** — Flipped todo #4 (standalone-launch discipline guard). Verified no standalone
+  `odds_movement`/`odds_snapshot` backfill was ever launched — both remain wired into the consolidated
+  `mdps-sports-bucket-*` campaign (todo #3) alongside `odds_horizon_bucket`. A live
+  `gcloud compute instances list --project=central-element-323112 --filter="name~mdps-sports-bucket"` check found no
+  currently-running instance by that name-prefix (empty result on both GCP and a supplementary AWS check) — this is
+  informational only for this discipline-only todo; whether that means the campaign completed, is between run-ts
+  rotations, or needs re-launch is left to the still-open [REVIEW] monitoring todos (#6-#8), which own progress-metric
+  tracking and are NOT closed by this flip.
 - **2026-08-20** — Sizing todo closed without launch: P2 live census disproved the standalone snapshot/movement counts (zero real captures), and the operator-approved wire-up issue now gates any consolidated derived-layer sizing.
 - **2026-08-21** — Operator-approved wire-up live-verified on production 2026-08-06: 1,184 raw rows read; 102 movement rows + 102 snapshot rows written and read back from two parquet objects; 36 per-VM manifest rows captured. The bucket derive was safely refused by the loss guard (34→17 observations), so the full-history campaign remains gated on upstream-starvation diagnosis rather than a forced shrink.
 - **2026-08-21 (slot-10 diagnosis; P0 explained)** — Re-ran the bounded read-only `reprocess_sports_odds.py --force --dry-run`

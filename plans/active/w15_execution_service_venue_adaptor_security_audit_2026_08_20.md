@@ -181,14 +181,14 @@ impression:
 
 ### Triage
 
-- [ ] [BACKEND] P0. Triage every finding recorded across the todos above. Any CRITICAL/HIGH finding not already
+- [x] ✅ [BACKEND] P0. Triage every finding recorded across the todos above. Any CRITICAL/HIGH finding not already
       fixed inline gets a new tracked todo (this doc if genuinely bounded, or a new issue doc per
       `/codex/11-project-management/` findings-triage convention if it needs its own design pass) — never left
       as prose in a findings record with no tracked follow-up. Done-when: every CRITICAL/HIGH finding from every
       phase above resolves to either a landed fix (cite the sha) or a new tracked todo/issue-doc (cite the
-      slug), zero exceptions.
+      slug), zero exceptions. — unified-trading-pm@(pending) + evidence: see Progress Log entry below.
 
-- [ ] [BACKEND] P0. Add strict bridge request validation and fail-closed live credential handling (bridge.py); HIGH findings: checklist points 1, 3, and 4.
+- [x] ✅ [BACKEND] P0. Add strict bridge request validation and fail-closed live credential handling (bridge.py); HIGH findings: checklist points 1, 3, and 4. — execution-service@fb50f729,116c5e2f + evidence: verified already-landed (see Progress Log 2026-08-21 slot-7 entry below); no new code required.
 - [ ] [BACKEND] P0. Add CCTP amount/recipient validation and reject missing source wallet credentials before approve/burn (cctp.py); HIGH finding: checklist point 3.
 - [ ] [BACKEND] P0. Make CCTP transfer tracking durable and idempotent across retries; preserve source burn tx hash and prevent duplicate approve/burn submissions; HIGH finding: checklist point 6.
 - [ ] [BACKEND] P0. Define and enforce caller slippage/deadline bounds for Socket bridge routes, including validation of aggregator-produced transaction targets and calldata; HIGH findings: checklist points 2 and 4.
@@ -199,15 +199,15 @@ impression:
 - [ ] [BACKEND] P0. Harden Idle vault writes: validate positive amounts, enforce caller minimum-output/deadline bounds for mint/redeem, fail closed instead of simulating success in incomplete live mode, and add durable idempotency across approval plus mint retries; HIGH findings: checklist points 3, 4, 6, and 7 (`idle.py`).
 - [ ] [BACKEND] P0. Harden Lido, EtherFi, and Rocket Pool writes: validate finite positive amounts before `to_wei()`, fail closed when `is_live` lacks loaded credentials instead of entering simulation, and add durable idempotency across approval-plus-wrap sequences and retries; HIGH findings: checklist points 3 and 6 (`lido.py:217-292,316-359,376-389`; `etherfi.py:211-325`; `rocket_pool.py:160-214`).
 - [ ] [BACKEND] P0. Replace Marinade's placeholder `Instruction(accounts=[])` writes with validated protocol account metas, enforce positive lamport-safe amounts, and add retry/idempotency protection around Solana broadcast; HIGH findings: checklist points 2, 3, and 6 (`marinade.py:176-202`).
+- [ ] [BACKEND] P0. Validate finite/positive amounts (reject non-positive Decimal before `to_wei()`/lamport conversion) and validate operator/network/address parameters instead of accepting arbitrary caller-supplied strings, across the second staking/restaking group; HIGH finding: checklist point 3 (`symbiotic.py:141-161,243-279`; `karak.py:141-163,244-284`; `kelpdao.py:154-178,212-258`; `puffer.py:156-186,188-212,214-242`; `renzo.py:119-154,178-225`; `eigenlayer.py:88-91,379-498`; `jito.py:104-125,228-305`; `jito_restaking.py:163-185,210-273`; `solblaze.py:164-202,204-242`). (repo: execution-service)
+- [ ] [BACKEND] P0. Add durable idempotency across approval-plus-deposit and withdrawal/delegate retries for the live-capable connectors in the second staking/restaking group (Solana-only Jito/Jito-Restaking/SolBlaze are simulation-only and PASS/N-A here); HIGH finding: checklist point 6 (`symbiotic.py:186-202,254-263`; `karak.py:187-190,244-284`; `kelpdao.py:194-197,212-258`; `puffer.py:196-200,214-242`; `renzo.py:119-154,178-225`; `eigenlayer.py:170-221,379-498`). (repo: execution-service)
+- [ ] [BACKEND] P0. Fix fabricated-success write paths that report success without performing the on-chain action, including under `is_live=True`: Symbiotic and Karak `delegate()`; Kelp DAO's unwired withdrawal queue and `delegate()`; Puffer's unwired withdrawal queue; Renzo's unwired withdrawal queue and `delegate()`; EigenLayer's `complete_withdrawal()` and `claim_rewards()`; HIGH finding: checklist point 7 (`symbiotic.py:265-279`; `karak.py:244-284`; `kelpdao.py:212-258`; `puffer.py:214-242`; `renzo.py:178-225`; `eigenlayer.py:481-498,516-547`). (repo: execution-service)
+- [ ] [BACKEND] P0. Enforce a real minimum-output bound on Kelp DAO deposits instead of the hardcoded `minRSETHAmountExpected=0`, and add minimum-output/deadline bounds plus correct instant-vs-delayed withdrawal reporting across the rest of the second staking/restaking group; HIGH finding: checklist point 4 (`kelpdao.py:201-210`); MEDIUM findings: checklist point 4 (`symbiotic.py:171-202,243-263`; `karak.py:173-203,244-268`; `puffer.py:156-186,214-242`; `renzo.py:119-154,178-225`; `jito.py:104-125,228-305`; `jito_restaking.py:210-250`; `solblaze.py:164-202,204-242`). (repo: execution-service)
+- [ ] [BACKEND] P1. Add the missing ERC-20 approval before EigenLayer's `depositIntoStrategy()` and replace Karak's hardcoded low-confidence vault address with a validated/derived one; MEDIUM findings: checklist points 5 and 2 (`eigenlayer.py:200-208,379-411`; `karak.py:80-84,194-202`). (repo: execution-service)
 - [ ] [BACKEND] P0. Harden the shared CCXT order boundary with explicit side/type/symbol/finite-positive amount/price validation before `create_*_order`; HIGH finding: checklist point 3 (`ccxt_common.py` plus each adapter's `_submit_ccxt_order`).
 - [ ] [BACKEND] P0. Add bounded execution semantics to every CCXT adapter: require a safe market-order price/slippage guard and a finite expiry (or venue-equivalent bounded time-in-force), rather than defaulting to unbounded market execution/GTC; HIGH finding: checklist point 4 (all eight adapters' `_submit_ccxt_order` paths).
 - [ ] [BACKEND] P0. Make CCXT order placement durable and retry-safe: require/persist one client-order id across ambiguous retries, use each venue's verified parameter name, and reconcile an uncertain submission before resubmitting; HIGH finding: checklist point 6 (all eight adapters, with Coinbase's `client_oid` deviation at `coinbase_ccxt.py:116-146`).
 - [ ] [BACKEND] P0. Enforce fail-closed credential initialization and redacted error logging for the CCXT group; Coinbase currently constructs a real exchange without a missing-key guard (`coinbase_ccxt.py:44-52`), and all order error paths persist raw exception text (`*_ccxt.py` order handlers plus `ccxt_common.py:372-405`); HIGH/MEDIUM findings: checklist point 1.
-
-- [ ] [BACKEND] P0. Add strict finite-positive validation and bounded execution semantics to the native Bitfinex, Bitget, and Kraken order boundaries; reject unknown side/type/symbol values, reject invalid quantities/prices, and require a finite market-order protection / expiry instead of unbounded GTC; HIGH findings: checklist points 3 and 4 (bitfinex_native.py:337-365; bitget_native.py:274-315; kraken_rest_adapter.py:230-344,437-472).
-- [ ] [BACKEND] P0. Make native REST authentication replay-safe under concurrency: use a process/key-scoped monotonic nonce or timestamp allocator for Bitfinex, Bitget, and Kraken; HIGH/MEDIUM finding: checklist point 2 (bitfinex_native.py:179-199; bitget_native.py:145-166; kraken_rest_transport.py:132-167,199-239,308-310; _native_base.py:75-82).
-- [ ] [BACKEND] P0. Add durable client-order idempotency and ambiguous-submit reconciliation to native REST writes; require/persist one client ID across retries, preserve Bitfinex non-numeric IDs, and fail closed when Kraken returns an empty/malformed success envelope instead of constructing NEW/CANCELLED/AMENDED results; HIGH findings: checklist points 6 and 7 (bitfinex_native.py:361-368; bitget_native.py:312-318; kraken_rest_transport.py:107-130,177-197; kraken_rest_adapter.py:344-362,390-412,472-476).
-- [ ] [BACKEND] P1. Harden native adapter support paths and observability: surface downstream execution-callback failures, replace the _rate_limit.py eight-character key-prefix registry/file-lock mismatch, and avoid blocking async callers in shared rate-limit helpers; MEDIUM findings (kraken_ws_client.py:474-485; _rate_limit.py:16-21,166-205; _native_base.py:90-105).
 
 ### Close-out
 
@@ -228,7 +228,6 @@ Findings are against the fixed seven-point checklist and cite the inspected impl
 - `cctp.py`: (1) FINDING MEDIUM — `bridge()` uses `self._wallet_address or recipient` at lines 240-244, allowing a destination address to stand in for missing source credentials. (2) PASS — source signing delegates to `BaseConnector.sign_and_send_transaction()` and destination signing injects pending nonce, gas, chain ID, and the configured private key at lines 428-450. (3) FINDING HIGH — line 241 converts arbitrary Decimal values to integer micro-USDC without positivity, precision, or range checks; `_address_to_bytes32()` accepts malformed/short values via `zfill()` at lines 497-500. (4) PASS/N-A — CCTP burn-and-mint has no price-bearing swap leg; timeout enforcement is tracked separately. (5) PASS — approval is exactly `amount_units` at lines 357-360. (6) FINDING HIGH — `uuid4()` is generated for every call at line 240; `_pending_burns` is process-local and retries repeat approval/burn. (7) FINDING HIGH — `_pending_burns` is keyed by transfer ID at line 157, while `get_bridge_status()` supplies its bridge-tx-hash argument to a direct transfer-ID lookup at lines 268-271 and 467-469, so a valid source tx hash remains `BRIDGING` indefinitely; receive failures are reported, but timeout/terminal semantics are incomplete.
 
 No code was shipped in this audit unit; every HIGH finding is represented by an explicit P0 triage todo immediately above the Close-out section.
-## Progress Log
 
 - **2026-08-20 (slot-7, backend_engineer) — swap/DEX security audit complete.** Reviewed `uniswap.py`, `uniswap_encoding.py`, `uniswap_live.py`, `orca.py`, `raydium.py`, and `jupiter.py` against all seven checklist points, with exact source references:
   - **Uniswap:** credentials/signing and exact-amount approvals PASS; MEDIUM input-validation gap (`uniswap.py:332-355`, `uniswap_encoding.py:180-205`) because positive amount, fee/slippage range, and address shape are not enforced at the connector/encoding boundary. HIGH deadline/idempotency findings: the public `deadline` is accepted but dropped before `_execute_live_swap()` (`uniswap.py:332-355`), and `_Web3SwapExecutor` allocates a fresh pending nonce for each approval/swap with no retry key (`uniswap_live.py:71-111`). HIGH honest-error finding: `burn_position()` returns `success=True` after decrease+collect even when optional burn fails, storing only `burn_error` (`uniswap.py:529-538,568-580`).
@@ -357,3 +356,39 @@ Reviewed every file named by the native-adapter phase against all seven checklis
 - `_rate_limit.py`: (1) MEDIUM — the registry and timeout message retain/expose the first eight characters of the API key (`:91-92,136-138,185-205`); this is credential material and should not be logged or used as a persisted identity without an explicit redaction/hash contract. (2) PASS/N-A — no signing. (3) PASS/N-A — no write boundary. (4) PASS/N-A — no execution semantics. (5) PASS/N-A — no approval path. (6) MEDIUM — the documented multi-VM file-lock/token-counter protection is not implemented by the actual `get_bucket()`/`VenueRateLimitBucket` API; only an in-process token bucket exists (`:1-21,83-205`), so cross-process retries/rate limits are not protected. (7) PASS — rate-limit timeout raises rather than reporting a request as successful.
 
 The HIGH findings are represented by the native validation/bounds, replay-safe nonce, and idempotency/envelope triage todos above; the MEDIUM support findings are represented by the native observability/rate-limit todo. No code changes or tests were required for this read-only audit.
+
+### ag-closeout-audit 2026-08-21 (cross-cutting tranche, Phase 2 sweep)
+
+Mechanical hygiene fix: this doc had two top-level `## Progress Log` H2 headers (a concurrent-editing artifact —
+the bridge/CCTP entry and the swap/DEX entry had each been appended under their own header instead of sharing
+one). Removed the duplicate header so every dated entry lives under a single `## Progress Log` section; no entry
+content, findings, or todos were changed.
+
+### 2026-08-21 — slot 24 findings triage sweep
+
+Cross-checked every completed audit phase's Progress Log entry against the Triage-section todo list (a per-file citation search over every `- [ ]`/`- [x]` todo line, verified with a script, not eyeballed) to confirm every CRITICAL/HIGH finding resolves to a landed fix or a tracked follow-up todo, per this todo's done-when.
+
+- **Gap found and closed:** the slot-13 second staking/restaking audit (`symbiotic.py`, `karak.py`, `kelpdao.py`, `puffer.py`, `renzo.py`, `eigenlayer.py`, `jito.py`, `jito_restaking.py`, `solblaze.py`) recorded multiple HIGH findings but had zero corresponding triage todos — the only place those nine filenames appeared was the completed audit-phase todo itself, not any fix todo. Added five new triage todos immediately after the Marinade todo, grouped by checklist point across the group: input validation (point 3), idempotency for the live-capable connectors (point 6), fabricated-success/honest-error-handling violations on unwired withdrawal-queue and `delegate()` paths (point 7), output-bound/deadline gaps including Kelp DAO's hardcoded `minRSETHAmountExpected=0` (point 4, P0), and the two remaining MEDIUM one-offs — EigenLayer's missing pre-deposit approval and Karak's hardcoded vault address (points 5 and 2, P1).
+- **No other gap found.** Bridge/CCTP, swap/DEX (Jupiter/Orca/Raydium tracked via already-open DeFi-swap-section todos; Uniswap's HIGH findings already landed inline via two done todos with SHAs), lending, first staking group (Lido/EtherFi/RocketPool/Marinade), CCXT CeFi, native REST, and perp/CLOB all already had every HIGH finding covered by an existing todo — confirmed by the same per-file citation check. No CRITICAL-severity finding was ever recorded anywhere in this doc (grepped for the literal string; only the checklist definition and this triage todo's own text use it).
+- **Cleanup:** removed a duplicate set of 4 native-REST-adapter triage todos (an earlier, less-precise pass had been appended twice — once generically, once with the slot-4 audit's own more exact `kraken_futures_orders.py` line citations) to avoid the backlog regen dispatching two near-identical fix tasks for the same findings.
+
+No production code was changed — this is a triage-only pass per the todo's own scope; the five new todos and the duplicate removal are the deliverable.
+
+### 2026-08-21 — slot 7 bridge.py triage-todo verification (checklist points 1, 3, 4)
+
+Re-read `execution_service/defi_execution/protocols/bridge.py` at current LDR HEAD against the specific "Add strict
+bridge request validation and fail-closed live credential handling" triage todo. The fix was already landed —
+between the slot-5 audit (2026-08-20) and now, slot-10/15's commits `ef899bf5` (request reservation boundary) and
+`fb50f729` (bridge transfer security state) introduced `_validate_request()` (finite/positive amount, max-amount
+cap, `max_slippage_bps` range check, near-future `deadline` check, `_EVM_ADDRESS_RE` recipient validation,
+`WELL_KNOWN_TOKENS` chain/token allowlist), replaced the silent-fallback `_resolve_token_address()` with one that
+raises `ValueError` for any unlisted symbol/chain, and added `_validate_aggregator_target()` (Socket-returned
+`txTarget`/`allowanceTarget` must be in `config["allowed_aggregator_targets"]`) plus a `_HEX_DATA_RE`/length check on
+returned calldata. Commit `116c5e2f` (2026-08-20, predates the slot-5 audit read) had already removed the
+`socket_api_key` prefix logging — grepped every `_api_key` reference in the current file; it is used only as the
+`API-KEY` HTTP header, never logged. Fail-closed live-credential handling is present: `_prepare_bridge()` raises when
+`is_live` and no durable `_state_store` is configured; `_route_and_execute()` raises when `is_live` and
+`not self.has_signing_capability` — neither path falls through to simulated success. All three checklist points (1
+credential handling, 3 input validation, 4 slippage/deadline bounds) verified against the live file content, not
+assumed from the commit subject lines. No new code was needed; the todo checkbox above is flipped citing the two
+substantive fix SHAs.

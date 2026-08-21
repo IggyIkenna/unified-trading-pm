@@ -176,3 +176,20 @@ The proven replacement pattern (shipped + verified in
     re-scoped to P2 headroom-verification (already column-projected + on a 64GB VM since 08-15);
     canonical-migration sizing refined to category-scoped (blanket bump rejected as oversizing its
     streaming content passes).
+- **2026-08-21 (same session, final — honest-coverage rollup REFRESHED post-purge)**: today's
+  `gs://central-element-323112-honest-coverage/2026-08-21/coverage.json` VERIFIED at updated
+  09:18:34Z (after the 06:38Z AAVEV3 purge): all 5 asset_groups measured, 0 failed, **0 `AAVEV3`
+  occurrences** (canonical `AAVE_V3` present) — deployment-api's honest-coverage surface now serves
+  post-purge numbers; the `/api/data-status/manifest` rollup was separately verified to never have
+  carried the phantom (registry-driven venue universe). Getting there took 6 launch attempts whose
+  real blocker was TARBALL-SET CONSISTENCY: floating tarballs had drifted to mixed vintages (a
+  fresh-UTL/stale-UAC skew import-crashed one run on `MarginModel.DERIBIT`), and per-repo
+  auto-republish can't fix it while trees are dirty (peer UAC WIP + this session's own in-flight
+  work) — solved by building the whole set from clean DETACHED WORKTREES at landed HEADs
+  (`git worktree add --detach` + `WORKSPACE_ROOT=<clean-ws> create-code-tarballs.sh --include
+  instruments-service`), a reusable recipe when shared trees are dirty. ATTRIBUTION CAVEAT kept
+  honest: one 64GB all-AG run today was OOM-killed (rc=137) at the defi-index load, and the
+  successful 09:18Z write came from a SUBSEQUENT run launched with the consistent tarballs (most
+  plausibly the ~09:10 nightly) — before trusting the nightly as healed, the [CODE] P1 todo above
+  must confirm which machine size wrote 09:18Z and whether the launcher/scheduler default still
+  needs the bump.
