@@ -808,8 +808,8 @@
       <div class="stat">
         <span class="v">14</span
         ><span class="k"
-          >Endpoints documented in full depth below (2 instruments, 3 market data, 1 instructions, 2 client
-          reporting, 6 signal leasing)</span
+          >Endpoints documented in full depth below (2 instruments, 3 market data, 1 instructions, 2 client reporting, 6
+          signal leasing)</span
         >
       </div>
       <div class="stat">
@@ -824,8 +824,8 @@
         ><span class="k"
           >Instruction types routed to real execution today — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
           UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC route through live execution wiring (BORROW/REPAY wired
-          2026-08-21, AAVE V3 only); QUOTE arms repricing without submitting an order; BRIDGE/LP_MINT/LP_BURN parse
-          as real union members and return an honest 501 — no execution engine built for any of the three yet</span
+          2026-08-21, AAVE V3 only); QUOTE arms repricing without submitting an order; BRIDGE/LP_MINT/LP_BURN parse as
+          real union members and return an honest 501 — no execution engine built for any of the three yet</span
         >
       </div>
       <div class="stat">
@@ -839,31 +839,31 @@
 
     <h3 style="margin-top: 34px">What this platform is</h3>
     <p class="lede">
-      One canonical platform spanning five market ecosystems — centralised crypto, decentralised finance,
-      traditional markets, sports and prediction markets — with historical batch delivery and near-real-time
-      streaming over the same canonical contracts, a controlled path from backtest through paper to live, and
-      modular choices over who owns the signal and who owns execution.
+      One canonical platform spanning five market ecosystems — centralised crypto, decentralised finance, traditional
+      markets, sports and prediction markets — with historical batch delivery and near-real-time streaming over the same
+      canonical contracts, a controlled path from backtest through paper to live, and modular choices over who owns the
+      signal and who owns execution.
     </p>
     <div class="keypoints">
       <div>
         <b>Five asset groups</b
         ><span
-          >CeFi, DeFi, TradFi, sports and prediction markets are represented through common discovery and data
-          contracts — most providers expose a separate schema and operating model per domain.</span
+          >CeFi, DeFi, TradFi, sports and prediction markets are represented through common discovery and data contracts
+          — most providers expose a separate schema and operating model per domain.</span
         >
       </div>
       <div>
         <b>Live plus batch</b
         ><span
-          >The same canonical universe supports daily persisted delivery, replay/recovery and near-real-time
-          consumption — research historically and operate live without rebuilding the integration.</span
+          >The same canonical universe supports daily persisted delivery, replay/recovery and near-real-time consumption
+          — research historically and operate live without rebuilding the integration.</span
         >
       </div>
       <div>
         <b>Lifecycle continuity</b
         ><span
-          >Backtest, paper and live retain the same strategy/configuration identity and can be reconciled against
-          each other — promotion is controlled and evidential, not a rewrite.</span
+          >Backtest, paper and live retain the same strategy/configuration identity and can be reconciled against each
+          other — promotion is controlled and evidential, not a rewrite.</span
         >
       </div>
       <div>
@@ -883,19 +883,19 @@
       </li>
       <li>Consume near-real-time normalised market-data envelopes over a durable, replayable stream.</li>
       <li>
-        Lease an entitled signal slot at an agreed payload depth, receive it by pull or push, and acknowledge
-        delivery.
+        Lease an entitled signal slot at an agreed payload depth, receive it by pull or push, and acknowledge delivery.
       </li>
       <li>
-        Submit target-position, quote, cancel, transfer, DeFi and multi-leg instructions for execution where
-        authorised.
+        Submit target-position, quote, cancel, transfer, DeFi and multi-leg instructions for execution where authorised.
       </li>
       <li>Run an externally generated strategy through this platform's data, execution and reporting.</li>
       <li>
         Inspect positions, NAV, P&amp;L, attribution, trades, transfers and fees, scoped to their own
         <code>client_id</code>.
       </li>
-      <li>Promote a versioned strategy from backtest to paper to live under explicit approvals, limits and kill switches.</li>
+      <li>
+        Promote a versioned strategy from backtest to paper to live under explicit approvals, limits and kill switches.
+      </li>
     </ul>
     <div class="callout">
       <span class="tag">Read this before treating any of the above as uniform across the five groups</span>
@@ -1102,8 +1102,8 @@
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        <b class="ev ev-verified">✓ verified</b> Of the services this page documents, only client-reporting-api
-        mounts the shared <code>/auth/login</code> / <code>/auth/me</code> router (<code>create_auth_router</code>,
+        <b class="ev ev-verified">✓ verified</b> Of the services this page documents, only client-reporting-api mounts
+        the shared <code>/auth/login</code> / <code>/auth/me</code> router (<code>create_auth_router</code>,
         <code>client_reporting_api/api/main.py</code>) — execution-service, instruments-service, and
         market-tick-data-service do not call <code>create_auth_router</code> anywhere in their trees (confirmed by a
         repo-wide search, not just the entry file). Token issuance/provisioning for those three is an operator-side
@@ -1733,12 +1733,11 @@
           <b class="ev ev-verified">✓ verified</b> The transport call —
           <code>unified_trading_library.streaming.event_facade.get_transport(topology).read(...)</code>, each envelope
           serialised via <code>.model_dump_json()</code> (<code>external.py:304-310</code>) — and the
-          <code>CanonicalPersistEnvelope</code> field list itself:
-          <code>schema_version</code>, <code>asset_group</code>, <code>data_type</code>, <code>pipeline_mode</code>,
-          <code>period_start</code>, <code>period_end</code>, <code>source</code>, <code>available_at</code>,
-          <code>retention_class</code>, exactly one of <code>payload_inline</code> / <code>payload_pointer</code>,
-          <code>venue</code>, <code>chain</code>, <code>instrument_id</code>, <code>instrument_type</code>,
-          <code>correlation_id</code>, <code>vm_name</code>.
+          <code>CanonicalPersistEnvelope</code> field list itself: <code>schema_version</code>,
+          <code>asset_group</code>, <code>data_type</code>, <code>pipeline_mode</code>, <code>period_start</code>,
+          <code>period_end</code>, <code>source</code>, <code>available_at</code>, <code>retention_class</code>, exactly
+          one of <code>payload_inline</code> / <code>payload_pointer</code>, <code>venue</code>, <code>chain</code>,
+          <code>instrument_id</code>, <code>instrument_type</code>, <code>correlation_id</code>, <code>vm_name</code>.
           <b>Source:</b> <code>unified-api-contracts/unified_api_contracts/events/persist.py</code>.
         </p>
         <h3>Errors</h3>
@@ -1860,11 +1859,11 @@
         (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
-        internal DART manual-trade surface uses in production. BORROW/REPAY were wired 2026-08-21 through the same
-        AAVE V3 live-dispatch seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE already used
-        (<code>execution_service/engine/handlers/defi_live_dispatch.py::dispatch_borrow_live</code>). Three
-        variants — BRIDGE, LP_MINT, and LP_BURN — parse successfully (they are real, valid members of the union) but
-        return an honest <code>501</code>: not a silent drop, but not the same contract either
+        internal DART manual-trade surface uses in production. BORROW/REPAY were wired 2026-08-21 through the same AAVE
+        V3 live-dispatch seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE already used
+        (<code>execution_service/engine/handlers/defi_live_dispatch.py::dispatch_borrow_live</code>). Three variants —
+        BRIDGE, LP_MINT, and LP_BURN — parse successfully (they are real, valid members of the union) but return an
+        honest <code>501</code>: not a silent drop, but not the same contract either
         (<code>external_instruction_api.py:129-136</code>).
       </p>
       <p>
@@ -1915,8 +1914,8 @@
             <td><code>BORROW</code></td>
             <td><code>BorrowInstruction</code></td>
             <td>
-              <b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3, wired 2026-08-21); falls
-              back to simulation outside LIVE/MANUAL mode
+              <b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3, wired 2026-08-21); falls back
+              to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
           <tr>
@@ -1947,8 +1946,8 @@
             <td><code>REPAY</code></td>
             <td><code>RepayInstruction</code></td>
             <td>
-              Routed to live DeFi execution (AAVE V3, wired 2026-08-21) — same seam as <code>BORROW</code> above;
-              falls back to simulation outside LIVE/MANUAL mode
+              Routed to live DeFi execution (AAVE V3, wired 2026-08-21) — same seam as <code>BORROW</code> above; falls
+              back to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
           <tr>
@@ -1971,8 +1970,10 @@
           <tr>
             <td><code>BRIDGE</code></td>
             <td><code>BridgeInstructionV2</code></td>
-            <td><b class="st st-plan">planned</b> — recognised, honest 501; no cross-chain bridge execution engine
-              exists yet</td>
+            <td>
+              <b class="st st-plan">planned</b> — recognised, honest 501; no cross-chain bridge execution engine exists
+              yet
+            </td>
           </tr>
           <tr>
             <td><code>ATOMIC</code></td>
@@ -1984,22 +1985,25 @@
             <td><code>CancelInstruction</code></td>
             <td>
               <b class="st st-part">partial</b> — cancels open orders on this router's own tracked orchestrators for
-              either scope: a single instruction (<code>cancel_scope=SINGLE</code>) or every open order across
-              venues for one strategy instance (<code>cancel_scope=ALL_FOR_STRATEGY_INSTANCE</code>, wired
-              2026-08-21)
+              either scope: a single instruction (<code>cancel_scope=SINGLE</code>) or every open order across venues
+              for one strategy instance (<code>cancel_scope=ALL_FOR_STRATEGY_INSTANCE</code>, wired 2026-08-21)
             </td>
           </tr>
           <tr>
             <td><code>LP_MINT</code></td>
             <td><code>LpMintInstruction</code></td>
-            <td><b class="st st-plan">planned</b> — recognised, honest 501; no concentrated-liquidity mint execution
-              engine exists yet</td>
+            <td>
+              <b class="st st-plan">planned</b> — recognised, honest 501; no concentrated-liquidity mint execution
+              engine exists yet
+            </td>
           </tr>
           <tr>
             <td><code>LP_BURN</code></td>
             <td><code>LpBurnInstruction</code></td>
-            <td><b class="st st-plan">planned</b> — recognised, honest 501; no concentrated-liquidity burn execution
-              engine exists yet</td>
+            <td>
+              <b class="st st-plan">planned</b> — recognised, honest 501; no concentrated-liquidity burn execution
+              engine exists yet
+            </td>
           </tr>
         </tbody>
       </table>
@@ -2021,7 +2025,10 @@
         <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
-        <h3>Request body — TradeInstruction (shown as the reference shape; see the support table above for every other variant)</h3>
+        <h3>
+          Request body — TradeInstruction (shown as the reference shape; see the support table above for every other
+          variant)
+        </h3>
         <div class="scroll-x">
           <table>
             <thead>
@@ -2245,8 +2252,8 @@
                 </td>
                 <td class="mono">
                   "action='BRIDGE' is not yet wired for external submission. TRADE/QUOTE/TRANSFER/CANCEL/SWAP/LEND/
-                  WITHDRAW/STAKE/UNSTAKE/BORROW/REPAY/ATOMIC are the 12 of 16 StrategyInstructionV2 action types
-                  wired today."
+                  WITHDRAW/STAKE/UNSTAKE/BORROW/REPAY/ATOMIC are the 12 of 16 StrategyInstructionV2 action types wired
+                  today."
                 </td>
               </tr>
               <tr>
@@ -2395,9 +2402,9 @@
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           <b class="ev ev-verified">✓ verified</b> Rounding is 6dp for a BTC-denominated account and 2dp otherwise
           (<code>rnd = 6 if is_btc else 2</code>, <code>_is_btc_account(curve)</code>); if the client has no equity
-          history at all, the response is still <code>200</code> with a body of <code>"No data\n"</code> rather than
-          a <code>404</code> — worth handling explicitly rather than assuming an error status.
-          <b>Source:</b> <code>client-reporting-api/client_reporting_api/api/routes/exports.py:160-166</code>.
+          history at all, the response is still <code>200</code> with a body of <code>"No data\n"</code> rather than a
+          <code>404</code> — worth handling explicitly rather than assuming an error status. <b>Source:</b>
+          <code>client-reporting-api/client_reporting_api/api/routes/exports.py:160-166</code>.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -3230,16 +3237,16 @@
       <p>
         <b class="ev ev-verified">✓ verified</b>
         <code>unified_api_contracts/internal/domain/signal_broadcast/registry.py</code> seeds exactly two
-        counterparties, both explicitly overriding <code>Counterparty.status</code>'s own <code>ACTIVE</code>
-        default to the pre-activation member <code>is_counterparty_active()</code> requires them NOT to be
+        counterparties, both explicitly overriding <code>Counterparty.status</code>'s own <code>ACTIVE</code> default to
+        the pre-activation member <code>is_counterparty_active()</code> requires them NOT to be
         (<code>counterparty.py:71</code>): <code>counterparty-stub-1</code> (STANDARD payload depth,
         <code>default</code> rate-limit profile) and <code>counterparty-stub-2</code> (MINIMAL payload depth,
         <code>minimal</code> rate-limit profile). Their <code>endpoint</code> URLs are placeholders
         (<code>https://webhook.example.invalid/…</code>) — "real webhook URLs + Secret Manager references are injected
-        at deploy time by deployment-service" per the registry's own module docstring, and have not been. The
-        registry's own <code>_LAUNCH_WINDOW_START</code> constant records the target launch date,
-        <b>2026-09-01T00:00:00Z</b> — reaching that date does not by itself flip <code>status</code>; nothing in this
-        module or its callers reads the clock, so activation is a deploy-time code change, not a scheduled cutover.
+        at deploy time by deployment-service" per the registry's own module docstring, and have not been. The registry's
+        own <code>_LAUNCH_WINDOW_START</code> constant records the target launch date, <b>2026-09-01T00:00:00Z</b> —
+        reaching that date does not by itself flip <code>status</code>; nothing in this module or its callers reads the
+        clock, so activation is a deploy-time code change, not a scheduled cutover.
       </p>
       <p>
         This is not a soft gate — it is enforced on every request. <code>transport.py</code>'s own
