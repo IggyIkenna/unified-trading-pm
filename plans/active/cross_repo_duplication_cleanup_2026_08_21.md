@@ -117,11 +117,11 @@ Three audit findings collide with plans that already own those files. Per the fi
 
 ### features-service
 
-- [ ] [AGENT] P1. Adopt UTL `ConfigReloaderBase` across the 8 feature-family `config_reloaders.py` copies. The calendar
+- [x] ✅ [AGENT] P1. SHIPPED features-service@67c006fb. Original: Adopt UTL `ConfigReloaderBase` across the 8 feature-family `config_reloaders.py` copies. The calendar
       and commodity copies differ by 3 lines out of 147; UTL's base class docstring already states it replaces this
       boilerplate.
-- [ ] [AGENT] P1. Collapse the 8 byte-identical `features_service/*/auth_s2s.py` copies into one shared module.
-- [ ] [AGENT] P2. Deduplicate `tests/*/smoke/test_shard_combinatorics.py` across the 4 feature families (57-82 shared
+- [x] ✅ [AGENT] P1. SHIPPED features-service@67c006fb (8 copies to 1, verified on origin). Original: Collapse the 8 byte-identical `features_service/*/auth_s2s.py` copies into one shared module.
+- [x] ✅ [AGENT] P2. SHIPPED features-service@67c006fb. Original: Deduplicate `tests` smoke `test_shard_combinatorics.py` across the 4 feature families (57-82 shared
       blocks pairwise) into one parameterised suite.
 - [ ] [AGENT] P3. Deduplicate `tests/{onchain,volatility}/unit/test_library_deps_integration.py`.
 
