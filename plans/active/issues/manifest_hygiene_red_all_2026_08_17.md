@@ -9,9 +9,10 @@ summary: >-
   capture is mostly fine (though it has its own separate 8-day-and-counting outage as of 2026-08-16 — see
   Todos). Slot-9's 2026-08-17 all-or-nothing-coverage-gate root-cause claim was REFUTED by slot-14's
   round-2 LIVE measurement the same day (zero attempted_failed rows found on clean test dates) — real
-  cause not yet confirmed, needs a fresh code trace (see "Diagnosis update (slot-14 round 2)"); cefi
-  (58,362 cells) and tradfi (8,468 cells) still need a VM-scale re-run of detect_manifest_divergence.py
-  (OOMs the shared host).
+  cause not yet confirmed, needs a fresh code trace (see "Diagnosis update (slot-14 round 2)"); cefi and
+  tradfi's VM-scale re-runs are DONE (2026-08-21) — real per-cell breakdowns obtained (cefi broadly
+  spread across 19 venues, tradfi concentrated in NASDAQ/NYSE/CME ohlcv_1m/1s), real-gap vs code-bug vs
+  oracle-bug triage still open (see "Diagnosis update (2026-08-21, slot-3)").
 status: open
 nature: issue
 asset_group: [cefi, tradfi, prediction]
@@ -569,6 +570,109 @@ lowest-volume-first pass) — out of scope for this todo (which was to root-caus
 regression); if the full >2100-market long tail matters, file a fresh todo for that separately rather than
 scope-creep this fix.
 
+## Diagnosis update (2026-08-21, slot-3) — cefi + tradfi VM-scale re-run: REAL per-cell breakdowns obtained, triage NOT yet done
+
+Per the two open P2 todos, launched two dedicated GCE VMs (both OOM'd this workspace's shared-host 4GB cap
+reading `_index/availability_index.parquet` alone — the whole reason these two AGs were still open).
+Reused the existing generic `canonical-migration` `VM_TASK`/`VM_MIGRATION_CMD` dispatch in
+`setup-data-pipeline-vm.sh` (per vm-launcher-runbook.md: "the generic canonical-migration VM_TASK dispatch
+... runs any VM_MIGRATION_CMD verbatim, so it fits scripts with no dedicated launcher yet") via a new,
+committed, reusable launcher — `deployment-service/scripts/vm/launch-manifest-divergence-detector-vm.sh`
+— rather than a one-off hand-rolled `gcloud` call or a new `VM_TASK` branch. VM names fall under the
+ALREADY-registered `canonical-migration-` catch-all `VM_PREFIX_TO_BUCKET` prefix (confirmed live in
+`vm_zombie_watchdog.py`) — no new registry entry needed. Both VMs ran SPOT (idempotent single-pass
+read-only audit, self-deleted on completion via `VM_SHUTDOWN_ON_COMPLETION=true`), no preemption on
+either run.
+
+- **cefi**: `canonical-migration-manifest-div-cefi-20260821-014730` (e2-highmem-8/64GB, ~13 min
+  wall-clock incl. boot+deps). 341,531 total cells; **57,920 DIVERGENT_EMPTY** (doc's 2026-08-17 count
+  was 58,362 — 4 days of manifest drift between then and this run, same ballpark). CSV:
+  `gs://deployment-scripts-central-element-323112/manifest-divergence-results/cefi/canonical-migration-manifest-div-cefi-20260821-014730/divergence_2026-08-21.csv`
+  (341,531 rows, 31.0MiB).
+- **tradfi**: `canonical-migration-manifest-div-tradfi-20260821-015654` (e2-highmem-4/32GB, ~15 min
+  wall-clock incl. boot+deps). 126,943 total cells; **8,497 DIVERGENT_EMPTY** (doc's count was 8,468 —
+  same ~4-day drift). CSV:
+  `gs://deployment-scripts-central-element-323112/manifest-divergence-results/tradfi/canonical-migration-manifest-div-tradfi-20260821-015654/divergence_2026-08-21.csv`
+  (126,943 rows, 10.3MiB).
+
+Both CSVs are the REAL per-cell breakdown the todos asked for (not the manifest_hygiene daily audit's
+2000-char stdout-tail sample) — grouped by `(venue, data_type)` below.
+
+**cefi — broadly distributed, NO single dominant cause (opposite shape from prediction's 91%-one-cell
+finding).** 59 distinct `(venue, data_type)` cells carry DIVERGENT_EMPTY rows, spread across 19 of cefi's
+venues roughly proportional to venue size — no cell exceeds ~10% of the total:
+
+| venue | data_type | count | date range |
+| --- | --- | --- | --- |
+| OKX-SPOT | book_snapshot_5 | 2,358 | 2019-01-01 → 2026-08-15 |
+| OKX-SPOT | trades | 2,296 | 2019-01-01 → 2026-08-18 |
+| OKX-SWAP | trades | 2,217 | 2019-01-01 → 2026-08-15 |
+| OKX-SWAP | book_snapshot_5 | 2,159 | 2019-01-01 → 2026-08-15 |
+| BYBIT | book_snapshot_5 | 2,069 | 2019-01-01 → 2026-08-18 |
+| BINANCE-SPOT | book_snapshot_5 | 2,064 | 2019-01-01 → 2026-08-15 |
+| KRAKEN-SPOT | book_snapshot_5 | 2,060 | 2019-01-01 → 2026-08-15 |
+| KRAKEN-SPOT | trades | 2,056 | 2019-01-01 → 2026-08-15 |
+| COINBASE-SPOT | trades | 2,045 | 2019-01-01 → 2026-08-15 |
+| BINANCE-FUTURES | book_snapshot_5 | 1,957 | 2019-09-08 → 2026-07-08 |
+| *(49 more cells, each ≤1,936)* | | | |
+
+By venue (top 5 of 19): OKX-SWAP 6,024 (10.4%), BYBIT 5,550 (9.6%), OKX-SPOT 4,654 (8.0%), KRAKEN-FUTURES
+4,497 (7.8%), KRAKEN-SPOT 4,116 (7.1%). By data_type: `trades` 25,654 (44.3%) and `book_snapshot_5`
+22,803 (39.4%) together = **83.7%** of the total; `derivative_ticker` 4,790, `liquidations` 3,629,
+`futures_chain` 792, `options_chain` 212, `perp_funding` 40 make up the rest. Every top cell spans the
+FULL corpus history (2019-01-01, several venues' listing date) through essentially TODAY
+(2026-08-15→08-18) — this is a longstanding structural pattern, not a recent regression.
+
+**tradfi — HEAVILY concentrated, matched-pair shape across timeframes.** Only 15 distinct
+`(venue, data_type)` cells total:
+
+| venue | data_type | count | date range |
+| --- | --- | --- | --- |
+| NASDAQ | ohlcv_1m | 1,373 | 2018-01-01 → 2026-08-20 |
+| NASDAQ | ohlcv_1s | 1,373 | 2018-01-01 → 2026-08-20 |
+| NYSE | ohlcv_1m | 1,373 | 2018-01-01 → 2026-08-20 |
+| NYSE | ohlcv_1s | 1,373 | 2018-01-01 → 2026-08-20 |
+| CBOE | ohlcv_1m | 634 | 2018-01-01 → 2026-08-20 |
+| CME | ohlcv_1m | 531 | 2018-01-01 → 2026-08-20 |
+| CME | ohlcv_1s | 531 | 2018-01-01 → 2026-08-20 |
+| KRX | ohlcv_24h | 470 | 2019-01-01 → 2026-08-14 |
+| CBOE | ohlcv_1s | 374 | 2019-01-01 → 2026-08-20 |
+| FRED | ohlcv_1d | 140 | 2022-05-03 → 2024-09-30 |
+| FRED | yield_curve | 140 | 2022-05-03 → 2024-09-30 |
+| CME | tbbo | 88 | 2026-02-20 → 2026-06-29 |
+| CME | trades | 86 | 2026-03-12 → 2026-08-21 |
+| ICE | ohlcv_24h | 8 | 2019-01-21 → 2019-12-25 |
+| FX | ohlcv_24h | 3 | 2026-05-08 → 2026-08-07 |
+
+NASDAQ+NYSE `ohlcv_1m`+`ohlcv_1s` alone = 5,492/8,497 (**64.6%**) of the total. The exact-matched
+day-count between each venue's `ohlcv_1m` and `ohlcv_1s` rows (NASDAQ 1,373=1,373; NYSE 1,373=1,373; CME
+531=531) is a strong structural signal — whichever days are divergent for one timeframe are divergent for
+the OTHER timeframe at that same venue too, meaning whatever drives this operates at the
+`(venue, date)` grain (a shared per-day capture/bundling mechanism), not two independently-broken
+timeframe paths. 1,373/~3,150 days in the range ≈ 43.6% — well above a plausible weekends+holidays-only
+rate (~29% for NYSE/NASDAQ), so this is not simply "market closed" days, and it runs through TODAY
+(2026-08-20), not a closed historical window. By contrast, **FRED's `ohlcv_1d`/`yield_curve` pair (140
+days each, IDENTICAL) is BOUNDED to 2022-05-03→2024-09-30 only** — not ongoing — consistent with a
+discontinued/retired source window rather than a live gap. CME's `tbbo`/`trades` gaps are recent
+(2026-02-20→ and 2026-03-12→, both continuing to present) — worth checking against
+`/codex/02-data/tradfi-databento-sourcing-ssot.md` for a recent regression. CBOE's `ohlcv_1m`
+(634)/`ohlcv_1s` (374) mismatch (unlike NASDAQ/NYSE/CME's exact pairing) is a different shape again.
+ICE/FX are small (≤8 days each).
+
+**Real-gap vs code-bug vs oracle-bug triage — NOT attempted this session (CLAUDE.md CLAIM≤MEASUREMENT).**
+Both todos' own stated goal was explicitly "the real per-cell CSV breakdown ... before triaging real-gap
+vs code-bug vs oracle-bug" — this session delivers exactly that breakdown, for both AGs, and stops there.
+Determining which bucket each finding falls into needs a LIVE spot-check against raw captured data (the
+same multi-session process the prediction finding above needed: pull one flagged date's raw parquet for
+the dominant cell, count real captured rows, compare against what the manifest cell shows) — not
+attempted here. The two shapes point different directions for where to start: cefi's near-universal,
+proportional-to-venue-size spread across `trades`+`book_snapshot_5` suggests either a genuine widespread
+capture gap or an oracle that over-expects across nearly every venue equally; tradfi's NASDAQ/NYSE/CME
+exact-timeframe-pairing is the stronger, narrower lead (one shared per-`(venue,date)` mechanism, not 15
+independent bugs) and is the better starting point for a live drill-down. Filed as a fresh P2 todo below
+rather than freelanced on unconfirmed root cause for prod data-correctness code (same discipline as every
+prior diagnosis round in this doc).
+
 ## Todos
 
 - [x] ✅ [CODE] P1. Manifest hygiene RED — diagnosed (not fully fixed) 2026-08-17 slot-14. See "Diagnosis"
@@ -660,18 +764,38 @@ scope-creep this fix.
       entirely (the URDI fetch never returns any POLYMARKET records to write, so `_write_prediction_venue` is
       never even invoked for that venue on an affected day) — filing this correction inline per CLAUDE.md "a
       doc/comment that misled you is a finding, fix it in the same turn" rather than leaving the stale path.
-- [ ] [DATA] P2. Launch a VM to run `detect_manifest_divergence.py --asset-group cefi` (14M+ row manifest OOMs the
-      shared host at a 4GB cap) and get the real per-cell CSV breakdown (not the stdout-tail sample) — determine
-      which venue(s)/data_type(s) actually drive the 58,362 DIVERGENT_EMPTY count before triaging real-gap vs
-      code-bug vs oracle-bug. `market-tick-data-service`/`unified-trading-library` (the detector script's home).
-      No `[OPERATOR]` gate needed (task_template.md finding U — read-only/audit/census todo, writes only a new CSV
-      artifact, touches no existing prod data; corrected 2026-08-19, plan-reconcile observability_master).
-- [ ] [DATA] P2. Launch a VM to run `detect_manifest_divergence.py --asset-group tradfi` (8,468 DIVERGENT_EMPTY,
-      14,464,340-row manifest already confirmed to OOM a 4GB local cap) — same read-only breakdown as the cefi
-      todo immediately above, same repo, same no-`[OPERATOR]`-needed justification (corrected 2026-08-19,
-      plan-reconcile observability_master: this todo previously read "Same as above" with no restated action —
-      task_template.md §3 line-1 completeness; same-priority todos dispatch independently, so a worker claiming
-      only this line needs the full instruction, not a backward reference).
+- [x] ✅ [DATA] P2. Launched 2026-08-21 slot-3 — VM `canonical-migration-manifest-div-cefi-20260821-014730`
+      (e2-highmem-8, SPOT, self-deleted on completion, exit_code=0). Real per-cell CSV:
+      `gs://deployment-scripts-central-element-323112/manifest-divergence-results/cefi/canonical-migration-manifest-div-cefi-20260821-014730/divergence_2026-08-21.csv`
+      (341,531 rows). 57,920 DIVERGENT_EMPTY across 59 `(venue, data_type)` cells, broadly spread across 19
+      venues (no single cell >10.4% of total), 83.7% in `trades`+`book_snapshot_5`, spanning the full
+      2019-01-01→today corpus history. See "Diagnosis update (2026-08-21, slot-3)" above for the full
+      breakdown table — real-gap vs code-bug vs oracle-bug triage NOT done this session (needs a live
+      spot-check drill-down), split into the new todo below per the todo's own stated scope (breakdown
+      first, triage after).
+- [x] ✅ [DATA] P2. Launched 2026-08-21 slot-3 — VM `canonical-migration-manifest-div-tradfi-20260821-015654`
+      (e2-highmem-4, SPOT, self-deleted on completion, exit_code=0). Real per-cell CSV:
+      `gs://deployment-scripts-central-element-323112/manifest-divergence-results/tradfi/canonical-migration-manifest-div-tradfi-20260821-015654/divergence_2026-08-21.csv`
+      (126,943 rows). 8,497 DIVERGENT_EMPTY across only 15 `(venue, data_type)` cells — NASDAQ+NYSE
+      `ohlcv_1m`/`ohlcv_1s` alone = 64.6% of total, with an exact day-count match between each venue's two
+      timeframes (a shared per-`(venue,date)` mechanism, not independent per-timeframe bugs); FRED's
+      140-day `ohlcv_1d`/`yield_curve` pair is BOUNDED to 2022-05-03→2024-09-30 (a closed historical
+      window, not ongoing) — see "Diagnosis update (2026-08-21, slot-3)" above for the full table. Same
+      triage-not-done caveat as cefi — split into the new todo below.
+
+- [ ] [DATA] P2. Live spot-check triage cefi's + tradfi's DIVERGENT_EMPTY findings from the 2026-08-21 VM
+      breakdowns above — real-gap vs code-bug vs oracle-bug, per both todos' own original stated goal (the
+      breakdown-first, triage-after split this doc has followed since 2026-08-17). Start with tradfi's
+      NASDAQ/NYSE/CME exact-timeframe-pairing (`ohlcv_1m`==`ohlcv_1s` day-count match — one shared
+      per-`(venue,date)` mechanism, narrower lead) before cefi's broadly-distributed shape (19 venues, no
+      dominant cell, needs a wider sample). Pull one flagged date's raw parquet for the dominant cell
+      (e.g. NASDAQ `ohlcv_1m`/`ohlcv_1s`, any date in the 1,373-day range), count real rows, compare
+      against what the manifest cell shows — same live-spot-check method slot-14/slot-19/slot-33 used
+      for the prediction finding above. `market-tick-data-service`/`unified-trading-library` (or
+      `instruments-service` if the root cause traces upstream, per the prediction precedent). No
+      `[OPERATOR]` gate needed for the read-only spot-check itself (same task_template.md finding U
+      justification as the two VM-launch todos above) — a fix, if one is warranted, would need its own
+      todo + operator ruling on direction, per every prior diagnosis round in this doc.
 
 ## Progress Log
 
@@ -708,3 +832,4 @@ scope-creep this fix.
   residual-scope note (still capped at ~2000-2100 by volume, same as pre-57c71bd4 — the long tail beyond
   that is a separate, unscoped follow-up if it matters). Also corrected the todo's stale file pointer
   (`process_write.py` → `process_write_venue.py`, split out since this todo was filed) inline per CLAUDE.md.
+- **slot-3 2026-08-21**: launched the two open cefi/tradfi VM-scale re-run todos via a new committed launcher (`deployment-service/scripts/vm/launch-manifest-divergence-detector-vm.sh`, reuses the existing generic canonical-migration VM_MIGRATION_CMD dispatch, no new VM_TASK/registry entry). Both VMs completed clean (SPOT, self-deleted, exit_code=0): cefi 57,920 DIVERGENT_EMPTY/59 cells (broadly spread, no dominant cause), tradfi 8,497 DIVERGENT_EMPTY/15 cells (NASDAQ+NYSE ohlcv_1m/1s = 64.6%, exact-timeframe-paired). Flipped both todos, filed the live-spot-check-triage follow-up (breakdown was the stated goal; triage is the next step, not attempted this session). Full per-cell CSVs in GCS (see Diagnosis update section) — not committed to git (plans/audit/results/divergence_*.csv is gitignored, same convention as every prior divergence CSV in this doc).
