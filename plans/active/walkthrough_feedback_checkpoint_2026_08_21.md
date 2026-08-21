@@ -93,7 +93,7 @@ Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-44
       (strategy-service@21937bb2cf).
 - [ ] [AGENT] P1. Verify BLRS recon_excluded landed on origin; if absent re-run its recorded quickmerge, flip its
       todo in the main plan.
-- [ ] [AGENT] P1. WATCH: platform-api-reference.html §01 states the MTDS entitlement seam as landed, but that
+- [x] ✅ [AGENT] P1. RESOLVED — MTDS entitlement landed at market-tick-data-service@746ad763b (with rate-limiting+pagination in the same commit, 11150 green); §01 claim is now true on origin and was rewritten with real citations (unified-trading-pm@f5c4498582). WATCH closed: platform-api-reference.html §01 states the MTDS entitlement seam as landed, but that
       code is still in its ship queue (rate-limits lane carries it). If the MTDS ship fails, correct §01 to
       origin truth; when it lands, the claim is true — verify and close.
 - [ ] [DOC] P1. Walkthrough §16–§25/§27/§29: ~25 remaining `st-plan`/pending markers (wizard stages, archetype
