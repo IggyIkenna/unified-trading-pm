@@ -203,7 +203,7 @@ impression:
 - [x] ✅ [BACKEND] P0. Add strict bridge request validation and fail-closed live credential handling (bridge.py); HIGH findings: checklist points 1, 3, and 4. — execution-service@fb50f729,116c5e2f + evidence: verified already-landed (see Progress Log 2026-08-21 slot-7 entry below); no new code required.
 - [x] ✅ [BACKEND] P0. Add CCTP amount/recipient validation and reject missing source wallet credentials before approve/burn (cctp.py); HIGH finding: checklist point 3. — execution-service@fa434b66a0 + evidence: verified already-landed in fb50f729 (see Progress Log entry below); added regression test coverage, no production code change required.
 - [ ] [BACKEND] P0. Make CCTP transfer tracking durable and idempotent across retries; preserve source burn tx hash and prevent duplicate approve/burn submissions; HIGH finding: checklist point 6.
-- [ ] [BACKEND] P0. Define and enforce caller slippage/deadline bounds for Socket bridge routes, including validation of aggregator-produced transaction targets and calldata; HIGH findings: checklist points 2 and 4.
+- [x] ✅ [BACKEND] P0. Define and enforce caller slippage/deadline bounds for Socket bridge routes, including validation of aggregator-produced transaction targets and calldata; HIGH findings: checklist points 2 and 4. — execution-service@fb50f729,3f54ca20 + evidence: verified already-landed (see Progress Log 2026-08-21 slot-22 entry below); no new code required.
 - [ ] [BACKEND] P0. Correct CCTP status lookup and enforce attestation timeout/terminal failure semantics; HIGH finding: checklist point 7.
 - [ ] [BACKEND] P0. Harden Aave lending writes: reject non-positive/non-integral amounts and invalid flash-loan vectors, fail closed instead of simulating success when live credentials/executor are absent, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3, 6, and 7 (`aave.py`, `aave_live.py`).
 - [ ] [BACKEND] P0. Harden Morpho Blue writes: validate amount/LLTV/market-id inputs, use configured loan-token decimals rather than unconditional 18-decimal conversion, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3 and 6 (`morpho.py`).
@@ -471,3 +471,38 @@ amount, and a live-path regression proving `accounts` is no longer `[]`); the sh
 needed a new `AccountMeta` mock alongside its existing `Instruction` mock, or every test in the file would have
 failed to import. QG passed twice (187s pre-commit, 412s post-commit, both green); shipped —
 execution-service@6a509338f9 (post-push ancestry independently verified).
+
+### 2026-08-21 — slot 22 Socket bridge slippage/deadline/aggregator-target triage
+
+Re-checked the triage todo "Define and enforce caller slippage/deadline bounds for Socket bridge routes, including
+validation of aggregator-produced transaction targets and calldata" (checklist points 2 and 4) against the live
+`bridge.py` on `origin/live-defi-rollout` (slot clean, ahead=0, behind=0) before writing any new code, per the
+findings-triage convention. Both HIGH findings recorded in the 2026-08-20 slot-5 bridge/CCTP entry above are already
+closed by commit `fb50f7296` ("fix(defi): persist bridge transfer security state", 2026-08-20, slot-15), refined for
+line-length by `8b87a17a`/`3f54ca20` with no logic change (diffed to confirm):
+
+- **Checklist point 2** (the original finding: `_execute_bridge_tx()` signed aggregator-supplied `txTarget`/`txData`
+  with no validation): `_execute_bridge_tx()` now calls `_validate_aggregator_target()` on the resolved `txTarget`
+  before signing (`bridge.py:703-705`), and again on `approvalData.allowanceTarget` in `_approve_if_needed()`
+  (`bridge.py:725-726`) — both reject anything not on the EVM-address-shaped, config-driven
+  `allowed_aggregator_targets` allowlist (`bridge.py:788-796`). Calldata is validated as well-formed hex and capped
+  at 512002 chars before broadcast (`bridge.py:706-707`).
+- **Checklist point 4** (the original finding: quote/build requests had no caller slippage bound or deadline):
+  `bridge()`/`_validate_request()` now accept and range-check `max_slippage_bps` (0-1000) and `deadline` (must be a
+  near-future timestamp bounded by `max_bridge_deadline_seconds`) (`bridge.py:607-624`); `_resolve_best_route()`
+  computes the caller's minimum acceptable output from `max_slippage_bps` and raises before broadcasting if the
+  Socket quote falls short (`bridge.py:649-652`); `deadline` is threaded into the `/build-tx` request
+  (`bridge.py:780-781`).
+- Test coverage exists in `tests/integration/test_bridge_e2e.py` and `tests/unit/test_live_bridge_adapter.py`
+  (grepped, not just assumed).
+
+No production code was changed for this todo — the fix was already shipped, just not yet cited against this specific
+triage line. Flipped the checkbox above citing `fb50f7296`/`3f54ca20` as evidence.
+
+**Unrelated finding fixed in the same session**: this repo's `plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`
+was found with a dangerous staged revert in the index (working tree matched a stale, pre-completion snapshot of this
+same file — missing the landed Orca/Raydium checkbox, the Triage checkbox, the bridge/CCTP checkboxes, and two later
+Progress Log entries, none of which this session authored). Restored via `git restore --staged --worktree` to match
+`origin/live-defi-rollout` HEAD before making any edit, per the "never delete another agent's already-landed content"
+rule — no content was lost since HEAD already had the correct state and nothing had been committed from the stale
+index.
