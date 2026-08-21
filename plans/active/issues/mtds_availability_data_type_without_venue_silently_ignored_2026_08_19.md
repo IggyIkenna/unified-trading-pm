@@ -116,84 +116,6 @@ this todo was checking for.
 **Conclusion**: only `data_type` was ever affected by the conditional-branch silent-drop bug (fixed 2026-08-19/21,
 `market-tick-data-service@8addeac2`). No other current or claimed parameter on this endpoint exhibits the pattern.
 
-## Findings — general sweep of the three external routers for silent-no-op parameters (2026-08-21)
-
-Batch21 item ("Sweep the three external routers for silent-no-op parameters generally", source: this doc's todo 3),
-pure investigation/report per that todo's own scope — nothing below was fixed. All three named routers read in
-full: `instruments-service/instruments_service/api/routers/external.py`,
-`market-tick-data-service/market_tick_data_service/api/routers/external.py`,
-`execution-service/execution_service/api/external_instruction_api.py`.
-
-**Method**: for the two query-param routers (instruments-service, MTDS), traced every declared `Query(...)`
-parameter through its handler body to confirm it reaches a branch with real effect. For execution-service's
-JSON-envelope router, traced every field on each dispatched `StrategyInstructionV2` member
-(`unified_api_contracts/internal/architecture_v2/schemas.py`) through its translation function into the internal
-instruction/params object, then repo-wide-grepped (`rg`, non-test files) the field name to confirm zero downstream
-consumption before calling it dropped — the same bug shape this doc's own `data_type` fix instance had (accepted,
-never read, HTTP 200 returned).
-
-### instruments-service `external.py` — CLEAN
-
-Both endpoints' full declared parameter sets thread straight into their query functions with no conditional-drop
-branch: `GET /v1/instruments` (`asset_group`, `venue`, `instrument_type`, `day`, `limit`, `cursor`) all reach
-`query_instruments(...)` (cursor is decoded and cross-validated against the other params, not silently ignored);
-`GET /v1/instruments/bulk` (`asset_group`, `venue`, `day`) all reach `build_bulk_parquet(...)`. No silent-no-op
-parameter found.
-
-### market-tick-data-service `external.py` — CLEAN
-
-`GET /availability`'s only historical instance of this bug class (`data_type` without `venue`) is already fixed
-(`market-tick-data-service@8addeac2`, see this doc's own history above) and its full sibling-parameter set was
-independently re-verified clean in the "Findings — sibling parameter audit" section above. `GET /delivery/batch`
-(`asset_group`, `venue`, `data_type`, `date`, `file`, `cursor`) and `GET /delivery/stream` (`asset_group`,
-`data_type`, `after`, `limit`, `topology`) both thread every declared parameter into their respective list/stream
-calls with no conditional-drop branch. No silent-no-op parameter found.
-
-### execution-service `external_instruction_api.py` — NOT CLEAN, 3 confirmed silent-no-op fields
-
-Unlike the two query-param routers, this router accepts a typed JSON envelope per action, so the failure shape is
-a schema FIELD accepted-but-never-read by the translation function, rather than a dropped query param — same
-end-user-visible defect (client sets a real value, gets HTTP 200, the value has zero effect, no error surfaces):
-
-1. **`TradeInstruction.stop_loss_price` / `TradeInstruction.take_profit_price`** (schemas.py:306-307) — both
-   accepted on the envelope. `_build_strategy_instruction_from_trade` (external_instruction_api.py:263-284) reads
-   only `target_venue`/`reference_price`/`max_price`/`min_price`/`direction`/`target_position_units`, then calls
-   `ManualOperationHandler.build_instruction(...)` (`execution_service/operations/manual/__init__.py:207-232`),
-   whose keyword-only signature has NO `stop_loss_price`/`take_profit_price` parameter at all — there is no
-   downstream place for these two values to go on this path. Repo-wide grep confirms the only non-test hits for
-   both names are in the unrelated BATCH/backtest instruction loaders
-   (`engine/execution/instruction_loader.py`, `strategy_instructions/loader.py`,
-   `utils/validation/instruction_validator.py`) — a completely different code path from this external HTTP
-   surface. A caller submitting a TRADE with a stop-loss/take-profit gets HTTP 200 and a real order placed with
-   neither protection wired.
-2. **`BridgeInstructionV2.bridge_hint`** (schemas.py:426) — accepted on the envelope.
-   `_build_execution_instruction_from_bridge` (external_instruction_api.py:505-532) builds the internal
-   `ExecutionInstruction` from `chain_from`/`chain_to`/`asset`/`target_balance_at_destination` plus a hardcoded
-   `metadata={"force_transfer_type": "BRIDGE"}` — `envelope.bridge_hint` is never read. Repo-wide grep confirms
-   the only `bridge_hint` hit in execution-service is this router's own docstring (line 518), which documents the
-   field's ABSENCE-of-a-recipient-address implication but never that the hint itself is dropped. A caller naming
-   a preferred bridge route gets HTTP 200 (or a real PENDING bridge) with their route preference silently ignored
-   — `LiveBridgeTransferAdapter` picks its own resolved route regardless.
-3. **`QuoteInstruction.skew_on_inventory`** (schemas.py:379, default `True`) — accepted on the envelope.
-   `_register_quote_instruction` (external_instruction_api.py:287-325) passes the whole envelope to
-   `QuoteMaintainer.register_quote_instruction` -> `quote_instruction_to_delta_proxy_params`
-   (`execution_service/engine/quote_maintenance.py:141-176`), which builds `DeltaProxyParams` from
-   `reference_price`/`half_spread_bps`/`underlying_instrument_id`/`delta`/`gamma`/`max_inventory_abs` — never
-   reads `instruction.skew_on_inventory`. Repo-wide grep confirms zero non-test hits for `skew_on_inventory`
-   anywhere in execution-service. A caller registering a quote with inventory-skew disabled or tuned gets HTTP 200
-   ("REGISTERED") with the skew behavior unchanged from whatever the repricer's own default is.
-
-**Checked and NOT counted as a defect**: `QuoteInstruction.refresh_cadence_ms` has no execution-side consumption
-either, but per its own field docstring this is BY DESIGN — it documents how often the STRATEGY side re-emits the
-cached instruction (a strategy-side keep-alive cadence), not something execution-service is meant to act on;
-`register_quote_instruction`'s own docstring explicitly notes it deliberately does not reset `_last_submitted` for
-this reason. This is a documented, intentional non-consumption, not the silent-no-op pattern this sweep targets.
-
-**Not investigated in this pass**: the DeFi instruction types (`SWAP`/`LEND`/`WITHDRAW`/`STAKE`/`UNSTAKE`/
-`BORROW`/`REPAY`/`LP_MINT`/`LP_BURN`) and `AtomicInstruction` dispatch through `_submit_defi_instruction`/
-`_submit_atomic_instruction`, which live in the sibling `external_instruction_defi.py` module, not the named
-`external_instruction_api.py` file this todo scoped to sweep — out of scope for this pass, not swept.
-
 ## Progress Log
 
 **2026-08-19 — filed.** Not fixed; no MTDS code touched. Surfaced during client-artefact work, so it is disclosed
@@ -214,14 +136,3 @@ in the API reference as known behaviour pending this fix rather than documented 
   (no such parameter exists on this endpoint at all); `date` UNAFFECTED (consumed unconditionally regardless of
   `venue`/`data_type`); `venue` UNAFFECTED (the conditioning parameter itself). Only `data_type` was ever affected,
   already fixed. Full evidence in the new "Findings — sibling parameter audit (2026-08-21)" section above.
-- **2026-08-21 (batch21 item, general 3-router sweep, slot-5)** — closed the "sweep the three external routers for
-  silent-no-op parameters generally" todo (this doc's todo 3). Pure investigation, no code touched.
-  instruments-service `external.py` and market-tick-data-service `external.py`: CLEAN (every declared parameter
-  threads through with real effect). execution-service `external_instruction_api.py`: NOT CLEAN — 3 confirmed
-  silent-no-op envelope fields (`TradeInstruction.stop_loss_price`/`take_profit_price` never reach
-  `ManualOperationHandler.build_instruction`; `BridgeInstructionV2.bridge_hint` never read by the bridge
-  translation function; `QuoteInstruction.skew_on_inventory` never read by
-  `quote_instruction_to_delta_proxy_params`). Full evidence + per-field grep confirmation in the new "Findings —
-  general sweep of the three external routers for silent-no-op parameters (2026-08-21)" section above. DeFi/Atomic
-  dispatch (in the sibling `external_instruction_defi.py`, not the named router file) explicitly not swept — noted
-  as out of scope, not silently skipped.

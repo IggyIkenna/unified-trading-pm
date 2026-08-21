@@ -61,7 +61,7 @@ source: >-
 
 ## From `walkthrough_file_shared_checkout_repeated_content_loss_2026_08_20.md`
 
-- [ ] [BACKEND] P1. **Add a pre-write safety snapshot for agent-authored client-artefact edits.** Before a
+- [x] [BACKEND] P1. **Add a pre-write safety snapshot for agent-authored client-artefact edits.** Before a
       single-file structure-pass agent begins editing a large, contested file (the pattern that produced 2 of the 3
       losses this issue documents), snapshot its current content (content-hashed, timestamped) to a location
       outside the shared working tree — a scratchpad or a dedicated GCS prefix, not another spot in the same
@@ -71,6 +71,7 @@ source: >-
       `walkthrough_file_shared_checkout_repeated_content_loss_2026_08_20.md` todo 2 (the pre-write safety snapshot
       item — NOT todo 1 "determine the actual reset mechanism" or todo 3 "investigate whether this file is
       unusually contended," both genuine root-cause investigation left on the source doc).
+      **Evidence:** Implemented via `scripts/dev/client_artefact_snapshot.py`. Exercised via test file snapshot/overwrite/restore cycle confirming byte-for-byte SHA256 match, and via repository client artefact `codex/14-customer-journeys/shared-core/client-reporting-demo-walkthrough.md`.
 - [ ] [DOC] P2. **Add the 2026-08-20 shared-checkout content-loss incident to
       `/codex/05-infrastructure/per-tab-worktrees.md`** as a concrete case study alongside the existing
       multi-agent-collision documentation — the existing guidance anticipates loss occurring via a git operation

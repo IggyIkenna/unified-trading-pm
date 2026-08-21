@@ -33,7 +33,7 @@ related:
   - /plans/active/ao_consolidated_closeout_2026_08_12.md
   - /plans/active/issues/plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md
   - /plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md
-  - /plans/archive/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md
+  - /plans/active/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md
 context_scope: [agent-orchestrator/server/tmux_spawn.py, agent-orchestrator/server/orphan_reap.py, agent-orchestrator/scripts/orchestrator/strace_tmux_server_supervisor.sh, scripts/self-hosted-runners/tmpfs-disk-cleanup.sh, /codex/15-runbooks/safe-service-restart-procedures.md]
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
@@ -273,11 +273,9 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [ ] [INFRA] P3. Once confidence is high (extended clean window, no new `tmux_session_lost` bursts), tear down the
       `strace_tmux_server_supervisor.sh` + `auditctl tmux_exec_watch` diagnostic instrumentation — they were built for
       this investigation, not intended as permanent fixtures, and the strace log alone runs several MB/hour.
-- [x] ✅ [INFRA] P3. **DONE 2026-08-21** — documented as `/codex/05-infrastructure/tmux-socket-isolation-pattern.md`:
-      the 4-part pattern (isolate your own server's socket; unset all three of TMUX_TMPDIR/TMUX/TMUX_PANE in
-      anything dispatched, not just the tmpdir var; self-heal the isolation directory before every spawn, not
-      just at service start; isolate any test suite spawning real tmux sessions), each part traced to the live
-      incident that discovered it, plus a short "applying this to a new service" section.
+- [ ] [INFRA] P3. Consider documenting the `TMUX_TMPDIR`/`TMUX`/`TMUX_PANE` isolation pattern in codex
+      (`/codex/05-infrastructure/`) as a standing rule for this shared multi-operator VM, so the NEXT service that
+      spawns its own tmux-based fleet doesn't rediscover this the hard way.
 - [x] [INFRA] P0. Root-cause + fix supervisor's own PID-attribution mechanism (ps-grep unreliable, then
       inode-vs-lsof-NODE comparison also wrong) — DONE 2026-08-13, live-connect() resolution shipped and verified
       attached to the genuinely-current server.
@@ -415,12 +413,13 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       pytest), landed + ancestry-verified on `live-defi-rollout`. Does NOT explain the slot-1 SIGTERM death or every
       remaining `unexplained` row fleet-wide — this closes ONE confirmed, live, currently-firing mechanism, not the
       whole bucket.
-- [x] ✅ [INFRA] P2. **DONE 2026-08-21** — `agent-orchestrator@31c90ca3c1`. Added the same setsid-safe dispatch-
-      timeline exemption to `reap_dead_slot_worker_tree` (a new `last_spawned_at` parameter, `None`-default so
-      every pre-existing caller/test is unaffected). Kept the function's "no DB access at all" invariant
-      (`ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26`) intact by threading `SlotRow.last_spawned_at`
-      through from `TmuxPruner.prune_once()`'s own existing read-only pass, rather than opening a session inside
-      the reap function itself. New regression test + full quality-gates.sh green.
+- [ ] [INFRA] P2. Audit whether `reap_dead_slot_worker_tree` (the REACTIVE, always-live twin of
+      `sweep_orphan_processes`, fired the instant `TmuxPruner` confirms a slot's session is gone) needs the same
+      `setsid`-safe dispatch-timeline exemption — this session's fix only touched the periodic sweep, the path that
+      actually killed pid 372995. `reap_dead_slot_worker_tree` has no `pid_shares_tmux_session` check at all today
+      (only `boot_grace_seconds`), so a legitimately-detached `setsid` job surviving a genuine session death would
+      currently be reaped unconditionally on the very next tick — worth the same protection, scoped separately since
+      it's a different (always-live, not dry-run-gated) trust level.
 - [x] ✅ [OPERATOR] P0. **Root-cause host-level fix for codex-luna's dominant death signature — FIXED + VERIFIED
       2026-08-21.** Unprivileged user-namespace creation was broken host-wide on the orchestrator VM for the `ubuntu`
       user (reproduced live via both `unshare --user --map-root-user whoami` and Codex's own bundled `bwrap` binary,
@@ -472,7 +471,7 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
         `tmux_spawn.py::_start_session`'s `exec` into the `claude` binary (exec replaces the process image; the
         guard functions are never `export -f`'d; a fresh Bash-tool-call subshell never sourced the guard in the
         first place). Full mechanism, code citations, and fix recommendation:
-        `/plans/archive/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md` (new doc — this is a
+        `/plans/active/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md` (new doc — this is a
         distinct, high-priority finding in its own right, not merged into this already-large doc). Also ruled out
         for Cluster B, with hard per-death evidence across all 26 investigated transcripts: OOM (cgroup counters
         zero on every one), `orphan_reap`, the kicker's forced-respawn escalation, every `WorkerLivenessWatchdog`
@@ -948,7 +947,7 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   among those that hit the quota wall). Full findings folded into the todo above: Cluster A (balance exhaustion, 11
   deaths, closed) and Cluster B (a 4th recurrence of the cross-slot broad-pattern `pkill` incident, root-caused to a
   provably-dead guard mechanism — new doc
-  `/plans/archive/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md`, not merged here to keep this
+  `/plans/active/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md`, not merged here to keep this
   doc's size in check). The Cluster-B finding is the single most consequential discovery of this whole investigation
   thread — a fleet safety mechanism believed fixed since 2026-08-14 has been silently non-functional the entire time.
 - **2026-08-21 (continued, separate session, ultracode Workflow)**: swept every remaining model (Gemini, Claude

@@ -533,32 +533,3 @@ Commit+Push+Flip rule, citing the landed SHA. Two todos in this same "DeFi by pr
 section remain open after this one: the checklist-point-4 slippage/deadline-bounds todo (line 283) and the
 close-out epic-reflection todo near the end of this plan — pick point-4 next per the plan's own top-to-bottom
 ordering, it's the natural sibling (same four files, same audit phase).
-
-**UPDATE 2026-08-21 (slot 10) — the above WIP was never committed and is not recoverable from this checkout.**
-Verified in this slot's own `execution-service` clone: `git status --porcelain` is clean at `live-defi-rollout` HEAD,
-`execution_service/defi_execution/protocols/_perp_idempotency.py` does not exist, and no commit touching it appears
-in `git log`. The prior session's uncommitted WIP lived only in that other slot's local worktree and was lost when
-that session ended without shipping (a stash was never pushed either, per this plan's own git-discipline rules). The
-checklist-point-6 perp/CLOB idempotency todo (line 284) needs to be re-implemented from the design already recorded
-above, not assumed done. Checkbox left `[ ]`, matching reality.
-
-### 2026-08-21 — slot 10 close-out todo: epic W15 section confirmed + corrected
-
-Confirmed the epic's W15 section (`/plans/epics/system_readiness_master.md`) against this plan's actual live
-checkbox state (41 done / 13 open of 54 todos, counted directly from the file, not estimated) rather than trusting
-the epic's own prior summary. Found the epic line stale in two ways: it still listed CCXT order-idempotency +
-fail-closed-credential-init and the TradFi-gateway audit as open (both are `[x]` done — see the slot-1 CCXT
-idempotency and TradFi-gateway audit entries above/in the archive), and it undercounted completed audit phases
-(8/12 stated vs 10/12 actual — only the sports-exchange-adapter and sports-unity-subsystem phases haven't run).
-Corrected the epic line in place with the accurate breakdown: 3 open P0 fixes (perp/CLOB slippage/deadline bounds
-line 283; perp/CLOB idempotency line 284, re-opened per the UPDATE entry directly above; native-REST client-order-id
-idempotency line 304), 5 open P1 follow-ups (Orca/Raydium full account derivation line 126; Kamino market
-cross-check line 217; wiring the real on-chain calls behind the staking fail-closed guards line 224; EigenLayer
-approval + Karak vault line 226; native rate-limit/blocking-sleep hardening line 321), 2 open P2 dead-code fixes
-(Aave/Morpho typed-params decimals, lines 213/215), the 2 unstarted audit phases (sports exchange line 188, sports
-unity line 192), and this close-out todo itself.
-
-**This close-out todo's own done-when ("once every todo above is done or explicitly re-scoped") is NOT yet
-satisfied** — the 3 open P0s above are genuine unresolved HIGH findings, not re-scoped/deferred work, so the
-checkbox below stays `[ ]` rather than being falsely flipped. No production code was changed; this is a doc-accuracy
-fix only (epic doc + this Progress Log entry).
