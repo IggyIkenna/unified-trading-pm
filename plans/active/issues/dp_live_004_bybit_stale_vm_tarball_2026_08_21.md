@@ -17,7 +17,6 @@ tags: [data-pipeline, dp-live-004, bybit-futures, stale-tarball, live-capture]
 related:
   - /plans/active/issues/mtds_live_cefi_redeploy_cold_start_is_universe_gap_2026_08_17.md
   - /plans/active/cross_ag_live_capture_parity_2026_08_14.md
-  - /plans/active/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md
 created: "2026-08-21"
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -38,6 +37,10 @@ context_scope:
 ---
 
 # DP-LIVE-004 BYBIT-FUTURES shard is running a pre-filter MTDS tarball
+
+> Same-shape predecessor (resolved, archived — cited here as historical evidence, per the
+> archive-safety ratchet, operator ruling 2026-08-17):
+> `/plans/archive/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md`.
 
 ## What I found
 
@@ -102,7 +105,7 @@ external action and is not performed by this escalation without that decision.
       `SPOT_PAIR` errors appear in any Bybit log (unlike the old VM). **Old VM
       left RUNNING/undeleted** — the decommission half of this todo is NOT done;
       see the new todo below for why.
-- [ ] [INFRA-or-BACKEND] P1. **DUPLICATE OF `/plans/active/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md`
+- [ ] [INFRA-or-BACKEND] P1. **DUPLICATE OF `/plans/archive/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md`
       todo 2** (the canonical, already-consolidated doc for this same VM/incident; verified status: open,
       not archived) — this todo's diagnostic progress feeds that doc's own "verify a real captured row / if
       unproductive, inspect subscribe acks" open todo directly; do not diagnose independently in both places.

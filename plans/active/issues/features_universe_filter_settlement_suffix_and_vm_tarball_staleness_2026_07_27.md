@@ -28,7 +28,7 @@ drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
 resolved_by:
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 context_scope:
@@ -372,7 +372,7 @@ gap; no new action taken on the default itself (existing P2 todos below already 
   needed.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 - **2026-08-12** — `locked_by`/`locked_since` cleared (corpus-wide fix, operator ruling Option B, interactive session
-  2026-08-12; see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
+  2026-08-12; see /plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
   0 open todos, so clearing the placeholder lock immediately makes it archive-eligible. Per the ruling's explicit scope
   ("do NOT auto-archive in this same pass"), archival itself is deferred to a separate follow-on pass; bridged with
   `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
