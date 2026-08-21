@@ -23,7 +23,7 @@ summary: >-
   account-concentrated; this one: the reserve slots were simply never protected from ordinary
   dispatch reaching them at all). Fixed same day by mirroring the 2026-08-16 fix exactly for the
   CI-escalation reserve — see Fix section.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -152,16 +152,23 @@ Mirrored the 2026-08-16 `scheduled_reserve` fix exactly, for the CI-escalation r
       show the same tasks they were running before the fix shipped — expected, since the fix
       prevents new claims, it doesn't evict already-running work; the real test (no new non-escalation
       task landing there) held for the observed post-restart window.
-- [ ] [OPERATOR] P2. Separately, the reserve is still 100% single-account-concentrated
-      (`codex-luna` as of 2026-08-21, was `sub-b-iggy2london` on 2026-08-18) — this doc's fix
-      protects the SLOTS from ordinary dispatch, but does not address the account-concentration
-      risk already tracked as an open todo in
-      [[ao_stuck_escalation_mtds_no_free_slot_2026_08_18]] ("spread 31/32/33 across more than one
-      account"). Not duplicating that todo here — cross-referenced only. **Context found 2026-08-21**:
-      `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` root-caused WHY codex-luna
-      dominates the fleet right now (3 stacked dispatch-routing bugs excluding Claude/Gemini/GLM from
-      normal rotation) — that doc, not this one, owns the actual fix; once it lands the reserve's
-      account concentration should self-correct as routing rebalances, worth re-checking then.
+- [x] [OPERATOR] P2. ✅ **RE-CHECKED 2026-08-21, self-corrected as predicted.** The single-account
+      (`codex-luna`) concentration this todo flagged no longer holds. `ao_dispatch_skew_root_cause_
+      and_session_cleanup_2026_08_21.md`'s bugs 1-5 landed (`agent-orchestrator@e3a3ef4166` →
+      `@ba855161ae`) and live `activity_log` since then shows: current slot 31/32/33 occupants are
+      `sub-f-odum2default`, `gemini-3-5-flash-lite-proj1`, `gemini-3-5-flash-lite-proj3` — three
+      DIFFERENT accounts, zero `codex-luna`. All `escalation_dispatch_initiated` events in the
+      ~4.5h window since the fix (10:20-14:43 UTC) went to 6 distinct accounts:
+      `sub-e-odum2default` (3×), `sub-f-odum2default` (2×), `gemini-3-5-flash-lite-proj1/2/3/4`
+      (proj2 2×, proj1/3/4 1× each) — no single-account monopoly. Confirmed `escalation.py::escalate()`
+      routes through the same fixed `select_account_with_non_strict_retry`/`select_account_for_spawn`
+      pipeline as Class-A dispatch (verified via `escalation.py:824,2052`) — it's a single-item pick
+      per escalation call, not a batch loop, so bug 4a/5's exclude_ids fix doesn't directly apply here,
+      but it correctly inherits the underlying headroom-based fair rotation regardless. **New, smaller
+      finding**: `gemini-3-5-flash-lite-proj4` had 3 consecutive `escalation_dispatch_failed` events
+      (13:01-13:26 UTC) before an escalation finally succeeded on a different account — worth a look if
+      it recurs, not chased further here (see the broader round-robin/capability-aware dispatch audit
+      requested 2026-08-21, tracked in `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`).
 
 ## Progress Log
 

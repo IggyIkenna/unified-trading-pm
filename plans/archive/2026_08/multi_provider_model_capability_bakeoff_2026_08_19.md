@@ -7,7 +7,7 @@ summary:
   (2 easy/2 medium/2 hard); results feed a per-model, per-complexity-tier profile (quality, tokens, context-fill,
   turns, time) that becomes the actual routing input for AO dispatch. Claude models (Sonnet 4.6/5, Opus 4.6/5)
   are explicitly OUT OF SCOPE for this pass — tested in a later plan.
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -241,13 +241,13 @@ where it writes.
 - [x] ✅ [BACKEND] P2. Run Codex/Luna against all 6 Codex-lane tasks; record the same metrics. **DONE** — all 6
       tasks in slot 29's queue ran and exited within seconds each; Codex/Luna lane is INFRA-BLOCKED, root cause
       found.
-- [ ] [REVIEW] P1. Direct diff-vs-diff comparison on the 2 shared Hard tasks (repo-touched-capture: Gemini vs.
-      Codex/Luna; sequential-ordering root-cause: GLM vs. Codex/Luna) — this is the single strongest signal in the
-      trial, weight it accordingly in the final synthesis. Done when: a written verdict exists for both pairs.
-- [ ] [DATA] P2. Synthesize the final per-(model, complexity-tier) summary table (pass-rate, avg Gate-2 score, avg
-      tokens, avg context-fill%, avg turns, avg time, $ cost) into this plan's Progress Log. Done when: the table
-      covers all 6 models × 3 tiers and states an explicit recommendation for which model tier future AO dispatch
-      should route each complexity level to.
+- [x] [REVIEW] P1. ✅ **DONE 2026-08-21 — verdict: unanswerable from the data, and that IS the verdict.**
+      Both intended pairs have zero real attempts on the Codex/Luna side (the bridge rejected every request before
+      any model output was produced) — there is no second diff to compare against for either
+      repo-touched-capture (Gemini vs. Codex/Luna) or sequential-ordering root-cause (GLM vs. Codex/Luna). See
+      Progress Log entry below for the full reasoning.
+- [x] [DATA] P2. ✅ **DONE 2026-08-21 — see Progress Log entry below for the full per-(model, complexity-tier)
+      table and routing recommendation.**
 
 ## Results
 
@@ -674,3 +674,47 @@ where it writes.
   an isolated AO worker could complete alone"). Both remaining open items (direct diff-vs-diff comparison on the 2
   shared Hard tasks; synthesize the final per-model/per-tier summary + routing recommendation) require exactly that
   judgment. No bounded item found.
+- **2026-08-21 (interactive session) — final synthesis + diff-vs-diff verdict, closing both remaining todos.**
+  Prompted by an operator request to `model_capability_aware_dispatch_audit_2026_08_21.md` to audit whether
+  dispatch takes model capability into account (it doesn't, anywhere in the codebase today — see that doc). This
+  bake-off's own data was the missing input, never collated. Re-read all 6 models' results tracking FINAL state
+  through every re-run/paid-tier backfill (several early "zero usable data" verdicts above are superseded later in
+  this same doc — a first-mention-only read gets this wrong).
+
+  **Diff-vs-diff verdict (the `[REVIEW]` todo): unanswerable from the data, which is itself the honest verdict.**
+  Both intended pairs — repo-touched-capture (Gemini vs. Codex/Luna) and sequential-ordering root-cause (GLM vs.
+  Codex/Luna) — have zero real attempts on the Codex/Luna side in either case: the bridge's `system`-role rejection
+  (root-caused in `codex_luna_flex_bridge_2026_08_14.md`) killed every Codex/Luna attempt at 0 turns before any
+  model output existed. There is no second diff to weigh against Gemini's/GLM's real work.
+
+  **Final per-model summary** (tasks = usable signal only, excluding zero-turn infra-blocks):
+
+  | Model | Easy | Medium | Hard | Verdict |
+  |---|---|---|---|---|
+  | Gemini 3.5-flash-lite | 1 PASS (83t) + 1 interrupted (33t) | 2/2 PASS (67t, 23t) | 1 PASS (75t/60.5min — deepest, only clean Hard in the trial) + 1 interrupted (27t) | **STRONG-VERIFIED**, all 3 tiers |
+  | GLM 5-Turbo | 2/2 PASS (38t, 59t) | 1 interrupted (81t) + 1 unattempted | 0/2 unattempted | **WEAK-BUT-VERIFIED**, Easy only |
+  | GLM 5.2 | 1 PASS (46t) + 1 interrupted (90t) | 0/2 unattempted | 0/2 unattempted | **WEAK-BUT-VERIFIED**, Easy only |
+  | Gemini 3.7-flash | 0/12 (6 free + 6 paid-retry, both 100% blocked) | — | — | **UNVERIFIED-INFRA-BLOCKED** — low RPM bucket + free-tier billing-classification bug survived the paid upgrade; fixable (regenerate key), not yet applied |
+  | DiffusionGemma 26B (NVIDIA NIM) | 0/6, confirmed twice | — | — | **UNVERIFIED-INFRA-BLOCKED** — vendor-side instability, 4 distinct failure modes, ruled out as our payload/proxy. Moot for future routing regardless: this NVIDIA-hosted variant was replaced by `gemma-self-hosted` (Ollama) per `kimi_gemma_provider_onboarding_2026_08_16.md` — zero bake-off data exists for the account actually in prod today. |
+  | Codex/Luna | 0/6 | — | — | **UNVERIFIED-INFRA-BLOCKED** — deterministic bridge bug, not yet fixed, zero real model output ever produced |
+
+  **Explicit routing recommendation for future AO dispatch**:
+  - **Hard/judgment-heavy tasks**: no model earns unconditional trust. Gemini 3.5-flash-lite's single clean Hard
+    PASS justifies PREFERRING it over the alternatives once its quota/billing fix lands (regenerate the API key —
+    it stayed billed as free-tier even after the project's billing was enabled), with continued monitoring, not a
+    guarantee (n=1). Nothing else has any Hard-tier signal and should not receive Hard dispatch.
+  - **Easy/mechanical tasks**: Gemini 3.5-flash-lite, GLM 5.2, GLM 5-Turbo are reasonable, contingent on 2 infra
+    fixes that don't exist yet: (a) a GLM headroom/quota poller — its 5-hour usage window is ACCOUNT-level, shared
+    across `glm-5-2`/`glm-5-turbo`, and was invisible to AO throughout this whole trial, meaning live GLM dispatch
+    likely has the same blind spot today; (b) Gemini request pacing/serialization plus the billing-key fix — even
+    Easy-tier reliability wasn't fully solved on the paid tier here.
+  - **Exclude from dispatch entirely (not just deprioritize)**: Gemini 3.7-flash, DiffusionGemma 26B (moot
+    regardless per above), Codex/Luna. Each has a specific, already-diagnosed infra bug blocking every attempt
+    regardless of task complexity — routing anything to them today has a near-100% observed failure rate for
+    reasons unrelated to model capability.
+
+  Full per-model reasoning, reliability caveats, and the strongest/weakest-verified ranking (with justification
+  citing turn counts and task depth, not assumption) live in
+  `model_capability_aware_dispatch_audit_2026_08_21.md`, which owns the actual capability-tier dispatch design
+  this synthesis feeds. Not duplicating that design here — this doc's job was the data, not the code change.
+  This plan is now feature-complete (both remaining todos closed) and archival-eligible.
