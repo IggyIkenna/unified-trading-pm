@@ -111,3 +111,11 @@ orphaned and the check short-circuited; the pattern is otherwise a real, recurri
   investigated/changed — pure observation + escalation, since directly probing `quickmerge --isolated`'s internals
   mid-session would have meant editing shared script files outside this task's scope while a live peer session was
   actively working nearby.
+- **2026-08-21 (slot-16), post-compact re-check** — Re-confirmed still live: `oms-wt.oc3YkB`'s HEAD commit was 319s
+  old at check time (author `github-actions[bot]`, not the earlier-seen `ikennaigboaka [slot-2·laptop]` — the
+  authoring identity on this worktree is not stable across commits, consistent with a bot/CI process periodically
+  committing into the same live session rather than a single human's commits). `/api/slots/16/done` retried against
+  `http://localhost:8765` (unauthenticated — see the worker.md auth-gap fix landed same commit) and rejected again
+  with the identical `oms-wt.oc3YkB` dirty-file list (30 files, same set as before). Per pre-compact Step 7.2, two
+  identical consecutive failures = stable condition, not flapping — stopped retrying; the already-shipped todo-1 work
+  (`unified-trading-pm@832b8de031`+`19d99de82a`) stays acked-pending, no data at risk since it's already on origin.
