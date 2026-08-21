@@ -221,19 +221,15 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Walkthrough feedback 2026-08-21 — refdata/coverage cluster (operator feedback on platform-external-api-walkthrough.html)
 
-- [ ] [BACKEND] P1. **BLOCKED-OPERATOR — do not repoint yet.** Kalshi perp: `instruments-service/.../adapters/cefi/kalshi_perp.py`
-      EXISTS with a write-guard layer, enumeration disabled (`_REPOINT_PENDING = True`) after the events-host
-      contamination incident. MEASURED 2026-08-21: an RSA-PSS-signed probe with the EXISTING GSM creds
-      (kalshi-api-key-id + kalshi-private-key-pem) returned HTTP 200 on
-      `external-api.kalshi.com/trade-api/v2/margin/markets` and portfolio/balance — the probe credentials
-      technically reach the margin/perps host. **Operator ruling 2026-08-21: a successful auth PROBE is not the
-      same as having the perps trading rights** — Kalshi's margin/perps product rolls out member-by-member, and a
-      credentials-level 200 doesn't confirm our account has been granted perps trading rights yet. The venue stays
-      declared **"planned"** (honest-empty enumeration via `_REPOINT_PENDING`, artefact renders "Coming Soon" —
-      already the correct passive behavior today, no code change needed for that) until the rights signup is
-      confirmed. **Do NOT wire RSA-PSS auth, flip `_REPOINT_PENDING`, or repoint the base URL until that
-      confirmation happens** — this is an operator/business action (signing up for perps rights), not a code
-      readiness gap. Re-open as actionable BACKEND work once the operator confirms the rights are secured.
+- [ ] [BACKEND] P1. **Kalshi perp — DATA-ONLY repoint, PROCEED (operator ruling 2026-08-21, final).** Wire
+      RSA-PSS auth from existing GSM secrets (kalshi-api-key-id + kalshi-private-key-pem — MEASURED 2026-08-21:
+      HTTP 200 with real perp market data on `external-api.kalshi.com/trade-api/v2/margin/markets`), repoint
+      `kalshi_perp.py` enumeration to the margin host, flip `_REPOINT_PENDING`, keep the write-guard, discover
+      the real funding-rates subpath (the docstring's literal path 404s), update the stale BLOCKED-CREDENTIALS
+      docstring claim. Never re-enable against the events host. An EARLIER same-day hold ("auth probe ≠ perps
+      trading rights, do not repoint") applied before the operator distinguished the data path — it is
+      SUPERSEDED for data capture and remains in force ONLY for TRADING integration, which stays gated on the
+      member-by-member perps rights signup.
 - [x] ✅ [AGENT] P1. Classify the sports bookmaker roster for the operator (NOT for the artefact): for each of the
       27 kept books, is it (a) an odds-api bookmaker, (b) covered by the Unity central-wallet integration, or (c)
       neither — legacy arbitrage-research leftovers. Deliver the (c) list as a removal proposal; removal itself is
@@ -861,7 +857,18 @@ todos only to confirm they are data-movement, then leave it.
       archived issue doc.
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag. 31 docs in your allocation are flagged `excluded_data_movement` — confirm and leave them.
-- [ ] [AGENT] P0. Post-phase codex audit across `/codex/02-data/` for every contract you changed.
+- [x] ✅ [AGENT] P0. Post-phase codex audit across `/codex/02-data/` for every contract you changed.
+      **2026-08-21 — checked `honest-coverage-model.md`'s "coverage.json v2 schema" section (`authoritative_for`
+      that exact schema) against every field this tranche shipped this session; found 2 real gaps, fixed both.**
+      The JSON schema block and its "New-in-v2 keys" prose were missing `by_venue_instrument_type_data_type_league`
+      (level 5e, `instruments-service@6056d46d5c`) and `hollow_instrument_type_fraction`
+      (`instruments-service@540a3bd94d`) entirely — both shipped, live, and populated in the real artefact
+      (confirmed two todos above), just never reflected in the schema doc a future reader would consult. Added
+      both to the JSON example + the key-list prose with their SHAs. The narrative "Projected atom vs declared
+      atom" section and the shard-atom-identity `league_id` banner were already fixed earlier this session (see
+      that todo above). Did not find further drift in `availability-manifest-and-data-status.md` — this session's
+      findings there CONFIRMED its existing shard-atom text rather than contradicting it, so no edit was needed.
+      Scope: `/codex/02-data/` only, per the todo's own text — did not sweep other codex sections.
 - [x] ✅ [AGENT] P0. Confirm every artefact coverage marker owned by this tranche now reads live with a stated
       denominator and date, or is one of the five allowed pending states.
       **2026-08-21 — MEASURED against the live artefact, not assumed shipped.** Downloaded
@@ -961,6 +968,15 @@ todos only to confirm they are data-movement, then leave it.
      | (b) Unity-covered | 9 | MATCHBOOK (dual a+b) + 8 net-new Unity child books (3ET, BROKER5, CROWN, SBO, SHARPBET, VX, BETDEX, IBC) — subscription pending, zero-capture, forward-looking, not leftovers |
      | (c) neither — HIGH-confidence removal candidates | 4 | BETOPENLY, NOVIG, ONEXBET, PROPHETX — canonical token + odds_api key exist, never wired into live fetch scope, zero manifest presence, no Unity coverage; arbitrage-research vintage |
      | (c) neither — LOW-MEDIUM confidence flags | 2 | BETMGM (captured=1,591), BETWAY (captured=1,803) — same unwired pattern but real historical rows; operator judgment call, not proposed for removal |
+
+- [ ] [BACKEND] P1. **Operator ruling 2026-08-21: REMOVE ALL 6 stale bookmakers** — BETOPENLY, NOVIG, ONEXBET,
+      PROPHETX (high-confidence) AND BETMGM, BETWAY (operator chose removal over retention). Registry removal in
+      unified-api-contracts (handed to the wave-1a registry lane — same-file discipline on
+      `market_data_categories.py`) MUST follow the entity-rename/split consumer-migration rule: enumerate and
+      migrate EVERY consumer in the same change (a token grep misses path-prefix/filename/registry-membership
+      binders; sports paths via `candidate_parquet_paths()`); manifest/GCS row disposition for BETMGM/BETWAY's
+      historical rows is data-side and stays out of this code pass (flag as follow-up, no deletion of prod data
+      without the delete-safety protocol).
 
      Removal of the 4 HIGH-confidence candidates and the BETMGM/BETWAY judgment call both stay `[OPERATOR]`-gated
      in the issue doc's own todos — nothing removed this session, per the dispatch instructions ("removal itself
