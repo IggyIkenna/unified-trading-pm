@@ -23,7 +23,7 @@ tags: [plan_reconciler, defi_master, epic-scoped, reconciliation]
 related:
   [
     /plans/epics/defi_master.md,
-    /plans/active/issues/plan_reconciler_findings_defi_2026_08_18.md,
+    /plans/archive/issues/plan_reconciler_findings_defi_2026_08_18.md,
     /plans/active/issues/plan_reconciler_findings_defi_2026_08_17.md,
     /plans/active/issues/plan_reconciler_findings_defi_2026_08_16.md,
   ]
@@ -41,7 +41,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/epics/defi_master.md,
-    /plans/active/issues/plan_reconciler_findings_defi_2026_08_18.md,
+    /plans/archive/issues/plan_reconciler_findings_defi_2026_08_18.md,
     /codex/11-project-management/epic-html-report-format.md,
   ]
 ---
