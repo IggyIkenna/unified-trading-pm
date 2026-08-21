@@ -143,3 +143,4 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   `data_pipeline_hardening_self_monitoring` archival commit already resolves correctly via this doc's existing
   archive-path entry; no new reference target since the 2026-08-07 scout pass.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — reaffirms 2026-08-07 (unchanged, 1 open todo): the sole remaining item is a genuine real-wall-clock observation window (up to 24h, watching a RESOLVED/green bookend post once the underlying sports/tradfi/cefi conditions clear) — not agent-executable; explicit operator 'run this locally' instruction still governs.

@@ -953,6 +953,8 @@ Non-execution-service sub-agent dispatches (batch-live-reconciliation-service, c
 greeks-service, ibkr-gateway-infra) and the delta-proxy/policy-gaps design-heavy docs: see their own checkboxes
 above for full evidence, not duplicated here.
 
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 4 of the operator-slot-launched code-readiness series (same Launch-prompts mechanism). Remaining open items include a BLOCKED-OPERATOR delta-proxy position/credit leg (gated on the same fabric-SSOT ruling as T1's paired todo), a Ceffu integration blocked on a genuine docs gap (no API spec exists anywhere in the workspace), per-venue scope-key provisioning explicitly checked-exhaustively and found genuinely unbounded, and transfer-netting/custody-routing split across a strategy-service-owned decision plus the same Ceffu gap. None clears the whole-doc RECLASSIFY bar.
+
 ## Deferred work after 2026-08-20 (CONDENSED — superseded entries removed, per-item full detail lives on the
 checkboxes above, not duplicated here)
 
