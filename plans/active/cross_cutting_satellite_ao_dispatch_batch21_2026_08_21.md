@@ -121,12 +121,18 @@ source: >-
 
 ## From `external_market_data_response_leaks_vendor_pipeline_mode_2026_08_20.md`
 
-- [ ] [REVIEW] P1. **Audit `GET /external/market-data/delivery/stream` and `GET /external/market-data/availability`
+- [x] ✅ [REVIEW] P1. **Audit `GET /external/market-data/delivery/stream` and `GET /external/market-data/availability`
       for the same `pipeline_mode`/vendor-bearing path leak** found on `GET /external/market-data/delivery/batch`.
       Pure investigation — report which (if any) of the two sibling endpoints leak the same vendor tag; do not fix,
       the mechanism decision (todo 1 in the source doc) is still open. Done when: both endpoints have a definite
       leak/no-leak verdict on record. Source:
       `external_market_data_response_leaks_vendor_pipeline_mode_2026_08_20.md` todo 2.
+      **Done 2026-08-21** — `/availability` = NO LEAK (coverage-rollup aggregates only, no path/vendor field).
+      `/delivery/stream` = LEAK, more directly than `/delivery/batch`: `CanonicalPersistEnvelope.pipeline_mode` is a
+      named field serialized verbatim by `model_dump_json()`, plus `payload_pointer` (when set) re-leaks via
+      path-embedding. Full findings + evidence filed in
+      `external_market_data_response_leaks_vendor_pipeline_mode_2026_08_20.md`'s new "Findings — sibling endpoint
+      audit (2026-08-21)" section. Evidence: unified-trading-pm@<pending>.
 
 ## From `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`
 
@@ -177,6 +183,9 @@ source: >-
 
 ## Progress Log
 
+- **2026-08-21 (slot-4)** — Closed the vendor-tag-leak sibling-endpoint audit todo. `/availability` = no leak,
+  `/delivery/stream` = leak (worse than `/delivery/batch` — a named `pipeline_mode` field, plus `payload_pointer`
+  path-embedding). Full findings in `external_market_data_response_leaks_vendor_pipeline_mode_2026_08_20.md`.
 - **2026-08-21 (slot-16)** — Closed the MTDS-connector-timestamp-audit todo. All 65 connector files classified
   (37 exchange-time w/ arrival fallback, 11 pure arrival-time, 2 mixed-path, 15 BLOCKED-* scaffolds). Evidence in
   `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new Findings section.
