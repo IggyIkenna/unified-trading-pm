@@ -571,9 +571,18 @@ successor plan, the work remains tracked here as still-open todos, not lost).
 
 ### API-reference client-ready follow-ups
 
-- [ ] [SCRIPT] P2. execution-service: `POST /external/instructions` CANCEL currently only supports
+- [x] [SCRIPT] P2. execution-service: `POST /external/instructions` CANCEL currently only supports
       `cancel_scope=SINGLE`; add an `ALL_FOR_STRATEGY_INSTANCE` lookup (index `order_tracker` by strategy-instance,
-      not just `instruction_id`) so the doc's remaining "Coming soon" cancel-scope note can close. <1 day.
+      not just `instruction_id`) so the doc's remaining "Coming soon" cancel-scope note can close. <1 day. —
+      execution-service@4e35a09b2 (2026-08-21). `Instruction.strategy_id` threaded from `StrategyInstruction`
+      through `manual_request_to_instruction()`; `ExecutionOrchestrator` now indexes `strategy_id_to_order_ids`
+      and exposes `get_orders_for_strategy_instance()`/`get_order_instrument_id()` (+ the orchestrator's own
+      missing `mark_cancelled()`, a pre-existing gap both cancel scopes depended on); new
+      `_cancel_all_for_strategy_instance()` sweeps every cached orchestrator. Tests: multi-venue multi-order
+      sweep, other-instance orders unaffected, no-orders 404, partial-failure CANCEL_FAILED
+      (`tests/unit/test_external_instruction_api.py::TestCancelInstructionPath`). QG green (8915 passed, cov
+      82.53%). `platform-api-reference.html` CANCEL row updated (both scopes wired) —
+      `unified-trading-pm@185e266a0e`.
 - [ ] [SCRIPT] P2. **UPDATED 2026-08-21 (this session) — the premise above was stale.** The live tick-ingestion
       loop was already built and wired BEFORE this session (`feature_tick_subscriber.py`,
       execution-service@0be361333, started from the `api.main` lifespan) — "needs a tick-source decision" no
@@ -588,10 +597,20 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       tests/unit/engine/test_feature_tick_subscriber.py'` once `unified-api-contracts` is clean, flip this
       checkbox with the resulting sha, then ship the already-drafted `platform-api-reference.html` QUOTE prose
       update (4 spots, drafted this session, held back pending the code shipping) via `safe-doc-push.sh`.
-- [ ] [SCRIPT] P1. execution-service: `docs/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`
+- [x] [SCRIPT] P1. execution-service: `docs/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`
       names BORROW/REPAY as the last 2 DeFi action types on pure simulation — wiring them through the same
       `defi_live_dispatch` seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE just used would close the doc's last 2
-      DeFi-side "Coming soon" rows in well under a day, since the dispatch pattern is now proven 5x.
+      DeFi-side "Coming soon" rows in well under a day, since the dispatch pattern is now proven 5x. —
+      execution-service@4e35a09b2 (2026-08-21). `dispatch_borrow_live()` added to `defi_live_dispatch.py` (AAVE V3
+      `borrow()`/`repay()`, same `_resolve_live_connector` seam); `BorrowHandler` now accepts `defi_adapter=` and
+      routes through it; `HandlerRegistry._DEFI_LIVE_DISPATCH_OPERATIONS` extended; `external_instruction_defi.py`/
+      `external_instruction_api.py` wired to accept `BorrowInstruction`/`RepayInstruction` (12 of 15
+      `StrategyInstructionV2` action types now live, up from 10). Tests per the existing per-type pattern
+      (`tests/unit/test_defi_live_dispatch.py::TestDispatchBorrowLive`,
+      `tests/unit/test_external_instruction_api.py::TestBorrowRepayInstructionPath`,
+      `tests/unit/test_handler_registry.py`). QG green (8915 passed, cov 82.53%). Closes
+      `external_instruction_defi_handlers_simulation_only_2026_08_20.md`'s last 2 DeFi rows;
+      `platform-api-reference.html` BORROW/REPAY rows updated — `unified-trading-pm@185e266a0e`.
 - [ ] [SCRIPT] P2. execution-service: BRIDGE/LP_MINT/LP_BURN are the platform-api-reference.html client-ready pass's
       only remaining honest-501 rows (2026-08-21 pass; confirmed genuinely unbuilt, not guessed). BRIDGE — no real
       execution engine at all; `TransferHandler._execute_bridge_transfer` is a live stub that always fails, and
