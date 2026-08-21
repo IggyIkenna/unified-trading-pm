@@ -76,7 +76,7 @@
     "fund-administration-service": "0.12.8",
     "ibkr-gateway-infra": "0.5.3",
     "instruments-service": "0.103.49",
-    "market-tick-data-service": "0.148.8",
+    "market-tick-data-service": "0.148.9",
     "system-integration-tests": "0.15.6",
     "unified-api-contracts": "0.157.0",
     "unified-trading-library": "0.93.1",
