@@ -25,7 +25,10 @@ tags:
   [agent-orchestrator, autospawn, account-failover, exhaustion, observability, nvidia, gemma, codex, luna, glm]
 related:
   [
+    /plans/active/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md,
     /plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md,
+    /plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md,
+    /plans/active/kimi_gemma_provider_onboarding_2026_08_16.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: "2026-08-19"

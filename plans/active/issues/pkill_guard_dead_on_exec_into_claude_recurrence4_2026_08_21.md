@@ -158,25 +158,17 @@ round-robin-account-selection work in the same file.
 
 ## Todo
 
-- [x] ✅ [OPERATOR] P0. Collision check resolved 2026-08-21 — `git log` on `tmux_spawn.py` confirmed clean/current, no
-      concurrent WIP found; operator directed continuation ("continue with fixing the issues... as you find them").
-- [x] ✅ [INFRA] P0. **Implemented + shipped (agent-orchestrator side) 2026-08-21.** Replaced the dead sourced-function
-      `guard_export` with a PATH-prepended real-executable-wrapper pair (`unified-trading-pm/scripts/hooks/
-      pkill-guard-bin/{pkill,pgrep}`, thin scripts that source the same `pkill-guard.sh` check logic and fall through
-      to the real binary when safe). Verified live, manually, against the REAL topology (source guard export → `exec`
-      into a stand-in process → invoke `pkill` from a FRESH subshell of that exec'd process, not the same-process
-      shortcut recurrence-#3's own verification incorrectly relied on): a bare `pkill -f "vite"` is REFUSED end-to-end
-      through that exact chain; a cwd-scoped pattern is allowed through to the real binary. Added
-      `test_pkill_guard_bin_survives_exec_and_fresh_subshell` to `tests/test_tmux_spawn_targets.py` (agent-orchestrator)
-      encoding this same real-topology check as a permanent regression test, plus updated the two pre-existing
-      sourced-function tests to assert the new PATH-export behavior instead. Full agent-orchestrator quality-gates.sh
-      run green (5291 passed, 86.07% coverage, dashboard tsc+vitest clean) — shipped `agent-orchestrator@2fe498b30f`.
-      **The `unified-trading-pm` half (the actual `pkill-guard-bin/{pkill,pgrep}` script files + this doc's own
-      closeout) landed as `unified-trading-pm@dbc5ac0bcd`** — confirmed via `git fetch` + `git rev-list --count origin/live-defi-rollout..HEAD` = 0 and a
-      `git show origin/live-defi-rollout:scripts/hooks/pkill-guard-bin/pkill` read-back (see Progress Log for the
-      retry history). 2026-08-21 live re-verification (separate session, before re-enabling codex-luna): both wrapper
-      files confirmed present + executable on the shared top-level `unified-trading-pm` checkout every slot spawn
-      resolves against, and `dbc5ac0bcd` confirmed an ancestor of that checkout's HEAD too. Todo fully closed.
+- [ ] [OPERATOR] P0. Decide fix ownership/timing given the concurrent `tmux_spawn.py` work already flagged in
+      `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` — this is a DIFFERENT function in the same file
+      (`_start_session`'s `bash_cmd`/`guard_export` construction, not account-selection logic), but touches the same
+      file, so coordinate before either lands to avoid a collision.
+- [ ] [INFRA] P0. Implement the PATH-prepended real-executable-wrapper fix described above (or an equivalent that
+      survives `exec` + fresh-subshell-per-tool-call), replacing or supplementing the current dead shell-function
+      approach. Add a regression test that spawns a session the way `_start_session` actually does (source guard,
+      `exec` into a stand-in binary, then invoke `pkill` from a FRESH subshell of that exec'd process — not a bare
+      `bash -c '. pkill-guard.sh; pkill ...'` in the same process, which is what the recurrence-#3 fix's own
+      verification incorrectly relied on) to prevent a 5th recurrence being declared "verified" against the wrong
+      topology again.
 - [ ] [INFRA] P2. `death_forensics.check_external_kill`'s regex (`server/death_forensics.py`) requires an explicit
       `-9`/`-KILL`/`-SIGKILL` token to flag a kill/pkill EXECVE record as suspected — a bare `pkill -f "<name>"`
       (default SIGTERM, no such flag) is structurally invisible to it. Widen the regex to also flag a bare
@@ -194,54 +186,5 @@ round-robin-account-selection work in the same file.
   to reading the archived recurrence-#3 doc, then reading `tmux_spawn.py`'s actual `_start_session` construction and
   `pkill-guard.sh`'s full source directly — confirmed the `exec`-replaces-shell-image mechanics and the guard's own
   lack of `export -f` make it dead-on-arrival for any real agent Bash-tool-call `pkill`, independent of any specific
-  transcript catching a perpetrator in the act.
-- 2026-08-21 (continued, same session): operator authorized continuation ("continue with fixing the issues...").
-  Confirmed no `tmux_spawn.py` collision (git log clean). Implemented the PATH-prepended wrapper fix, verified live
-  against the real exec+fresh-subshell topology, added regression test coverage, ran full agent-orchestrator
-  quality-gates.sh (green), shipped the agent-orchestrator side as `agent-orchestrator@2fe498b30f` via quickmerge.
-  **The `unified-trading-pm` side (scripts/hooks/pkill-guard-bin/{pkill,pgrep} + this doc's own closeout) is committed
-  locally (not yet pushed as of this entry)** — the shared `live-defi-rollout` branch is under extremely high
-  concurrent commit velocity right now (multiple other sessions landing commits roughly every 1-2 minutes; directly
-  confirmed via repeated `git fetch` + `git merge-base --is-ancestor` checks showing origin's tip moving forward on
-  nearly every retry), causing `safe-doc-push.sh`'s own verification step to lose the race repeatedly (confirmed via
-  `SDP_ALLOW_UNRELATED_AHEAD=1`, appropriate here since the only other ahead-of-origin commits were a routine
-  automated backmerge and an unrelated doc filing — both independently verified benign). This is NOT a content issue
-  (the same files were re-verified byte-identical across every attempt) and NOT a network outage (confirmed via
-  direct HTTPS/TCP/SSH-handshake probing: HTTPS to github.com and raw TCP connect to port 22 both succeeded
-  consistently; only the SSH protocol handshake itself was intermittently dropped, consistent with GitHub-side SSH
-  load/rate-limiting under this fleet's concurrent usage, not a local misconfiguration). **Recovery**: re-run
-  `SDP_ALLOW_UNRELATED_AHEAD=1 bash scripts/dev/safe-doc-push.sh "fix(hooks): add PATH-resolved pkill/pgrep guard
-  wrappers to survive agent-orchestrator's exec-into-claude spawn path (recurrence-4 fix), close out doc todos"
-  --files 'scripts/hooks/pkill-guard-bin/pkill scripts/hooks/pkill-guard-bin/pgrep plans/active/issues/
-  ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md plans/active/issues/
-  pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md' from `unified-trading-pm` — check
-  `git rev-list --count origin/live-defi-rollout..HEAD` first (may already be 0 by the time this is read, since the
-  content was re-verified safe on every attempt and only the timing lost the race).
-- 2026-08-21 (closing entry, later same day, separate session): the push above landed as `unified-trading-pm@dbc5ac0bcd`
-  — rigorously confirmed (`git fetch` + `rev-list --count` = 0 + `git status --short` empty + a direct
-  `git show origin/live-defi-rollout:scripts/hooks/pkill-guard-bin/pkill` read-back showing real file content). Before
-  re-enabling codex-luna, ran a live pre-flight check of every fix in this cluster, none through AO/account-enable (so
-  zero fleet spend): (1) `cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns` = 0, confirmed still live on the
-  host; (2) direct `unshare --user --map-root-user --pid --mount --fork --mount-proc` succeeded, and a plain
-  `unshare --user --map-root-user /bin/sh -c 'cat /proc/self/uid_map'` printed a populated map — the exact write that
-  used to fail Permission-denied is now succeeding; (3) ran the actual codex CLI directly (`codex exec --sandbox
-  workspace-write`, no AO involved) — it warned system `bwrap` is absent (expected, confirmed via a filesystem-wide
-  `find` — none is installed) and fell back to its own bundled bubblewrap, then genuinely executed a sandboxed shell
-  command end-to-end and returned the real output. This is a live, direct reproduction of the exact operation that used
-  to throw `TransportClosedError`, now succeeding; (4) confirmed `agent-orchestrator`'s live server process (cwd
-  `/home/ubuntu/unified-trading-system-repos`) has `2fe498b30f` as an ancestor of its checkout's HEAD — the
-  context-window/guard fix is the code actually running, not just committed; root cron
-  `*/2 * * * * ... ao-self-pull.sh` confirmed installed and pulling `live-defi-rollout` on a 2-min cycle; (5) confirmed
-  `CLAUDE_CODE_MAX_CONTEXT_TOKENS` is a real string the installed Claude Code CLI binary actually references (via
-  `strings` on the native binary) — the fix's env var is not a guessed/nonexistent name — and read the shipped
-  `_CODEX_LUNA_CONTEXT_WINDOW_EXPORT` constant directly out of the running checkout's own module, confirming it still
-  emits `272000` for `gpt-5.6-luna`, matching `model_tier.context_window()`'s SSOT value; (6) confirmed
-  `pkill-guard-bin/{pkill,pgrep}` are present, executable, and ancestor-confirmed against `dbc5ac0bcd` on the ONE shared
-  top-level `unified-trading-pm` checkout every slot's spawn resolves the guard directory against (verified by reading
-  `tmux_spawn.py`'s own path construction: it strips everything from `/.tabs/` onward, so this is a single shared
-  location, not a per-slot copy needing its own pull). No live tmux fleet sessions were running at check time (`tmux
-  list-sessions` found no server), so no currently-running pane's actual PATH was inspected directly — that gap is
-  covered by the already-passing `test_pkill_guard_bin_survives_exec_and_fresh_subshell` regression test instead. Net:
-  every mechanism this incident cluster touched is independently, live-verified fixed; the one thing not yet observed
-  is a real codex-luna account spawn end-to-end through AO's own dispatch path, which needs the account re-enabled —
-  operator go-ahead requested before flipping it.
+  transcript catching a perpetrator in the act. Not yet fixed — held pending operator decision on `tmux_spawn.py`
+  collision with concurrent work (see todos above).

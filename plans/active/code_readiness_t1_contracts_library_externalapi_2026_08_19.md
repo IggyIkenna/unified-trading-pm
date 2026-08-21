@@ -245,15 +245,8 @@ todos only to confirm they are data-movement, then leave it.
       test_execution_service_venue_coverage_cascade_invariant.py`,
       `tests/data/execution_service_venue_reachability_baseline.json`.
 
-- [x] ✅ [FROM-T4] P1. **DONE — all 4/4 shipped.** `WithdrawInstruction`/`RepayInstruction` landed first
-      (`unified-api-contracts@f5fc118ae1`); `LpMintInstruction`/`LpBurnInstruction` landed 2026-08-21 exactly per the
-      shape T1 proposed below — `unified-api-contracts@d751e743` (+ `@3204e607` JSON round-trip tests), verified
-      against `unified_api_contracts/internal/architecture_v2/schemas.py` (both classes present, both in the
-      `StrategyInstructionV2` union) and `merge-base --is-ancestor` against `origin/live-defi-rollout`. T4's BATCH
-      settlement gap is now closed 5/5 (`CONVERT_DUST`/`WITHDRAW`/`REPAY`/`LP_MINT`/`LP_BURN` all have dataclasses).
-      Also folded into the codex post-phase audit — `/codex/04-architecture/strategy-execution-protocol.md`'s
-      instruction-action table updated to reflect the shipped shape (`unified-trading-pm@0dd2475e82`). Original
-      request text follows verbatim for provenance.
+- [ ] [FROM-T4] P1. **2 of 4 shipped — `WithdrawInstruction`/`RepayInstruction` done; `LpMintInstruction`/
+      `LpBurnInstruction` still need the DeFi LP position shape specified (T4's call, not designed here).**
       Original ask, MEASURED 2026-08-20 by T4 closing its "Close the BATCH settlement gap" todo:
       `InstructionActionV2` has 16 members; `execution_service/backtest_v2/action_handlers.py`'s
       `resolve_settlement` dispatches on `isinstance(instruction, <Type>)` over `StrategyInstructionEnvelope`
@@ -434,26 +427,7 @@ todos only to confirm they are data-movement, then leave it.
       formula from schema-carried values. Also documented `refresh_cadence_ms` as the STRATEGY-side cadence
       specifically — the issue is explicit that conflating it with execution's faster tick-driven loop is a design
       error. 5 tests incl. a JSON round-trip (the instruction crosses the EventTransport seam).
-- [ ] BLOCKED-OPERATOR-DECISION [BACKEND] P0. **RE-CHECKED 2026-08-21 (close-out pass) — still genuinely blocked, not
-      forceable, but the blocker has MOVED.** Q12-Q16 themselves ARE answered (confirmed against
-      `/codex/04-architecture/cross-domain-state-fabric.md` § 14, "Closed since first publication" +
-      "RESOLVED 2026-08-21" banner, and the issue doc's own "OPERATOR RULING 2026-08-21" section). But that same
-      ruling explicitly says the implementation vehicle is the fabric's **snapshot/factor-state contract**
-      (per-instrument `J_i`/`H_i`/`Theta_i` against canonical factors, in a versioned snapshot with watermarks) —
-      **NOT** literal scalar delta/gamma/theta fields bolted onto `StrategyInstructionEnvelope`. The ruling's own Q12
-      answer then names a concrete field list (`references: list[InstrumentReferenceEntry]` with per-entry
-      `reference_price`/`reference_position`/`credit`/`position_adjustment_bps_per_unit_risk`/
-      `sensitivity_coefficient`/`second_order_coefficient`/`time_decay_coefficient`) that reads as exactly those
-      scalar-shaped fields the same paragraph just said not to build — an apparent internal tension in the ruling
-      text itself, not resolved by re-reading it twice. Separately, the fabric doc's own "Not settled here" §14 states
-      Parts II-V of the restructured spec (per-profile detail, archetype manifests) don't exist yet, so the stated
-      implementation vehicle isn't buildable code today either way. Shipping the literal `InstructionReferenceEntry`
-      field list would risk re-committing exactly the "wrong shape" mistake the operator already caught once
-      (2026-08-19 scalar-vs-vector correction, same issue doc). This is a genuine design/architecture judgment call,
-      not a coding task — needs the operator to confirm which of the two readings governs before this becomes
-      bounded work. Was previously tagged as merely needing "a ruling on Q12-Q16"; that framing is now stale since
-      the ruling landed — retagged to reflect the real remaining gap.
-      **UNBLOCKED 2026-08-21 in DIRECTION, shape governed by the fabric SSOT**: operator answered the
+- [ ] [BACKEND] P0. **UNBLOCKED 2026-08-21 in DIRECTION, shape governed by the fabric SSOT**: operator answered the
       legacy Q12-Q16 set (vector one home; per-entry matrix incl. optional theta; venue nested per-instrument;
       per-entry credit/trigger/coefficient) — but Q12-Q16 were superseded by the factor-state model, so the
       implementation shape is `/codex/04-architecture/cross-domain-state-fabric.md` (R1-R16 snapshot/factor
@@ -467,11 +441,7 @@ todos only to confirm they are data-movement, then leave it.
       literal text would ship the rejected shape; implementing the vector would answer five questions explicitly
       reserved for the operator. **Needs: a ruling on Q12-Q16**, then this becomes a bounded code task.
       Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
-- [ ] BLOCKED-OPERATOR-DECISION [BACKEND] P0. **RE-CHECKED 2026-08-21 (close-out pass) — same finding as
-      `reference_position` immediately above: Q12-Q16 answered, but the ruling's stated implementation vehicle (the
-      fabric snapshot/factor-state contract) vs. its own literal per-entry field list are in apparent tension, and
-      Parts II-V of the fabric spec don't exist yet. Not re-explaining verbatim — see the note above.**
-      **UNBLOCKED 2026-08-21 in direction, same fabric-SSOT governance as above** (credit is per-entry,
+- [ ] [BACKEND] P0. **UNBLOCKED 2026-08-21 in direction, same fabric-SSOT governance as above** (credit is per-entry,
       optional, strategy-owned — consistent with the fabric contract's `c_i` term). Add the `credit` leg to `StrategyInstructionEnvelope`. Formerly same gate as
       `reference_position` above — Q14 asks whether `credit` varies per-entry or is one policy shared across the
       vector, which cannot be answered without first resolving Q12 (where the vector lives). Landing `credit` as a
@@ -504,15 +474,9 @@ todos only to confirm they are data-movement, then leave it.
       2026-08-21, resolved).
 ### Walkthrough feedback 2026-08-21
 
-- [ ] BLOCKED-OPERATOR-DECISION [AGENT] P0. Execute the registry cluster of the 2026-08-21 walkthrough feedback,
-      tracked in `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (todos live there — this plan is
-      over the line cap). **2026-08-21: all T1-actionable items in that cluster now closed** — the 12 unresolved
-      venue/data_type pairs (`unified-api-contracts@f79cd936`, a concurrent session's fix, independently verified
-      0 unresolved of 683 triples), the DeFi venue-set dedup, and the CeFi instrument_type roster over-fan are all
-      shipped (no longer in that plan's open-todo list). **One item remains, genuinely operator-gated, not
-      T1-forceable**: bucketing the 23 declared-but-unbucketed DeFi venues requires an operator ruling on which of
-      20 `pipeline`-phase venues are actually IS-producible/ready to flip to `live` — a readiness call, not a
-      registry-hygiene fix. See that plan's own todo for detail.
+- [ ] [AGENT] P0. Execute the registry cluster of the 2026-08-21 walkthrough feedback, tracked in
+      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (todos live there — this plan is
+      over the line cap).
 
 ### W5 — venue registry completeness
 
@@ -625,11 +589,6 @@ todos only to confirm they are data-movement, then leave it.
       converter) discovered and partially done. **Operator ruled 2026-08-21: YES, convert the root too — write
       the public-API import-parity test first, then the hand-designed lazy root.** Real measured win once all land: 1,766→1,295 modules (~27%) on
       `from unified_api_contracts.internal import StrategyArchetype`.
-      **2026-08-21: `_VENUES` loop shipped `unified-api-contracts@ab0f9dba7c`** (sys.meta_path finder +
-      PEP 562 `__getattr__`/`__dir__`, import-parity tested). Still open: the top-level file's other ~1098 eager
-      re-exports remain unconverted — that mechanical conversion was attempted and deliberately REVERTED
-      2026-08-20 after a silent data-corruption bug, root cause unresolved. Full detail:
-      `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md`'s "Layer 2 (UAC)" todo.
 - [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
       (`[FROM-T2]` above). **2026-08-20: investigated and designed, not yet implemented.** Read the real
       implementation (`_writer_io.py`'s `_flush_per_vm_pending`/`_read_per_vm_shard`,
@@ -717,91 +676,20 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Close-out
 
-- [ ] [AGENT] P1. **PARTIAL, 2026-08-21 close-out pass — this plan's OWN todos are zeroed; the wider JSON-allocation
-      corpus tail is not, and is NOT claimed done.** Re-walked every remaining `- [ ]` in THIS
-      plan top to bottom (the spine section is already 100% closed, verified above). Result: `LpMintInstruction`/
-      `LpBurnInstruction` was genuinely done and unflipped — fixed above with evidence. `reference_position`/`credit`
-      re-tagged `BLOCKED-OPERATOR-DECISION` (was tagged as merely needing "a ruling," which is now stale — the
-      ruling landed 2026-08-21 but exposed a real apparent tension between its own two halves; see the notes above,
-      not forced). The walkthrough-feedback registry cluster (line ~477) and W5 collateral/margin population
-      (line ~489) were independently re-verified still correctly `BLOCKED-OPERATOR-DECISION` — not touched, per this
-      todo's own explicit instruction not to spend effort trying to unblock them. The lazy-loading refactor P2
-      (line ~588) and manifest-writer per-VM shard flush P2 (line ~603) were re-verified still accurately described
-      (checked the real code state, not just re-read the doc) and correctly deferred — not forced.
-      **The `§ "Your allocated corpus"` JSON allocation is a SEPARATE, much larger surface** (~45 non-spine docs,
-      the allocation script assigns doc-level, not todo-level, so many carry T1-repo-touching todos alongside
-      other-tranche domain work). A sampled audit (frontmatter `repos:` + live open-todo count on ~20 of them)
-      confirms the same pattern already established for this plan's own "External API surface" section: most tail
-      todos are prediction/sports/tradfi/UI-domain work that only incidentally names a T1 repo (e.g. deployment-api
-      as a display surface), not T1 contract/library work. Fully resolving that ~45-doc / ~90-todo surface to the
-      same rigor as the External API surface redirect (per-doc investigation, `[FROM-T1]` redirects where genuinely
-      out-of-repo) is real work beyond one close-out pass's bounded scope and risks concurrent-edit collisions across
-      ~45 files other tranches may be actively touching (this session already hit exactly that collision risk once,
-      on this same repo, today). Recommending that surface become its own follow-up if the operator wants it swept —
-      not claiming it silently zeroed. This plan's OWN todos (the actual close-out unit) are the ones verified done
-      above.
-- [x] ✅ [AGENT] P0. **Post-phase codex audit complete, 2026-08-21 — all 6 items checked, 3 codex docs updated.**
-      Evidence: `unified-trading-pm@0dd2475e82`.
-      1. **`QuoteInstruction` sensitivity fields** — real drift found: `/codex/04-architecture/strategy-execution-protocol.md`'s
-         `### QUOTE` section (and its "11 actions" framing throughout) predated this session's schema changes.
-         Updated with `delta`/`gamma`/`underlying_instrument_id` + the `effective_delta` formula.
-      2. **`TransferCapabilityV2`** — no codex doc mentioned it at all. Added a "Transfer capability" section to
-         `/codex/03-services/venue-capability-registry.md` (the correct SSOT — `authoritative_for: venue capability
-         declaration schema`), with a disclosure note that the doc's existing dataclass sketch is V1-era and hasn't
-         been fully reconciled to `VenueCapabilityV2`.
-      3. **W17 fee breakdown** (`clearing_fee_bps`/`broker_fee_bps`/`other_fee_bps`) — searched for an
-         `ExecutionCostEstimate` SSOT; the only codex hits (`defi-execution-overview.md`,
-         `defi-risk-monitoring.md`, `pnl-attribution.md`) describe DIFFERENT DeFi-specific cost classes
-         (`DefiCostEstimate`/`UnwindCostEstimate`), not the CeFi `ExecutionCostEstimate` this field landed on. No
-         doc exists for it and none is warranted — small, self-explanatory field addition, matches the judgment bar
-         set by the lazy-loading precedent (no doc manufactured for coverage's sake).
-      4. **`WithdrawInstruction`/`RepayInstruction`** (+ `LpMintInstruction`/`LpBurnInstruction`, found genuinely
-         shipped during this same pass, see above) — same `strategy-execution-protocol.md` doc, same real drift:
-         its "11 Actions" table had none of the 4 new actions. Added all 4 (title/summary/authoritative_for/body
-         updated to "15 Actions" — the target-state family; `KILL_SWITCH`/`FLATTEN_POSITION`/`CONVERT_DUST` noted as
-         a separate control-plane family, not silently folded into the same count).
-      5. **Venue→chain SSOT + `VenueFeature`/`VenueCapability` overlap fix** — checked
-         `venue-capability-registry.md`'s existing illustrative `VenueFeature` example
-         (`CROSS_MARGIN`/`PORTFOLIO_MARGIN`/`SUBACCOUNT`/`ATOMIC_MULTI_LEG`) against the real post-dedup
-         `VenueCapabilityV2.features` set (`unified-api-contracts@0d7afa29e`) — **no drift**, the doc's own example
-         already matches exactly. Added a confirming note (folded into the same TransferCapabilityV2 edit) rather
-         than leaving the match undocumented.
-      6. **W8 weightings** — `/codex/03-services/portfolio-allocator.md` already correctly described the Group
-         1/Group 2 archetype split in prose; no drift, but the new `WeightingDimension`/
-         `ALLOCATOR_ARCHETYPE_DIMENSION` enum now codifies exactly that split with a totality test. Added a
-         cross-reference note so a future reader finds the enforced enum, not just the prose description.
-      **Hazard hit and recovered from mid-task**: this repo's shared-checkout auto-reconcile quarantined the first
-      attempt at these 3 doc edits into an autostash (an 87-entry pile) before they could be committed — confirmed
-      via `git status`/`git diff --stat` showing the edits absent, not just a stale notification. Redone from
-      scratch, shipped immediately via `safe-doc-push.sh` (isolated-worktree commit, unaffected by the working-tree
-      quarantine), landing verified against `origin/live-defi-rollout`. A subsequent `git pull --ff-only` conflicted
-      re-applying a stale autostash of the SAME edit against itself (cosmetic table-width diff only, not content) —
-      resolved by keeping the already-landed version; several OTHER sessions' unrelated foreign WIP that surfaced in
-      the same autostash pop was re-quarantined by name (`git stash push -u -m "quarantine: ..."`, never dropped)
-      rather than touched, per the multi-agent-safety hard rule.
-- [ ] BLOCKED-OPERATOR-DECISION [AGENT] P0. **Confirmation done, 2026-08-21 — genuinely blocked, not a
-      missing-tooling gap; re-derivation itself cannot happen yet.** Found `platform-external-api-walkthrough.html`'s markers are real: `class="st st-*"`
-      (`st-part`/`st-plan`/`st-live`) + `class="ev ev-*"` (`ev-check`/`ev-assumed`/`ev-verified`) hand-authored
-      markup, read by `scripts/plan-hygiene/check_artefact_claim_ownership.py` (ownership/count ratchet) and
-      `check_artefact_enum_drift.py` (count-vs-UAC-enum ratchet) — both are CHECKERS, not regenerators; these files
-      are explicitly hand-authored (both scripts' own docstrings state this), so "re-derive" means edit the HTML
-      to match measured reality, then re-run the checkers to confirm — not run a generator script (none exists, and
-      none should be invented for this todo). **T5 (this artefact's actual owner) already has a standing, explicit,
-      2026-08-20 operator ruling to freeze ALL hand-edits to all 4 client artefacts** — sourced from
-      `/plans/active/state_fabric_artefacts_2026_08_20.md` line 357 ("wait for this plan's ledger-binding approach,
-      do not hand-edit the artefacts") and independently confirmed by that same plan's own todo 1/2 ("Persist a
-      versioned readiness + coverage ledger" / "Bind the artefacts to the ledger") both still open `- [ ]` — the
-      ledger-binding this freeze is conditioned on has NOT landed. T5's own na-eligibility-audit entry
-      (`code_readiness_t5_readiness_observability_presentations_2026_08_19.md` line ~978) independently corroborates:
-      "4 DOC 're-derive artefacts' todos — Not started — operator decision 2026-08-20: wait for the ledger plan."
-      **The "five allowed pending states"** are the marker vocabulary itself, per
-      `check_artefact_claim_ownership.py`'s own docstring: `st-part`/`st-plan`/`ev-check`/`ev-assumed` are the four
-      OPEN states (one of the operator's 5 goalpost exceptions is allowed to still read one of these) plus `st-live`/
-      `ev-verified` as the closed pair — matches this plan's own line 62-73 "goalpost" framing (backfills-running /
-      venue-connectivity / market-data-live / testnets / archetypes-pending-real-data are the 5 allowed reasons a
-      marker stays open). Not hand-editing the HTML per the todo's own explicit instruction AND the operator's
-      standing freeze — correctly left as `BLOCKED-OPERATOR-DECISION`, T1 has nothing further to do here until T5's
-      ledger plan lands.
+- [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation (see § "Your allocated corpus") to zero open
+      todos or an explicit `BLOCKED-*` tag on every remainder.
+- [ ] [AGENT] P0. Post-phase codex audit — update every changed contract doc, stub new patterns, add SUPERSEDED
+      banners to invalidated docs. Plan↔codex drift is review-blocking. **In progress, 2026-08-20 — one pattern
+      stubbed, not a full sweep yet.** The lazy-loading refactor had no codex SSOT at all (pattern + both real bugs
+      + the top-level file's known-broken state lived only in the plan's own Progress Log, which archives when the
+      plan does) — wrote `/codex/06-coding-standards/uac-init-lazy-loading-pattern.md`. Order-state-machine SSOT
+      was already handled by T4 earlier today (`c74d869b36`, stale 7-state warning + diagram). Remaining
+      contract-shaped changes this tranche shipped that have NOT yet been checked against an existing codex doc for
+      drift: `QuoteInstruction` sensitivity fields, `TransferCapabilityV2`, W17 fee breakdown, `WithdrawInstruction`/
+      `RepayInstruction`, the venue→chain SSOT + `VenueFeature`/`VenueCapability` overlap fix, W8 weightings. Not
+      claiming this todo done off one doc.
+- [ ] [AGENT] P0. Confirm every artefact marker owned by this tranche now reads live, or is one of the five allowed
+      pending states. Re-derive; never hand-edit the HTML.
 
 ## Progress Log
 
@@ -844,43 +732,9 @@ todos only to confirm they are data-movement, then leave it.
   `UniswapConnector.mint_position()`/`burn_position()`'s real signatures, which the enum's own comment already
   cites as the dispatch target) — held open, not fabricated.
 
-- [x] ✅ [FROM-T2] P3. **Flip `InstrumentRecord.model_config = ConfigDict(extra="forbid")`** in
+- [ ] [FROM-T2] P3. **Flip `InstrumentRecord.model_config = ConfigDict(extra="forbid")`** in
       `unified-api-contracts/unified_api_contracts/internal/reference/instrument.py`. Every REMOVE-verdict caller
       is now clean fleet-wide — T2 finished the last one (`min_order_size`, zero consumers, removed from all 5
-      call sites, `instruments-service@588f35aeb0`). Shipped `unified-api-contracts@cdb8ae8806` (bundled with the
-      6-bookmaker removal); 4 new regression tests added
-      (`tests/unit/test_instrument_record_extra_forbid.py`). Full disposition history + evidence:
-      `/plans/archive/2026_08/instrument_record_schema_completeness_extra_forbid_2026_07_18.md` (resolved+archived).
+      call sites, `instruments-service@588f35aeb0`). Full disposition history + evidence:
+      `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`. P3, not blocking.
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 1 of the operator-slot-launched code-readiness series (see the coordinator doc's Launch-prompts mechanism — paste-into-a-slot + `/autonomous`, not AO-backlog dispatch); actively worked, extensive shipped-commit evidence throughout. Remaining open items mix genuine operator-gated design questions (Q12-Q16 reference-position/credit shape ruling via the cross-domain-state-fabric SSOT, W5 collateral/margin data explicitly requiring real per-venue research — 'T1 will not invent financial risk parameters'), a kill-switch/flatten-position design call held pending T4's answer, an un-started wizard UI item, and standing tail-closure/codex-audit/marker-confirmation todos gated on the rest of the tranche completing. None clears the whole-doc RECLASSIFY bar.
-- **Close-out session 2026-08-21**: worked all 3 close-out todos. (1) **Non-spine tail** — this plan's own remaining
-  open todos re-walked top to bottom: `LpMintInstruction`/`LpBurnInstruction` found genuinely shipped
-  (`unified-api-contracts@d751e743`/`@3204e607`) and flipped with evidence; `reference_position`/`credit` re-tagged
-  `BLOCKED-OPERATOR-DECISION` (Q12-Q16 answered 2026-08-21 but exposed a real apparent tension between the ruling's
-  stated implementation vehicle — the fabric snapshot/factor-state contract — and its own literal field-list answer;
-  not forceable without another operator pass); the two "do not force" items (W5 collateral, manifest-writer flush)
-  and the two already-blocked items (walkthrough-feedback registry cluster, lazy-loading refactor) all independently
-  re-verified still accurate. The wider `§ "Your allocated corpus"` JSON-allocation tail (~45 non-spine docs) was
-  sampled, not exhaustively worked — most sampled docs carry other-tranche domain work (prediction/sports/tradfi/UI
-  features) that only incidentally names a T1-owned repo; fully redirecting all of it needs the same per-doc rigor
-  as the "External API surface" section got, which is beyond one close-out pass — left open with this finding
-  recorded rather than claimed done. (2) **Post-phase codex audit** — all 6 named contract changes checked against
-  existing codex docs; 3 docs updated (`strategy-execution-protocol.md`: QuoteInstruction sensitivity fields +
-  WITHDRAW/REPAY/LP_MINT/LP_BURN, "11 Actions"→"15 Actions"; `venue-capability-registry.md`: TransferCapabilityV2 +
-  VenueFeature/VenueCapability confirmation; `portfolio-allocator.md`: WeightingDimension cross-reference); W17 fee
-  breakdown confirmed to need no doc (no existing `ExecutionCostEstimate` SSOT, small self-explanatory field
-  addition). Evidence: `unified-trading-pm@0dd2475e82`, verified against `origin/live-defi-rollout`. (3) **Artefact
-  markers** — confirmed genuinely `BLOCKED-OPERATOR-DECISION`: T5 (the artefact's actual owner) has a standing
-  2026-08-20 operator freeze on hand-editing all 4 client artefacts pending
-  `/plans/active/state_fabric_artefacts_2026_08_20.md`'s ledger-binding, which has not landed (its own todos 1-2
-  still open). The marker vocabulary (`st-part`/`st-plan`/`ev-check`/`ev-assumed` open, `st-live`/`ev-verified`
-  closed) is hand-authored by design (both artefact-check scripts' own docstrings say so) — confirmed no
-  regeneration script exists or should exist; per the todo's own instruction, did not hand-edit the HTML.
-  **Mid-session hazard**: this repo's shared-checkout auto-reconcile quarantined the first attempt at the 3 codex
-  doc edits into an 87-entry autostash before they were committed (measured via `git status`, not assumed from a
-  stale notification); redone and shipped via `safe-doc-push.sh` (isolated-worktree commit, unaffected by the
-  working-tree quarantine), then a `git pull --ff-only` produced one cosmetic table-width conflict against a stale
-  copy of the SAME edit (resolved by keeping the landed content) plus several other sessions' unrelated foreign WIP
-  in the same autostash pop — that foreign WIP was re-quarantined by name (`git stash push -u -m "quarantine: ..."`,
-  never dropped, never inspected further) rather than touched, per the multi-agent-safety hard rule. **Verified
-  every shipment against `origin/live-defi-rollout` directly** (`git fetch` + `git show origin/...:<path>` /
-  `merge-base --is-ancestor`), not trusted off a ship script's own success message.

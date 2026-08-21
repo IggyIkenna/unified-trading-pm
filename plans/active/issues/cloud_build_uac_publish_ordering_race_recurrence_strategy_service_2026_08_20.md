@@ -27,7 +27,7 @@ status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
-repos: [strategy-service, unified-api-contracts, unified-trading-pm, market-data-processing-service, trading-agent-service, instruments-service]
+repos: [strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [ci, cloud-build, publish-ordering, artifact-registry, unified-api-contracts, race-condition, live-incident]
 related:
@@ -48,7 +48,7 @@ locked_by:
 supersedes:
 superseded_by:
 resolved_by: ""
-last_updated: 2026-08-21
+last_updated: 2026-08-20
 context_scope:
   [
     strategy-service/Dockerfile,
@@ -305,53 +305,3 @@ The doc's own primary "Implement" todo (line ~233) is explicitly gated: "operato
 until reviewed" — cannot be dispatched ahead of that sign-off regardless of how bounded the implementation reads.
 The remaining 4 todos are sizing/sequencing/defense-in-depth follow-ups explicitly scoped as secondary to that same
 gated primary fix. No operator review recorded yet as of this pass (doc is 1 day old). No `assigned_vm` change.
-
-- **2026-08-21 (cicd slot-24, escalation `agt-5560fb`)** — 3rd+ recurrence of the same class, this time
-  `market-data-processing-service`. `cloud-build-failure-watcher` paged for build `71ad811a` (main @ `96fd90a5`,
-  2026-08-21T12:32:01Z) — docker step 6 `uv pip install`: "× No solution found ... market-data-processing-service==0.32.7
-  depends on unified-api-contracts>=0.159.0,<1.0.0" while AR's newest wheel at that moment was
-  `0.158.1.dev1+gae56a4f9f` (0.159.0 published 4.5 min later at 12:36:34Z). Same-repo evidence of the class
-  recurring on its own routine cadence, not just at a fleet-wide batch-promote tick: TWO EARLIER same-day MDPS
-  failures against the PRIOR floor too — `71d477bd` (10:36:44Z) and `736cf29b` (10:15:33Z) both hit
-  `unified-api-contracts<=0.157.1.dev1+g615972874` vs. a required `>=0.158.0` floor (0.158.0 never even shows in the
-  `gcloud artifacts versions list` history — that floor-bump's own re-pin looks to have been superseded by the next
-  one, `0.159.0`, before it ever resolved). Verified resolved LIVE the same way as the strategy-service instance:
-  re-ran `market-data-processing-service-build` on the same `main` HEAD (`gcloud builds triggers run
-  market-data-processing-service-build --branch=main`) → build `967d5bb2` **SUCCESS** (13:37→13:44:31Z, ~7min), log
-  confirms `+ unified-api-contracts==0.159.2` (a later clean release, published in the interim) resolved and
-  `market-data-processing-service:latest` (+ `96fd90a` + `0.32.7` tags) re-pushed. No MDPS code change made — per this
-  doc's own root-cause section, the fix belongs in `update-repo-version.yml`'s `resolve-gate`, not in any consumer
-  repo. Not implementing here — the doc's P2 "Implement" todo is still operator-review-gated; this entry is
-  additional evidence for whoever picks that up, not a new investigation. Escalation closed.
-- **2026-08-21 (cicd slot-31, escalation `agt-568ea1`)** — Another sibling of the SAME 2026-08-21 `0.159.0` floor wave
-  as the MDPS entry above, this time `trading-agent-service`. `cloud-build-failure-watcher` paged for build
-  `ccd69f30-9d09-40f8-a384-9261d3e408d7` (main @ `35be999b`, 2026-08-21T12:32:01Z, region asia-northeast1) — docker
-  step 6 `uv pip install`: "× No solution found ... trading-agent-service==0.13.23 depends on
-  unified-api-contracts>=0.159.0,<1.0.0" while AR's newest wheel at that moment was `0.158.1.dev1+gae56a4f9f`
-  (`0.159.0` published ~3.7 min later at 12:36:34Z). Same repo also hit the PRIOR floor race earlier the same day:
-  build `eb5be051-8c32-4d47-820a-5b59540b345a` (main @ `9de11645`, 2026-08-21T10:22:34Z) failed on
-  `unified-api-contracts>=0.158.0` vs. only `<=0.157.1.dev1+g615972874` available — that one self-healed on its own
-  next natural trigger (`55cf8fd5`, 11:07:01Z, SUCCESS) with no manual re-run needed. For the 12:32 failure: did NOT
-  need a manual re-run either — by the time this escalation was triaged (~15:25Z), two later natural builds had
-  already gone SUCCESS on their own (`ff19a6d9` 14:30:06Z, `294fee39` 14:38:27Z, both against `>=0.159.0` — current AR
-  head is `0.161.1`). Verified LIVE: current `live-defi-rollout` `pyproject.toml` already carries the correct
-  `unified-api-contracts>=0.159.0,<1.0.0` constraint (no drift), `origin/repo-blockers` has no open entry for
-  `trading-agent-service`, and the most recent build is green — no code change needed, no re-run needed, nothing to
-  ship. Root cause identical to every other entry in this doc: the fix belongs in `update-repo-version.yml`'s
-  `resolve-gate`, not in any consumer repo; this entry is additional evidence for the still operator-review-gated P2
-  "Implement" todo, not a new investigation. Escalation closed.
-- **2026-08-21 (cicd slot-8, escalation `agt-069c25`, wall_type `cloud_build_router_failure`)** — Another sibling of
-  the SAME 2026-08-21 `0.158.0`-floor wave as the `trading-agent-service` PRIOR-floor entry above, this time
-  `instruments-service`. Escalated Cloud Build `95687259-49f9-48ab-ae2c-25779f33d853` (main @ `42f81d962b`,
-  createTime 2026-08-21T10:53:53Z, FAILURE 11:06:25Z) — docker step 5 `uv pip install` (7 retry attempts, ~594s):
-  "× No solution found ... instruments-service==0.104.0 depends on unified-api-contracts>=0.158.0,<1.0.0" while AR's
-  newest wheel at that moment was `0.157.1.dev1+g615972874` (published 10:07:19Z) — `0.158.0` never resolved cleanly;
-  AR went straight from `0.158.1.dev1+gae56a4f9f` (11:46:00Z) to `0.159.0` (12:36:34Z), the same never-a-clean-release
-  pattern the MDPS entry above documented. Verified LIVE, no manual re-run needed: 10 consecutive natural
-  `instruments-service-prod` builds since 12:51:16Z today are all SUCCESS (spot-checked through 16:50:40Z), current
-  `live-defi-rollout`/`main` `pyproject.toml` already carries `unified-api-contracts>=0.159.0,<1.0.0` (no drift, matches
-  the sibling repos' already-advanced floor), and current AR head is `0.161.2` — comfortably inside range. No open
-  repo-blocker for instruments-service (`GET /api/repo-blockers` → only one open entry, an unrelated unified-trading-pm
-  BATS finding `RB-fbd8d08f`). Root cause identical to every other entry in this doc: the fix belongs in
-  `update-repo-version.yml`'s `resolve-gate`, not in any consumer repo; this entry is additional evidence for the
-  still operator-review-gated P2 "Implement" todo, not a new investigation. Escalation closed.

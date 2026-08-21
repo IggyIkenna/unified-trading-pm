@@ -135,7 +135,7 @@ pre-flight/dedup keying gap".
 On-chain perpetual CLOB exchanges are classified **`asset_group=cefi`** (UAC `VENUE_TO_ASSET_GROUP` /
 `VENUES_BY_ASSET_GROUP["cefi"]`), even though they settle on-chain — they trade the perp/hedge leg, not the DeFi
 long/stake/lend/AMM leg. **CeFi on-chain perps: `HYPERLIQUID` (HYPERLIQUID), `ASTER` (BSC), `EXTENDED` (STARKNET),
-`LIGHTER` (ZKSYNC), `KALSHI_PERP` (chainless), `POLYMARKET_PERP` (POLYGON)** (the latter two added 2026-08-13 per the 2026-08-06 operator
+`LIGHTER` (ZKSYNC), `KALSHI_PERP`, `POLYMARKET_PERP`** (the latter two added 2026-08-13 per the 2026-08-06 operator
 ruling in `defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md` — their `perp_funding` capture reroutes to
 `asset_group=cefi`, matching the shipped routing fix `market-tick-data-service@2aa23de5`) — each has a cefi
 `SourceCapability` (`_cefi.py`) + a cefi venue-launch date + per-CEFI-instrument manifest shape
@@ -148,31 +148,20 @@ EXTENDED/PACIFICA/LIGHTER as defi → 1,802 contaminant defi `_index` rows; they
 (adapters relocated `adapters/defi/`→`adapters/cefi/`) and the contaminant rows purged. SSOT:
 `plans/active/instruments_foundation_completeness_2026_06_24.md`.
 
-**Only KALSHI-PERP carries a BLANK `chain` — it is genuinely chainless, not a defect (operator ruling 2026-08-21,
-`issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md`, archived).** It's a
-CFTC-regulated crypto perpetual exchange with **no underlying blockchain at all** — captured through
-`market-tick-data-service`'s DeFi-shaped `perp_funding_handler.py`/`_defi_manifest.py` recorder for implementation
-convenience, not because it's chain-bound. That recorder's `_build_row_key` enforces a hard "A4-full" invariant
-(every DeFi-family shard carries a non-blank `chain`, `BlankChainError` otherwise) — correct for every genuinely
-chain-bound venue, but a category error for KALSHI-PERP. The manifest's real capture history confirms this: 100% of
-every real `(venue=KALSHI-PERP, data_type=perp_funding)` row ever recorded carries `chain=""`. The fix
-(`market-tick-data-service@f7cdd18b21`) added a small, explicit `_CHAINLESS_VENUES` allowlist to `_build_row_key`.
-
-**CORRECTION, same day (2026-08-21)**: `f7cdd18b21` initially over-generalized this allowlist to
-`{"KALSHI-PERP", "POLYMARKET-PERP"}` — wrong. POLYMARKET-PERP settles on-chain on **Polygon** (USDC
-deposits/settlement in Polygon smart contracts, confirmed via web research), same "hybrid on-chain-CLOB is still
-CeFi" pattern as HYPERLIQUID/ASTER/EXTENDED/LIGHTER, not a chainless venue like KALSHI-PERP. A same-day operator
-ruling ("fix all three — Polymarket, Hyperliquid, and Aster") reversed this: POLYMARKET-PERP was removed from
-`_CHAINLESS_VENUES` (now `frozenset({"KALSHI-PERP"})` — the only member) and `perp_funding_handler.py`'s
-`_chain_map` now stamps `POLYMARKET_PERP → "POLYGON"`. The same ruling also found `onchain_perp_batch_handler.py`
-had wrongly blanked HYPERLIQUID's and ASTER's `chain` to `""` for their non-`perp_funding` data_types (a
-2026-07-21 restamp cleanup that over-applied the same category error in the other direction) — fixed via
-`_REAL_CHAIN_OVERRIDE = {"HYPERLIQUID": "HYPERLIQUID", "ASTER": "BSC"}`; backfills tracked in
-`issues/defi_cefi_hyperliquid_perp_funding_manifest_chain_contradiction_2026_08_21.md` and
-`issues/mtds_aster_dead_chain_default_and_unverified_instrument_catalogue_field_2026_08_21.md`. **Pattern for a
-future chainless CeFi venue piggy-backing on this recorder**: add it to `_CHAINLESS_VENUES` ONLY if it is genuinely
-blockchain-free (verify, don't assume from "it's CeFi-classified") — every other CeFi on-chain-perp venue gets its
-real chain, never a blank-chain default and never a per-venue hardcoded non-blank workaround stamp.
+**KALSHI-PERP/POLYMARKET-PERP carry a BLANK `chain` — they are genuinely chainless, not a defect (operator ruling
+2026-08-21, `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md`).** Unlike the other
+CeFi on-chain perps above (HYPERLIQUID/ASTER/EXTENDED/LIGHTER, each a real settlement chain), KALSHI-PERP and
+POLYMARKET-PERP are CFTC-regulated crypto perpetual exchanges with **no underlying blockchain at all** — they're
+captured through `market-tick-data-service`'s DeFi-shaped `perp_funding_handler.py`/`_defi_manifest.py` recorder for
+implementation convenience, not because they're chain-bound. That recorder's `_build_row_key` enforces a hard
+"A4-full" invariant (every DeFi-family shard carries a non-blank `chain`, `BlankChainError` otherwise) — correct for
+every genuinely chain-bound venue, but a category error for these two. The manifest's real capture history confirms
+this: 100% of every real `(venue=KALSHI-PERP, data_type=perp_funding)` row ever recorded carries `chain=""`. The fix
+(`market-tick-data-service@f7cdd18b21`) adds a small, explicit `_CHAINLESS_VENUES` allowlist to `_build_row_key`
+(`{"KALSHI-PERP", "POLYMARKET-PERP"}`) so a blank chain is accepted for exactly these two, while the A4-full invariant
+stays a real guarantee for every other DeFi-family shard. **Pattern for a future chainless CeFi venue piggy-backing on
+this recorder**: add it to `_CHAINLESS_VENUES`, not a per-venue hardcoded non-blank workaround stamp — the latter is
+the anti-pattern this ruling retired.
 
 ## `dex_pool_state` = EVM + Solana pool-state UNION under one data_type (CHANGE — operator-noted 2026-06-01)
 

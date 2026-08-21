@@ -161,64 +161,14 @@ is_linked_worktree() {
   [ "${gd}" != "${cd_}" ]
 }
 
-# workspace_root_for <path> -> the nearest ancestor of <path> that directly contains a `.tabs`
-# subdirectory, or empty if none is found within a bounded walk. Purely path-based -- no
-# dependency on $CLAUDE_PROJECT_DIR (which reflects wherever the CALLING session itself is
-# rooted -- a slot, the bare workspace, or a single repo -- not necessarily the multi-repo
-# container a given TARGET path lives under). Bounded at 20 hops for the same reason
-# `_ancestor_pids` is: a detector that can loop forever on a malformed input is worse than one
-# that gives up and reports nothing.
-workspace_root_for() {
-  local dir hops=0
-  dir="$(dirname -- "$1" 2>/dev/null)" || return 0
-  while [ "${dir}" != "/" ] && [ "${hops}" -lt 20 ]; do
-    [ -d "${dir}/.tabs" ] && {
-      printf '%s' "${dir}"
-      return 0
-    }
-    dir="$(dirname -- "${dir}")"
-    hops=$((hops + 1))
-  done
-}
-
-# bare_root_repo_with_slot_sibling <path> -> prints "<workspace_root> <repo>" iff <path> is a
-# BARE-ROOT checkout path (`<workspace_root>/<repo>/...`, no `.tabs` component) for a <repo>
-# that has at least one live `.tabs/*/<repo>` sibling -- i.e. slots are actively used for this
-# repo, so a bare-root write is anomalous rather than "this repo has no slot workflow at all".
-# Empty otherwise, including when <path> is already inside a slot. This is the INVERSE of
-# `slot_dir_for` -- that answers "which slot is this path in"; this answers "this path is
-# OUTSIDE every slot, but should it be".
-bare_root_repo_with_slot_sibling() {
-  local path="$1" root rest repo cand
-  case "${path}" in
-    */.tabs/*) return 0 ;; # already in a slot -- nothing to warn about
-  esac
-  root="$(workspace_root_for "${path}")"
-  [ -n "${root}" ] || return 0
-  case "${path}" in
-    "${root}"/*) ;;
-    *) return 0 ;;
-  esac
-  rest="${path#"${root}"/}"
-  repo="${rest%%/*}"
-  [ -n "${repo}" ] || return 0
-  for cand in "${root}"/.tabs/*/"${repo}"; do
-    [ -d "${cand}" ] && {
-      printf '%s %s' "${root}" "${repo}"
-      return 0
-    }
-  done
-}
-
 # CLI dispatch -- only when executed directly, never when sourced.
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
   case "${1:-}" in
     slot-dir) slot_dir_for "${2:-}" ;;
     foreign-pids) foreign_claude_pids "${2:-}" ;;
     is-linked-worktree) is_linked_worktree "${2:-.}" ;;
-    bare-root-repo) bare_root_repo_with_slot_sibling "${2:-}" ;;
     *)
-      echo "usage: $(basename "$0") {slot-dir <cwd>|foreign-pids <slot>|is-linked-worktree <dir>|bare-root-repo <path>}" >&2
+      echo "usage: $(basename "$0") {slot-dir <cwd>|foreign-pids <slot>|is-linked-worktree <dir>}" >&2
       exit 64
       ;;
   esac

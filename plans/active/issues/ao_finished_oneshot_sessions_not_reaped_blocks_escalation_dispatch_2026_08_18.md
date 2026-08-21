@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [ao, escalation, slot-reclaim, reaper, tmux, one-shot-lifecycle, capacity]
 related:
   [
-    /plans/archive/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
   ]
 created: "2026-08-18"
@@ -55,7 +55,7 @@ context_scope:
     agent-orchestrator/server/worker_liveness_watchdog.py,
     agent-orchestrator/server/dedup_state.py,
     agent-orchestrator/server/escalation.py,
-    /plans/archive/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
     /plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18_finalize_2026_08_19.md,
   ]
 ---

@@ -172,86 +172,9 @@ drift_direction: advance-code
 
 ## Progress Log
 
-- **2026-08-21 ~17:2x London (todo 6 root-fix FULLY SHIPPED both layers)** — instruments-service@0020df5f
-  (`capability-gated expected-universe seeding for perp data_types`, landed on LDR, content-verified on origin: the
-  `_defi_perp_capable_protocols()` gate is present) + unified-api-contracts@4b06013aea (earlier). NOTE the recovery
-  detail: the first IS quickmerge exited 12 having SWEPT the fix into `stash@{0}` (ahead=0 trap) — recovered via
-  `git checkout 'stash@{0}' -- <files>` then re-shipped `--isolated` successfully. Remaining half of todo 6: purge the
-  EXISTING blanket perp-stamp rows (forward seeding now stops; historical rows still in the index).
-- **2026-08-21 ~17:2x London (todo 7 ship leg done; todo 3 purge in flight)** — deployment-service launcher fix landed
-  on origin (module-style `-m market_tick_data_service.scripts.*` invocation; old tarball file path 404'd on the VM).
-  VM launch attempt 2 was aborted by the stale-UAC-tarball freshness gate (co-occupant WIP, since cleared) — relaunch
-  pending after the current uplink-heavy purge completes. Todo 3 purge: Kleene-mask fix VERIFIED (pass 1 matched
-  EXACTLY the expected 4,834 phantom rows); attempts 2/3 died on 600s GCS read-timeouts (saturated uplink), attempt 5
-  got through download+delete but died re-UPLOADING the 7.5GB snapshot — script patched to SERVER-SIDE
-  `copy_blob` snapshots (zero egress, generation-pinned); attempt 7 running with a pause→apply→resume consolidator
-  bracket. MTDS ship (todos 1+2): size-gate fix applied (`scan_and_rebuild` 213L→~196L via `_log_retired_skip` +
-  `_covered_key` extraction); quickmerge attempt 4 mid-re-gate (pytest ~80%).
-- **2026-08-21 ~15:15 London (todos 1+2 CODE-COMPLETE, ship pending)** — mtds@d188fb2e (LOCAL commit, 10 files
-  +557/-29; NOT yet on LDR — quickmerge dirty-deps-blocked, see choke point below). Root causes: (1)
-  `_lending_grain.py:141-145` `_PROTOCOL_TO_CANONICAL_VENUE` mapped kamino_lending/solend/marginfi to GLUED
-  `X-SOLANA` venues — feeds risk_params/lending_indices handlers; `write_defi_rows`'s `build_canonical_instrument_id`
-  glues AGAIN → double-glued path+id; fixed to bare. (2) `solana_lst_archival.py:737,757` SOLBLAZE-SOLANA → bare
-  SOLBLAZE. (3) `canonical_write.py:85` `_normalize_venue` docstring falsely claimed glue-stripping — corrected. (4)
-  NEW `_rebuild_defi_retired_guard.py` wired into `rebuild_defi_manifest.py` scan: skips RETIRED
-  `dex_pools` (dex_swaps deliberately EXCLUDED — real content) + double-glued-id detector via UAC
-  `split_glued_venue_chain`. 18 new/updated tests. QG: own tests green; 1 fail + 1 collection error from unrelated
-  same-day peer commit f7cdd18b (sports registry / pipeline_e2e_check) — peer sessions are actively shipping
-  fixes/skip-marks for exactly those.
-- **2026-08-21 ~15:15 London (execution state)** — Todo 3 purge apply RUNNING (Kleene-mask fix applied to
-  `purge_evm_glued_phantom_venue_defi_rows_2026_08_21.py` — non-Kleene or_/and_ nulled the whole mask on NULL-chain
-  rows; consolidator cron PAUSED for the write, resume after terminal verdict). Todo 7 projection VM launch attempt 2
-  ABORTED at the tarball-freshness gate (dirty UAC checkout). **Single choke point: co-occupant sessions' uncommitted
-  WIP in slot-3 UAC (`venue_instrument_type_axis.py`, actively being QG'd by its owner) + UTL (`ledger/run_writer.py`)
-  blocks ALL of: MTDS ship (d188fb2e), IS seeder-fix ship, deployment-service launcher ship, and the VM tarball
-  publish.** Dep-clean watcher armed (60s poll, 45min cap) → on fire: relaunch VM + retry all three quickmerges.
-  Purge agent also left `scripts/one_offs/rekey_solana_glued_venue_defi_rows_2026_08_21.py` (task-5 manifest re-key,
-  untracked) — run after task-3 completes + copies verified.
-
 - **2026-08-21 (slot 3, interactive + /autonomous)** — Plan created from a 4-agent live census (manifest census /
   distinct-values trace / plans census / UAC+consumer audit). Key numbers in § Evidence base. Census artifacts in the
   session scratchpad (`venue_census.csv`, `datatype_census.csv`, `instrumenttype_census.csv`, `chain_census.csv`,
   `perp_census.csv`, `defi_distinct_values_result.json`). VM fleet check: no defi rebuild VM running; canon-swap
   unblocked. Operator rulings recorded in the banner. perp_funding vs derivative_ticker settled as NOT-duplicates
   (code-verified; see banner).
-- **2026-08-21 ~14:00Z (todo 6 root-fix half)** — Root cause of the blanket perp stamps FOUND + half-shipped. (1)
-  Primary: `instruments-service/scripts/enumerate_expected_universe.py::_yield_v2_defi_pre_launch_rows` Class-2 loop
-  cross-joined every `PROTOCOL_LAUNCH_DATES` entry (126 chain-protocol tuples) × ALL defi data_types incl.
-  perp_funding/derivative_ticker with ZERO capability check. (2) Secondary: UAC
-  `market_data_categories.py::valid_data_types_for_venue_instrument_type` unmapped-protocol fallback returned the
-  cross-protocol UNION, leaking perp_funding via the `spot_pair` union — **fix SHIPPED
-  unified-api-contracts@4b06013aea** (defi-scoped exclusion + 2 tests; QG 13445 passed, 2 pre-existing unrelated
-  fails). IS seeder fix (capability-derived `_defi_perp_capable_protocols()` gate + 2 tests) is code-complete,
-  QG-passed locally, but quickmerge Stage-1 dep validation is HARD BLOCKED: two unrelated peer sessions hold
-  uncommitted WIP in this slot's UAC (`venue_instrument_type_axis.py` DERIBIT fix) + UTL (`ledger/run_writer.py`)
-  checkouts — PROTECTed per liveness rule; re-attempt the IS quickmerge once peers land. Stops-seeding population: 71
-  of 72 protocols × chains × {perp_funding, derivative_ticker} (ASTER kept — capability-declared; HYPERLIQUID /
-  EXTENDED / LIGHTER untouched by construction). Reverse finding (report-only): `DATA_TYPES_BY_ASSET_GROUP["defi"]`
-  declares perp_funding/derivative_ticker but no defi-axis venue capability produces them — inert axis declarations,
-  belongs to the b21/orthogonality thread.
-- **2026-08-21 ~14:00Z (in-flight)** — Todo 3 phantom purge forward-apply RUNNING + todo 5 Solana migration copy pass
-  2 RUNNING (purge worker, background jobs with wake-loops). Todo 1 writer fix code-complete, QG queued behind the
-  saturated host-wide QG governor (Monitor armed). Todo 7 projection VM: first launch attempt FAILED, launcher fix in
-  QG, relaunch pending (worker driving).
-- **2026-08-21 ~14:40 London — SESSION-LIMIT interruption (resets 16:40 London). RESUME STATE (lossless):** the purge
-  and VM sub-agents were API-terminated mid-flight; verified NO orphaned process is mutating the manifest (ps clean;
-  the only heavy host processes are a slot-2 peer quickmerge shipping adjacent DeFi handler fixes — it also skip-marks
-  `test_defi_prefix_parser_handles_multi_hyphen_protocol_keys`, a pre-existing UAC `parse_defi_venue` multi-hyphen
-  failure directly adjacent to this plan's glued-venue scope; see
-  `/plans/archive/issues/mtds_defi_prefix_parser_multi_hyphen_solana_native_2026_08_21.md`). Per-todo resume state,
-  scratch evidence in the session scratchpad: **Todo 3** — dry-run + full-reverify done (`task3_purge_dryrun.log`,
-  `task3_full_reverify.log`); forward-apply NOT completed (216-byte `task3_forward_apply.log`): the worker found a
-  REAL bug in its pyarrow mask before applying — `pc.equal(chain, "")` on a NULL chain yields null and non-Kleene
-  `pc.or_`/`pc.and_` propagate it through the mask; the fix was unverified at termination. Re-verify the mask
-  (null-safe: use `pc.is_null` OR Kleene logic) against the dry-run counts BEFORE any apply. **Todo 4** — no evidence
-  of execution; not started. **Todo 5** — SOLBLAZE-SOLANA confirmed PHANTOM (absence re-verified across writer
-  vocabularies, `task5_solblaze_reverify.log`/`task5_solblaze_absent.csv` → purge rows with todo 3); copy pass 1 done
-  (`task5_copy.log`, plan `task5_copy_plan.csv` 142KB), pass 2 started (`task5_copy_pass2.log` 313B) — re-verify copy
-  completeness against the plan CSV, then manifest re-key, then retention-qualified legacy deletes. **Todo 1** —
-  writer-fix worker ALIVE at interruption: QG queued ~57min behind the saturated host governor (host cap 7, peer-slot
-  runs), Monitor armed on the QG log terminal marker; ship + report pending. **Todo 6** — UAC half SHIPPED
-  (@4b06013aea); IS half code-complete in the IS working tree, quickmerge dep-gate blocked on peer WIP in UAC
-  (`venue_instrument_type_axis.py` et al.) + UTL (`ledger/run_writer.py`) — re-attempt when peers land. **Todo 7** —
-  VM NOT launched; launcher fix was in QG at ~98% when the worker was terminated; deployment-service working tree
-  holds the fix — verify QG, quickmerge, launch, then todo 8 sequencing (apply only after todos 3-5 mutations land +
-  drain gate green).

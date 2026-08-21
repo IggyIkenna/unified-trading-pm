@@ -415,39 +415,32 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       (only `boot_grace_seconds`), so a legitimately-detached `setsid` job surviving a genuine session death would
       currently be reaped unconditionally on the very next tick — worth the same protection, scoped separately since
       it's a different (always-live, not dry-run-gated) trust level.
-- [x] ✅ [OPERATOR] P0. **Root-cause host-level fix for codex-luna's dominant death signature — FIXED + VERIFIED
-      2026-08-21.** Unprivileged user-namespace creation was broken host-wide on the orchestrator VM for the `ubuntu`
-      user (reproduced live via both `unshare --user --map-root-user whoami` and Codex's own bundled `bwrap` binary,
-      both failing `Permission denied` on the uid_map write). Flipped `kernel.apparmor_restrict_unprivileged_userns`
-      1→0 (the standard documented Ubuntu 24.04 remediation for this exact failure signature — identical to the
-      well-known Chrome-sandbox/Flatpak breakage) and both repro commands now succeed cleanly with no other change.
-      Persisted via `/etc/sysctl.d/99-disable-apparmor-unprivileged-userns-restrict.conf` (survives reboot, applied
-      live via `sysctl --system`, confirmed `cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns` = `0`).
-      Accepted trade-off documented in the sysctl file's own header: this host is single-purpose (the one
-      `planning` orchestrator VM, not multi-tenant), so the privilege-escalation class this restriction guards
-      against isn't a realistic threat model here, against a proven, actively-recurring, quantified incident
-      (76+ pane deaths/24h at time of discovery). Operator-directed continuation authorized this (2026-08-21:
-      "continue with fixing the issues... as you find them").
-- [x] ✅ [INFRA] P1. **Wired `CLAUDE_CODE_MAX_CONTEXT_TOKENS` for `gpt-5.6-luna` into `tmux_spawn.py` — implemented
-      2026-08-21**, mirroring the existing DeepSeek export as an independent sibling constant
-      (`_CODEX_LUNA_CONTEXT_WINDOW_EXPORT`, matching `*gpt-5.6-luna*` in ANTHROPIC_MODEL, exporting
-      `context_window('gpt-5.6-luna')` = 272,000 from the already-existing `model_tier.py` registry — no new number
-      introduced, same SSOT-derivation discipline as the DeepSeek export it mirrors). New test file
-      `tests/test_tmux_spawn_codex_luna_context_window.py` (6 tests, mirroring the DeepSeek test file's coverage:
-      real-window export, Anthropic-models-left-alone, cross-account isolation from the DeepSeek export, unset-model
-      safety, SSOT-not-a-copy pinning, scope-check). Collision concern resolved: `git log` confirmed the file is
-      clean/up to date with origin, no concurrent WIP found. **Quality-gates.sh run in progress at time of this
-      write — not yet shipped**, see the next Progress Log entry for the outcome.
-- [x] ✅ [OPERATOR] P1. **Re-enable codex-luna** — operator go-ahead given 2026-08-21 after both upstream fixes were
-      live-verified (sysctl, a real `unshare`/`codex exec --sandbox` reproduction of the previously-failing operation
-      now succeeding, the shipped `2fe498b30f` context-window export confirmed live with the correct SSOT value, and
-      `CLAUDE_CODE_MAX_CONTEXT_TOKENS` confirmed to be a real string the installed Claude Code CLI binary references —
-      full detail in `pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md`'s closing Progress Log entry).
-      Re-enabled via `server.state_store.account_usage.enable_account` (the same SSOT function the
-      `POST /api/accounts/codex-luna/enable` endpoint calls) run against the live `state.db` through
-      `server.db.get_session_factory()` — confirmed `account_status` flipped `disabled -> healthy` and
-      `account_is_usable('codex-luna')` returns `True`. Still open: observe a real codex-luna spawn through AO's own
-      dispatch path (the one thing not yet directly witnessed) — monitor the next dispatch for a clean run.
+- [ ] [OPERATOR] P0. **Root-cause host-level fix for codex-luna's dominant death signature (2026-08-21, see Progress
+      Log entry below for full evidence)**: unprivileged user-namespace creation is broken host-wide on the
+      orchestrator VM for the `ubuntu` user — reproduced live via both `unshare --user --map-root-user whoami`
+      (`write failed /proc/self/uid_map: Operation not permitted`) and Codex's own bundled `bwrap` binary
+      (`bwrap: setting up uid map: Permission denied`). `kernel.unprivileged_userns_clone=1` and
+      `user.max_user_namespaces=115876` are both fine; the `unprivileged_userns` AppArmor profile is loaded+enforcing
+      and its own rules say `allow userns,` — yet creation still fails with no AVC audit record, so the exact LSM/
+      kernel hook responsible is NOT pinned down (would need ftrace/bpftrace on the syscall, not attempted). The
+      standard documented Ubuntu 24.04 remediation for this exact failure signature (identical to the well-known
+      Chrome-sandbox/Flatpak breakage) is flipping `kernel.apparmor_restrict_unprivileged_userns` 1→0 — untested here
+      since it's a host security sysctl on shared production infra and needs an explicit operator decision, not an
+      autonomous flip. Blocks codex-luna re-enablement (see the disable todo below) until fixed AND verified (re-run
+      the same two repro commands and confirm both succeed).
+- [ ] [INFRA] P1. Wire `CLAUDE_CODE_MAX_CONTEXT_TOKENS` for `gpt-5.6-luna` into `tmux_spawn.py`'s spawn-time export —
+      confirmed gap (2026-08-21): `model_tier.py:177,231` already registers the model's real window
+      (`_CONTEXT_WINDOW_GPT_5_6_LUNA = 272_000`), but `tmux_spawn.py:933-936`'s `_DEEPSEEK_CONTEXT_WINDOW_EXPORT` shell
+      `case` only matches `*deepseek*` — there is no `*luna*`/`*codex*` branch, so every codex-luna CLI process still
+      guesses ~200K and prints the `"gpt-5.6-luna" is not a model this version of Claude Code recognizes...` banner,
+      which correlates with the Pattern-B (SIGTERM) death signature below. Small, low-risk fix mirroring the existing
+      DeepSeek branch — **held as of 2026-08-21 pending a separate agent's concurrent work in the same file
+      (round-robin account-selection logic)** to avoid a collision; pick up once that lands.
+- [ ] [OPERATOR] P1. **Re-enable codex-luna** (`POST /api/accounts/codex-luna/enable`) once BOTH todos above are
+      fixed and independently verified — do not re-enable on just one. Currently `account_status=disabled` (set
+      2026-08-21, see Progress Log entry below), sticky, fleet-wide, via the existing operator-disable mechanism
+      (`server/state_store/account_usage.py::disable_account`) — no auto-clear path exists, so this requires an
+      explicit action, not a passive wait.
 - [x] ✅ [INVESTIGATE] P1. **DeepSeek's dominant mid-task death mechanism — ROOT-CAUSED 2026-08-21 via a 26-agent
       transcript-level Workflow investigation** (32-death population, 14-day DB lookback confirmed ALL fall inside
       one bounded cluster, 2026-08-19 23:45:28 -> 2026-08-20 15:46:01, none before or since). Two distinct causes,
@@ -476,13 +469,6 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
         still never actually completed for this cluster, and even if it had, its regex requires an explicit
         `-9`/`-KILL` token that a bare `pkill -f "<name>"` (default SIGTERM) would never carry — tracked as its own
         todo in the new doc.
-- [x] ✅ [INVESTIGATE] P1. **Remaining models (Gemini, Claude sub-accounts, GLM, Gemma) — ROOT-CAUSED 2026-08-21.**
-      Full findings, evidence, fixes, and follow-up todos moved to a dedicated doc to keep this one under its line
-      cap: `/plans/active/issues/fleet_wide_mid_task_death_root_cause_2026_08_21.md`. One-line headline: the
-      pkill-guard fix above already explains 98.6% of the single biggest remaining unexplained population
-      fleet-wide (214 events, 4 Claude sub-accounts); a fleet-wide classification-gap fix
-      (`agent-orchestrator@dc1d273f89`) and a follow-up batch (`agent-orchestrator@0704ed0a47`, closing 2 more
-      classification-gap events + a fleet-wide `ausearch` PATH bug) both shipped.
 
 ## Progress Log
 
@@ -945,9 +931,3 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   `/plans/active/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md`, not merged here to keep this
   doc's size in check). The Cluster-B finding is the single most consequential discovery of this whole investigation
   thread — a fleet safety mechanism believed fixed since 2026-08-14 has been silently non-functional the entire time.
-- **2026-08-21 (continued, separate session, ultracode Workflow)**: swept every remaining model (Gemini, Claude
-  sub-accounts, GLM, Gemma) for the same mid-task-death class. Full findings + fixes in the new, dedicated
-  `/plans/active/issues/fleet_wide_mid_task_death_root_cause_2026_08_21.md` (split out to keep this doc under its
-  line cap, same reason Cluster B was split out above) — headline: the pkill-guard fix above already explains 98.6%
-  of the biggest remaining unexplained population fleet-wide, plus 2 more classification-gap fixes and a
-  fleet-wide forensics PATH bug shipped (`agent-orchestrator@dc1d273f89`, `@0704ed0a47`).

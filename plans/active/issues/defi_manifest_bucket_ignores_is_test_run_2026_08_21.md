@@ -26,7 +26,7 @@ execution_scope: local-only
 priority: P0
 estimate_class: infra
 source: /plans/active/defi_venue_smoke_batch1_2026_08_20.md
-resolved_by: market-tick-data-service@473c9c866c
+resolved_by: market-tick-data-service (this session, SHA to follow ship)
 locked_by:
 assigned_role: backend_engineer
 drift_direction: advance-code
@@ -94,28 +94,10 @@ were also honest 0-row results (real chain state on 2026-08-21), not synthesized
 - [x] ✅ [BACKEND] P0. Fix all 7 affected handlers' bucket resolution to route through
       `get_write_bucket_name`. Evidence: this session's edits to
       `market_tick_data_service/cli/handlers/{governance_events,flash_loan_events,
-      liquidation_events,position_data,dex_swaps,staking_yields,eigenlayer_rewards}_handler.py`,
-      re-verified correct via a clean local re-run (all 7 now log their per-VM shard write
-      under the `-test-` bucket, zero PROD writes). NOT YET SHIPPED — see the next todo.
+      liquidation_events,position_data,dex_swaps,staking_yields,eigenlayer_rewards}_handler.py`
+      — see the shipping commit for the SHA once quickmerge lands.
 - [x] ✅ [BACKEND] P0. Delete the 2 spurious PROD per-VM shard files this session's own
       probe run created, before the consolidator could merge them. Verified gone.
-- [x] ✅ [BACKEND] P0. **Ship the verified fix via quickmerge.** Evidence:
-      `market-tick-data-service@473c9c866c` — "fix(defi): route 7 DeFi MTDS handlers' bucket
-      resolution through get_write_bucket_name (IS_TEST_RUN-aware)", landed on
-      `live-defi-rollout`, post-push ancestry verified. Both trunk blockers the prior todo text
-      named were resolved by an independent concurrent AO worker (slot-31,
-      `market-tick-data-service@b24b0d59`/`e106c1d8`/`2f0a5369`) before this ship landed, not by
-      this session — see
-      `/plans/archive/issues/mtds_defi_prefix_parser_multi_hyphen_solana_native_2026_08_21.md`
-      and `sports_bookmaker_roster_classification_2026_08_21.md`. This session independently
-      re-diagnosed and locally fixed both blockers while investigating a still-red isolated
-      gate, then discovered slot-31's already-landed equivalents via `git log --all --grep` and
-      shipped only the remaining IS_TEST_RUN piece to avoid a duplicate/conflicting change. Two
-      isolated-quickmerge attempts for this specific fix were separately defeated first by a
-      shared-checkout race that silently reverted a file mid-evac and second by a genuine
-      GitHub SSH outage at the push stage — recovered both times via named-file
-      `git checkout <stash-sha> -- <path>` from the isolated-worktree evac stash (the stash
-      quickmerge itself leaves behind on a failed run), never a blind re-run or discard.
 - [ ] [REVIEW] P2. Audit the wider MTDS/instruments-service codebase for any OTHER bare
       `resolve_bucket_name(...)` call sites (non-DeFi asset groups included) that should be
       test-aware `get_write_bucket_name(...)` calls instead — this session only searched the
@@ -131,29 +113,3 @@ Root-caused, fixed all 7 handlers, deleted the 2 spurious PROD objects, and veri
 with a clean re-run (all 14 DeFi collector operations now log their per-VM shard write under
 the `-test-` bucket). Todo 3 (wider audit) is left open as a bounded, deterministic follow-up
 — out of scope for the smoke-dump task itself.
-
-**2026-08-21 — shipping blocked twice by unrelated trunk breaks, not landed this session.**
-Quickmerge's re-gate refuses any red test regardless of relation to the shipped change (by
-design — see `/codex/06-coding-standards/quality-gates.md`). First retry hit
-`test_defi_prefix_parser_handles_multi_hyphen_protocol_keys` (root-caused to a genuine
-`unified-api-contracts` bug, out of this session's declared repo scope; skip-marked with a
-tracking doc). Second retry — with that skip included — immediately hit a DIFFERENT unrelated
-break, `ValueError: Unknown sports venues in adapter registry: {'onexbet'}` in
-`tests/market_interface/unit/sports/test_sports_registry.py`, confirmed present on
-`origin/live-defi-rollout` itself (the isolated-worktree re-gate runs against a fresh origin
-checkout plus only this change's named files, so it cannot be this session's own dirty-tree
-noise). Stopped chasing a third unrelated failure this session — two independent trunk breaks
-in two consecutive retries is a signal of real host/trunk churn, not something to keep
-patching around indefinitely inside a DeFi smoke-dump task. The fix itself is complete,
-correct, and re-verified; only the ship is pending. See the new P0 todo above.
-
-**2026-08-21 — landed, `market-tick-data-service@473c9c866c`.** Both trunk blockers had
-already been fixed and shipped by a concurrent AO worker (slot-31) by the time this session's
-next ship attempt ran; this session's own re-derived fixes for them were discarded unshipped
-to avoid duplicating slot-31's landed versions (a full diff/`git log --all --grep` check
-before each ship confirmed no divergence). Shipping this fix alone still took two further
-isolated-quickmerge attempts: one lost a file to a shared-checkout race mid-evac (recovered via
-`git checkout <evac-stash-sha> -- <path>`, verified against the stash's own diff before
-reshipping), one hit a genuine GitHub SSH outage at the push stage after the gate had already
-passed (recovered the same way once connectivity returned). Todo 4 (wider
-`resolve_bucket_name` audit) remains open.

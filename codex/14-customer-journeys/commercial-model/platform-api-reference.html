@@ -665,77 +665,7 @@
       display: none;
     }
   }
-
-  /* Sticky left-hand TOC sidebar — wide viewports only; page body itself never scrolls horizontally,
-     this panel scrolls only its own contents. Mirrors nav.contents (in-flow), does not replace it. */
-  .toc-sidebar {
-    position: fixed;
-    left: max(14px, calc((100vw - var(--shell)) / 2 - 226px));
-    top: 88px;
-    width: 208px;
-    max-height: calc(100vh - 132px);
-    overflow-y: auto;
-    display: none;
-    z-index: 30;
-    border-left: 1px solid var(--rule);
-    padding-left: 15px;
-  }
-  @media (min-width: 1360px) {
-    .toc-sidebar {
-      display: block;
-    }
-  }
-  @media (min-width: 1360px) and (max-width: 1679px) {
-    .shell {
-      margin-left: 252px;
-      margin-right: auto;
-      max-width: min(var(--shell), calc(100vw - 280px));
-    }
-  }
-  .toc-sidebar h2 {
-    font-family: var(--sans);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    margin: 0 0 12px;
-  }
-  .toc-sidebar ol {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    max-width: none;
-  }
-  .toc-sidebar li {
-    margin: 0;
-  }
-  .toc-sidebar a {
-    display: block;
-    padding: 3.5px 0 3.5px 11px;
-    margin-left: -12px;
-    border-left: 2px solid transparent;
-    font-family: var(--sans);
-    font-size: 11.5px;
-    line-height: 1.4;
-    color: var(--ink-3);
-    text-decoration: none;
-  }
-  .toc-sidebar a:hover {
-    color: var(--accent);
-  }
-  .toc-sidebar a.active {
-    color: var(--accent);
-    border-left-color: var(--accent);
-    font-weight: 600;
-  }
 </style>
-
-<aside class="toc-sidebar" id="tocSidebar" aria-label="Section navigation">
-  <h2>Contents</h2>
-  <nav><ol id="tocSidebarList"></ol></nav>
-</aside>
-
 <style>
   /* Status marks + evidence tier + owner mark — identical vocabulary and tokens to
      platform-external-api-walkthrough.html, so the two read as one family. */
@@ -896,7 +826,7 @@
       <span class="sep">/</span>
       <span>Platform API reference</span>
       <span class="sep">/</span>
-      <span><a href="https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-443a968ff8d4">Integration guide ↗</a></span>
+      <span>Companion to the integration guide</span>
       <span class="conf">As of 2026-08-21</span>
     </div>
 
@@ -1010,10 +940,6 @@
     </div>
     <p>Subject to entitlement, a counterparty on this platform can:</p>
     <ul>
-      <li>
-        Invest through our investment-management platform — allocations facilitated in both SMA (separately managed
-        account) and fund structures.
-      </li>
       <li>Discover available instruments, venues, data types and historical coverage across all five asset groups.</li>
       <li>
         Download point-in-time instrument catalogues and historical market data in bulk, for local research and
@@ -1103,16 +1029,6 @@
       DART — Data Analytics Research Terminal — is the same in-house research/backtest/paper/live terminal Odum
       runs its own strategies on, shareable with clients; see
       <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §dart.
-    </p>
-    <p>
-      Inter-service checks each declare their own cadence — reconciliation runs nightly with a faster
-      operator-driven path for a break, per-input staleness is bounded per input — and kill switches are scoped
-      (venue, archetype or global) rather than all-or-nothing. The platform's own delivery pipeline runs on the same
-      automated-detection-to-verified-fix discipline: a build failure is diagnosed against its real logs, fixed, and
-      re-verified through the same gates before it ships, escalating to a human only when it cannot be. Storage and
-      compute address AWS and GCP through one provider-neutral resolver today, with a third provider (IONOS) being
-      brought into the same pattern and Azure available on request — full detail in
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §15.
     </p>
     <p style="font-size: 0.9rem; color: var(--ink-3)">
       Full narrative version of all three engagement models, plus DeFi liquidity-pool engagement detail: see
@@ -1331,8 +1247,8 @@
           tightening a specific org's scope is a data change via <code>register_org_entitlement</code>, not a route-logic
           one). 401 behavior is unchanged. <b>Source:</b>
           <code>market-tick-data-service/market_tick_data_service/api/entitlement.py</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:121</code> (availability),
-          <code>:328</code> (batch delivery), <code>:411</code> (stream delivery).
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:107-135</code> (availability),
+          <code>:260-282</code> (batch delivery), <code>:328-348</code> (stream delivery).
         </p>
       </div>
       <div class="callout">
@@ -1724,16 +1640,6 @@
       Three endpoints under one router-level auth gate — what's captured, and two ways to get it out: a bounded "list,
       then stream" daily batch, and a near-real-time NDJSON leg over the shared UTL event transport.
       <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>.
-    </p>
-    <p>
-      Every venue connector tracks its own reconnect state — a window built across a reconnect is stamped
-      <code>data_freshness=STALE</code>, never silently presented as fresh — backed by a 60-second heartbeat that
-      catches a connector that has stopped producing ticks without dropping. Every shard also carries an explicit
-      <code>cadence</code> (one-off backfill, nightly T+1, continuous live, recovery replay) as its own manifest
-      column, so history stays current without a manual re-trigger. Intraday replay of your own already-delivered
-      data — key for exchange-outage recovery — is in development on top of the same gap-fill watermark mechanism
-      that already re-drives the internal live pipeline after a disconnect. Narrative detail:
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §06.
     </p>
 
     <details class="ep">
@@ -2230,16 +2136,6 @@
       One instruction envelope, any asset class — all sixteen of its <code>StrategyInstructionV2</code> action
       types execute for real through this endpoint today.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
-    </p>
-    <p>
-      Two mechanisms in progress extend this contract for latency-sensitive execution. A per-venue position
-      handshake lets execution check its own live position against what strategy last believed it held on every
-      instruction — a mismatch blocks by default, reusing the risk engine's existing consequence vocabulary. A
-      cached reference-price-and-sensitivity fast path lets execution reprice against live market moves without a
-      round-trip back to strategy, within a defined staleness bound — the extrapolation engine is real, tested code;
-      the general contract is still being wired end to end. Both ride on dual-timestamp capture already enforced on
-      external market data (local receipt time validated against the exchange's own clock). Narrative detail:
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §12.
     </p>
 
     <div class="callout">
@@ -2741,14 +2637,6 @@
       service adds on top — entitlement scoping tied to <code>client_id</code>.
       <code>client-reporting-api/client_reporting_api/api/main.py</code> and
       <code>client_reporting_api/api/routes/**/*.py</code>.
-    </p>
-    <p>
-      Reconciliation is not only a target design. The manual-trade exclusion path
-      (<code>recon_excluded=True</code>) is real, shipped code today: the reconciliation service's daily determinism
-      stage splits a manually-booked fill out of ledger matching and logs the count it excluded rather than dropping
-      it silently. The full six-stage reconciliation DAG runs end to end on a T+1 nightly cadence in staging;
-      production activation is the remaining step. Narrative detail:
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §21.
     </p>
 
     <div class="callout">
@@ -4169,63 +4057,3 @@
     </p>
   </footer>
 </div>
-
-<script>
-  (function () {
-    // Populate the sticky sidebar from the existing in-flow Contents nav — one source of section
-    // links, no duplicated titles to drift. Scroll-spy highlights whichever section is nearest the
-    // top of the viewport; click-to-jump comes for free from the anchors themselves.
-    var list = document.getElementById("tocSidebarList");
-    var sourceLinks = document.querySelectorAll("nav.contents > ol > li > a");
-    if (!list || !sourceLinks.length) return;
-
-    var entries = [];
-    sourceLinks.forEach(function (a) {
-      var href = a.getAttribute("href") || "";
-      var id = href.slice(1);
-      var target = id ? document.getElementById(id) : null;
-      if (!target) return;
-      var num = a.querySelector(".num");
-      var ttl = a.querySelector(".ttl");
-      var li = document.createElement("li");
-      var link = document.createElement("a");
-      link.href = href;
-      link.textContent = (num ? num.textContent + " " : "") + (ttl ? ttl.textContent : a.textContent);
-      li.appendChild(link);
-      list.appendChild(li);
-      entries.push({ id: id, link: link });
-    });
-
-    var active = null;
-    function setActive(link) {
-      if (active === link) return;
-      if (active) active.classList.remove("active");
-      if (link) link.classList.add("active");
-      active = link;
-    }
-
-    if (!("IntersectionObserver" in window) || !entries.length) return;
-    var linkById = {};
-    entries.forEach(function (e) {
-      linkById[e.id] = e.link;
-    });
-    var observer = new IntersectionObserver(
-      function (observed) {
-        var best = null;
-        var bestTop = Infinity;
-        observed.forEach(function (item) {
-          if (item.isIntersecting && item.boundingClientRect.top < bestTop) {
-            bestTop = item.boundingClientRect.top;
-            best = item.target.id;
-          }
-        });
-        if (best) setActive(linkById[best]);
-      },
-      { rootMargin: "-8% 0px -75% 0px", threshold: 0 }
-    );
-    entries.forEach(function (e) {
-      var el = document.getElementById(e.id);
-      if (el) observer.observe(el);
-    });
-  })();
-</script>

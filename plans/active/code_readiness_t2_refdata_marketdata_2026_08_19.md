@@ -568,7 +568,7 @@ todos only to confirm they are data-movement, then leave it.
       `test_evm_lst_rows_queries_concurrently_not_sequentially` stubs `_query_rate` with a real `time.sleep(0.05)`
       and asserts wall-clock stays near ONE sleep rather than N — fails against the pre-fix sequential
       implementation by construction (11 tokens x 0.05s = 0.55s sequential vs the assertion's <0.275s bound).
-      59/59 tests passing (58 pre-existing + 1 new). Evidence: `market-tick-data-service@894a942511`.
+      59/59 tests passing (58 pre-existing + 1 new). Evidence: `market-tick-data-service@<pending-ship>`.
       **Still open**: `dex_swaps_handler.py` (needs a stage-module extraction first, file at its 900L cap — a
       distinct, larger refactor, not attempted this pass), `gas_fee_handler.py`/`vault_share_price_handler.py`
       (sync RPC-calling functions, needs async-ifying the call chain first — a separate design call per the
@@ -587,7 +587,7 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. **BLOCKED-UPSTREAM (T1/UAC), reconciliation half DONE.** Complete the `InstrumentRecord` schema
       ADD/REMOVE reconciliation against adapter kwargs and flip `extra='forbid'`. Adapter kwargs are silently
       dropped on mismatch today. Evidence:
-      `/plans/archive/2026_08/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`.
+      `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`.
       **2026-08-20 (T2, `/autonomous`)** — the reconciliation half is fully done, this tranche's own work: all 6
       systemically-dropped kwargs dispositioned (5 REMOVE incl. this session's `min_order_size`, 1 rename-fix),
       every caller fixed (`instruments-service@ee2d6c75`, `@588f35aeb0`). What remains is ONLY the

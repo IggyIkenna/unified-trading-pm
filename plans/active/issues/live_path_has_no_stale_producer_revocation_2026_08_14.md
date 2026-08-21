@@ -234,19 +234,6 @@ none of them appear as todos in that plan.
 
 ## Progress Log addendum
 
-- **2026-08-21**: The core finding this doc opened with — "the kill switch is armed by exactly 5 risk conditions,
-  none of which is 'an internal service went silent'" — is now PARTIALLY closed. `execution-service@fca9b729fa`
-  shipped a 6th armed condition: a per-`(strategy_instance_id, client_id)` producer-liveness clock
-  (`execution_service/validation/producer_liveness_gate.py`), swept every poll cycle by
-  `strategy_instruction_subscriber.py`, arming `kill_switch.activate()` (alert-only, structurally incapable of
-  placing an order) when strategy-service goes silent past the 15-minute SLA. This is the DETECTION piece of
-  `producer_silence_flatten_protocol_2026_08_14.md` Phase 3's first todo (now checked off there) — the response
-  mechanism (flatten/reduce, branch on reconciliation health, dedicated Slack copy, and that plan's other 22
-  todos) is NOT built and remains tracked in that plan. This doc's own three still-open follow-up todos below
-  (dependency_health_policy actuator wiring, its anti-inertness guard, the launcher admission-gate operator
-  decision) are UNCHANGED by this shipment — none of them is about the kill-switch condition count, they are
-  about the separate dependency-health-policy chain's three-level inertness. Not flipping this doc to resolved.
-
 - **context-scout 2026-08-17**: populated context_scope (5 entries).
 
 ## Progress Log

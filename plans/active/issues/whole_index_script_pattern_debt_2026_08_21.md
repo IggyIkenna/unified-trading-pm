@@ -97,26 +97,18 @@ The proven replacement pattern (shipped + verified in
 
 ## Todos
 
-- [x] [CODE] P1. ✅ DONE 2026-08-21 — LANDED as `deployment-service@3000d17ccc` (full isolated re-gate
-      green: templates purge/canonicalize/reconcile/backfill + `migration_common` streaming/CAS seams +
-      5 template test files + 2 consumers declaring `predicate_scope`). Port the streaming + CAS pattern into the four migration templates
+- [ ] [CODE] P1. Port the streaming + CAS pattern into the four migration templates
       (`deployment-service/scripts/migrations/lib/templates/template_{purge,canonicalize,audit,
       reconcile}.py`) so every future stamped script inherits it — mirror the proven AAVEV3 purge
       script structure (generation-pinned read, iter_batches scan, few-column mask view, Arrow filter,
       CAS write, server-side snapshot).
-- [x] [CODE] P1. ✅ INTERIM RESOLVED 2026-08-21 — launcher default raised e2-highmem-8 -> e2-highmem-16
-      (128GB, the size that succeeded same-day while 64GB OOM'd) in `deployment-service@6ef5ba27c2`;
-      GCS launcher copy republished same hour so the 00:30 UTC nightly picks it up. Residuals: the
-      usage-comment at the launcher's line ~31 still says highmem-8 (fix with the next DS touch), and
-      the durable streaming conversion moved into the [CODE] P2 conversion todo below. Original:
-      `measure_honest_coverage.py` (daily, permanent): headroom question ANSWERED THE HARD
+- [ ] [CODE] P1. `measure_honest_coverage.py` (daily, permanent): headroom question ANSWERED THE HARD
       WAY same day — an `--asset-group all` run on the standard e2-highmem-8/64GB VM was OOM-KILLED
       (rc=137, `measure-honest-coverage-20260821-091926`, kernel `Killed`) right at the defi index
       load (161,763,519 rows), despite the script's existing column-projection + dictionary
       preservation. **The scheduled nightly is therefore BROKEN at today's index size** until either
       (a) the launcher default machine (and whatever the scheduler passes) is raised — a one-line
-      deployment-service change (the AAVEV3 [SHIP] batch has LANDED at `3000d17ccc`; ship the bump
-      standalone) — or (b) the read path is converted to
+      deployment-service change riding the blocked [SHIP] — or (b) the read path is converted to
       streaming (`migration_common.stream_filter_parquet`-style per-batch aggregation), the durable
       fix. A 128GB (`--machine-type e2-highmem-16 --oom-monitor`) run was used same-day to produce
       2026-08-21's coverage.json and to capture the real peak for sizing; check its oom-monitor trail
@@ -124,9 +116,7 @@ The proven replacement pattern (shipped + verified in
       31.68GB anon-rss on 2026-08-08's index; the 08-15 bump to 64GB has now been outgrown too.)
 - [ ] [CODE] P2. Same conversion for the remaining permanent-lifecycle whole-frame tools listed in the
       Finding (catalogue builder, phantom reconcilers/sweepers, sports rescan, prediction split,
-      wave_launcher, MTDS manifest reconcile) PLUS `measure_honest_coverage.py` (its 2026-08-21
-      interim was a machine bump to 128GB; at the index's measured doubling rate that buys months,
-      not years) — one PR per repo, shared helper preferred.
+      wave_launcher, MTDS manifest reconcile) — one PR per repo, shared helper preferred.
 - [ ] [DESIGN] P2. Decide the shared-helper home (UTL `manifest_index_io`-style:
       `stream_availability_index(bucket, columns, batch_size)` + `rewrite_availability_index_cas(...)`)
       and whether a QG ratchet should ban NEW whole-frame index reads in `scripts/` (baseline-only-down,
@@ -137,42 +127,12 @@ The proven replacement pattern (shipped + verified in
       The correct change is category-scoped: size only the whole-index categories (index
       download+filter+rewrite CAS ops) to 64GB, keyed on the category/task flag at launch — make that
       call when next actually running one against today's 7.5GB+ indexes.
-- [x] [INFRA] P2. ✅ DONE 2026-08-21 — six prefix entries LANDED in `deployment-service@3000d17ccc`;
-      zombie-watchdog VM relaunched (old `…20260815-191525` deleted → after two daemon-less boots
-      from the tarball boot-breaker below, `vm-zombie-watchdog-20260821-164521` RUNNING, daemon
-      VERIFIED sweeping 16:03Z; the launcher re-uploads the `.py` SSOT on every launch). Add
-      `PREFIX_IDLE_THRESHOLDS` entries for the whole-index `bucket=None` prefixes named in the Finding
-      (same `(90, 360)` shape), then relaunch the zombie-watchdog VM once.
-- [x] [INFRA] P3. ✅ DONE 2026-08-21 — LANDED in `deployment-service@3000d17ccc` (`lc_gcloud_create`:
-      `KEEP_VM=true` → `VM_SHUTDOWN_ON_COMPLETION=false` + `keep=true` label). Generalize `KEEP_VM=true` (shutdown=false + `keep=true` label) from
+- [ ] [INFRA] P2. Add `PREFIX_IDLE_THRESHOLDS` entries for the whole-index `bucket=None` prefixes named
+      in the Finding (same `(90, 360)` shape as `canonical-migration-` / `defi-aavev3-bare-alias-purge-`),
+      then relaunch the zombie-watchdog VM once (its running copy never re-fetches).
+- [ ] [INFRA] P3. Generalize `KEEP_VM=true` (shutdown=false + `keep=true` label) from
       `launch-defi-aavev3-bare-alias-purge-vm.sh` into `lib/launcher_common.sh` so any launcher gets a
       supervised-diagnostic mode without a per-copy edit.
-
-- [ ] [INFRA] P1. Code-tarball publish pipeline hardening (2026-08-21 incident — fleet-wide VM-boot
-      breaker, root-caused by measurement): the 14:08Z republish wave shipped `deployment-service` /
-      `unified-api-contracts` tarballs built on a Mac WITHOUT `COPYFILE_DISABLE` and WITHOUT excluding
-      `.claude/` — thousands of AppleDouble `._*` members (+ a swept-in `.claude/worktrees/<agent>/`
-      tree) made GNU tar on the VM emit enough warnings that the bootstrap's
-      `tar xf ... 2>&1 | head -5 || true` SIGPIPE'd tar mid-extraction -> truncated tree without
-      `pyproject.toml` -> `pip_install_or_fail` FATAL -> the zombie-watchdog VM booted daemon-less
-      TWICE (13:5x boot: DS tarball; 14:13 reset boot: UAC tarball; a clean-tree republish restored
-      coverage the same hour — the fleet had NO zombie watchdog for ~30 min). Fixes: (a)
-      `create-code-tarballs.sh` must set `COPYFILE_DISABLE=1` + exclude `.claude/`, and REFUSE to
-      publish a tarball containing `._*` members (a post-build scratch-venv install self-check would
-      have caught every variant); (b) same script crashed on unset `GCP_PROJECT_ID` mid-run yet still
-      exited 0 — make it fail loudly; (c) the VM bootstraps' `tar xf ... 2>&1 | head -5` pattern must
-      not let head's SIGPIPE truncate extraction (log to file, tail the file — same class as the
-      2026-08-16 `pip_install_or_fail` fix, one seam earlier: launch-vm-zombie-watchdog.sh's heredoc +
-      grep the sibling setup-*.sh bootstraps for the same pattern). PARTIAL SHIP 2026-08-21: (a)+(c)
-      LANDED as `deployment-service@e0c38258` — builder gained `COPYFILE_DISABLE=1` + `--no-xattrs` +
-      a `.claude` exclude; the launcher's 3 extraction sites now log to file with
-      `--warning=no-unknown-keyword` (setup-data-pipeline-vm.sh grep'd clean — no tar-pipe-head there).
-      Clean tarballs republished 15:45Z (verified: 0 PAX xattr headers, pyproject at depth); the
-      watchdog boot on the fixed pair went straight through to a live sweeping daemon (16:03Z).
-      REMAINING in this todo: (b) fail-loud on unset `GCP_PROJECT_ID` (measured: it crashed mid-run
-      yet exited 0), the publish-time self-check (refuse `._*`/xattr'd members, scratch-venv install
-      smoke), and IDENTIFY the recurring wrong-cwd Mac republisher (waves at 13:15Z / 14:08Z / ~15:2xZ
-      kept clobbering clean generations — until it pulls `e0c38258` its output stays poisonous).
 
 ## Progress Log
 

@@ -121,18 +121,12 @@ source: >-
 
 ## From `external_market_data_response_leaks_vendor_pipeline_mode_2026_08_20.md`
 
-- [x] ✅ [REVIEW] P1. **Audit `GET /external/market-data/delivery/stream` and `GET /external/market-data/availability`
+- [ ] [REVIEW] P1. **Audit `GET /external/market-data/delivery/stream` and `GET /external/market-data/availability`
       for the same `pipeline_mode`/vendor-bearing path leak** found on `GET /external/market-data/delivery/batch`.
       Pure investigation — report which (if any) of the two sibling endpoints leak the same vendor tag; do not fix,
       the mechanism decision (todo 1 in the source doc) is still open. Done when: both endpoints have a definite
       leak/no-leak verdict on record. Source:
       `external_market_data_response_leaks_vendor_pipeline_mode_2026_08_20.md` todo 2.
-      **Done 2026-08-21** — `/availability` = NO LEAK (coverage-rollup aggregates only, no path/vendor field).
-      `/delivery/stream` = LEAK, more directly than `/delivery/batch`: `CanonicalPersistEnvelope.pipeline_mode` is a
-      named field serialized verbatim by `model_dump_json()`, plus `payload_pointer` (when set) re-leaks via
-      path-embedding. Full findings + evidence filed in
-      `external_market_data_response_leaks_vendor_pipeline_mode_2026_08_20.md`'s new "Findings — sibling endpoint
-      audit (2026-08-21)" section. Evidence: unified-trading-pm@<pending>.
 
 ## From `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`
 
@@ -147,37 +141,21 @@ source: >-
       live emission yet). Full table + methodology filed in
       `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new "Findings — full connector
       timestamp-semantics audit (2026-08-21)" section. Evidence: unified-trading-pm@c81b5881d8.
-- [x] ✅ [REVIEW] P1. **Close or supersede `resolve_mtds_ts_event_timestamp_naming_collision`** — this exact
+- [ ] [REVIEW] P1. **Close or supersede `resolve_mtds_ts_event_timestamp_naming_collision`** — this exact
       timestamp collision was already identified and named in-code (referenced in `symbol_rules.py` comments) but
       never closed. Find the reference, establish whether that prior work was descoped, forgotten, or partially
       landed, and report which — before the P0 schema-split todos in the source doc re-do work that may already
       exist. Done when: a definite disposition (descoped / forgotten / partially-landed-where) is on record.
       Source: `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md` todo "Close or supersede
-      resolve_mtds_ts_event_timestamp_naming_collision". **Done 2026-08-21** — neither descoped nor forgotten:
-      partially landed (all 6 todos of `resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md` shipped +
-      verified 2026-08-05), then Phase 4 (alias removal) was specifically REVERTED in production 5 days later
-      (market-tick-data-service@dcd3b7c401, 2026-08-10, "restore ts_event→timestamp alias copy — unblock VIX/CBOE
-      ohlcv_1m schema validation") and never corrected in the archived plan pair. Live code today
-      (`symbol_rules.py:84-88`) still carries the `ts_event→timestamp` alias Phase 4 claimed to have removed;
-      Phases 1-3 remain intact. Full evidence chain filed in
-      `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new "Findings — disposition of
-      resolve_mtds_ts_event_timestamp_naming_collision" section. Evidence: unified-trading-pm@<pending>.
+      resolve_mtds_ts_event_timestamp_naming_collision".
 
 ## From `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`
 
-- [x] ✅ [REVIEW] P1. **Check the sibling parameters on `GET /external/market-data/availability`** —
+- [ ] [REVIEW] P1. **Check the sibling parameters on `GET /external/market-data/availability`** —
       `asset_group`, `instrument_type`, and any other optional filter — for the same conditional-branch silent-drop
       bug found for `data_type` without `venue`. Pure investigation; the fix decision (todo 1 in the source doc)
       is still open. Done when: each sibling parameter has a definite affected/unaffected verdict on record.
       Source: `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md` todo 2.
-      **Done 2026-08-21** — `asset_group` UNAFFECTED (required, not optional — no silent-drop path exists);
-      `instrument_type` N/A (no such parameter exists on this endpoint — the only `instrument_type` hit anywhere
-      in the file/tests is an unrelated mocked path-segment string); `date` UNAFFECTED (consumed unconditionally
-      regardless of `venue`/`data_type`); `venue` UNAFFECTED (the conditioning parameter itself, always applied
-      when present). Only `data_type` was ever affected by this bug class, already fixed
-      (market-tick-data-service@8addeac2). Full evidence in
-      `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`'s new "Findings — sibling
-      parameter audit (2026-08-21)" section. Evidence: unified-trading-pm@<pending>.
 - [ ] [AGENT] P2. **Sweep the three external routers for silent-no-op parameters generally**
       (`instruments-service/.../external.py`, `market-tick-data-service/.../external.py`,
       `execution-service/.../external_instruction_api.py`) — a parameter accepted, silently ignored, and returning
@@ -199,22 +177,9 @@ source: >-
 
 ## Progress Log
 
-- **2026-08-21 (slot-4)** — Closed the vendor-tag-leak sibling-endpoint audit todo. `/availability` = no leak,
-  `/delivery/stream` = leak (worse than `/delivery/batch` — a named `pipeline_mode` field, plus `payload_pointer`
-  path-embedding). Full findings in `external_market_data_response_leaks_vendor_pipeline_mode_2026_08_20.md`.
 - **2026-08-21 (slot-16)** — Closed the MTDS-connector-timestamp-audit todo. All 65 connector files classified
   (37 exchange-time w/ arrival fallback, 11 pure arrival-time, 2 mixed-path, 15 BLOCKED-* scaffolds). Evidence in
   `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new Findings section.
 - **2026-08-21**: drafted by na-eligibility-audit (cross-cutting tranche, batch 2 of 3). All 10 items conflict-
   checked against every existing cross-cutting satellite batch (1b, 13-20) and the consolidated closeout — no
   duplication found.
-- **2026-08-21 (slot-10)** — Closed the `resolve_mtds_ts_event_timestamp_naming_collision` disposition todo.
-  Disposition: partially landed, then Phase 4 (alias removal) reverted in production 5 days later
-  (market-tick-data-service@dcd3b7c401, 2026-08-10) after breaking VIX/CBOE `ohlcv_1m` backfills — never corrected
-  in the archived plan pair. Full evidence in
-  `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new Findings section.
-- **2026-08-21 (slot-1)** — Closed the `GET /external/market-data/availability` sibling-parameter audit todo.
-  `asset_group` UNAFFECTED (required, not optional), `instrument_type` N/A (no such parameter exists on this
-  endpoint), `date` UNAFFECTED (applied unconditionally), `venue` UNAFFECTED (the conditioning parameter itself).
-  Only `data_type` was ever affected by the silent-drop bug, already fixed. Full evidence in
-  `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`'s new Findings section.

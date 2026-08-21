@@ -26,6 +26,7 @@ related:
   [
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /plans/active/grok_gemini_translation_proxy_2026_08_14.md,
+    /plans/active/kimi_gemma_provider_onboarding_2026_08_16.md,
     /plans/active/codex_luna_flex_bridge_2026_08_14.md,
     /plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md,
     /plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md,

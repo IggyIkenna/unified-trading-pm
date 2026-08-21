@@ -59,6 +59,8 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, tmux, slot-lifecycle, worker-liveness-watchdog, scheduled-jobs, orphaned-session, escalation-dispatch, reserve-preference, orphan-session-reclaim, account-failover]
 related:
   [
+    /plans/active/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
   ]
 created: "2026-08-19"
