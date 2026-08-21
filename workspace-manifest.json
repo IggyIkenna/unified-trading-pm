@@ -83,7 +83,7 @@
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.32.6",
     "e2e-testing": "0.41.43",
-    "agent-orchestrator": "0.100.51",
+    "agent-orchestrator": "0.100.52",
     "greeks-service": "0.18.77",
     "trading-agent-service": "0.13.23",
     "strategy-service": "0.84.0",
