@@ -145,7 +145,3 @@ key rename; this fix covers the position-tracking consumer path.
   execution-service window, and if so audit FillDB/reconcile position state) -- a real-money live-trading
   judgment/investigation call, not a bounded mechanical fix.
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed unchanged since 2026-08-08. Sole open todo is an
-  `[OPERATOR]` P1 live-trading data-correctness call (confirm whether a live strategy-service instance ran against
-  the broken execution-service window, audit FillDB/reconcile if so) — real-money judgment/investigation, not a
-  bounded mechanical fix. Cross-cutting tranche, batch 2 of 3.

@@ -1,13 +1,7 @@
 ---
 doc_type: plan
 title: sports-integration-05-ml-training-pipeline
-summary: 'Wire sports ML training end-to-end: features -> training -> model -> inference.
-
-  Port Model 2A ensemble (CatBoost/XGBoost/LightGBM/Huber) from archived repo.
-
-  Walk-forward validation across seasons. Multi-phase: CLV base -> meta, xG base -> meta.
-
-  Sports metrics: Poisson NLL, RPS, Brier score.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -21,6 +15,15 @@ remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_
 superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
+overview: 'Wire sports ML training end-to-end: features -> training -> model -> inference.
+
+  Port Model 2A ensemble (CatBoost/XGBoost/LightGBM/Huber) from archived repo.
+
+  Walk-forward validation across seasons. Multi-phase: CLV base -> meta, xG base -> meta.
+
+  Sports metrics: Poisson NLL, RPS, Brier score.
+
+  '
 type: code
 epic: epic-code-completion
 completion_gates: {code: C4, deployment: D2, business: B3}

@@ -1,11 +1,7 @@
 ---
 doc_type: plan
 title: features-consolidation-and-drilldown
-summary: Two follow-on improvements after correctness + read-perf land. (1) Feature-store consolidation layer that pre-joins
-  all relevant feature_groups into a wide-table parquet per (asset_group, day) at write-time, giving ML training a single
-  GCS GET per day instead of N. (2) UTL FeatureBatchHandler base class lifting the Delta-One/Onchain/Sports/Volatility BatchHandler
-  boilerplate (~200 LOC each). (3) deployment-ui feature-group drill-down route + per-feature-group parquet download endpoint.
-  Sequenced after sibling plans writegate_honest_coverage_endtoend, feature_dag_uac_ssot_and_features_coverage, and ml_training_feature_read_perf.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -15,6 +11,13 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-06
+overview:
+  Two follow-on improvements after correctness + read-perf land. (1) Feature-store consolidation layer that pre-joins
+  all relevant feature_groups into a wide-table parquet per (asset_group, day) at write-time, giving ML training a
+  single GCS GET per day instead of N. (2) UTL FeatureBatchHandler base class lifting the
+  Delta-One/Onchain/Sports/Volatility BatchHandler boilerplate (~200 LOC each). (3) deployment-ui feature-group
+  drill-down route + per-feature-group parquet download endpoint. Sequenced after sibling plans
+  writegate_honest_coverage_endtoend, feature_dag_uac_ssot_and_features_coverage, and ml_training_feature_read_perf.
 type: code
 epic: data-pipeline-completion
 owner: Harsh

@@ -122,15 +122,13 @@ still needs attention once a class-level fix lands.
       Everything else needs a per-epic batch ruling (2+ siblings, or a different tag). Run the narrow auto-fold
       pass first, then group the remainder by `parent_epic` and bring back as batched questions -- do not ask
       per-doc, the epic groupings already did most of this sorting during the hunt.
-- [x] ✅ [SCRIPT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` item 4
-      (na-eligibility-audit 2026-08-21, cross-cutting tranche). **Non-standard checkbox markers (`[~]`) and bare
-      status lines with no `[ ]`/`[x]` marker at all** -- confirmed in 6+ docs (`bucket_fold_ml_2026_07_17.md`,
-      `bucket_fold_features_2026_07_17.md`, `data_completion_defi_2026_07_15.md`,
-      `sports_cf8_available_at_backfill_regression_2026_07_13.md`'s "CANCELLED" line,
-      `mtds_qg_red_morpho_url_and_sports_contract_regression_2026_08_15.md`, and one more from the defi cluster).
-      Both are invisible to the standard checkbox-grep every audit/backlog tool in this corpus uses, silently
-      undercounting open-todo totals. Operator-approved: normalize to standard `[ ]`/`[x]` syntax corpus-wide,
-      mechanical, no judgment call -- a single grep-and-fix pass.
+- [ ] [SCRIPT] P2. **Non-standard checkbox markers (`[~]`) and bare status lines with no `[ ]`/`[x]` marker at
+      all** -- confirmed in 6+ docs (`bucket_fold_ml_2026_07_17.md`, `bucket_fold_features_2026_07_17.md`,
+      `data_completion_defi_2026_07_15.md`, `sports_cf8_available_at_backfill_regression_2026_07_13.md`'s
+      "CANCELLED" line, `mtds_qg_red_morpho_url_and_sports_contract_regression_2026_08_15.md`, and one more from
+      the defi cluster). Both are invisible to the standard checkbox-grep every audit/backlog tool in this corpus
+      uses, silently undercounting open-todo totals. Operator-approved: normalize to standard `[ ]`/`[x]` syntax
+      corpus-wide, mechanical, no judgment call -- a single grep-and-fix pass.
 - [ ] [AGENT] P2. **Archive candidates (16 confirmed this sweep, 0 open todos / unlocked / no real blocker).**
       Includes several `archive_exempt: true` docs where the exemption was set >1 week ago deferring to a named
       follow-on pass (`/archive-candidates-audit`) that never ran. Operator-approved: batch through the standard
@@ -168,12 +166,3 @@ still needs attention once a class-level fix lands.
   actioned via direct triage + 6 dispatched follow-ups. This doc created as the durable record ahead of a
   context-checkpoint compaction; P2/P3 long tail converted to class-level tracked todos above rather than left as
   ephemeral scratchpad-only findings.
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): RECLASSIFY (per-todo split) — of 6 open
-  class-level todos, extracted the ONE with a currently-verified, enumerated, zero-judgment target list (normalize
-  non-standard `[~]`/bare-status checkbox markers, 6+ named docs) to
-  `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` item 4. The other 5 (`locked_by` boilerplate
-  root-cause, context-scout append-corruption repair, near-complete auto-fold of 104 candidates, 16 archive
-  candidates, the 153-item P3 long tail) were deliberately NOT extracted — none carry a currently-re-verified target
-  list in this doc's own text (the per-finding transcripts from the one-off sweep were never preserved), so a
-  worker would need to re-derive the candidate set before executing, which is re-running the sweep's own job, not
-  bounded dispatch. Doc stays `assigned_vm: NA` for those 5.

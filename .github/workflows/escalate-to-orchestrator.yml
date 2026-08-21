@@ -109,7 +109,8 @@ permissions:
 
 # Never cancel an in-flight dispatch; serialise per repo+PR so a re-fire doesn't double-spawn.
 concurrency:
-  group: escalate-${{ inputs.repo || github.event.client_payload.repo }}-${{ inputs.pr_number ||
+  group:
+    escalate-${{ inputs.repo || github.event.client_payload.repo }}-${{ inputs.pr_number ||
     github.event.client_payload.pr_number }}
   cancel-in-progress: false
 
@@ -128,11 +129,7 @@ jobs:
       # `no_headroom` (orchestrator at capacity → the wall is PARKED) is the distinct, actionable
       # alert the single-live-orchestrator case needs — there is no separate vm-planning VM to
       # "restore"; vm-0 IS the orchestrator, and a flat 503 means it has no free slot, not that a
-      # host is down. `orchestrator_unreachable` (502/504/000) is the DIFFERENT transient-restart
-      # case (nginx/TCP layer, not app-capacity) — see the case-statement comment below.
-      # `dispatched` / `no_escalation_id` / `no_headroom` / `orchestrator_unreachable` is the closed
-      # set reaching notify's `needs.escalate.outputs.*` (none of the non-dispatched ones page —
-      # notify only fires on `dispatched=='true'` or a genuine job `failure`, see the notify job).
+      # host is down. `dispatched` / `no_escalation_id` / `no_headroom` is the closed set reaching notify.
       outcome: ${{ steps.post.outputs.outcome }}
     steps:
       - name: Resolve inputs (workflow_call / dispatch / repository_dispatch)
@@ -256,20 +253,9 @@ jobs:
               echo "::error::Orchestrator rejected the request (400) — likely a bad wall_type. Body above."
               exit 1
               ;;
-            502 | 504 | 000)
-              # Single-VM orchestrator: ao-self-pull.sh restarts the process on every LDR HEAD move
-              # (root cron, every 2min). 502/504 (nginx up, upstream app not yet listening) and 000
-              # (connection refused/timeout — curl's own synthetic code, not a real status; see the
-              # `|| echo "000"` above) are the observed signature of hitting that brief restart
-              # window, not a standing outage — confirmed live 2026-08-21: /api/healthz reachable
-              # again (uptime_seconds ~166) within ~3 minutes of a 502 here. Soft-fail so the next
-              # ldr-ci-monitor tick (the wall re-fires as long as the repo is still red) retries, same
-              # rationale as the 503 branch above. A STANDING AO outage is not this dispatcher's job
-              # to detect — that's AO's own liveness monitoring (ci-reconcile §5 WORKER-LIVENESS GAP /
-              # /api/healthz checks), which pages independently of any one escalation attempt.
-              echo "::warning::Orchestrator unreachable (HTTP ${HTTP}) — likely mid-restart (ao-self-pull.sh). Escalation NOT dispatched. Retryable next tick."
-              echo "dispatched=false" >> "$GITHUB_OUTPUT"
-              echo "outcome=orchestrator_unreachable" >> "$GITHUB_OUTPUT"
+            000)
+              echo "::error::Could not reach the orchestrator at ${ORCH_URL} (timeout / DNS / TLS)."
+              exit 1
               ;;
             *)
               echo "::error::Unexpected HTTP ${HTTP} from /api/escalate. Body above."
@@ -336,7 +322,8 @@ jobs:
       # A successful hand-off is a one-time transition (label-gated) → no dedup_key needed. A HARD
       # failure can recur every tick if the orchestrator stays unreachable → dedup per repo+PR so a
       # standing auth/DNS error pages ONCE per cooldown, not every */15 tick.
-      dedup_key: ${{ needs.escalate.outputs.dispatched == 'true' && '' || format('escalation-dispatch-failed:{0}:{1}',
+      dedup_key:
+        ${{ needs.escalate.outputs.dispatched == 'true' && '' || format('escalation-dispatch-failed:{0}:{1}',
         needs.escalate.outputs.repo, needs.escalate.outputs.pr_number) }}
       cooldown_min: 240
     secrets: inherit

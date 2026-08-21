@@ -236,18 +236,11 @@ child's Phase 1 section for the full gate-by-gate detail.
 > **Folded-in defi residual** (from I-1 consolidation 2026-06-26, `defi_venue_name_canonicalisation_and_reth_2026_06_17`
 > archived; 4/5 done — moved here verbatim 2026-07-24):
 
-- [x] ✅ [REGISTRY] P2. **NICE-TO-HAVE — add cbETH as `COINBASE-ETHEREUM` to the DeFi LST universe** (full new-venue add:
+- [ ] [REGISTRY] P2. **NICE-TO-HAVE — add cbETH as `COINBASE-ETHEREUM` to the DeFi LST universe** (full new-venue add:
       `ALL_DEFI_VENUES` + `DEFI_VENUE_PHASE` + `defi_venue_capabilities.py` lst_rates/oracle_prices genesis 2022-08-26 +
       chain-qualified `LEGACY_DEFI_VENUE_ALIASES` + catalogue DEFI genesis). Care: `COINBASE` name collides with the
       CeFi spot exchange — use a chain-qualified alias only. Repo: unified-api-contracts + unified-trading-pm. (MIGRATED
       FROM: `defi_venue_name_canonicalisation_and_reth_2026_06_17`.)
-      ✅ 2026-08-21 — **already fully done, stale todo.** Verified in code: `COINBASE-ETHEREUM` is in
-      `unified-api-contracts/unified_api_contracts/registry/defi_venues.py:247` (`ALL_DEFI_VENUES`) and `:495`
-      (`DEFI_VENUE_PHASE["COINBASE-ETHEREUM"]="live"`); `registry/defi_venue_capabilities.py:235` carries
-      `oracle_prices: 2022-08-26`; `registry/venue_launch_dates.py:267` has the genesis (2022-08-24);
-      `registry/venue_adapter_keys.py:192` has adapter key `"cbeth"`; `registry/market_data_categories.py:2806-2814`
-      even comments that this exact todo "already produces" the capability record. Chain-qualified per the
-      collision warning — no bare `COINBASE` reuse. Nothing to ship.
 
 **tradfi** — same gates; Databento universe (GLBX/DBEQ/XCBF) + Yahoo (KRX/FX). MOVED (2026-07-24 split, content moved
 verbatim, nothing dropped) to `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` — includes the "Already-fixed G1

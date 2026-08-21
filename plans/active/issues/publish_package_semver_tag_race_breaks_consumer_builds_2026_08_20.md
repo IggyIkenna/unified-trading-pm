@@ -20,7 +20,6 @@ scope: [engineer]
 tags: [ci, cloud-build, publish-package, semver-agent, artifact-registry, race, live-incident]
 related:
   - /plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md
-  - /plans/active/issues/cloud_build_uac_publish_ordering_race_recurrence_strategy_service_2026_08_20.md
 created: 2026-08-20
 author: /ci-reconcile (cicd escalation agt-18cf35, slot-7·planning)
 parent_epic: ci_master
@@ -28,10 +27,8 @@ priority: P2
 source: >-
   Cloud Build FAILURE escalation for instruments-service (env prod, branch main) — cloud_build_router_failure,
   agt-18cf35, 2026-08-20.
-assigned_vm: planning
-execution_scope: orchestrator-agent
-assigned_role: infra
-effort: low
+assigned_vm: NA
+execution_scope: local-only
 drift_direction: advance-infra
 depends_on: []
 locked_by:
@@ -117,15 +114,3 @@ path (never hand-edit per-repo copies).
 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries); all paths re-verified on disk,
   unchanged.
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): RECLASSIFY (whole-doc), `assigned_vm: NA
-  → planning`. Sole open todo is a single, fully-specified `.github/**` workflow-trigger fix (add `tags: ["v*"]` to
-  `publish-package.yml`, roll out via `rollout-workflow-templates.sh`, verify on the next breaking release) — no
-  design/judgment call, outcome worker-determinable alone. Conflict-check: grepped active `assigned_vm: planning`
-  docs for overlapping scope; found `cloud_build_uac_publish_ordering_race_recurrence_strategy_service_2026_08_20.md`
-  (also `NA`) independently diagnosing an adjacent variant of the SAME semver-agent/publish-package race (its own P3
-  "longer-term option" proposes sequencing semver-agent's dispatch behind `publish-package.yml`'s AR-confirmation —
-  a different remedy for overlapping root-cause territory) with no prior cross-reference between the two docs —
-  added the missing `related:` link both directions so a worker landing either fix does so aware of the other.
-  Not a blocking conflict (neither doc is `planning`-dispatched, and the two P2 fixes are independent workstreams:
-  producer-side tag-triggered republish here vs. consumer-side retry-budget widening there), but flagging per the
-  "flag rather than guess which doc should win" instruction.

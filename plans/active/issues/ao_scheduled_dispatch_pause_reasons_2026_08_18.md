@@ -185,25 +185,6 @@ itself "done," so the next natural tick after unpause dispatches normally with n
   2026-08-18/19/20), reinforcing the schema-fix todo. `ao_watchdog` confirmed NOT paused (resumed 2026-08-19).
   Updated the section + flipped the todo checkbox. No schema change made here (that's the separate open
   `[SCRIPT] P2` todo).
-- **2026-08-21 (slot 17, interactive) — NEW BUG FOUND in the shipped schema fix itself**: attempted to backfill
-  the `reason`/`paused_at` fields for all 6 currently-paused modes via `POST /api/scheduled-dispatch/{mode}/pause
-  ?reason=...` (using the reasons already recorded by hand in this doc). All 6 calls returned `200 {"status":
-  "paused", ...}`, but a follow-up `GET /api/scheduled-dispatch/status` showed **every mode's `reason` still
-  reading `"Reason not recorded"`** — the write silently did not take effect. Root-caused:
-  `scheduled_dispatch_pause.py::set_paused()` only writes `reason`/`paused_at` inside the `if mode not in
-  details:` branch — i.e. ONLY on the transition from unpaused→paused. A `set_paused(mode, True, reason=...)`
-  call against an ALREADY-paused mode (all 6 of these were) is a pure no-op on the stored reason, regardless of
-  what `reason` is passed. This is a real, previously-undiscovered gap in `agent-orchestrator@4bff9c1532` (the
-  08-19 schema-fix commit itself) — not a "nobody populated it yet" data-entry gap as this doc previously
-  assumed. Fix: widen `set_paused` to update the stored `reason` when an already-paused mode receives an
-  explicit non-empty `reason` (leaving `paused_at` untouched, since that field represents when the pause STATE
-  began, not when the reason was last edited) — tracked as a `[SCRIPT] P1` todo below, small/clear/same-session
-  fix per the workspace's own findings-triage rule (no separate issue doc). Also flagged live: the `reconcile`
-  mode's recorded reason (operators running plan_reconciler manually due to account exhaustion ~2026-08-19) may
-  be STALE — a live check the same session (2026-08-21) found the fleet substantially recovered (24/48 slots
-  idle, only 3-4/27 accounts genuinely constrained). Asked the operator whether to resume it; they said leave it
-  paused for now. `ci_reconcile`'s CURRENT re-pause reason (it was resumed once 2026-08-18, then re-paused again
-  without a recorded reason) is genuinely unknown — recorded as such rather than guessed.
 
 ## MEASURED UPDATE 2026-08-19 — the paused set has grown from 3 to 7, and `ci_reconcile` is paused again
 
@@ -248,8 +229,7 @@ dispatch"` — consistent with the account snapshots seen the same hour
       "status":"active"}` and the persisted registry re-read confirms it is gone from the paused
       set (6 remain: ag_closeout, cefi_mtds_smoke, ci_reconcile, na_eligibility, reconcile,
       report). It was the urgent one — it is the fleet's own daily health check
-      (`/plans/archive/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md` wired its timer, now archived —
-      timer confirmed live 2026-08-21),
+      (`/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md` wired its timer),
       so while it was paused nothing was running the check that would have surfaced the other six.
       **RESOLVED 2026-08-20 (operator ruling on todo
       ao_scheduled_dispatch_pause_reasons-53b859c93847 — source:
@@ -271,9 +251,3 @@ dispatch"` — consistent with the account snapshots seen the same hour
       three `plan_health`-family jobs above sat queued ~20h on 2026-08-19 with `no free configured
       slot` / `no headroom account`, and nothing paged. Distinct from the pause question — these
       modes are enabled and still not running. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P1. Fix `scheduled_dispatch_pause.py::set_paused()` so an explicit non-empty
-      `reason` passed against an ALREADY-paused mode updates the stored reason (currently a silent
-      no-op — see the 2026-08-21 Progress Log entry above). Leave `paused_at` untouched on a
-      reason-only update. Add a regression test. Re-run the 6 backfill POST calls afterward and
-      verify via `GET /api/scheduled-dispatch/status` that the reasons actually persisted this
-      time. Ship via quickmerge with quality-gates.sh green. (repo: agent-orchestrator)

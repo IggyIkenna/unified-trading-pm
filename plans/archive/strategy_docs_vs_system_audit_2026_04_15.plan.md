@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: strategy-docs-vs-system-audit
-summary: Full audit of codex/09-strategy docs against backend system — close all gaps in both directions, implement new
-  strategies, add centralised on-chain primitives
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -20,6 +19,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-15"
+overview:
+  Full audit of codex/09-strategy docs against backend system — close all gaps in both directions, implement new
+  strategies, add centralised on-chain primitives
 type: mixed
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: none, business: none }

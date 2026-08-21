@@ -141,10 +141,3 @@ while moving the platform further from target state.
 **2026-08-20 — authored.** No code written. Created because a measured coverage check found nine ruling-derived
 concepts with zero tracked todos: the rulings had become codex SSOT without becoming work. Human plan
 (`assigned_vm: NA`) per operator ruling — several items need judgement as they land.
-
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — foundational UAC
-  architecture-declaration plan for a brand-new concept ("27 state-fabric rulings") that every other state-fabric
-  repo plan gates on; the doc's own frontmatter/Progress Log states explicit operator intent ("Human plan
-  (`assigned_vm: NA`) per operator ruling — several items need judgement as they land"). All 16 open todos are
-  first-declarations of new invariant vocabulary (StateEnvelope, finality ladder, recovery-quality levels,
-  capability gate/resolver) requiring design coherence across the whole concept, not isolated bounded tasks.

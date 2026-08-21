@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: Unit Tests and Test Failure Action Plan
-summary: Merged plan for achieving all unit tests passing across T0–T3 and services. Combines per-repo execution workflow
-  with root-cause analysis and fix options for ~98 T4 failures and ~18 collection errors.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-03'
+overview: Merged plan for achieving all unit tests passing across T0–T3 and services. Combines per-repo execution workflow with root-cause analysis and fix options for ~98 T4 failures and ~18 collection errors.
 isProject: false
 todos:
 - {id: phase1-quick-wins, content: 'Phase 1 — High-impact quick wins (~3h, unblocks 43 tests): RC-1: DONE — UFCL already exports BaseFeatureCalculator, BaseFeatureService, FeatureCalculatorRegistry from service_base. features-calendar lint fixed (RUF002, RUF060). RC-2: Implement DependencyChecker in ml-inference-service + execution-service OR move to shared lib OR delete if abandoned — unblocks ml-inference (22 fails + 3 errors) + execution (2). RC-11: Add ''from unified_events_interface import log_event'' to ml-training + ml-inference main module. RC-8: Add initial_hyperparams param to stage2_coarse_optimization() + stage3_targeted_optimization() in ml-training-service.', status: completed, notes: "All RC-1/2/8/11 pre-resolved as of 2026-03-09 (confirmed by verification agents):\nRC-1: UFCL exports all 3 names from service_base; ruff clean.\nRC-2: DependencyChecker fully implemented in both ml-inference (engine/validation/ + app/core/) and\n      execution-service (utils/dependency_checker.py);\

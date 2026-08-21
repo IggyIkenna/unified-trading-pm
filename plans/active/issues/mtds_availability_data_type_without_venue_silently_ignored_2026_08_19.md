@@ -66,13 +66,14 @@ one day suggests the pattern is worth a sweep, not just two point fixes.
 - [ ] [BACKEND] P1. **Decide and implement the correct contract**: either reject `data_type` without `venue` with a
       422 naming the missing parameter, or make the filter work independently of `venue`. Do NOT leave a third
       option where it silently no-ops. Whichever is chosen, the API reference must be updated in the same change.
-- [x] ✅ [REVIEW] P1. **EXTRACTED 2026-08-21** — check the sibling parameters (`asset_group`, `instrument_type`,
-      any other optional filter) on the same endpoint for the same conditional-branch bug. Extracted to
-      `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch (na-eligibility-audit,
-      cross-cutting tranche, batch 2 of 3).
-- [x] ✅ [AGENT] P2. **EXTRACTED 2026-08-21** — sweep the three external routers for silent-no-op parameters
-      generally. Extracted to `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch
-      (na-eligibility-audit, cross-cutting tranche, batch 2 of 3).
+- [ ] [REVIEW] P1. **Check the sibling parameters on the same endpoint** — `asset_group`, `instrument_type` and any
+      other optional filter — for the same conditional-branch bug. One was found by reading the code; the others
+      were not checked.
+- [ ] [AGENT] P2. **Sweep the three external routers for silent-no-op parameters generally**
+      (`instruments-service/.../external.py`, `market-tick-data-service/.../external.py`,
+      `execution-service/.../external_instruction_api.py`). A parameter that is accepted, ignored and returns 200 is
+      indistinguishable from one that worked — this is exactly the class of defect that only shows up when a client
+      trusts the result.
 
 ## Progress Log
 
@@ -80,8 +81,3 @@ one day suggests the pattern is worth a sweep, not just two point fixes.
 in the API reference as known behaviour pending this fix rather than documented as intended.
 
 - **context-scout 2026-08-20**: populated context_scope (3 entries).
-- **na-eligibility-audit 2026-08-21**: RECLASSIFY (per-todo split) — todos 2-3 (check sibling params; sweep 3
-  external routers) are pure investigation tasks; extracted to
-  `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`. Todo 1 ("Decide and implement the correct
-  contract") stays `assigned_vm: NA` — explicit design decision. Doc's own `assigned_vm: NA` unchanged.
-  Cross-cutting tranche, batch 2 of 3.

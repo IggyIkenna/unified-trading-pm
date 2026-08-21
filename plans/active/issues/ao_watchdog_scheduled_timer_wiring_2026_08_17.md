@@ -39,10 +39,6 @@ context_scope:
   ]
 ---
 
-> **🟢 ARCHIVED 2026-08-21 — fully resolved.** `ao-watchdog.timer` is confirmed live and firing on schedule (00:47
-> UTC daily) on the central orchestrator VM. See `cursor-configs/skills/ao-watchdog/SKILL.md`'s "Scheduling this
-> skill" section for the current-state summary.
-
 # Wire /ao-watchdog into the scheduled-job timer family
 
 ## What's needed
@@ -121,12 +117,11 @@ Following the exact pattern `escalation_queue_reconciler` already established (s
       `ao-watchdog` row (codex-alignment check per the archival ritual). **Scope note**: this laptop dev session
       had no central-VM access, so only the repo-side script change is done here — the live orchestrator-VM
       systemd timer re-run + verification is split out as its own todo below rather than silently left undone.
-- [x] ✅ [OPERATOR] P2. **Re-run `install-ao-watchdog-timer.sh` on the central orchestrator VM — CONFIRMED DONE,
-      2026-08-21.** Live-verified directly on the orchestrator VM (slot 17, colocated, `systemctl --user
-      list-timers --all`): `ao-watchdog.timer` is installed and firing at the intended `00:47 UTC` cadence — `LAST
-      Fri 2026-08-21 00:48:05 UTC` (5h52m before this check), `NEXT Sat 2026-08-22 00:47:41 UTC`. Not the stale
-      `06:25 UTC` cadence — someone completed this todo between 2026-08-19 (when it was last confirmed open) and
-      today without flipping the checkbox here. All todos in this doc are now done.
+- [ ] [OPERATOR] P2. **Re-run `install-ao-watchdog-timer.sh` on the central orchestrator VM** (needs VM access —
+      SSH or an AO-dispatched worker running ON the VM, neither available to this laptop dev session) so the live
+      systemd timer actually picks up the new `00:47 UTC` cadence shipped in `agent-orchestrator@a404d74303` (the
+      live unit still fires at the old `06:25 UTC` until this runs). Verify via `systemctl --user list-timers` —
+      confirm `ao-watchdog.timer` shows the new next-trigger time.
 
 ## Why this wasn't done in the same session as the skill itself
 

@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: backtest-config-ui-2026-03-21
-summary: UI for configuring and launching mass backtests using the Fixed vs Grid two-tier architecture. Three tabs (ML,
-  Strategy, Execution), fixed param dropdowns, grid param range sliders, shard count preview, and GCS config upload.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,9 @@ scope: [engineer, admin]
 tags: [ui, backtest, config, grid]
 related: []
 created: '2026-03-21'
+overview: 'UI for configuring and launching mass backtests using the Fixed vs Grid two-tier architecture. Three tabs (ML, Strategy, Execution), fixed param dropdowns, grid param range sliders, shard count preview, and GCS config upload.
+
+  '
 type: code
 epic: epic-code-completion
 priority: P1

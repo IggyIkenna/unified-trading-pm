@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: recovery-and-transfer-completion
-summary: Complete all stubbed execution paths, strategy-service integration, UI→backend wiring, CeFi/TradFi auto-deleverage,
-  G6 playbook mapping — batch and live share identical code paths
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-16'
+overview: Complete all stubbed execution paths, strategy-service integration, UI→backend wiring, CeFi/TradFi auto-deleverage, G6 playbook mapping — batch and live share identical code paths
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D3, business: B3}

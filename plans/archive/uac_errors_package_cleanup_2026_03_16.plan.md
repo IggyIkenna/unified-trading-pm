@@ -1,7 +1,17 @@
 ---
 doc_type: plan
 title: contracts-observability-risk-cleanup
-summary: 'Comprehensive cleanup, observability, circuit breaker hardening, and risk expansion.
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, market-data-processing-service, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-16'
+overview: 'Comprehensive cleanup, observability, circuit breaker hardening, and risk expansion.
 
   Phased execution DAG with pre-audit manifest — agents execute from manifest, no re-scanning.
 
@@ -15,16 +25,9 @@ summary: 'Comprehensive cleanup, observability, circuit breaker hardening, and r
 
   Phase 5: Observability, circuit breaker citadel-grade, VaR Phase 2.
 
-  Phase 6: Final workspace-wide QG.'
-status: complete
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: [deployment-service, execution-service, market-data-processing-service, strategy-service, unified-api-contracts, unified-trading-library]
-scope: [engineer, admin]
-tags: []
-related: []
-created: '2026-03-16'
+  Phase 6: Final workspace-wide QG.
+
+  '
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D2, business: none}
@@ -352,8 +355,8 @@ todos:
       - [x] [AGENT] P1. Build P&L attribution engine that decomposes total P&L into
         contributions from each RiskType the strategy is subscribed to:
         total_pnl = delta_pnl + gamma_pnl + vega_pnl + theta_pnl + rho_pnl
-        + volga_pnl + vanna_pnl + funding_pnl + basis_pnl + carry_pnl
-        + fx_pnl + spread_pnl + fees + residual
+                   + volga_pnl + vanna_pnl + funding_pnl + basis_pnl + carry_pnl
+                   + fx_pnl + spread_pnl + fees + residual
         Aggregates up the hierarchy: instrument → strategy → account → client → company.
         Residual = unexplained P&L (should be small; large residual = missing risk factor).
         Time series: store daily snapshots for over-time analysis.
@@ -468,7 +471,7 @@ todos:
 
         Compose: "Kill client C1's BASIS strategy on Binance" =
         KillSwitchScope(entity_type="client", entity_id="C1",
-        strategy_type="BASIS", venue="binance")
+                        strategy_type="BASIS", venue="binance")
 
         SCHEMA (UIC — add to risk.py):
         class KillSwitchScope(BaseModel):
@@ -570,28 +573,28 @@ todos:
           MOM:
             exit_type: market_close
             steps:
-            - {order: 1, action: close_all_positions, urgency: immediate}
+              - {order: 1, action: close_all_positions, urgency: immediate}
           BASIS:
             exit_type: atomic_unwind
             steps:
-            - {order: 1, action: close_perp_leg, urgency: immediate}
-            - {order: 1, action: close_spot_leg, urgency: immediate}
+              - {order: 1, action: close_perp_leg, urgency: immediate}
+              - {order: 1, action: close_spot_leg, urgency: immediate}
           RECURSIVE_STAKED_BASIS:
             exit_type: deleverage_sequence
             steps:
-            - {order: 1, action: repay_variable_debt, instrument_filter: WETH_DEBT}
-            - {order: 2, action: withdraw_collateral, instrument_filter: aweETH}
-            - {order: 3, action: swap_to_stable, max_slippage_bps: 200, urgency: best_effort}
+              - {order: 1, action: repay_variable_debt, instrument_filter: WETH_DEBT}
+              - {order: 2, action: withdraw_collateral, instrument_filter: aweETH}
+              - {order: 3, action: swap_to_stable, max_slippage_bps: 200, urgency: best_effort}
           SPORTS:
             exit_type: hedge_cross_venue
             steps:
-            - {order: 1, action: find_hedge_venue, urgency: best_effort}
-            - {order: 2, action: place_lay_bets, max_slippage_bps: 100}
+              - {order: 1, action: find_hedge_venue, urgency: best_effort}
+              - {order: 2, action: place_lay_bets, max_slippage_bps: 100}
           YIELD_STAKING:
             exit_type: hybrid_unwind
             steps:
-            - {order: 1, action: trade_out_liquid_portion, urgency: immediate, max_slippage_bps: 100}
-            - {order: 2, action: initiate_unbonding, urgency: queued}
+              - {order: 1, action: trade_out_liquid_portion, urgency: immediate, max_slippage_bps: 100}
+              - {order: 2, action: initiate_unbonding, urgency: queued}
         Repos: unified-trading-pm (templates), deployment-service (sync to GCS).
     status: done
     note: "PARALLEL stream D. Local templates = editable source. GCS = runtime copy."

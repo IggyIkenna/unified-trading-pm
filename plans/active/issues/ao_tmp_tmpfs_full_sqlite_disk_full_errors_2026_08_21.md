@@ -77,39 +77,16 @@ at 100% capacity makes those writes fail, surfacing as `database or disk is full
 regardless of the real database file's own size or the disk's real free space — this can affect any endpoint that
 touches the orchestrator's state.db, not just the one caught live here.
 
-## Resolution (2026-08-21)
+## Not yet done (deliberately — found during a checkpoint, not chased down)
 
-Root cause identified precisely: `codex-bridge.service` (`PrivateTmp=yes`, a Codex/Luna-backed agent bridge running
-real `quickmerge --isolated`/`prek`/QG operations for its child agent sessions) had accumulated its ENTIRE 8G tmpfs
-into its own isolated `systemd-private-*/tmp` namespace — 17895 files, zero reaped in the unit's 18h uptime, because
-the existing `cleanup-stale-tmp-parquet-scratch.sh` reaper cron had no visibility into that namespace at all (a
-different offender class from the original enum-univ-*/cefi-corrector-* parquet pattern this doc/script already
-handled). Confirmed via `fuser`-liveness-check that the largest offenders (~2.6G) had zero open handles — genuinely
-orphaned scratch from already-exited quickmerge/prek/QG runs, the same "SIGKILLed run's `finally: unlink()` never
-ran" failure class already documented above, just hidden behind a mount namespace.
-
-Fix shipped (`unified-trading-pm@29690daebd`, in flight to origin): a second, name-unrestricted, liveness-gated sweep
-in the same reaper script for any discovered `systemd-private-*/tmp` root. Discovered mid-implementation that the
-outer `systemd-private-*` dir is `drwx------ root:root` — the existing operator-user cron structurally cannot see
-into it (confirmed empty result running the sweep as `ubuntu` vs. full visibility as root over SSM) — so this needed
-a NEW root-owned systemd timer (`tmp-privatetmp-reaper.service` + `.timer`, 15min cadence), not an extension of the
-existing operator crontab. Deployed live and verified working: `/tmp` dropped from 100% (8.0G/8.0G, 19M avail) to
-71% (5.7G/8.0G, 2.4G avail) mid-sweep, liveness-gate confirmed correctly skipping in-use files (0 false removals in
-the journal), zero interference with codex-bridge.service itself (never restarted, never touched while live).
-Codex-SSOT updated in the same commit: `/codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`.
-
-## Not yet done
-
-- [x] [INFRA] P0. Identify what's actually filling the 8GB `/tmp` tmpfs and clear/rotate it — see Resolution above.
+- [ ] [INFRA] P0. Identify what's actually filling the 8GB `/tmp` tmpfs (`du -sh /tmp/* | sort -rh`, live on the VM)
+      and clear/rotate whatever's accumulating there. Check `/codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`
+      first — this workspace already has documented conventions for exactly this class of problem (a `$HOME/.cache/*`
+      pattern as the mitigation for scripts that would otherwise dump into `/tmp`); read it before improvising a fix.
+      (repo: agent-orchestrator, or infra-level if this is host-wide)
 - [ ] [INFRA] P1. Once cleared, decide whether 8GB is simply undersized for this host's real tmpfs usage (raise the
       cap) or whether something is genuinely leaking/not cleaning up after itself into `/tmp` (fix the leak) —
-      don't just clear it once and let it silently refill. Partially addressed by the sub-hourly root timer above,
-      but the underlying question (should `codex-bridge.service` even have `PrivateTmp=yes`, given it now needs a
-      second privileged reaper to compensate for the isolation it creates?) is still open.
-- [ ] [INFRA] P2. Commit the new `tmp-privatetmp-reaper.service`/`.timer` unit files + an install script into
-      agent-orchestrator (matching the existing `codex-bridge.service` checked-in-unit-file pattern) so this is
-      reproducible/version-controlled rather than a hand-deployed VM snowflake — currently only live via direct SSM
-      deployment, not yet source-controlled.
+      don't just clear it once and let it silently refill.
 - [ ] [INFRA] P2. Investigate the 93% I/O Wait figure separately — confirm whether it's related to this `/tmp`
       pressure or a distinct signal (e.g. concurrent QG/pytest activity from multiple sessions on this shared host,
       per the same-day findings in `agent_orchestrator_pytest_cov_silent_death_under_host_load_2026_08_20.md` and
@@ -123,13 +100,3 @@ Codex-SSOT updated in the same commit: `/codex/05-infrastructure/shared-host-tmp
 - **2026-08-21**: doc authored during a pre-compact checkpoint. Found while verifying a routine service restart;
   the operator independently flagged the dashboard's disk panel at the same moment, which is what prompted checking
   `df -h` directly rather than trusting the panel's single "Disk" number.
-- **2026-08-21 (later same day)**: root cause pinned down precisely (codex-bridge.service's `PrivateTmp` namespace,
-  not the originally-suspected instruments-service parquet class), fix designed + implemented + shipped
-  (`unified-trading-pm@29690daebd`), and deployed live. Mid-implementation discovery changed the fix's shape: the
-  operator-user cron cannot reach `PrivateTmp` dirs at all (root:root 0700 permissions), so this needed a new
-  root-owned systemd timer rather than an extension of the existing crontab reaper — verified via a failed dry-run
-  test as `ubuntu` before building the correct root-privileged mechanism, per the operator's explicit choice.
-  Mid-flight, a peer session's automated `git reset` to origin (this is a shared checkout — see
-  `/codex/05-infrastructure/per-tab-worktrees.md`) discarded the uncommitted edits once; recovered by reconstructing
-  from conversation context and committing immediately. Live-verified: `/tmp` 100%→71% used mid-sweep, zero false
-  removals (liveness-gate held), codex-bridge.service itself never touched/restarted throughout.

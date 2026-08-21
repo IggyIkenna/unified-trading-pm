@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: api_football_minimal_flattening_removal_2026_05_07
-summary: Stop dropping nested API-Football payloads at write time. Today FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS
-  / INJURIES persist only `fixture_id + data_available_at` over what FIXTURES already has — every per-team / per-event /
-  per-player field in the payload is dropped during ingest. Flatten at the UAC normalizer level so the parquets carry the
-  actual signal (xG, shots, possession, cards, formations, lineup grids, injury reasons).
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -18,6 +15,11 @@ related:
     /plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md,
   ]
 created: "2026-05-07"
+overview:
+  Stop dropping nested API-Football payloads at write time. Today FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS /
+  INJURIES persist only `fixture_id + data_available_at` over what FIXTURES already has — every per-team / per-event /
+  per-player field in the payload is dropped during ingest. Flatten at the UAC normalizer level so the parquets carry
+  the actual signal (xG, shots, possession, cards, formations, lineup grids, injury reasons).
 type: code
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: D3, business: none }
@@ -210,7 +212,7 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
       `event_detail`, `comments` (nullable string). (UAC@c76e6d0)
 - [x] [UAC] P0. `normalize_api_football_lineup(raw, fixture_id) -> list[dict]`. Today returns one row per team with
       `formation` only. Extend to: one row per (team, player) — flatten
-      `startXI: [{player.id, .name, .number, .pos, .grid}]` AND `substitutes: [...]` AND coach. Columns: `team_id`,
+      `startXI: [{player.id, .name,     .number, .pos, .grid}]` AND `substitutes: [...]` AND coach. Columns: `team_id`,
       `team_name`, `formation`, `coach_id`, `coach_name`, `player_id`, `player_name`, `player_number`, `player_pos`
       (G/D/M/F), `player_grid` (e.g. "4:1"), `is_starter` (bool). (UAC@c76e6d0 — coach NOT emitted as own row; stamped
       on every (team, player) row to preserve grain.)

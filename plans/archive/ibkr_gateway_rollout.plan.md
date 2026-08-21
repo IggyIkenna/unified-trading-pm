@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: ibkr-gateway-rollout
-summary: Consolidate four duplicated IBKR adapter connection implementations into thin shims pointing to a single long-lived
-  ibkr-gateway-infra process, resolving the TWS test-mocking design decision
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-05"
+overview:
+  Consolidate four duplicated IBKR adapter connection implementations into thin shims pointing to a single long-lived
+  ibkr-gateway-infra process, resolving the TWS test-mocking design decision
 type: mixed
 epic: epic-code-completion
 superseded_by: cicd_code_rollout_master_2026_03_13

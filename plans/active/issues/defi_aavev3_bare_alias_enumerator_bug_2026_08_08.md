@@ -105,15 +105,8 @@ defect (phantom-venue emission) without touching a registry other code may depen
 
 - [x] [CODE] P2. Canonicalise `venue_label` + dedup emitted `(chain, venue)` pairs in `_yield_v2_defi_pre_launch_rows` —
       `instruments-service@2b2e9f124`, QG-verified + regression test added.
-- [x] [DATA] P1. ✅ DONE 2026-08-21 (root cause found + purge EXECUTED + verified — full detail in the
-      2026-08-21 Progress Log entry): the 11 blind failures were the external `vm_zombie_watchdog` reaping
-      memory-starved VMs; script rewritten to stream record batches; dry-run clean (exactly 46,300, all
-      gates True), `--apply` complete (new live index generation `1787294319966516`, snapshot
-      `_index/snapshots/pre_defi_aavev3_bare_alias_purge_20260821T063716Z.parquet`, §3a retention
-      fresh-checked 604800s at apply time), independent post-apply verification PASS (venue=AAVEV3 rows
-      = 0; twin `AAVE_V3` untouched at 3,652,348 rows; total 161,763,519 = before − 46,300 exactly).
-      Historical context of the earlier attempts follows. **Re-run the purge script's dry-run — first
-      attempt 2026-08-20 hit a network timeout, not a logic failure, no write occurred.** `instruments-service/scripts/purge_defi_aavev3_bare_alias_manifest_rows_2026_08_20.py`
+- [ ] [DATA] P1. **Re-run the purge script's dry-run — first attempt 2026-08-20 hit a network timeout, not a
+      logic failure, no write occurred.** `instruments-service/scripts/purge_defi_aavev3_bare_alias_manifest_rows_2026_08_20.py`
       (shipped `instruments-service@<pending, see plan Progress Log for sha>` — the script itself is code-reviewed
       and safe: dry-run by default, snapshot + fresh §3a soft-delete retention check before any write, arithmetic
       gate refusing to proceed if anything but `capture_status=empty_confirmed` rows would be touched). Bucket
@@ -171,35 +164,6 @@ defect (phantom-venue emission) without touching a registry other code may depen
       correct-key `AAVE_V3`-ETHEREUM twin; "0 backing GCS objects" was independently established by the 2026-08-08
       root-cause session (see Finding section above) and cited rather than re-derived, since the population is
       capped by a fixed historical launch-date window and cannot have changed.
-- [ ] [DATA] P1. Durability re-check after the next defi manifest-consolidator cycle over
-      `market-data-tick-defi-prd-*`: confirm `venue=AAVEV3` count in the live
-      `_index/availability_index.parquet` is STILL 0 (one filtered pyarrow read, no corpus walk). The purge
-      removed the rows from the CONSOLIDATED index only; if any `_index/per_vm/*.parquet` shard from the
-      2026-08-05 enumerator run still carries bare rows, an incremental consolidation could resurrect them.
-      **Per-VM-shard side CHECKED 2026-08-21 (post-purge listing)**: exactly 2 shards exist —
-      `_legacy_seed.parquet` (created 2026-06-24, PREDATES the 2026-08-05 enumerator write, cannot carry
-      its rows) and `mdps-defi-2025-20260817-000343.parquet` (created 2026-08-21 06:50 by the live MDPS
-      backfill, unrelated) — so resurrection risk is measured-low and this re-check is cheap
-      belt-and-braces, not an open hazard. If somehow resurrected anyway: locate + purge the shard
-      source, citing this doc's existing delete-safety proof (same population).
-- [ ] [SHIP] P1. Land the two fix commits currently blocked by a PEER session's in-flight
-      `unified-api-contracts` WIP (its prediction-domain migration breaks every consumer's QG/pre-flight;
-      both commits are otherwise ready): (a) `deployment-service` watchdog prefix-threshold +
-      launcher 64GB/KEEP_VM change (QG was green pre-block; content restored in slot-2 tree after one
-      contention sweep — recovery pinned on local branch `aavev3-watchdog-fix-backup` = `70cf3231`;
-      a 2nd QG re-run at 07:0x went red with 35 failures ALL in dep-sensitive data-status/turbo
-      suites, none touching the fix's two files — the mid-window quickmerge ancestor cascade pulled
-      newer UTL/UAC into the workspace, so treat that red as upstream drift, not this diff, and
-      re-gate once the peer's UAC migration lands); (b) `instruments-service` streaming purge
-      script rewrite (the EXACT bytes that executed the purge — must land for provenance; IS QG is red
-      solely on the peer's UAC breakage, re-gate once UAC lands). After (a) lands: relaunch the
-      zombie-watchdog VM (kill `vm-zombie-watchdog-*` + re-run `launch-vm-zombie-watchdog.sh`) so the live
-      daemon picks up the new `defi-aavev3-bare-alias-purge-` 90-min idle threshold.
-- [ ] [CLEANUP] P3. After the durability re-check passes: per the script's own `Delete-when` lifecycle
-      marker, delete `instruments-service/scripts/purge_defi_aavev3_bare_alias_manifest_rows_2026_08_20.py`
-      + `deployment-service/scripts/vm/launch-defi-aavev3-bare-alias-purge-vm.sh` and remove the
-      `defi-aavev3-bare-alias-purge-` entries from `vm_prefix_registry.py` + `vm_zombie_watchdog.py`'s
-      `PREFIX_IDLE_THRESHOLDS` (one-offs are temporary; SSOT `/codex/06-coding-standards/script-homes.md`).
 - [ ] [DESIGN] P3. Decide whether `chain_env.py`'s `PROTOCOL_LAUNCH_DATES` should keep alias dict-keys at all vs.
       resolving aliases inside a `get_protocol_launch_date()`-style accessor, removing the defensive- canonicalisation
       burden from every future iterator-style consumer of the raw dict.
@@ -462,36 +426,3 @@ defect (phantom-venue emission) without touching a registry other code may depen
   as a Cloud Run Job instead of a raw GCE VM. Neither of these is a code-level "fix another bug" step — both are
   judgment calls for a human or a dedicated infra investigation.
 - **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-read against the freshest content (a peer session actively continued this same-day infra investigation to Attempt #11 while this audit was in flight — content re-verified post-conflict-recovery, not stale). The doc's own conclusion stands: every code-level fix this investigation could find is shipped and verified live, the remaining blocker is external (network/infra, not application code), and the [DATA] P1 purge + [DESIGN] P3 alias dict-key todos both stay genuinely non-worker-determinable. Doc stays `assigned_vm: NA`.
-- **2026-08-21 (interactive session, ROOT CAUSE FOUND + PURGE EXECUTED + VERIFIED — [DATA] P1 closed)**:
-  the "still-unexplained environment issue" was neither network nor GCS: **the external
-  `vm_zombie_watchdog` daemon deleted every attempt's VM** (Cloud-Logging audit: every delete's
-  `callerSuppliedUserAgent=python-requests/2.34.2` — the daemon's compute client; the VM's own
-  self-delete path uses the `gcloud` CLI and never ran). Trigger chain, fully measured on a supervised
-  `KEEP_VM` run (`defi-aavev3-bare-alias-purge-20260821-054457`, e2-highmem-8, SSH'd + 10s in-VM
-  sampler): the script's whole-frame `pd.read_parquet` of the index — actually **7.5GB compressed /
-  161,809,819 rows** (not the ~3GB the earlier entries assumed; it grew) — hit **54.5GB RSS 60s after
-  workload start**, livelocking the box in no-swap reclaim thrash; every in-VM GCS writer (heartbeat
-  sidecar's snap-gcloud spawns, UTL LogUploader, tee-wrapper watchdog subshell, even sshd) starved from
-  T+~1min; heartbeat blobs froze (all 8 GCE-visible attempts: last write ≈ wrapper start +1min, delete
-  at heartbeat-age 15-17min = the watchdog's default `--heartbeat-stale` window, this prefix having NO
-  `PREFIX_IDLE_THRESHOLDS` entry — the exact 2026-08-06 `canonical-migration-` failure mode repeated).
-  Correction to Attempt #9's narrative per measurement-claims discipline: its "WATCHDOG_TRACE uploaded
-  every tick for 18+ min" claim is contradicted by the surviving object (58 bytes = ONE tick, mtime
-  T+4.4min) — no attempt ever had a live GCS writer past the first minute of workload.
-  **Fixes**: (1) `vm_zombie_watchdog.py` `PREFIX_IDLE_THRESHOLDS["defi-aavev3-bare-alias-purge-"] =
-  (90, 360)` + launcher default e2-highmem-8 + `KEEP_VM=true` supervised mode (deployment-service,
-  QG-green; commit pending — see [SHIP] P1); (2) purge script REWRITTEN to stream pyarrow record
-  batches (measured ~2GB peak vs 54.5GB), Arrow-layer filtering (written bytes never round-trip
-  pandas), server-side exact-bytes snapshot, and a generation-pinned CAS upload closing the
-  consolidator lost-update race (instruments-service, commit pending — same [SHIP] P1; local
-  streaming-logic test green).
-  **Execution (same supervised VM, reset + scp'd script)**: dry-run 06:25-06:28 UTC — first completion
-  in 12 attempts: exactly 46,300 bare rows (zero drift), all `empty_confirmed`, zero collateral,
-  `written_at` = the single 2026-08-05T04:08:15.957401Z bulk stamp both ends, GATE all-True. `--apply`
-  06:29-06:38: §3a retention fresh-checked 604800s, snapshot
-  `_index/snapshots/pre_defi_aavev3_bare_alias_purge_20260821T063716Z.parquet` (7,533,484,626 bytes =
-  exact pre-purge size), CAS write against generation 1787293315808393 → **new generation
-  1787294319966516**. Independent fresh-download verification: `venue=AAVEV3` rows **0**, twin
-  `AAVE_V3` 3,652,348 (untouched), total 161,763,519 = before − 46,300 exactly — **PASS**. VM deleted
-  (keep=true contract). Remaining: the four open todos above ([DATA] P1 durability re-check, [SHIP] P1
-  blocked on a peer's in-flight UAC prediction-domain WIP, [CLEANUP] P3, [DESIGN] P3).

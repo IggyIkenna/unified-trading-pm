@@ -33,6 +33,7 @@ codex_ssots:
 related_plans:
   - ../active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
   - ../active/issues/instruments_schema_not_locked_versioned_2026_08_18.md
+  - ../active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md
   - ../active/issues/yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13.md
 last_updated: 2026-08-18
 locked_by:
@@ -102,12 +103,9 @@ healthy. **4 remain open** after the first `/plan-reconcile uac_master` pass (sa
   FALSE-CLEAN for ~811,200 wire-named CeFi objects because it never validated the filename instrument-id stem, only
   path structure. Highest-priority item in this epic — a machine oracle silently under-reporting violations at this
   volume is a correctness-gate failure, not a cosmetic bug.
-- **`order_state_machine_ssot_vs_uac_orderstatus_2026_07_31`** (P2) — **RESOLVED + ARCHIVED 2026-08-21** (see
-  `/plans/archive/2026_08/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`): the operator ruled
-  option A (advance the contract) 2026-08-06/12; `code_readiness_t4_execution_settlement_2026_08_19.md` landed the
-  full rollout — `execution-service@35f0bfb1b` renamed `OrderStatus.PENDING`/`.OPEN` → `.PENDING_NEW`/`.NEW` in all
-  18 true UAC-importing call sites, and `execution-service@69a9a088be` shipped the declared-but-never-written
-  verifier test.
+- **`order_state_machine_ssot_vs_uac_orderstatus_2026_07_31`** (P2) — `order-state-machine.md` documents a 9-state
+  `OrderState` that does not exist in UAC; the shipped contract is a 7-member `OrderStatus` missing states the docs
+  claim are authoritative.
 - **`uac_kamino_venue_reachability_cascade_regression_2026_08_15`** (P2) — **RESOLVED + ARCHIVED 2026-08-18** (see
   `/plans/archive/issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md`): `kamino`/`morpho` left the
   venue-coverage-cascade reachability baseline `unified-api-contracts@9b982906` (2026-08-17) — `DeFiAdapter` already
@@ -137,6 +135,12 @@ resolved + archived the same day — see Current state above). Workers pick up i
 ### [`yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13`](../active/issues/yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13.md)
 **status**: open · **estimate**: 0.2 cal AI-days (class: design)
 **title**: tradfi ohlcv_1h added to SOURCE_PRIORITY without an availability semantic — fixed as tick_timestamp; P3 latency re-check remains
+
+## P2 — useful; opportunistic
+
+### [`order_state_machine_ssot_vs_uac_orderstatus_2026_07_31`](../active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md)
+**status**: open
+**title**: order-state-machine.md is authoritative_for a 9-state OrderState that does not exist in UAC — shipped contract is 7-member OrderStatus
 
 ## P3 — backlog; revisit quarterly
 

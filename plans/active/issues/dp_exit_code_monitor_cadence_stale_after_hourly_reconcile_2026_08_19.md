@@ -221,15 +221,3 @@ backport precedent already used for this same job), not a same-session escalatio
   this file. Did not touch the terraform-drift todo (unrelated, still open, unchanged scope). No code
   changed this session — deploy-only fix, since the source fix from the prior session was already correct.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA-STALE (already-duplicated) — both remaining open todos (terraform
-  schedule backport + Cloud Build push-trigger wiring) are already extracted verbatim into
-  `cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md` item 1, but that batch sits `status: draft`
-  (per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" rule, awaiting explicit operator approval to flip
-  `active`) — not yet dispatchable. **Separately verified, worth flagging**: a DIFFERENT doc
-  (`deployment_service_prod_terraform_drift_2026_08_07.md`) claims (checkbox `[x]` "RESOLVED 2026-08-16") to have
-  already fixed this exact terraform schedule to `0 * * * *` — live-checked `origin/live-defi-rollout` in
-  `deployment-service` (`terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf`) and the `dp_exit_code_monitor_cron`
-  resource still declares `schedule = "*/5 * * * *"`, i.e. that other doc's claim does not match measured reality —
-  a claim ≤ measurement gap, not something this doc caused or can fix. Not edited here (outside this batch's
-  assigned doc list; flagging for operator/routing attention). This doc's own todos stay genuinely open and
-  correctly cited to batch19. Doc stays `assigned_vm: NA`. Cross-cutting tranche, batch 2 of 3.

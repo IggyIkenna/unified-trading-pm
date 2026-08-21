@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: ui-api-flow-validation-citadel-grade
-summary: 'Citadel-grade 3-layer testing framework: UI mock tests validate UX behavior, API mock-mode tests validate endpoint
-  contracts, real-flow tests validate end-to-end wiring. No critical UI interaction exists without executable test evidence.
-  Mock-only passes cannot represent production readiness.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-14'
+overview: 'Citadel-grade 3-layer testing framework: UI mock tests validate UX behavior, API mock-mode tests validate endpoint contracts, real-flow tests validate end-to-end wiring. No critical UI interaction exists without executable test evidence. Mock-only passes cannot represent production readiness.
+
+  '
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C4, deployment: D2, business: none}

@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: client-reporting-api — backfill entitlement enforcement on existing reporting routes
-summary: The new allocator routes (`allocators.py`) enforce `_enforce_entitlement(auth, client_id)` — external callers must
-  match their AuthContext.org_id, internal callers bypass. The existing reporting routes (`settlements.py`, `trades.py`,
-  `reporting/*`) trust the `client_id` query param blindly. Backfill the check across the old surface so external clients
-  cannot read each other's data.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -14,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-22'
+overview: The new allocator routes (`allocators.py`) enforce `_enforce_entitlement(auth, client_id)` — external callers must match their AuthContext.org_id, internal callers bypass. The existing reporting routes (`settlements.py`, `trades.py`, `reporting/*`) trust the `client_id` query param blindly. Backfill the check across the old surface so external clients cannot read each other's data.
 type: code
 locked_by: live-defi-rollout
 locked_since: 2026-04-22
@@ -147,7 +145,7 @@ Out of scope (no `client_id` parameter): `alerts.py`, `compliance.py`, `document
 - [x] Extract `_enforce_entitlement` helper from `allocators.py` into a shared helper in
       `client_reporting_api/core/entitlement.py`. Added `require_internal(auth)` companion. Same semantics;
       `allocators.py` now re-imports the shared helper. Both helpers carry
-      `# TODO: emit REPORTING_ENTITLEMENT_DENIED once UTL event is registered` (UTL is dirty upstream — deferred per
+      `# TODO: emit REPORTING_ENTITLEMENT_DENIED once UTL event is     registered` (UTL is dirty upstream — deferred per
       instructions).
 - [x] Apply to every (a) route. 36 routes wrapped; unit tests confirm cross-tenant read returns 403 (see
       `tests/unit/test_entitlement_backfill.py::TestExternalEntitlementOnReportingRoutes`).

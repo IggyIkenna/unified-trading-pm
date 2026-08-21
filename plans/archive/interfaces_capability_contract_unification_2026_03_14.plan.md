@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: interfaces-capability-contract-unification-2026-03-14
-summary: Unify architecture, import policy, capability registry, and runtime guardrails across all interface repos and their
-  consuming services. Standardize raw->validated->canonical flows, endpoint selection by mode/env/auth scope, and fail-fast
-  errors for unsupported mode/provider/key combinations.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-14'
+overview: 'Unify architecture, import policy, capability registry, and runtime guardrails across all interface repos and their consuming services. Standardize raw->validated->canonical flows, endpoint selection by mode/env/auth scope, and fail-fast errors for unsupported mode/provider/key combinations.
+
+  '
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D3, business: none}

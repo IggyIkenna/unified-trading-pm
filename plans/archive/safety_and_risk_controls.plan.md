@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: Safety and Risk Controls
-summary: 'Verify and implement production-grade safety controls for live trading. risk-and-exposure-service
-
-  has a PreTradeCheckEngine with position limit checks and risk_monitor. Gaps: no circuit breaker
-
-  pattern, no kill switch mechanism, pre-trade wiring into execution-service not verified, preflight
-
-  checks before live session start not confirmed. This plan wires PreTradeCheckEngine into the
-
-  execution flow, adds circuit breakers and kill switch, verifies preflight checks, and achieves
-
-  ≥70% test coverage on all risk modules. Covers audit S21.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -21,6 +11,19 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
+overview: 'Verify and implement production-grade safety controls for live trading. risk-and-exposure-service
+
+  has a PreTradeCheckEngine with position limit checks and risk_monitor. Gaps: no circuit breaker
+
+  pattern, no kill switch mechanism, pre-trade wiring into execution-service not verified, preflight
+
+  checks before live session start not confirmed. This plan wires PreTradeCheckEngine into the
+
+  execution flow, adds circuit breakers and kill switch, verifies preflight checks, and achieves
+
+  ≥70% test coverage on all risk modules. Covers audit S21.
+
+  '
 todos:
 - {id: risk-pretrade-wiring-verify, content: 'DONE 2026-03-08. Verified PreTradeCheckEngine wired via RiskChecker HTTP boundary in execution-service. kill_switch check runs BEFORE any order is submitted (503 when active). RiskChecker.check_instruction() delegates to check_pre_trade_risk() — the single HTTP boundary. Tests: tests/unit/engine/test_pretrade_wiring.py (10 tests): kill switch blocking, approved/rejected/error paths, payload construction.', status: completed}
 - {id: risk-position-limits-verify, content: 'DONE 2026-03-08. Position limit enforcement verified and tested: position size breach (qty>100 rejected), position value breach (qty*price>max_position_value rejected), gross exposure breach, capital limit breach, VaR limit breach (PRE_TRADE_VAR_BREACH emitted). Limits loaded from service config (not hardcoded). Tests: tests/unit/test_position_limits_breach.py (11 tests, all assertions on checks dict keys).', status: completed}

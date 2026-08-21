@@ -1,11 +1,7 @@
 ---
 doc_type: plan
 title: Schema Contracts Full Audit
-summary: 'Comprehensive audit of all schema/model definitions across all 60+ repos. Enforces that every schema lives in
-  unified-api-contracts (external API) or unified-internal-contracts (internal/domain), with no exceptions. Produces a violation
-  catalogue covering: misplaced schemas, duplicates, conflicts, orphaned schemas, and tier boundary issues. Feeds Plans
-  #11 (orphan utilization) and #11b (UAC normalization). Outputs: audit document + codex/cursor rules updates. Remediation
-  plan follows separately.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -16,6 +12,12 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-06"
+overview:
+  "Comprehensive audit of all schema/model definitions across all 60+ repos. Enforces that every schema lives in
+  unified-api-contracts (external API) or unified-internal-contracts (internal/domain), with no exceptions. Produces a
+  violation catalogue covering: misplaced schemas, duplicates, conflicts, orphaned schemas, and tier boundary issues.
+  Feeds Plans #11 (orphan utilization) and #11b (UAC normalization). Outputs: audit document + codex/cursor rules
+  updates. Remediation plan follows separately."
 todos:
   - {
       id: agent1-contract-repos,

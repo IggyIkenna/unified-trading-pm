@@ -147,11 +147,3 @@ root cause per the CORRECTION above, same session, ~90 minutes later.
 ## Progress Log
 
 - **context-scout 2026-08-20**: populated context_scope (5 entries).
-- **2026-08-21 (slot 17, interactive) — corroborating live evidence**: while investigating scheduled/escalation-
-  worker health (unrelated task), found `uptime` reporting **load average 46/54/60 on this 16-core VM** (~3-4x
-  overload) and **30GB of swap actively in use on a 30GB-RAM host**. Same "chronically contended shared host"
-  condition this doc and its sibling
-  [[agent_orchestrator_pytest_cov_silent_death_under_host_load_2026_08_20]] already track — cross-linked there in
-  more detail, not re-investigated independently here. Worth folding into whichever of this doc's 3 open
-  `[SCRIPT]` todos ends up auditing other repos' baselines, since a host running this hot makes EVERY repo's QG
-  memory/CPU baseline more likely to drift stale, not just agent-orchestrator's.

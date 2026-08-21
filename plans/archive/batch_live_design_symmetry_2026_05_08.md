@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: batch-live-design-symmetry
-summary: Re-audit "batch = live, only fill source differs" SSOT — service code paths, UI surfaces, events, analytics, manifest
-  schema, per-asset-group narratives, static enforcement. Gap-list vs the goal of total design-path symmetry, even at the
-  cost of feeling like overkill.
+summary:
 status: plan-spawned
 nature: record
 asset_group: [cross-cutting]
@@ -31,6 +29,10 @@ related:
     unified-trading-pm/plans/questions/codex_vs_citadel_infrastructure_specs_2026_05_08.md,
   ]
 created: 2026-05-08
+overview:
+  Re-audit "batch = live, only fill source differs" SSOT — service code paths, UI surfaces, events, analytics, manifest
+  schema, per-asset-group narratives, static enforcement. Gap-list vs the goal of total design-path symmetry, even at
+  the cost of feeling like overkill.
 type: question
 plan_spawned: 2026-05-10
 operator: ikenna

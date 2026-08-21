@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: ml-pipeline-revolution
-summary: P&L-aware training, confidence calibration, incremental learning, transfer learning, neural nets, multi-task training,
-  hierarchical models, feature importance feedback, Bayesian optimization
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -16,6 +15,7 @@ remaining_todos_consolidated_into: consolidated_ml_advanced_pipeline_2026_04_15
 superseded_by: [consolidated_ml_advanced_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
+overview: P&L-aware training, confidence calibration, incremental learning, transfer learning, neural nets, multi-task training, hierarchical models, feature importance feedback, Bayesian optimization
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

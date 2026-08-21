@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: instruments-service-metadata-refactor-2026-04-29
-summary: Extend InstrumentRecord with optional DeFi metadata fields, populate them in instruments-service adapters, refactor
-  MTDS DeFi handlers to consume instruments-store-defi parquets instead of re-querying The Graph subgraphs each cycle.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-29"
+overview:
+  Extend InstrumentRecord with optional DeFi metadata fields, populate them in instruments-service adapters, refactor
+  MTDS DeFi handlers to consume instruments-store-defi parquets instead of re-querying The Graph subgraphs each cycle.
 type: code
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: none, business: none }

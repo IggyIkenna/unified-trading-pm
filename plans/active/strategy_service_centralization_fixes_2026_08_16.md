@@ -262,128 +262,55 @@ Full findings, root cause, and evidence for every todo below live in the three s
       the generic protocol-level rate-index data it actually reads and states plainly it is NOT used for
       strategy-service risk gating (per-wallet Aave polling was never real). Landed via quickmerge, verified
       post-push ancestor of `origin/live-defi-rollout`.
-- [x] ✅ [BACKEND] P2. **Deletion half DONE 2026-08-21, `strategy-service@bfa778f4ab`; re-pointing is a
-      genuinely separate follow-up, correctly split out below.** The "wallet_id → (client_id, protocol)
-      mapping" concern this todo was originally gated on turned out to be MOOT, not a design call: a
-      full-repo grep found `derive_snapshot_from_lending()`/`update_wallet_health_from_lending()`
-      have ZERO real callers anywhere (the "called by DeFi adapters whenever they write fresh
-      lending positions" docstring was never true) — nothing populates `/positions/health`'s cache
-      via this path in production, so deleting it needs no client_id reconciliation at all. Deeper
-      finding while verifying the route's OTHER claimed consumer: `run_wallet_preflight_checks`
-      Layer-4's `position_health_fn` callback is real, but grepped execution-service end to end —
-      neither of its two call sites (`manual_instruction_submit.py`, `manual_instruction_helpers.py`)
-      ever passes it, so Layer 4 is always skipped in production today too. `/positions/health` is
-      dead on BOTH ends, not just the writer side this todo originally scoped. Deleted the 3 dead
-      functions + their 6 tests (5 real route tests remain, all passing); corrected the module
-      docstring's false "consumed by Layer-4" claim. **Re-pointing `/positions/health` onto
-      `margin_health_cache` is a real, separate follow-up** (new todo below) — `CachedMarginReading`
-      carries a raw HF/margin-usage `value`, not the richer `ltv`/`liquidation_threshold` split this
-      response shape wants; that schema mapping is a genuine design call, not invented here.
-- [ ] [BACKEND] P3. **NEW 2026-08-21 — Design the schema mapping to re-point `/positions/health` onto
-      `margin_health_cache.get_current_margin_health()`** instead of its now-permanently-empty local
-      cache. Needs: (a) how a raw HF-mode `value` (health factor, ~1.0-2.0) or MMR-mode `value`
-      (margin_usage_pct, 0-100) maps onto `PositionHealthSnapshot`'s `ltv`/`liquidation_threshold`/
-      `margin_ratio`/`maintenance_margin` split — they are not the same metric; (b) the route only
-      has `wallet_id` today, but `margin_health_cache` is keyed `(subject, scope)` where
-      scope=protocol — decide whether to add `protocol` as a required query param (simplest, matches
-      the cache's real shape) or attempt multi-protocol aggregation. P3 since nothing consumes this
-      route in production today (see the finding above) — low urgency, but worth closing since a
-      declared, seemingly-real endpoint that always 404s is a real trap for the next person who
-      wires a Layer-4 caller assuming it works.
-- [x] [BACKEND] P1. **NEW 2026-08-18 — Build the real live perp-margin sourcing adapter for `staked_basis.py`'s
-      LST_AS_MARGIN gate.** ✅ 2026-08-21 — **DERIBIT `MarginModel` registry gap CLOSED** —
-      unified-api-contracts@af14eee25f (`MarginModel.DERIBIT` + `LIQUIDATION_PARAMS_REGISTRY[DERIBIT]`,
-      mmr_warning/critical=70/85 placeholder — Deribit support docs confirm liquidation triggers at MM-ratio=100%
-      but publish no separate early-warning band, so this mirrors the same Bybit/OKX/dYdX/Hyperliquid placeholder
-      pending real Deribit-specific banding data), unified-trading-library@6d7f801273 (`DeribitMarginModel` class +
-      `_MODEL_REGISTRY` entry, parallel test case in `test_margin_and_liquidation.py`), strategy-service@5d3bd5a3b0
-      (`CEFI_PERP_MARGIN_MODELS`/`CEFI_PERP_VENUES` now carry `"deribit"`, parallel test case in
-      `test_cefi_margin_traceability.py`). `cefi_margin_tiers.py` already had `("deribit", "BTC"/"ETH")` tier data —
-      no change needed there.
-      **CORRECTION to this todo's own premise** (found while implementing, not assumed): `staked_basis.py`'s
-      consumer-side gate was **already fully wired** before this session — `get_current_margin_health(self.identity.client_id, config.perp_venue, now_utc=now_utc)`
-      exists at `staked_basis.py:836` (fail-closed on `None`/stale, matching this file's existing style) — the
-      "nothing feeds that scope" framing was accurate for the SCOPE, not for the consumer call site, which was not
-      new. The producer side is ALSO already-existing generic infra, not something built from scratch this
-      session: `venue_balance_tracker.py::emit_live_cefi_margin_events()` iterates `CEFI_PERP_VENUES` (now
-      including deribit) via `CefiVenueBalanceReader`/`AccountQueryClient`, which already routes to a real
-      `DeribitPositionAdapter` (`position/position_interface/adapters/deribit.py`, live via
-      `routing.py`/`factory.py`/`capabilities.py` — confirmed by grep, not assumed) — the ONLY blocker was the
-      missing `MarginModel.DERIBIT`/registry entries, now fixed. `record_margin_health`'s `_key()` lowercases
-      `scope`, so the `"DERIBIT"` (uppercase, from `catalog_staked_basis.py`'s `perp_venue` literal) vs `"deribit"`
-      (lowercase, from `CEFI_PERP_VENUES`) casing difference collides to the same cache key — no casing bug.
-      **Genuinely remaining gap (separate, NOT Deribit-specific, left open)**: `position/cli/handlers/monitor_handler.py`'s
-      reconciliation loop defaults `active_venues` to `["binance"]` and calls `emit_live_cefi_margin_events` with no
-      explicit `client_id` (defaults to `"default"`) — so in production this generic CeFi margin-emission loop
-      still needs per-client config naming the real client_id + venue list (incl. `"deribit"`/`"bybit"`) before the
-      cache is actually populated for a specific `LST_AS_MARGIN` archetype instance's own account. This affects
-      every CeFi venue equally (not something this todo introduced or was scoped to fix) — tracked as a new
-      follow-up below.
+- [ ] [BACKEND] P2. **NEW 2026-08-18 — Delete `positions_health.py`'s redundant `derive_snapshot_from_lending()` re-derivation once its wallet-keyed HTTP contract is reconciled with the client_id-scoped cache.** The
+      reconciliation todo's decision (above) and this doc's P0 done-note both said this deletion should follow
+      once the in-process read path exists — it now does (`margin_health_cache.py`), but `/positions/health`'s
+      route is keyed by `wallet_id` (consumed cross-service by execution-service's `run_wallet_preflight_checks`),
+      while the new cache is keyed by `client_id`+scope — deleting the redundant path requires resolving a
+      `wallet_id -> (client_id, protocol)` mapping first, a genuine small design decision (not build-and-ship),
+      to avoid silently breaking that cross-service HTTP contract. Only the hardcoded-threshold half of this todo
+      was fixed this session (see above) — the deletion half is this new todo. Done-when: `derive_snapshot_from_
+      lending()`/`update_wallet_health_from_lending()` are deleted and `/positions/health` reads the same generic
+      cache instead of re-deriving.
+- [ ] [BACKEND] P1. **NEW 2026-08-18 — Build the real live perp-margin sourcing adapter for `staked_basis.py`'s LST_AS_MARGIN gate.** Surfaced while shipping the P0 switch-over above: `staked_basis.py`'s health gate is
+      correctly wired to `get_current_margin_health(client_id, perp_venue, ...)` but nothing feeds that scope —
+      `perp_venue` (Deribit/Bybit) is a CeFi/perp-margin position, not a DeFi lending position, so
+      `AavePositionAdapter`/the DeFi wallet poller don't apply. Build a per-instance perp-margin read (posted LST
+      value + used margin at `perp_venue` for THIS archetype's own wallet/account — `CefiVenueBalanceReader`
+      (`venue_balance_tracker.py`) is the closest existing shape but is scoped to PBM's shared reconciliation-loop
+      account, not a specific archetype instance's wallet) that calls
+      `record_margin_health(client_id, perp_venue, ...)` via `unified_trading_library.margin_and_liquidation`'s
+      generic `MarginModelProtocol.compute()` (MMR-mode), analogous to `emit_margin_event_for_cefi()`. Real
+      prerequisite this surfaces: `MarginModel`/`LIQUIDATION_PARAMS_REGISTRY`/`CEFI_PERP_MARGIN_MODELS` (UAC +
+      `venue_balance_tracker.py`) has no `DERIBIT` entry today, even though it's one of `staked_basis.py`'s two
+      live perp venues (Deribit, Bybit) — add it (a UAC registry change + a strategy-service consumer bump).
       Done-when: `get_current_margin_health(client_id, perp_venue)` returns a real reading for a live
-      `LST_AS_MARGIN` slot, and DERIBIT has a registered `MarginModel`. **DERIBIT registration is done; the
-      end-to-end live reading still depends on the monitor-loop config gap above.**
-- [ ] [BACKEND] P2. **NEW 2026-08-21 — Configure `monitor_handler.py`'s CeFi reconciliation loop with the real
-      per-client `client_id` + full `active_venues` list (incl. `deribit`, `bybit`).** Surfaced closing the todo
-      above: `_run_reconciliation_cycle` calls `emit_live_cefi_margin_events(account_query_client=account_client,
-      venues=venues)` with no `client_id` kwarg (silently defaults to `"default"`) and `venues` defaults to
-      `["binance"]` unless `active_venues` is threaded in from service config — so even with DERIBIT now a
-      registered `MarginModel`, `record_margin_health(client_id, "deribit", ...)` never actually fires in
-      production until this is wired per-client. Not Deribit-specific (Bybit has the same gap today). Done-when:
-      the live monitor loop populates `get_current_margin_health(<real client_id>, "deribit")` for at least one
-      running `LST_AS_MARGIN` instance.
-- [x] [BACKEND] P2. ✅ SHIPPED 2026-08-21 — `strategy-service@f56af3b94e`. **Corrected premise**: no
-      `unhealthy_account_` feature key exists anywhere in `features-service` (confirmed by a full-repo grep before
-      building — this todo's "likely sourced from features-onchain-service" guess did not pan out), and no
-      on-chain event-scanner infra exists to build on cheaply either. Built instead, real not fabricated:
-      `strategy_service/position/core/aave_candidate_discovery.py` — a bounded, TTL-cached borrower watch-list
-      queried from Aave V3's public subgraph via the already-existing `UnifiedCloudConfig.thegraph_gateway_url`/
-      `thegraph_secret_name` Secret-Manager-backed key pool (the same infra `market-tick-data-service`'s
-      `TheGraphBaseClient` already draws from) — plus `strategy_service/position/core/
-      candidate_wallet_health_poller.py`, which polls each candidate's REAL on-chain health factor via the
-      existing `AavePositionAdapter.get_lending_position()` eth_call (same one `defi_health_poller.py` uses for
-      own-client wallets) and writes it to `margin_health_cache.record_margin_health(subject=<address>,
-      scope="aave_v3", ...)`. Wired into `monitor_handler.py`'s existing reconciliation loop alongside
-      `poll_all_defi_wallets`. New tests: `test_aave_candidate_discovery.py`, `test_candidate_wallet_health_poller.py`.
-      **Honest scope note — do not overclaim "both archetypes now live-functional"**: this inherits the SAME
-      real limitation `defi_health_poller.py`'s own docstring already documents — no caller in strategy-service
-      resolves the Alchemy RPC secret in production today, so a live poll attempt raises inside
-      `resolve_defi_rpc_url()` (caught per-candidate, logged, never fabricated) until that secret-wiring lands.
-      Ethereum/Aave V3-only, matching `defi_health_poller.py`'s own documented scope limit. Done-when met
-      mechanically (discovery→poll→cache wiring is real and unit-tested end to end with mocked HTTP/eth_call),
-      but the full chain has NOT been verified against a live discovered candidate address with real RPC
-      credentials in production — that verification is gated on the pre-existing Alchemy-RPC-secret-wiring gap,
-      not new work from this todo.
-- [ ] [BACKEND] P2. **Corrected 2026-08-21 — the "delete dead" half of this todo is WRONG, the
-      source issue doc's claim needs its own fix.** `strategy_service/config.py::load_config`/
-      `load_strategy_config` are NOT dead: grepped `tests/` fresh and found 6 files with real,
-      substantial fixture usage (`test_order_batch_storage_expanded.py`,
-      `test_risk_monitor_edge_cases.py`, `test_order_batch_storage_load.py`,
-      `test_risk_monitor_expanded.py`, `test_utility_manager_expanded.py`,
-      `test_order_batch_storage.py` — 25+ call sites total) plus a dedicated
-      `test_default_templates_integration.py` that end-to-end validates
-      `load_strategy_config()` loading every real default template. Deleting either function
-      would break all of it. `per_client_config_surface_keying_and_missing_axes_2026_08_12.md`'s
-      own "zero callers found anywhere in the tree" claim (line 368) was wrong — did not grep
-      `tests/`, only production code. **Genuinely remaining scope**: unify `ConfigLoader.load_config`'s
-      `configs/{strategy_id}.json` vs. `load_strategy_config_gcs`'s
-      `configs/strategies/{strategy_id}.json` behind one loader building on
-      `get_strategy_params()`'s existing resolution seam — that half is still real and
-      unaddressed, `load_config`/`load_strategy_config` just are not part of the deletable set
-      alongside it. Details:
-      [per_client_config_surface_keying_and_missing_axes_2026_08_12](/plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md)
-      (needs its own line-368 correction — not done here, flag for the next pass on that doc).
-- [x] [BACKEND] P2. Audit every hardcoded venue literal in `catalog_trading.py`/`catalog_directional.py` against
-      each named venue's actual current capabilities — pm@0fa40df01d. Findings recorded in
-      [venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16](/plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md):
-      2 real drift findings (CME event-contract root symbols `ECES`/`ECBTC` unconfirmed against CME's live symbol
-      directory; Phoenix listed as a live spot/CLMM venue is stale — Phoenix Legacy deprecated, Phoenix Perpetuals
-      is private-beta only). Everything else checked (Deribit, Hyperliquid, dYdX, CME futures, Camelot,
-      Kalshi/Polymarket) confirmed accurate.
+      `LST_AS_MARGIN` slot, and DERIBIT has a registered `MarginModel`.
+- [ ] [BACKEND] P2. **NEW 2026-08-18 — Build a candidate-wallet liquidation-health scanner.** Surfaced while
+      shipping `liquidation_capture.py`/`liquidation_bundle.py`'s switch-over above: both archetypes now correctly
+      read `get_current_margin_health(subject=<candidate wallet>, scope=<protocol>)`, but nothing populates that
+      cache for third-party wallets — this needs a discovery/watch-list mechanism (which candidate addresses to
+      poll, likely sourced from features-onchain-service's `unhealthy_account_` feature keys or an on-chain event
+      scanner) plus a periodic poll per watched wallet calling `record_margin_health()`, analogous in shape to the
+      DeFi wallet poller (`defi_health_poller.py`) but keyed by discovered candidate address instead of a static
+      per-client config. Until this lands both archetypes correctly never fire (fail-closed), which is honest but
+      means neither is live-functional yet. Done-when: a live scanner populates
+      `get_current_margin_health(subject=<address>, scope=<protocol>)` for at least one discovered candidate.
+- [ ] [BACKEND] P2. Unify the two divergent GCS config-loader path conventions —
+      `ConfigLoader.load_config`'s `configs/{strategy_id}.json` vs. `load_strategy_config_gcs`'s
+      `configs/strategies/{strategy_id}.json` — behind one loader, building on `get_strategy_params()`'s existing
+      resolution seam. Delete the dead local-YAML `config.py::load_strategy_config` path and its unused
+      `load_config` alias. Details:
+      [per_client_config_surface_keying_and_missing_axes_2026_08_12](/plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md).
+- [ ] [BACKEND] P2. Audit every hardcoded venue literal in `catalog_trading.py`/`catalog_directional.py` against
+      each named venue's actual current capabilities (does OKX/Bybit/Hyperliquid/CME/IBKR/etc. genuinely support
+      what each row assumes, today) — record findings as a new dated section in
+      [venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16](/plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md),
+      correcting any drift found. Useful regardless of the next todo's outcome.
 - [ ] [OPERATOR] P2. Decide the venue-eligibility generalization shape — extend `venue_capabilities.py` to every
-      strategy family, or accept the hardcoded catalog literals as deliberate. **Not fully clean**: the prior
-      todo found 2 real drift items (CME event root symbols, Phoenix) needing a fix either way, independent of
-      this decision. If generalizing, add a regression check so a catalog row whose venue lacks the assumed
-      capability fails loudly at build/test time rather than shipping a slot that can't actually trade.
+      strategy family, or accept the hardcoded catalog literals (now verified accurate by the prior todo) as
+      deliberate. If generalizing, add a regression check so a catalog row whose venue lacks the assumed capability
+      fails loudly at build/test time rather than shipping a slot that can't actually trade.
 - [ ] [OPERATOR] P2. Design the mode-aware dispatch (batch / live / paper-testnet / paper-live) for the
       centralized DeFi position-risk read, once the earlier routing/switch todos land.
 - [ ] [BACKEND] P3. Update
@@ -449,30 +376,14 @@ logic and that no second archetype could ever want. That must be stated, not ass
 - [ ] [OPERATOR] P1. **Rule on the ambiguous ones** — any candidate where two destinations are defensible, or where
       migrating means merging two registries that may be legitimately orthogonal (the `VENUE_CHAIN_MAP` case above is
       the type specimen). Escalate as a list with a recommendation each, not one at a time.
-- [x] ✅ [BACKEND] P1. **Fix the exemplar — DONE 2026-08-21, `strategy-service@1ea9d0b170`.**
-      `_STAKING_PROTOCOL_CHAIN` was already gone (shipped earlier this session,
-      `strategy-service@8a7f80e8`) — replaced with UAC's `get_chain_for_protocol()`. Verified live
-      (`python -c` against the real registry, not assumed) that all 5 originally-cited "missing"
-      protocols now resolve correctly: `rocketpool`→ethereum, `coinbase_staking`→ethereum,
-      `eigenlayer`→ethereum, `jito`→solana, `marinade`→solana — the gap this todo was filed against
-      is fully closed. `_ALLOWED_CHAINS` (a 3-chain trading-scope allow-list, not a protocol→chain
-      map) verdicted STAYS LOCAL: grepped every archetype under `engine/strategies/v2/`, it's the
-      only file with anything shaped like this — no second archetype wants it — and it already cites
-      its own codex spec (`carry-staked-basis.md § allowed_chains`). Added an explicit
-      "stays local, here's why" comment to the constant itself rather than leaving the verdict
-      implicit, per this todo's own done-when bar.
+- [ ] [BACKEND] P1. **Fix the exemplar.** Resolve `_STAKING_PROTOCOL_CHAIN` and `_ALLOWED_CHAINS` in
+      `staked_basis.py` onto whatever W2 rules for venue→chain, adding the 5 protocols UAC currently lacks
+      (rocketpool, coinbase_staking, eigenlayer, jito, marinade) to the SSOT rather than to a strategy file.
+      Done-when: `staked_basis.py` declares neither constant and every staking archetype reads the same source.
 - [ ] [BACKEND] P2. **Gate the regression.** A check that fails when a new module-level reference-shaped constant
       naming venues/chains/tokens/protocols appears under `engine/strategies/`. Baseline it at the post-migration
       count and ratchet DOWN only, per the workspace's shrinking-baseline convention — a hard zero would block
       legitimately-local constants.
-
-- [ ] [BACKEND] P2. **Collapse the per-domain config-reloader and S2S-auth boilerplate** (added 2026-08-21, provenance
-      `/plans/active/cross_repo_duplication_cleanup_2026_08_21.md`). `strategy_service/{pnl,position,risk}/auth_s2s.py`
-      are byte-identical (shasum-verified) — collapse to one shared module. Separately, adopt UTL
-      `ConfigReloaderBase` for the per-domain `config_reloaders.py` copies; UTL's own docstring states the base class
-      exists to replace this boilerplate, and the equivalent files in features-service measure 3 differing lines out of
-      147 between domains. Preserve every genuine per-domain difference — the goal is deleting the identical part, not
-      flattening real variation. SSOT: `/codex/06-coding-standards/config-reloader-pattern.md`.
 
 ## Progress Log
 

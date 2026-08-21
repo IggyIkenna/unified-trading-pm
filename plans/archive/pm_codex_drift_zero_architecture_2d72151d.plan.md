@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: PM Codex Drift Zero Architecture
-summary: A cohesive flow from PM (manifest + active plans) to Codex (target-state docs) to service implementation, with
-  zero drift. Problem → Target → Solution in staged phases, rollable by agents.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-04'
+overview: A cohesive flow from PM (manifest + active plans) to Codex (target-state docs) to service implementation, with zero drift. Problem → Target → Solution in staged phases, rollable by agents.
 todos:
 - {id: phase-0-manifest-sync, content: 'Phase 0: Add PM sync-manifest-versions.yml (repository_dispatch); update version-bump workflows; remove broken manifest steps', status: completed}
 - {id: phase-0b-cleanup, content: 'Phase 0b: Codex + PM cleanup; fix paths, merge archives, create SSOT indexes', status: completed}

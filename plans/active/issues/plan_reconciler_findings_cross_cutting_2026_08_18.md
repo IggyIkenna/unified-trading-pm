@@ -379,10 +379,3 @@ run's 174-doc snapshot is still current.
   disjoint skill's remit, needs external artifact access, or carry explicitly-flagged genuine ambiguity) stay
   KEEP-NA. This doc's own `assigned_vm: NA` unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — this is a plan_reconciler
-  run-log doc; its 4 remaining open items are a routing note (a DIFFERENT doc's assigned_vm reclassification,
-  explicitly deferred to na-eligibility-audit's own remit — not actionable on this doc), a diagnostic item requiring
-  a closer judgment read of another doc's block-reason validity, an already-resolved re-confirm-only marker, and an
-  item blocked on external `claude.ai` artifact access outside this audit's tool surface. None are bounded/
-  deterministic AO-dispatch work in isolation from the run-log doc's own narrative; correctly designed as a punch-
-  list for a future `/plan-reconcile` pass, not this skill's population.

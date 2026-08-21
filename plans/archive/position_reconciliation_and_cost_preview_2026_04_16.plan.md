@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: position-reconciliation-and-cost-preview
-summary: Target vs actual position reconciliation (Observe tab), cost-aware close/reduce previews (Trading Terminal), and
-  client reporting close-all
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-16'
+overview: Target vs actual position reconciliation (Observe tab), cost-aware close/reduce previews (Trading Terminal), and client reporting close-all
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D3, business: B3}

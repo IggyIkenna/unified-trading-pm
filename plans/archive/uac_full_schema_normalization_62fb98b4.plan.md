@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: UAC Full Schema Normalization
-summary: Exhaustive task specification for normalizing all external API contracts across 60+ venues into canonical formats,
-  with full matrix generation, live-batch symmetry, and complete field coverage.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-06'
+overview: Exhaustive task specification for normalizing all external API contracts across 60+ venues into canonical formats, with full matrix generation, live-batch symmetry, and complete field coverage.
 todos: []
 isProject: false
 ---

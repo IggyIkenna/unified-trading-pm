@@ -360,11 +360,3 @@ confirmation items, same class) stay held pending this plan's progress. This pla
 unclaimed as of this note — whoever picks it up next should know 3 tools' outputs are already ready to bind
 (`readiness-state-dump`'s `row_grain`/`coverage_source_grain` split + `execution_instruction` wiring,
 `honest-coverage-dump`'s `dedup_stats`), and that T5's own artefact work is blocked waiting on this landing.
-
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — brand-new (2026-08-20),
-  P0, client-facing counterparty-disclosure content-authoring plan requiring "audited as a design"-level depth
-  across execution/recoverability documents plus the seven existing HTMLs, sourced from a readiness ledger this
-  plan is itself building. Same doc explicitly named in
-  `walkthrough_file_shared_checkout_repeated_content_loss_2026_08_20.md` as the active work whose shared-checkout
-  contention caused 3 real content-loss incidents in one session — high-touch, high-judgment content work, not
-  bounded/mechanical AO-dispatch territory.

@@ -93,19 +93,10 @@ stale content.
       "LDR's OWN most recent commit" — a comment edit may fall outside the guard's file-content comparison). Fix
       the backmerge (or document the guard's scope limit) so a comment-only `.github` change survives a promote →
       backmerge round-trip. Repo: unified-trading-ci (+ unified-trading-pm if branch-health.yml is involved).
-- [x] ✅ [CI] P2. **EXTRACTED 2026-08-21** — re-ship the 3 blocked repos once their QG reds clear
-      (features-service RB-5e5dbb39, unified-trading-library RB-09ca4f33, execution-service RB-70f96454).
-      Extracted to `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch (na-eligibility-audit,
-      cross-cutting tranche, batch 2 of 3).
-
-## Progress Log addendum
-
-- **na-eligibility-audit 2026-08-21**: RECLASSIFY (per-todo split) — todo 2 (re-ship the 3 QG-blocked repos once
-  green) is a bounded, deterministic-outcome task; extracted to
-  `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`. Todo 1 (reproduce + root-cause the backmerge
-  silently reverting a comment-only change) stays `assigned_vm: NA` — a genuine root-cause investigation into
-  live CI/promotion pipeline integrity with an uncertain fix shape. Doc's own `assigned_vm: NA` unchanged.
-  Cross-cutting tranche, batch 2 of 3.
+- [ ] [CI] P2. **Re-ship the 3 blocked repos once their QG reds clear** (features-service RB-5e5dbb39,
+      unified-trading-library RB-09ca4f33, execution-service RB-70f96454): fresh-pull, re-apply the caller-stub
+      comment fix, QG green → quickmerge `--agent`. Each still carries the local commit from 2026-08-20's first
+      attempt. Repos: features-service, unified-trading-library, execution-service.
 
 ## Progress Log
 

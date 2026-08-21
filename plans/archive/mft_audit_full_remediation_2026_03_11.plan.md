@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: mft-audit-full-remediation
-summary: Full remediation of all 15 FAILs and 20 WARNs from the 2026-03-11 Citadel-grade MFT infrastructure audit. Covers
-  float price precision, CI/CD divergence, deployment-api tier boundary (HTTP), cloud abstraction compliance, schema governance,
-  code quality, and governance/compliance gaps.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
+overview: Full remediation of all 15 FAILs and 20 WARNs from the 2026-03-11 Citadel-grade MFT infrastructure audit. Covers float price precision, CI/CD divergence, deployment-api tier boundary (HTTP), cloud abstraction compliance, schema governance, code quality, and governance/compliance gaps.
 todos:
 - {id: float-fields-defi-api-contracts, content: §5.1a/b — Replace float price/qty fields with Decimal in unified-defi-execution-interface/connectors/cefi_base.py (17 fields) and unified-api-contracts/canonical_mappings.py (4 fields in ContractSpec), status: done}
 - {id: import-error-fallbacks, content: '§8.3 — Remove try/except ImportError fallbacks in deployment-service/live_deployment.py:306-307,359-360 — fail loud at module import time', status: done}

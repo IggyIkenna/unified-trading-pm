@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: website-content-refresh-2026-03-13
-summary: 'Refresh odum-research-website content: About page with 6 team member stubs (photos TBD), services copy from presentations
-  (regulatory umbrella, investment management, multi-asset), updated traction data. Odum tagline preserved.'
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
+overview: 'Refresh odum-research-website content: About page with 6 team member stubs (photos TBD), services copy from presentations (regulatory umbrella, investment management, multi-asset), updated traction data. Odum tagline preserved.'
 type: mixed
 epic: epic-website
 superseded_by: website_master_2026_03_13

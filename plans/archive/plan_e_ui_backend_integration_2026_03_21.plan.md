@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: plan-e-ui-backend-integration
-summary: UI integration with unified-trading-api gateway. TS type generation, proxy config, auth header, React Query hook
-  rewire, page migration waves (26 pages with inline mocks), inline mock file deletion, WebSocket client, MSW alignment,
-  UI config CRUD, UI scenario panel, and external testnet deployment.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
+overview: UI integration with unified-trading-api gateway. TS type generation, proxy config, auth header, React Query hook rewire, page migration waves (26 pages with inline mocks), inline mock file deletion, WebSocket client, MSW alignment, UI config CRUD, UI scenario panel, and external testnet deployment.
 type: code
 epic: epic-code-completion
 locked_by:

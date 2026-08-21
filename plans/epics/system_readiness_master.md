@@ -747,8 +747,9 @@ two ways: we host it, or they run our container themselves. Surfaced while audit
       A direct service-to-service call is explicitly out — this is a T4 service boundary.
 - [ ] [BACKEND] P0. **Features-service → execution subscription.** Execution subscribes to only the feature groups
       it needs, not a broadcast of everything features-service produces.
-- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-21 — execution-service@c6b8bd02ad. Every strategy-emitted instruction is persisted one-by-one through the existing manifest/shard pipeline; Evidence: bash scripts/quality-gates.sh --no-fix (8877 passed, 22 skipped, 1 xpassed; isolated quickmerge gate green).
-      Queryable through the existing BigQuery external-table pattern; distinct from market-tick-data aggregation (W2/W3), a separate axis.
+- [ ] [BACKEND] P0. **Every strategy-emitted instruction sinked to GCS, one by one, for audit and analysis** —
+      reuse the existing manifest/shard pipeline rather than inventing a parallel one; queryable via BigQuery
+      external tables. Distinct from market-tick-data aggregation (W2/W3), which is a separate axis.
 - [ ] [BACKEND] P0. **Three execution-service deployment topology, one schema, protocol per deployment**:
       internal (Pub/Sub, our own strategy-service), external-automated (registered/allow-listed clients, HTTP or
       WebSocket depending on the latency bar), manual (DART or an external trading UI/API, HTTP — manual trading
@@ -820,7 +821,7 @@ delta/gamma repricing infra; generalizes beyond MEV to market-making and arb-leg
 the self-inflicted-conflict guard repeatedly) · `unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17` (P1) ·
 `git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17` (P3) ·
 `ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17` (P2) ·
-`ao_dashboard_activity_log_role_vocabulary_gap_2026_08_18` (P2) ·
+`ao_watchdog_scheduled_timer_wiring_2026_08_17` (P2) · `ao_dashboard_activity_log_role_vocabulary_gap_2026_08_18` (P2) ·
 `na_eligibility_*` (3) · `docs_reconcile_findings_2026_08_17` (P2) ·
 `plan_reconciler_findings_{cefi,tradfi}_2026_08_18` · `sit_stamp_dispatch_503_false_positive_2026_08_17` (P3) ·
 `promote_pr_non_supersession_after_greeks_service_fix_2026_08_18` (P3) ·

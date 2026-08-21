@@ -104,56 +104,20 @@ superseded_by:
       path during the loss windows (`~19:00-19:32` local, 2026-08-20) — `ps aux` during the incident showed 16
       claude-matching processes with this slot's cwd; identify which, if any, ran a git write operation against this
       specific file.
-- [x] ✅ [BACKEND] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` item 1
-      (na-eligibility-audit 2026-08-21, cross-cutting tranche). **Add a pre-write safety snapshot for
-      agent-authored client-artefact edits** — before a single-file structure-pass agent begins editing a large,
-      contested file, snapshot its current state (content-hashed, timestamped) to a location outside the shared
-      working tree, so a repeat of loss (2)/(3) has a designed recovery path instead of a lucky scratchpad find.
+- [ ] [BACKEND] P1. **Add a pre-write safety snapshot for agent-authored client-artefact edits** — before a
+      single-file structure-pass agent begins editing a large, contested file, snapshot its current state
+      (content-hashed, timestamped) to a location outside the shared working tree, so a repeat of loss (2)/(3) has a
+      designed recovery path instead of a lucky scratchpad find.
 - [ ] [REVIEW] P1. **Investigate whether `platform-external-api-walkthrough.html` specifically is unusually
       contended** — it is the largest of the five client artefacts (now ~839KB) and was the target of both losses (2)
       and (3); check whether size, edit frequency, or being the T7b reconciliation target made it a hotspot other
       files in the same commits were not.
-- [x] ✅ [DOC] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` item 2
-      (na-eligibility-audit 2026-08-21, cross-cutting tranche). **Add this incident to
-      `/codex/05-infrastructure/per-tab-worktrees.md`** as a concrete case study alongside the existing
-      multi-agent-collision documentation, since the existing guidance did not anticipate working-tree loss
-      occurring independently of a git operation this session performed.
+- [ ] [DOC] P2. **Add this incident to `/codex/05-infrastructure/per-tab-worktrees.md`** as a concrete case study
+      alongside the existing multi-agent-collision documentation, since the existing guidance did not anticipate
+      working-tree loss occurring independently of a git operation this session performed.
 
 ## Progress Log
 
 **2026-08-20 — filed.** All three losses were fully recovered within the same session — nothing is currently missing.
 Filed because the pattern (not the individual incidents) needs a real fix; recovering by luck three times in one
 session is not sustainable for the remaining artefact work still in flight.
-
-- **2026-08-21 (slot-2 interactive, operator-reported)**: RECURRENCE — operator noticed "most sections entirely
-  gone". Root cause: `unified-trading-pm@cef0bcfa8e` ("fix: restore artefact claim-ownership baseline",
-  slot-32·planning AO escalation agt-ea249c, 2026-08-20 19:54Z) reverted the walkthrough from 19,180 to 17,878
-  lines, deleting FIVE whole sections (External API reference; Shard-level coverage drilldown; Trade the full
-  stack — strategy styles; The instrument universe; Execution algorithms in depth) that three commits that
-  evening had just recovered/added — 1,312 lines deleted vs 9 added. Recovered by restoring the file wholesale
-  from `67ee71b773` (last good); the 9 dropped lines were minor cross-reference tweaks, re-derivable in T5's
-  re-derive pass. The AO "claim-ownership baseline restore" escalation path is doing blind file-level reverts on
-  this artefact — it should be constrained to claim-marker edits, never whole-file baselines.
-- **2026-08-21 addendum**: `cef0bcfa8e` clobbered `platform-api-reference.html` the same way (3,457 → 2,169
-  lines — the endpoint enumeration for reporting/clients/exports APIs deleted). Restored from `2340bd96b5` with
-  the one later legitimate addition (WITHDRAW type-support row from `f28330fafc`) re-applied. The other three
-  state-fabric artefacts touched by `cef0bcfa8e` have NOT been audited for the same loss — check
-  platform-architecture.html, strategy-service-deep-dive.html, strategy-service-walkthrough.html before wave 2.
-- **2026-08-21 sweep completed**: ALL FIVE artefacts were clobbered by `cef0bcfa8e`, now all restored from
-  `2340bd96b5`: platform-architecture.html (10,189L, was 9,502), strategy-service-deep-dive.html (4,582L, was
-  3,848), strategy-service-walkthrough.html (3,183L, was 2,768), plus the two restored earlier. Small real
-  additions the revert carried are dropped by the wholesale restore and MUST be re-derived in T5's pass:
-  deep-dive gained ~10 lines (CCXT venue-API/withdrawal route rows; P&L-attribution route-inventory rows citing
-  position/api/routes/risk.py, margin_health.py, pnl/api/main.py, pnl_series.py); walkthrough ~9 (cross-refs +
-  external_instruction_api auth-pending note); architecture 1; ss-walkthrough ~6. All content-shaped snippets
-  are derived-from-source and regenerate in the wave-2 re-derive.
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): RECLASSIFY (per-todo split). Extracted 2 of
-  4 open items (the pre-write safety snapshot mechanism, the codex case-study addition) to
-  `cross_cutting_satellite_ao_dispatch_batch22_2026_08_21.md` items 1-2 — both are bounded engineering/doc work with
-  no open design call. The other 2 items (determine the actual working-tree-reset mechanism; investigate whether
-  this specific file is unusually contended) stay on this doc, `assigned_vm: NA` — genuine root-cause investigation
-  with no predetermined outcome, requiring live process/`git` forensics on a still-contended checkout. **Note**: the
-  RECURRENCE entries immediately above (2026-08-21, slot-2) are independent confirmation of this issue doc's own
-  thesis — the SAME file-loss pattern struck the actual walkthrough HTML files days after this doc was filed,
-  reinforcing that todo 1 (root-cause the reset mechanism) and the extracted safety-snapshot item are not
-  hypothetical.

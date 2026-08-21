@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: data_status_drilldown_shard_atom_alignment_2026_05_07
-summary: Realign the deployment-ui data-status drill-down hierarchy + per-shard download with the codex shard-key matrix
-  per asset_group; add MTDS CLI flags for per-shard targeting + recovery.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -17,6 +16,9 @@ related:
     /plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md,
   ]
 created: "2026-05-07"
+overview:
+  Realign the deployment-ui data-status drill-down hierarchy + per-shard download with the codex shard-key matrix per
+  asset_group; add MTDS CLI flags for per-shard targeting + recovery.
 type: code
 epic: epic-deployment
 completion_gates: { code: C5, deployment: D3, business: none }
@@ -305,7 +307,7 @@ on whatever flags exist today as a degenerate case).
       documented + tested.
 - [x] [deployment-api] P0 (NEW 2026-05-07 — shipped deployment-api@a86e40a). Rewrite `_build_chain_breakdown()` in
       `data_status_service.py` to count true leaf shards. Numerator = captured manifest rows in the chain; denominator =
-      `Σ over chain venues of (expected_dates × distinct (data_type, instrument_id) leaves observed for that venue)`.
+      `Σ over chain venues of (expected_dates × distinct (data_type, instrument_id) leaves observed for that     venue)`.
       Refactored into `_venue_expected_dates_for_chain` + `_shards_expected_for_chain` helpers (C901-clean).
       Backward-compat: `dates_found` / `dates_expected` fields preserved. New canonical fields: `shards_found` /
       `shards_expected`; `completion_pct` derives from shard ratio. 4 unit tests in `TestBuildChainBreakdownShardMath`
@@ -315,7 +317,7 @@ on whatever flags exist today as a degenerate case).
       days clip exactly like pre-chain-genesis already does. Falls through unchanged for pending-investigation pairs
       (chain-genesis over-clip is the safe fallback).
 - [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). New module `data_status_hierarchical.py` with
-      `get_hierarchical_drilldown(service, asset_group, window_start, window_end, filters, expand_to_depth)`
+      `get_hierarchical_drilldown(service, asset_group, window_start, window_end,     filters, expand_to_depth)`
       returning a tree shaped per the codex shard atom. Each leaf carries
       `{captured, empty_confirmed, attempted_failed, total, completion_pct, row_key, children, is_leaf}`. Reads the
       manifest once via `read_availability_index`; axis order from `SHARD_AXIS_MATRIX[(service, asset_group)]`.
@@ -347,7 +349,7 @@ on whatever flags exist today as a degenerate case).
 - [x] [deployment-ui] P0 (shipped deployment-ui@209a41a). New `HierarchicalShardDrilldown.tsx` component (~250 LOC).
       Recursive: each level renders a list of expandable items; on first expand fires `getHierarchicalDrilldown(...)`
       with the parent's `row_key` as filter dict. AbortController on every fetch. Each row shows
-      `axis=value | captured/total | completion_pct | empty/failed badges`. Leaf rows un-clickable. Top-level fetch
+      `axis=value |     captured/total | completion_pct | empty/failed badges`. Leaf rows un-clickable. Top-level fetch
       on mount with `expand_to_depth=1`. Plus `client.ts` API wrapper `getHierarchicalDrilldown` +
       `getDrilldownSupportedPairs` + `DrilldownNode` / `DrilldownResponse` / `DrilldownPair` TypeScript interfaces (~100
       LOC).
@@ -586,7 +588,7 @@ cannot reach the truncated tail. **Two related shape problems**:
       `availability-manifest-and-data-status.md` § "Rollup-side metric inconsistency 2026-05-07 — open finding"). The
       offline rollup at `gs://*-data-status-rollups/{service}/full.json.gz` emits per-(combined-venue) DEFI entries
       where `dates_found` is non-zero for venues that have ZERO matching manifest rows (e.g.
-      `AAVE_V3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0, empty_confirmed: 0, attempted_failed: 0}`).
+      `AAVE_V3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0,     empty_confirmed: 0, attempted_failed: 0}`).
       The "31" comes from a different source than `capture_status_counts`. Per the codex finding, the rollup worker's
       per-(combined-venue) `dates_found` must derive from the manifest row count, not from the expected denominator.
       Owner: data-status multi-axis stream per `infrastructure_master_2026_05_07.md`.

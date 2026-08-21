@@ -1,11 +1,7 @@
 ---
 doc_type: plan
 title: UCI Cloud Abstraction Complete
-summary: 'Complete cloud-provider abstraction so a single CLOUD_PROVIDER env var switches the entire system between GCP
-  and AWS with zero code changes. All cloud SDK usage lives exclusively inside unified-cloud-interface providers. UCI exposes
-  StorageClient, SecretClient, QueueClient, AnalyticsClient, CacheClient, ComputeClient with auto-provider selection. UTL
-  parallel cloud layer deleted. Terraform + bootstrap scripts in deployment-service. CLOUD_PROVIDER: gcp | aws | local.
-  Terraform is exempt.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -15,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-06'
+overview: 'Complete cloud-provider abstraction so a single CLOUD_PROVIDER env var switches the entire system between GCP and AWS with zero code changes. All cloud SDK usage lives exclusively inside unified-cloud-interface providers. UCI exposes StorageClient, SecretClient, QueueClient, AnalyticsClient, CacheClient, ComputeClient with auto-provider selection. UTL parallel cloud layer deleted. Terraform + bootstrap scripts in deployment-service. CLOUD_PROVIDER: gcp | aws | local. Terraform is exempt.'
 todos:
 - {id: p0-service-violations, content: 'Fix direct SDK imports in services (features-cross-instrument, hyperliquid_adapter, deployment-api redis).', status: completed}
 - {id: p0-script-violations, content: Fix direct GCS/BQ SDK imports in deployment-service scripts and ml-training-service scripts., status: completed}

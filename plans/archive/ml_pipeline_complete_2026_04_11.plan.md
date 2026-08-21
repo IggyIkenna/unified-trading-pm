@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: ml-pipeline-complete
-summary: Complete ML training pipeline for all categories — Sports (family-based), TradFi (market-hours-aware), CEFI stubs
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-14'
+overview: Complete ML training pipeline for all categories — Sports (family-based), TradFi (market-hours-aware), CEFI stubs
 type: code
 epic: epic-code-completion
 completion_gates: {code: C4, deployment: none, business: none}

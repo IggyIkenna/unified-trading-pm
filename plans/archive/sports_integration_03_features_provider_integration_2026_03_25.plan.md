@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: sports-integration-03-features-provider-integration
-summary: 'FSS reads reference data + cross-provider mappings from instruments-service GCS,
-
-  odds data from MTDS GCS. Uses mappings to resolve provider-specific IDs (footystats_id,
-
-  understat_name) and calls features-interface adapters for enrichment data.
-
-  FSS never fetches reference data directly from APIs.
-
-  NOTE: FSS CLI entrypoint needs fixing (L3 validation blocker). Cross-provider mappings
-
-  now exist for ALL 33/33 leagues in UAC (completed 2026-03-30).'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -25,6 +15,19 @@ remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_
 superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
+overview: 'FSS reads reference data + cross-provider mappings from instruments-service GCS,
+
+  odds data from MTDS GCS. Uses mappings to resolve provider-specific IDs (footystats_id,
+
+  understat_name) and calls features-interface adapters for enrichment data.
+
+  FSS never fetches reference data directly from APIs.
+
+  NOTE: FSS CLI entrypoint needs fixing (L3 validation blocker). Cross-provider mappings
+
+  now exist for ALL 33/33 leagues in UAC (completed 2026-03-30).
+
+  '
 type: code
 epic: epic-code-completion
 completion_gates: {code: C4, deployment: D1, business: B1}

@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: plan-f-ui-quality-hardening
-summary: Harden unified-trading-system-ui to match deployment-ui integration quality. CI/CD pipeline, quality gates script,
-  cloud integration, dev scripts, TypeScript strict mode, auth integration, OpenAPI type consumption, and 4-mode startup.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
+overview: Harden unified-trading-system-ui to match deployment-ui integration quality. CI/CD pipeline, quality gates script, cloud integration, dev scripts, TypeScript strict mode, auth integration, OpenAPI type consumption, and 4-mode startup.
 type: code
 epic: epic-code-completion
 locked_by:

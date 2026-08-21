@@ -1,14 +1,7 @@
 ---
 doc_type: plan
 title: Batch-Live Reconciliation + Batch Audit System
-summary: "Three interconnected deliverables:\n(1) batch-live-reconciliation-service — nightly T+1 orchestrator that replays\
-  \ the full pipeline\n    (features → ML → strategy → execution → position/risk/exposure) using T+1 GCS namespace,\n  \
-  \  compares batch events vs live events stage by stage, and attributes deviations to the responsible service.\n(2) batch-audit-api\
-  \ — new API service for batch-audit-ui covering recon results, full audit trail,\n    orphan/error/TTS compliance, and\
-  \ data completeness checks across the entire system.\n(3) GCS T+1 namespace + T+1 Cloud Scheduler for ALL batch services\
-  \ — every batch service gets a\n    daily T+1 Cloud Run Job + writes to t1-recon/ GCS prefix (not overwriting thermal\
-  \ backtest or\n    batch/ data). Applied uniformly across all repos.\nSurfaces everything in batch-audit-ui (expanded\
-  \ beyond current skeleton)."
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -26,6 +19,15 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-10"
+overview:
+  "Three interconnected deliverables:\n(1) batch-live-reconciliation-service — nightly T+1 orchestrator that replays the
+  full pipeline\n    (features → ML → strategy → execution → position/risk/exposure) using T+1 GCS
+  namespace,\n    compares batch events vs live events stage by stage, and attributes deviations to the responsible
+  service.\n(2) batch-audit-api — new API service for batch-audit-ui covering recon results, full audit
+  trail,\n    orphan/error/TTS compliance, and data completeness checks across the entire system.\n(3) GCS T+1 namespace
+  + T+1 Cloud Scheduler for ALL batch services — every batch service gets a\n    daily T+1 Cloud Run Job + writes to
+  t1-recon/ GCS prefix (not overwriting thermal backtest or\n    batch/ data). Applied uniformly across all
+  repos.\nSurfaces everything in batch-audit-ui (expanded beyond current skeleton).\n"
 todos:
   - { id: new-repo-blrs, content: Create batch-live-reconciliation-service repo, status: done }
   - { id: new-repo-batch-audit-api, content: Create batch-audit-api repo (pairs with batch-audit-ui), status: done }
