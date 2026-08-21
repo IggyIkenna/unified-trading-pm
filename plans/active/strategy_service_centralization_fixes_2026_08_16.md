@@ -427,6 +427,14 @@ logic and that no second archetype could ever want. That must be stated, not ass
       count and ratchet DOWN only, per the workspace's shrinking-baseline convention — a hard zero would block
       legitimately-local constants.
 
+- [ ] [BACKEND] P2. **Collapse the per-domain config-reloader and S2S-auth boilerplate** (added 2026-08-21, provenance
+      `/plans/active/cross_repo_duplication_cleanup_2026_08_21.md`). `strategy_service/{pnl,position,risk}/auth_s2s.py`
+      are byte-identical (shasum-verified) — collapse to one shared module. Separately, adopt UTL
+      `ConfigReloaderBase` for the per-domain `config_reloaders.py` copies; UTL's own docstring states the base class
+      exists to replace this boilerplate, and the equivalent files in features-service measure 3 differing lines out of
+      147 between domains. Preserve every genuine per-domain difference — the goal is deleting the identical part, not
+      flattening real variation. SSOT: `/codex/06-coding-standards/config-reloader-pattern.md`.
+
 ## Progress Log
 
 - **2026-08-18 (slot 5, backend_engineer)** — Resolved the P0 reconciliation todo. Read the actual call graph
