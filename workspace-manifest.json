@@ -71,19 +71,19 @@
     "deployment-api": "0.96.1",
     "deployment-service": "0.156.3",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.101.0",
+    "execution-service": "0.100.0",
     "features-service": "0.94.8",
     "fund-administration-service": "0.12.8",
     "ibkr-gateway-infra": "0.5.3",
     "instruments-service": "0.106.0",
     "market-tick-data-service": "0.148.10",
     "system-integration-tests": "0.15.6",
-    "unified-api-contracts": "0.161.0",
+    "unified-api-contracts": "0.159.2",
     "unified-trading-library": "0.93.2",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.32.6",
     "e2e-testing": "0.41.44",
-    "agent-orchestrator": "0.100.53",
+    "agent-orchestrator": "0.100.52",
     "greeks-service": "0.18.77",
     "trading-agent-service": "0.13.23",
     "strategy-service": "0.85.0",
@@ -2254,8 +2254,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.161.0",
-      "published_at": "2026-08-21T14:08:57Z",
+      "version": "0.159.2",
+      "published_at": "2026-08-21T13:37:06Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {

@@ -170,9 +170,11 @@ now — with DeepSeek gated out almost always, the alphabetical waterfall runs c
 - **Accounts-tab dashboard display**: `GET /api/accounts`'s `used_by_slots` (`routes/accounts.py:104`)
   is a live SQL join computed fresh on every call, not cached/stale. No display bug — the fleet really
   is that skewed.
-- **GLM's 0-selections anomaly**: flagged here as unexplained, later **root-caused and confirmed
-  resolved** — see Part 6 item 5 (bug 3's `free_provider_priority` fix was the fix; GLM got 27
-  selections in the first 2h post-ship).
+- **GLM's 0-selections anomaly**: NOT explained in this pass. GLM is registered, healthy,
+  `weekly_pct: 0`, has no dollar-balance concept to trip `_account_has_balance_headroom`, yet got zero
+  selections in 24h with no corresponding skip/failure event either — meaning it isn't reaching
+  `_live_free_combo_ids` at all, or the in-memory failure ring has excluded it since before this
+  session's process-restart window. Flagged as an open follow-up (todo 6), not chased further here.
 
 ## Part 2 — Kimi/OmniRoute/OpenRouter provider removal (SHIPPED)
 
@@ -343,100 +345,32 @@ and the resulting log file's line count verified (9331 real lines, not a stub), 
 evidence. Lesson: a "completed, exit 0" notification is not itself proof of a real pass — read the
 log content and check it isn't suspiciously short/absent before shipping on it.
 
-## Part 6 — 2-hour live-effectiveness recheck: CONFIRMED EFFECTIVE (bugs 4a/4b/5 + GLM anomaly)
-
-Operator directive (2h after shipping, not "a day or two"). `CronCreate` job `be0aad88` fired on
-schedule but the check was deliberately deferred at ~98% context (pre-compact); re-run manually this
-session against the LIVE checkout's `activity_log` via `server.db.get_session_factory()`, window
-2026-08-21T10:20:30Z (`ba855161ae` ship) → 2026-08-21T13:52Z (check time, live checkout by then at
-`d4893b4c`, same fix lineage, no intervening dispatch-logic changes). 3419 activity_log rows in
-window.
-
-**1. Dispatch spread — confirmed, no monopolization.** 705 account-attributed selection events
-across **18 distinct accounts**. Top account (`gemini-3-5-flash-lite-proj3`) holds 19.6% share;
-next four each 13-16%. No account holds a majority — a structurally different pattern from the
-pre-fix near-100%-on-one skew Part 1 measured.
-
-**2. Bulk-sweep spreading (bug 4a) — directly observed live, working.** At 12:41:18-12:41:40 UTC the
-operator disabled `gemini-3-5-flash-lite-proj2`/`proj3` (and briefly `deepseek-v4-flash`/`-pro`,
-re-enabled seconds later — an unrelated toggle, not investigated further), triggering
-`rotate_all_slots_off_account` sweeps that moved 14 slots off the two disabled Gemini accounts.
-Destinations: `glm-5-2`×3, `sub-e-odum2default`×3, `glm-5-turbo`×2, `gemma-self-hosted`×2,
-`sub-f-odum2default`×2, `gemini-3-5-flash-lite-proj2`×1, `sub-h-igboestates`×1 — **7 distinct
-destination accounts**, roughly even split, no pileup. This is exactly the `exclude_ids` fix's
-intended behavior; pre-fix this shape piled every slot onto the single first-ranked account (Part 4).
-
-**3. Resume-pass spreading (bug 5) — directly observed live, working.** 7
-`worker_account_unusable_killed` events this window, all on `gemini-3-7-flash-proj2` (4×) /
-`gemini-3-7-flash-proj3` (3×) — the LOW-volume Gemini accounts hitting real RPM/RPD ceilings
-mid-session, triggering the proactive failover kill (`autospawn.py:4029`, working-as-designed
-self-healing, not a bug). Every one of the 7 kills was followed by a successful resume onto a
-**different** account (`sub-e-odum2default`, `glm-5-turbo`, `gemini-3-5-flash-lite-proj2`/`proj3`) —
-no repeat pileup onto the just-exhausted account, confirming `select_account_with_tick_spread`'s
-exclusion is live-effective in `_resume_pass` too, not just `_run_one_tick`.
-
-**4. Root cause of the "Gemini dying/going stale" symptom — isolated, and it is NOT the routing bug
-post-fix.** It is `gemini-3-7-flash-proj2`/`proj3` specifically (2 of 10 Gemini accounts) hitting
-real upstream RPM/RPD limits mid-session. The high-volume Gemini accounts
-(`gemini-3-5-flash-lite-proj2/3/4`, 93-138 selections each) show low death/selection ratios
-(0.02-0.04) — healthy. The system now self-heals this correctly (kill + respread across providers)
-rather than looping or piling back onto the same exhausted account.
-
-**5. GLM's "0-selections-in-24h" anomaly (Part 1 "Ruled out", flagged but not chased) — CONFIRMED
-RESOLVED, root cause was bug 3.** GLM got 27 selections this 2h window (`glm-5-2`: 13, `glm-5-turbo`:
-14), both `account_status: healthy`, `five_hour_pct` 8-9%, `last_used_at` current at check time.
-`free_provider_spawn_selected` events show GLM being picked both by `autospawn_refill`'s
-`free_provider_priority` walk and by `server_rotate_all_slots_off_account` during the sweep above —
-both call sites bug 3's fix touches (`free_provider_priority` default `["deepseek"]` → `["deepseek",
-"gemini", "glm", "ollama", "codex"]`). The old all-deepseek default meant GLM's `_live_free_combo_ids`
-branch was structurally unreachable whenever DeepSeek was gated — matches the original symptom
-exactly. No separate GLM-specific bug found; closing without further chase.
-
-**New minor observations (not chased further, not bugs in bugs 4a/4b/5's scope — logged as todos
-below):**
-- `sub-e-odum2default`/`sub-f-odum2default` (Claude) show elevated death/selection ratios
-  (0.387/0.385) vs. the healthy Gemini accounts (0.02-0.04) — but on small samples (31/13
-  selections), so not conclusive yet.
-- 2 GLM deaths this window were real upstream 429s ("Usage limit reached for 5 hour") where the
-  `account_snapshot.account_status` embedded in the death event still read `"healthy"` — a small lag
-  between the real-time API rejection and the DB's cached `account_status`/poller state, not a
-  dispatch-routing bug.
-
-**Verdict: bugs 4a/4b/5 hold under live 2h+ traffic. No further round-robin/dispatch fix work
-identified.** Evidence script (one-shot, not promoted — see Deferred/lessons section): live
-`activity_log` queries against `ActivityRow` (`event_type`, `slot_id`, `details_json`), joining death
-events to accounts via each slot's most-recent account-carrying event, run directly against
-`server.db.get_session_factory()` from the live checkout.
-
 ## Todos
 
-- [x] [OPERATOR] P2. ✅ **RESOLVED 2026-08-21 — operator resumed all Gemini accounts.** Confirmed live:
-      `data/config/accounts.json` shows `account_status: null` (enabled) for all 10 `gemini-*`
-      accounts; `activity_log` shows `account_enabled` events for `gemini-3-5-flash-lite-proj1/2/3/4`
-      at 12:41:49-12:42:19 UTC and `gemini-3-7-flash-proj4/5`, `gemini-3-5-flash-lite-proj5` at
-      13:49:22-13:49:32 UTC. Part 6's recheck (above) confirms the fleet handles the full 10-account
-      Gemini pool correctly post-resume — no pileup, proper spread.
-- [x] [DATA] P3. ✅ **DONE 2026-08-21 — see Part 6.** 2-hour live-effectiveness recheck of bugs 4a/4b/5
-      executed (deferred from the original cron firing, re-run manually this session). Result:
-      effective — dispatch spread across 18 accounts, bulk-sweep spreading confirmed live (7 distinct
-      destinations across 14 slots), resume-pass spreading confirmed live (7/7 unusable-kills
-      resumed onto a different account), no monopolization pattern recurred. Repo: agent-orchestrator.
-- [x] [DATA] P3. ✅ **DONE 2026-08-21 — see Part 6 item 5.** GLM's 0-selections-in-24h anomaly
-      resolved: root cause was bug 3 (`free_provider_priority` defaulting to `["deepseek"]` only,
-      never falling through to GLM). Confirmed live: GLM got 27 selections in the 2h post-fix window,
-      both accounts healthy and actively used. No separate GLM-specific bug. Repo: agent-orchestrator.
-- [ ] [DATA] P3. **NEW, found during Part 6's recheck.** `sub-e-odum2default`/`sub-f-odum2default`
-      show elevated death/selection ratios (0.387/0.385) vs. the healthy high-volume Gemini accounts
-      (0.02-0.04) in the 2h window — but on small samples (31/13 selections each), not conclusive.
-      Re-check once more traffic accumulates (a day+); if the ratio holds on a larger sample,
-      investigate why Claude sub-accounts die more often per-selection than Gemini. Repo:
+- [ ] [OPERATOR] P2. Re-enable `gemini-3-5-flash-lite-proj1` (paused 2026-08-21 as bug 4a/4b's
+      immediate stopgap — see Part 4) once comfortable the fix prevents a recurrence, or leave
+      paused if the account has an independent problem worth investigating further first.
+- [ ] [DATA] P3. **STILL OPEN — cron fired but check was deferred, not executed.** Re-check bugs
+      4a/4b/5's live effectiveness (operator directive: 2 hours after shipping, not "a day or two").
+      `CronCreate` job `be0aad88` fired on schedule (~12:02 UTC 2026-08-21) with the full query spec
+      below, but the session was at ~98% context at fire time (system-forced pre-compact) — the
+      investigation was deliberately NOT run rather than risk losing it mid-task, and the one-shot
+      cron job has now auto-deleted itself (session-scoped, already consumed — it will NOT re-fire).
+      **A fresh session must run this manually**, from the LIVE checkout
+      (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator`, not a slot worktree), via
+      `server.db.get_session_factory()` against `activity_log` over the ~2h window since
+      `agent-orchestrator@ba855161ae` shipped (10:20:30 UTC): (1) confirm dispatch selections are
+      still spread across multiple accounts/providers, not monopolized by one (same method as Part
+      1's original live-evidence table); (2) check whether any single account absorbed a
+      disproportionate share of selections ALONGSIDE a disproportionate share of
+      `tmux_session_lost`/`autospawn_failed`/`worker_polling_dead` events on itself (the bug 4a/4b
+      failure signature confirmed live in Part 4/5 — if this recurs, the fix did not fully hold and
+      needs further investigation); (3) check whether a NEW bulk account-sweep occurred in this
+      window and, if so, whether it spread across multiple destination accounts (evidence the
+      `exclude_ids` fix is working) rather than piling onto one. Update THIS todo + Part 4's "not yet
+      done"/Part 5's evidence with the result — do any file edits/shipping from slot 13
+      (`/home/ubuntu/unified-trading-system-repos/.tabs/13/`), never the live/bare checkout. Repo:
       agent-orchestrator.
-- [ ] [DATA] P3. **NEW, found during Part 6's recheck.** 2 GLM `tmux_session_lost` deaths this window
-      were real upstream 429s, but the death event's embedded `account_snapshot.account_status` still
-      read `"healthy"` at the moment of death — a small lag between the real API rejection and the
-      DB's cached account-health state (poller/status-write timing, not a dispatch-routing bug). Not
-      chased further; worth a look if it turns out to cause a mis-routed spawn onto an
-      already-rate-limited account. Repo: agent-orchestrator.
 - [x] [SCRIPT] P3. **Found while verifying bug 1 post-ship.** The live (gitignored, per-VM)
       `data/config/accounts.json` on the planning VM still carried 3 dead Kimi entries
       (`kimi-k3`/`kimi-k2-6`/`kimi-k2-7-code`) — harmless (gracefully skipped) but not a true "removed
@@ -475,6 +409,11 @@ events to accounts via each slot's most-recent account-carrying event, run direc
       check regardless of actual usage — providers with an observable real signal (Gemini RPM/RPD, GLM's
       `glm_quota_poller.py` pct fields) get first refusal instead. Operator: flag if a different order is
       wanted; the config default is a one-line change (`server/config.py` ~line 1600).
+- [ ] [OPERATOR] P2. Top up the DeepSeek wallet (currently `-$0.63`, shared by both
+      `deepseek-v4-flash`/`deepseek-v4-pro`) — real, separate exhaustion, not a routing bug, but it's
+      what makes bug 3 bite constantly right now.
+- [ ] [DATA] P3. Investigate GLM's 0-selections-in-24h anomaly (Part 1, "Ruled out" section) — not
+      explained by any check in this pass. Repo: agent-orchestrator.
 - [ ] [SCRIPT] P3. Update the 3 plan docs the Kimi/OmniRoute/OpenRouter removal (Part 2) touches but
       hasn't yet updated: `kimi_gemma_provider_onboarding_2026_08_16.md` (Kimi-specific todos/Progress
       Log — leave Gemma untouched), the archived OmniRoute evaluation doc (closing Progress Log entry
@@ -482,12 +421,12 @@ events to accounts via each slot's most-recent account-carrying event, run direc
       `deepseek_claude_blended_provider_routing_2026_07_28.md` (short note that OpenRouter was
       evaluated as a Phase-2 candidate provider and removed as unused code debt). Repo:
       unified-trading-pm.
-- [x] [BACKEND] P3. ✅ **DONE 2026-08-21.** Added a line to `SUB_AGENT_MANDATORY_RULES.md`'s per-slot-
-      worktree section: "If YOUR prompt never named an absolute `.tabs/<N>/` path, STOP and ask — never
-      default to the bare repo root." Also condensed the existing incident sentence to make room. File
-      now 10,119 B, under the 10,240 B (10 KiB) hard cap (`check_agent_rules_size_cap.py`). Repo:
-      unified-trading-pm. (Also tracked as todo 4 in `ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md`
-      — flipped there too, same edit.)
+- [ ] [BACKEND] P3. Add a line to `SUB_AGENT_MANDATORY_RULES.md`'s per-slot-worktree section making it
+      explicit that a delegation prompt to a sub-agent must name the operator's assigned slot path,
+      never the bare `<repo>/` root — the concrete gap Part 3 item 1 found. Stay inside the file's 10KB
+      budget. Repo: unified-trading-pm. (Also tracked as todo 4 in
+      `ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md` — resolve in one place, cross-reference
+      the other.)
 
 ## Codex SSOTs
 
