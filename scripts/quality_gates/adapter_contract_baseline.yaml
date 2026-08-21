@@ -443,7 +443,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/cli/handlers/orca_whirlpool_state_handler.py:
     count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py:
-    count: 12
+    count: 9
   market-tick-data-service/market_tick_data_service/cli/handlers/phoenix_orderbook_handler.py:
     count: 9
   market-tick-data-service/market_tick_data_service/cli/handlers/position_data_handler.py:
@@ -784,4 +784,8 @@ baseline:
     count: 3
   unified-trading-pm/plans/audit/results/cf_manifest_audit_2026_06_01.py:
     count: 1
+  unified-trading-system-ui/context/api-contracts/canonical-schemas/crosscutting/errors/__init__.py:
+    count: 2
+  unified-trading-system-ui/context/internal-contracts/schemas/events.py:
+    count: 2
 note: Seeded 2026-05-20 (slot 1) — lint_sweep_774602ea8 regression-audit Phase 1.
