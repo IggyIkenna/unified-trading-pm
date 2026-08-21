@@ -91,11 +91,12 @@ The monitoring gap itself is unfixed: `slot-git-status-report.sh`'s slot-0 branc
 
 ## Recommended fix
 
-- [ ] [BACKEND] P1. Wire the same alert path the numbered-slot loop already has
+- [x] ✅ [BACKEND] P1. Wire the same alert path the numbered-slot loop already has
       (`check_starvation_for_slot`/`check_stash_pile_for_slot`'s dedup-per-episode pattern) into the slot-0 branch
       of `unified-trading-pm/scripts/dev/slot-git-status-report.sh` (around the `if slot_in_filter "0"` block) — a
       DIRTY or untracked-files verdict on a bare root repo should page the same way FF-pull-starvation or stash-pile
-      regrowth already does. Extend `classify_repo`'s slot-0 call site, not the numbered-slot one.
+      regrowth already does. Extend `classify_repo`'s slot-0 call site, not the numbered-slot one. —
+      unified-trading-pm@0ace3cb194
 - [ ] [AGENT] P2. Once the alert lands, re-verify CLAUDE.md's slot-0 line (already corrected this session to
       "reported not enforced every 5 min") reads as accurate again — flip back to describing real enforcement only
       after the alert path is live and proven (at least one real DIRTY-slot-0 page observed).
@@ -112,3 +113,22 @@ The monitoring gap itself is unfixed: `slot-git-status-report.sh`'s slot-0 branc
   enforced" in `cursor-configs/CLAUDE.md`) re-verified ACCURATE as-is — flipping it now would reintroduce the
   overstated enforcement claim this issue exists to remove. **P2 remains gated on BOTH: P1 landed + first real
   DIRTY-slot-0 page observed.** Next worker on P2: confirm both conditions before touching CLAUDE.md.
+
+- 2026-08-21, slot 14 (P1 implementation; task `…-c77574a3f999`): implemented
+  `check_bare_root_dirty_for_slot0()` in `scripts/dev/slot-git-status-report.sh` — wires the slot-0 branch (the
+  `if slot_in_filter "0"` block, right after `post_snapshot "0" ...`) to the same dedup-per-episode ping pattern
+  (`post_starve_ping` + a per-(slot,repo) marker under `STARVE_STATE_DIR`) `check_starvation_for_slot`/
+  `check_stash_pile_for_slot` already use for the numbered-slot loop. A `dirty` verdict from `classify_repo`
+  (which already folds untracked-only files into "dirty" via its own porcelain loop, so untracked-files coverage
+  needs no separate check) now pages once per episode via `/api/slots/0/message`; the marker clears on a clean
+  re-read so a future episode re-pings. New `BARE_ROOT_DIRTY_WATCHDOG=0` toggle to disable, matching the sibling
+  watchdogs' convention. 7 new hermetic bats tests (`tests/test_slot_git_status_bare_root_dirty_alert.bats`,
+  hand-built TSV rows — `classify_repo`'s own state-precedence correctness is already covered by
+  `test_slot_git_status_dirty_count.bats`) cover: single-alert + marker creation, dedup on a second run,
+  marker-clear-then-re-fire on a fresh episode, all 6 non-dirty states never firing, independent per-repo
+  alerting across a multi-repo sweep, and the watchdog-off toggle. All 7 pass; re-ran the full
+  `test_slot_git_status_*.bats` sibling suite (37 tests) to confirm zero regressions. Shipped:
+  unified-trading-pm@0ace3cb194. **P2 remains open and correctly gated** (per slot 5's note above — needs BOTH P1
+  landed [now true] AND a first real DIRTY-slot-0 page observed in production, which hasn't happened yet since
+  this is a new capability with no live trigger so far) — next worker/watcher on P2: do not flip it until an
+  actual bare-root DIRTY page has fired and been confirmed in the AO dashboard/Slack.
