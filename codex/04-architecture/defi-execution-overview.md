@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: DeFi Execution Overview
-summary:
-  "SSOT for DeFi execution: strategy→execution manifest handoff (3-state emission), operation routing
+summary: "SSOT for DeFi execution: strategy→execution manifest handoff (3-state emission), operation routing
   (TRADE/LEND/BORROW/SWAP/STAKE/FLASH_* + Phase-4 LST/restaking/yield/Solana connectors), credential fetch,
   DefiErrorCode (35 codes), cost models (gas/slippage/flash), wrap preprocessor, and the DeFi-long+CeFi-short hybrid
   model."
@@ -302,8 +301,17 @@ this code can produce** — it is indistinguishable from a real fill to every do
 ledgers and reconciliation, so it surfaces as an unexplained position discrepancy long after the trade, if at all. An
 exception at construction is strictly better than a fill that never happened.
 
-Note the guard covers the `BaseConnector` tree. Solana connectors inherit `BaseSolanaConnector` (`solana_base.py`); they
-are live today, but the same declaration should be mirrored there when that tree is next touched.
+Solana connectors split across two base classes, not one, and are not uniformly live (corrected 2026-08-21 per the W15
+venue-adaptor security audit, `w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`, which found this
+claim stale on both counts). `OrcaConnector`, `RaydiumConnector`, and `MarinadeConnector` inherit `BaseSolanaConnector`
+(`solana_base.py`), which already mirrors the same `supports_live: bool = False` fail-closed default declared on
+`BaseConnector` (the mirroring described as still-pending here has since landed) — these three declare
+`supports_live = True` and are live today. `JitoConnector`, `JitoRestakingConnector`, and `SolBlazeConnector` instead
+inherit `BaseConnector` directly and stay `supports_live = False` by design: their target programs (SPL stake-pool
+`DepositSol`/`WithdrawSol`, and Jito's Anchor-based restaking vault) take fixed, protocol-specific account lists that
+need an SDK (`spl-stake-pool` or an Anchor IDL decoder) this repo does not yet depend on — hand-rolling the raw
+instruction bytes was judged too risky to fabricate. This is the fail-closed guard working as intended, not an
+unmirrored declaration; see each module's own "Live-capability status" docstring for the per-connector detail.
 
 ### What "live-capable" requires per connector
 
