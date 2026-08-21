@@ -183,7 +183,7 @@ defect (phantom-venue emission) without touching a registry other code may depen
       belt-and-braces, not an open hazard. If somehow resurrected anyway: locate + purge the shard
       source, citing this doc's existing delete-safety proof (same population).
 - [x] [SHIP] P1. ✅ DONE 2026-08-21 — (a) LANDED as `deployment-service@3000d17ccc` + zombie-watchdog
-      VM relaunched (`vm-zombie-watchdog-20260821-144933`); (b) `instruments-service@26c898e470`.
+      VM relaunched (`vm-zombie-watchdog-20260821-164521`); (b) `instruments-service@26c898e470`.
       Original item: Land the two fix commits currently blocked by a PEER session's in-flight
       `unified-api-contracts` WIP (its prediction-domain migration breaks every consumer's QG/pre-flight;
       both commits are otherwise ready): (a) `deployment-service` — GREW during the same session's
@@ -215,10 +215,13 @@ defect (phantom-venue emission) without touching a registry other code may depen
       streaming purge script SHIPPED as `instruments-service@26c898e470` (the executed code, landed
       for provenance; the peer's UAC migration landed and IS QG went green — 5,427 passed; the one
       residual import-patterns step was a deep `unified_trading_library.cloud_interface` import,
-      fixed to the top-level form pre-ship). After (a) landed: zombie-watchdog VM RELAUNCHED same hour — old
-      `vm-zombie-watchdog-20260815-191525` deleted, `vm-zombie-watchdog-20260821-144933` RUNNING
-      (the launcher re-uploads the repo `.py` to the GCS SSOT on every launch, so the live daemon
-      now carries all six new whole-index prefix thresholds).
+      fixed to the top-level form pre-ship). After (a) landed: zombie-watchdog VM RELAUNCHED same day — old
+      `vm-zombie-watchdog-20260815-191525` deleted; the first two replacement boots came up
+      DAEMON-LESS (Mac-built tarball xattr PAX headers SIGPIPE'd the bootstrap's tar — the
+      boot-breaker incident tracked in the pattern-debt issue's tarball todo, fixes landed
+      `deployment-service@e0c38258`); `vm-zombie-watchdog-20260821-164521` is RUNNING with the
+      daemon VERIFIED sweeping (journal 16:03Z "terminated-reaper complete"), carrying all six
+      new whole-index prefix thresholds (the launcher re-uploads the repo `.py` on every launch).
 - [ ] [INFRA] P2. quickmerge `--isolated` restore-on-early-failure defect (PM-SSOT `scripts/quickmerge.sh`,
       symlinked fleet-wide): when the run dies before the ship stage (measured 2026-08-21: harness SIGTERM
       at a 10-min foreground cap mid-gate; STAGE-1 dep-conflict exit-1) the evacuated `--files` are NOT

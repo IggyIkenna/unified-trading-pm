@@ -138,8 +138,9 @@ The proven replacement pattern (shipped + verified in
       download+filter+rewrite CAS ops) to 64GB, keyed on the category/task flag at launch — make that
       call when next actually running one against today's 7.5GB+ indexes.
 - [x] [INFRA] P2. ✅ DONE 2026-08-21 — six prefix entries LANDED in `deployment-service@3000d17ccc`;
-      zombie-watchdog VM relaunched (old `…20260815-191525` deleted → `vm-zombie-watchdog-20260821-144933`
-      RUNNING; the launcher re-uploads the `.py` SSOT from the landed tree on every launch). Add
+      zombie-watchdog VM relaunched (old `…20260815-191525` deleted → after two daemon-less boots
+      from the tarball boot-breaker below, `vm-zombie-watchdog-20260821-164521` RUNNING, daemon
+      VERIFIED sweeping 16:03Z; the launcher re-uploads the `.py` SSOT on every launch). Add
       `PREFIX_IDLE_THRESHOLDS` entries for the whole-index `bucket=None` prefixes named in the Finding
       (same `(90, 360)` shape), then relaunch the zombie-watchdog VM once.
 - [x] [INFRA] P3. ✅ DONE 2026-08-21 — LANDED in `deployment-service@3000d17ccc` (`lc_gcloud_create`:
@@ -162,7 +163,16 @@ The proven replacement pattern (shipped + verified in
       exited 0 — make it fail loudly; (c) the VM bootstraps' `tar xf ... 2>&1 | head -5` pattern must
       not let head's SIGPIPE truncate extraction (log to file, tail the file — same class as the
       2026-08-16 `pip_install_or_fail` fix, one seam earlier: launch-vm-zombie-watchdog.sh's heredoc +
-      grep the sibling setup-*.sh bootstraps for the same pattern).
+      grep the sibling setup-*.sh bootstraps for the same pattern). PARTIAL SHIP 2026-08-21: (a)+(c)
+      LANDED as `deployment-service@e0c38258` — builder gained `COPYFILE_DISABLE=1` + `--no-xattrs` +
+      a `.claude` exclude; the launcher's 3 extraction sites now log to file with
+      `--warning=no-unknown-keyword` (setup-data-pipeline-vm.sh grep'd clean — no tar-pipe-head there).
+      Clean tarballs republished 15:45Z (verified: 0 PAX xattr headers, pyproject at depth); the
+      watchdog boot on the fixed pair went straight through to a live sweeping daemon (16:03Z).
+      REMAINING in this todo: (b) fail-loud on unset `GCP_PROJECT_ID` (measured: it crashed mid-run
+      yet exited 0), the publish-time self-check (refuse `._*`/xattr'd members, scratch-venv install
+      smoke), and IDENTIFY the recurring wrong-cwd Mac republisher (waves at 13:15Z / 14:08Z / ~15:2xZ
+      kept clobbering clean generations — until it pulls `e0c38258` its output stays poisonous).
 
 ## Progress Log
 
