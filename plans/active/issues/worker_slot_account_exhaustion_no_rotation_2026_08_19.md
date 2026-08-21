@@ -27,7 +27,7 @@ related:
     /plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md,
     /plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/archive/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md,
+    /plans/archive/2026_08/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md,
   ]
 created: "2026-08-19"
 last_updated: "2026-08-19"
@@ -355,7 +355,7 @@ While shipping todo 3's doc half, `quickmerge.sh`/`quality-gates.sh` repeatedly 
 whose frontmatter was observed in 3 different, progressively-more-broken states across ~10
 minutes without this session touching it — already on origin, so it blocked EVERY quickmerge in
 this repo, not just this one. Full write-up, evidence, and its own follow-up todos (still open,
-independent of this doc): `/plans/archive/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`.
+independent of this doc): `/plans/archive/2026_08/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`.
 **Consequence for THIS issue, resolved**: the blocking file's frontmatter had stabilized enough by
 the next session to pass `check_frontmatter_schema` standalone; todo 3's `unified-trading-pm` half
 shipped cleanly at `cc38229b57` on the first retry. The generator issue itself is unrelated to this

@@ -137,6 +137,3 @@ recovery to full-chunk replay or a page — this needs its own verification + fi
   (operator-gated/time-gated per the standing 2026-08-16 ruling), one item resolved this run.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries) — all existing entries still resolve (the linked
   design plan, the archived throughput-collapse doc, the MTDS orchestrator barrier, and the UTL concurrency adapter).
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; items 1/2 stay under the doc's own
-  explicit 2026-08-16 operator ruling (human plan, execute today); item 3 (stale-citation fix) already closed
-  2026-08-19.

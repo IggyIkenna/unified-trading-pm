@@ -44,7 +44,7 @@ source: Mandatory companion finalize per task_template.md's AO-plan rule (operat
 context_scope:
   [
     /plans/active/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md,
-    /plans/archive/2026_08/w_execution_orchestrator_oms_persistence_2026_08_20.md,
+    /plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md,
     /plans/active/w_state_recovery_real_wiring_2026_08_20.md,
     /plans/epics/system_readiness_master.md,
   ]

@@ -88,7 +88,7 @@ context_scope:
       there. Per CLAUDE.md's own HARD RULE ("SSOT for a durable rule is a codex doc — never an active plan"), the
       codex doc's stricter rule governs, not this finalize plan's own looser phrasing. **Archival is correctly
       deferred, not performed**, until the parent's 2 open todos genuinely close (via
-      `/plans/active/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md`'s own follow-up implementation plan
+      `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md`'s own follow-up implementation plan
       landing, then Phase 3 todo 1 + the "run real recovery" todo re-attempted for real). Flagged to the
       coordinator 2026-08-20 rather than silently archiving against the stricter rule or silently leaving this
       todo's discrepancy unexplained.

@@ -124,6 +124,3 @@ here.
   one day prior) already claims this exact ground; dispatching a second copy would race the same VM launcher.
   Citation-only fix, not a reclassification. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-17**: refreshed context_scope (5 entries).
-- **na-eligibility-audit 2026-08-21**: KEEP-NA-STALE (already-duplicated) — reconfirmed, both open todos still cited
-  verbatim to `sports_satellite_ao_dispatch_batch14_2026_08_16.md` todo 2 (re-verified: batch14 still carries this
-  exact ground). No drift since 2026-08-17.

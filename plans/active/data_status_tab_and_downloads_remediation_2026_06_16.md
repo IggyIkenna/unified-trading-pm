@@ -17,7 +17,7 @@ related: []
 created: 2026-06-16
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
-execution_scope: local-only
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
@@ -488,11 +488,3 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   defi/sports APPLY-GATE sign-off) stay NA — both explicitly self-gated on the same still-open, named 2026-08-07
   operator HOLD. Doc stays `assigned_vm: NA` overall (2 open items remain).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21 (ui tranche)**: KEEP-NA, stale item closed (frontmatter only) — corrected a
-  frontmatter inconsistency: `execution_scope: orchestrator-agent` contradicted `assigned_vm: NA` (the LOCAL-track
-  pairing per `task_template.md` §1/§2 is `assigned_vm: NA` + `execution_scope: local-only`); fixed to `local-only`,
-  no dispatch-behavior change (`assigned_vm` alone gates ingestion). Content verdict unchanged: re-confirmed via a
-  fresh corpus grep (`APPLY GATE`, `defi.*HOLD`, `sports.*HOLD`) that the 2026-08-07 operator HOLD on the defi/sports
-  APPLY-GATE sign-off is still the most recent ruling — no newer operator decision found across the corpus. Both
-  remaining open todos (DeFi sub-bucket phantom-row audit; defi/sports APPLY-GATE sign-off) stay correctly NA,
-  self-gated on that same still-open HOLD. No reclassification.

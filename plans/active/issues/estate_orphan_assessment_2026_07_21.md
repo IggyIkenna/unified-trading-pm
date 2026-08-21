@@ -599,9 +599,3 @@ landed before re-starting the investigation from scratch.
 - **na-eligibility-audit 2026-08-17** [body-hash:2a1a59f43ef68bc2]: KEEP-NA, valid — Reaffirmed. Sole open item (todo 6, batched-incremental record_cells() refactor) carries a standing CONTESTED-then-reverted history (2026-07-30 defi RECLASSIFY reverted to NA after a 2-1 tally) — citation-hold class (b), a standing ruling. Doc stays assigned_vm: NA.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms 2026-08-17 verdict; sole open item (todo 6,
-  batched-incremental `record_cells()` refactor) stays under the standing 2-1 contested-then-reverted KEEP-NA tally
-  (cefi+sports KEEP-NA vs. defi RECLASSIFY, reverted 2026-07-30) pending an explicit operator boundedness ruling.
-  Note: the 2026-08-19 ag-closeout-audit reclassified this doc's own framing to `exclude_cross_cutting` (5-AG tag,
-  `parent_epic: instruments_master`) — cefi is not this doc's sole/primary tranche, but it remains genuinely
-  un-superseded and open regardless.

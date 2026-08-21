@@ -358,6 +358,3 @@ fully resolved and stays
   re-read.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open item remains the rubric's own
-  line-cap-blocked-done sub-case (the `[OPERATOR]`-tag fix on `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`,
-  itself still over its own 1000L hard cap) — un-actionable until that target doc is split. `assigned_vm` unchanged.

@@ -20,16 +20,12 @@ related:
   [
     /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
-    /plans/active/data_status_cell_grid_rearchitecture_finalize_2026_08_21.md,
   ]
 created: 2026-07-18
-last_updated: 2026-08-21 # (was: 2026-08-20 -- na-eligibility-audit RECLASSIFY whole-doc: design gate resolved, remaining
-# todos 3/5/6/7/8 are all bounded/deterministic (todo 3 has a ready-to-apply 6-file spec; the BLOCKED-SANDBOX notes on
-# todos 3/5 were an interactive-session worktree-isolation artifact, not a real block for an AO worker with full repo
-# access -- removed)
+last_updated: 2026-08-20 # (was: 2026-08-18 -- todo 2 design gate resolved + todo 4 N/A this session, now through 2026-08-20)
 parent_epic: deployment_and_user_management_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 5
@@ -96,13 +92,10 @@ real fix is to never load the whole manifest per request.
       record the decision + the projection schema. This is the design gate. Decision: **BOUND** (date_window
       pushdown), extended to the on-demand live-build fallback path. Full evidence + exact implementation spec in the
       2026-08-20 Progress Log entry. — unified-trading-pm (design doc only, no code repo touched by this decision)
-- [x] ✅ [BACKEND] P1. **Implement the bounded read** — the API cell-grid endpoint reads ONLY the requested window from the
+- [ ] [BACKEND] P1. **Implement the bounded read** — the API cell-grid endpoint reads ONLY the requested window from the
       manifest (or the precomputed projection), never the whole corpus; column-pruned + TTL-cached. **READY TO APPLY —
-      exact edit spec in the 2026-08-20 Progress Log entry** (the 6-file change list, all additive optional-kwarg,
-      default `None` = byte-identical prior behavior). Done-when: all 6 files edited per spec, `deployment-api`
-      quality-gates green (incl. `test_manifest_status_dual_scope.py` / `test_data_status_service.py::TestReadIndexCached`
-      / `test_coverage_summary_dual_scope.py`), no new whole-corpus walk introduced. — deployment-api@777f1fa531;
-      evidence and implementation mapping: /plans/archive/2026_08/issues/data_status_cell_grid_todo3_shipped_pre_reclassify_2026_08_21.md
+      exact edit spec in the 2026-08-20 Progress Log entry** (BLOCKED-SANDBOX: the 2026-08-20 session had no write
+      access to `deployment-api`; needs a session/slot with a real `deployment-api` checkout to apply + ship).
 - [x] ✅ [BACKEND] P2. **Precompute projection (if chosen)** — N/A, not chosen. The `uts-prod-data-status-rollup`
       Cloud Run job + `full.json.gz`-per-service blob (`_manifest_status_rollup_fast_path` in
       `deployment_api/services/data_status/manifest.py`) already IS a working precompute projection and already
@@ -115,7 +108,7 @@ real fix is to never load the whole manifest per request.
       `FULL_HISTORY_START_DATE`) as an explicit one-click action, and the operator's 2026-07-14 ruling
       (`data-status-default-range.spec.ts`) deliberately keeps 90-day as the silent DEFAULT — this todo does NOT
       require changing `DEFAULT_LOOKBACK_DAYS`, only proving the "All" preset renders reliably + adding its pw:L2
-      spec.** Done-when: a `pw:L2` regression spec exercises the "All" preset at full history and passes.
+      spec.** BLOCKED-SANDBOX — no write access to `deployment-ui` this session.
 - [ ] [BACKEND] P2. **Load-test at full history** — prove a full-history cell-grid request stays within Cloud Run memory
       at production concurrency (cite memory p99 + latency); retire the per-request OOM guard. **Do not mark this done
       on Bound alone** — see the full-history limitation recorded in the 2026-08-20 Progress Log entry; this gate is
@@ -136,11 +129,7 @@ real fix is to never load the whole manifest per request.
       memory, bounded regardless of corpus size). Extend the SAME pattern to `_build_manifest_category`'s aggregation
       pipeline (venue breakdown, MTDS honest-coverage override, sub-dimension grouping, dual-scope) — a materially
       larger rewrite (~10-15 methods) than todo 3, hence split out as its own todo rather than folded into it. This is
-      the todo that actually unblocks todo 6 (guard retirement) for the worst case. **Strengthened done-when (finding V,
-      `task_template.md` §3 — shared fleet-wide manifest-aggregation code, no soft-delete-style safety net if a subtle
-      correctness bug ships)**: the FULL existing `_build_manifest_category` regression suite must stay green AND a NEW
-      adversarial test must assert the row-group-streamed path produces byte-identical aggregate output to the
-      pre-change full-load path on a fixture with >1 row group per key.
+      the todo that actually unblocks todo 6 (guard retirement) for the worst case.
 
 ## Progress Log
 
@@ -308,22 +297,3 @@ real fix is to never load the whole manifest per request.
   `quality-gates.sh`, and ship via `quickmerge.sh`. Todo 7 (codex audit) is correctly sequenced after todo 3 actually
   ships, so also not yet actionable. Flagging this because it blocks 4 of this plan's 8 todos, not because the
   plan's own content is wrong.
-
-- **na-eligibility-audit 2026-08-21 (ui tranche)**: RECLASSIFY (whole-doc) — todo 2's design gate (the sole reason
-  every prior audit pass since 2026-07-30 kept this doc KEEP-NA) resolved 2026-08-20 (Decision: BOUND). All 5
-  remaining open todos (3, 5, 6, 7, 8) are bounded/deterministic: todo 3 has a ready-to-apply 6-file spec written out
-  in the 2026-08-20 Progress Log entry above; todo 5 is a scoped pw:L2-proof with an explicit non-goal already
-  stated; todo 6 is a load-test with a stated numeric done-when (p99 < 4 GiB); todo 7 is sequenced (already
-  `sequential: true`) after todo 3 ships; todo 8 extends an already-proven sibling pattern
-  (`_live_coverage_venue_year.py`'s row-group streaming) to a named pipeline, now with a strengthened done-when per
-  finding V (regression suite green + a new adversarial byte-identical-output test) given the shared fleet-wide
-  correctness risk. Removed the `BLOCKED-SANDBOX` literal from todos 3/5 — that token structurally excludes a todo
-  from AO ingestion (`task_template.md` §3's non-dispatchable family), but the block was specific to THIS
-  interactive session's `isolation: "worktree"` scope (confirmed confined to `unified-trading-pm` only); an AO
-  worker on the single orchestrator VM has a full multi-repo checkout, so it does not apply there. Conflict-check
-  clear: `grep -rl "date_window" plans/active/*.md` returns only this doc; no other active `assigned_vm: planning`
-  doc under `parent_epic: deployment_and_user_management_master` touches this cell-grid/manifest-read-path work.
-  Flipped `assigned_vm: NA` → `planning`, `execution_scope: local-only` → `orchestrator-agent`; kept `sequential:
-  true` (todo 7 genuinely depends on todo 3; todos 3/6/7/8 plausibly share files in the
-  `deployment_api/services/data_status/` tree, so intra-plan concurrency stays off). Authored companion
-  `data_status_cell_grid_rearchitecture_finalize_2026_08_21.md` per the finalize-plan-coverage rule.

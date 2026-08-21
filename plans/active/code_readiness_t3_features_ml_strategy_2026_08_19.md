@@ -252,19 +252,6 @@ todos only to confirm they are data-movement, then leave it.
 
 ## Todos
 
-### Walkthrough feedback 2026-08-21 — strategy cluster (operator feedback on platform-external-api-walkthrough.html; verified against strategy-service HEAD 2026-08-21)
-
-- [ ] [BACKEND] P0. Strategy wizard external endpoint — verified 2026-08-21: NO external HTTP wizard route
-      exists in deployment-api or strategy-service. Build it (wizard create/validate/deploy as an authenticated
-      external API), with documented request/response examples. Hot config reload is already fully built both
-      sides (`strategy_service/config_reloaders.py` + per-domain reloaders; `execution_service/
-      config_reloaders.py`, `v2/policy_reloader.py`) — expose/document its request-response pattern alongside,
-      hand examples to T5.
-- [ ] [BACKEND] P1. Add `staking_pnl` as a first-class dimension in `_PNL_DIMENSIONS`
-      (`position/core/pnl_attribution_aggregator.py:13` — today staking folds into carry/residual). Existing
-      set (delta/gamma/theta/vega/rho, funding, basis, interest_rate, carry, fx, residual) is the real list —
-      hand to T5 so the PnL-attribution section enumerates actual dimensions.
-
 ### Archetype code completeness — the headline number
 
 - [x] [BACKEND] P0. Register a v2 engine for all 60 `StrategyArchetype` members — **59/60 done**;

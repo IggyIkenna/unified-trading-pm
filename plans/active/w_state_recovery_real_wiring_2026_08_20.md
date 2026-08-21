@@ -198,7 +198,7 @@ context_scope:
       deliberately NOT attempted inline here, even after an explicit "continue at your own pace" go-ahead from
       the coordinator, per this workspace's own AO-eligibility rule ("never an open-ended judgment/design call
       inline — resolve that first as its own plan"). Coordinator agreed: spun out into its own design-only plan,
-      `/plans/archive/2026_08/w_execution_orchestrator_oms_persistence_2026_08_20.md` (+ mandatory finalize companion) —
+      `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md` (+ mandatory finalize companion) —
       this todo is CLOSED here, tracked THERE. Verify Phase 3 todo 1 (below) by re-running it once that plan's
       own follow-up IMPLEMENTATION plan lands.
       **Update (2026-08-21):** that design plan closed all 10 of its own todos same-session (write contract,

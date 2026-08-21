@@ -117,6 +117,3 @@ confirmation across 4 handler files, not a corpus-wide sweep of every features-s
   design question) is a genuine architectural judgment call; todo 2 is textually gated on todo 1's unresolved
   outcome. `assigned_vm` unchanged.
 - **context-scout 2026-08-19**: populated/refreshed context_scope (5 entries).
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Both open todos (the Layer-1 EXPECTED-universe
-  design question and its contingent `record_captured` wiring) remain genuine architectural judgment work, unchanged
-  since the 08-19 pass. `assigned_vm` unchanged.

@@ -384,11 +384,3 @@ defect (phantom-venue emission) without touching a registry other code may depen
   launch attempts across two sessions; `--apply` was NOT run this session (the arithmetic gate was never
   reached, let alone confirmed clean) — the `[OPERATOR]`/§3a pre-authorization for `--apply` stands, but its
   precondition (a clean dry-run) is still unmet, so it was correctly not exercised.
-- **2026-08-21 (interactive session, follow-through)**: extended fix #2 (`python -u`) fleet-wide — re-diffed every
-  `scripts/vm/launch-*.sh` in `deployment-service` and found 48 more launchers missing it (only the AAVEV3 launcher
-  and its already-reliable sibling `launch-cefi-itype-casing-apply-reduced-workers-vm.sh` had it). Applied
-  mechanically (pure `python ... ` → `python -u ...` / `$PYTHON_BIN ... ` → `$PYTHON_BIN -u ...`, verified zero
-  unrelated diff lines before shipping), full `deployment-service` `quality-gates.sh` green (1813s), shipped
-  `deployment-service@38f760e034`. This does not resolve the AAVEV3 dry-run's own unresolved mystery (attempt #9
-  already had this exact fix live and still lost `run.log`) — it closes out the class of risk for every OTHER
-  launcher that hadn't gotten it yet, on general reliability grounds established by this investigation.

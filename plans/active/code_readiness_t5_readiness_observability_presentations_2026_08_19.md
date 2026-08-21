@@ -148,6 +148,7 @@ for x in d['tranches']['T5-readiness-observability-presentations']['docs']:
 Then the tail. A doc flagged `excluded_data_movement: true` is skipped per the standing rules above; open its
 todos only to confirm they are data-movement, then leave it.
 
+
 ## Inbound requests
 
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
@@ -292,9 +293,6 @@ todos only to confirm they are data-movement, then leave it.
       `batch=wired` rather than `deployed`.
 
 ## Todos
-
-- [ ] [AGENT] P0. Execute the presentation cluster of the 2026-08-21 walkthrough feedback, tracked in
-      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (moved: line cap).
 
 ### W1 — readiness derivation and the state dump
 
@@ -549,32 +547,12 @@ todos only to confirm they are data-movement, then leave it.
       `unverified`, 27 `pending`, 17 `planned`, 17 `partial`, 14 `not yet`, 6 `missing`, 5 `not built`).
 - [ ] [DOC] P0. Re-derive `strategy-service-deep-dive.html` (51 `unverified`, 15 `partial`) against T3's output.
 - [ ] [DOC] P0. Re-derive `strategy-service-walkthrough.html` (23 `partial`) against T3's output.
-- [x] ✅ [DOC] P2. **[OPERATOR]** Complete `platform-api-reference.html`'s type-support table — add the two rows it
+- [ ] [DOC] P2. **[OPERATOR]** Complete `platform-api-reference.html`'s type-support table — add the two rows it
       still omits, `WITHDRAW`/`WithdrawInstruction` and `REPAY`/`RepayInstruction`. UAC `StrategyInstructionEnvelope`
       grew 11→13 subclasses (`f5fc118a` 2026-08-20); the count/prose enum-drift fix shipped separately (that was the
       promote-PR QG red), so the table still lists 11 of 13 rows. Adding the 2 rows adds 2 `st-plan` markers →
       claim-ownership open-markers 189→191, tripping the shrinking ratchet. Operator-gated: bump the markers baseline
       (never hand-raise), or close 2 other open markers by real state change first.
-
-      **PARTIALLY RESOLVED 2026-08-21 — `unified-trading-pm@f28330fafc`.** Netted rather than bumped the baseline:
-      closed one genuinely-resolved marker in `carveout-engineering.html` §09 ("Appendix — the source estate") —
-      its `ev-check` → `ev-verified`, citing `strategy-service@efa1525813`'s now-landed `EXTRACTION_AUDIT.md` (the
-      per-repository code-coupling measurement that §09's own 26-repo contribute/non-contribute table asserts — see
-      `elysium_carveout_stubbed_strategy_service_2026_08_12.md`'s 2026-08-16 Progress Log entry). Checked the other
-      3 candidate-resolved todos in that same plan (PortfolioRiskService live-values ruling ~L124, frozen
-      collateral-eligibility ruling ~L169, health_factor/usdc_idle_yield data-scope resolution ~L236) against the
-      artefact's actual prose — none maps cleanly to a whole-section claim: the PortfolioRiskService/risk-guards-local
-      write-up todos in that plan's own §B are still `[ ]` unchecked, i.e. `carveout-engineering.html`'s prose was
-      never updated to match the 2026-08-16 ruling, so upgrading its marker now would be the exact "marker with no
-      genuine state-change behind it" failure mode the ownership rule exists to prevent; the collateral-eligibility
-      ruling covers only one row of §05's multi-claim table (not that section's whole claim) and its own text says
-      "still open, not yet done" for the actual substitution build; the data-scope resolution has no corresponding
-      section in this artefact at all. Only 1 of 4 closed safely, so added only 1 new row
-      (`WITHDRAW`/`WithdrawInstruction`), not 2, to stay net-zero — `REPAY`/`RepayInstruction` remains a documented
-      gap in the table, needing either a second genuine marker close elsewhere or an operator-approved baseline
-      bump. Net check: `check_artefact_claim_ownership.py` open-markers held at **189** (no baseline bump used) —
-      `carveout-engineering.html` 17→16, `platform-api-reference.html` 28→29. Verified per-file against
-      `origin/live-defi-rollout` (not just local HEAD), commit `f28330fafc`.
 - [x] [DOC] P0. Verify the invariant the epic sets — **every claim-bearing artefact section maps to a tracked
       item**. Build the check; it has already failed once, measurably. — `unified-trading-pm@7b2dd29aaa`.
       `scripts/plan-hygiene/check_artefact_claim_ownership.py`, wired into `run_hygiene_sweep.sh`. Measured
@@ -629,7 +607,7 @@ todos only to confirm they are data-movement, then leave it.
       human" note from prior audit passes; force-fixing them would mean guessing, which the prior passes correctly
       declined to do. One item WAS resolvable: the root `README.md` P2 finding had gone stale in the other
       direction — the 3 claims it named were already fixed by another session since 2026-08-02 — flipped with
-      evidence, `unified-trading-pm@2d743a57d3`. Genuinely 2 `[OPERATOR]` decisions + ~11 human-judgment items
+      evidence, `unified-trading-pm@<pending>`. Genuinely 2 `[OPERATOR]` decisions + ~11 human-judgment items
       remain; not a bounded mechanical pass.
 - [x] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
       `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`. — **Checked 2026-08-20**: the
@@ -651,15 +629,14 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Infrastructure defects that cost other agents time
 
-- [x] [BACKEND] P1. Fix `git stash push/pop` silently dropping content under high branch velocity — this defect
+- [ ] [BACKEND] P1. Fix `git stash push/pop` silently dropping content under high branch velocity — this defect
       costs every tranche real work. Evidence:
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`.
-      **DONE 2026-08-21**: both extracted items in `/plans/active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`
-      landed — item 1 (repro of both the stale-pathspec and transient-empty-pathspec hypotheses, both confirmed)
-      at `unified-trading-pm@9e5e873988`, item 2 (promoted the confirmed `git pull --rebase --autostash` per-batch
-      fix into `/codex/05-infrastructure/per-tab-worktrees.md`) at `unified-trading-pm@e022d3f0e3`. This doc's own
-      remaining items are P3 conditional-future ("if velocity recurs") or a P2 design-review call, neither
-      blocking this tranche.
+      **Re-verified 2026-08-20: the bounded/mechanical portions are already extracted to
+      `/plans/active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` (`status: active`, AO-dispatch
+      eligible) — items 1-2 (repro + promote the confirmed `--rebase --autostash` fix into durable recovery docs)
+      still open there, not yet landed. Not duplicating that work here; this doc's own remaining items are P3
+      conditional-future ("if velocity recurs") or a P2 design-review call, neither blocking.**
 - [x] [BACKEND] P1. Add the retry safety net for `main-backmerge-to-ldr` on non-PM repos. Evidence:
       `/plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md`.
       **Re-verified 2026-08-20: all three extracted fixes are landed and cited in the source issue —
@@ -984,6 +961,39 @@ the todo checkboxes themselves; only genuinely-still-open items stay here)
 call, a VM-launch decision, or someone else's AO-dispatched work landing first. Nothing here is actionable by simply
 spending more session time on it.
 
-## Lessons carried forward
+## Lessons carried forward (2026-08-20)
 
-Moved verbatim to `/plans/active/code_readiness_t5_progress_history_2026_08_21.md` (parent at the 1000-line hard cap).
+- **`bash cmd 2>&1 | tee LOG | tail -N` silently discards `cmd`'s real exit code** — the pipeline returns `tail`'s
+  status. Confirmed live: `false | tee x | tail -5; echo $?` → `0`. This explains most of this session's own
+  "exited with code 0 but the banner said FAILED" confusion, including in `quickmerge_exit_zero_on_failed_regate_
+  and_silent_directory_files_2026_08_20.md`'s own Defect 1 evidence — re-measure with `${PIPESTATUS[0]}` before
+  trusting a piped exit code again.
+- **A diagnostic grep pattern is never exhaustive.** `ruff format --check` fails with `Would reformat: <path>`,
+  matching neither `❌` nor `FAILED`/`ERROR`/`E `. When a "REAL failure" banner fires with no visible evidence,
+  run each formatter/linter standalone against the exact files being shipped rather than trusting a keyword grep
+  over the full log a second time.
+- **Extending an existing check's dimensionality surfaces latent gaps in how it handles missing data.** Adding
+  MANUAL as a 4th mode wasn't itself risky, but it immediately exposed `execution_instruction()` conflating
+  "probe measured none" with "probe never had this field at all" — a real overclaim (`not_ready` instead of
+  `unverified`) that existed for the 3 original modes too, just never triggered because every mode DID have a
+  probe field. Adding an axis is a free correctness test for the axes that already existed.
+- **A stash-quarantine collision is recoverable if the diff is a clean superset** — verified via
+  `diff stash-version current-version` showing ONLY your own additions missing, nothing else different, before
+  restoring. Don't restore blind even when you're confident; the check costs one command.
+- **SHA ancestry doesn't survive a squash-style LDR→main promote** — `git merge-base --is-ancestor <sha> origin/main`
+  can report "not an ancestor" for a fix that genuinely IS live, because "Option-B direct" promotes rewrite history.
+  Content-diff the actual file against the target ref instead; that's what settled the `dp_cron_did_not_fire`
+  serving-revision question this session, not ancestry.
+- **A large-corpus bookkeeping triage parallelizes safely as read-only fan-out + serial human apply.** 15 sub-agents
+  (3 waves of ≤5) each read ~20-25 docs in full and reported proposed old/new diffs — none edited or shipped. This
+  let the expensive part (read + cross-check every doc) run in parallel on a live shared checkout without any
+  concurrent-write collision risk, while I stayed the sole writer/shipper. Yield was consistently low (~24 real
+  fixes across 352 docs) because this corpus already runs recurring audit skills — that's the correct outcome, not
+  a wasted pass; the value was catching the ~24 genuine misses those recurring audits don't check for.
+- **Even a pure checkbox-flip can trip `check_line_caps.sh` if the file was already over cap before you touched
+  it** — the fix is never "shrink my edit," it's recognizing a pre-existing structural blocker and routing around
+  it (revert, track the specific fix content as its own todo so it isn't lost, don't force through the gate).
+- **Re-run the gate after editing evidence text, not just before shipping** — citing a regex pattern inside
+  backticks in `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`'s evidence tripped the exact
+  prosewrap-padding bug that same doc tracks. Caught by re-running `check_prosewrap_padding.sh` standalone before
+  the ship attempt, not by the ship gate itself catching it first.

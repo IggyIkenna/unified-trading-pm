@@ -49,7 +49,7 @@ source: >-
   Log entry, not re-designed here.
 context_scope:
   [
-    /plans/archive/2026_08/w_execution_orchestrator_oms_persistence_2026_08_20.md,
+    /plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md,
     execution-service/execution_service/engine/live/persistence/postgresql.py,
     execution-service/execution_service/engine/live/persistence/protocols.py,
     execution-service/execution_service/adapters/order_adapter.py,

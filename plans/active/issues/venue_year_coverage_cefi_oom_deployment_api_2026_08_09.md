@@ -209,7 +209,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       promotion means a bare `is-ancestor` check reads NO), and cite fresh Cloud Logging evidence of a CLEAN window (no
       `Memory limit exceeded` / `terminated on signal 9`) same as this issue's original acceptance bar. Repo:
       deployment-api (+ verify unified-trading-library reached main).
-- [x] ✅ [BACKEND] P0. **NEW 2026-08-20 — `deployment-api@a69dad3`'s ThreadPoolExecutor parallelization did NOT close
+- [ ] [BACKEND] P0. **NEW 2026-08-20 — `deployment-api@a69dad3`'s ThreadPoolExecutor parallelization did NOT close
       the aggregate-budget gap; a FOURTH distinct abort site surfaced, inside `provenance_breakdown` itself.** Live
       repro against `uts-shared-deployment-api-00670-v6r` (created 2026-08-20T18:23:24Z, confirmed post-`a69dad3` —
       `git diff origin/main origin/live-defi-rollout -- manifest_source.py _live_coverage_venue_year.py
@@ -239,7 +239,6 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       the acceptance check once shipped. Repo: deployment-api. Evidence for this finding: revision
       `uts-shared-deployment-api-00670-v6r`, SIGABRT pid 21 @2026-08-20T19:47:06Z (Cloud Logging,
       `central-element-323112`).
-  **Resolution:** deployment-api@efd52b2b49 — removed redundant pandas full-frame allocations in `provenance_breakdown` (in-place derived columns and index reset). `quality-gates.sh` PASS (324s; existing baseline warnings only); quickmerge ancestry verified on `origin/live-defi-rollout`.
 - [x] ✅ [BACKEND] P0. **cefi `venue-year-coverage` still WORKER-TIMEOUTs (300s gunicorn limit) even with every
       shipped per-chunk vectorization fix live — an AGGREGATE wall-clock budget problem across 215+ row groups, not a
       single slow call.** Live repro 2026-08-19 (slot 32, infra re-verification) against deployed revision
@@ -468,15 +467,6 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       3-scope cefi probe) is a separate follow-up**, same pattern as this issue's other BACKEND fixes — the top-level
       INFRA todo above should be re-run against the deployed revision containing this SHA once it also picks up the
       still-open `filter_to_mvp` fix (mvp scope) for a genuinely clean 3-scope pass.
-
-- [x] ✅ [BACKEND] P0. **Narrow `provenance_breakdown()`'s per-row-group working frame** — live revision
-      `uts-shared-deployment-api-00675-rpm` (100% traffic) still timed out all three cefi scopes at 90s and logged
-      gunicorn worker timeouts/SIGABRT at `data_status_union.py:266` during the group-column `fillna` path. The
-      function copied every manifest column before reducing, although it only uses group keys, cell keys, capture
-      status, transport, and cadence. `deployment-api@d5d1078749` now copies only that required projection, preserving
-      the existing rank/tie-break and output semantics. Full `quality-gates.sh --no-fix`: **5414 passed, 11 skipped**;
-      all gates passed (188s). The live acceptance probe remains the open INFRA todo above and must be rerun after this
-      revision reaches production.
 
 ## Progress Log
 
@@ -729,5 +719,3 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   issue's own established discipline of confirming a fix locally before shipping, not shipping on log-read alone).
   **Not flipping the top-level INFRA todo** — the clean-window acceptance bar is still not met, now gated on this
   new finding rather than any previously-shipped fix (all four prior fixes confirmed live and holding).
-
-- **2026-08-20**: Closed the new provenance-breakdown abort site by shipping `deployment-api@efd52b2b49`. The implementation keeps one defensive copy and mutates derived columns in place, eliminating the duplicate `.assign()` allocations. Syntax/diff checks passed; full `quality-gates.sh` passed; quickmerge verified the SHA on `origin/live-defi-rollout`. Local pandas benchmarking was unavailable because this slot initially lacked an environment with pandas; the code path was validated by the repository test suite in the quality gate.

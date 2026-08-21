@@ -219,12 +219,8 @@ separate frontmatter/todo-format mechanical-fixer runs were needed.)
       account-lockout blocker question. **FIXED 2026-08-19 (ag_closeout_auditor, prediction tranche)** — retagged
       `[BLOCKED-CREDENTIALS][INFRA]` (landed via `plan_reconciler_findings_predictions_master_2026_08_19.md`'s copy of
       this same finding; this doc's copy is superseded, not independently re-applied).
-- [x] ✅ [DOCS] P3. `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md:395-397` — possible `[OPERATOR]` mistag.
-      Still grace-protected (10h53m at last check). **RESOLVED 2026-08-21 (na-eligibility-audit, prediction
-      tranche)** — same fix as the sibling `plan_reconciler_findings_prediction_2026_08_16.md`'s copy of this
-      finding: the mistag question is moot, the item was already RECLASSIFY-SPLIT + executed via
-      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (verdict REFUTED, full Cloud Logging evidence chain). Not
-      independently re-applied here, only closed.
+- [ ] [DOCS] P3. `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md:395-397` — possible `[OPERATOR]` mistag.
+      Still grace-protected (10h53m at last check).
 - [x] ✅ [DOCS] P3. `task_template.md:402` — stale reference to an archived doc (normative ref, corpus-wide ownership,
       not prediction-specific). Still grace-protected (10h43m at last check). **FIXED 2026-08-19 (plan_reconciler,
       `/plan-reconcile predictions_master`)**: grace cleared; repointed to `plans/archive/issues/...`. Same fix
@@ -371,10 +367,3 @@ fixing 11 other tranches' concurrent NA growth would defeat the sharded-run desi
   doc's marker. Item 1 (systemic `last_updated` staleness routing note) and item 3 (mdps_fleet mistag pointer) remain
   correctly non-dispatchable. Doc stays NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)
-- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, stale-items — closed 1 of 2 open items with hard
-  evidence (flipped `[x]` above): the `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` mistag pointer is
-  resolved — RECLASSIFY-SPLIT + executed via `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (verdict REFUTED,
-  full Cloud Logging evidence), same fix as the sibling `_2026_08_16.md` findings doc's copy. 2 open -> 1. Remaining
-  item (systemic `last_updated` frontmatter staleness — a tooling-gap routing note owned by the
-  context-scout/na-eligibility-audit/plan_reconciler skills themselves, not per-doc content) re-confirmed correctly
-  non-dispatchable: no single doc's content is wrong, the fix belongs in 3 skills' own update logic. Doc stays NA.

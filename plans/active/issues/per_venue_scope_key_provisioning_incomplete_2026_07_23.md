@@ -271,6 +271,3 @@ All three are real design/priority calls, not something determinable from code o
   are unchanged and correctly still open — no new done-but-unchecked or contradiction found. See the epic's own
   `## Report` section for the full run's findings.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; 3 open items unchanged (Bybit key
-  creation needs the operator's own exchange login; OKX/Hyperliquid scope-separation design call approved-to-build
-  but still unscoped; Upbit/Kraken/Bitfinex/Bitget provisioning is an open priority call).

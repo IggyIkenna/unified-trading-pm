@@ -778,7 +778,4 @@ Coverage is the verification lens — every number flows through `compute_honest
   raise-vs-fallback CF-11 honest-absence behavior) is a genuine behavior-change design decision with manifest
   implications, not mechanically bounded by any round-11 ruling. No reclassification.
 - **na-eligibility-audit 2026-08-16** [body-hash:0dbdac10b55b4a2a]: KEEP-NA, valid — Read the full 769-line doc end-to-end (both halves) plus grep-verified the open-todo count matches the Phase-0 inventory (2).
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; the 2 open items (G1 umbrella
-  sign-off recording, EXTENDED CF-11 raise-vs-fallback design call) are unchanged, both operator sign-off/judgment
-  gates.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

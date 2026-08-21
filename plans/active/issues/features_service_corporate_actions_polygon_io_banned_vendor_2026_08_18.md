@@ -136,6 +136,3 @@ independently re-derived, this is a direct-read confirmation of the adapter's re
   it runs only inside this same unscheduled `--operation corporate_actions`, so "genuinely dispatched" holds only as
   "registered callable operation", not "scheduled". Limitation: GCS presence (has the handler EVER written data) not
   machine-verified — `gcloud storage` CLI is guardrail-blocked on this host.
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Todo 2 (`[OPERATOR]` vendor re-sourcing decision —
-  yfinance vs. a paid contract) is genuine diligence/judgment work; todo 3 stays contingent on it. `assigned_vm`
-  unchanged.

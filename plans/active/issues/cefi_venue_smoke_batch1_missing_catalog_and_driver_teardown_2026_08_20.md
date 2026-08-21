@@ -12,7 +12,7 @@ scope: [engineer, admin]
 tags: [venue-readiness, smoke-test, cefi, pipeline-e2e-check, tardis, catalogue]
 related: [/plans/active/cefi_venue_smoke_batch1_2026_08_20.md, /plans/active/issues/mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md]
 created: 2026-08-20
-last_updated: 2026-08-21
+last_updated: 2026-08-20
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -63,18 +63,6 @@ shared cap and produces false skips/failures.
 3. Verify the smoke gate rejects zero-row successful VM exits (or retain the existing explicit post-run assertion) before
    marking the P0 checkbox complete.
 
-## Open todos
-
-- [ ] [BACKEND] P0. Rerun the 79 failed and 208 skipped CeFi cells as bounded serial force/skip/canonical attempts under
-  the Tardis concurrency cap, retaining per-cell terminal reports and fresh manifest evidence (repos:
-  `market-tick-data-service`, `deployment-service`).
-- [ ] [BACKEND] P0. Resolve the LIGHTER-ZKSYNC derivative-ticker catalogue mapping so sampled symbols cannot be emitted
-  as a bare `ARM` instrument id, then rerun its canonical negative/positive controls (repos: `instruments-service`,
-  `unified-api-contracts`, `market-tick-data-service`).
-- [ ] [BACKEND] P1. Classify every `no_captured_data_for_cell` and `tardis_guard_busy` result against the production
-  source listing and record an honest absence or successful capture; no row may remain represented only by a skipped
-  aggregate result (repos: `market-tick-data-service`, `deployment-service`).
-
 ## Progress Log
 
 **2026-08-20 — slot 18.** Captured the failed full-driver and bounded diagnostic evidence above. P0 remains open.
@@ -96,15 +84,3 @@ and a manifest atom, exit code 0. The retained aggregate report measured `total=
 `skipped=215`; `no_captured_data_for_cell`, Tardis contention, and canonical-missing-object failures remain. Per the
 operator ruling, this report does not prove the P0 contract. Keep this issue open and remediate missing captures with
 bounded serial runs.
-
-**2026-08-20 — resumed execution attempt 2 (slot 14).** The UAC generator again measured 73 CeFi rows. The driver ran with explicit staging VM launch arguments, `--require-captured`, `--auto-day`, and `--bundle`; phase-0 consolidation succeeded (`shards=4`, `rows_in=111855`, `rows_out=109308`). It progressed through the CeFi venue cells, including native-REST HYPERLIQUID/ASTER, but did not produce a terminal CeFi report. The staging launcher eventually failed its freshness auto-republish with `printf: write error: No space left on device` and refused to launch stale/unverified tarballs for `market-tick-data-service`, `unified-api-contracts`, `unified-trading-library`, and `deployment-service`. The exact driver retry process was stopped after SIGTERM when the full-filesystem retry loop continued. The existing audit result at `unified-trading-pm/plans/audit/results/data_pipeline_e2e_check_mtds_2026_08_20.md` is a Prediction run, not CeFi evidence. P0 remains open; next rerun requires reclaiming the launcher staging space, regenerating verified tarballs, and then bounded serial CeFi cells with retained per-cell terminal reports.
-
-**2026-08-21 — terminal correction for resumed staging run (slot 14).** The preserved driver
-`pipeline-e2e-check-mtds-20260820-2217-cefi` reached a terminal failed state: remote
-`/tmp/vm-exec-5628.exit_status` is `1`; the log records `118` shard launches and `136` poll ticks; and the
-report was written at 2026-08-21T00:24:08Z. Final result: `total=294`, `passed=7`, `failed=79`, `ambiguous=0`,
-`skipped=208`. Failures include genuine `no_parquet_under` results, `vm_self_deleted_no_exit_status`, and a
-canonical rejection of raw `LIGHTER-ZKSYNC:PERPETUAL:ARM.parquet`; this is terminal RED evidence, not a zero-row
-success. P0 remains open. Evidence: VM log
-`gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260820-2217-cefi/run.log` and
-report `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`.

@@ -155,6 +155,3 @@ retry, not genuinely new information.
   consolidated into `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 2 alongside the `btc-2020` sibling —
   see checkbox above. Todo 1 (operator relaunch decision) stays genuinely gated. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open todo (`[OPERATOR]` relaunch-vs-wait)
-  remains genuinely operator-gated; todo 2's consolidation into `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md`
-  Todo 2 stays current. `assigned_vm` unchanged.

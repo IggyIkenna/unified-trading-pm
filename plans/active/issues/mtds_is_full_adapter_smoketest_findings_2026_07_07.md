@@ -747,7 +747,3 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
   DERIBIT/COMBO mistagging root-cause, drilldown-mockup update) remain open-ended research/investigation per 6+ prior
   independent passes — reaffirmed. Doc stays assigned_vm: NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; 4 remaining open items (ODDS_API
-  ownership research, FLUID 18-month coverage gap needing an alternate historical read path, untraced 273-row
-  DERIBIT/COMBO mistagging root-cause, an under-specified drilldown-mockup update) stay open-ended
-  research/investigation.

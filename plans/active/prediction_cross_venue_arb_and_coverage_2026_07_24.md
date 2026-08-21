@@ -457,7 +457,3 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
-- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, valid — 2 open items re-confirmed live
-  (`grep -cE '^\s*- \[ \]'` = 2): the tarball-overwrite-race infra/ci mitigation choice (2 named options, no
-  directive) and the fixture-pairing team-name-canonicalization design residual (explicitly gated by an in-text "no
-  false pairs — operator" annotation). Consistent with 6+ prior audit passes. Doc stays NA.

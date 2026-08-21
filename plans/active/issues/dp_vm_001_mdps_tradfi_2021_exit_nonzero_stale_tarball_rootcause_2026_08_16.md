@@ -233,6 +233,3 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
   "consider whether..." question, not a bounded script task) — doesn't change the gated disposition. Both remaining
   todos stay operator/design-gated. `assigned_vm` unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Todo 1 (`[OPERATOR]` relaunch-vs-wait) and todo 3
-  (`[DESIGN]` tarball-refresh-cadence question) both remain genuinely operator/design-gated, unchanged since the 08-18
-  pass. `assigned_vm` unchanged.
