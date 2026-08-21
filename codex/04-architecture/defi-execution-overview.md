@@ -186,6 +186,9 @@ Every on-chain revert maps to a structured error code with an action. SSOT for t
 `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (StrEnum; 35 codes; refreshed 2026-05-22 — grew
 from 13 original Aave codes to 35 as HL perp + recursive-loop + oracle codes added 2026-05-12/13 + 5 CCTP codes added
 2026-05-19). Import: `from unified_api_contracts import DefiErrorCode, OracleStaleError, OracleDeviationError`.
+Distinct from this runtime enum, the venue-error REGISTRY (`errors/defi.py` + `errors/_defi_aave_codes.py`) carries
+the protocols' PUBLISHED error tables transcribed in full for `classify_venue_error()` (e.g. Aave v3's 84-code
+`Errors.sol` table, doc-cited, added 2026-08-21) — SSOT `/codex/04-architecture/venue-websocket-resilience.md` §2.
 
 ### Aave V3 / on-chain DeFi codes (13)
 

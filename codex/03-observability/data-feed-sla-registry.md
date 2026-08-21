@@ -64,15 +64,15 @@ not code. The registry is the single home; every consumer reads it — nothing r
 
 Defined in `unified_api_contracts.internal.reference.data_freshness`:
 
-| Field                      | Type                                                | Meaning                                                                                                                   |
-| -------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `source`                   | `str`                                               | Feed identifier (venue name / data domain). Also serves as the dict key in each sub-dict.                                 |
-| `asset_group`              | `Literal[...]`                                      | Market domain: `"cefi"` / `"defi"` / `"tradfi"` / `"sports"` / `"prediction"` / `"execution"` (account-state feeds).      |
-| `max_age_seconds`          | `int`                                               | Hard ceiling — a feed older than this value is **stale**; consumers must act.                                             |
-| `warn_age_seconds`         | `int`                                               | Soft warning threshold (`warn_age_seconds < max_age_seconds` always; CI gate asserts this).                               |
-| `expected_cadence_seconds` | `int`                                               | Expected feed update cadence — used by liveness monitors to detect a silent producer.                                     |
-| `criticality`              | `Literal["critical", "important", "informational"]` | Determines what consumers do on breach (see tiers below).                                                                 |
-| `refetch_action`           | `str \| None`                                       | Layer-0 recovery action to fire on staleness breach. `None` for `informational` feeds. Format: `"refetch-feed:<source>"`. |
+| Field                      | Type                                                | Meaning                                                                                                                                                                                                                      |
+| -------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `source`                   | `str`                                               | Feed identifier (venue name / data domain). Also serves as the dict key in each sub-dict.                                                                                                                                    |
+| `asset_group`              | `Literal[...]`                                      | Market domain: `"cefi"` / `"defi"` / `"tradfi"` / `"sports"` / `"prediction"` / `"execution"` (account-state feeds).                                                                                                         |
+| `max_age_seconds`          | `int`                                               | Hard ceiling — a feed older than this value is **stale**; consumers must act.                                                                                                                                                |
+| `warn_age_seconds`         | `int`                                               | Soft warning threshold (`warn_age_seconds < max_age_seconds` always; CI gate asserts this).                                                                                                                                  |
+| `expected_cadence_seconds` | `int`                                               | Expected feed update cadence — used by liveness monitors to detect a silent producer.                                                                                                                                        |
+| `criticality`              | `Literal["critical", "important", "informational"]` | Determines what consumers do on breach (see tiers below).                                                                                                                                                                    |
+| `refetch_action`           | `str \| None`                                       | Layer-0 recovery action to fire on staleness breach. `None` for `informational` feeds. Format: `"refetch-feed:<source>"` (REST re-pull) or `"rotate-websocket:<source>"` (ws-session rotation — the ws-sourced live venues). |
 
 **Invariant (CI-enforced):** `warn_age_seconds < max_age_seconds` for every contract in `ALL_FRESHNESS_CONTRACTS`.
 
@@ -127,17 +127,24 @@ These feeds are reachable via `ALL_FRESHNESS_CONTRACTS` and via
 
 ## `refetch_action` field and active self-healing
 
-Every `critical` and `important` contract carries `refetch_action = "refetch-feed:<source>"`. This string names the
-Layer-0 recovery action that fires when the feed is stale:
+Every `critical` and `important` contract carries a bound Layer-0 action id — `refetch-feed:<source>` (REST re-pull)
+or, for the ws-sourced live venues (binance/bybit/okx/coinbase/hyperliquid/deribit), `rotate-websocket:<source>`
+(ws-session rotation — a REST re-pull cannot revive a dead socket). The id names the Layer-0 recovery action that
+fires when the feed is stale:
 
-- **Layer-0 script**: `deployment-service/scripts/recovery/refetch_feed.py` — looks up the contract, invokes the
-  owning-service CLI
+- **Layer-0 script (refetch)**: `deployment-service/scripts/recovery/refetch_feed.py` — looks up the contract, invokes
+  the owning-service CLI
   (`market-tick-data-service --operation download --mode batch --asset-group <ag> --venues <source> --day <today-UTC>`),
   emits `AgentActionEvent`, and enforces a per-feed cooldown storm-guard.
-- **UAC enum**: `ActionType.REFETCH_FEED` in `unified_api_contracts`.
-- **UTL registry**: `RecoveryScriptRegistry` entry maps `ActionType.REFETCH_FEED` to the script.
-- **Escalation**: `alerting-service/rules/feed_refetch_rules.py` — stale critical feed → fire `refetch-feed`
-  (SILENT_RETRY) → per-feed `CircuitBreaker` (3 fails/30 min) escalates WARN→CRITICAL/HIGH via
+- **Layer-0 script (rotate)**: `deployment-service/scripts/recovery/rotate_websocket.py` (`ActionType.ROTATE_WEBSOCKET`)
+  — same storm guards; drops the UTL `ws_rotation_request` sentinel, which the owning `WsSessionManager` consumes on
+  its next watchdog tick to rotate the session per the venue's `WsProtocolSpec`. SSOT:
+  `/codex/04-architecture/venue-websocket-resilience.md`.
+- **UAC enum**: `ActionType.REFETCH_FEED` / `ActionType.ROTATE_WEBSOCKET` in `unified_api_contracts`.
+- **UTL registry**: `RecoveryScriptRegistry` entries map both action types to their scripts.
+- **Escalation**: `alerting-service/rules/feed_refetch_rules.py` — stale critical feed → fire the feed's BOUND action
+  (resolved from the contract — refetch or rotate) as SILENT_RETRY → per-feed `CircuitBreaker` (3 fails/30 min)
+  escalates WARN→CRITICAL/HIGH via
   `route_event_with_explicit_channels` → sustained breach adds advisory `reduce_position`.
 
 **Limitation (known, tracked):** the re-fetch uses a coarse `--day` window. Finer `--shard-key` targeting is a future
@@ -169,14 +176,15 @@ Any change to the alert threshold that would make it stricter than the per-venue
 
 All consumers read `ALL_FRESHNESS_CONTRACTS` (or a sub-dict) from the registry — no inline literals:
 
-| Consumer                                                | What it does                                                                                              |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `execution-service/validation/freshness_gate.py`        | `assert_market_data_fresh` — raises `DataStalenessError` for `critical` breaches; blocks orders.          |
-| `strategy-service/validation/freshness_gate.py`         | `assert_feature_fresh` — raises for `critical`, emits `DATA_STALE` warning for `important`.               |
-| `mdps/monitors/feature_freshness.py`                    | Feature-feed freshness monitor — checks `FEATURE_FRESHNESS` contracts on each pipeline tick.              |
-| `unified_trading_library/monitors/freshness_monitor.py` | Generic wrapper around `DataFreshnessContract`; used by any service that needs a per-feed liveness probe. |
-| `deployment-service/scripts/recovery/refetch_feed.py`   | Layer-0 recovery — reads `refetch_action` to drive active re-fetch on stale critical/important feeds.     |
-| `alerting-service/rules/feed_refetch_rules.py`          | Escalation ladder for repeated refetch failures.                                                          |
+| Consumer                                                  | What it does                                                                                                              |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `execution-service/validation/freshness_gate.py`          | `assert_market_data_fresh` — raises `DataStalenessError` for `critical` breaches; blocks orders.                          |
+| `strategy-service/validation/freshness_gate.py`           | `assert_feature_fresh` — raises for `critical`, emits `DATA_STALE` warning for `important`.                               |
+| `mdps/monitors/feature_freshness.py`                      | Feature-feed freshness monitor — checks `FEATURE_FRESHNESS` contracts on each pipeline tick.                              |
+| `unified_trading_library/monitors/freshness_monitor.py`   | Generic wrapper around `DataFreshnessContract`; used by any service that needs a per-feed liveness probe.                 |
+| `deployment-service/scripts/recovery/refetch_feed.py`     | Layer-0 recovery — reads `refetch_action` to drive active re-fetch on stale critical/important feeds.                     |
+| `deployment-service/scripts/recovery/rotate_websocket.py` | Layer-0 recovery — ws-session rotation for `rotate-websocket:`-bound feeds (drops the WsSessionManager request sentinel). |
+| `alerting-service/rules/feed_refetch_rules.py`            | Escalation ladder for repeated refetch failures.                                                                          |
 
 ---
 
