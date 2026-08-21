@@ -81,6 +81,7 @@
     font-size: 17.5px;
     line-height: 1.62;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
   .shell {
     max-width: var(--shell);
@@ -260,6 +261,63 @@
   .contents .ttl {
     font-size: 0.93rem;
     color: var(--ink-2);
+  }
+
+  /* Sticky left-hand TOC sidebar — wide viewports only; page body itself never scrolls horizontally,
+     this panel scrolls only its own contents. Mirrors nav.contents (in-flow), does not replace it. */
+  .toc-sidebar {
+    position: fixed;
+    left: max(14px, calc((100vw - var(--shell)) / 2 - 226px));
+    top: 88px;
+    width: 208px;
+    max-height: calc(100vh - 132px);
+    overflow-y: auto;
+    display: none;
+    z-index: 30;
+    border-left: 1px solid var(--rule);
+    padding-left: 15px;
+  }
+  @media (min-width: 1680px) {
+    .toc-sidebar {
+      display: block;
+    }
+  }
+  .toc-sidebar h2 {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 12px;
+  }
+  .toc-sidebar ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+  }
+  .toc-sidebar li {
+    margin: 0;
+  }
+  .toc-sidebar a {
+    display: block;
+    padding: 3.5px 0 3.5px 11px;
+    margin-left: -12px;
+    border-left: 2px solid transparent;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: var(--ink-3);
+    text-decoration: none;
+  }
+  .toc-sidebar a:hover {
+    color: var(--accent);
+  }
+  .toc-sidebar a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
   }
 
   section {
@@ -566,6 +624,16 @@
   .code .k {
     color: var(--g-exec);
     font-weight: 600;
+  }
+  /* Shard-schemas section (§07) only — colour-distinguish column tokens from their type tokens so a
+     dense inline schema reads at a glance without the type doubling as a code-comment colour. */
+  #s7 .code .fld {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  #s7 .code i {
+    color: var(--g-exec);
+    font-style: normal;
   }
 
   .stat-row {
@@ -909,6 +977,11 @@
   }
 </style>
 
+<aside class="toc-sidebar" id="tocSidebar" aria-label="Section navigation">
+  <h2>Contents</h2>
+  <nav><ol id="tocSidebarList"></ol></nav>
+</aside>
+
 <div class="shell">
   <header class="masthead">
     <div class="eyebrow">
@@ -949,6 +1022,13 @@
         ><b class="own" title="Example — hover any owner mark for the full reference">owner: W5</b> the workstream, plan
         or epic that closes this gap — hover for the full citation; omitted once status reaches
         <b class="st st-live">live</b>, because a live claim has no open gap to own</span
+      >
+    </div>
+    <div class="legend">
+      <span
+        ><b>Declared since: not declared</b> means the capability is live-only — reachable on the streaming path with
+        no batch start date, because nothing has backfilled it yet. That is a statement about which path exists today,
+        not a claim that the capability itself is not real</span
       >
     </div>
   </header>
@@ -16239,6 +16319,16 @@
         Daily parquet, partitioned along the same axes the availability query uses, so the path you download is the path
         you asked about. Instruments come as a bulk parquet dump on the same model.
       </p>
+      <div class="callout">
+        <span class="tag">Why parquet</span>
+        <p>
+          Parquet is typed and columnar — the schema travels with the file, and compression is native rather than a
+          wrapper you add yourself, so a day's shard is smaller on the wire and on disk than an equivalent flat file
+          without losing type information at read time. That is the default, not a constraint: a caller who needs a
+          different compression codec, or a flat CSV for a downstream tool that cannot read parquet, can ask for it —
+          the underlying data does not change, only its serialisation on delivery.
+        </p>
+      </div>
       <h3>Live</h3>
       <p>
         Streaming, on the same schemas as batch. This matters more than it sounds: the live and batch paths are the same
@@ -16254,7 +16344,7 @@
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly: <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>'s
+        Source: <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>'s
         <code>/delivery/stream</code> route is backed by the UTL
         <code>unified_trading_library.streaming.event_facade</code>
         (<code>get_transport</code>) — the same facade the internal live-tick sink publishes through. Full parameter
@@ -16284,28 +16374,32 @@
       <details class="ref">
         <summary>Trades<span class="tag-ref">Schema</span></summary>
         <div class="code">
-          timestamp <i>datetime[UTC]</i> instrument_id <i>str</i> price <i>decimal</i> size <i>decimal</i> side
-          <i>str</i> trade_id <i>str</i>
+          <span class="fld">timestamp</span> <i>datetime[UTC]</i> <span class="fld">instrument_id</span> <i>str</i>
+          <span class="fld">price</span> <i>decimal</i> <span class="fld">size</span> <i>decimal</i>
+          <span class="fld">side</span> <i>str</i> <span class="fld">trade_id</span> <i>str</i>
         </div>
       </details>
       <details class="ref">
         <summary>Book snapshot<span class="tag-ref">Schema</span></summary>
         <div class="code">
-          timestamp <i>datetime[UTC]</i> instrument_id <i>str</i> bids <i>list[[price, size]]</i> asks
-          <i>list[[price, size]]</i> depth <i>int</i>
+          <span class="fld">timestamp</span> <i>datetime[UTC]</i> <span class="fld">instrument_id</span> <i>str</i>
+          <span class="fld">bids</span> <i>list[[price, size]]</i> <span class="fld">asks</span>
+          <i>list[[price, size]]</i> <span class="fld">depth</span> <i>int</i>
         </div>
       </details>
       <details class="ref">
         <summary>Candles<span class="tag-ref">Schema</span></summary>
         <div class="code">
-          timestamp <i>datetime[UTC]</i> instrument_id <i>str</i> timeframe <i>str</i> open high low close
-          <i>decimal</i> volume <i>decimal</i>
+          <span class="fld">timestamp</span> <i>datetime[UTC]</i> <span class="fld">instrument_id</span> <i>str</i>
+          <span class="fld">timeframe</span> <i>str</i> <span class="fld">open high low close</span>
+          <i>decimal</i> <span class="fld">volume</span> <i>decimal</i>
         </div>
       </details>
       <details class="ref">
         <summary>Funding rate<span class="tag-ref">Schema</span></summary>
         <div class="code">
-          timestamp <i>datetime[UTC]</i> instrument_id <i>str</i> funding_rate <i>decimal</i> next_funding_at
+          <span class="fld">timestamp</span> <i>datetime[UTC]</i> <span class="fld">instrument_id</span> <i>str</i>
+          <span class="fld">funding_rate</span> <i>decimal</i> <span class="fld">next_funding_at</span>
           <i>datetime[UTC]</i>
         </div>
       </details>
@@ -16343,16 +16437,39 @@
       </p>
       <details class="ref">
         <summary>The instruction envelope<span class="tag-ref">Contract</span></summary>
-        <div class="code">
-          <span class="k">class</span> <b>StrategyInstructionEnvelope</b>: action: <i>InstructionAction</i>
-          <i># what to do</i> instrument: <i>InstrumentKey</i> quantity: <i>decimal</i> reference_price: <i>decimal</i>
-          <i># the benchmark it assumed</i> execution_policy_ref: <i>str</i> <i># which policy governs it</i> urgency:
-          <i>Urgency</i> eligible_venues: <i>list[str]</i> venue_constraints:
-          <i>VenueConstraints</i> reference_position: <i>dict[str, decimal] | None</i>
-          <i># believed position per eligible venue</i> credit: <i>{entry_threshold, abandon_threshold} | None</i>
-          <i># strategy-owned band or threshold</i> position_adjustment_bps_per_unit_risk: <i>decimal | None</i>
-          <i># symmetric skew coefficient, against raw position</i>
+        <p style="font-size: 0.9rem; color: var(--ink-3)">
+          The <code>StrategyInstructionEnvelope</code> fields below, shaped as the body of the POST that carries them
+          — field names and types are the real, declared contract; the request line is illustrative.
+        </p>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">Example</span><span class="note">Shape of a real POST body — values illustrative</span>
+          </div>
+          <div class="plate-body scroll-x">
+            <div class="code">POST /external/instructions HTTP/1.1
+Content-Type: application/json
+
+{
+  "action": "&lt;InstructionAction&gt;",
+  "instrument": "&lt;InstrumentKey&gt;",
+  "quantity": "&lt;decimal&gt;",
+  "reference_price": "&lt;decimal&gt;",
+  "execution_policy_ref": "&lt;str&gt;",
+  "urgency": "&lt;Urgency&gt;",
+  "eligible_venues": ["&lt;str&gt;", "..."],
+  "venue_constraints": "&lt;VenueConstraints&gt;",
+  "reference_position": "&lt;dict[str, decimal] | null&gt;",
+  "credit": "&lt;{entry_threshold, abandon_threshold} | null&gt;",
+  "position_adjustment_bps_per_unit_risk": "&lt;decimal | null&gt;"
+}</div>
+          </div>
         </div>
+        <p style="font-size: 0.9rem; color: var(--ink-3)">
+          <code>reference_price</code> is the benchmark strategy assumed; <code>execution_policy_ref</code> names
+          which policy governs the instruction; <code>reference_position</code> is strategy's believed position per
+          eligible venue; <code>credit</code> is strategy-owned — a band or a threshold; and
+          <code>position_adjustment_bps_per_unit_risk</code> is a symmetric skew coefficient against raw position.
+        </p>
       </details>
       <div class="callout">
         <span class="tag">The design decision worth noticing</span>
@@ -16785,7 +16902,7 @@
         versioned, any fill can be traced to the exact policy that governed it.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly: <code>execution-service/execution_service/algorithms/registry.py</code> maps algorithm IDs
+        Source: <code>execution-service/execution_service/algorithms/registry.py</code> maps algorithm IDs
         (<code>TWAP</code>, <code>VWAP</code>, <code>ICEBERG</code>) to their execution and config classes; a straight
         market order is the default when no policy names an algo.
       </p>
@@ -16887,7 +17004,7 @@
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Verified directly: <code>execution-service/execution_service/isolation_policy.py</code>'s
+        Source: <code>execution-service/execution_service/isolation_policy.py</code>'s
         <code>assert_client_allowed()</code>, called from the live path in
         <code>execution-service/execution_service/engine/modes/live/trigger.py</code> — a cross-client event is logged
         and dropped, not executed.
@@ -19178,3 +19295,63 @@ Content-Type: application/json
     </p>
   </footer>
 </div>
+
+<script>
+  (function () {
+    // Populate the sticky sidebar from the existing in-flow Contents nav — one source of section
+    // links, no duplicated titles to drift. Scroll-spy highlights whichever section is nearest the
+    // top of the viewport; click-to-jump comes for free from the anchors themselves.
+    var list = document.getElementById("tocSidebarList");
+    var sourceLinks = document.querySelectorAll("nav.contents > ol > li > a");
+    if (!list || !sourceLinks.length) return;
+
+    var entries = [];
+    sourceLinks.forEach(function (a) {
+      var href = a.getAttribute("href") || "";
+      var id = href.slice(1);
+      var target = id ? document.getElementById(id) : null;
+      if (!target) return;
+      var num = a.querySelector(".num");
+      var ttl = a.querySelector(".ttl");
+      var li = document.createElement("li");
+      var link = document.createElement("a");
+      link.href = href;
+      link.textContent = (num ? num.textContent + " " : "") + (ttl ? ttl.textContent : a.textContent);
+      li.appendChild(link);
+      list.appendChild(li);
+      entries.push({ id: id, link: link });
+    });
+
+    var active = null;
+    function setActive(link) {
+      if (active === link) return;
+      if (active) active.classList.remove("active");
+      if (link) link.classList.add("active");
+      active = link;
+    }
+
+    if (!("IntersectionObserver" in window) || !entries.length) return;
+    var linkById = {};
+    entries.forEach(function (e) {
+      linkById[e.id] = e.link;
+    });
+    var observer = new IntersectionObserver(
+      function (observed) {
+        var best = null;
+        var bestTop = Infinity;
+        observed.forEach(function (item) {
+          if (item.isIntersecting && item.boundingClientRect.top < bestTop) {
+            bestTop = item.boundingClientRect.top;
+            best = item.target.id;
+          }
+        });
+        if (best) setActive(linkById[best]);
+      },
+      { rootMargin: "-8% 0px -75% 0px", threshold: 0 }
+    );
+    entries.forEach(function (e) {
+      var el = document.getElementById(e.id);
+      if (el) observer.observe(el);
+    });
+  })();
+</script>
