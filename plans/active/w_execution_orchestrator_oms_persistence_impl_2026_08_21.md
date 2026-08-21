@@ -98,11 +98,11 @@ context_scope:
 
 ### Phase B — write contract in `OrderAdapter` (the hot-path wiring)
 
-- [x] ✅ [BACKEND] P0. **Thread an optional `oms: UnifiedOrderManager | None = None` param into
+- [ ] [BACKEND] P0. **Thread an optional `oms: UnifiedOrderManager | None = None` param into
       `OrderAdapter.__init__`** (`adapters/order_adapter.py`) and `OrderAdapterMatchingEngine.__init__`
       (`engine/orchestrator.py`), defaulting to a fresh `UnifiedOrderManager(InMemoryOrderPersistence())` when
       not supplied — mirrors `OrderBook.__init__`'s own existing default-constructible pattern
-      (`engine/startup/order_recovery.py`). Implements design plan todo 7 (test strategy). — execution-service@f4cb199b48 + evidence: quality-gates.sh passed; quickmerge ancestry verified.
+      (`engine/startup/order_recovery.py`). Implements design plan todo 7 (test strategy).
 - [ ] [BACKEND] P0. **Wire `oms.create_order()`/`update_order_status()` calls into `OrderAdapter.submit_order()`**
       at the exact points the design plan's Progress Log names — `create_order` immediately before the
       existing `_log_order_created()` call, `update_order_status` immediately after `_log_post_submit_audit`'s

@@ -135,7 +135,7 @@ impression:
 
 ### DeFi by primitive — perp / CLOB on-chain
 
-- [x] ✅ [BACKEND] P0. Audit the on-chain perp/CLOB group: `hyperliquid.py`, `_hyperliquid_schemas.py`,
+- [ ] [BACKEND] P0. Audit the on-chain perp/CLOB group: `hyperliquid.py`, `_hyperliquid_schemas.py`,
       `_hyperliquid_signing.py`, `aster.py`, `pacifica.py`, `bybit.py` (the DeFi-side Bybit protocol file, not
       the CeFi CCXT adapter — confirm which is which before starting). Checklist point 2 (signing/auth) is the
       primary risk — these are the files implementing custom signature schemes rather than reusing a vetted
@@ -283,17 +283,3 @@ Findings use the fixed seven-point checklist and exact implementation lines. EVM
 - `solblaze.py`: (1), (2), and (5) PASS/N-A — simulation-only, no live credential/signing/approval (`solblaze.py:21-33,73-97`). (3) HIGH — stake/unstake accept non-positive amounts and mutate state without balance/range validation (`solblaze.py:164-202,204-242`). (4) MEDIUM — no minimum-output bound and always reports instant withdrawal despite the documented epoch-delayed route. (6) PASS/N-A for on-chain retry safety. (7) PASS with simulation-only limitation; construction with `is_live=True` is rejected by the base contract.
 
 No code was changed or tests run for this read-only audit. The HIGH findings require the existing triage phase to add explicit fixes/todos before W15 close-out.
-- [ ] [BACKEND] P0. Harden perp/CLOB order boundaries across Hyperliquid, Aster, Pacifica, and the DeFi-side Bybit wrapper: reject non-finite/non-positive size and price, reject unknown side/order-type values, and preserve the underlying adapter's validation before any live submission; HIGH finding: checklist point 3 (hyperliquid.py:370-402,504-516; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132).
-- [ ] [BACKEND] P0. Define caller-controlled slippage and expiry/deadline bounds for market and resting perp orders; remove the implicit Hyperliquid 5% IOC buffer and make Aster/Pacifica/Bybit market semantics explicit and bounded; HIGH finding: checklist point 4 (hyperliquid.py:381-391; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132).
-- [ ] [BACKEND] P0. Add durable idempotency/client-order IDs and ambiguous-outcome recovery for the perp/CLOB order paths; thread client_order_id through the Bybit wrapper into BybitCCXTAdapter, and prevent duplicate retries for Hyperliquid nonce-based, Aster timestamp-based, and Pacifica timestamp/expiry-based submissions; HIGH finding: checklist point 6 (hyperliquid.py:504-546; aster.py:479-519; pacifica.py:559-655; bybit.py:105-132).
-- [ ] [BACKEND] P0. Make Bybit position/balance read failures observable instead of returning empty positions or zero balance, while preserving the already honest failed-order result; MEDIUM finding related to checklist point 7 (bybit.py:136-176).
-- [ ] [BACKEND] P0. Confirm Pacifica's future live enablement retains the current fail-closed boundary (supports_live=False) and validates the configured Solana keypair/account relationship before changing that flag; HIGH-risk signing/auth guardrail (pacifica.py:31-48,286-328,610-645).
-
-### 2026-08-21 — slot 25 perp/CLOB audit
-
-Findings use the fixed seven-point checklist and exact implementation lines.
-
-- Hyperliquid signing and UAC schema boundaries PASS (`_hyperliquid_signing.py:32-108`; `hyperliquid.py:504-546`); HIGH input-validation gap and permissive side mapping (`hyperliquid.py:370-402,504-516`), fixed 5% IOC buffer with no caller deadline/slippage (`hyperliquid.py:381-391`), and no durable idempotency/client-order key (`hyperliquid.py:504-546`).
-- Aster HMAC credentials/signing PASS (`aster.py:249-278`); HIGH unchecked quantity/price/side (`aster.py:394-427`), no slippage/deadline contract, and no client-order idempotency across fresh timestamped submissions (`aster.py:479-519`).
-- Pacifica remains fail-closed (`supports_live=False`) and its Ed25519 scaffold does not post private material (`pacifica.py:166-211,286-328,559-645`); HIGH future-live input, expiry, and replay/idempotency gaps (`pacifica.py:489-515,559-655`).
-- Bybit delegates credential/signing correctness and returns failed write results, but has HIGH unchecked wrapper inputs and drops the delegated `client_order_id` (`bybit.py:105-132`; `bybit_ccxt.py:208-226`); MEDIUM read failures become empty positions/zero balance (`bybit.py:136-176`).

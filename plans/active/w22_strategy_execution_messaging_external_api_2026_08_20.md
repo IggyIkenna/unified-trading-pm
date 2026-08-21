@@ -10,7 +10,7 @@ status: active
 nature: design
 asset_group: [cross-cutting]
 stage: [execution]
-repos: [execution-service, strategy-service, unified-trading-library, unified-api-contracts, deployment-service]
+repos: [execution-service, strategy-service, unified-trading-library]
 scope: [engineer]
 tags: [execution, messaging, event-transport, external-api, w22]
 related:
@@ -47,10 +47,6 @@ context_scope:
   [
     strategy-service/strategy_service/engine/strategies/v2/live_routing.py,
     unified-trading-library/unified_trading_library/streaming/event_facade.py,
-    unified-api-contracts/unified_api_contracts/events/sink_matrix.py,
-    deployment-service/terraform/gcp/live_event_log/main.tf,
-    deployment-service/terraform/gcp/live_event_log/warm_sink.tf,
-    deployment-service/terraform/gcp/live_event_log/bq_external.tf,
     execution-service/execution_service/api/external_instruction_api.py,
     execution-service/execution_service/adapters/defi_adapter.py,
     execution-service/execution_service/v2/account_orchestrator.py,
@@ -123,19 +119,11 @@ context_scope:
       issue's own remaining todos proceed, cross-link both directions in `related:` once landed). Done-when: a
       live `QUOTE` instruction's repricing responds to a published feature-group tick within one round trip,
       not just a registered-but-inert state. Evidence: bash scripts/quality-gates.sh --no-fix (8816 passed, 22 skipped, 1 xpassed; venue-routing commit 62d2e3ab76).
-- [x] [BACKEND] P0. Sink every strategy-emitted instruction consumed by the new subscriber to GCS, one record at
-      a time, via the EXISTING event-log shard pipeline (reuse, do not invent a parallel writer) — queryable via
+- [ ] [BACKEND] P0. Sink every strategy-emitted instruction consumed by the new subscriber to GCS, one record at
+      a time, via the EXISTING manifest/shard pipeline (reuse, do not invent a parallel writer) — queryable via
       the same BigQuery external-table pattern other shard types already use. Distinct from market-tick-data
       aggregation (a separate axis). Done-when: one consumed instruction produces one queryable GCS row with a
-      manifest entry, verified via a real read-back, not just a written-file check. The `atomic_instruction`
-      `SINK_MATRIX` entry already exists; this todo adds the matching Pub/Sub topic, warm-GCS subscription, and
-      BigQuery external table so the canonical envelope published by strategy-service is durably queryable. —
-      **SHIPPED 2026-08-21**: `unified-api-contracts@96ce5bdd6e` adds focused SINK_MATRIX coverage;
-      `deployment-service@9f602e64aa` adds the wildcard `atomic_instruction` Pub/Sub topic, never-expiring warm GCS
-      subscription, and BigQuery external table over the existing event-log sink. Evidence: UAC quality-gates green
-      (214s), deployment-service quality-gates green (246s), UAC focused suite 27 passed, compactor suite 6 passed,
-      `tofu fmt -check` passed; `tofu validate` was unavailable because the Google provider 7.43.0 is not cached
-      locally.
+      manifest entry, verified via a real read-back, not just a written-file check.
 
 ### Instruction action vocabulary
 
