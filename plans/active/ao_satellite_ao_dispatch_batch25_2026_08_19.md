@@ -29,9 +29,9 @@ related:
     /plans/active/issues/na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18.md,
     /plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md,
     /plans/active/ao_human_fleet_integration_2026_08_15.md,
-    /plans/archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md,
+    /plans/active/kimi_gemma_provider_onboarding_2026_08_16.md,
     /plans/active/issues/account_failover_ignores_overage_rejected_2026_08_18.md,
-    /plans/archive/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-19"
@@ -57,8 +57,8 @@ sequential: true # several items (7-9) touch the same account-failover subsystem
 context_scope:
   [
     /plans/active/issues/account_failover_ignores_overage_rejected_2026_08_18.md,
-    /plans/archive/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
-    /plans/archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
+    /plans/active/kimi_gemma_provider_onboarding_2026_08_16.md,
     /plans/active/ao_human_fleet_integration_2026_08_15.md,
     agent-orchestrator/server/server.py,
   ]

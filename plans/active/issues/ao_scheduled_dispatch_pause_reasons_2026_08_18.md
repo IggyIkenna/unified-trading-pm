@@ -54,9 +54,6 @@ context_scope:
   ]
 ---
 
-> **🟢 ARCHIVED 2026-08-21** — all todos resolved and evidence-backed (capacity-starvation alert
-> decided no-change; pause-reason immutability widened, agent-orchestrator@3e982e3174).
-
 # Recorded reasons for the three currently-paused scheduled-dispatch modes
 
 ## Current state — re-checked against the LIVE registry 2026-08-20
@@ -275,20 +272,15 @@ dispatch"` — consistent with the account snapshots seen the same hour
       (`agent-orchestrator/data/state/scheduled_dispatch_paused_modes.dedup.json`, mtime 2026-08-19 22:56) —
       `["ag_closeout","cefi_mtds_smoke","ci_reconcile","na_eligibility","reconcile","report"]`; prior 3-mode
       listing was stale. (repo: unified-trading-pm)
-- [x] [INFRA] P2. **DECIDED 2026-08-21 (operator decision, this doc's own Progress Log): no
-      change.** Considered whether
-      scheduled-job capacity starvation deserves its own alert — the three `plan_health`-family
-      jobs above sat queued ~20h on 2026-08-19 with `no free configured slot` / `no headroom
-      account`, and nothing paged (distinct from the pause question — these modes are enabled and
-      simply couldn't get capacity). Operator decision: the existing na-eligibility/ao-watchdog
-      periodic cadence already surfaces this class of issue (as happened this same session), and a
-      dedicated real-time alert isn't worth the added alerting-channel complexity right now. Closed
-      as decided-no-change. (repo: agent-orchestrator)
-- [x] ✅ [OPERATOR] P3. **RESOLVED 2026-08-21 (operator decision): allow explicit reason
-      updates.**
-      Widened `set_paused()` — an explicit new reason (differing from the one on file) now updates
-      the stored reason AND `paused_at` on re-pause; no reason, or the same reason, stays a no-op
-      preserving the original entry. `test_repause_preserves_original_reason_and_timestamp` replaced
-      with 3 tests covering all three cases (no-op/no-reason, no-op/same-reason, update/new-reason).
-      Evidence: `agent-orchestrator@3e982e3174`, quickmerge-shipped 2026-08-21, `quality-gates.sh`
-      green (5297 passed, 0 failed, coverage 86.09% > 85.86% baseline). (repo: agent-orchestrator)
+- [ ] [INFRA] P2. Decide whether scheduled-job capacity starvation deserves its own alert: the
+      three `plan_health`-family jobs above sat queued ~20h on 2026-08-19 with `no free configured
+      slot` / `no headroom account`, and nothing paged. Distinct from the pause question — these
+      modes are enabled and still not running. (repo: agent-orchestrator)
+- [ ] [OPERATOR] P3. Decide whether the reason field's immutable-once-set design (tested,
+      intentional — see the 2026-08-21 Progress Log entry above) should change to allow an explicit
+      reason to update an already-paused mode's stored reason. If yes: widen `set_paused()`, update
+      `test_repause_preserves_original_reason_and_timestamp` to match the new contract (not just
+      delete it), add a regression test for the update path, ship via quickmerge with
+      quality-gates.sh green. If no: this todo closes as "confirmed intentional, no change" — the
+      6 live-paused modes' reasons stay hand-recorded in this doc only, never correctable via the
+      live API short of an actual resume→re-pause. (repo: agent-orchestrator)

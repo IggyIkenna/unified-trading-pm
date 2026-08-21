@@ -103,7 +103,7 @@ were also honest 0-row results (real chain state on 2026-08-21), not synthesized
       unrelated, deterministic (not flaky) trunk failures on re-gate, each requiring its own
       skip-mark + tracking doc before a retry: (1)
       `test_defi_prefix_parser_handles_multi_hyphen_protocol_keys`
-      (`/plans/active/issues/mtds_defi_prefix_parser_multi_hyphen_solana_native_2026_08_21.md`,
+      (`/plans/archive/issues/mtds_defi_prefix_parser_multi_hyphen_solana_native_2026_08_21.md`,
       skip-marked and included in the retry), (2)
       `tests/market_interface/unit/sports/test_sports_registry.py` —
       `ValueError: Unknown sports venues in adapter registry: {'onexbet'}` — hit on the retry
