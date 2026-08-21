@@ -197,17 +197,7 @@ jobs:
               with open('workspace-manifest.json') as mf:
                   manifest = json.load(mf)
               if manifest.get('staging_dormant_mode'):
-                  # single_branch repos (e.g. unified-trading-ci: 'main only — no LDR/staging
-                  # promotion tiers', per its manifest notes) have no main-backmerge-to-ldr.yml
-                  # push trigger of their own to produce a fresh run — promotion_lag_monitor.py
-                  # already exempts this promotion_model for the identical reason (2026-08-07).
-                  # Without the same exemption here, a repo's one-time PRE-migration run (here:
-                  # unified-trading-ci's push-triggered copy, later converted to workflow_call-only
-                  # per fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md) is
-                  # permanently 'the latest run' and re-pages CRITICAL every cooldown forever —
-                  # measured live: run 31148739599 (2026-08-07) re-paged every ~2-3h for 2+ weeks.
-                  out.update(str(name) for name, cfg in manifest.get('repositories', {}).items()
-                             if isinstance(cfg, dict) and cfg.get('promotion_model') != 'single_branch')
+                  out.update(str(name) for name in manifest.get('repositories', {}))
               else:
                   out.update(str(name) for name, cfg in manifest.get('repositories', {}).items()
                              if isinstance(cfg, dict) and cfg.get('promotion_model') == 'ldr_main')
