@@ -255,4 +255,3 @@ class in a third script.
   call with no stated done-when; not found in any active `ao_satellite_ao_dispatch_batch*` citation list through
   batch17.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — sole open item (`[SCRIPT] P3`, bundle-vs-extract-a-shared-membership-test-module) remains an explicit design-preference call with no stated done-when, re-affirming 4 prior audit passes (2026-08-06, 08-09 round11, 08-10, 08-17) on the identical reasoning. Not re-litigated.

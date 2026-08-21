@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: full-autonomous-agent-ci
-summary: Full multi-repo autonomous agent CI suite extending agent_ci_prototype to all repos with four specialized agent
-  types, overnight tier-ordered execution, and Telegram morning summary
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-06'
+overview: Full multi-repo autonomous agent CI suite extending agent_ci_prototype to all repos with four specialized agent types, overnight tier-ordered execution, and Telegram morning summary
 type: infra
 epic: epic-infra
 superseded_by: cicd_code_rollout_master_2026_03_13

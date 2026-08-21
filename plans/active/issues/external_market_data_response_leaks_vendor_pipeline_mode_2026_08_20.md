@@ -74,10 +74,9 @@ example and the real response now disagree on purpose: the doc states the target
       segment specifically for the external response serializer, leaving the internal storage layout untouched.
       Option (a) is stronger — it also removes any future coupling between the external contract and internal
       GCS layout changes, not just this one vendor-tag issue.
-- [x] ✅ [BACKEND] P1. **EXTRACTED 2026-08-21** — audit `GET /external/market-data/delivery/stream` and
-      `/external/market-data/availability` for the same `pipeline_mode`/vendor-bearing path leak. Extracted to
-      `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch (na-eligibility-audit,
-      cross-cutting tranche, batch 2 of 3).
+- [ ] [BACKEND] P1. **Audit every other external response for the same leak** — this was found on one endpoint by
+      inspecting one worked example; `GET /external/market-data/delivery/stream` and `/external/market-data/availability`
+      should be checked for the same `pipeline_mode`/vendor-bearing path pattern before assuming this is the only one.
 - [ ] [REVIEW] P2. **Confirm the fix against the corrected doc example** once shipped — the doc now says `file` is
       opaque; the fix should make that literally true, not just documented as an aspiration.
 
@@ -86,8 +85,3 @@ example and the real response now disagree on purpose: the doc states the target
 **2026-08-20 — filed.** No code touched. `platform-api-reference.html` corrected in the same session to document the
 target (opaque) contract rather than the current (vendor-leaking) behaviour — the two are now honestly divergent
 pending this fix, not silently inconsistent.
-
-- **na-eligibility-audit 2026-08-21**: RECLASSIFY (per-todo split) — todo 2 (audit sibling endpoints for the same
-  leak) is a bounded, pure investigation task; extracted to
-  `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`. Todo 1 ("Decide the mechanism") stays `assigned_vm:
-  NA` — explicit design decision. Doc's own `assigned_vm: NA` unchanged. Cross-cutting tranche, batch 2 of 3.

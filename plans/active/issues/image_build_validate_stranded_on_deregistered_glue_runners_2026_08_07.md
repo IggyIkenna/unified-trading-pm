@@ -203,10 +203,3 @@ design/priority call, not a bounded spec...
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- The doc's blocking P0 fix (image-build-validate.yml self-hosted→ubuntu-latest revert) landed and is live-verified with resolved_by SHAs in frontmatter; the P2 fleet-wide sweep todo is `[x]` DONE with 0 findings. The sole open todo (line 125, INFRA P3) asks for a brand-new standing check that flags a workflow's host-repo visibility change or a caller's runner-registration drift as a re-audit trigger for `runs-on:` choices. The most recent audit (2026-08-10) found this requires 'designing a...
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries).
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — unchanged since the 2026-08-18 verdict
-(5th+ consecutive confirmation). Sole open todo (line ~126, P3) asks for a brand-new standing check flagging a
-workflow's host-repo visibility change or a caller's runner-registration drift as a re-audit trigger for `runs-on:`
-choices — requires designing a new detection heuristic from scratch (no existing historical-state tracker to diff
-against), independently corroborated by `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`'s own
-todo 10 raising the identical question. No `assigned_vm` change.

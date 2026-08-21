@@ -278,14 +278,3 @@ a normal ratchet into a self-reinforcing wall.
   `live-defi-rollout`, mirroring what a real LDR-push CI run would set) would close this permanently for every
   future local session, but that's a `scripts/**` change outside this run's write scope. Filed as todo below.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): **RECLASSIFY, per-todo split path.** Conflict-checked (grep
-across `plans/active/*.md` for the mechanism — zero prior hits) then extracted the bounded `[SCRIPT] P2` todo (have
-`scripts/dev/safe-doc-push.sh` self-set `GITHUB_REF_NAME`/`GITHUB_REF` when committing to `live-defi-rollout`
-locally, plus root-cause the `export`-doesn't-propagate finding) into
-`ci_satellite_ao_dispatch_batch16_2026_08_21.md` (new batch, todo 1) — a genuinely worker-determinable script fix
-with a clear done-when, confirmed recurring 3x (2026-08-16, 2026-08-19 x2) with no design call embedded. The other 2
-open items stay `assigned_vm: NA`: the promote-PR re-gate item is an explicit operator decision ("not a unilateral
-backend change — it narrows a hard gate," per the 2026-08-17 verdict), and the deploy-service/kill-switch-toggle
-journey item touches live-trading kill-switch machinery — genuine care-requiring engineering work, not a bounded
-spec. Doc stays NA overall; this is a split extraction, not a whole-doc reclassify.

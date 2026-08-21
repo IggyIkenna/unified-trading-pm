@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: risk-simulations-limits-alerting
-summary: Risk monitor vs risk simulations vs risk alerts vs pre-flight risk checks — wire-up across the system, dimensions
-  (venue / account / strategy / client), per instrument-type + strategy-family / archetype, consequences of failure (block
-  vs monitor vs test). Owner of the canonical circuit-breaker rule taxonomy + the mock-data-as-stress-test surface that
-  downstream plans consume.
+summary:
 status: plan-spawned
 nature: record
 asset_group: [cross-cutting]
@@ -24,6 +21,11 @@ related:
     plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md,
   ]
 created: 2026-05-08
+overview:
+  Risk monitor vs risk simulations vs risk alerts vs pre-flight risk checks — wire-up across the system, dimensions
+  (venue / account / strategy / client), per instrument-type + strategy-family / archetype, consequences of failure
+  (block vs monitor vs test). Owner of the canonical circuit-breaker rule taxonomy + the mock-data-as-stress-test
+  surface that downstream plans consume.
 type: question
 plan_spawned: 2026-05-10
 operator: ikenna

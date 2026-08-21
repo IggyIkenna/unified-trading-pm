@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: operational-config-migration
-summary: Migrate all operational configs from deployment-service/configs/ to unified-trading-pm/configs/ to eliminate cross-service
-  dependency in deployment-api
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
+overview: Migrate all operational configs from deployment-service/configs/ to unified-trading-pm/configs/ to eliminate cross-service dependency in deployment-api
 type: infra
 epic: epic-infra
 completion_gates: {code: C5, deployment: none, business: none}

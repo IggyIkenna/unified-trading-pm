@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: mock-data-dev-project-seeding-2026-03-10
-summary: Create a systematic seeded dataset covering all 4 asset classes with schema-validated synthetic data so any developer
-  gets a complete GCP dev environment within 5 minutes, zero live API calls.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
+overview: Create a systematic seeded dataset covering all 4 asset classes with schema-validated synthetic data so any developer gets a complete GCP dev environment within 5 minutes, zero live API calls.
 type: infra
 epic: epic-infra
 completion_gates: {code: C5, deployment: none, business: none}

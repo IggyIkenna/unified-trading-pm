@@ -452,11 +452,3 @@ genuinely-unresolved data-pipeline items (Filed, "real work" bucket) first.
   for the remaining 4 hunters afterward. Worth remembering for any future run that fans out Agent-tool sub-agents
   and needs to wait on them individually rather than relying only on background task-notifications.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — another plan_reconciler
-  run-log doc, 22 open items in its "Filed" section (an exit-gate residual, a line-cap-blocked 3-item split, real
-  unresolved data-pipeline items needing a live check, out-of-tranche routing notes, and ~11 lower-severity
-  deferred findings the sweep did not individually re-verify). This is a punch-list explicitly designed for a
-  future `/plan-reconcile` pass (its own "Plans not reached" — none this run — and "Next steps" sections say so),
-  not this skill's population; individual items reference OTHER docs' content but the checkboxes live in a
-  meta-tracking doc whose own nature is judgment-based reconciliation. No conflicting active `planning` doc found
-  covering this doc's own scope.

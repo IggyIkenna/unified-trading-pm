@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: sports-canonical-mapping-and-gcs-migration
-summary: "Consolidate all sports canonical ID mappings into UAC (their correct SSOT),\nremove duplicate implementations\
-  \ scattered across instruments-service and\ndeployment-service, and write a GCS migration script for existing sports data.\n\
-  \n## Problem\nSports mapping data (league registry, team aliases, stadium names, player name\nnormalisation) lives in\
-  \ instruments-service/sports/ (17 files) and\ndeployment-service/scripts/sports/. Zero of it is in UAC where it belongs.\n\
-  Downstream services that need the same data either re-implement or go without.\n\n## Solution\n1. Lift all type/data definitions\
-  \ into UAC (canonical/ + external/api_football/ +\n   external/odds_api/) and export via the sports facade.\n2. instruments-service\
-  \ deletes its local sports/ implementations and imports UAC.\n3. USRI exposes the new UAC sports symbols at the sports-reference\
-  \ boundary (convenience imports). UCI does not own\n   or re-export UAC domain enums (uci-no-domain-schemas).\n4. GCS\
-  \ migration script handles existing data path alignment.\n\n## Scope: 4 repos touched\n- unified-api-contracts (UAC) \
-  \  — primary target\n- instruments-service           — delete local, import UAC\n- unified-sports-reference-interface\
-  \ (USRI) — sports-facing exports from UAC\n- unified-trading-pm            — GCS migration script"
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -23,6 +13,8 @@ related: []
 created: '2026-03-21'
 locked_by: live-defi-rollout
 locked_since: 2026-03-18
+overview: "Consolidate all sports canonical ID mappings into UAC (their correct SSOT),\nremove duplicate implementations scattered across instruments-service and\ndeployment-service, and write a GCS migration script for existing sports data.\n\n## Problem\nSports mapping data (league registry, team aliases, stadium names, player name\nnormalisation) lives in instruments-service/sports/ (17 files) and\ndeployment-service/scripts/sports/. Zero of it is in UAC where it belongs.\nDownstream services that need the same data either re-implement or go without.\n\n## Solution\n1. Lift all type/data definitions into UAC (canonical/ + external/api_football/ +\n   external/odds_api/) and export via the sports facade.\n2. instruments-service deletes its local sports/ implementations and imports UAC.\n3. USRI exposes the new UAC sports symbols at the sports-reference boundary (convenience imports). UCI does not own\n   or re-export UAC domain enums (uci-no-domain-schemas).\n4. GCS migration script handles\
+  \ existing data path alignment.\n\n## Scope: 4 repos touched\n- unified-api-contracts (UAC)   — primary target\n- instruments-service           — delete local, import UAC\n- unified-sports-reference-interface (USRI) — sports-facing exports from UAC\n- unified-trading-pm            — GCS migration script\n"
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

@@ -161,4 +161,3 @@ spawn workers.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:4c459f34ca19cf91]: RECLASSIFY (per-todo split) — 2 of 3 remaining todos (pull overage_disabled_reason for the other 21 disabled accounts, investigate /api/agents zero human rows) extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` items 10-11. Doc stays NA for the sole remaining item ([OPERATOR] spread reserve slots 31/32/33 across more than one account instead of triple-booking sub-b).
 - **context-scout 2026-08-19**: populated context_scope (5 entries).
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item ([OPERATOR] P2, spread reserve slots 31/32/33 across more than one account instead of triple-booking sub-b) is a genuine capacity/account-allocation decision, unchanged since the 2026-08-19 verdict.

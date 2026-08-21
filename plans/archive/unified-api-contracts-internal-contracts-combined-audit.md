@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: unified-api-contracts full audit
-summary: Full audit of unified-api-contracts and unified-internal-contracts with a combined split—AC = external + normalised
-  only, UIC = internal only; AC must not depend on UIC; canonical namings needed by AC stay in AC.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-03'
+overview: Full audit of unified-api-contracts and unified-internal-contracts with a combined split—AC = external + normalised only, UIC = internal only; AC must not depend on UIC; canonical namings needed by AC stay in AC.
 todos: []
 isProject: false
 ---

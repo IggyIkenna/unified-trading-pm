@@ -1,20 +1,7 @@
 ---
 doc_type: plan
 title: UI npm Dependency Governance — 2026-03-10
-summary: "Six-part improvement to make UI npm dependency drift detectable and auto-resolved\nin the same CI/CD flow as Python\
-  \ dependency alignment.\n\nProblem: package.json edits (e.g. adding @vitest/coverage-v8) did not trigger npm install\n\
-  because setup.sh compared package.json mtime against the node_modules/ *directory* mtime,\nwhich a failed npm install\
-  \ can touch without completing. This left node_modules stale silently.\n\nSolution:\n  1. setup.sh: compare package.json\
-  \ against package-lock.json (written only on successful\n     install) instead of node_modules dir mtime.\n  2. run-version-alignment.sh:\
-  \ add step [0.6/4] — scan all pure UI repos (package.json,\n     no pyproject.toml) and WARN if package.json is newer\
-  \ than package-lock.json.\n     --strict makes it fatal. --ui-only skips Python alignment steps (runs 0.5+0.7 only).\n\
-  \  3. base-ui.sh: --test flag added so run-all-quality-gates.sh --test skips lint for UI repos\n     (previously --test\
-  \ was ignored by UI quality-gates.sh).\n  4. workspace-npm-constraints.json + rollout-npm-versions.py: canonical npm devDependency\n\
-  \     versions enforced cross-repo (analogue of workspace-constraints.toml + propagate-canonical-\n     versions.py for\
-  \ Python). Integrated as step [0.7/4] in run-version-alignment.sh so it runs\n     in the same CI/CD flow alongside Python\
-  \ alignment. --fix applies version updates; --strict\n     makes mismatches fatal.\n  5. batch-audit-ui test setup: was\
-  \ the only UI repo with testing_level: none. Added vitest,\n     @vitest/coverage-v8, @testing-library/react, jest-dom.\
-  \ 3 tests, all pass.\n  6. Manifest updated: all 11 UI repos now testing_level: unit, quality_gate_status: PASSING."
+summary:
 status: completed
 nature: record
 asset_group: [cross-cutting]
@@ -24,6 +11,8 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-03-10
+overview: "Six-part improvement to make UI npm dependency drift detectable and auto-resolved\nin the same CI/CD flow as Python dependency alignment.\n\nProblem: package.json edits (e.g. adding @vitest/coverage-v8) did not trigger npm install\nbecause setup.sh compared package.json mtime against the node_modules/ *directory* mtime,\nwhich a failed npm install can touch without completing. This left node_modules stale silently.\n\nSolution:\n  1. setup.sh: compare package.json against package-lock.json (written only on successful\n     install) instead of node_modules dir mtime.\n  2. run-version-alignment.sh: add step [0.6/4] — scan all pure UI repos (package.json,\n     no pyproject.toml) and WARN if package.json is newer than package-lock.json.\n     --strict makes it fatal. --ui-only skips Python alignment steps (runs 0.5+0.7 only).\n  3. base-ui.sh: --test flag added so run-all-quality-gates.sh --test skips lint for UI repos\n     (previously --test was ignored by UI quality-gates.sh).\n\
+  \  4. workspace-npm-constraints.json + rollout-npm-versions.py: canonical npm devDependency\n     versions enforced cross-repo (analogue of workspace-constraints.toml + propagate-canonical-\n     versions.py for Python). Integrated as step [0.7/4] in run-version-alignment.sh so it runs\n     in the same CI/CD flow alongside Python alignment. --fix applies version updates; --strict\n     makes mismatches fatal.\n  5. batch-audit-ui test setup: was the only UI repo with testing_level: none. Added vitest,\n     @vitest/coverage-v8, @testing-library/react, jest-dom. 3 tests, all pass.\n  6. Manifest updated: all 11 UI repos now testing_level: unit, quality_gate_status: PASSING.\n"
 updated: 2026-03-10
 isProject: false
 todos:

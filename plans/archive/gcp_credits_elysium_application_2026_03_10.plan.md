@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: gcp-credits-elysium-application-2026-03-10
-summary: Apply for $150k GCP credits via Google Cloud for Startups using Elysium Capital as the applicant entity, with materials
-  covering the AI/ML DeFi trading use case and GCP spend estimate.
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
+overview: Apply for $150k GCP credits via Google Cloud for Startups using Elysium Capital as the applicant entity, with materials covering the AI/ML DeFi trading use case and GCP spend estimate.
 type: business
 epic: epic-business
 superseded_by: presentations_2026_03_13

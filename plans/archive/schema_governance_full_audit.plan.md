@@ -1,12 +1,7 @@
 ---
 doc_type: plan
 title: Schema Governance Full Audit
-summary: 'Comprehensive schema governance audit across unified-api-contracts (UAC) and unified-internal-contracts (UIC).
-  Covers: (1) canonical normalization quality — logical groupings, field consistency, deviation coverage, normalizer completeness;
-  (2) UIC utilization — adoption matrix across all services, orphaned schemas, missing adoption; (3) cross-contract deduplication
-  — InstrumentRecord conflict resolution, 85+ interface-adapter duplicates; (4) DRY/SoC enforcement — new cursor rule, quality
-  gate STEP 5.12; (5) SCHEMA_GOVERNANCE.md codex doc. Distinct from SCHEMA_CONTRACTS_AUDIT.md (placement violations) and
-  uac_schema_normalization_complete (provider coverage gaps).'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -16,6 +11,13 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-06"
+overview:
+  "Comprehensive schema governance audit across unified-api-contracts (UAC) and unified-internal-contracts (UIC).
+  Covers: (1) canonical normalization quality — logical groupings, field consistency, deviation coverage, normalizer
+  completeness; (2) UIC utilization — adoption matrix across all services, orphaned schemas, missing adoption; (3)
+  cross-contract deduplication — InstrumentRecord conflict resolution, 85+ interface-adapter duplicates; (4) DRY/SoC
+  enforcement — new cursor rule, quality gate STEP 5.12; (5) SCHEMA_GOVERNANCE.md codex doc. Distinct from
+  SCHEMA_CONTRACTS_AUDIT.md (placement violations) and uac_schema_normalization_complete (provider coverage gaps)."
 todos:
   - {
       id: p1-canonical-groupings,

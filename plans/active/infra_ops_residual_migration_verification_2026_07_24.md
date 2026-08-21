@@ -261,4 +261,3 @@ source: >-
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
 - **context-scout 2026-08-17**: re-verified context_scope, no change needed (5 entries).
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries)
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — reaffirms the chain of 5 prior audit passes (2026-07-30 through 08-19), unchanged: 3 residual todos, each independently NEVER-RE-LITIGATE-citable — a broad multi-plan FULL AUDIT judgment call, an irreversible schema_version re-stamp explicitly DEFERRED by operator 2026-06-22 pending a quiet backfill-fleet window, and an execution-config pre-flight pointer item whose own text says 'File under the execution epic'.

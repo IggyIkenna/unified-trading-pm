@@ -172,4 +172,3 @@ documented as the correct mechanism in `task_template.md` and still not exempted
   genuinely NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ce5bc82e1f9d8389]: KEEP-NA, valid — 2 of 3 original items already shipped+verified; sole remaining item self-flags as needing design judgment on cross-file correlation logic, not a mechanical one-liner, ruled KEEP-NA twice already.
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — re-affirms prior verdict; the sole open item (Finding-J archival-extraction cross-file conservation fix for `check_todo_regression.sh`) still self-flags as needing "design judgment on the cross-file correlation logic, not a mechanical one-liner."

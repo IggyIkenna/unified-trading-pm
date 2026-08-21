@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: performance-testing-load-benchmarks-2026-03-10
-summary: Establish system-wide performance baselines, load benchmarks, and resource limits across all critical paths before
-  live trading; add CI gates for latency and throughput regressions.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -20,6 +19,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-10"
+overview:
+  Establish system-wide performance baselines, load benchmarks, and resource limits across all critical paths before
+  live trading; add CI gates for latency and throughput regressions.
 type: code
 epic: epic-code-completion
 completion_gates: { code: C5, deployment: none, business: none }

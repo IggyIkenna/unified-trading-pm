@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: cicd-e2e-test-plan
-summary: End-to-end test plan for the full CI/CD pipeline stack. Validates all autonomous components, SIT lock lifecycle,
-  hotfix path, Cloud Build routing, YAML validation, conflict resolution agent, Telegram inventory, and semver agent — with
-  a test for each major decision point in cicd-pipeline-definition.yaml. Created after CI-CD-FLOW.md was expanded (2026-03-13)
-  to identify untested gaps and drive systematic production validation.
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -14,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
+overview: 'End-to-end test plan for the full CI/CD pipeline stack. Validates all autonomous components, SIT lock lifecycle, hotfix path, Cloud Build routing, YAML validation, conflict resolution agent, Telegram inventory, and semver agent — with a test for each major decision point in cicd-pipeline-definition.yaml. Created after CI-CD-FLOW.md was expanded (2026-03-13) to identify untested gaps and drive systematic production validation.
+
+  '
 type: infra
 epic: epic-infra
 superseded_by: cicd_e2e_testing_master_2026_03_13

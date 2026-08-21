@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: strategy-registry-v1-delete-and-consumer-migration-2026-04-21
-summary: Delete unified-trading-system-ui/lib/strategy-registry.ts (7780 LOC) + legacy-family-migration helpers. Migrate
-  18 consumer files to v2-sourced data (lib/architecture-v2/coverage.ts + regenerated mock fixture derived from UAC STRATEGY_REGISTRY).
-  Purge 3 Elysium rows from mock-data-seed.ts + positions-data-context.tsx + ui-reference-data.json.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -13,6 +11,10 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-21"
+overview:
+  Delete unified-trading-system-ui/lib/strategy-registry.ts (7780 LOC) + legacy-family-migration helpers. Migrate 18
+  consumer files to v2-sourced data (lib/architecture-v2/coverage.ts + regenerated mock fixture derived from UAC
+  STRATEGY_REGISTRY). Purge 3 Elysium rows from mock-data-seed.ts + positions-data-context.tsx + ui-reference-data.json.
 type: refactor
 epic: epic-code-completion
 completion_gates: { code: C4, deployment: none, business: none }

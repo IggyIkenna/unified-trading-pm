@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: VaR/CVaR Risk Framework
-summary: 'Implement a production-grade Value-at-Risk (VaR) and Conditional Value-at-Risk (CVaR)
-
-  framework in risk-and-exposure-service. Covers parametric VaR, historical VaR, CVaR,
-
-  multi-horizon scaling (1-day, 10-day), stress scenario simulation (GFC_2008,
-
-  COVID_2020, CRYPTO_BLACK_THURSDAY_2020), and pre-trade VaR limit enforcement via the
-
-  existing PreTradeCheckEngine. All calculations are pure-function stdlib-only — no
-
-  ML/stats libraries, no I/O.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -21,6 +11,19 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-07'
+overview: 'Implement a production-grade Value-at-Risk (VaR) and Conditional Value-at-Risk (CVaR)
+
+  framework in risk-and-exposure-service. Covers parametric VaR, historical VaR, CVaR,
+
+  multi-horizon scaling (1-day, 10-day), stress scenario simulation (GFC_2008,
+
+  COVID_2020, CRYPTO_BLACK_THURSDAY_2020), and pre-trade VaR limit enforcement via the
+
+  existing PreTradeCheckEngine. All calculations are pure-function stdlib-only — no
+
+  ML/stats libraries, no I/O.
+
+  '
 todos:
 - {id: var-calculator-core, content: 'Implement risk-and-exposure-service/risk_and_exposure_service/core/var_calculator.py with four pure functions: historical_var(returns, confidence, horizon_days), parametric_var(returns, confidence, horizon_days), cvar(returns, confidence, horizon_days), stress_var(returns, scenario). Use stdlib statistics + math only. No Any types. No I/O. Confidence defaults: 0.99. Horizon defaults: 1-day; 10-day via sqrt(10) scaling.', status: completed}
 - {id: var-cvar-stress-tests, content: 'Write tests/unit/core/test_var_calculator.py covering: (1) historical_var returns negative float for known-loss returns list, (2) parametric_var for normal distribution, (3) cvar >= var in absolute value (CVaR always at least as bad), (4) 10-day scaling = sqrt(10) * 1-day VaR, (5) stress_var returns larger loss than historical_var for same returns, (6) all three stress scenarios (GFC_2008, COVID_2020, CRYPTO_BLACK_THURSDAY_2020) execute without error.', status: completed}

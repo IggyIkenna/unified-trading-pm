@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: production-backfill-step-by-step-2026-03-10
-summary: Define the exact 5-step sequenced backfill runbook (instruments → tick data → features → ML training → validation
-  backtest) with gate scripts at each step and recovery procedures, must complete before live trading week 2026-03-20.
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
+overview: Define the exact 5-step sequenced backfill runbook (instruments → tick data → features → ML training → validation backtest) with gate scripts at each step and recovery procedures, must complete before live trading week 2026-03-20.
 type: infra
 epic: epic-infra
 superseded_by: defi_keys_data_integration_2026_03_13

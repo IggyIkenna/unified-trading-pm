@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: ui-walkthrough-and-e2e-alignment
-summary: UI full strategy walkthrough capability (all strategies manually executable in mock), E2E testing for all modes,
-  batch=live alignment
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -16,6 +15,9 @@ remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
 superseded_by: [consolidated_strategy_and_ui_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
+overview:
+  UI full strategy walkthrough capability (all strategies manually executable in mock), E2E testing for all modes,
+  batch=live alignment
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

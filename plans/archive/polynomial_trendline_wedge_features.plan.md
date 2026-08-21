@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: Polynomial Trendline & Wedge Feature Calculator
-summary: 'Add multi-scale polynomial (quadratic) trendline calculators to features-delta-one-service,
-
-  fitting separate curves to price highs (resistance) and lows (support). Validates curves by
-
-  touch count, detects wedge patterns (converging curves), estimates bars-to-breakout via
-
-  closed-form quadratic intersection, and adds cross-timeframe wedge confluence to
-
-  features-multi-timeframe-service. A sweep of 6 named parameter combos produces 132 new
-
-  columns total — ML model decides what''s most predictive.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -21,6 +11,19 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-06'
+overview: 'Add multi-scale polynomial (quadratic) trendline calculators to features-delta-one-service,
+
+  fitting separate curves to price highs (resistance) and lows (support). Validates curves by
+
+  touch count, detects wedge patterns (converging curves), estimates bars-to-breakout via
+
+  closed-form quadratic intersection, and adds cross-timeframe wedge confluence to
+
+  features-multi-timeframe-service. A sweep of 6 named parameter combos produces 132 new
+
+  columns total — ML model decides what''s most predictive.
+
+  '
 todos:
 - {id: poly-calc-implementation, content: Implement PolynomialTrendlineCalculator in features-delta-one-service/features_delta_one_service/app/calculators/polynomial_trendline.py. Extend BaseFeatureCalculator (polars-based). Register as @FeatureCalculatorRegistry.register('polynomial_trendlines'). Compute support (local lows) and resistance (local highs) polynomial fits for all 6 POLY_COMBOS. Emit 84 curve columns (14 per combo)., status: done}
 - {id: wedge-detector-implementation, content: Implement WedgeDetector in features-delta-one-service/features_delta_one_service/app/calculators/wedge_detector.py. Detect convergence of support and resistance curves. Compute bars_to_convergence via closed-form quadratic intersection formula. Classify wedge type (symmetric/ascending/descending). Emit 42 wedge columns (7 per combo)., status: done}

@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: Workspace Quickmerge Validation Plan
-summary: Every repo passing quickmerge in dependency order across feature → staging → prod. Topological sort T0→T1→T2→T3→services;
-  validate-workspace-quickmerge.sh script.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
+overview: Every repo passing quickmerge in dependency order across feature → staging → prod. Topological sort T0→T1→T2→T3→services; validate-workspace-quickmerge.sh script.
 todos:
 - {id: topological-sort, content: Topological sort from workspace-manifest.json (T0→T1→T2→T3→services→APIs→UIs), status: completed}
 - {id: quickmerge-per-repo, content: Run quickmerge --unit-only per repo in dependency order, status: completed}

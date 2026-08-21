@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: registry-completeness-implementation-detail
-summary: Execute the UAC registry completeness refactor — instrument types, sports BTTS end-to-end, BetSide/CommissionModel,
-  consumer adoption across repos. Domain enums live in UAC; consumers use `from unified_api_contracts import …`; UCI must
-  not re-export UAC (uci-no-domain-schemas). USRI may expose UAC sports symbols at the sports-reference boundary. Phase
-  0-1 additive; Phase 2-4 consolidation and consumer adoption.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -14,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-15'
+overview: Execute the UAC registry completeness refactor — instrument types, sports BTTS end-to-end, BetSide/CommissionModel, consumer adoption across repos. Domain enums live in UAC; consumers use `from unified_api_contracts import …`; UCI must not re-export UAC (uci-no-domain-schemas). USRI may expose UAC sports symbols at the sports-reference boundary. Phase 0-1 additive; Phase 2-4 consolidation and consumer adoption.
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

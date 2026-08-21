@@ -622,15 +622,9 @@ before touching the source doc directly._
       question, re-check 31 declined-orphan gates, archive 1 newly-eligible source doc, archive the batch plan itself).
       Both batch5 and batch5_finalize `git mv`'d to `plans/archive/2026_08/`, banners added,
       `status: active → complete`, all corpus-wide referrers repointed.
-- [x] ✅ [SCRIPT] P2. Finish the `context_scope` backfill named in `batch3`'s own open todo (see Track 3) — this is what
-      still gated `batch3_finalize`'s 5 todos via `gate_on_depends`. Source:
-      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`. **CLOSED 2026-08-21
-      (na-eligibility-audit, ao tranche) — stale, already done.** Direct check of both cited archived docs: `batch3`
-      itself carries `[x] DONE 2026-08-20. Backfill context_scope frontmatter across the full active plans/issues
-      corpus... generate_context_scope_inventory.py --json post-backfill: 888/888 UP_TO_DATE`, and `batch3_finalize`
-      itself is `status: resolved` with every one of its own 5 todos `[x]` (including the final archival-ritual
-      todo). The gate this tracker item was pointing at has already cleared and both source docs are archived —
-      nothing left to finish.
+- [ ] [SCRIPT] P2. Finish the `context_scope` backfill named in `batch3`'s own open todo (see Track 3) — this is what
+      still gates `batch3_finalize`'s 5 todos via `gate_on_depends`. Source:
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`.
 - [x] [REVIEW] P1. **RULED 2026-08-06 disposition sweep** — apply the operator's default-disposition ruling to the
       remaining declined-orphan docs. Source: `/plans/archive/issues/ao_orphan_audit_followup_triage_2026_07_30.md`.
       **DONE 2026-08-14** — re-checked all 12 named docs directly: 10 already archived/resolved by earlier sessions, 1
@@ -945,10 +939,3 @@ plan can reach zero-open-todos and archive independently.
 - **context-scout 2026-08-19**: re-scouted; context_scope unchanged (5 entries) — meta-tracker doc, each Track item
   already points to its own source doc individually; the 3 codex architecture docs + `dispatch.py` +
   `worker_liveness_watchdog.py` remain the cross-cutting entries worth a worker reading before touching any Track.
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, stale items — closed the context_scope-backfill/
-  batch3_finalize-gate item above with hard evidence (both cited archived source docs already show the work done
-  and the gate cleared). The remaining l2_book re-test-gate pointer item stays open and accurate: directly checked
-  `plans/active/l2_book_microstructure_capture_2026_07_13.md` — still `status: active`, `assigned_vm: NA`, so the
-  hold this tracker item is pointing at has genuinely not cleared. Doc stays `assigned_vm: NA` (explicit
-  meta-tracker/pointer doc, never auto-dispatched by design; not archivable until its own `depends_on` clears per
-  the 2026-08-16 operator direction).

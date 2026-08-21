@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: Integration Tests Codex Compliance
-summary: Implement UI integration test template rollout, fix Codex violations in 10 repos, merge redundant coverage-boost
-  tests without losing coverage, add service-to-library and library-to-library integration test requirements, and create
-  PM integration test script.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -21,6 +19,10 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-14"
+overview:
+  Implement UI integration test template rollout, fix Codex violations in 10 repos, merge redundant coverage-boost tests
+  without losing coverage, add service-to-library and library-to-library integration test requirements, and create PM
+  integration test script.
 todos: []
 isProject: false
 ---

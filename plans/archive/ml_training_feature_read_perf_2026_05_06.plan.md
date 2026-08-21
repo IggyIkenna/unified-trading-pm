@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: ml-training-feature-read-perf
-summary: Reduce ML training feature-read time by 2-4x via three surgical changes to ml-training-service feature reader (date-partition
-  row-group pruning, column pushdown, DuckDB lazy joins replacing pandas outer-merge) plus concurrency tuning of features-volatility-service
-  (max_workers=4 default is conservative). Foundation for the P2 feature-store consolidation plan (sibling), which is high-effort
-  and shipped after this lands.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -14,6 +11,11 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-06
+overview:
+  Reduce ML training feature-read time by 2-4x via three surgical changes to ml-training-service feature reader
+  (date-partition row-group pruning, column pushdown, DuckDB lazy joins replacing pandas outer-merge) plus concurrency
+  tuning of features-volatility-service (max_workers=4 default is conservative). Foundation for the P2 feature-store
+  consolidation plan (sibling), which is high-effort and shipped after this lands.
 type: code
 epic: data-pipeline-completion
 owner: Harsh

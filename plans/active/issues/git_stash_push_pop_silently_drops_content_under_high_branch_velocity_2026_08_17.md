@@ -312,10 +312,3 @@ concurrency-safety problem this whole investigation had to rediscover and patch 
   reproduced with `cycle 2 stash count: 1 -> 1` and `d.txt` retaining its local content; the empty-pathspec case
   reproduced with `empty-pathspec stash count: 1 -> 1`, followed by the unrelated stash being popped. Both
   hypotheses are therefore confirmed as pattern-level hazards; the script is the exact re-runnable sequence.
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed unchanged. 3 open todos remain, all explicitly
-  conditional/design: todo 2 (P3, "not urgent, no action needed unless this recurs"), todo 4 (P3, conditional on
-  a not-yet-existing future task), todo 5 ([REVIEW] P2, a genuine workspace-convention policy call on whether to
-  retire the hand-rolled grind scripts). Cross-cutting tranche, batch 2 of 3. **Meta-note**: this exact session
-  independently hit a live instance of this doc's own documented failure class — 23 of this audit's own edits to
-  other docs were silently dropped from the working tree mid-session on this same heavily-contended checkout
-  (82+ autostash entries observed), matching this doc's "genuine stash-pathspec-staleness hazard" finding.

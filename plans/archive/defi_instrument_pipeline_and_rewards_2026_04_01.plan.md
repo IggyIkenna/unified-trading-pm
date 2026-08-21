@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: defi-instrument-pipeline-and-rewards
-summary: End-to-end instrument pipeline validation + EIGEN/ETHFI reward lifecycle (claim, M2M, sell) + Lido configurability
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -23,6 +23,8 @@ remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 superseded_by: [consolidated_defi_data_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
+overview:
+  End-to-end instrument pipeline validation + EIGEN/ETHFI reward lifecycle (claim, M2M, sell) + Lido configurability
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout

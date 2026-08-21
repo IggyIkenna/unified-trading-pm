@@ -434,7 +434,3 @@ uncommitted pending QG), see that todo for status. Todo 7 remains externally blo
   ask for the slug directly rather than burning more search cycles guessing — a same-window,
   same-provider-effort sibling plan (billing-reconciliation) was an easy false-positive lead here.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — sole open item (`[DATA] P3`, replace
-  the flat "all-but-haiku" equivalence-class placeholder with real tiering data) is explicitly `BLOCKED-ON:
-  multi_provider_model_capability_bakeoff_2026_08_19` — that doc's own synthesis todo is confirmed still open
-  (per this batch's own read of that doc). Genuinely blocked, not yet actionable.

@@ -14,7 +14,7 @@ summary: >-
   earlier today, whose own verification method (diffing `origin/main` against `origin/live-defi-rollout` and finding
   them empty) was real but insufficient: it proved the two branches agree with each other, not that either one
   actually contains the fix.
-status: resolved
+status: open
 nature: issue
 asset_group: [cross-cutting]
 stage: [execution]
@@ -40,17 +40,12 @@ depends_on: []
 context_scope:
   [/plans/active/issues/venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md]
 locked_by:
-resolved_by: unified-trading-pm (this session, 2026-08-21)
+resolved_by:
 supersedes:
 superseded_by:
 ---
 
 # `a69dad3` was logged as "confirmed live" twice — it was never merged
-
-> **ARCHIVED 2026-08-21** — resolved via first-hand re-verification. `a69dad3` confirmed genuinely unmerged;
-> abandoned as moot (superseded by the independently-merged `deployment-api@efd52b2b49`). Correction added to
-> [`venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`](venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md)'s
-> own Progress Log. See Todos below for full resolution detail.
 
 ## Provenance (read before acting)
 
@@ -106,49 +101,18 @@ already-live regression — that reframing should be treated as authoritative on
 
 ## Todos
 
-- [x] ✅ [REVIEW] P0. Once the dispatched sub-agent's final report lands (watch for its completion, do not
+- [ ] [REVIEW] P0. Once the dispatched sub-agent's final report lands (watch for its completion, do not
       independently re-dispatch a duplicate investigation): (a) verify its `gh api compare` / pickaxe-search claims
       directly, (b) correct BOTH mis-stated Progress Log entries in
       `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md` (2026-08-19 slot-7 and 2026-08-20 T1-slice) with a
       dated correction rather than silently editing the old text away, and (c) decide whether `a69dad3` should be
       re-landed as-is, landed with a benchmark-informed fix, or abandoned in favor of a different approach — per the
-      sub-agent's own findings. Archive this issue doc once the source doc carries the correction. **Done** (the
-      sub-agent's own completion notification never arrived across a context compaction, so this was closed via
-      first-hand re-verification rather than relayed sub-agent output): (a) confirmed directly --
-      `git merge-base --is-ancestor a69dad3 origin/live-defi-rollout` in a live deployment-api checkout returns
-      NOT-an-ancestor, same verdict as the sub-agent's relayed finding; (b) correction added to the source doc's
-      Progress Log (new dated entry, old entries left intact per the no-silent-edit instruction above); (c)
-      **abandon `a69dad3`** -- moot, not merely deferred: the source doc's own later todo chain shows the
-      aggregate-wall-clock-budget problem `a69dad3` was trying to fix was fully closed through a DIFFERENT,
-      independently-merged commit (`deployment-api@efd52b2b49`, confirmed a real ancestor of
-      `origin/live-defi-rollout`, which removed the redundant `provenance_breakdown` DataFrame copies rather than
-      parallelizing row-group reads) -- and the live code today (`manifest_source.py::iter_manifest_row_groups`,
-      grepped directly) carries no `ThreadPoolExecutor`/`_ROW_GROUP_READ_MAX_WORKERS` at all. Re-landing `a69dad3`'s
-      literal content would reintroduce the GIL-contention hypothesis this doc exists to flag, for a problem that's
-      already solved a different way -- no action needed on the orphaned `wip-preserve/orchestrator-slot-7-a69dad3`
-      branch beyond leaving it unmerged.
-- [x] ✅ [SCRIPT] P3. Consider whether this false-positive class (branch-vs-branch diff mistaken for "commit reached
+      sub-agent's own findings. Archive this issue doc once the source doc carries the correction.
+- [ ] [SCRIPT] P3. Consider whether this false-positive class (branch-vs-branch diff mistaken for "commit reached
       this branch") is common enough elsewhere in this corpus's "confirm reached main" checks to warrant a
-      corpus-wide grep for the same pattern — not scoped/investigated here, flagging only. **Done (bounded, not
-      exhaustive)**: `grep -rl "tree-diff.*empty\|git diff origin/main origin/live-defi-rollout" plans/active/
-      plans/active/issues/` (excluding this doc's own family) finds exactly ONE other hit --
-      `defi_satellite_ao_dispatch_batch11_2026_08_09.md`. Not independently verified whether that instance pairs the
-      diff with a real ancestor check (this doc's own mistake did not) or uses it as sole proof -- flagging for
-      whoever next touches that doc, not chasing further; the corpus-wide pattern does not appear widespread enough
-      to warrant a dedicated sweep beyond this one flag.
+      corpus-wide grep for the same pattern — not scoped/investigated here, flagging only.
 
 ## Progress Log
 
 - **2026-08-20 (T1 slice, /pre-compact audit)**: Filed to make the sub-agent's chat-relayed finding durable before
   a possible compaction, without touching the file the sub-agent is still actively working. See Provenance above.
-- **2026-08-21 (T1 slice)**: Resolved both todos via first-hand re-verification (sub-agent's own completion
-  notification never arrived across an intervening context compaction). See todo checkmarks above for full detail.
-  Correction landed in the source doc's Progress Log this same session. Archiving now.
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — BIG FINDING (flagging
-  per this skill's own instruction even though already tracked). 2 open items: todo 1 (`[REVIEW]` P0) is explicitly
-  gated on a still-in-progress sub-agent's own completion report and a real re-land/abandon judgment call; todo 2
-  (`[SCRIPT]` P3) is a "consider... not scoped" flag, not yet bounded work. The finding itself — two Progress Log
-  entries in a SIBLING doc (`venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`) asserted a fix was
-  "confirmed live" via a branch-vs-branch diff check that cannot actually prove that (both branches can independently
-  lack a fix and still diff empty) — is exactly the class of methodological gap this workspace's measurement-claims
-  discipline exists to catch; worth the operator/maintainer's attention independent of this audit's own scope.

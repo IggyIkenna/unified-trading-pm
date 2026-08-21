@@ -177,4 +177,3 @@ trusting that).
   domain enum. Todos 1-2 are scoped to `unified-api-contracts`, outside this session's scope. Open-todo count unchanged
   at 6; destination ruling (BLK-87fc93e4) continues to correctly govern, `assigned_vm: NA` unchanged.
 - **context-scout 2026-08-20**: re-scouted; context_scope unchanged (4 entries), all still resolve on disk.
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — reaffirms the chain of prior verdicts (2026-08-02/04/07); explicit dated destination ruling (BLK-87fc93e4, 2026-07-21) governs this 9+-repo atomic breaking rename as LOCAL/human by deliberate operator-protective default; 6 open todos unchanged, none independently worker-executable without the coordinated cross-repo landing.

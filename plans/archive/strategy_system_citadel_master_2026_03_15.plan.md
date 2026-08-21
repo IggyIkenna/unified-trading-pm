@@ -1,7 +1,17 @@
 ---
 doc_type: plan
 title: strategy-system-citadel-master-2026-03-15
-summary: 'Citadel-grade master plan consolidating strategy universe expansion (mean reversion, options ML 3 types,
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-ui, execution-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-15'
+overview: 'Citadel-grade master plan consolidating strategy universe expansion (mean reversion, options ML 3 types,
 
   sports market making, prediction market arb), instrument availability (Polymarket/Kalshi canonical mapping),
 
@@ -15,16 +25,9 @@ summary: 'Citadel-grade master plan consolidating strategy universe expansion (m
 
   Stripped of already-completed items from March 13 audit. Built up with enhanced detail on options ML prediction types,
 
-  canonical instrument ID mapping for prediction markets, and strategy-venue-instrument validation matrix.'
-status: complete
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: [alerting-service, deployment-api, deployment-ui, execution-service, instruments-service, strategy-service]
-scope: [engineer, admin]
-tags: []
-related: []
-created: '2026-03-15'
+  canonical instrument ID mapping for prediction markets, and strategy-venue-instrument validation matrix.
+
+  '
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D3, business: B4}
@@ -49,7 +52,7 @@ todos:
     \ `{DOMAIN}_{SUBCATEGORY}_{ASSET}_{TIMEFRAME}` — human-readable, uppercase, underscores.\nExamples: `CEFI_MOMENTUM_BTC_1H`, `DEFI_BASIS_ETH_USDT`, `SPORTS_ARB_FOOTBALL_EPL`, `TRADFI_MOMENTUM_SPY_1D`,\n`OPTIONS_VOL_ML_BTC_DERIBIT`, `PREDICTION_ARB_POLYMARKET_CROSS`.\nAcceptance: JSON validates, every existing strategy has an entry, `jq` parses cleanly.\n", status: done}
 - {id: p1-strategy-manifest-qg-tests, content: "- [x] [AGENT] P0. Add strategy manifest validation to `unified-trading-pm/scripts/quality-gates.sh`:\n1. Parse strategy-manifest.json — valid JSON, no duplicate strategy_ids\n2. For each entry where `maturity.code.class_exists=true`: verify class_path importable\n   (`python -c \"from {class_path} import {class_name}\"`)\n3. For each entry where `maturity.code.unit_tests=true`: verify test file exists\n4. For each entry: verify `config_file` path exists on disk\n5. For each entry: verify `venues[]` are all in UCI Venue enum\n6. For each entry: verify `asset_groupes[]` are all in UAC InstrumentType enum\n7. For each entry: verify `api_served_by` exists in workspace-manifest.json\n8. For each entry: verify `ui_rendered_in[]` exist in workspace-manifest.json\n9. Generate `STRATEGY_MANIFEST_DAG.svg` visualization (strategy → venue → instrument → features)\nTest: `cd unified-trading-pm && bash scripts/quality-gates.sh` passes with new checks.\n",
   status: done, completion_note: 'validate-strategy-manifest.py created, wired into QG, 44 tests.'}
-- {id: p1-strategy-maturity-checklist, content: "- [x] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/check-strategy-maturity.py`:\nReads strategy-manifest.json and for each strategy prints a maturity report card:\n```\nCEFI_MOMENTUM_BTC_1H:\n  Code: C4 [x] class [x] tests [x] QG [ ] merged\n  Deployment: D0 [ ] batch_analytics [ ] mock_smoke [ ] batch_live_recon\n  Business: B0 [ ] backtest_profitable [ ] live_1d [ ] live_1w [ ] deck\n  Data: [x] features [ ] tick [x] ML model [ ] testnet [ ] API keys\n```\nExit 1 if any strategy with `maturity.code.status >= C2` has `unit_tests=false`.\nExit 1 if any strategy with `maturity.deployment.status >= D2` has `mock_smoke=false`.\nAcceptance: script runs, produces table for all strategies, exits 0 on current state.\n", status: done}
+- {id: p1-strategy-maturity-checklist, content: "- [x] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/check-strategy-maturity.py`:\nReads strategy-manifest.json and for each strategy prints a maturity report card:\n```\nCEFI_MOMENTUM_BTC_1H:\n  Code:       C4 [x] class [x] tests [x] QG [ ] merged\n  Deployment: D0 [ ] batch_analytics [ ] mock_smoke [ ] batch_live_recon\n  Business:   B0 [ ] backtest_profitable [ ] live_1d [ ] live_1w [ ] deck\n  Data:       [x] features [ ] tick [x] ML model [ ] testnet [ ] API keys\n```\nExit 1 if any strategy with `maturity.code.status >= C2` has `unit_tests=false`.\nExit 1 if any strategy with `maturity.deployment.status >= D2` has `mock_smoke=false`.\nAcceptance: script runs, produces table for all strategies, exits 0 on current state.\n", status: done}
 - {id: p1-strategy-manifest-svg, content: '- [x] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/generate_strategy_manifest_dag.py`:
 
     Reads strategy-manifest.json and generates STRATEGY_MANIFEST_DAG.svg showing:

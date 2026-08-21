@@ -1,15 +1,7 @@
 ---
 doc_type: plan
 title: live-batch-alignment-audit
-summary: 'Full live/batch alignment remediation. Services should think they''re doing the same thing
-
-  regardless of mode — only infrastructure (transport, triggering, lifecycle) differs.
-
-  Covers: matching-engine wiring, CanonicalFill convergence, L0 matcher for top-of-book,
-
-  topology_reader move to UTL, feature service live readiness, event sink fixes,
-
-  sharding SSOT docs, ServiceMode deletion.'
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,6 +11,17 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-21'
+overview: 'Full live/batch alignment remediation. Services should think they''re doing the same thing
+
+  regardless of mode — only infrastructure (transport, triggering, lifecycle) differs.
+
+  Covers: matching-engine wiring, CanonicalFill convergence, L0 matcher for top-of-book,
+
+  topology_reader move to UTL, feature service live readiness, event sink fixes,
+
+  sharding SSOT docs, ServiceMode deletion.
+
+  '
 type: mixed
 epic: epic-code-completion
 locked_by:

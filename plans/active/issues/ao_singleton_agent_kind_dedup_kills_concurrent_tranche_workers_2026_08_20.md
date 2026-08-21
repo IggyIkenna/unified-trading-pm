@@ -53,8 +53,8 @@ related:
 created: "2026-08-20"
 last_updated: "2026-08-20"
 parent_epic: orchestrator_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 1.0
@@ -200,4 +200,3 @@ self-heals NEVER, silently defeating the whole point of the automated sweep for 
   the two affected test files. `tofu validate`/quickmerge full quality-gates all green. The remaining P2
   (`_owns_live`/`tmux_session` investigation) and P3 (STEP 7 unlock reliability) items stay open as genuine
   investigative follow-ups, not blocking.
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: RECLASSIFY (whole-doc) — both remaining open todos (P2: investigate why `agt-d46d9a`/`agt-c82f06` did not register as owning a live session, for dashboard "who owns this session" display accuracy; P3: check whether `agents/plan_reconciler.md`'s STEP 7 unlock is reliably reached before `/done`) are bounded code/log investigations with no design/judgment call remaining — the P1 fix already shipped, these are pure follow-on diagnostics with a stated purpose. Conflict-check: grepped `plans/active/` for `_owns_live`/`STEP 7 unlock` — the only hit (`plan_reconciler_findings_sports_2026_08_19.md`) is a live INSTANCE of the STEP-7-not-reached phenomenon in one specific incident, not a duplicate open investigation into the general mechanism; no genuine conflict. Flipped `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`.

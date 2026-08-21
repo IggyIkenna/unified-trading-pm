@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: dev-environment-automated-onboarding-2026-03-10
-summary: Automated dev environment setup script that puts a developer into a fully working local dev environment in <15
-  minutes with zero live API calls
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
+overview: Automated dev environment setup script that puts a developer into a fully working local dev environment in <15 minutes with zero live API calls
 type: infra
 epic: epic-infra
 superseded_by: cicd_code_rollout_master_2026_03_13

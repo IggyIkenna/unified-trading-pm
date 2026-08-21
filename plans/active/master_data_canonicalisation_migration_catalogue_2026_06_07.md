@@ -945,10 +945,3 @@ the current 919-line file), and neither successor claim matched live corpus stat
    `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (line 502, open, citing
    `is_catalogue_g1_root_audit_log_2026_07_24.md` by name). Migrated to:
    `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.
-
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — this MASTER COORDINATOR
-  doc's 2 open checkboxes are (a) the DeFi G4 `--apply` item, which the doc's own text already correctly redirects
-  to `defi_migration_audit_log_2026_07_24.md` GATE C as "the live tracked todo" (not duplicated here, per the
-  KEEP-NA-STALE citation pattern already self-applied), and (b) an explicit future-wave placeholder ("WAVE 5 /
-  live-side (gated, after batch migration)... Assign to slots when reached"). Consistent with the doc's own
-  "pure dependency-gated sequencer" role — it coordinates, it does not execute.

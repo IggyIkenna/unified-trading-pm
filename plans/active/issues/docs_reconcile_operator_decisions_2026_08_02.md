@@ -447,4 +447,3 @@ just tracked here so they aren't lost:
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:0aec3afabab2e46a]: KEEP-NA, valid — all 4 remaining items are explicit BLOCKED-OPERATOR-DECISION authority calls (doctrine/authoritative_for collisions) per docs-reconcile's own contract; item 1 correctly REOPENED 2026-08-12 with new evidence (a live CI consumer), not stale.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — all 4 remaining items are explicit BLOCKED-OPERATOR-DECISION authority calls (doctrine/`authoritative_for` collisions) per docs-reconcile's own contract; unchanged since 2026-08-17.

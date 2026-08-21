@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: proper-coverage-roadmap
-summary: How to reach ~100% honest coverage per category for instruments-service / MTDS / MDPS — the operational sequence
-  that lights up every cell of the Data Status heatmap.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -20,6 +19,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-20"
+overview:
+  How to reach ~100% honest coverage per category for instruments-service / MTDS / MDPS — the operational sequence that
+  lights up every cell of the Data Status heatmap.
 type: ops
 epic: epic-data-platform-honest-coverage
 locked_by: live-defi-rollout

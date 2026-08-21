@@ -1,14 +1,7 @@
 ---
 doc_type: plan
 title: Topology DAG — PM as SSOT + Protocol Injection Formalization
-summary: "TOPOLOGY-DAG.md belongs in unified-trading-pm, not in unified-trading-codex.\nEverything in the system depends\
-  \ on the tier DAG — libraries use it to know\ntheir protocol surface, UCI factory uses it to resolve live vs batch mode,\n\
-  services declare intent (SERVICE_MODE=live|batch), and deployment injects\nPROTOCOL_* env vars. The codex should carry\
-  \ a thin reference stub, not own\nthe diagram.\n\nThree sequential outcomes:\n1. Move TOPOLOGY-DAG.md to unified-trading-pm/\
-  \ (PM is already SSOT for\n   workspace-manifest.json; the human DAG belongs alongside it).\n2. Formalize the n-tier protocol\
-  \ injection contract in codex as\n   04-architecture/PROTOCOL-INJECTION.md — the authoritative doc for how\n   libraries\
-  \ know which protocol to use at runtime without ever reading\n   env vars directly.\n3. Complete the UTL cloud symbol\
-  \ deletion (Category B violations) and the\n   canary CodeBuild run — the two remaining gaps blocking UCI plan closure."
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -26,6 +19,16 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-06"
+overview:
+  "TOPOLOGY-DAG.md belongs in unified-trading-pm, not in unified-trading-codex.\nEverything in the system depends on the
+  tier DAG — libraries use it to know\ntheir protocol surface, UCI factory uses it to resolve live vs batch
+  mode,\nservices declare intent (SERVICE_MODE=live|batch), and deployment injects\nPROTOCOL_* env vars. The codex
+  should carry a thin reference stub, not own\nthe diagram.\n\nThree sequential outcomes:\n1. Move TOPOLOGY-DAG.md to
+  unified-trading-pm/ (PM is already SSOT for\n   workspace-manifest.json; the human DAG belongs alongside it).\n2.
+  Formalize the n-tier protocol injection contract in codex as\n   04-architecture/PROTOCOL-INJECTION.md — the
+  authoritative doc for how\n   libraries know which protocol to use at runtime without ever reading\n   env vars
+  directly.\n3. Complete the UTL cloud symbol deletion (Category B violations) and the\n   canary CodeBuild run — the
+  two remaining gaps blocking UCI plan closure.\n"
 todos:
   - {
       id: topology-dag-move,

@@ -101,18 +101,17 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
       after a bounded number of kicks or a wall-clock threshold, so a wedged-but-pane-alive slot self-heals instead of
       looping resume-kicks for 1.5h+. Also reconcile the `phase=pre_boot`/`worker_alive=false`-vs-alive-pane bookkeeping
       mismatch (the pane is past boot; the state says pre_boot). (repo: agent-orchestrator)
-- [x] ✅ [OPERATOR] P2. **CLOSED 2026-08-21 (na-eligibility-audit) — superseded by the shipped durable fix,
-      self-heals going forward.** Was: **Slot 3 — 3rd occurrence, RECURRED same day it was marked resolved**: review
-      (msg 4113, 2026-08-08T12:58:58Z) + main independently confirmed via `/api/state` (2026-08-08T~12:59Z): slot 3
-      back to `phase=booting`, `worker_alive=false`, `tmux_alive=true`, `current_task=null`, `last_ping=12:28:17Z` —
-      30+ min stuck, same signature as the two prior instances on this exact slot. **Staleness note (2026-08-16,
-      /plan-reconcile)**: this is a point-in-time alert from 2026-08-08 with no Progress Log entry since 2026-08-10 —
-      AutoSpawn cycles slots continuously, so this specific slot-3 state almost certainly no longer holds. **Closure
-      evidence**: the durable watchdog-escalation fix this todo's own text names as "the actual blocker" is now
-      shipped and deployed (`agent-orchestrator@609d044b8f`, 2026-08-20, per the "Durable fix" todo + Progress Log
-      above) — a genuinely-wedged `phase=pre_boot/booting` + `worker_alive=false` slot now self-heals via a bounded
-      resume-budget escalation to kill+respawn, so this 13-day-stale manual-kill request against one specific,
-      already-cycled slot state is moot. (repo: agent-orchestrator)
+- [ ] [OPERATOR] P2. **Slot 3 — 3rd occurrence, RECURRED same day it was marked resolved**: review (msg 4113,
+      2026-08-08T12:58:58Z) + main independently confirmed via `/api/state` (2026-08-08T~12:59Z): slot 3 back to
+      `phase=booting`, `worker_alive=false`, `tmux_alive=true`, `current_task=null`, `last_ping=12:28:17Z` — 30+ min
+      stuck, same signature as the two prior instances on this exact slot. This recurred only ~4h after the todo above
+      was marked RESOLVED at 08:55-08:57Z the same day, which is itself evidence the point-fix (kill+respawn) doesn't
+      hold and the [BACKEND] durable watchdog-escalation fix above is the actual blocker, not yet shipped. Needs another
+      kill+respawn (operator-owned, main cannot self-serve per this doc's established precedent). (repo:
+      agent-orchestrator — operator action) **Staleness note (2026-08-16, /plan-reconcile)**: this is a point-in-time
+      alert from 2026-08-08 with no Progress Log entry since 2026-08-10 — AutoSpawn cycles slots continuously, so this
+      specific slot-3 state almost certainly no longer holds. Needs a fresh live `GET /api/state` check before acting,
+      not treated as still-actionable as literally worded.
 - [x] ✅ [OPERATOR] P2. **Slot 3 — 2nd instance of the same wedged class (kill+respawn)** — **RESOLVED, verified live
       2026-08-08 (round5-cross-cutting-audit).** Live `GET /api/state` shows slot 3 also now `phase: "idle"` (not
       `working`/wedged), same coherent "214 task(s) blocked" message, `last_ping` fresh (2026-08-08T08:57:01Z). The
@@ -205,9 +204,3 @@ dashboard ("phase is only meaningful while status is idle").
       the commit — do not silently pick one. Rarer since `agent-orchestrator@0391039be0` (a typed
       one-shot no longer produces `working`+`booting`), but still reachable inside the boot window.
       (repo: agent-orchestrator)
-
-- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA-STALE (item closed) — closed the stale
-  "Slot 3 — 3rd occurrence" `[OPERATOR]` kill+respawn item (see its own citation above), superseded by the shipped
-  durable watchdog-escalation fix (`agent-orchestrator@609d044b8f`). The sole remaining open item (`[BACKEND] P3`,
-  reconcile the `fleet_slot_status.py`/`layout.tsx` phase-split scope) is live-dispatch-critical-path fleet-KPI
-  counting-semantics code — stays KEEP-NA, consistent with this doc's established caution.

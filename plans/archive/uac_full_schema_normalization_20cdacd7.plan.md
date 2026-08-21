@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: UAC Full Schema Normalization
-summary: Complete specification for normalizing all external API contracts across 60+ venues into canonical formats, with
-  full matrix generation, live/batch symmetry, and references for every data source and schema.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-06"
+overview:
+  Complete specification for normalizing all external API contracts across 60+ venues into canonical formats, with full
+  matrix generation, live/batch symmetry, and references for every data source and schema.
 todos: []
 isProject: false
 ---

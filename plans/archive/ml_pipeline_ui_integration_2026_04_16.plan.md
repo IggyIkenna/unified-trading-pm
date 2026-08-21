@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: ml-pipeline-ui-integration
-summary: ML pipeline → API → UI integration — mock data to GCS, SHAP artifacts, 16 missing endpoints, tier-aligned mode
-  switching, inference serving
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-16'
+overview: ML pipeline → API → UI integration — mock data to GCS, SHAP artifacts, 16 missing endpoints, tier-aligned mode switching, inference serving
 type: mixed
 epic: epic-deployment
 completion_gates: {code: C5, deployment: D3, business: B4}

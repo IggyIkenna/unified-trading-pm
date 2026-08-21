@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: aws-migration
-summary: Dual-cloud readiness for GCP primary and AWS secondary. Cloud-agnostic abstractions via unified-cloud-interface;
-  migration phases for build path, runtime, and full dual-cloud deployment.
+summary:
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-05"
+overview:
+  Dual-cloud readiness for GCP primary and AWS secondary. Cloud-agnostic abstractions via unified-cloud-interface;
+  migration phases for build path, runtime, and full dual-cloud deployment.
 type: deployment
 epic: epic-deployment
 superseded_by: cicd_code_rollout_master_2026_03_13

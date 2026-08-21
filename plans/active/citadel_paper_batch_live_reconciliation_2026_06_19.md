@@ -973,4 +973,3 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
   `crypto_alpha_research_2026_07_24.md`'s 3 own live `_panel.py` references (the actual owning doc per the
   near-verbatim-duplicate citation above).
 - **context-scout 2026-08-20**: re-scouted; context_scope unchanged (5 entries), all still resolve on disk.
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — 3 open todos confirmed (matches inventory): P2.7.3 is the PERMANENT CLAUDE.md human-only hard-stop (live wallet/custody approval, reaffirmed 2026-07-28); P2.11.15/P2.11.18(b) are ML research/retrain judgment calls (longer-horizon target retrain to fix a 2026 cs-leg drag), not bounded outcomes. Reaffirms 2026-08-17/19 verdicts unchanged.

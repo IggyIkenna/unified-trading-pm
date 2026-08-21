@@ -635,10 +635,10 @@ POST_ONLY as two independently composable fields.
       coefficient, applied against the RAW single-instrument/single-venue position) on the shared envelope,
       generalizing off `QuoteInstruction.skew_on_inventory` rather than inventing new shape. **Note 2026-08-19 (later
       revision): now likely per-vector-entry (judgment call 16), not per-instruction — unresolved.**
-- [x] ✅ [AGENT] P2. **EXTRACTED 2026-08-21 → batch21.** Trace whether `HealthFactorMonitor`/`DeleverageExecutor` are wired to a real production
+- [ ] [AGENT] P2. **Trace whether `HealthFactorMonitor`/`DeleverageExecutor` are wired to a real production
       entrypoint** (service bootstrap constructing the monitor per-chain; a real Pub/Sub subscription calling
       `deleverage_executor.handle()`) or are declared-but-unwired like the rest of this issue's findings.
-- [x] ✅ [BACKEND] P3. **EXTRACTED 2026-08-21 → batch21.** Fix the stale `_SCE_1H` suffix on DeFi strategy_ids** (`carry_staked_basis.yaml` and siblings)
+- [ ] [BACKEND] P3. **Fix the stale `_SCE_1H` suffix on DeFi strategy_ids** (`carry_staked_basis.yaml` and siblings)
       — DeFi is never SAME_CANDLE_EXIT per `hold-policy.md`; rename to the correct hold-policy abbreviation across
       the config, `close_all/__init__.py`'s dispatch dict, and `close_all/carry_staked_basis.py`'s `STRATEGY_ID`
       constant together (a rename needs every consumer migrated in the same change).
@@ -929,10 +929,8 @@ underlying. Consistent with the standing "strategy reads only processed data, ne
    pending order at 100% through `A` AND treat it as full inventory risk elsewhere unless deliberately conservative.
 4. **Substrate-conditional transport** — should derived topology take deployment substrate as input (colo L2 ->
    multicast; cloud -> unicast/relay) given per-receiver cloud multicast billing?
-5. Five Wave-0 rulings — **ALL RESOLVED 2026-08-21 (operator)**: CloudKMS wallet check closed by measurement
-   (no live wallet-config in any prod GCP bucket — evidence in the CloudKMS issue doc); UAC `__init__` root →
-   convert (parity test first); catalogue → enumerate+fix writer-vs-contract diffs, then lock+version;
-   hot-swap → option B, blessed, codex corrected; venue-eligibility → one declarative R17 resolver, fail closed.
+5. Five outstanding Wave-0 rulings: CloudKmsCustodyProvider wallet check, UAC `__init__` restructure scope,
+   instruments catalogue ratification, instrument-universe hot-swap safety, venue-eligibility generalisation shape.
 
 - [ ] [DOC] P0. **Write the full build spec** — a CTO-level document covering slow/fast split, worked examples,
       infrastructure, feed arbitration, instrument selection for fast updates, and the options fast path. A peer
@@ -995,4 +993,3 @@ remain OPEN** — carried into the codex doc's section 10.
 - [ ] [REVIEW] P1. **Add a reorg row to the DeFi failure matrix and audit barrier-1 dedup keys for the reorg trap** —
       a key on `tx_hash` alone wrongly suppresses the same transaction re-included under a different block hash.
       Measured 2026-08-20: `reorg` has ZERO hits across execution-service, strategy-service and features-service.
-- **na-eligibility-audit 2026-08-21** (line-cap-constrained, doc at 997/1000L): RECLASSIFY (per-todo split) — 2 pure investigation/rename items (the `_SCE_1H` rename, tracing whether HealthFactorMonitor/DeleverageExecutor are wired to production) extracted to `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`; everything else stays `assigned_vm: NA` per the dispatching orchestrator's explicit caution against a naive whole-doc reclassify on this hub doc. Doc's own `assigned_vm: NA` unchanged. Cross-cutting tranche, batch 2 of 3.

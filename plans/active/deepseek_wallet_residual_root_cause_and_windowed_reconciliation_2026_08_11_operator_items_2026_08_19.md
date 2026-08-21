@@ -82,7 +82,3 @@ source: >-
   `[OPERATOR]` marker per task_template.md §3's ingestion-gate family) — this fork is a corpus-hygiene/archival-
   discoverability fix, not a dispatch-mechanics change.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. Sole todo is explicitly `[OPERATOR]`,
-  optional, and unchanged in substance: an accounting-adjustment judgment call (fold a small already-root-caused
-  historical residual into the frozen `opening_balance`, or leave it), the exact same action-class as the sibling
-  P0 item already executed by the operator directly. Doc stays `assigned_vm: NA`.

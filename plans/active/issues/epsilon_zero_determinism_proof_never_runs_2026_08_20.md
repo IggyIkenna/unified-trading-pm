@@ -135,10 +135,3 @@ so this is a dated, accepted gap rather than an open question.
   `trade_recon.py` was missing its `batch_live_reconciliation_service/` package-dir prefix, and
   `daily_determinism_handler.py` was attributed to `strategy-service` (per the doc's own body-text citation at
   line 67) but actually lives in `batch-live-reconciliation-service` — both now verified on disk.
-- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — 5 open todos, 4 of 5 explicitly sequenced behind the
-  2026-08-20 operator ruling to wire the determinism proof AFTER the still-actively-evolving state-fabric build
-  (the sibling `execution_delta_proxy_repricer_generalization_2026_08_18.md` was still gaining new operator
-  rulings on this exact architecture as of 2026-08-21). The remaining item (correct the codex doc's cadence claim)
-  is a small, genuinely bounded doc-fix, but given 4/5 items are still gated on an architecture actively in flux
-  and the fix is low-value in isolation, erring conservative rather than fragmenting a single-topic doc for one
-  small extraction. Cross-cutting tranche, batch 2 of 3.

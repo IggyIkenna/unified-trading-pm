@@ -186,21 +186,13 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
       `HTTP 200, stop_reason: "tool_use"`, `tool_use_id=toolu_codex_a06d75bf223b4d0e8220da4e`; turn 2
       (`tool_result="PROD-SMOKE-8821"`) → `HTTP 200`, final answer `"PROD-SMOKE-8821"` — genuinely reflecting the
       injected content, not a hallucination. `codex-bridge.service` confirmed `active` post-restart both times.
-- [x] ✅ [REVIEW] P1. **Production smoke test RE-CONFIRMED 2026-08-19** — a real tool_use/tool_result round trip
-      against the live `codex-bridge.service` (marker `RESMOKE-DD6149CC32` injected via `tool_result`, echoed back
-      verbatim, `MARKER_MATCH=True`). Flagged **READY FOR OPERATOR REVIEW to unpause** `codex-luna` — the
-      `BLOCKED-OPERATOR-DECISION` tag this todo carried is retired in this same edit, per the corpus's own "the
-      moment an operator tag resolves, retag in the same edit" rule.
-      **UNPAUSE CONFIRMED LIVE 2026-08-21 (interactive session)** — independently re-verified rather than trusting
-      the operator's statement alone, per this workspace's measurement discipline: queried `AccountUsageRow`
-      directly on the orchestrator VM (read-only, via the app's own `session_scope()`, no dashboard JWT) —
-      `account_id=codex-luna status=healthy` (not `disabled`), `last_used_at=2026-08-21 05:36:58 UTC`.
-      Cross-checked against `TaskUsageRow`: **8 real completed dispatches** to `codex-luna` in the trailing ~2h
-      across 5 different real slots (4, 8, 12, 25, 26), including genuine plan-derived backlog tasks
-      (`b21_distinct_values_noncanonical_live-…`, `w15_execution_service_venue_adaptor_security_audit-…`,
-      `w_execution_orchestrator_oms_persistence_impl-…`), not just one-off dispatches — real fleet traffic is
-      flowing through the bridge, not a paused/idle account. `codex_luna_flex_bridge_2026_08_14.md`'s own
-      `[REVIEW] P0. Smoke-test gate before any real fleet traffic` todo was already updated to reference this
+- [ ] [REVIEW] P1. BLOCKED-OPERATOR-DECISION. **Production smoke test RE-CONFIRMED 2026-08-19 (fresh evidence, same day, later run)** — see
+      Progress Log entry below: a real tool_use/tool_result round trip against the live `codex-bridge.service`
+      (marker `RESMOKE-DD6149CC32` injected via `tool_result`, echoed back verbatim, `MARKER_MATCH=True`).
+      **READY FOR OPERATOR REVIEW to unpause** `codex-luna` (`POST /api/accounts/codex-luna/enable`, the real
+      `enable_account_endpoint`) — this todo deliberately stops short of flipping it; that action is
+      operator-gated per this plan's own Non-goals and is NOT done here. `codex_luna_flex_bridge_2026_08_14.md`'s
+      own `[REVIEW] P0. Smoke-test gate before any real fleet traffic` todo was already updated to reference this
       plan's evidence and closed (see the 2026-08-19 Progress Log entry below).
 - [ ] [DOC] P2. Once every todo above is done, run this plan through the standard 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — this is a LOCAL/human plan
@@ -329,8 +321,3 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
   Ran a real 2-turn tool_use/tool_result round trip via SSM `send-command` (`AWS-RunShellScript`, instance `i-0c9b283b31d6b5ca7`, region `ap-northeast-1`) against the live `codex-bridge.service`, using its own resident `codex-luna` ChatGPT credentials — no account state touched, no restart, no file changes on the VM. **Real measured result**: `/health` → `200 {"status":"ok"}`; turn 1 (`echo_marker` tool declared) → `HTTP 200`, `stop_reason=tool_use`, real `tool_use_id=toolu_codex_a8eaa455727c4871ac70fc4b`; turn 2 (`tool_result` = freshly-generated marker `RESMOKE-DD6149CC32`) → `HTTP 200`, final text `'RESMOKE-DD6149CC32'` — genuinely echoing the injected content, `MARKER_MATCH=True`. Passed cleanly, no errors, no retries needed. (Usage numbers logged in this run — `input_tokens=44`/`60`, `output_tokens=1`/`4` — are still the OLD `len(text)//4` estimate, since `multi_provider_context_billing_reconciliation_2026_08_16.md`'s `[INFRA] P0` real-usage fix had not yet been deployed to this VM at the time of this run — expected, unrelated to this todo.)
 
   Updated the `[REVIEW] P1` unpause todo above to **READY FOR OPERATOR REVIEW** with this fresh evidence — deliberately did NOT flip `codex-luna`'s `account_status` myself (`POST /api/accounts/codex-luna/enable`), per this plan's own Non-goals; that flip, and this plan's final `[DOC] P2` archival todo (gated on it), remain for the operator.
-
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. `last_updated: 2026-08-19`, no
-  content change since the 2026-08-19 verdict. Both open todos remain: an `[REVIEW] P1` operator-gated account
-  unpause (a real production-dispatch-affecting flip, deliberately not mine to do per this plan's own Non-goals),
-  and a `[DOC] P2` final archival todo explicitly gated on that unpause. Doc stays `assigned_vm: NA`.

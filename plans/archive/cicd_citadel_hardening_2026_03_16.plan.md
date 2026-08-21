@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: cicd-citadel-hardening-2026-03-16
-summary: Post-bootstrap CI/CD hardening. Lowers SIT filter to 0.1.0+ so deployment tests run for all repos. Adds plan locking
-  to prevent premature archival. Adds smart context loading for conflict-resolution-agent. Adds PM/codex fast-path routing
-  (plans/docs -> main, scripts/workflows -> staging). Changes PM semver policy from always_patch to agent for proper breaking-change
-  detection on infrastructure files. Adds quickmerge integration smoke test to SIT.
+summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -14,6 +11,9 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-16'
+overview: 'Post-bootstrap CI/CD hardening. Lowers SIT filter to 0.1.0+ so deployment tests run for all repos. Adds plan locking to prevent premature archival. Adds smart context loading for conflict-resolution-agent. Adds PM/codex fast-path routing (plans/docs -> main, scripts/workflows -> staging). Changes PM semver policy from always_patch to agent for proper breaking-change detection on infrastructure files. Adds quickmerge integration smoke test to SIT.
+
+  '
 type: infra
 epic: epic-infra
 completion_gates: {code: C5, deployment: D3, business: none}

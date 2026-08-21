@@ -1,8 +1,7 @@
 ---
 doc_type: plan
 title: contract-completeness-checker-2026-03-10
-summary: Add AST-based completeness checkers for UIC and UAC that detect public classes defined in source but absent from
-  __all__, with SIT tests and GHA wiring.
+summary:
 status: completed
 nature: record
 asset_group: [cross-cutting]
@@ -12,6 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
+overview: Add AST-based completeness checkers for UIC and UAC that detect public classes defined in source but absent from __all__, with SIT tests and GHA wiring.
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: none}

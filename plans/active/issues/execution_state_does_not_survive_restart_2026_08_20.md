@@ -111,18 +111,17 @@ which is worse than the others because a CLI flag and a docstring both actively 
       -default shape as `get_venue_asset_group()` returning `"cefi"`.
 - [ ] [BACKEND] P1. **Add epoch fencing to the order path** so a superseded instance cannot keep submitting. Nothing
       currently prevents two live instances both sending orders.
-- [x] ✅ [REVIEW] P1. **EXTRACTED 2026-08-21** — rename or gut `pre_crash_checkpoint.py`. Extracted to
-      `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch (na-eligibility-audit,
-      cross-cutting tranche, batch 2 of 3).
-- [x] ✅ [AGENT] P1. **EXTRACTED 2026-08-21** — enumerate execution-service classes with tests but no non-test
-      instantiation. Extracted to `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch
-      (na-eligibility-audit, cross-cutting tranche, batch 2 of 3).
-- [x] ✅ [REVIEW] P2. **EXTRACTED 2026-08-21** — close the audit's own open questions (read `engine/orphan_monitor.py`,
-      `venue_failover.py`, `venue_cascade_monitor.py`, `manual_pending_queue.py`, `order_rejection_tracker.py`,
-      `utils/fidelity_selector.py`, `trade_execution/adapters/_rate_limit.py`,
-      `sports_execution/monitoring/venue_health.py:23 VenueHealthStatus` in full). Extracted to
-      `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch (na-eligibility-audit,
-      cross-cutting tranche, batch 2 of 3).
+- [ ] [REVIEW] P1. **Rename or gut `pre_crash_checkpoint.py`.** It checkpoints nothing; the name asserts a guarantee
+      the file does not provide, and it was the first place an auditor looked.
+- [ ] [AGENT] P1. **Enumerate execution-service classes with tests but no non-test instantiation.** Four instances is a
+      pattern. A repeatable check belongs in the quality gate, not in another audit.
+- [ ] [REVIEW] P2. **Close the audit's own open questions** — `engine/orphan_monitor.py`, `venue_failover.py`,
+      `venue_cascade_monitor.py`, `manual_pending_queue.py`, `order_rejection_tracker.py` were NOT opened, so the
+      ABSENT verdicts on recovery-state-machine, fencing and reconciliation rest on directory-wide greps rather than a
+      full read. Also unopened: `utils/fidelity_selector.py`, `trade_execution/adapters/_rate_limit.py` (a "multi-VM
+      singleton lock" that may or may not be fencing-adjacent), and
+      `sports_execution/monitoring/venue_health.py:23 VenueHealthStatus` (a second readiness-like concept outside the
+      `readiness/` package).
 
 ## What was measured as PRESENT, so nobody re-audits it
 
