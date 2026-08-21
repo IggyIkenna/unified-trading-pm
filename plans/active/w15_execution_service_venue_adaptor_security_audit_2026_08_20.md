@@ -327,16 +327,24 @@ No code was changed or tests run for this read-only audit. The HIGH findings req
 - [ ] [BACKEND] P0. Define caller-controlled slippage and expiry/deadline bounds for market and resting perp orders; remove the implicit Hyperliquid 5% IOC buffer and make Aster/Pacifica/Bybit market semantics explicit and bounded; HIGH finding: checklist point 4 (hyperliquid.py:381-391; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132).
 - [ ] [BACKEND] P0. Add durable idempotency/client-order IDs and ambiguous-outcome recovery for the perp/CLOB order paths; thread client_order_id through the Bybit wrapper into BybitCCXTAdapter, and prevent duplicate retries for Hyperliquid nonce-based, Aster timestamp-based, and Pacifica timestamp/expiry-based submissions; HIGH finding: checklist point 6 (hyperliquid.py:504-546; aster.py:479-519; pacifica.py:559-655; bybit.py:105-132).
 - [x] ✅ [BACKEND] P0. Make Bybit position/balance read failures observable instead of returning empty positions or zero balance, while preserving the already honest failed-order result; MEDIUM finding related to checklist point 7 (bybit.py:136-176). — execution-service@f1565e8a5e + evidence: `fetch_positions()`/`fetch_balance()` now log at ERROR and re-raise instead of swallowing adapter-init/CCXT read failures into `[]`/`Decimal("0")`; consistent with existing callers (`bybit_deposit.py`'s poll loop already try/excepts around `fetch_balance`, `perp_hedge_wiring.py`'s HL-side readers already let real errors propagate); 2 tests updated to assert the raise instead of the old silent fallback; quality-gates.sh green (292s, sentinel matched committed HEAD).
-- [ ] [BACKEND] P0. Confirm Pacifica's future live enablement retains the current fail-closed boundary (supports_live=False) and validates the configured Solana keypair/account relationship before changing that flag; HIGH-risk signing/auth guardrail (pacifica.py:31-48,286-328,610-645).
+- [x] ✅ [BACKEND] P0. Confirm Pacifica's future live enablement retains the current fail-closed boundary (supports_live=False) and validates the configured Solana keypair/account relationship before changing that flag; HIGH-risk signing/auth guardrail (pacifica.py:31-48,286-328,610-645). — execution-service@9d0753d6ff + evidence: `supports_live` confirmed still `BaseConnector`'s fail-closed `False` default, no override (`base.py:312,330-336`). Real gap found + fixed: `sign_pacifica_payload` always set `account` to the signing keypair's own pubkey with no `agent_wallet` header — silently wrong for Pacifica's documented delegated "Agent Key" mode (verified via WebFetch of `docs.pacifica.fi/api-documentation/api/signing/api-agent-keys.md`: "Still use the original wallet's public key for `account`" + a required `agent_wallet` header). Added optional `wallet_account_address` config + `account_address`/`_signing_headers()`; `supports_live` itself untouched. 8 new regression tests; `quality-gates.sh` green (354s, sentinel matched committed HEAD `3ae00b8a`); post-push ancestry independently verified after a quickmerge push-race rebase.
 
-- [ ] [BACKEND] P0. Add a process/key-scoped monotonic nonce allocator for Bitfinex, Bitget, and Kraken native
+- [x] ✅ [BACKEND] P0. Add a process/key-scoped monotonic nonce allocator for Bitfinex, Bitget, and Kraken native
       signing, including concurrency protection and reuse across adapter instances; HIGH finding: checklist point 2
       (bitfinex_native.py:179-199, bitget_native.py:145-166, kraken_rest_transport.py:308-310,
-      _native_base.py:75-82).
-- [ ] [BACKEND] P0. Enforce finite-positive quantity/price, strict side/order-type/symbol, and bounded
+      _native_base.py:75-82). — execution-service@cc6c2ee171 + evidence: new `allocate_monotonic_nonce()` in
+      `_native_base.py` (module-level lock + last-issued-per-scope registry, scope_key=`f"{venue_name}:{api_key}"`);
+      wired into `bitfinex_native.py`, `bitget_native.py`, and `kraken_rest_transport.py`'s `_make_nonce()`
+      (Kraken Spot + Futures share the one method); 11 new regression tests in
+      `tests/unit/cefi_execution/test_native_nonce_allocator.py` (monotonic increase, no-regression-on-clock-step,
+      scope isolation, 50-thread concurrency with zero collisions, reuse-across-instances for all three venues
+      incl. Kraken Spot+Futures sharing one key); quality-gates.sh green (182s, sentinel matched committed HEAD);
+      post-push ancestry verified.
+- [x] ✅ [BACKEND] P0. Enforce finite-positive quantity/price, strict side/order-type/symbol, and bounded
       market-order expiry/slippage semantics at every native order and amend boundary; HIGH findings: checklist
       points 3 and 4 (bitfinex_native.py:337-365, bitget_native.py:274-315,
-      kraken_rest_adapter.py:230-344,437-472, kraken_futures_orders.py:49-123,163-177).
+      kraken_rest_adapter.py:230-344,437-472, kraken_futures_orders.py:49-123,163-177). — execution-service@a57d7fba93
+      + evidence: shared validators in _native_base.py, wired pre-body-build into all 4 files; QG green.
 - [ ] [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
       retrying; do not discard invalid/missing IDs or allow a fresh retry to double-place an order; HIGH finding:
       checklist point 6 (bitfinex_native.py:337-368, bitget_native.py:274-318,

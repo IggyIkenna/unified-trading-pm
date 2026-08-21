@@ -1115,8 +1115,9 @@
       <div>
         <b>1 — Allocate</b>
         <span>
-          Deploy capital into Odum's own investment-management business. One strategy is live today with a
-          verifiable track record — see
+          Deploy capital into Odum's own investment-management business — allocations facilitated in both SMA
+          (separately managed account) and fund structures. One strategy is live today with a verifiable track
+          record — see
           <a href="https://www.odum-research.com/odum-tearsheet-5cda11d0928332808a3fcd57.html" target="_blank" rel="noopener"
             >the tear sheet</a
           >. This platform is the infrastructure accelerating further strategy builds behind it: more allocations
@@ -16390,6 +16391,58 @@
         tables, worked requests and responses, and error codes for the availability and delivery endpoints are in
         <a href="#s26">§26</a>.
       </p>
+      <h3>Keeping history current — continuous T+1 backfill</h3>
+      <p>
+        History is not a one-time load. Every shard is stamped with an explicit cadence — a one-off backfill, a
+        nightly T+1 daily run, a scheduled recurring pull, continuous live capture, or a recovery replay — tracked as
+        its own manifest column, separate from which vendor served it. The nightly T+1 run is what keeps yesterday's
+        data present today without a manual re-trigger: the same pipeline that backfills years of history also runs
+        it one day at a time, on a schedule, so the corpus a strategy trains or backtests against never falls more
+        than a day behind live.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Source: manifest schema v9's <code>cadence</code> column
+        (<code>"one_off_backfill" | "t1_daily" | "scheduled_recurring" | "continuous_live" | "recovery_replay"</code>),
+        an axis orthogonal to <code>pipeline_mode</code> — one endpoint can serve both a nightly T+1 run and a
+        long-term backfill under the same mode. <code>/codex/02-data/availability-manifest-and-data-status.md</code>.
+      </p>
+      <h3>WebSocket reconnection — a stale window is flagged, never silently treated as fresh</h3>
+      <p>
+        A live connector's socket drops and reconnects for reasons outside anyone's control — a venue-side bounce, a
+        network blip. What matters is that a window built across a reconnect is never presented as though nothing
+        happened: every venue connector tracks its own reconnect state, and the moment a reconnect occurs, the window
+        it affects is stamped <code>data_freshness=STALE</code> rather than <code>FRESH</code> — a consumer reading
+        the manifest can tell the difference without guessing from gaps in the data itself. A background heartbeat,
+        independent of whether a window has actually closed, checks in periodically so a connector that is still "up"
+        but has stopped producing ticks is caught by a stall detector rather than going quiet unnoticed. Separately,
+        on the data-vendor side (Databento, The Graph and others queried over REST rather than streamed), API keys
+        rotate across a pool per request, with a rate-limit hit on one key routing the next call to a different,
+        non-limited key rather than stalling the whole feed on one exhausted credential.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Source: <code>market-tick-data-service/market_tick_data_service/live/_ws_window_helpers.py</code>'s
+        <code>WSFeedConnector.pop_reconnect_flag()</code>;
+        <code>market_tick_data_service/live/websocket_runner.py</code>'s 60-second
+        <code>PipelineHeartbeatTimer</code> stall watchdog; key-pool rotation in
+        <code>market_tick_data_service/market_interface/clients/thegraph_base_client.py</code> and
+        <code>databento_base_client.py</code>.
+      </p>
+      <h3>Replaying data intraday <span style="font-weight: 400; color: var(--ink-3)">(in development)</span></h3>
+      <p>
+        Today's gap-fill mechanism re-drives historical sources back through the same live transport when the live
+        pipeline itself loses data — a websocket disconnect that outlasts the reconnect grace period, an intraday VM
+        restart — using a per-shard watermark to resume exactly where it left off rather than re-running the whole
+        window. That mechanism is internal today. What is in development is exposing the same capability directly to
+        a counterparty: the ability to replay your own already-delivered data for a given intraday window on demand,
+        rather than waiting for the next scheduled batch. This matters most around an exchange outage — if a venue
+        drops a connection or halts trading mid-session, pulling exactly the window that was missed, on your own
+        schedule, is the difference between a clean recovery and reconstructing history by hand.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Source: replay runner and per-shard <code>replay_watermark</code> handoff —
+        <code>/codex/05-infrastructure/replay-subsystem.md</code>. Customer-facing exposure tracked in
+        <code>/plans/active/data_pipeline_completion_2026_08_21.md</code>.
+      </p>
     </details>
   </section>
 
@@ -16966,6 +17019,45 @@ Content-Type: application/json
           production, and a retry means the same thing on every venue.
         </p>
       </details>
+      <h3>Position handshake — keeping strategy and execution in agreement</h3>
+      <p>
+        A price moving away from what strategy last saw is normal — the market moved. A position disagreement is
+        not: if execution's own record of what it holds on a venue differs from what strategy believes it holds
+        there, the two services disagree about ground truth, not about a moving market, and that is worth treating
+        differently. The design in progress has strategy state its believed position per venue alongside every
+        instruction it sends, so execution can check its own live view against it on every instruction — not as a
+        slow periodic reconciliation pass, but as an instant, per-instruction check reusing the same
+        block/scale-down/monitor consequence vocabulary the risk engine already applies to any other triggered rule.
+        Default behaviour on a mismatch is to block, because a strategy and its execution layer silently disagreeing
+        about what is actually held is exactly the class of problem <a href="#s21">§21</a>'s reconciliation framework
+        exists to catch, just checked faster and closer to the point of action.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Design in progress, not yet shipped —
+        <code>/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md</code> §
+        "Reference position, credit ownership."
+      </p>
+      <h3>Fast-path repricing from a cached reference</h3>
+      <p>
+        Re-running a strategy's full decision loop on every tick is too slow for some opportunities — a
+        market-making quote, an arbitrage leg — to react to a market that has already moved by the time a fresh
+        instruction round-trips back from strategy. The pattern being generalised across the platform: strategy
+        periodically publishes a reference price and a sensitivity factor for how that opportunity's value moves with
+        the market, and execution — watching the live feed directly, without waiting on strategy — cheaply
+        extrapolates from the cached reference rather than recomputing from scratch, clamping to a defined staleness
+        bound rather than extrapolating indefinitely. This is what makes HFT-grade reaction speed possible from a
+        co-located or cross-region execution engine without every decision needing a fresh round-trip to strategy. It
+        rides on the same discipline applied everywhere market data is captured: every observation carries both the
+        exchange's own timestamp and the local time it was received, so a stale or slow-arriving update is provably
+        distinguishable from a genuinely fresh one rather than assumed current.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        The extrapolation engine (<code>DeltaProxyRepricer</code>, <code>QuoteMaintainer</code>) is real, tested
+        code; end-to-end wiring for the general contract is in progress —
+        <code>/codex/04-architecture/cross-domain-state-fabric.md</code>. Dual-timestamp capture:
+        <code>unified_trading_library/domain_client/validation.py</code> (<code>local_timestamp</code> — when we
+        received it — validated against <code>timestamp</code> — the exchange's own clock).
+      </p>
     </details>
   </section>
 
@@ -17157,6 +17249,43 @@ Content-Type: application/json
         Failures resolve through a defined ladder rather than ad hoc alerting — retry, restart, drain, hold dependants,
         halt — with each step's scope declared. Automated recovery handles the classes it is allowed to; the rest
         escalates to a human with the reason attached.
+      </p>
+      <p>
+        The same discipline applies one layer up, to the platform's own software delivery. A build or test failure is
+        detected automatically, dispatched to an agent that diagnoses the root cause against the actual failing logs
+        — not a guess — applies a fix, and ships it back through the same quality gates every other change goes
+        through, verified green before it lands. A failure that cannot be resolved this way escalates to a human with
+        the diagnosis already attached, rather than sitting silently red. This is not a roadmap description: the fix
+        behind several of the items on this page reached production through exactly this path.
+      </p>
+      <h3>Inter-service SLAs and disaster recovery</h3>
+      <p>
+        Every cross-service check that matters declares its own cadence rather than sharing one global assumption.
+        Reconciliation (<a href="#s21">§21</a>) runs a defined nightly pass with a separate, faster path for an
+        operator-driven break; per-input staleness (<a href="#s24">§24</a>) is bounded per input, not
+        platform-wide; kill-switching (keypoints above) is scoped and immediate rather than all-or-nothing. Disaster
+        recovery follows the same standing-standby model for the infrastructure behind it: the orchestration and
+        delivery infrastructure that keeps the platform's own engineering running keeps a documented, previously-live
+        standby on a second cloud provider — stopped rather than torn down — with an exact, already-written recovery
+        procedure to bring it back to serving traffic, rather than an improvised response written after the fact.
+      </p>
+      <h3>Cloud-agnostic infrastructure</h3>
+      <p>
+        Storage and compute are addressed through one provider-neutral interface rather than one cloud's SDK called
+        directly — every bucket is resolved by name through a single resolver rather than a hardcoded path, already
+        spanning both AWS and GCP in production today. A third provider (IONOS) is being brought into the same
+        pattern now, and the point of building it this way is that adding a provider is a configuration change to the
+        resolver, not a rewrite of every service that touches storage — the same shape extends to Azure on request.
+        In practice this also means a deployment can run compute and streaming in the cloud region nearest a client,
+        and stream across clouds within that same region into the client's own account — keeping data close to where
+        it is used and avoiding cross-region egress cost.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Source: <code>unified_trading_library/cloud_interface/bucket_naming.py</code>'s
+        <code>resolve_bucket_name()</code>; provider duality —
+        <code>/codex/05-infrastructure/bucket-isolation-model.md</code>,
+        <code>/codex/05-infrastructure/cloud-agnostic-script-pattern.md</code>. IONOS build-in-progress:
+        <code>/plans/active/ao_ci_aws_to_ionos_migration_2026_08_18.md</code>.
       </p>
       <h3>Dual authorization on treasury movements</h3>
       <p>
@@ -17600,6 +17729,23 @@ Content-Type: application/json
           the reconciliation delta until the venue's own record catches up.
         </p>
       </div>
+      <div class="callout">
+        <span class="tag">Already real — the manual-trade exclusion path</span>
+        <p>
+          The specific behaviour above has real code behind it today, not only the target spec. The reconciliation
+          service's daily determinism stage splits every fill flagged <code>recon_excluded=True</code> out of ledger
+          matching before comparison runs, and logs the count it excluded — excluded from matching is not the same as
+          invisible. The six-stage reconciliation DAG itself (config/manifest/data-pipeline, ML, strategy, execution,
+          paper-live, batch-paper) already runs end to end on a T+1 nightly cadence in staging; production activation
+          is the remaining step.
+        </p>
+      </div>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Source:
+        <code>batch-live-reconciliation-service/batch_live_reconciliation_service/engine/daily_determinism_stage.py</code>
+        (<code>_exclude_recon_excluded</code>) and <code>models/recon_report.py</code>. Stage detail:
+        <code>/codex/04-architecture/reconciliation-resolution.md</code>.
+      </p>
     </details>
   </section>
 
