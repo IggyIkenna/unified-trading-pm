@@ -732,6 +732,25 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       with neither ledger fills nor backfilled history but with live-collector-only state isn't covered yet (that
       route's third fallback, `get_collector().get_client_trades(...)`, wasn't reused to keep the fix scoped). Low
       priority: affects only clients with no ledger run and no backfill history.
+- [x] [SCRIPT] P0. instruments-service: build org-scoped entitlement into the external instrument catalogue — the
+      external router discarded `AuthContext` after the auth dependency ran (`del auth`, `external.py:86`),
+      serving an identical catalogue to every authenticated caller (Security/P0, the same "auth is a gate, not a
+      scope" class as MTDS's and execution-service's fixes above). New
+      `instruments_service/api/entitlement.py::enforce_asset_group_entitlement`, mirroring client-reporting-api's
+      `enforce_entitlement` two-gate model: `auth.is_internal` bypasses; an external org's `subscription_tier`
+      resolves its entitled `asset_group` scope via `_TIER_ASSET_GROUPS` (keyed by UAC's `SubscriptionTier`), 403
+      on an out-of-scope ask. Neither client-reporting-api's own entitlement module nor deployment-api's
+      `ClientSubscription` store carries a per-org asset_group scope reachable without a service→service call, so
+      per the fallback instruction this reuses `AuthContext.subscription_tier` (already resolved from JWT claims
+      by the same `create_api_auth` dependency) — a UAC-typed entitlement config read, not a new store.
+      Default-full-catalogue ships today (`_TIER_ASSET_GROUPS` empty — reference data is the product's front
+      door); the filter seam is real and tested, so tightening a tier later is a config edit, not a code change.
+      Both `GET /v1/instruments` and `/bulk` wired; a bad `asset_group` still 400s before the 403 entitlement
+      check runs. Tests: entitled-subset filtering, internal full access, default-entitlement path, 401 unchanged
+      (`tests/unit/test_entitlement.py`, `tests/unit/test_external_router.py`). `quality-gates.sh --no-fix` green
+      (5427 passed, cov 88.25%) — `instruments-service@0abd96f3bb`. `platform-api-reference.html`'s "What auth
+      does not do on these two routers" callout rewritten for the instruments half —
+      `unified-trading-pm@e2bae4c5f2`.
 - [ ] [DOC] P2. platform-api-reference.html §04: `ControlInstruction` (action ∈ `{KILL_SWITCH, FLATTEN_POSITION}`,
       `unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:457-468`) is a real,
       already-committed 16th `StrategyInstructionV2` union member — confirmed wired at
@@ -949,45 +968,9 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   Checker: `check_artefact_claim_ownership.py` — 246 open markers, baseline 247 (unchanged by this session).
   Shipped via `scripts/dev/safe-doc-push.sh` — sha recorded in the commit trailer.
 
-- 2026-08-21 — **BRIDGE/LP_MINT/LP_BURN session: the last 3 of 16 `StrategyInstructionV2` action types wired to
-  real execution, plus the client_id↔org_id binding P0 todo inherited from stale dead WIP found in the same
-  file.** Confirmed at session start (measured, not guessed) that `BridgeInstructionV2`/`LpMintInstruction`/
-  `LpBurnInstruction` schema classes and `InstructionActionV2.BRIDGE`/`.LP_MINT`/`.LP_BURN` already existed in UAC
-  (this todo's own premise that they were "pending" was stale) — only JSON round-trip test coverage was missing,
-  added in `tests/internal/unit/test_bridge_lp_instructions.py`; also added `OperationType.LP_MINT`/`.LP_BURN`
-  (execution-internal enum, 1:1 naming parity with `InstructionActionV2`, purely additive) since no execution-side
-  operation identifier existed for the concentrated-liquidity engines below. Waited on the sibling BORROW/REPAY +
-  CANCEL-scope commit (`execution-service@4e35a09b2`) per the dispatching operator's explicit instruction before
-  touching `external_instruction_api.py`/`external_instruction_defi.py`; built the LP_MINT/LP_BURN dispatch engine
-  in new, independent files first (`lp_concentrated_dispatch.py`, kept separate from the concurrently-edited
-  `defi_live_dispatch.py` on purpose) while waiting. BRIDGE turned out feasible to wire fully end-to-end through
-  clean (non-dirty) files alone (`engine/transfers/*`, `engine/handlers/transfer_handler.py`) — discovered
-  `SocketBridgeConnector` already existed as a real, live-capable Socket v2 bridge-route aggregator but had never
-  been wired into any adapter a handler could reach; built `LiveBridgeTransferAdapter` + a new durable
-  `GcsTransferStateStore` + a `force_transfer_type` metadata override on `TransferHandler` (needed because
-  `classify_transfer_type()` has no bare-chain-name-pair → BRIDGE derivation, confirmed by reading its source
-  directly). Once the sibling's commit landed, wired all three onto `POST /external/instructions` for real: new
-  `LpMintHandler`/`LpBurnHandler` registered in `HandlerRegistry.DEFAULT_HANDLERS`, new
-  `_build_execution_instruction_from_bridge`/`_lp_mint`/`_lp_burn` translation functions, all three added to the
-  dispatch chain, the stale "3 action types stay 501" module docstring/fallback message rewritten. Found + fixed a
-  genuine cross-session conflict: `tests/unit/test_external_instruction_api.py` (stale, 27+ min untouched,
-  mtime-verified dead WIP) had one test asserting BRIDGE still 501s and lacked bridge support on its fake
-  adapter — inherited the file (dead-claim rule), added `execute_bridge_transfer` to the fake, and replaced the
-  stale test with a real `TestBridgeInstructionPath` class plus a corrected "invalid action → 422" test. The same
-  dead WIP also contained a complete, unrelated `_enforce_client_org_binding` fix for this plan's own client_id↔
-  org_id P0 todo (filed by an earlier session in this doc) — shipped it in the same commit rather than leaving it
-  stranded, flipped that todo too. Both repos' `quality-gates.sh` went green only after several real fixes: two
-  methods over the 50-line cap (split into helper methods), 9 E501 line-length violations, 2 new broad-except
-  sites (justified with `# noqa: broad-except` — the storage-client boundary is UTL-abstracted, no
-  `google.cloud` exception types to narrow to), a `CompositeTransferAdapter` back-compat break (made the new
-  `bridge=` constructor param optional, defaulting to an honestly-not-wired `LiveBridgeTransferAdapter(None)`, so
-  a pre-existing direct construction call site didn't crash), and `TransferHandler.estimate_cost()`'s own
-  independent (uncovered by the first fix) call to `classify_transfer_type()` needing the same override. Both
-  repos' quickmerge hit real `unified-api-contracts` dirty-dependency blocks from a concurrent prediction-market-
-  migration session — per the dispatching operator's explicit instruction, waited (a sized background watchdog
-  polling every 60s, never forced/committed foreign work) rather than working around it; both ships landed clean
-  once that session's own commit (`unified-api-contracts@4f25d5f0`) cleared the dependency.
-  Shas: `unified-api-contracts@3204e607e4`, `execution-service@0aa709f076`.
+- 2026-08-21 — BRIDGE/LP_MINT/LP_BURN wired to real execution (last 3 of 16 `StrategyInstructionV2` action
+  types) + the client_id↔org_id binding P0 todo, inherited from stale dead WIP in the same file — full detail in
+  the matching `- [x]` todo above. Shas: `unified-api-contracts@3204e607e4`, `execution-service@0aa709f076`.
 
 - 2026-08-21 — Resolved the `4f25d5f0` deployment-api fallout (`PredictionMarketCategory` deletion + a second
   same-commit `prediction_markets_config_descriptor` break): `deployment-api@9947cc40ae`, quality-gates.sh green
