@@ -732,9 +732,11 @@ todos only to confirm they are data-movement, then leave it.
   `UniswapConnector.mint_position()`/`burn_position()`'s real signatures, which the enum's own comment already
   cites as the dispatch target) — held open, not fabricated.
 
-- [ ] [FROM-T2] P3. **Flip `InstrumentRecord.model_config = ConfigDict(extra="forbid")`** in
+- [x] ✅ [FROM-T2] P3. **Flip `InstrumentRecord.model_config = ConfigDict(extra="forbid")`** in
       `unified-api-contracts/unified_api_contracts/internal/reference/instrument.py`. Every REMOVE-verdict caller
       is now clean fleet-wide — T2 finished the last one (`min_order_size`, zero consumers, removed from all 5
-      call sites, `instruments-service@588f35aeb0`). Full disposition history + evidence:
-      `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`. P3, not blocking.
+      call sites, `instruments-service@588f35aeb0`). Shipped `unified-api-contracts@cdb8ae8806` (bundled with the
+      6-bookmaker removal); 4 new regression tests added
+      (`tests/unit/test_instrument_record_extra_forbid.py`). Full disposition history + evidence:
+      `/plans/archive/2026_08/instrument_record_schema_completeness_extra_forbid_2026_07_18.md` (resolved+archived).
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 1 of the operator-slot-launched code-readiness series (see the coordinator doc's Launch-prompts mechanism — paste-into-a-slot + `/autonomous`, not AO-backlog dispatch); actively worked, extensive shipped-commit evidence throughout. Remaining open items mix genuine operator-gated design questions (Q12-Q16 reference-position/credit shape ruling via the cross-domain-state-fabric SSOT, W5 collateral/margin data explicitly requiring real per-venue research — 'T1 will not invent financial risk parameters'), a kill-switch/flatten-position design call held pending T4's answer, an un-started wizard UI item, and standing tail-closure/codex-audit/marker-confirmation todos gated on the rest of the tranche completing. None clears the whole-doc RECLASSIFY bar.
