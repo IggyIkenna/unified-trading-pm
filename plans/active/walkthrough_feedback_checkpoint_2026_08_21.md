@@ -61,7 +61,7 @@ Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-44
 
 ## Todos
 
-- [x] ✅ [DOC] P0. **Operator content additions 2026-08-21 (both docs; light in api-reference, verbose in the
+- [ ] [DOC] P0. **Operator content additions 2026-08-21 (both docs; light in api-reference, verbose in the
       walkthrough)** — reconciliation prominence; WebSocket rotations; the strategy↔execution POSITION HANDSHAKE;
       inter-service SLAs, disaster recovery, kill-switching, escalation paths incl. the agentic-DevOps workflow;
       CONTINUOUS T+1 BACKFILL keeping the pipeline current; INTRADAY REPLAY (in development — customers replay
@@ -71,27 +71,7 @@ Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-44
       HFT-grade execution, co-located or cross-region engines; local + exchange timestamps); CLOUD-AGNOSTIC
       framework (AWS + GCP today, IONOS integration in progress — cite the IONOS plan; Azure on request; regions
       near the client; cross-cloud same-region streaming into the client's own account to cut streaming cost).
-      All 9 items landed as surgical extensions of EXISTING sections (no renumbering, no new Contents-nav entries
-      needed — none of the 9 required a new top-level `<section>`): walkthrough §21 (recon_excluded landed —
-      verified real on origin via `batch-live-reconciliation-service` commit `1ba1a62`, daily_determinism_stage.py),
-      §06 (T+1 `cadence` manifest axis; WS reconnect/STALE-flagging + heartbeat watchdog + key-pool rotation, real
-      code in `_ws_window_helpers.py`/`websocket_runner.py`/`thegraph_base_client.py`; intraday replay — in
-      development, cites replay-subsystem.md + data_pipeline_completion_2026_08_21.md), §12 (position handshake +
-      fast-path repricing — design-stage, cites the delta-proxy issue + cross-domain-state-fabric.md; dual-timestamp
-      cites `unified_trading_library/domain_client/validation.py`'s `local_timestamp`/`timestamp` validation), §15
-      (agentic-DevOps escalation paragraph — this session is the cited evidence; new SLA/disaster-recovery h3 citing
-      the AWS DR-standby runbook; new cloud-agnostic h3 citing `resolve_bucket_name()` + the IONOS migration plan,
-      status draft, described as "in progress" per the operator's own phrasing, not overclaimed as shipped), and
-      engage §1 (SMA/fund-structure mirror of the api-reference capability-list bullet). API-reference got the LIGHT
-      mirror: one new paragraph each in About (SLA/DR/kill-switch/escalation/cloud-agnostic, compact), §03 Market
-      data (WS reconnect + T+1 + intraday replay), §04 Instructions (position handshake + fast-path repricing), §05
-      Client Reporting (recon_excluded). Marker discipline: zero new `st-`/`ev-` marker tags added (verified by
-      class-count diff before writing); `check_artefact_claim_ownership.py` reports 200 open markers post-edit
-      (baseline 247, DOWN not up — other lanes' concurrent edits this session also lowered it) and 0
-      ownership/owner-ref violations. Tag-balance sanity check clean on the walkthrough (div/details/p/h3/section
-      all balanced); the api-reference's pre-existing `<div>` count skew (23, unrelated to any tag I touched — my 4
-      edits added `<p>` blocks only, zero `<div>`) predates this change and is out of scope. Evidence: shipped via
-      `safe-doc-push.sh` immediately following this edit — see this doc's own commit history for the landing sha.
+      Verify every claim's code/plan basis before writing.
 - [x] [DOC] P0. **Operator content additions 2026-08-21, second tranche (both docs; compact in api-reference,
       fuller in the walkthrough) — About Us / engagement models / research-as-a-service / DART / security /
       DeFi LP** — About Odum Research (main site, who-we-are, tear sheet, the 1yr+ consultancy engagement, and
@@ -111,19 +91,8 @@ Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-44
       replay / credit-reference-price / cloud-agnostic remain open in that item. Marker check re-verified
       202/247 (unchanged) post-ship. Evidence: unified-trading-pm@40ac124b0f (walkthrough),
       unified-trading-pm@b50711e8b7 (api-reference), both confirmed ancestors of origin/live-defi-rollout.
-- [x] ✅ [BACKEND] P2. UAC `PortfolioPnLAttribution.staking_pnl` first-class field — drop the documented carry fold
-      (strategy-service@21937bb2cf) — **done**. UAC: added `staking_pnl: Decimal = Decimal("0")` to
-      `PortfolioPnLAttribution` (12th dimension, docstring updated 11→12), extended
-      `test_portfolio_pnl_attribution_round_trip` to cover it. Evidence: `unified-api-contracts@366b74ec08`
-      (ancestor-verified on origin/live-defi-rollout). strategy-service: removed `_UAC_FOLD_TARGET` and the
-      carry-fold branch in `pnl_attribution_aggregator.py` — `staking_pnl` now passes straight through to its
-      own UAC field like every other dimension; updated the 2 staking tests
-      (`test_staking_pnl_is_first_class_uac_dimension` — renamed from `..._folded_into_carry`, asserts
-      `carry_pnl` stays untouched and `staking_pnl` lands on its own field;
-      `test_staking_pnl_defaults_to_zero_when_unspecified` — asserts `staking_pnl == 0`); fixed the stale
-      `_UAC_FOLD_TARGET` comment reference in `test_all_11_dimensions_sum`. Both repos' `quality-gates.sh
-      --no-fix` green before commit. Evidence: `strategy-service@09d6dfaadd` (ancestor-verified on
-      origin/live-defi-rollout).
+- [ ] [BACKEND] P2. UAC `PortfolioPnLAttribution.staking_pnl` first-class field — drop the documented carry fold
+      (strategy-service@21937bb2cf).
 - [ ] [AGENT] P1. Verify BLRS recon_excluded landed on origin; if absent re-run its recorded quickmerge, flip its
       todo in the main plan.
 - [x] ✅ [AGENT] P1. RESOLVED — MTDS entitlement landed at market-tick-data-service@746ad763b (with rate-limiting+pagination in the same commit, 11150 green); §01 claim is now true on origin and was rewritten with real citations (unified-trading-pm@f5c4498582). WATCH closed: platform-api-reference.html §01 states the MTDS entitlement seam as landed, but that
