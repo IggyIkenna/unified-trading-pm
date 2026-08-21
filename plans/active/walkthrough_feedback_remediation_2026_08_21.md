@@ -118,11 +118,25 @@ drift_direction: advance-code
       `PredictionShardCategory` enum is unrelated and untouched. Deleted
       `canonical/domain/prediction/{__init__.py,prediction_mapping.py}` (incl. the unused legacy
       `CanonicalPredictionMarket`/`PredictionMarketMapper`/`MappingRule`/`OrphanDetector`/
-      `PREDICTION_MARKETS_CONFIG_*` config-versioning surface — no production consumer, only its own now-deleted
+      `PREDICTION_MARKETS_CONFIG_*` config-versioning surface — ~~no production consumer, only its own now-deleted
+      test file~~ **CORRECTION 2026-08-21 (T2 session, found while re-gating an unrelated Kalshi ship): this claim
+      was WRONG.** The self-audit's `rg` was scoped to `unified-api-contracts/` only and never checked downstream
+      repos. `PredictionMarketMapper` has a real, live production consumer:
+      `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket/{markets.py,parsing.py}`
+      (module-level `_MAPPER = PredictionMarketMapper()`, called in `_parse_market()` to classify every Polymarket
+      market). This deletion broke collection for instruments-service's ENTIRE test suite
+      (`ModuleNotFoundError: No module named 'unified_api_contracts.prediction'` at conftest import time — every
+      test, not just prediction ones — 4079 collection errors measured). Same root cause + shape as the sibling
+      `deployment_api_prediction_catalogue_broken_by_uac_category_deletion_2026_08_21.md` issue this todo's own
+      "Manifest supersession flagged to T2" line anticipated; filed as
+      `/plans/active/issues/instruments_service_polymarket_broken_by_uac_prediction_market_mapper_deletion_2026_08_21.md`.
       test file) + `unified_api_contracts/prediction.py` facade + every re-export in `unified_api_contracts/`,
       `canonical/domain/`, and `predictions/__init__.py`. `rg 'PredictionMarketCategory|canonical/domain/prediction[^s]'`
-      is zero in live code (only historical-migration-note prose in docstrings/comments remains). QG-gated
-      (`quality-gates.sh --no-fix` green): also fixed 2 pre-existing, unrelated repo-wide QG blockers hit along
+      is zero in live code (only historical-migration-note prose in docstrings/comments remains) — **that `rg` ran
+      inside `unified-api-contracts/` only; it does not cover downstream-repo consumers, see correction above.**
+      QG-gated (`quality-gates.sh --no-fix` green **in unified-api-contracts only** — this never covered
+      instruments-service, a separate repo with its own gate, now red until the linked issue is resolved): also
+      fixed 2 pre-existing, unrelated repo-wide QG blockers hit along
       the way — `internal/architecture_v2/__init__.py` missing from the `SIZE_EXTRA_EXCLUDES` `__init__.py`-facade
       allowlist (900-line hard gate), and 4 blank-`asset_group` false/true positives in
       `cloud_run_job_registry.py`/`deployment_classification.py` (STEP 5.96 ratchet, baseline=0) — both predate
@@ -596,20 +610,18 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       (`tests/unit/test_external_instruction_api.py::TestCancelInstructionPath`). QG green (8915 passed, cov
       82.53%). `platform-api-reference.html` CANCEL row updated (both scopes wired) —
       `unified-trading-pm@185e266a0e`.
-- [ ] [SCRIPT] P2. **UPDATED 2026-08-21 (this session) — the premise above was stale.** The live tick-ingestion
-      loop was already built and wired BEFORE this session (`feature_tick_subscriber.py`,
-      execution-service@0be361333, started from the `api.main` lifespan) — "needs a tick-source decision" no
-      longer applies. This session read the real code, found the actual remaining gap
-      (`QuoteMaintainer.on_underlying_tick` resubmitted BUY/SELL orders to the venue on EVERY tick unconditionally,
-      even with zero price change — real order-spam churn), and built + tested the fix (no-churn order-state
-      memoization; 6 new tests). **Code complete, NOT YET SHIPPED** — blocked on an external `unified-api-contracts`
-      dependency conflict unrelated to this change; full evidence in the Progress Log entry below. Remaining work
-      is exactly: retry `bash scripts/quickmerge.sh "feat: QUOTE tick-ingestion reprice loop no-churn suppression
-      over EventTransport" --agent --isolated --files 'execution_service/engine/quote_maintenance.py
-      execution_service/engine/delta_proxy_repricer.py tests/unit/engine/test_quote_maintenance.py
-      tests/unit/engine/test_feature_tick_subscriber.py'` once `unified-api-contracts` is clean, flip this
-      checkbox with the resulting sha, then ship the already-drafted `platform-api-reference.html` QUOTE prose
-      update (4 spots, drafted this session, held back pending the code shipping) via `safe-doc-push.sh`.
+- [x] ✅ [SCRIPT] P2. **SHIPPED 2026-08-21 — execution-service@56d6e7480e.** The live tick-ingestion loop was
+      already built and wired BEFORE this session (`feature_tick_subscriber.py`, execution-service@0be361333,
+      started from the `api.main` lifespan) — the original ">1 day, needs a tick-source decision" framing was
+      stale. This session read the real code, found the actual gap (`QuoteMaintainer.on_underlying_tick`
+      resubmitted BUY/SELL orders to the venue on EVERY tick unconditionally, even with zero price change — real
+      order-spam churn), and shipped the fix: no-churn order-state memoization + 6 new tests, isolated-worktree QG
+      green (8980 passed, 0 failed), landed on `live-defi-rollout`, verified an ancestor of origin. Was blocked
+      ~30min on an external `unified-api-contracts` dependency conflict (a concurrent T1 registry-cluster
+      session's uncommitted work, unrelated to this change) — retried once that session landed
+      (unified-api-contracts@4f25d5f0); full blocked-then-unblocked evidence in the Progress Log entry below.
+      `platform-api-reference.html`'s QUOTE prose (drafted this session) ships next, same turn, via
+      `safe-doc-push.sh`.
 - [x] [SCRIPT] P1. execution-service: `docs/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`
       names BORROW/REPAY as the last 2 DeFi action types on pure simulation — wiring them through the same
       `defi_live_dispatch` seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE just used would close the doc's last 2
