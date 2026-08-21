@@ -756,9 +756,7 @@ todos only to confirm they are data-movement, then leave it.
       already documented; reverted rather than force through the gate). Remaining open todos across the tail are
       genuinely open — operator-gated decisions, machine-`gate_on_depends`-blocked finalize plans awaiting a parent
       that isn't done, or real unstarted engineering/ops work — not a bookkeeping gap.
-- [x] [AGENT] P3. ✅ **DONE 2026-08-21**: line-cap block cleared (another session split the doc's history out to
-      `cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`, 1093→650 lines) — applied both fixes,
-      `unified-trading-pm@8f76f9e85f`. Apply the 2 verified-but-unshipped fixes in
+- [ ] [AGENT] P3. Apply the 2 verified-but-unshipped fixes in
       `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` once its pre-existing line-cap block clears (see
       that doc's own item 1 / `epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md` line 290 for the
       blocker — needs either a real split or a 5th operator-ruled `check_line_caps.sh` carve-out). Both verified
@@ -967,8 +965,6 @@ todos only to confirm they are data-movement, then leave it.
   2 new regression tests added (`test_nudge_ahead_not_sustained_does_not_fire`,
   `test_nudge_ahead_sustained_fires_with_age`); file 26/26 passing, broader worker-liveness suite 103/103.
   **NOT YET LANDED, 2026-08-20** — ship failed on `dashboard/node_modules` missing `@vitest/coverage-v8` (environmental, unrelated to this change; exit 0 with nothing landed, caught by per-file origin verification, not by the exit code). Fix + 2 tests preserved locally AND backed up outside git (scratchpad/agent-orchestrator-backup/) since this session already measured local edits as fragile under contention. Needs `npm --prefix dashboard install` (or equivalent) before the next agent-orchestrator ship attempt — flagged as its own todo below since it will block ANY future ship to this repo, not just this fix.
-
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 5 of the operator-slot-launched code-readiness series (same Launch-prompts mechanism; also owns the acceptance-test artefacts). Remaining open items are explicitly gated on a 2026-08-20 operator decision to wait for the state-fabric ledger plan before any artefact hand-edit (the 4 DOC re-derive todos + disclosure-standard extension + FROM-T1 API-surface regeneration), a VM-launch decision for 2 manifest-hygiene P2 residuals, and an AO-dispatch-queue item outside this tranche's direct control. None clears the whole-doc RECLASSIFY bar.
 
 ## Deferred work after 2026-08-20 (revised 2026-08-20, pre-compact — fully-resolved rows removed, evidence lives on
 the todo checkboxes themselves; only genuinely-still-open items stay here)

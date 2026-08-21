@@ -84,22 +84,22 @@ event**; that name appears nowhere in the workspace.
 > operator-confirmed 2026-08-12 scoping in
 > `/plans/archive/2026_08/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`.
 
-| Field class                  | Hot-reload safe?            | Notes                                                                                                                                                                                       |
-| ---------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sizing (notional, weights)   | Yes                         | `strategy_params` — applies to next signal; existing orders untouched                                                                                                                       |
-| Risk caps (per-position max) | Yes                         | `strategy_params` — cap drops trigger an immediate halt of orders that exceed                                                                                                               |
-| Venue-routing weights        | Yes                         | `strategy_params` — applies to next signal                                                                                                                                                  |
-| Signal-filter thresholds     | Yes                         | `strategy_params` — applies to next signal                                                                                                                                                  |
-| Kill-switch flags            | Yes                         | `strategy_params` — immediate; in-flight orders paused                                                                                                                                      |
-| Strategy archetype family    | **NO — enforced**           | `enabled_strategies` change raises `UnsafeConfigChangeError`; restart required                                                                                                              |
-| Underlying instruments       | Yes — ruled safe 2026-08-21 | `instruments` domain reloader hot-swaps the universe live (`_on_instruments_reload()` delta + `INSTRUMENT_UNIVERSE_CHANGED` fan-out); operator ruled the live hot-swap intentional and safe |
+| Field class                  | Hot-reload safe?            | Notes                                                                                                                                |
+| ---------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Sizing (notional, weights)   | Yes                         | `strategy_params` — applies to next signal; existing orders untouched                                                                |
+| Risk caps (per-position max) | Yes                         | `strategy_params` — cap drops trigger an immediate halt of orders that exceed                                                        |
+| Venue-routing weights        | Yes                         | `strategy_params` — applies to next signal                                                                                           |
+| Signal-filter thresholds     | Yes                         | `strategy_params` — applies to next signal                                                                                           |
+| Kill-switch flags            | Yes                         | `strategy_params` — immediate; in-flight orders paused                                                                               |
+| Strategy archetype family    | **NO — enforced**           | `enabled_strategies` change raises `UnsafeConfigChangeError`; restart required                                                       |
+| Underlying instruments       | ⚠️ CONTRADICTED, unenforced | Separate `instruments` domain/reloader — the shipped reloader still DOES hot-swap the instrument universe unconditionally; see below |
 
-**Resolved 2026-08-21 — operator ruled option B: the live hot-swap IS the intended behaviour** (the old "NO — restart required" row was obsolete design text). Historical context of the contradiction, kept for the audit trail: `_on_instruments_reload()` atomically swaps
+**The "Underlying instruments = NO" row contradicts shipped behaviour.** `_on_instruments_reload()` atomically swaps
 `_active_instruments`, computes the added/removed delta, and notifies strategy engines via `INSTRUMENT_UNIVERSE_CHANGED`
 — i.e. an instrument-universe change is hot-applied today, with no restart and no error raised. Either the code is doing
 something the design considers unsafe for position-state continuity, or the design row is obsolete. Resolve before
 relying on either statement:
-`/plans/archive/2026_08/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md` (split off 2026-08-14
+`/plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md` (split off 2026-08-14
 from the now-archived `/plans/archive/2026_08/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`, which
 only closed the strategy-config half of this concern).
 

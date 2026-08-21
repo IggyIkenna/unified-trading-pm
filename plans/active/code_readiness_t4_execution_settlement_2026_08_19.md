@@ -186,7 +186,7 @@ todos only to confirm they are data-movement, then leave it.
       and `RepayInstruction` are done (rate-matched inverses of `LendInstruction`/`BorrowInstruction`, added to
       `StrategyInstructionV2`). `LpMintInstruction`/`LpBurnInstruction` are still open — genuinely need the DeFi LP
       position shape specified, which is your call per the original request, not invented here.
-- [x] ✅ [FROM-T1] P1. **Kill-switch / flatten-position as instructions a caller can send** — both are already
+- [ ] [FROM-T1] P1. **Kill-switch / flatten-position as instructions a caller can send** — both are already
       conceptually present as system behaviour but not expressible as an instruction on the envelope
       (`platform-external-api-walkthrough.html` §25). T1 has deliberately NOT added `KILL_SWITCH`/
       `FLATTEN_POSITION` to `StrategyInstructionType` yet — it is a genuine design call (does a control instruction
@@ -213,16 +213,6 @@ todos only to confirm they are data-movement, then leave it.
       duplicate it — a strategy-envelope KILL_SWITCH/FLATTEN_POSITION instruction becomes a thin translation into
       the SAME already-authorized internal call, never a second independent authority path). Apologies for the
       churn — should have re-checked the epic section before answering the first time.
-
-      **RE-POINTED and CLOSED 2026-08-21 — the direct ask to T1 above is redundant with W22's own todo, which is
-      the actual live mechanism now.** `w22_strategy_execution_messaging_external_api_2026_08_20.md` already
-      carries "Add `KILL_SWITCH`/`FLATTEN_POSITION` as `InstructionActionV2` members — coordinate with T1" (queued
-      in the AO backlog) — the identical ask this item makes directly, just via a tracked, fleet-dispatchable todo
-      instead of prose. Closing here so T1 isn't fielding the same request from two different plans. **Cross-plan
-      drift found while checking**: T1's own plan closed ITS mirror of this item citing T4's FIRST (wrong,
-      since-corrected) answer — "do NOT add KILL_SWITCH/FLATTEN_POSITION" — not the corrected one above. Not
-      editing T1's plan directly (not this tranche's to touch); no functional harm since W22's todo is the real
-      mechanism regardless of what T1's closed checkbox says, but worth T1 noticing next time they touch that item.
 - [x] ✅ [FROM-T1] P1. **Spun out into the dedicated W22 AO plan, 2026-08-20 —
       `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`'s "Messaging bridge" section**
       (execution-service opened its own EventTransport subscriber build there; T3's matching inbound item is
@@ -403,11 +393,21 @@ todos only to confirm they are data-movement, then leave it.
       called from the live surface (`api/manual_instruction_api.py:473` `/cancel`, `:551` `/amend`). The source
       issue's remaining open item is a P3 (`instruction_to_order_ids` staleness), not this P0. Evidence:
       `/plans/active/issues/execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md`.
-- [x] ✅ [BACKEND] P0. Implement the full 9-state order lifecycle — `OrderState`/`OrderStatus` landed (FROM-T1
-      notice above). **PARTIAL 2026-08-20, `69a9a088be`**: transition safety enforced. **CLOSED 2026-08-21,
-      `execution-service@005b5f5248`**: new `orders/order_status.py` is the single home for `OrderStatus`/mapping/
-      `is_legal_local_transition()`; `oms.py` + `persistent_oms.py` import from it, zero behavior change (verified;
-      `ManualOperationHandler` unaffected). `tracker.py` untouched (dead code). Full QG 8844 passed; landed clean.
+- [ ] [BACKEND] P0. Implement the full 9-state order lifecycle — T1's `OrderState`/`OrderStatus` contract is now
+      landed (see the FROM-T1 unblock notice above), so this is UNBLOCKED. **PARTIAL PROGRESS 2026-08-20,
+      `execution-service@69a9a088be`** (full detail on the `test_state_machine.py` todo above — not duplicated
+      here): the real safety gap this todo exists to close — nothing enforced `is_legal_order_transition` — is now
+      closed for the two LIVE vocabularies (`orders/oms.py` + `trade_execution/oms/persistent_oms.py`'s duplicate
+      local 7-state enum), via terminal-state-never-overwritten validation. **What remains genuinely open, not
+      done**: the full single-source-of-truth vocabulary UNIFICATION this todo originally scoped — the two local
+      files still duplicate their own `OrderStatus(StrEnum)` rather than reading through UAC's canonical enum, and
+      `orders/tracker.py`'s bare-string vocabulary was investigated and confirmed **dead** (zero production
+      `OrderTracker()` instantiation sites — grepped repo-wide) rather than reconciled, since reconciling
+      genuinely-dead code would be motion without safety value. Collapsing `orders/oms.py` and
+      `trade_execution/oms/persistent_oms.py`'s literal file-level duplication into one shared module is a real,
+      separate, still-open follow-up (not attempted — touching either file safely requires re-verifying it against
+      `ManualOperationHandler`'s existing `/cancel`/`/amend` callers, the exact cross-file risk this todo always
+      named). Left open rather than closed on a technicality.
 - [x] ✅ [BACKEND] P0. Fix the broken emergency close-all path — **CONFIRMED 2026-08-20, and worse than this todo
       said.** Two independent defects, both measured: (a) no `/api/orders` route exists anywhere under
       `execution_service/api/`, so the strategy-side POST reaches nothing; (b) even the in-process path is a
@@ -554,22 +554,48 @@ todos only to confirm they are data-movement, then leave it.
       message "Funds NEVER move between different clients (custody + legal boundary)" citing the SSOT directly;
       `validate_intent` (`:173`) and the handler path (`:238-244`) both propagate it rather than swallowing. SSOT:
       `/codex/04-architecture/client-funds-isolation.md`.
-- [x] ✅ [BACKEND] P1. **CLOSED 2026-08-21 — 5/5, condensed from an earlier duplicated Progress-Log-style
-      history.** BATCH settlement gap surfaced 2026-08-20 via `backtest_v2.action_handlers.BATCH_UNHANDLED_ACTIONS`
-      (originally `{CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW}` — each raised `UnhandledActionError`, so
-      `paper(W) == batch-rerun(W)` couldn't hold for any instruction using them). SSOT:
-      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2. Evidence, all 5:
-      `CONVERT_DUST` — `execution-service@6f664e80a0` (order-matched, fill_size = Σ input-token amounts).
-      `WITHDRAW`/`REPAY` — UAC schema `unified-api-contracts@f5fc118ae1` + wiring `execution-service@59627fa2d2`
-      (rate-matched inverses of `LEND`/`BORROW`); fixed a stale test that had pinned the gap itself as expected
-      behavior. `LP_MINT`/`LP_BURN` — T1 fully specified the shape on
-      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md` (grounded in real connector
-      signatures: Uniswap's NFT-position `mint_position`/`burn_position` vs. Orca/Raydium's pool-address
-      `add_liquidity`/`remove_liquidity`) and explicitly deferred the go-ahead to "T4's call" — T4 shipped both
-      halves directly rather than wait: UAC schema `unified-api-contracts@d751e743cf`, wiring
-      `execution-service@cde9311a1f` (same order-matched pattern as `CONVERT_DUST`/`ATOMIC` — a two-asset deposit
-      has no single implied price). **MEASURED**: `BATCH_UNHANDLED_ACTIONS` is now `frozenset()` — 16/16
-      `InstructionActionV2` members have a real settlement handler.
+- [ ] [BACKEND] P1. Close the BATCH settlement gap the instruction-path check surfaced 2026-08-20. MEASURED via
+      `backtest_v2.action_handlers.BATCH_UNHANDLED_ACTIONS`: `resolve_settlement` has no handler for
+      `CONVERT_DUST`, `LP_BURN`, `LP_MINT`, `REPAY`, `WITHDRAW`, so each raises `UnhandledActionError` and
+      `paper(W) == batch-rerun(W)` cannot hold for any instruction using them — this is why every lending venue
+      derives `batch=wired` instead of `deployed`. SSOT: `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2.
+
+      **3/5 CLOSED — stale text corrected 2026-08-20, this todo had drifted behind its own shipped progress.**
+      `CONVERT_DUST` — `execution-service@6f664e80a0`. The UAC `ConvertDustInstruction` schema already existed
+      (`unified_api_contracts/internal/architecture_v2/restaking_rewards.py`), it just was never wired into
+      `resolve_settlement` or the `StrategyInstructionV2` union — the isinstance branch takes the base
+      `StrategyInstructionEnvelope` type so no UAC-side union edit was needed. Priced order-matched (like
+      `ATOMIC`), fill_size = Σ input-token amounts. 2 new tests. `WITHDRAW`/`REPAY` — `execution-service@59627fa2d2`.
+      **RE-MEASURED 2026-08-20 directly against current code** (this todo's own prior text incorrectly claimed
+      these two also had no UAC schema — they do, this was fixed the same session but the todo was never
+      updated): `WithdrawInstruction`/`RepayInstruction` exist at
+      `unified_api_contracts/internal/architecture_v2/schemas.py:337,347` and are wired in
+      `action_handlers.py:215-228`, rate-matched like `LEND`/`BORROW`. `BATCH_UNHANDLED_ACTIONS` is DERIVED
+      (`frozenset(InstructionActionV2) - BATCH_SETTLEMENT_ACTIONS - BATCH_NO_FILL_ACTIONS`), MEASURED now =
+      exactly `{LP_BURN, LP_MINT}`, down from the original 5.
+
+      **`LP_MINT`/`LP_BURN` genuinely remain — no `StrategyInstructionEnvelope` subclass exists in UAC for
+      either.** This tranche does not own `unified-api-contracts`, so it cannot add the schema itself. The
+      `[FROM-T4]` inbound request on
+      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md` now carries the full shape
+      spec (grounded in real connector signatures — Uniswap's NFT-position `mint_position`/`burn_position` vs.
+      Orca/Raydium's pool-address `add_liquidity`/`remove_liquidity`), not just a bare ask — once T1 lands the 2
+      subclasses, T4's side is mechanical (2 more `isinstance` branches, same pattern as the 3 fixes above).
+      `BLOCKED-` on that request until then.
+
+      **3/5 CLOSED 2026-08-20 — `execution-service@59627fa2d2`.** T1 landed `WithdrawInstruction`/
+      `RepayInstruction` (`unified-api-contracts@f5fc118ae1`) same day, exactly as the request predicted —
+      `resolve_settlement` now handles both as rate-matched inverses of `LEND`/`BORROW` (protocol/asset/
+      target_supplied_amount and target_debt_amount respectively). `BATCH_UNHANDLED_ACTIONS` measured shrinking
+      to exactly `{LP_BURN, LP_MINT}`. Fixed a test that had pinned the OLD gap as expected behavior
+      (`test_lending_venue_is_only_wired_on_batch` asserted `AAVE-V3-ETHEREUM.batch == "wired"` — now genuinely
+      `"deployed"`, rewritten to assert the fixed reality rather than the historical gap). 4 new tests total.
+      **Still open, but no longer a blank design question — shape specified 2026-08-20** on
+      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`'s `[FROM-T4]` thread,
+      grounded in both real connector families (`UniswapConnector.mint_position()`/`burn_position()` — NFT
+      position id + sqrt-price bounds — vs. Orca/Raydium's `add_liquidity()`/`remove_liquidity()` — pool address +
+      raw ticks, no NFT). `BLOCKED-ON:` T1 landing `LpMintInstruction`/`LpBurnInstruction`; once shipped, T4's
+      side is the same mechanical 2-branch `isinstance` addition as `CONVERT_DUST`/`WITHDRAW`/`REPAY` — 5/5.
 
 ### W12 — reconciliation
 
@@ -909,7 +935,6 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `unified-trading-pm@68c1d2cf82` | authored + dispatched `w22_strategy_execution_messaging_external_api_2026_08_20` and `w15_execution_service_venue_adaptor_security_audit_2026_08_20` as active AO plans, each with a mandatory gated finalize plan, per the 2026-08-19 operator ruling |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
-| `execution-service@005b5f5248` | (sub-agent) 9-state order lifecycle todo CLOSED: collapsed `orders/oms.py` + `trade_execution/oms/persistent_oms.py`'s duplicate local `OrderStatus`/`is_legal_local_transition` into one shared `execution_service/orders/order_status.py`; zero behavior change (both files re-import, verified via identity check); `ManualOperationHandler` confirmed to never reference these symbols by name, so its `/cancel`/`/amend` path carried no risk; full QG 8844 passed — landing independently verified (ancestor check + empty `git diff --stat origin/live-defi-rollout` for all 5 touched files) |
 
 **Traps worth more than the code — all measured, none anticipated:**
 
@@ -952,8 +977,6 @@ looked like a real gate failure was actually a wrong-python artifact).
 Non-execution-service sub-agent dispatches (batch-live-reconciliation-service, client-reporting-api,
 greeks-service, ibkr-gateway-infra) and the delta-proxy/policy-gaps design-heavy docs: see their own checkboxes
 above for full evidence, not duplicated here.
-
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 4 of the operator-slot-launched code-readiness series (same Launch-prompts mechanism). Remaining open items include a BLOCKED-OPERATOR delta-proxy position/credit leg (gated on the same fabric-SSOT ruling as T1's paired todo), a Ceffu integration blocked on a genuine docs gap (no API spec exists anywhere in the workspace), per-venue scope-key provisioning explicitly checked-exhaustively and found genuinely unbounded, and transfer-netting/custody-routing split across a strategy-service-owned decision plus the same Ceffu gap. None clears the whole-doc RECLASSIFY bar.
 
 ## Deferred work after 2026-08-20 (CONDENSED — superseded entries removed, per-item full detail lives on the
 checkboxes above, not duplicated here)

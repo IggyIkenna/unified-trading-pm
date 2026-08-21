@@ -75,20 +75,3 @@ track their control ids, skip only empty control buffers when no connectivity
 gap or upstream failure is present, and add regression tests for both healthy
 and failed control buffers. Re-run the focused websocket tests and the MTDS
 quality gate before shipping.
-
-## Verification
-
-- [x] [CODE] P1. Ship and verify the fan-out control-buffer fix — `market-tick-data-service@9097603c86` is an
-  ancestor of `origin/live-defi-rollout`; the required quality gate completed green with 11,108 passed, 28 skipped,
-  1 xpassed, and 17 warnings.
-- [ ] [VERIFY] P1. Re-run the DP-LIVE-004 candidate check against the named live shard and confirm no new false
-  empty-confirmed rows. The supported `deployment-service` meta monitor was run read-only on 2026-08-21 but timed out
-  after 300 seconds with exit 124 before producing a terminal candidate verdict. Existing live-writer evidence remains
-  positive (fresh bookmaker-fanout objects and manifest rows), but this verification is still open.
-
-## Progress Log
-
-**2026-08-21 — escalation `agt-a1445b`.** The MTDS fix landed through quickmerge on `origin/live-defi-rollout` as
-`9097603c86` (including the connector marker, control-id tracking, healthy-empty suppression, and failure-preserving
-regressions). The read-only live candidate check was attempted but timed out before a terminal result; no fresh live
-pass is asserted.

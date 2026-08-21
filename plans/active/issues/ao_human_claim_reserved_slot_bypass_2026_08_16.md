@@ -154,8 +154,3 @@ full existing `test_human_fleet_endpoints.py` (21 passed) and `test_dispatch_rev
   fix. The `[OPERATOR] P2` manual-recovery-decision todo remains open (live-infra judgment call, unrelated to this
   fix) — this doc stays `active`, not archived.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. The doc has converged to a single
-  open todo (the `[BACKEND] P3` "second independent gap" item shipped 2026-08-19, `agent-orchestrator@13b51c2e1e`).
-  The sole remaining item ([OPERATOR] P2, whether the live review slot needs a manual recovery action) is a genuine
-  live-infra judgment call, explicitly scoped as out of this investigation's authorized reach. Doc stays
-  `assigned_vm: NA`.

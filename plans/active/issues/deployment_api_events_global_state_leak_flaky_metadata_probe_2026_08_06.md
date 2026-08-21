@@ -194,8 +194,3 @@ executes the real lifecycle context manager at all).
   shared dependency, not a mechanical fix.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — unchanged since the 2026-08-07 verdict.
-Sole open `[BACKEND] P3` todo (investigate + reconcile the two independent `unified_trading_library` event-global-
-state stores, and why the `conftest.py` autouse reset didn't prevent the CI-only leak) is genuine investigation/
-design work on a fleet-wide shared dependency, not a mechanical fix. No `assigned_vm` change.

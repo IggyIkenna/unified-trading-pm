@@ -690,7 +690,7 @@ batch)
   — **RESOLVED 2026-08-14** (strategy-config half only): operator-confirmed 2026-08-12 ruling (option A) implemented via
   `strategy-service@c688512912` (safe-field allow-list + `UnsafeConfigChangeError`, strategies domain); doc archived.
   The instrument-universe half of the original concern was split off, still unruled:
-  [`instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`](/plans/archive/2026_08/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md).
+  [`instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`](/plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md).
 
 ### Genuinely cross-cutting, real open work, currently uncovered (orphaned_never_touched)
 
@@ -748,4 +748,3 @@ batch)
 - **na-eligibility-audit 2026-08-17** [body-hash:8ab9e31d0fdd6376]: KEEP-NA, valid -- Umbrella cross-cutting coordinator/pointer doc referencing (not duplicating) ~24 Tracks' worth of source docs; the overwhelming majority of tracked work has been extracted, closed, or forked to sibling docs (see Split notice section; Tracks 14/15/18-22 extracted 2026-08-09). Its own single remaining todo flags that certain cross-cutting gaps (Track 1's G5 'no AG has started backfill-to-100%', and Track 14's daily-failing CF-manifest-audit job) are not tracked as checkbox work ANYWHERE in the corpus -- the doc's own close-out criterion for G5 states this 'likely needs an operator ruling on whether that's in-scope here or lives entirely inside each AG's own consolidated closeout,' an open scoping/ownership question, not a bounded fix a worker could resolve alone.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 1 open todo (grep-verified, matches Phase-0=1) in the cross-cutting umbrella coordinator/pointer doc for 24 Tracks; the sole todo is a scoping/ownership question.
 - **context-scout 2026-08-19**: re-verified context_scope, no change needed (6 entries), all paths still resolve, still accurate.
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — reaffirms 2026-08-19 (unchanged, 1 open todo): the sole remaining item (Track 1's G5 'no AG has started backfill-to-100%') is an explicit scoping/ownership question needing an operator ruling on whether it lives here or inside each AG's own consolidated closeout, not a bounded fix a worker could resolve alone.

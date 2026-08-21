@@ -218,9 +218,3 @@ host-checkout staleness) with no decision made and no stated done-when.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Carries 5 sequential na-eligibility-audit KEEP_NA confirmations (2026-08-03, 08-06, round-11 08-09, 08-10) all citing the same reasoning: the sole open todo ('Consider whether STEP 5.83 should validate against a canonical/fresh state... rather than each shipping repo's local, possibly-stale sibling checkouts') is an explicit undecided architecture tradeoff with no stated decision or done-when. The doc's actual blocking scope (todo 1, the deployment-api checkout staleness that broke...
-
-**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — unchanged, 6th consecutive confirmation.
-Doc's actual blocking scope (todo 1, deployment-api checkout staleness) was resolved 2026-08-03; `status: open` is
-deliberately retained only for the sole remaining item (todo 3, `[INFRA] P3`): an explicit undecided architecture
-tradeoff ("Consider whether STEP 5.83 should validate against a canonical/fresh state... rather than each shipping
-repo's local, possibly-stale sibling checkouts") with no stated decision or done-when. No `assigned_vm` change.

@@ -177,4 +177,3 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): all 4 open todos remain
   sequentially gated behind todo 2's still-unresolved operator-judgment verdict on `min_order_size` disposition.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (4 entries).
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — 2 open todos remain: the extra='forbid' flip is filed as an Inbound Request on `code_readiness_t1_contracts_library_externalapi_2026_08_19.md` (verified live — that doc's own Inbound Requests section carries the identical `[FROM-T2] P3` item, open, 'P3, not blocking'), confirming the citation is accurate, not stale; the post-phase codex audit stays gated on that flip landing. No reclassification — this doc's own remaining work is fully delegated to T1's cross-repo scope.

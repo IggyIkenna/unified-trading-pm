@@ -181,4 +181,3 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
   needed.
 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA-STALE (already-duplicated), re-confirmed — sole open item (archive-this-doc trigger) is still the identical closing action tracked as todo 2 of the active `solana_dex_pool_swaps_indexer_2026_08_08_finalize.md`; citation still correct and current. No action needed.

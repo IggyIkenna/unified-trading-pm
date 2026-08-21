@@ -81,8 +81,3 @@ source: >-
   verbatim out of the source plan's line ~354. Source plan's checkbox replaced with a bold pointer digest line
   (task_template.md §3 finding H convention) + `related:` cross-link added both directions.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed. Checked directly:
-  `~/.claude/laptop_login_identity_log.jsonl` does not exist yet on this machine (`ls` confirms absent), so the
-  operator has not yet run `scripts/dev/log-laptop-login-identity.py` on their laptop. The sole todo is structurally
-  laptop-only (reads `~/.claude.json` on the operator's own machine) — no AO worker can execute it. Doc stays
-  `assigned_vm: NA`.

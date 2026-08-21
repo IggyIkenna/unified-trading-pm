@@ -328,58 +328,8 @@ todos only to confirm they are data-movement, then leave it.
       first and each pinned by a test proven to fail pre-fix): unstable level-5 display label (24 groups), `'nan'`
       leaking as a real instrument_type key (26 beside 85 blank), and `data_type` never case-folded (6 groups).
       Evidence: `instruments-service@2b482a1247`, verified an ancestor of `origin/live-defi-rollout`.
-      **MEASURED 2026-08-21 (T2, general-purpose sub-agent investigation, evidence-cited)** — the remaining 3
-      surfaces, one at a time:
-      - **Writer vs projection: CONSISTENT.** `unified-trading-library`'s real dedup/shard key
-        (`manifest_consolidator.py:571-585` `_BASE_DEDUP_COLS`+`_OPTIONAL_DEDUP_COLS`, mirrored
-        `manifest_writer/_read_index.py:38-50`) and the MTDS sports-odds writer
-        (`market-tick-data-service/.../manifest_finalize.py:400-497`) both agree with the projection: `league_id`
-        is a real splitting key, `instrument_type` is a uniform non-splitting `"odds"` constant for sports (matches
-        the codex's own "not a shard axis" ruling), `fixture_id` is display-only everywhere, never in the dedup key.
-        No fix needed.
-      - **Gate vs projection: DIVERGENT, real, still open — NOT closing this session.** The Layer-1
-        enumeration-completeness gate (`scripts/check_enumeration_completeness.py::_build_enumerated_tuples`,
-        `scripts/expected_universe.py::_expected_sports`) still computes EXPECTED/ENUMERATED at the coarser
-        `(venue, instrument_type, data_type)` 3-tuple grain — never extended when level 5e folded `league_id` in.
-        A venue with one league fully captured and every other league untouched still reads
-        `instrument_gates_download: false` (falsely "complete enough to trust") for that venue. Root cause is
-        NOT a quick code fix: closing it needs a new authoritative "expected leagues per bookmaker venue"
-        source, which does not exist anywhere today (checked `unified_api_contracts.registry.sports_per_source_rules`
-        — a different surface, reference-data sources not MTDS odds venues; checked
-        `market-tick-data-service/.../adapters/sports/_league_request_resolution.py` — per-adapter fetch-time
-        scoping, e.g. `odds_api_adapter.py`'s own `_candidate_leagues`, not a shared cross-venue registry).
-        Fabricating one from observed data would risk manufacturing FALSE holes for leagues a venue never actually
-        offers — exactly the dishonesty this system exists to prevent. Split out as its own todo below rather than
-        forced through half-measured. Also fixed the stale codex banner that still called this "STILL OPEN" for the
-        projection half after it shipped: `/codex/02-data/honest-coverage-model.md`.
-      - **UI vs projection: minor, non-fabricating gap, cross-tranche.** `deployment-ui/src/components/HonestCoverageCard.tsx:135`
-        faithfully passes through the gate's flag (inherits its blind spot, introduces no NEW disagreement).
-        `ShardDetailModal.tsx`'s coordinate type has no `league_id` field, so it can't express a league-scoped
-        single-shard drilldown — but `deployment-api/deployment_api/services/data_status_drilldown/_core.py:201-361`
-        already carries `league_id` end-to-end, just not wired into `ShardDetailModal`'s own route/type. Split out
-        below as a cross-tranche note (deployment-api + deployment-ui are T5-adjacent, not T2-owned).
-      Leaving this box unchecked — genuinely partial, not closeable this session (2/3 remaining surfaces are either
-      real-but-blocked-on-missing-authority or outside T2's ownership).
-- [ ] [BACKEND] P1. **BLOCKED — missing authority, not missing code.** Extend the Layer-1 enumeration-completeness
-      gate (`instruments-service/scripts/check_enumeration_completeness.py`, `scripts/expected_universe.py::_expected_sports`)
-      to a `(venue, instrument_type, data_type, league_id)` grain for sports, split out of the shard-atom-identity
-      todo above (2026-08-21 investigation). Needs a new authoritative "expected leagues per bookmaker venue"
-      source first — none exists (`unified_api_contracts.registry.sports_per_source_rules` is a different surface;
-      each MTDS odds adapter, e.g. `odds_api_adapter.py`, resolves its own league scope ad hoc). Either: (a) an
-      operator/design decision on what defines "expected" per venue (e.g. formalize each adapter's own
-      unscoped-fetch league set — `odds_api_adapter`'s is `LeagueClassificationRegistry.get_prediction_leagues()`
-      — into a shared per-venue registry), or (b) explicitly rule the gate stays coarser-grained by design and
-      close this as WON'T-FIX with that reasoning recorded. Do not fabricate an expected-leagues list from observed
-      data — that risks manufacturing false holes for leagues a venue never offers.
-- [ ] [FROM-T2, for T5/deployment-api] P2. Wire `league_id` through `ShardDetailModal.tsx`'s coordinate type
-      (`deployment-ui/src/components/ShardDetailModal.tsx`) and its backing route
-      (`deployment-api/deployment_api/types/shard_detail.py`), split out of the shard-atom-identity todo above
-      (2026-08-21 investigation). The plumbing already exists one layer up
-      (`deployment-api/.../services/data_status_drilldown/_core.py:201-361` carries `league_id` end-to-end) — this
-      is wiring it into the single-shard drilldown modal, not new design. Low severity: the modal doesn't assert
-      anything false today, it just can't express a league-scoped drilldown yet. Cross-tranche — deployment-api/
-      deployment-ui are outside T2's owned repos (instruments-service, market-tick-data-service,
-      market-data-processing-service, + the documented deployment-service carve-out).
+      **Still unmeasured, so still unchecked**: whether the manifest WRITER, the data-status gate and the UI agree
+      with the projections' atom. Checking this box now would exceed what was measured.
 - [x] ✅ [BACKEND] P0. Make honest coverage measurable on EVERY axis and granularity, each figure carrying its
       denominator and date. This is the epic's own definition-of-done item. SSOT:
       `/codex/02-data/honest-coverage-model.md`.
@@ -469,28 +419,7 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W2 — data pipeline integrity (code only, no runs)
 
-- [x] ✅ [BACKEND] P0. Land the manifest canonicalisation and skip-logic CODE. Do NOT run the migration.
-      **2026-08-21 — investigated (general-purpose sub-agent, exhaustive), no open referent found; closing rather
-      than carrying an un-scopeable placeholder forward.** This todo carried no SSOT link, asset_group, or
-      issue-doc reference; T2's own frontmatter (`depends_on`/`supersedes`/`related`) has no link to any of the 5
-      per-AG canonicalisation closeout plans either — it reads as a generic placeholder for the canonical-migration
-      *program* (`/codex/02-data/cross-asset-canonical-target-ssot.md` §12), typed without checking what remained
-      open. Grepped all 5 (`cefi`/`tradfi`/`defi`/`prediction`/`sports`) `*_consolidated_closeout_2026_07_18/19.md`
-      plans plus the cross-cutting closeout for open canonical/migration/skip-logic todos landing in T2's 3 repos:
-      - cefi, tradfi, prediction: zero open hits.
-      - defi: the one open item is `delete_migrated_defi_markers_2026_07_23.py --apply` — the CODE already shipped
-        (`market-tick-data-service@a65117eb`); only the gated **run** remains, and T2 does not run migrations.
-      - sports: the referenced §11c issue doc
-        (`plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`)
-        is `status: resolved`, all 13 todos `[x]` — the writer fix + `league=`-aware migration-tool shape
-        extension shipped as `instruments-service@ba87cc32`, re-verified live on `main`.
-        `sports_taxonomy_p2_migration_2026_08_08.md` (the actual sports manifest-canonicalisation migration) is
-        also fully `[x]`. The closest real "skip-logic" match — `check_shard_freshness`'s ODDS_API-sentinel-collision
-        bug — is fixed (`market-tick-data-service@362e64e3`), though the underlying function lives in
-        `unified_trading_library/manifest_writer/_queries.py` (T1's repo, mirroring the sibling consolidator-freshness
-        todo above that was already found mis-scoped to T2 for the same reason).
-      Nothing left to build in T2's 3 repos under this heading. If the operator meant a SPECIFIC migration not
-      captured by any of the above, re-open with a named asset_group/SSOT so it can actually be scoped.
+- [ ] [BACKEND] P0. Land the manifest canonicalisation and skip-logic CODE. Do NOT run the migration.
 - [x] [BACKEND] P0. Build consolidator-freshness gating so a stale index loud-fails rather than serving stale
       coverage. SSOT: `/codex/05-infrastructure/manifest-consolidator-ssot.md`.
       ✅ 2026-08-20 — **already shipped, and it loud-fails BY DEFAULT.** Verified in code, not from the codex prose:
@@ -588,10 +517,7 @@ todos only to confirm they are data-movement, then leave it.
       consult the per-AG contracts, and add a golden/hash test so a silent column change cannot ship. Evidence:
       `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`.
       **Reason 2026-08-20 — the locked contract has NEVER matched the catalogue writer, so wiring it up as
-      specified would have blocked production promotion for all five asset groups.** **Operator ruled
-      2026-08-21: neither wholesale-ratify the writer nor hard-enforce the old spec — ENUMERATE the concrete
-      writer-vs-contract differences and FIX them (converge both sides), then lock + version the converged
-      schema.** Parts 1-3 of that issue's
+      specified would have blocked production promotion for all five asset groups.** Parts 1-3 of that issue's
       4-part fix are UAC (T1's repo); part 4 is mine. I built part 4 — `validate_dataframe(df, CONTRACT_REGISTRY[...])`
       at `build_instrument_catalogue.py::promote_catalogue`, which already takes `asset_group`, blocking the way its
       neighbour `CATALOGUE_SHRINK_BLOCKED` does (CRITICAL event + exit 1, never a raise) — then MEASURED it before
@@ -833,17 +759,8 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag. 31 docs in your allocation are flagged `excluded_data_movement` — confirm and leave them.
 - [ ] [AGENT] P0. Post-phase codex audit across `/codex/02-data/` for every contract you changed.
-- [x] ✅ [AGENT] P0. Confirm every artefact coverage marker owned by this tranche now reads live with a stated
+- [ ] [AGENT] P0. Confirm every artefact coverage marker owned by this tranche now reads live with a stated
       denominator and date, or is one of the five allowed pending states.
-      **2026-08-21 — MEASURED against the live artefact, not assumed shipped.** Downloaded
-      `gs://central-element-323112-honest-coverage/2026-08-20/coverage.json` directly (only date-partition present;
-      `last_modified: 2026-08-20T20:56:33Z`, `schema_version: 2`, `generated_at` stamped) and confirmed every
-      marker this tranche shipped this session is genuinely POPULATED, not just present-but-empty:
-      `by_venue_instrument_type_data_type_league` (level 5e) carries real data for all 5 asset_groups — sports
-      alone has 46 venues, each with real per-league breakdowns (e.g. `DRAFTKINGS` → `ALLSVENSKAN`,
-      `BRASILEIRAO`, ...); `by_venue_instrument_type_data_type_chain` (defi chain axis) populated;
-      `hollow_instrument_type_fraction` and `instrument_gates_download` both live under every
-      `by_asset_group[ag]` cell. Nothing pending, nothing stale.
 
 ## Progress Log
 
@@ -912,4 +829,3 @@ todos only to confirm they are data-movement, then leave it.
   `_CATALOGUE_KNOWN_CHAINS is KNOWN_CHAINS` → True, `ASTER` present, `STARKNET` absent. This is a real behaviour
   change to the catalogue read-side venue split, in the correcting direction.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 2 of the operator-slot-launched code-readiness series (same Launch-prompts mechanism as the coordinator/T1). Remaining open items include multiple BLOCKED-UPSTREAM(T1/UAC or T1/UTL) items, a BLOCKED-OPERATOR multi-instrument candle bundle write-race fix, an explicit operator-decision-needed denominator-semantics question (level-4 vs level-5 fully-retired-key disagreement, deliberately not silently edited per W3's 'never a silent edit' rule), a sports-bookmaker roster classification for the operator, and a large atomic MDPS adapter-protocol/polars-seam migration across 18 files. None clears the whole-doc RECLASSIFY bar; the doc's own structural design (operator-slot dispatch) also precludes AO-backlog eligibility.

@@ -61,4 +61,3 @@ already exists and is wired, it just cannot execute against live infra without t
 **na-eligibility-audit 2026-08-17** (defi tranche, dispatch agt-f4fef7): KEEP-NA, valid — re-confirmed; no
 substantive content change since the 2026-08-16 verdict (context-scout metadata touch only). Sole open todo still
 requires operator-provisioned Tenderly fork RPC + API key, not agent-self-serviceable. Doc stays `assigned_vm: NA`.
-- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; sole open todo still requires an operator-provisioned Tenderly fork RPC + API key, not agent-self-serviceable. Doc stays `assigned_vm: NA`.
