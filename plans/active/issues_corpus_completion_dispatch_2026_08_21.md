@@ -226,12 +226,29 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
 
 ## Waves
 
-### Wave 1 — no-input work (running, workflow `wf_b38a4988-fc3`)
+### Wave 1 — no-input work (workflow `wf_b38a4988-fc3` complete 2026-08-21; archival pass 2 pending)
 
 - [ ] [SCRIPT] P0. Archive the 56 ARCHIVE_RESOLVED docs via the 6-step ritual (serial lane, safe-doc-push). Done-when:
       `queue_archive_resolved.json` docs all under `plans/archive/` with referrers fixed; skips listed in Progress Log.
-- [ ] [SCRIPT] P0. Mark the 49 COVERED_ELSEWHERE docs with the counter-recognized EXTRACTED/DUPLICATE-OF or
-      superseded_by form (serial lane). Done-when: `count_open_tasks.py` "covered" line reflects them; skips logged.
+      Pass 1 (2026-08-21): 18 archived (`unified-trading-pm@4edaa505b1`, `@f7b7ee1aa5`, `@b97de2cbf9`, `@6c274b982d`,
+      `@dc08518953`, `@c66f71e3d5`, `@4c8de37473`), 38 skipped — see Progress Log for the skip taxonomy.
+- [ ] [SCRIPT] P1. Archival pass 2 over the 38 pass-1 skips + the 9 covered-lane `flag-for-archive` docs: (a) docs whose
+      `archive_exempt: true` carries an explicit BRIDGE note ("drop this line + git mv in the follow-on pass") — this
+      dispatch IS that pass, drop the bridge and archive; (b) `locked_by: live-defi-rollout` placeholder docs — run
+      `scripts/plans/clear_locked_by_placeholder_2026_08_12.py --dry-run` then `--apply` (the sanctioned fix for the
+      documented branch-name-as-lock bug; a real actor id such as `harsh-fleet-audit` stays locked), then archive;
+      (c) superseded-by-successor report docs (`ag_closeout_audit_*_parked_2026_08_16/19`, `na_eligibility_audit_defi_blocks_2026_08_16/17/18`)
+      → `status: superseded` + `superseded_by` + archive; (d) genuine standing references (`autonomous_session_operator_decisions_2026_07_25`,
+      `tradfi_autonomous_session_operator_decisions_2026_07_25`, `operator_ruling_record_plan_reconcile_session_2026_08_15`,
+      `sit_gate_treadmill_*`, `cefi_empty_confirmed_historical_breakdown_reference_*`) → leave active, correct their
+      queue verdict to STANDING-REFERENCE. Done-when: every pass-1 skip has one of those four dispositions logged.
+- [x] 2. ✅ [SCRIPT] P0. Mark the 49 COVERED_ELSEWHERE docs with the counter-recognized EXTRACTED/DUPLICATE-OF or
+      superseded_by form (serial lane) — `unified-trading-pm@6c274b982d` + `@dc08518953` + `@c66f71e3d5` + `@4c8de37473`
+      (47 processed: 14 newly marked, 5 edited, 1 partial, 18 verified already-deduped/0-open, 9 flagged for archival;
+      4 skipped where the coverage claim did not hold — `archival_referrer_codex_redirect_bulk_cleanup_2026_08_17`,
+      `defi_morpho_lending_indices_never_wired_2026_07_12`, `dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_*`,
+      `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27` — those four re-enter the executable queue).
+      `count_open_tasks.py` after: issues open deduped 1,146 → 1,129; docs 573 → 558.
 
 ### Wave 2 — operator-approved actions + credential wiring (non-PM repos first; deletes serial)
 
@@ -279,4 +296,16 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
 - **2026-08-21 (session start)** — Count baseline taken; 29-batch classification workflow run; 141 decisions merged;
   two operator question rounds answered (table above); wave 1 launched (archive + covered lanes); GSM verified for
   D12/D16/D19; Betfair root cause = Betfair's own pending-password-change flag. Plan-of-record + executable queue plan
-  authored.
+  authored (`unified-trading-pm@1b0b4aa87c`). Decision board artifact published for operator review.
+- **2026-08-21 (wave 1 complete, `wf_b38a4988-fc3`, 12 agents, 91 min)** — Archive lane: 18/56 archived, 38 skipped.
+  Skip taxonomy: 24 × `archive_exempt: true` (≈half explicit BRIDGE notes deferring to "the follow-on pass", the rest
+  genuine standing references — the classifier over-called these as ARCHIVE_RESOLVED); 8 × `locked_by` (7 the
+  `live-defi-rollout` placeholder bug, 1 real actor `harsh-fleet-audit`); 3 × live unresolved operator-preference
+  items still in prose; 1 stale duplicate left by an incomplete rename (`_cefi_canonical_blueprint_2026_07_17`); 1 with
+  a genuinely open checkbox the classifier missed; 1 archival owned by an active finalize plan. Covered lane: 47/49
+  processed, 4 coverage claims refuted (re-queued as executable). The one doc the classifier missed
+  (`dp_cron_did_not_fire_dedup_volatile_field_2026_08_17`) = operator-gated; it enters the ruling sweep. Side findings
+  filed by the lane: `locked_by_live_defi_rollout_placeholder_regression_new_writer_2026_08_21.md` (a new writer
+  re-emitting the placeholder) + `locked_by_live_defi_rollout_archival_referrer_cleanup_2026_08_21.md` (7 prose
+  referrers). Wave 2 (`wf_67607ae2-059`: D5/D7/D12) and wave 2b (`wf_76e252f8-2e7`: ruling application over 179
+  docs + D2 corrections) running. Progress metric: issues open deduped 1,146 → 1,129.
