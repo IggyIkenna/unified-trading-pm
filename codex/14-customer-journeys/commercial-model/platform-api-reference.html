@@ -799,21 +799,32 @@
     </div>
 
     <div class="stat-row">
-      <div class="stat"><span class="v">5</span><span class="k">Services expose a counterparty surface — one of them (strategy-service) not reachable by anyone yet</span></div>
+      <div class="stat">
+        <span class="v">5</span
+        ><span class="k"
+          >Services expose a counterparty surface — one of them (strategy-service) not reachable by anyone yet</span
+        >
+      </div>
       <div class="stat"><span class="v">8</span><span class="k">Endpoints documented in full depth below</span></div>
       <div class="stat">
         <span class="v">102</span
-        ><span class="k">Further client-reporting-api routes indexed by group in §05 — full per-endpoint depth pending</span>
-      </div>
-      <div class="stat">
-        <span class="v">1 / 13</span
         ><span class="k"
-          >Instruction types that place a live order — QUOTE (1 more) arms repricing without submitting one; the
-          remaining 11 return HTTP 501</span
+          >Further client-reporting-api routes indexed by group in §05 — full per-endpoint depth pending</span
         >
       </div>
       <div class="stat">
-        <span class="v">0</span><span class="k">Counterparties who can authenticate to strategy-service's signal-leasing API today — both seeded counterparties are SUSPENDED pending a 2026-09-01 launch</span>
+        <span class="v">1 / 15</span
+        ><span class="k"
+          >Instruction types that place a live order — QUOTE (1 more) arms repricing without submitting one; the
+          remaining 13 return HTTP 501</span
+        >
+      </div>
+      <div class="stat">
+        <span class="v">0</span
+        ><span class="k"
+          >Counterparties who can authenticate to strategy-service's signal-leasing API today — both seeded
+          counterparties are SUSPENDED pending a 2026-09-01 launch</span
+        >
       </div>
     </div>
   </header>
@@ -837,7 +848,9 @@
         <a href="#s4"><span class="num">04</span><span class="ttl">Instructions API — execution-service</span></a>
       </li>
       <li>
-        <a href="#s5"><span class="num">05</span><span class="ttl">Client Reporting API — client-reporting-api</span></a>
+        <a href="#s5"
+          ><span class="num">05</span><span class="ttl">Client Reporting API — client-reporting-api</span></a
+        >
       </li>
       <li>
         <a href="#s6"><span class="num">06</span><span class="ttl">Signal-leasing API — strategy-service</span></a>
@@ -1502,19 +1515,19 @@
         <div class="code-label">Response — 200</div>
         <div class="code">
           { "asset_group": "cefi", "venue": "BINANCE-FUTURES", "data_type": "trades", "date": "2026-08-17", "bucket":
-          "&lt;resolved tick-data bucket&gt;", "objects": [ { "file":
-          "&lt;opaque internal object path — round-trip verbatim, do not parse&gt;",
-          "size": 4831201 } ], "truncated": false }
+          "&lt;resolved tick-data bucket&gt;", "objects": [ { "file": "&lt;opaque internal object path — round-trip
+          verbatim, do not parse&gt;", "size": 4831201 } ], "truncated": false }
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           <code>file</code> is an internal object path and not part of the documented contract — its structure may
-          change without notice. Treat it as an opaque token: pass it back exactly as received in step 2, never parse
-          or reconstruct it.
+          change without notice. Treat it as an opaque token: pass it back exactly as received in step 2, never parse or
+          reconstruct it.
         </p>
         <div class="code-label">Step 2 — download (pass <code>file</code> verbatim from step 1)</div>
         <div class="code">
           <b>GET</b>
-          /external/market-data/delivery/batch?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades&amp;date=2026-08-17&amp;file=&lt;the exact file value returned in step 1&gt;
+          /external/market-data/delivery/batch?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades&amp;date=2026-08-17&amp;file=&lt;the
+          exact file value returned in step 1&gt;
         </div>
         <div class="code-label">Response — 200 (binary)</div>
         <div class="code">
@@ -1747,7 +1760,7 @@
       >
     </div>
     <p class="lede">
-      One instruction envelope, any asset class — but only one of its thirteen action types actually executes today.
+      One instruction envelope, any asset class — but only one of its fifteen action types actually executes today.
       <code>execution-service/execution_service/api/external_instruction_api.py</code>.
     </p>
 
@@ -1755,25 +1768,24 @@
       <span class="tag">Read this before anything else on this page</span>
       <p>
         <b>Only <code>TRADE</code> is wired end-to-end.</b> The request body type, <code>StrategyInstructionV2</code>,
-        is a 13-member discriminated union
-        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:373-385</code>). A
+        is a 15-member discriminated union
+        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
-        internal DART manual-trade surface uses in production. Eleven variants — SWAP, LEND, BORROW, WITHDRAW, REPAY,
-        STAKE, UNSTAKE, TRANSFER, BRIDGE, ATOMIC, CANCEL — parse successfully (they are real, valid members of the
-        union) but return an honest <code>501</code>: not a silent drop, but not the same contract either
+        internal DART manual-trade surface uses in production. Thirteen variants — SWAP, LEND, BORROW, WITHDRAW, REPAY,
+        STAKE, UNSTAKE, TRANSFER, BRIDGE, ATOMIC, CANCEL, LP_MINT, LP_BURN — parse successfully (they are real, valid
+        members of the union) but return an honest <code>501</code>: not a silent drop, but not the same contract either
         (<code>external_instruction_api.py:129-136</code>).
       </p>
       <p>
         <code>QUOTE</code> is a third case, distinct from both of the above — worth stating precisely rather than
         rounding it either way. It does not 501: <code>_register_quote_instruction()</code> is real and runs
-        (<code>external_instruction_api.py:133-171</code>), arming
-        <code>DeltaProxyRepricer</code> with this instrument's delta/gamma via
-        <code>QuoteMaintainer.register_quote_instruction()</code> and returning <code>status="REGISTERED"</code>. But
-        it does not place an order either: by the router's own docstring, "the two-sided quote is only submitted when
-        something calls <code>QuoteMaintainer.on_underlying_tick</code>, and no live tick-ingestion loop exists in
-        execution-service yet." A <code>REGISTERED</code> response means repricing parameters are armed, not that a
-        quote is resting on any venue.
+        (<code>external_instruction_api.py:133-171</code>), arming <code>DeltaProxyRepricer</code> with this
+        instrument's delta/gamma via <code>QuoteMaintainer.register_quote_instruction()</code> and returning
+        <code>status="REGISTERED"</code>. But it does not place an order either: by the router's own docstring, "the
+        two-sided quote is only submitted when something calls <code>QuoteMaintainer.on_underlying_tick</code>, and no
+        live tick-ingestion loop exists in execution-service yet." A <code>REGISTERED</code> response means repricing
+        parameters are armed, not that a quote is resting on any venue.
       </p>
     </div>
 
@@ -1855,7 +1867,7 @@
       </table>
     </div>
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
-      <b class="ev ev-verified">✓ verified</b> schemas.py (all 13 variants + the union);
+      <b class="ev ev-verified">✓ verified</b> schemas.py (all 15 variants + the union);
       external_instruction_api.py:110-136 (the 501 branch)
     </p>
 
@@ -2042,17 +2054,17 @@
 
         <h3>The <code>QUOTE</code> variant, on the same endpoint — registers, does not execute</h3>
         <p>
-          A body with <code>"action": "QUOTE"</code> (schema: <code>QuoteInstruction</code>) is intercepted before
-          the TRADE-only path above and never reaches the 501 branch either — see the callout at the top of this
-          section for the exact reasoning. It arms delta-proxy repricing and returns immediately.
+          A body with <code>"action": "QUOTE"</code> (schema: <code>QuoteInstruction</code>) is intercepted before the
+          TRADE-only path above and never reaches the 501 branch either — see the callout at the top of this section for
+          the exact reasoning. It arms delta-proxy repricing and returns immediately.
         </p>
         <div class="code-label">Example response — 200</div>
         <div class="code">
           { "instruction_id": "instr-quote-7c21", "status": "REGISTERED", "detail": { "underlying_instrument_id":
           "BINANCE-SPOT:SPOT_PAIR:BTCUSDT", "delta": "0.52", "gamma": "0.03", "original_bid": "65480.00",
-          "original_ask": "65520.00", "note": "Delta-proxy repricing is armed for this instrument. No order was
-          placed: quote submission requires an underlying-tick loop calling QuoteMaintainer.on_underlying_tick, which
-          is not wired in execution-service yet." } }
+          "original_ask": "65520.00", "note": "Delta-proxy repricing is armed for this instrument. No order was placed:
+          quote submission requires an underlying-tick loop calling QuoteMaintainer.on_underlying_tick, which is not
+          wired in execution-service yet." } }
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           <b class="ev ev-verified">✓ verified</b> Every field above, including the exact <code>note</code> string, is
@@ -2079,8 +2091,8 @@
               <tr>
                 <td><code>422</code></td>
                 <td>
-                  Body doesn't match any of the 13 <code>StrategyInstructionV2</code> variants (e.g. an
-                  <code>action</code> value like <code>CONVERT_DUST</code>/<code>LP_MINT</code> that exists on
+                  Body doesn't match any of the 15 <code>StrategyInstructionV2</code> variants (e.g. an
+                  <code>action</code> value like <code>CONVERT_DUST</code> that exists on
                   <code>InstructionActionV2</code> but has no envelope in the union at all)
                 </td>
                 <td>Standard FastAPI/Pydantic validation error</td>
@@ -2154,38 +2166,38 @@
       <p>
         <b class="ev ev-verified">✓ verified</b>
         <code>client_reporting_api/core/entitlement.py</code> defines the rule this whole service follows:
-        <code>enforce_entitlement(auth, client_id)</code> lets an internal/admin caller through unconditionally, but
-        for an external caller it 403s unless <code>auth.org_id == client_id</code> — the caller can only ever read
+        <code>enforce_entitlement(auth, client_id)</code> lets an internal/admin caller through unconditionally, but for
+        an external caller it 403s unless <code>auth.org_id == client_id</code> — the caller can only ever read
         <em>their own</em> <code>client_id</code>. <code>require_internal(auth)</code> is stricter: it 403s any
         non-internal caller outright, regardless of which <code>client_id</code> they ask for. Every endpoint in the
         index below is tagged with whichever of these it calls, verified per-route by reading the function body, not
         assumed from the route's file or prefix.
       </p>
+      <p>Three findings worth flagging on their own:</p>
       <p>
-        Three findings worth flagging on their own:
+        <b class="ev ev-verified">✓ verified</b>
+        <code>GET /api/v1/stream/reports</code> (<code>reports_stream.py</code>) carries
+        <b>no auth dependency at all</b> — it is mounted directly on the FastAPI app outside the
+        <code>_authenticated_router</code> wrapper every other route in this service sits behind
+        (<code>api/main.py</code>, the
+        <code>_authenticated_router = APIRouter(dependencies=[Depends(_api_auth)])</code> block). It is a global
+        server-sent-events fan-out: every subscriber receives every published report event for every client, with no
+        <code>client_id</code> scoping and no token check.
       </p>
       <p>
-        <b class="ev ev-verified">✓ verified</b> <code>GET /api/v1/stream/reports</code>
-        (<code>reports_stream.py</code>) carries <b>no auth dependency at all</b> — it is mounted directly on the
-        FastAPI app outside the <code>_authenticated_router</code> wrapper every other route in this service sits
-        behind (<code>api/main.py</code>, the <code>_authenticated_router = APIRouter(dependencies=[Depends(_api_auth)])</code>
-        block). It is a global server-sent-events fan-out: every subscriber receives every published report event for
-        every client, with no <code>client_id</code> scoping and no token check.
-      </p>
-      <p>
-        <b class="ev ev-verified">✓ verified</b> 13 of the 102 routes call neither <code>enforce_entitlement</code>
-        nor <code>require_internal</code> — <code>alerts.py</code>, <code>compliance.py</code>, <code>documents.py</code>,
-        and <code>docusign.py</code> in full, plus <code>reporting/investor_relations_archive.py</code>. These still
-        sit behind the blanket <code>create_api_auth</code> token check (so an unauthenticated caller is rejected),
-        but any authenticated caller — internal <em>or</em> external, any <code>org_id</code> — can reach them; no
-        per-<code>client_id</code> scoping was found in this pass. Marked <b class="ev ev-check">? check</b> in the
-        index rather than asserted as a confirmed cross-client leak, since the underlying service call each of these
-        makes was not individually read.
+        <b class="ev ev-verified">✓ verified</b> 13 of the 102 routes call neither <code>enforce_entitlement</code> nor
+        <code>require_internal</code> — <code>alerts.py</code>, <code>compliance.py</code>, <code>documents.py</code>,
+        and <code>docusign.py</code> in full, plus <code>reporting/investor_relations_archive.py</code>. These still sit
+        behind the blanket <code>create_api_auth</code> token check (so an unauthenticated caller is rejected), but any
+        authenticated caller — internal <em>or</em> external, any <code>org_id</code> — can reach them; no per-<code
+          >client_id</code
+        >
+        scoping was found in this pass. Marked <b class="ev ev-check">? check</b> in the index rather than asserted as a
+        confirmed cross-client leak, since the underlying service call each of these makes was not individually read.
       </p>
       <p>
         <b class="ev ev-verified">✓ verified</b> Some of what this surface returns is fixture data, not a real
-        per-client read, independent of the auth/entitlement question above — see the callout after the endpoint
-        index.
+        per-client read, independent of the auth/entitlement question above — see the callout after the endpoint index.
       </p>
     </div>
 
@@ -2232,8 +2244,8 @@
         </div>
         <div class="code-label">Example response — 200 (text/csv)</div>
         <div class="code">
-          HTTP/1.1 200 OK Content-Type: text/csv Content-Disposition: attachment;
-          filename="client-001_daily_equity.csv" date,equity,twr_index,drawdown_pct,daily_return_pct,transfer,cumulative_transfers
+          HTTP/1.1 200 OK Content-Type: text/csv Content-Disposition: attachment; filename="client-001_daily_equity.csv"
+          date,equity,twr_index,drawdown_pct,daily_return_pct,transfer,cumulative_transfers
           2026-08-17,104250.00,1.042500,0.00,0.3100,0.00,0.00 2026-08-18,103980.10,1.039801,0.26,-0.2588,-500.00,-500.00
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
@@ -2266,9 +2278,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          exports.py:148-221; core/entitlement.py:34-62
-        </p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">exports.py:148-221; core/entitlement.py:34-62</p>
       </div>
     </details>
 
@@ -2319,8 +2329,7 @@
         </div>
         <div class="code-label">Example request</div>
         <div class="code">
-          <b>GET</b> /api/v1/clients/client-001/hwm-timeline?date_from=2026-01-01 X-Service-Token:
-          &lt;service-token&gt;
+          <b>GET</b> /api/v1/clients/client-001/hwm-timeline?date_from=2026-01-01 X-Service-Token: &lt;service-token&gt;
         </div>
         <div class="code-label">Example response — 200</div>
         <div class="code">
@@ -2337,10 +2346,10 @@
         <div class="callout">
           <span class="tag">Mock data, disclosed exactly</span>
           <p>
-            <b class="ev ev-verified">✓ verified</b> When the service runs with <code>CLOUD_MOCK_MODE=true</code>
-            (<code>UnifiedCloudConfig().is_mock_mode()</code>), this endpoint returns three fixed demo rows
-            (<code>_mock_hwm_timeline</code>, <code>hwm.py:30-63</code>) regardless of the real client. Otherwise it
-            reads <code>read_fee_recognition_rows(client_id, date_from, date_to)</code> —
+            <b class="ev ev-verified">✓ verified</b> When the service runs with
+            <code>CLOUD_MOCK_MODE=true</code> (<code>UnifiedCloudConfig().is_mock_mode()</code>), this endpoint returns
+            three fixed demo rows (<code>_mock_hwm_timeline</code>, <code>hwm.py:30-63</code>) regardless of the real
+            client. Otherwise it reads <code>read_fee_recognition_rows(client_id, date_from, date_to)</code> —
             <code>core/hwm_reader.py</code>, not independently read this pass, so its backing data source carries a
             <b class="ev ev-check">? check</b> rather than a confirmed real-data claim.
           </p>
@@ -2384,33 +2393,35 @@
         Verified by reading the three route files most likely to matter first (<code>exports.py</code>,
         <code>performance.py</code>, <code>hwm.py</code>) — not re-verified for every one of the 102 routes below, so
         treat this as a confirmed sample rather than a full audit. <code>GET /api/v1/exports/trades</code> and
-        <code>GET /api/v1/exports/coin-breakdown</code> return a hardcoded fixture
-        (<code>MOCK_TRADES</code> / <code>MOCK_COIN_BREAKDOWN</code>) <b>unconditionally</b> — not gated by mock mode,
-        not varying by <code>client_id</code> (<code>exports.py:74,140</code>). <code>GET /api/v1/exports/daily-summary</code>
-        and <code>GET /api/v1/exports/hourly-snapshots</code> derive from
-        <code>get_mock_performance_summary()</code> — also fixture-sourced regardless of environment
-        (<code>core/mock_performance_data.py</code>, <code>exports.py:89,108</code>). The four
-        <code>/api/v1/performance/*</code> endpoints (positions, balances, coin-breakdown) fall back to fixtures only
-        when <code>CLOUD_MOCK_MODE=true</code> (<code>performance.py:52,94,126,163</code>) — real in a real
-        deployment. <code>GET /api/v1/exports/daily-equity</code> and <code>GET /api/v1/exports/transfers</code> read
-        real backing stores unconditionally (<code>get_equity_curve</code> / <code>get_transfers</code>). DocuSign
-        envelope status (<code>docusign.py</code>) is also fixture-backed (<code>MOCK_ENVELOPES</code>).
+        <code>GET /api/v1/exports/coin-breakdown</code> return a hardcoded fixture (<code>MOCK_TRADES</code> /
+        <code>MOCK_COIN_BREAKDOWN</code>) <b>unconditionally</b> — not gated by mock mode, not varying by
+        <code>client_id</code> (<code>exports.py:74,140</code>). <code>GET /api/v1/exports/daily-summary</code> and
+        <code>GET /api/v1/exports/hourly-snapshots</code> derive from <code>get_mock_performance_summary()</code> — also
+        fixture-sourced regardless of environment (<code>core/mock_performance_data.py</code>,
+        <code>exports.py:89,108</code>). The four <code>/api/v1/performance/*</code> endpoints (positions, balances,
+        coin-breakdown) fall back to fixtures only when
+        <code>CLOUD_MOCK_MODE=true</code> (<code>performance.py:52,94,126,163</code>) — real in a real deployment.
+        <code>GET /api/v1/exports/daily-equity</code> and <code>GET /api/v1/exports/transfers</code> read real backing
+        stores unconditionally (<code>get_equity_curve</code> / <code>get_transfers</code>). DocuSign envelope status
+        (<code>docusign.py</code>) is also fixture-backed (<code>MOCK_ENVELOPES</code>).
       </p>
     </div>
 
     <details class="ref">
-      <summary
-        >Full endpoint index — all 102 routes, grouped, verified against the router source
-        (2026-08-20)<span class="tag-ref">Reference</span></summary
-      >
+      <summary>
+        Full endpoint index — all 102 routes, grouped, verified against the router source (2026-08-20)<span
+          class="tag-ref"
+          >Reference</span
+        >
+      </summary>
       <div class="plate-body scroll-x">
         <p>
-          <b>Reachability legend</b>: <code>External</code> — <code>enforce_entitlement</code>, caller reads only
-          their own <code>client_id</code>; <code>Internal</code> — <code>require_internal</code>, external tokens
-          403 regardless of <code>client_id</code>; <code>Internal/External*</code> — the function branches on
-          whether a <code>client_id</code> filter is supplied; <code>? check</code> — authenticated-only, no
-          per-route entitlement call found in this pass; <code>Unauthenticated</code> — no auth dependency at all.
-          Purpose is a short paraphrase of the route's own function name, not an expansion of its docstring.
+          <b>Reachability legend</b>: <code>External</code> — <code>enforce_entitlement</code>, caller reads only their
+          own <code>client_id</code>; <code>Internal</code> — <code>require_internal</code>, external tokens 403
+          regardless of <code>client_id</code>; <code>Internal/External*</code> — the function branches on whether a
+          <code>client_id</code> filter is supplied; <code>? check</code> — authenticated-only, no per-route entitlement
+          call found in this pass; <code>Unauthenticated</code> — no auth dependency at all. Purpose is a short
+          paraphrase of the route's own function name, not an expansion of its docstring.
         </p>
         <div class="scroll-x">
           <table>
@@ -2482,7 +2493,10 @@
                 <td>Balance breakdown (reporting variant)</td>
               </tr>
               <tr>
-                <td colspan="3"><b>Attribution, PnL &amp; reconciliation</b> — attribution.py, all under <code>/api/v1/clients/{client_id}/…</code></td>
+                <td colspan="3">
+                  <b>Attribution, PnL &amp; reconciliation</b> — attribution.py, all under
+                  <code>/api/v1/clients/{client_id}/…</code>
+                </td>
               </tr>
               <tr>
                 <td><code>GET …/nav</code></td>
@@ -2700,7 +2714,9 @@
                 <td>Annual tax summary CSV</td>
               </tr>
               <tr>
-                <td colspan="3"><b>Manual entry (ops corrections)</b> — manual_entry.py, prefix /api/v1/manual-entry</td>
+                <td colspan="3">
+                  <b>Manual entry (ops corrections)</b> — manual_entry.py, prefix /api/v1/manual-entry
+                </td>
               </tr>
               <tr>
                 <td><code>POST /snapshot</code></td>
@@ -2738,11 +2754,14 @@
                 <td>Internal</td>
                 <td>
                   Close all positions for a client — <code>dry_run=true</code> (default) lists what would close,
-                  <code>dry_run=false</code> submits real market close orders via CCXT (<code>emergency.py:162-176</code>)
+                  <code>dry_run=false</code> submits real market close orders via CCXT
+                  (<code>emergency.py:162-176</code>)
                 </td>
               </tr>
               <tr>
-                <td colspan="3"><b>Invoices — generation &amp; lifecycle</b> — invoices/generation.py, transitions.py</td>
+                <td colspan="3">
+                  <b>Invoices — generation &amp; lifecycle</b> — invoices/generation.py, transitions.py
+                </td>
               </tr>
               <tr>
                 <td><code>POST /api/v1/invoices/generate</code></td>
@@ -2770,7 +2789,9 @@
                 <td>Transition an invoice's lifecycle state</td>
               </tr>
               <tr>
-                <td colspan="3"><b>Invoices — fee &amp; HWM dashboards</b> — invoices/dashboards.py, prefix /api/v1/invoices/dashboard</td>
+                <td colspan="3">
+                  <b>Invoices — fee &amp; HWM dashboards</b> — invoices/dashboards.py, prefix /api/v1/invoices/dashboard
+                </td>
               </tr>
               <tr>
                 <td><code>GET /fees</code></td>
@@ -2793,7 +2814,10 @@
                 <td>List introducers</td>
               </tr>
               <tr>
-                <td colspan="3"><b>Invoices — portals</b> — invoices/portals.py, prefix /api/v1/invoices/portal, all internal-only staff views</td>
+                <td colspan="3">
+                  <b>Invoices — portals</b> — invoices/portals.py, prefix /api/v1/invoices/portal, all internal-only
+                  staff views
+                </td>
               </tr>
               <tr>
                 <td><code>GET /admin</code></td>
@@ -2844,7 +2868,10 @@
               <tr>
                 <td><code>GET /api/v1/invoices/all</code></td>
                 <td>Internal/External*</td>
-                <td>List invoices — internal for the unfiltered list, entitlement-scoped when a <code>client_id</code> filter is passed</td>
+                <td>
+                  List invoices — internal for the unfiltered list, entitlement-scoped when a
+                  <code>client_id</code> filter is passed
+                </td>
               </tr>
               <tr>
                 <td><code>POST /api/v1/invoices/generate-all</code></td>
@@ -2912,7 +2939,9 @@
               <tr>
                 <td><code>GET /nav</code></td>
                 <td>Internal</td>
-                <td>Cross-client NAV aggregate — carries fee-rate figures in its response, not reproduced on this page</td>
+                <td>
+                  Cross-client NAV aggregate — carries fee-rate figures in its response, not reproduced on this page
+                </td>
               </tr>
               <tr>
                 <td><code>GET /invoices</code></td>
@@ -2925,7 +2954,9 @@
                 <td>Investor-relations archive metadata</td>
               </tr>
               <tr>
-                <td colspan="3"><b>Documents &amp; e-signature</b> — documents.py, docusign.py, prefix /api/v1/documents</td>
+                <td colspan="3">
+                  <b>Documents &amp; e-signature</b> — documents.py, docusign.py, prefix /api/v1/documents
+                </td>
               </tr>
               <tr>
                 <td><code>POST /upload-url</code></td>
@@ -3036,17 +3067,17 @@
       >
     </div>
     <p class="lede">
-      Corrected from an earlier version of this page, which stated strategy-service exposes no counterparty surface.
-      It does: a signal-leasing REST-pull/webhook-push surface, mounted at <code>/signal_broadcast</code> in
-      <code>strategy_service/api/main.py</code>, built and wired end-to-end. The honest qualifier is not "does it
-      exist" — it does — but "can anyone reach it": today, no.
+      Corrected from an earlier version of this page, which stated strategy-service exposes no counterparty surface. It
+      does: a signal-leasing REST-pull/webhook-push surface, mounted at <code>/signal_broadcast</code> in
+      <code>strategy_service/api/main.py</code>, built and wired end-to-end. The honest qualifier is not "does it exist"
+      — it does — but "can anyone reach it": today, no.
       <code>strategy-service/strategy_service/signal_broadcast/</code> (13 modules: <code>router.py</code>,
       <code>transport.py</code>, <code>emitter.py</code>, <code>credentials.py</code>, <code>audit.py</code>,
       <code>broadcaster.py</code>, <code>config.py</code>, <code>config_reloaders.py</code>,
       <code>failure_isolation.py</code>, <code>observability_ingest.py</code>, <code>observability_readers.py</code>,
       <code>observability_stores.py</code>, <code>__init__.py</code>) plus the schema layer in
-      <code>unified-api-contracts/unified_api_contracts/internal/domain/signal_broadcast/</code> (counterparty
-      registry, entitlements, rate limits, payload envelope).
+      <code>unified-api-contracts/unified_api_contracts/internal/domain/signal_broadcast/</code> (counterparty registry,
+      entitlements, rate limits, payload envelope).
     </p>
 
     <div class="callout">
@@ -3057,9 +3088,9 @@
         counterparties, both <code>CounterpartyStatus.SUSPENDED</code>: <code>counterparty-stub-1</code> (STANDARD
         payload depth, <code>default</code> rate-limit profile) and <code>counterparty-stub-2</code> (MINIMAL payload
         depth, <code>minimal</code> rate-limit profile). Their <code>endpoint</code> URLs are placeholders
-        (<code>https://webhook.example.invalid/…</code>) — "real webhook URLs + Secret Manager references are
-        injected at deploy time by deployment-service" per the registry's own module docstring, and have not been.
-        The stated launch window (<code>_LAUNCH_WINDOW_START</code>) is <b>2026-09-01T00:00:00Z</b>.
+        (<code>https://webhook.example.invalid/…</code>) — "real webhook URLs + Secret Manager references are injected
+        at deploy time by deployment-service" per the registry's own module docstring, and have not been. The stated
+        launch window (<code>_LAUNCH_WINDOW_START</code>) is <b>2026-09-01T00:00:00Z</b>.
       </p>
       <p>
         This is not a soft gate — it is enforced on every request. <code>transport.py</code>'s own
@@ -3079,15 +3110,18 @@
       <b>per-counterparty</b> HMAC secret — not a service-wide secret — resolved via
       <code>CounterpartyCredentialsManager</code> (<code>credentials.py</code>), which wraps the UTL
       <code>ApiKeyReloader</code> and hot-reloads each counterparty's secret from Secret Manager on a timer (default
-      300s) so a rotated secret propagates without a restart. Audience and issuer are also checked
-      (<code>config.jwt_audience</code> / <code>config.jwt_issuer</code>).
+      300s) so a rotated secret propagates without a restart. Audience and issuer are also checked (<code
+        >config.jwt_audience</code
+      >
+      / <code>config.jwt_issuer</code>).
     </p>
     <details class="ref">
       <summary>Payload depth tiers &amp; rate-limit profiles<span class="tag-ref">Reference</span></summary>
       <div class="plate-body scroll-x">
         <p>
-          <code>SignalPayload</code> (<code>unified_api_contracts/internal/domain/signal_broadcast/signal_payload.py</code>)
-          is one Pydantic model serialised at one of three depths per counterparty entitlement:
+          <code>SignalPayload</code>
+          (<code>unified_api_contracts/internal/domain/signal_broadcast/signal_payload.py</code>) is one Pydantic model
+          serialised at one of three depths per counterparty entitlement:
         </p>
         <div class="scroll-x">
           <table>
@@ -3100,20 +3134,32 @@
             <tbody>
               <tr>
                 <td><code>MINIMAL</code></td>
-                <td><code>slot_label</code>, <code>signal_version</code>, <code>directional_intent</code>, <code>target_exposure</code>, <code>timeframe</code>, <code>emitted_at</code></td>
+                <td>
+                  <code>slot_label</code>, <code>signal_version</code>, <code>directional_intent</code>,
+                  <code>target_exposure</code>, <code>timeframe</code>, <code>emitted_at</code>
+                </td>
               </tr>
               <tr>
                 <td><code>STANDARD</code></td>
-                <td>+ <code>confidence</code>, <code>expected_horizon_seconds</code>, <code>stop_loss_bps</code>, <code>take_profit_bps</code></td>
+                <td>
+                  + <code>confidence</code>, <code>expected_horizon_seconds</code>, <code>stop_loss_bps</code>,
+                  <code>take_profit_bps</code>
+                </td>
               </tr>
               <tr>
                 <td><code>RICH</code></td>
-                <td>+ <code>rationale_tags</code>, a <code>feature_snapshot</code> dict capped at 32 keys (deterministic, sorted-key truncation)</td>
+                <td>
+                  + <code>rationale_tags</code>, a <code>feature_snapshot</code> dict capped at 32 keys (deterministic,
+                  sorted-key truncation)
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
-        <p>Rate limits are a token bucket per <code>(counterparty_id, strategy_id)</code>, resolved from <code>Counterparty.rate_limit_ref</code>:</p>
+        <p>
+          Rate limits are a token bucket per <code>(counterparty_id, strategy_id)</code>, resolved from
+          <code>Counterparty.rate_limit_ref</code>:
+        </p>
         <div class="scroll-x">
           <table>
             <thead>
@@ -3143,8 +3189,7 @@
           </table>
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          unified_api_contracts/internal/domain/signal_broadcast/signal_payload.py:44-49,62-121;
-          .../registry.py:185-190
+          unified_api_contracts/internal/domain/signal_broadcast/signal_payload.py:44-49,62-121; .../registry.py:185-190
         </p>
       </div>
     </details>
@@ -3195,10 +3240,10 @@
           </table>
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b class="ev ev-check">? check</b> Response is <code>_EmissionEnvelope{"emissions": [...]}</code>
-          (<code>transport.py</code>) wrapping <code>SignalPayload</code>-shaped records from
-          <code>EmissionRingBuffer.fetch()</code> — the exact per-emission wrapper fields beyond the payload shape
-          documented above were not independently read this pass.
+          <b class="ev ev-check">? check</b> Response is
+          <code>_EmissionEnvelope{"emissions": [...]}</code> (<code>transport.py</code>) wrapping
+          <code>SignalPayload</code>-shaped records from <code>EmissionRingBuffer.fetch()</code> — the exact
+          per-emission wrapper fields beyond the payload shape documented above were not independently read this pass.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -3312,10 +3357,9 @@
         <p>
           Parameter: <code>counterparty_id</code> (query, required). Response:
           <code>BacktestPaperLiveEnvelope{"rows": …}</code> — filtered server-side to
-          <code>cp.allowed_slots</code> (<code>BacktestPaperLiveStore.rows_for(counterparty_id, entitled_slots=…)</code>),
-          so a counterparty cannot read reconciliation rows for a slot it is not entitled to. Row shape
-          <b class="ev ev-check">? check</b>, not independently read this pass. Same 403/401/503 auth errors as
-          above.
+          <code>cp.allowed_slots</code> (<code>BacktestPaperLiveStore.rows_for(counterparty_id, entitled_slots=…)</code
+          >), so a counterparty cannot read reconciliation rows for a slot it is not entitled to. Row shape
+          <b class="ev ev-check">? check</b>, not independently read this pass. Same 403/401/503 auth errors as above.
         </p>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py:493-503</p>
       </div>
@@ -3347,9 +3391,9 @@
       </summary>
       <div class="ep-body">
         <p>
-          Body: <code>PnlAttributionReport{counterparty_id, rows: […]}</code>. Requires the counterparty to have
-          opted in server-side (<code>PnlAttributionStore.is_opted_in()</code>) — a real, distinct gate on top of the
-          auth checks. Response — <code>202</code>: <code>{"status": "accepted", "row_count": &lt;int&gt;}</code>.
+          Body: <code>PnlAttributionReport{counterparty_id, rows: […]}</code>. Requires the counterparty to have opted
+          in server-side (<code>PnlAttributionStore.is_opted_in()</code>) — a real, distinct gate on top of the auth
+          checks. Response — <code>202</code>: <code>{"status": "accepted", "row_count": &lt;int&gt;}</code>.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -3407,16 +3451,21 @@
           <tr>
             <td><code>401</code></td>
             <td>Not authenticated — no valid token/key on the request</td>
-            <td>Every endpoint on this page except <code>GET /api/v1/stream/reports</code>, which has no auth check at all — §05</td>
+            <td>
+              Every endpoint on this page except <code>GET /api/v1/stream/reports</code>, which has no auth check at all
+              — §05
+            </td>
           </tr>
           <tr>
             <td><code>403</code></td>
             <td>
-              Two distinct causes, depending on the service: <code>X-Service-Token</code> present but wrong (§01), or
-              — on client-reporting-api only — the caller's <code>org_id</code> does not match the <code>client_id</code>
-              being read (<code>"Not entitled to read this client"</code>, §05)
+              Two distinct causes, depending on the service: <code>X-Service-Token</code> present but wrong (§01), or —
+              on client-reporting-api only — the caller's <code>org_id</code> does not match the
+              <code>client_id</code> being read (<code>"Not entitled to read this client"</code>, §05)
             </td>
-            <td>Instruments, market data, instructions (wrong token); client-reporting-api entitlement-scoped routes</td>
+            <td>
+              Instruments, market data, instructions (wrong token); client-reporting-api entitlement-scoped routes
+            </td>
           </tr>
           <tr>
             <td><code>404</code></td>
@@ -3426,8 +3475,8 @@
           <tr>
             <td><code>422</code></td>
             <td>
-              Request validation failed — bad enum value, a body that matches none of the 13 instruction variants, or
-              a malformed date on client-reporting-api
+              Request validation failed — bad enum value, a body that matches none of the 15 instruction variants, or a
+              malformed date on client-reporting-api
             </td>
             <td>Market-data (asset_group / topology / after), instructions POST, client-reporting-api date params</td>
           </tr>
@@ -3438,7 +3487,10 @@
           </tr>
           <tr>
             <td><code>501</code></td>
-            <td>Recognised but not wired for external submission — 11 of the 13 instruction types (TRADE executes; QUOTE registers without submitting an order and does not 501 — see §04)</td>
+            <td>
+              Recognised but not wired for external submission — 13 of the 15 instruction types (TRADE executes; QUOTE
+              registers without submitting an order and does not 501 — see §04)
+            </td>
             <td>Instructions POST</td>
           </tr>
           <tr>
