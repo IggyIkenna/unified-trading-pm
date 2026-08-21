@@ -122,9 +122,13 @@ real fix is to never load the whole manifest per request.
       honestly unmet until either todo 8 (streaming aggregation) ships or a real production load test proves the
       worst-case (MTDS/cefi full-history + venue filter, or stale-rollup fallback at full-history) stays under the
       4 GiB limit.
-- [ ] [REVIEW] P2. **Post-phase codex audit** — update `deployment-observability.md` with the new cell-grid
+- [x] ✅ [REVIEW] P2. **Post-phase codex audit** — update `deployment-observability.md` with the new cell-grid
       architecture; confirm no plan↔codex drift. Sequenced AFTER todo 3 actually ships (premature before then —
-      the codex doc must describe shipped behavior, not a design decision alone).
+      the codex doc must describe shipped behavior, not a design decision alone). Done: added a "Bounded date-window
+      read on the live-build fallback" paragraph under § "deployment-api cache & memory architecture", citing
+      deployment-api@777f1fa531 and restating the plan's own not-a-full-history-fix caveat so the codex doc doesn't
+      overclaim. — unified-trading-pm@6804f35e8d (shipped same session as todo 3, before the na-eligibility-audit
+      reclassification pass landed — this checkbox lagged that shipment, not redone).
 - [ ] [BACKEND] P1. **Phase 2 — row-group-streamed full-history aggregation** — `date_window` pushdown (todo 3) does
       NOT bound a genuinely full-history request: pyarrow row-group pushdown only skips groups entirely OUTSIDE the
       window, and cefi/MTDS-scale manifests have row groups spanning 2-2.5 calendar years each (measured,
