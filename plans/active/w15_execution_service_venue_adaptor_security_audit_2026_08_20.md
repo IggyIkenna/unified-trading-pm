@@ -189,7 +189,7 @@ impression:
       slug), zero exceptions. — unified-trading-pm@(pending) + evidence: see Progress Log entry below.
 
 - [x] ✅ [BACKEND] P0. Add strict bridge request validation and fail-closed live credential handling (bridge.py); HIGH findings: checklist points 1, 3, and 4. — execution-service@fb50f729,116c5e2f + evidence: verified already-landed (see Progress Log 2026-08-21 slot-7 entry below); no new code required.
-- [ ] [BACKEND] P0. Add CCTP amount/recipient validation and reject missing source wallet credentials before approve/burn (cctp.py); HIGH finding: checklist point 3.
+- [x] ✅ [BACKEND] P0. Add CCTP amount/recipient validation and reject missing source wallet credentials before approve/burn (cctp.py); HIGH finding: checklist point 3. — execution-service@fa434b66a0 + evidence: verified already-landed in fb50f729 (see Progress Log entry below); added regression test coverage, no production code change required.
 - [ ] [BACKEND] P0. Make CCTP transfer tracking durable and idempotent across retries; preserve source burn tx hash and prevent duplicate approve/burn submissions; HIGH finding: checklist point 6.
 - [ ] [BACKEND] P0. Define and enforce caller slippage/deadline bounds for Socket bridge routes, including validation of aggregator-produced transaction targets and calldata; HIGH findings: checklist points 2 and 4.
 - [ ] [BACKEND] P0. Correct CCTP status lookup and enforce attestation timeout/terminal failure semantics; HIGH finding: checklist point 7.
@@ -392,3 +392,44 @@ returned calldata. Commit `116c5e2f` (2026-08-20, predates the slot-5 audit read
 credential handling, 3 input validation, 4 slippage/deadline bounds) verified against the live file content, not
 assumed from the commit subject lines. No new code was needed; the todo checkbox above is flipped citing the two
 substantive fix SHAs.
+
+### 2026-08-21 — slot 5 CCTP triage-todo verification (checklist point 3)
+
+Re-read `execution_service/defi_execution/protocols/cctp.py` at current LDR HEAD against the "Add CCTP
+amount/recipient validation and reject missing source wallet credentials before approve/burn" triage todo. The fix
+was already landed — the same slot-15 commit `fb50f729` (2026-08-20, "persist bridge transfer security state") that
+fixed `bridge.py` also rewrote CCTP's `_validate_bridge_request()`: it now rejects non-finite/non-positive/
+over-`max_bridge_amount` amounts, rejects amounts with more than 6 decimal places, validates `recipient` via
+`_is_evm_address()` before it ever reaches `_address_to_bytes32()` (which itself now validates before `zfill()`
+instead of accepting malformed/short hex), and raises `"CCTP source wallet credentials are required; refusing to
+burn"` when `_wallet_address`/`_private_key`/`_web3_instance` is `None` — all four checks run at the top of
+`bridge()`, before `_approve_and_burn()` ever touches the wallet. The MEDIUM credential-handling finding from the
+original audit (`self._wallet_address or recipient` letting a destination address silently stand in for a missing
+source wallet) is also gone — `bridge()` now asserts `self._wallet_address is not None` and passes it directly.
+
+No regression test previously covered this guard, so this unit added six tests to
+`tests/unit/defi_execution/test_cctp.py` (`TestCCTPBridgeValidation`) exercising zero/negative amount, over-max
+amount, over-precision amount, invalid recipient, and missing source-wallet-credentials — each asserting the
+specific `ValueError` message from `_validate_bridge_request()`. Quality gates green (execution-service, 178s full
+run); shipped via quickmerge — execution-service@fa434b66a0.
+
+**Unrelated finding surfaced and fixed in the same unit (not part of this todo's scope, but actively blocking it):**
+this slot's `unified-trading-pm` worktree carried ~50 files of pre-existing, unattributed uncommitted/staged changes
+at session start (a large apparent partial revert — unchecked checkboxes and removed Progress Log entries versus
+LDR HEAD on several plan/issue docs, plus a staged addition to
+`scripts/quality_gates/adapter_contract_baseline.yaml` of two baseline entries for `unified-trading-system-ui`
+files that do not exist in this slot's UI checkout). The baseline addition caused execution-service's own
+`quality-gates.sh` STEP 5.83 (adapter contract-call regression ratchet) to fail with an unrelated
+`file missing or renamed` error. Restored (`git restore --staged --worktree`) only the two files this unit
+directly needed clean — this plan doc and the baseline YAML — back to HEAD; did **not** touch or investigate the
+remaining ~48 dirty files (out of this todo's scope; whoever owns that WIP should resolve it, since committing it
+as-is would silently delete other slots' already-landed audit checkboxes/Progress Log entries). Separately, the
+index also carried literal unresolved `git stash pop` conflict markers ("Updated upstream" vs "Stashed changes",
+no active `MERGE_HEAD`/rebase state) on three unrelated files
+(`plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`,
+`plans/active/sports_taxonomy_p2_migration_2026_08_08_finalize.md`,
+`plans/active/walkthrough_feedback_remediation_2026_08_21.md`), which made git refuse **every** commit in this repo
+regardless of which files were staged. Resolved with `git checkout --ours` (kept the already-committed HEAD side;
+the stash itself is untouched — `git stash list` still has 95 entries, none dropped — so the discarded
+"Stashed changes" side remains recoverable from the stash if it had any value). This repo's `unified-trading-pm`
+worktree needs a dedicated cleanup pass; flagging rather than attempting it here.

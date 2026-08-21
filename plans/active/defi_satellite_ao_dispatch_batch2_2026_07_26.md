@@ -79,11 +79,20 @@ context_scope:
 
 # DeFi satellite AO batch 2 — fresh triage extraction
 
-> **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
-> ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
-> explicit operator review). All 23 todos below are same-priority-independent and touch distinct files/docs (verified —
-> the one confirmed duplicate pair was merged into a single todo before this doc was authored, not left as two colliding
-> entries).
+> **✅ ALL 23 TODOS DONE 2026-08-21** (22 checkbox items + the 1 intentionally-non-checkbox superseded C8 entry) —
+> **not yet archived**: `defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md` is the machine-gated finalize
+> plan for this doc (`depends_on` + `gate_on_depends: true`) and owns the actual archival (its own todo 4) as ONE
+> coordinated action alongside reconciling every named source doc's checkboxes (todo 1) and re-checking the 20
+> Deferred items below (todo 2) — do not git-mv this doc ahead of that plan's own sequence. The last open todo
+> (line ~307, KALSHI_PERP CEFI manifest re-emit) surfaced a real chain-convention contradiction between the
+> manifest code and live data — resolved via operator ruling + `market-tick-data-service@f7cdd18b21`; the actual
+> 567-row historical re-emit was found already complete via a live full-window query. Full evidence:
+> `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md`,
+> `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`. Dispatched
+> 2026-07-26 per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance (a
+> skill-drafted AO batch is never auto-shipped; that flip followed explicit operator review). All 23 todos were
+> same-priority-independent and touched distinct files/docs (verified — the one confirmed duplicate pair was merged
+> into a single todo before this doc was authored, not left as two colliding entries).
 
 ## Todos
 
@@ -304,7 +313,7 @@ context_scope:
   `plans/archive/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`) in Source's new
   2026-07-26 dated section.
 
-- [ ] [DATA] P2. Once `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s P1 [BACKEND]
+- [x] ✅ [DATA] P2. **CLOSED 2026-08-21.** Once `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s P1 [BACKEND]
       `_perp_funding_kalshi_polymarket.py` cefi-routing fix (sourced from
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s 2026-07-24 root-cause resolution) has landed AND its P1
       [DATA] corpus-wide KALSHI_PERP scope audit has produced its per-day/per-symbol GCS-present/manifest-absent count,
@@ -316,22 +325,24 @@ context_scope:
       perp_funding now has a manifest row under the correct classification, `quality-gates.sh` green, and
       `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`'s status flips to resolved. Source:
       `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`.
-      **ATTEMPTED 2026-08-21, BLOCKED — not flipped.** Both prerequisites confirmed genuinely done (writer fix
-      `market-tick-data-service@2aa23de5` shipped 2026-07-27; scope audit landed 2026-07-28). Live-reconfirmed the
-      567-row scope on the sample day (`day=2026-07-22`: 13/13 real-symbol objects at the stale path, matches the
-      audit exactly). Designed + dry-run-validated (real GCS reads, zero writes) a migration script reusing the
-      production `_write_cefi_perp_funding_rows`/`DefiManifestRecorder` writers. **New blocker found querying the
-      live CEFI manifest before writing**: every real `(venue=KALSHI-PERP, data_type=perp_funding)` row ever
-      recorded (2026-07-26..2026-08-19) carries `chain=""`, but the CURRENT code
-      (`perp_funding_handler.py::_run_process`) hardcodes a non-blank `chain="KALSHI_PERP"` workaround and
-      `_build_row_key(chain="")` raises `BlankChainError` when invoked directly — the two cannot both be true of the
-      same live system, and the real writer producing the `chain=""` rows was not located. Writing either value
-      risks either fresh drift or bypassing a hard invariant on a guess. Paused before any write. Full investigation
-      + recommended next steps:
-      `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md`. Also found (undocumented
-      elsewhere): the GCS-object side of the migration may already be done for at least the sample day (13/13
-      correct-path CEFI objects already present, uploaded 2026-08-08, origin unknown) — needs a full-window check
-      once the chain question resolves.
+      **ATTEMPTED 2026-08-21, initially blocked, then resolved same day.** Both prerequisites confirmed genuinely
+      done (writer fix `market-tick-data-service@2aa23de5` shipped 2026-07-27; scope audit landed 2026-07-28).
+      Live-reconfirmed the 567-row scope on the sample day. Designed + dry-run-validated (real GCS reads, zero
+      writes) a migration script reusing the production `_write_cefi_perp_funding_rows`/`DefiManifestRecorder`
+      writers. **Blocker found querying the live CEFI manifest before writing**: every real
+      `(venue=KALSHI-PERP, data_type=perp_funding)` row ever recorded carried `chain=""`, but the code hardcoded a
+      non-blank `chain="KALSHI_PERP"` workaround and raised `BlankChainError` on a blank one — the two couldn't both
+      be true of the same live system. Paused before any write, filed
+      `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md`. **Operator ruled same
+      day: KALSHI-PERP is not a chain** — the manifest's real history was right, the code was wrong. Fixed + shipped
+      `market-tick-data-service@f7cdd18b21` (adds a narrow `_CHAINLESS_VENUES` carve-out to `_defi_manifest.py`'s
+      `_build_row_key`; bundled a same-day, unrelated, also-blocking SPORTS-MVP registry re-pin needed for a clean
+      `quickmerge` re-gate). **Then, live-verified the actual re-emit was already complete**: a full-window
+      (2026-05-29..2026-07-25) query of the CEFI manifest found 58/58 days present, chain="" throughout, zero
+      missing — done by an unidentified prior process (the GCS-object side was also already fully migrated) before
+      this session started. No new write was needed. `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`
+      flipped to resolved. Full evidence: `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md`
+      § Resolution.
 - [x] ✅ [SCRIPT] P1. **DONE 2026-07-26 (slot-5) — mtds@ff1b5d51e6c43d7fa3aa52b924a32a01a5438fb4.** All 3 pieces shipped
       in ONE commit: (a) the 3 knobs added to `service_config.py`; (b) `_run_solana_protocol_loop` +
       `dex_pools_handler._run_process` fan out via `ParallelPerSymbolRunner` (`manifest_writer=None`), sequential
@@ -826,5 +837,19 @@ source issue doc directly as the successor reference.
   current code's enforced manifest invariant and the live CEFI manifest's actual data for this exact shard family —
   paused before writing anything to production. Filed
   `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md` with the full investigation
-  and recommended next steps. Plan stays `active` (not archived) — this is still the one genuinely open item, now
-  blocked on that issue doc's resolution rather than simply unpicked-up.
+  and recommended next steps.
+- **2026-08-21 (same day, resolution)**: Operator ruled on the chain-convention contradiction ("KALSHI-PERP is not a
+  chain"). Shipped `market-tick-data-service@f7cdd18b21` (narrow `_CHAINLESS_VENUES` carve-out in
+  `_defi_manifest.py`; bundled an unrelated same-day SPORTS-MVP registry re-pin needed for a clean re-gate — 6
+  venues retired per `sports_bookmaker_roster_classification_2026_08_21.md`). Then live-verified the 567-row
+  historical re-emit was already fully complete (58/58 days, chain="" throughout) before this session started — no
+  new write was needed. Codex updated: `/codex/02-data/defi-canonical-naming-ssot.md` § "On-chain perp CLOBs are
+  CeFi, NOT DeFi" now documents the chainless-venue pattern. Last open todo flipped `[x]`. **All 23 todos now done.**
+  Archival itself is NOT done here — `defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md` is the machine-gated
+  finalize plan for this doc and owns the actual 6-step archival ritual as one coordinated action alongside its own
+  substantial reconciliation scope (source-doc checkbox reconciliation + a 20-item Deferred re-check); that plan is
+  now unblocked (`gate_on_depends: true` on this doc's all-23-done state) and will pick this up on its own dispatch.
+  `status:` frontmatter deliberately stays `active` (not `complete`) — `check_terminal_status_archived.py` fires
+  unconditionally on any terminal-status doc still in `plans/active/` regardless of `archive_exempt`, so the status
+  flip and the archival `git mv` belong in the SAME commit per the archival ritual; that commit is the finalize
+  plan's own todo 4, not this one.

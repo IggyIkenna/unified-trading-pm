@@ -21,13 +21,13 @@ summary: >-
   `book_snapshot`-only, unrelated `chain=None` call; no dedicated KALSHI-PERP chain-restamp script exists in
   `scripts/`). Paused before any write — did not execute the historical re-emit, did not flip the plan's todo, did not
   archive the plan.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, cefi]
 stage: [data]
 repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer]
-tags: [defi, cefi, kalshi-perp, manifest, chain-axis, data-correctness, blocked]
+tags: [defi, cefi, kalshi-perp, manifest, chain-axis, data-correctness, resolved]
 related:
   [
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
@@ -47,7 +47,7 @@ estimate_calibrated_ai_days: 0.5
 assigned_role: data_engineer
 drift_direction: unknown
 depends_on: []
-resolved_by:
+resolved_by: market-tick-data-service@f7cdd18b21
 locked_by:
 source: >-
   Discovered live 2026-08-21 while executing defi_satellite_ao_dispatch_batch2_2026_07_26.md's last open todo
@@ -64,6 +64,12 @@ context_scope:
 ---
 
 # KALSHI-PERP cefi perp_funding manifest chain convention contradiction
+
+> **🟢 RESOLVED 2026-08-21** — operator ruled "KALSHI-PERP is not a chain." Fixed + shipped
+> `market-tick-data-service@f7cdd18b21` (narrow `_CHAINLESS_VENUES` carve-out); codex updated
+> (`/codex/02-data/defi-canonical-naming-ssot.md`); the 567-row historical re-emit this contradiction blocked was
+> found already complete via a live full-window query. Full detail in the Resolution section below. Archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual.
 
 ## What was measured (live, 2026-08-21)
 
@@ -167,8 +173,63 @@ case — paused here rather than writing either value into the live 30.8M-row CE
    `day=2026-07-22` matches the audit exactly) but was not committed — it hardcoded `chain="KALSHI_PERP"` per the
    pre-discovery understanding and would need re-deriving once step 3 lands.
 
+## Resolution (2026-08-21)
+
+**Operator ruled: KALSHI-PERP is not a chain.** The live manifest's real capture history (`chain=""` on 100% of
+every real row) was right; `perp_funding_handler.py`'s hardcoded `chain="KALSHI_PERP"` workaround was wrong. Scope
+extended to POLYMARKET-PERP by the identical reasoning already documented in that same module's docstring (both
+CFTC-regulated, zero underlying blockchain) — not extended to HYPERLIQUID (a real L1, architecturally different; its
+own observed `chain=""` in production is a separate, not-yet-ruled-on finding, noted below).
+
+**Code fix shipped**: `market-tick-data-service@f7cdd18b21`.
+- `_defi_manifest.py`: added an explicit `_CHAINLESS_VENUES = frozenset({"KALSHI-PERP", "POLYMARKET-PERP"})`
+  allowlist; `_build_row_key` now accepts a blank `chain` for exactly these two venues, raising `BlankChainError`
+  for every other (still chain-bound) DeFi-family venue exactly as before — the A4-full invariant is narrowed, not
+  weakened.
+- `perp_funding_handler.py`: removed the `kalshi_perp`/`polymarket_perp` entries from `_chain_map` (both now fall
+  through to `chain=""` via `.get(protocol, "")`); rewrote the misleading 2026-07-30 "load-bearing workaround"
+  comment.
+- `tests/unit/test_perp_funding_handler.py`: updated the one assertion that hardcoded the old wrong value.
+- Full `quality-gates.sh` green (exit 0) both before and after a same-day sports-MVP registry fix (below) had to be
+  folded in to get a clean re-gate.
+- Codex updated: `/codex/02-data/defi-canonical-naming-ssot.md` § "On-chain perp CLOBs are CeFi, NOT DeFi" now
+  documents the chainless-venue pattern and the `_CHAINLESS_VENUES` allowlist as the sanctioned mechanism for any
+  future chainless CeFi venue piggy-backing on this recorder.
+
+**Unrelated pre-existing blocker found + fixed in the same ship** (needed for `quickmerge`'s full re-gate to pass at
+all, zero relation to the chain question): a same-day, legitimate operator ruling
+(`sports_bookmaker_roster_classification_2026_08_21.md`) retired 6 SPORTS venues (BETMGM/BETOPENLY/BETWAY/NOVIG/
+ONEXBET/PROPHETX) from UAC's live registry; `market-tick-data-service`'s hand-listed `_SPORTS_MVP_SHARDS` shadow
+constant (`scripts/pipeline_e2e_check.py`) and two dependent hardcoded shard-count assertions hadn't been re-pinned
+yet. Fixed in the same commit (re-pinned the set + counts 31→25 / 39→33), verified against the live UAC registry
+state, not guessed.
+
+**Surprise finding #1 fully resolved — the historical re-emit itself turned out to already be complete.** A live,
+full-window (not sample-day) query of the CEFI manifest for `(venue=KALSHI-PERP, data_type=perp_funding)` across the
+entire 2026-05-29..2026-07-25 window found **58/58 days present, zero missing, chain="" throughout** (53 `captured` +
+5 `empty_confirmed` for the pre-real-data 2026-05-29..2026-06-02 edge; the 3 originally-flagged "zero-object" gap
+days 2026-07-17/20/21 are ALSO `captured` with real row_count=39 — some undocumented process, evidently more
+thorough than the original stale-DEFI-path-only scope audit, already filled them). The CEFI-path GCS objects are
+likewise already fully present for the sample day checked. **The original 567-row re-emit this issue blocked never
+needed to run in this session — it was already done, by an unidentified prior process, before this investigation
+started.** Origin still unknown; not chased further since the outcome (complete, correct, chain="" throughout) is
+independently verified and the code fix now makes that state self-consistent with the codebase going forward too.
+
+**Not investigated / left open (separate, smaller, not blocking)**: the deployment-drift question in the original
+"Not investigated further" section below (whether the previously-deployed MTDS build was behind `fb32fb65`) no longer
+needs resolving — the code fix supersedes it either way. HYPERLIQUID's own observed `chain=""` in production
+(un-ruled-on) was initially left as only a code comment + this note, not a tracked follow-up — a hard-rule violation
+(prose-only follow-up) caught in review. **Filed properly 2026-08-21**:
+`issues/defi_cefi_hyperliquid_perp_funding_manifest_chain_contradiction_2026_08_21.md`, with a tracked `- [ ]` todo.
+
 ## Progress Log
 
 - **2026-08-21**: Discovered while executing `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s last open todo.
-  Filed this doc; did not write to production; did not flip the plan todo; did not archive the plan (it still has
-  one genuinely-open item, now blocked on this).
+  Filed this doc; did not write to production; did not flip the plan todo; did not archive the plan (it still had
+  one genuinely-open item, then blocked on this).
+- **2026-08-21 (resolution)**: Operator ruled on the chain-convention question. Shipped the code fix
+  (`market-tick-data-service@f7cdd18b21`, bundled with an unrelated same-day sports-MVP registry re-pin needed for a
+  clean re-gate), updated codex, and found via a full-window live query that the historical re-emit this issue
+  blocked was already complete (58/58 days, chain="" throughout) before this session started. Flipped
+  `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s last open todo (all 23 now done). Archival of that plan itself
+  is owned by its own machine-gated finalize plan, now unblocked — not done in this session. Status: resolved.
