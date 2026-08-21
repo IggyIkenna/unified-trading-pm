@@ -159,9 +159,9 @@ impression:
 
 ### DeFi by primitive — yield/vault aggregators
 
-- [ ] [BACKEND] P1. Audit the yield-aggregator group: `beefy.py`, `convex.py`, `yearn.py`, `pendle.py`.
+- [x] ✅ [BACKEND] P1. Audit the yield-aggregator group: `beefy.py`, `convex.py`, `yearn.py`, `pendle.py`.
       Checklist point 5 (approval scope) and point 3 (vault-share/withdrawal input validation) matter most.
-      Done-when: same evidence bar as above.
+      Done-when: same evidence bar as above. — execution-service@audit-only + evidence: code review of Beefy, Convex, Yearn v3 ERC4626, and Pendle SY/YT wrappers; honest live-mode capability flags verified; no production code changed.
 
 ### CeFi/TradFi
 
@@ -177,11 +177,11 @@ impression:
       `kraken_ws_client.py`, `_native_base.py`, `_rate_limit.py`. Checklist point 2 (signing correctness) is the
       primary risk. Done-when: same evidence bar as the CCXT group above, full per-file checklist (no
       spot-check shortcut — these are exactly the higher-risk, hand-rolled implementations). — execution-service@audit-only + evidence: exact per-file checklist record in Progress Log; no production code changed.
-- [ ] [BACKEND] P1. Audit the TradFi gateway adapters: `cboe_adapter.py`, `cme_adapter.py`, `fx_adapter.py`,
+- [x] ✅ [BACKEND] P1. Audit the TradFi gateway adapters: `cboe_adapter.py`, `cme_adapter.py`, `fx_adapter.py`,
       `ibkr_tradfi.py`, `ice_adapter.py`, `nasdaq_adapter.py`, `nyse_adapter.py`. Different auth model than
       crypto venues (session/gateway auth, not API-key HMAC) — checklist point 2 needs re-reading for what
       "signing" means in this context (session token validity/renewal) before applying it literally.
-      Done-when: same evidence bar as above.
+      Done-when: same evidence bar as above. — execution-service@audit-only + evidence: base `IbkrTradFiAdapter` and 6 venue subclasses reviewed; structural mode guards and simulation routes verified; no production code changed.
 
 ### Sports / prediction
 
