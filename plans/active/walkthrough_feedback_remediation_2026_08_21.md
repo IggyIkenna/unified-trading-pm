@@ -672,26 +672,40 @@ successor plan, the work remains tracked here as still-open todos, not lost).
       client-reporting-api's `enforce_entitlement` documents); external callers denied HTTP 403 the moment
       `auth.org_id != identity.client_id` — deny-by-default, including the empty/absent case. —
       `execution-service@0aa709f076` (same commit as the todo above).
-- [ ] [SCRIPT] P0. client-reporting-api: secure or disable `GET /api/v1/stream/reports` (`reports_stream.py`) —
-      verified 2026-08-21 still true: it is the only route in the service mounted outside the
-      `_authenticated_router` wrapper (`api/main.py`'s `dependencies=[Depends(_api_auth)]` block), so it carries
-      no auth dependency at all and fans out every published report event for every client with no `client_id`
-      scoping. CTO handoff correction "Global report stream lacks authentication/scoping" (Security/P0) — no
-      owning plan/issue found by grep. Disclosed honestly in the doc's §05 callout already; this todo is the
-      code-side fix.
-- [ ] [SCRIPT] P1. client-reporting-api: apply `enforce_entitlement`/`require_internal` to the 13 routes confirmed
+- [x] [SCRIPT] P0. client-reporting-api: secure or disable `GET /api/v1/stream/reports` (`reports_stream.py`) —
+      ✅ Fixed — `client-reporting-api@ef90afc547`. Moved the route inside `_authenticated_router` (blanket
+      `create_api_auth` token check, 401 without one) and added `require_internal(auth)` at the route level (the
+      queue has no per-`client_id` scoping, so internal-only is the strictest correct gate — judgment call noted).
+      Regression-tested in `tests/unit/test_entitlement_backfill.py::TestReportsStreamAuth` (401 unauthenticated,
+      403 external, internal opens the stream without raising). `platform-api-reference.html` §05 updated to match.
+- [x] [SCRIPT] P1. client-reporting-api: apply `enforce_entitlement`/`require_internal` to the 13 routes confirmed
       2026-08-21 to call neither today (`alerts.py`, `compliance.py`, `documents.py`, `docusign.py` in full, plus
-      `reporting/investor_relations_archive.py`) — any authenticated caller of any `org_id` can currently reach
-      them (still only behind the blanket token check). CTO handoff correction "Authenticated reporting routes
-      lack confirmed entitlement checks" (Security/P0) — no owning plan/issue found by grep. Disclosed as `? check`
-      in the doc's §05 endpoint index already; this todo is the code-side fix.
-- [ ] [SCRIPT] P2. client-reporting-api: remove or sandbox-gate the unconditionally-fixture routes
+      `reporting/investor_relations_archive.py`) — ✅ Fixed — `client-reporting-api@ef90afc547`. All 13 enumerated
+      independently (matched the CTO count): `compliance.py`'s 4 routes + `documents.py`'s `POST /upload-url` and
+      `GET /` (list) are `enforce_entitlement`-scoped via their existing `org_id`/`client_id` params;
+      `documents.py`'s `GET /{document_id}/download-url` and `docusign.py`'s `send-for-signature`/
+      `signature-status` resolve the document's real owning org from the shared store and entitlement-scope to
+      that, falling back to `require_internal` when unresolvable (live-mode uploads don't persist ownership yet —
+      fail closed, not a caller-supplied-org trust); `alerts.py`, `documents.py`'s `DELETE`, `docusign.py`'s
+      webhook, and `investor_relations_archive.py` are `require_internal` (no client-scoping param exists on any of
+      them — strictest plausible gate, each choice noted in the code). Per-route-class tests (entitled/unentitled
+      403/unauthenticated 401) in `tests/unit/test_entitlement_backfill.py`. `platform-api-reference.html` §05
+      endpoint index + callouts updated to match.
+- [x] [SCRIPT] P2. client-reporting-api: remove or sandbox-gate the unconditionally-fixture routes
       (`GET /api/v1/exports/trades`, `/coin-breakdown`, `/daily-summary`, `/hourly-snapshots` —
       `MOCK_TRADES`/`MOCK_COIN_BREAKDOWN`/`get_mock_performance_summary()`, none gated by `CLOUD_MOCK_MODE`, plus
-      DocuSign envelope status via `MOCK_ENVELOPES`) so production responses are never fixture data regardless of
-      environment. CTO handoff correction "Some reporting endpoints always return fixtures" (Integrity/P0) — no
-      owning plan/issue found by grep. Disclosed in full in the doc's §05 "real vs fixture" callout already; this
-      todo is the code-side fix.
+      DocuSign envelope status via `MOCK_ENVELOPES`) — ✅ Fixed — `client-reporting-api@ef90afc547`. `/trades` now
+      reuses the canonical ledger fills, falling back to backfilled history; `/coin-breakdown` reuses
+      `compute_coin_breakdown` (same engine `performance.py`'s real route uses, own honest column set — no
+      entry/current-price/cost-basis padding); `/daily-summary` reuses `compute_monthly_returns` over the real
+      equity curve (own reduced column set, `{month, return_pct}` only — that's all the real engine produces);
+      `/hourly-snapshots` has no real data source at all (no hourly-granularity equity store exists), so real mode
+      returns an explicit labeled "No data" rather than relabeling daily data as hourly. All four fall back to the
+      pre-existing fixture only under `CLOUD_MOCK_MODE=true`; an empty real result is an explicit "No data" row,
+      never a silent fixture. DocuSign envelope status was checked and found already honest — see the follow-up
+      todo below. Tests in `tests/unit/test_exports_honesty.py` (mock-mode fixture unchanged, real-mode reuses the
+      real reader, empty real result = explicit "No data"). `platform-api-reference.html` §05 "real vs fixture"
+      callout updated to match.
 - [ ] [SCRIPT] P2. client-reporting-api: side-discovery from the P2 fixture-honesty fix above — DocuSign envelope
       status (`GET /api/v1/documents/{document_id}/signature-status`) was checked and found ALREADY honest
       (`docusign.py`: `MOCK_ENVELOPES` only under `CLOUD_MOCK_MODE=true`, live-mode returns an honest `404` rather
