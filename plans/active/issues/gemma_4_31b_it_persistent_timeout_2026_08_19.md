@@ -19,6 +19,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, gemma, nvidia, nim, timeout, litellm, model-routing]
 related:
   [
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/active/codex_mcp_tool_use_bridge_2026_08_18.md,
     /codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md,
   ]
