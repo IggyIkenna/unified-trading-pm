@@ -55,6 +55,7 @@ Integration Guide → https://claude.ai/code/artifact/952680c2-2bda-4735-b298-8e
 | Republish BOTH artifacts once lanes land | not done (same paths/URLs) | lanes above |
 | BETMGM/BETWAY historical rows disposition | operator-owned (delete-safety) | operator |
 | Kalshi perps TRADING integration (DATA landed instruments-service@2dcee7e149) | operator-owned (venue rights) | venue |
+| MTDS `_write_prefix_candidates` multi-hyphen venue/chain defect fix (`SOLANA-NATIVE-SOLANA`→`venue=SOLANA-NATIVE/chain=SOLANA/`, root-caused to `mtds@06531f00`) | fix verified locally (target test 10/10; full isolated-worktree suite 11114 passed / 28 skipped / 1 xpass, only 1 unrelated collection error), NOT landed | `market_interface/sports/registry.py:67` raises `ValueError: Unknown sports venues in adapter registry: {'onexbet'}` at import — confirmed live on `origin/live-defi-rollout@1e2baca8` (not a local-tree artifact), blocking the FULL quality-gate for ANY MTDS quickmerge right now; tracked in `issues/sports_bookmaker_roster_classification_2026_08_21.md` (in-flight 6-bookmaker cross-repo removal) — retry once that lands |
 
 ## Todos
 
