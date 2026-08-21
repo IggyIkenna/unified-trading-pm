@@ -107,16 +107,22 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P0. 1. **MTDS writer fix — Solana glued-venue double-glue.** Find the writer emitting
-      `venue={PROTOCOL}-SOLANA` + `chain=SOLANA` + filename `{PROTOCOL}-SOLANA-SOLANA:...` for solana_lending
-      `risk_params` (KAMINO/MARGINFI/SOLEND) and check the SOLBLAZE lst_rates path for the same class. Fix to bare
-      `venue={PROTOCOL}` + `chain=SOLANA` + canonical id `{PROTOCOL}-SOLANA:{ITYPE}:{SYM}` per
-      defi-canonical-naming-ssot. QG green + quickmerge. (repo: market-tick-data-service)
-- [ ] [SCRIPT] P1. 2. **Rebuild-scan legacy-path guard.** `rebuild_defi_manifest.py` scan re-registers retired legacy
-      data_type objects (`dex_pools` re-registered 2026-08-12 after 2026-08-05 retirement). Add a durable
-      skip-legacy-vocabulary guard (retired data_types + glued defi venue segments) so retirements stick. QG +
-      quickmerge. (repo: market-tick-data-service)
-- [ ] [DATA] P0. 3. **Purge Class-A 22 glued phantom venues.** Safe-idempotent + self-justified per operator ruling
+- [x] [SCRIPT] P0. 1. ✅ **MTDS writer fix — Solana glued-venue double-glue.** — market-tick-data-service@36e4c830:
+      root cause `_lending_grain.py:141-145` `_PROTOCOL_TO_CANONICAL_VENUE` glued values (feeds
+      risk_params/lending_indices handlers; `write_defi_rows` glues AGAIN) → bare KAMINO/SOLEND/MARGINFI;
+      `solana_lst_archival.py:737,757` → bare SOLBLAZE; `_normalize_venue` false docstring corrected. 18 tests.
+      Content-verified on origin/live-defi-rollout.
+- [x] [SCRIPT] P1. 2. ✅ **Rebuild-scan legacy-path guard.** — market-tick-data-service@36e4c830:
+      `_rebuild_defi_retired_guard.py` wired into `scan_and_rebuild` (retired `dex_pools` + double-glued-id detector
+      via UAC `split_glued_venue_chain`; `dex_swaps` deliberately EXCLUDED — real un-migrated content). 12 tests.
+      Content-verified on origin.
+- [x] [DATA] P0. 3. ✅ **Purge Class-A 22 glued phantom venues.** — APPLIED 2026-08-21 20:02 London: deleted exactly
+      4,834 rows (pass-1 count == live-measured expectation, per-venue counts in session log task3_apply_kleene8.log);
+      pre-write server-side snapshot `_index/snapshots/pre_evm_glued_phantom_venue_purge_*.parquet` + `.bak`; CAS
+      generation-match write, new generation 1787338958360429; consolidator paused for the write + re-enabled after.
+      Kleene-mask fix was required (NULL chain + non-Kleene or_/and_ nulled the mask). Authorized by the operator
+      ruling recorded in this plan's banner (§ Operator rulings 2026-08-21,
+      /plans/active/defi_distinct_values_canonical_cleanup_2026_08_21.md). Original scope text: Safe-idempotent + self-justified per the banner ruling (/plans/active/defi_distinct_values_canonical_cleanup_2026_08_21.md § Operator rulings)
       (2): rows are phantom `captured` with verified-zero backing objects; per-venue prefix re-verification runs
       IMMEDIATELY before each delete inside the same tool run (delete-safety §phantom path; prefix_tpls must cover the
       glued shape). Use the existing IS/MTDS reconcile tooling — never a hand-rolled index rewrite. Evidence: per-venue
