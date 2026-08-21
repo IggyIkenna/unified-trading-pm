@@ -95,7 +95,7 @@ source: >-
 
 ## From `execution_state_does_not_survive_restart_2026_08_20.md`
 
-- [ ] [REVIEW] P1. **Rename or gut `execution-service/execution_service/pre_crash_checkpoint.py`.** It checkpoints
+- [x] ✅ [REVIEW] P1. **Rename or gut `execution-service/execution_service/pre_crash_checkpoint.py`.** It checkpoints — execution-service@f89497a825 + evidence: sanctioned tests slice passed (8,909 passed, 22 skipped, 1 XPASS; 82.68% coverage) and lint-codex slice passed; quickmerge execution-service content checks passed, while its shared adapter-contract post-check reported 2 unrelated UI baseline regressions
       nothing (a SIGTERM handler + an 85%-RSS watchdog, both converging on one `logger.critical` + `sys.exit()` —
       no state serialization, nothing reads it back) — the name asserts a guarantee the file does not provide.
       Rename to something accurate (e.g. `crash_alert.py`/`oom_watchdog.py`) or gut the misleading docstring/name.
