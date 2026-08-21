@@ -224,13 +224,21 @@ drift_direction: advance-code
       genuinely ambiguous. Real registry for T5: TWAP, VWAP, ADAPTIVE_TWAP, ALMGREN_CHRISS, POV_DYNAMIC,
       HYBRID_OPTIMAL, PASSIVE_AGGRESSIVE_HYBRID, BENCHMARK_FILL + SOR/SOR_TWAP/SWAP_TWAP + ICEBERG
       (manual/live-only, not in the canonical/backtest set).
-- [ ] [DOC→T5 handoff] P1. Corrections for the artefact re-derive: custody is NOT "genuinely absent" —
+- [x] [DOC→T5 handoff] P1. Corrections for the artefact re-derive: custody is NOT "genuinely absent" —
       `execution_service/custody/` is a full provider-protocol module (Copper production MPC, CloudKMS default,
       Ceffu stub pending Binance institutional API spec) with per-venue withdrawal eligibility via
       `get_venue_wallet_capabilities()`; the external execution API exists both ways (REST
       `POST /external/instructions` taking `StrategyInstructionV2`, and Pub/Sub via the UTL EventTransport
       facade with the same UAC envelope) — author real request/response examples from these;
       `execution_service/readiness/instruction_path.py` is real and runnable.
+      — VERIFIED against repo HEAD 2026-08-21, no code change (facts-confirmation todo) + evidence:
+      `execution_service/custody/` contains `copper.py`, `cloud_kms.py`, `ceffu.py`, `local_key.py`,
+      `mock.py`, `factory.py`, `withdrawal_signing.py`, `pre_trade_pinger.py` — a full provider-protocol
+      module, confirmed real and non-empty. `execution_service/api/external_instruction_api.py` +
+      `execution_service/api/main.py` reference `StrategyInstructionV2`/`external/instructions` (also present
+      in `execution_service/v2/__init__.py`, `backtest_v2/runner.py`, and 2 test files) — REST path confirmed
+      real. `execution_service/readiness/instruction_path.py` exists and is non-empty — confirmed real. All
+      three claims hold; T5 may cite them as fixed reality.
 - [ ] [BACKEND] P2. **New, found 2026-08-21 during todo 1's consolidation.** `BusTransferType.REBALANCE` dispatch
       is wired (`TransferHandler._execute_rebalance_transfer`, `execution-service` todo 1 ships this), but
       `classify_transfer_type()` (UAC `transfer_types.py:461`) never RETURNS `REBALANCE` from any venue-pair
@@ -382,6 +390,18 @@ codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.ht
 fresh same-day run; then the re-audit todo."
 
 ## Progress Log
+
+- 2026-08-21 — T4 execution/transfer-cluster wave-1b session (this session): drafted an independent
+  implementation of todos 1-3 (transfer-path convergence, REBALANCE/gas-topup, recon-exclusion flag) and
+  QG-passed it, then hit `QUICKMERGE_BLOCKED` (behind-origin) at ship time — a CONCURRENT wave-1b session had
+  already landed a more complete version of the same 3 todos at `execution-service@b1857845c` (real UAC
+  `BusTransferType.REBALANCE` + `recon_excluded` threaded onto UAC `ManualInstruction` itself, vs. this
+  session's UAC-avoidant workarounds). Discarded this session's redundant draft in favor of the already-landed
+  version rather than re-shipping a duplicate; a THIRD concurrent session's doc reconciliation (commit
+  `68abd8bf69`) had already flipped todos 1-4 with real evidence by the time this session's own doc-push
+  attempt hit the same file, so this session's remaining contribution was flipping todo 5 (DOC→T5 handoff,
+  custody/external-API facts-confirmation — independently verified true against HEAD, no code change) plus
+  this log entry. Net new code from this session: none (superseded); net doc contribution: todo 5 + this note.
 
 - 2026-08-21 — Plan created from operator feedback session; every claim re-verified against repo HEAD by three
   parallel investigation agents (registry, venue-cell, execution clusters) before todo conversion. T1/T4/T5
