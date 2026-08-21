@@ -123,6 +123,61 @@ models, unrelated to this defect.
 - [ ] [BACKEND] P2. **Add normalizer version and recovery epoch** to the canonical envelope, so a replay can tell
       which code produced a stored event.
 
+## Findings — full connector timestamp-semantics audit (2026-08-21)
+
+Audited all 65 files in `market_tick_data_service/live/connectors/` (excludes the 3 underscore-prefixed shared bases
+— `_defi_ws_blocked_credentials_base.py`, `_onchain_liquidation_poller.py`, `_subgraph_polling_connector.py` — which
+are not themselves registered connectors). Method: `rg -n "timestamp\s*="` + `rg -n "^\s*(ts|now|tick_ts)\s*="` across
+the directory to find every `ReceivedTick(...timestamp=...)` construction site and its variable's derivation, then
+read each helper function (`_parse_ts`/`_parse_msg_ts`/`_ts_from_iso`) and each BLOCKED-* scaffold's header in full.
+A file that subclasses/retags another already-classified connector's tick (e.g. `okx_spot_ws.py` retagging
+`okx_ws.py`'s output) inherits that connector's classification rather than being independently re-derived.
+
+**Legend**: `exchange (fallback)` = primary path parses an exchange-supplied timestamp field, falls back to
+`datetime.now(UTC)` only on a missing/unparseable field. `arrival` = always `datetime.now(UTC)`, no exchange field
+ever consulted. `mixed` = the file has two distinct tick-emission paths with different semantics. `scaffold (N/A)` =
+`BLOCKED-CREDENTIALS`/`BLOCKED-BUILD`/`BLOCKED-UPSTREAM-OUTAGE` stub with no live `stream()` body — no tick is ever
+emitted today, so no timestamp semantic exists to classify yet.
+
+**exchange (fallback)** — 37 files: `aave_liquidations_ethereum_ws.py` (on-chain event time via ISO parse),
+`aster_book_liq_ws.py` (retags `binance_futures_ws`/`binance_futures_book_ticker_ws`), `binance_futures_ws.py`,
+`binance_futures_book_ticker_ws.py`, `binance_spot_ws.py` (retags `binance_futures_ws`), `bitfinex_futures_ws.py`
+(subclasses `bitfinex_spot_ws`), `bitfinex_spot_ws.py`, `bitget_futures_ws.py` (subclasses `bitget_spot_ws`),
+`bitget_spot_ws.py`, `bybit_ws.py`, `bybit_futures_book_ticker_ws.py`, `bybit_spot_ws.py` (retags `bybit_ws`),
+`coinbase_cde_ws.py` (ISO `raw_time`), `coinbase_spot_ws.py` (ISO `raw_time`), `databento_tradfi_ws.py` (`ts_event`,
+already known), `deribit_ws.py`, `deribit_book_ticker_ws.py`, `hyperliquid_ws.py` (`ts_ms`), `hyperliquid_l2book_ws.py`,
+`kalshi_ws.py` (`ts_ms`→`ts_s`→now 3-tier), `kalshi_clob_ws.py` (`_parse_ts`), `kalshi_perp_ws.py`,
+`kalshi_trades_ws.py` (`_parse_ts`), `kraken_futures_ws.py`, `kraken_futures_book_ticker_ws.py`, `kraken_spot_ws.py`
+(ISO `raw_ts`), `okx_ws.py`, `okx_futures_ws.py`, `okx_futures_book_ticker_ws.py`, `okx_spot_ws.py` (retags `okx_ws`),
+`okx_spot_book_ws.py` (retags `okx_futures_book_ticker_ws`), `pacifica_solana_perp_ws.py`, `polymarket_clob_ws.py`
+(`_parse_msg_ts`, epoch), `polymarket_trades_ws.py` (`_parse_msg_ts`), `tardis_machine_ws.py` (`_ts_from_iso`, tardis's
+own ISO ts), `upbit_book_ws.py`, `upbit_spot_ws.py`.
+
+**arrival (always `datetime.now(UTC)`)** — 11 files: `binance_spot_book_ws.py` (depth/book-snapshot builder called
+with `datetime.now(UTC)` unconditionally — the vendor gives no per-snapshot exchange ts), `coinbase_book_ws.py` (same
+shape), `hyperliquid_ticker_ws.py` (already known, `test_timestamp_is_arrival_time` confirms), `jito_defi_ws.py`,
+`jupiter_solana_ws.py`, `morpho_defi_ws.py`, `odds_api_ws.py`, `orca_defi_ws.py`, `phoenix_ws.py`, `polymarket_ws.py`
+(the base WS ticker path — distinct from `polymarket_clob_ws.py`/`polymarket_trades_ws.py`, which DO parse an exchange
+ts), `raydium_defi_ws.py`.
+
+**mixed (two distinct emission paths)** — 2 files: `curve_defi_ws.py` (one path emits `now` i.e. arrival, a second
+emits `tick_ts` derived from an on-chain `ts_unix` with arrival fallback — needs code-owner input on which path is
+live/primary), `dex_swap_uniswap_v3_ws.py` (same shape: one `tick_ts`-from-block-time path, one plain `now` path).
+
+**scaffold (N/A — no live emission yet)** — 15 files, all header-confirmed `BLOCKED-CREDENTIALS` /
+`BLOCKED-BUILD` / `BLOCKED-UPSTREAM-OUTAGE`: `betfair_ws.py`, `coinbase_intx_ws.py`, `defi_lending_scaffold_ws.py`,
+`dex_swap_scaffold_ws.py`, `eigenlayer_ethereum_ws.py`, `ethena_ethereum_ws.py`, `etherfi_ethereum_ws.py`,
+`extended_starknet_perp_ws.py`, `fluid_ethereum_ws.py`, `kamino_solana_ws.py`, `lido_ethereum_ws.py`,
+`lighter_zksync_perp_ws.py`, `marinade_solana_ws.py`, `polymarket_perp_ws.py` (BLOCKED-UPSTREAM-OUTAGE, not
+credentials), `spark_ethereum_ws.py`.
+
+37 + 11 + 2 + 15 = 65, matching this todo's own "~65 connector files" estimate exactly. No file was left
+unclassified. This confirms and generalizes the doc's original dozen-file sample (Databento/exchange, Binance-spot-
+book/Hyperliquid-ticker/arrival): the arrival-time failure mode is not confined to those two — it recurs across every
+book-snapshot/depth-rebuild connector (no per-update exchange ts exists to carry) and every DeFi/on-chain poller that
+doesn't parse the underlying chain event's own timestamp. The P0 schema-split todo above must account for `mixed`
+connectors needing a per-path decision, not just a per-file one.
+
 ## Progress Log
 
 **2026-08-20 — filed.** No code touched. Filed after an operator correction to an orchestrating-session claim; the
@@ -137,3 +192,8 @@ use while an ambiguous one does not fail at all.
   schema/engineering todos and the P2 envelope extension stay `assigned_vm: NA` — a real, correctness-critical
   live-schema change across ~65 connector files needing genuine design judgment. Doc's own `assigned_vm: NA`
   unchanged. Cross-cutting tranche, batch 2 of 3.
+- **2026-08-21 (slot-16)** — Closed the extracted connector-audit todo (`cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`
+  item under "From `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`"). Added the "Findings —
+  full connector timestamp-semantics audit" section above: all 65 connector files classified (37 exchange-time w/
+  arrival fallback, 11 pure arrival-time, 2 mixed-path, 15 BLOCKED-* scaffolds with no live emission). Pure
+  classification, no schema change made.

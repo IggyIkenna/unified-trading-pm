@@ -130,13 +130,17 @@ source: >-
 
 ## From `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`
 
-- [ ] [REVIEW] P1. **Audit every MTDS connector for which timestamp meaning it writes today** — roughly 65
+- [x] ✅ [REVIEW] P1. **Audit every MTDS connector for which timestamp meaning it writes today** — roughly 65
       connector files exist, the source doc's own audit sampled about a dozen (Databento=exchange time,
       Binance-spot-book/Hyperliquid=arrival time). Classify each remaining connector as exchange-time,
       arrival-time, or unclear/needs-code-owner-input. Pure classification, no schema change. Done when: every
       connector file has a recorded classification. Source:
       `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md` todo "Audit every connector for which
-      meaning it writes today".
+      meaning it writes today". **Done 2026-08-21** — all 65 connector files classified (37 exchange-time w/
+      arrival fallback, 11 pure arrival-time, 2 mixed-path needing code-owner input, 15 BLOCKED-* scaffolds with no
+      live emission yet). Full table + methodology filed in
+      `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new "Findings — full connector
+      timestamp-semantics audit (2026-08-21)" section. Evidence: unified-trading-pm@\<pending\>.
 - [ ] [REVIEW] P1. **Close or supersede `resolve_mtds_ts_event_timestamp_naming_collision`** — this exact
       timestamp collision was already identified and named in-code (referenced in `symbol_rules.py` comments) but
       never closed. Find the reference, establish whether that prior work was descoped, forgotten, or partially
@@ -173,6 +177,9 @@ source: >-
 
 ## Progress Log
 
+- **2026-08-21 (slot-16)** — Closed the MTDS-connector-timestamp-audit todo. All 65 connector files classified
+  (37 exchange-time w/ arrival fallback, 11 pure arrival-time, 2 mixed-path, 15 BLOCKED-* scaffolds). Evidence in
+  `market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md`'s new Findings section.
 - **2026-08-21**: drafted by na-eligibility-audit (cross-cutting tranche, batch 2 of 3). All 10 items conflict-
   checked against every existing cross-cutting satellite batch (1b, 13-20) and the consolidated closeout — no
   duplication found.
