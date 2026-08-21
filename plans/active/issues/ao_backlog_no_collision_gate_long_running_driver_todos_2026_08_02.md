@@ -158,3 +158,7 @@ even if nobody revisits it.
   choice) per the 2026-08-03 marker's original analysis, still not mechanically specified.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed, content unchanged since the
+  2026-08-10 marker. Both open items remain genuine build-vs-extend dispatcher-design forks (self-expiring cooldown
+  matching heuristic, state-storage choice) per the 2026-08-03 marker's original analysis — 7 prior audit rounds
+  agree. Doc stays `assigned_vm: NA`.

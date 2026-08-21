@@ -176,3 +176,16 @@ to shape a plan.
   added a minimal one.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ba0e198553e8878a]: KEEP-NA, valid — todo 1 (re-triage 115 [ao] docs) is explicitly self-declared judgment-heavy classification, not mechanical; todo 3 (sequential:true dispatch-order root-cause) touches live-dispatch-critical-path machinery. Todo 2 (tranche-reopening convention) flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a future pass, not split now.
 - **na-eligibility-audit 2026-08-18 (ao tranche)**: RECLASSIFY (per-todo split) — closing the loop on the 2026-08-17 marker's MISCLASSIFIED_LIKELY_AO_ELIGIBLE flag on the tranche-reopening-convention todo: the convention text is already fully specified in the todo itself (transcription into a named codex doc, no open judgment call), so it clears the RECLASSIFY bar on its own. Conflict-checked clear (no other active doc claims this) and extracted to `ao_satellite_ao_dispatch_batch24_2026_08_18.md` item 5. The re-triage todo (self-declared judgment-heavy) and the dispatch-order root-cause todo (live-dispatch-critical-path) both re-confirmed KEEP-NA. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — reaffirmed on both remaining todos. The
+  re-triage-115-docs todo remains self-declared judgment-heavy classification work. The
+  `sequential: true` dispatch-order-violation root-cause todo remains live-dispatch-critical-path investigation
+  work — but note a real overlap worth cross-referencing: `plans/active/issues/ao_dispatch_no_dedup_on_sequential_plans_2026_08_20.md`
+  (filed 2026-08-20, after this todo) investigates a related but distinct symptom of the same underlying gap — that
+  doc's issue is TWO workers concurrently claiming different todos from the SAME in-flight `sequential:true` plan
+  (a dedup/locking gap), while this todo's own two named incidents (batch14_finalize, batch8_finalize) are about
+  todo-N dispatched before todo-N-1, or a todo silently never deriving a backlog row at all (an ordering/derivation
+  gap) — both point at `regen_backlog_from_plan.py`'s `sequential:`-enforcement path, so whoever picks up either
+  investigation should read the other first to avoid duplicating the code-read. Not merging the two docs here (each
+  has its own distinct incident evidence and neither's investigation is complete) — flagging the cross-reference so
+  a future root-cause pass on either treats the other as prior art, not a parallel, disconnected investigation. Both
+  todos here stay judgment/investigation-shaped, not mechanically bounded. Doc stays `assigned_vm: NA`.

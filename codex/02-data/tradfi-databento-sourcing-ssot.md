@@ -262,20 +262,17 @@ Therefore only `ohlcv-1h` / `ohlcv-1d` are **NOT** fetch schemas — requesting 
 `SOURCE_PRIORITY[("tradfi","ohlcv_1s")] = ["databento"]` (databento-only) → `derive_pipeline_mode_for_row` stamps
 `pipeline_mode=batch_databento` (provenance-correct).
 
-**TradFi SOURCE_PRIORITY is DATABENTO-FIRST (2026-06-24, coordinator-directed; supersedes the 2026-06-05/2026-06-11
-massive-first ordering):** `(tradfi, trades/tbbo/ohlcv_1m/ohlcv_15m/options_chain/futures_chain) = [databento, massive]`
-— databento is the PRIMARY [0] (verified-complete for the live MVP universe: Binance tradfi-perp basis tickers 56/56 +
-10/10 representative ETFs in DBEQ.BASIC, GLBX.MDP3 CME futures, XCBF.PITCH CFE/VX which massive never carried). massive
-is now the **FALLBACK [1]** — the broad-corpus bulk-backfill path + the per-venue granular slot via
-`_VENUE_SOURCE_EXCLUSIONS` for any future cell databento genuinely lacks (e.g. a non-US venue). `ohlcv_1s` stays
-databento-only. Live + batch now CONVERGE on databento (the `live_massive` source-stamp bug — `live_source_for_venue`
-resolving via the OLD batch `SOURCE_PRIORITY[0]=massive`, UAC@1205ae44 — is doubly-moot since the batch primary is
-databento too). `massive` IS still live-capable (operator 2026-06-05 — do NOT remove its `Mode.LIVE`) but the sole
-tradfi live WS producer is `databento_tradfi_ws`. Deploy: the live VM bakes UAC from a GCS tarball — a
-`create-code-tarballs.sh` rebuild from clean LDR + relaunch is required to pick up the databento-first `SOURCE_PRIORITY`
-order.
+**TradFi SOURCE_PRIORITY is Databento/Yahoo-only after the 2026-07-19 removal:**
+`(tradfi, trades/tbbo/options_chain/futures_chain) = [databento]`, while daily candle cells use Databento and/or
+Yahoo Finance as declared by the live registry. The former 2026-06-24
+Databento-first ordering superseded the 2026-06-05/2026-06-11 massive-first ordering, but Massive is no longer a
+current source.
+Databento remains primary for the supported live MVP universe (Binance tradfi-perp basis tickers 56/56 + 10/10
+representative ETFs in DBEQ.BASIC, GLBX.MDP3 CME futures, and XCBF.PITCH CFE/VX). `ohlcv_1s` stays
+Databento-only. Live + batch converge on Databento, with Yahoo Finance covering the explicitly registered daily-candle
+cells. The former `live_massive` source-stamp path is historical and must not be reintroduced.
 
-`ohlcv_1m` (and `trades`/`tbbo`) are now databento-first (`["databento","massive"]`). The MTDS download gate
+`ohlcv_1m` uses the current registry's Databento/Yahoo resolution, while `trades`/`tbbo` are Databento-only. The MTDS download gate
 (`umi_tick_provider._DATABENTO_SUPPORTED_DATA_TYPES`) and the IS/MTDS routing both carry `ohlcv_1s`; without it the
 fetch silently wrote 0 rows. Wiring: CME `VENUE_DATA_TYPE_CAPABILITIES` + `EXPECTED_COVERAGE_BY_ASSET_GROUP` +
 `_PER_INSTRUMENT_SHARD_DATA_TYPES` all carry `ohlcv_1s`; `"1s"` is in the `BarTimeframe` closed-set
@@ -422,7 +419,7 @@ would only raise if someone wrongly routed it through the Databento fetch path, 
 **⚠️→✅ CORRECTED 2026-07-25** — this section previously described Barchart as a live VIX 15m source; Barchart was
 RETIRED 2026-06-24 (operator ruling, plan-reconcile finding 375, §A2 B-queue — see
 `/plans/archive/tradfi_massive_dual_source_2026_05_28.md` line 64) and is no longer wired anywhere. Ground-truth
-`SOURCE_PRIORITY` for `("tradfi", "ohlcv_15m")` is now `["databento", "massive", "yahoo"]` (was:
+`SOURCE_PRIORITY` for `("tradfi", "ohlcv_15m")` is now `["databento", "yahoo"]` (was:
 `["databento", "yahoo", "barchart"]`).
 
 The CFE feed (`XCBF.PITCH` dataset) gives **VX futures** (the VIX futures curve). It does **NOT** provide the **VIX cash
@@ -440,7 +437,10 @@ rows sit in the terminal `empty_confirmed` state (not `expected_unattempted`), s
 `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`,
 `/plans/archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`.
 
-## Source provenance is WRITE-STAMPED by the FETCHING adapter — SOURCE_PRIORITY is READ-time only (operator 2026-06-19)
+## Historical source-provenance rule — pre-2026-07-19 Massive dual-source path
+
+The following incident record describes the retired Massive dual-source implementation. It is retained for provenance
+only; current TradFi writes use the live Databento/Yahoo registry and must not add a Massive source selector.
 
 **The bug this fixes.** The OHLCV write path used to stamp `source` + `pipeline_mode` from
 `SOURCE_PRIORITY[(asset_group, data_type)][0]` — the read-time PRIORITY source, NOT the adapter that actually fetched.
@@ -481,7 +481,9 @@ For `("tradfi","ohlcv_1m")` priority is `["massive","databento"]`, so EVERY 1m r
 `plans/archive/2026_06/tradfi_databento_subscription_universe_lockdown_2026_06_18.md` § "Source-provenance write-stamp
 fix".
 
-## Operational gotchas — backfill launchers + live producers (codified 2026-06-21)
+## Historical operational gotchas — pre-2026-07-19 Massive launchers and live producers
+
+The following incident record describes retired launcher behavior and is retained for provenance only.
 
 Learned the hard way (a whole-fleet silent 0-row failure). The TradFi OHLCV **backfill launchers** in
 `deployment-service/scripts/vm/` MUST get three things right or every payload silently fails (rc=0/1, **0 rows

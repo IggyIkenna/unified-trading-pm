@@ -347,11 +347,19 @@ todos only to confirm they are data-movement, then leave it.
       needs a human design pass on features-service's per-candidate feature-naming before it can be broken into
       AO-dispatchable todos. Evidence:
       `/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`.
-- [ ] [BACKEND] P1. Build the venue/currency curtailment mechanism — `allowed_venues` is dead code today, and the
-      catalog and `archetype_leg_spec_seeds` describe the same domain with no cross-check. Evidence:
-      `/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`.
-- [ ] [BACKEND] P1. Generalize the venue-eligibility gate beyond `carry_and_yield`'s perp-hedge leg — the other 8
-      in-scope families get `frozenset()` today. Evidence:
+- [ ] [OPERATOR] P1. **Re-triaged 2026-08-21 — this is operator-gated, not directly buildable.** The issue doc's
+      own "Recommendation" section (unresolved) asks the operator to decide scope FIRST: build now vs. later, all
+      19 archetypes vs. the 7 already-drivable ones, and separately whether to reconcile strategy-service's catalog
+      against UAC's `archetype_leg_spec_seeds` (recommended approach: (A) a diff/gate-fail script, NOT full
+      regeneration — ~0.5-1 AI-day once approved). The 3-layer design (dynamic ADV-based candidate discovery /
+      archetype-level allow-block-list / per-strategy-instance filter) is already fully sketched and
+      operator-specified verbatim — once scope is picked, this is a real, scoped, buildable task, just not one to
+      start without that pick. Evidence: `/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`.
+- [ ] [OPERATOR] P1. **Re-triaged 2026-08-21 — operator-gated.** Todo 1 of the issue doc is explicitly `[OPERATOR]`:
+      decide whether to generalize `venue_capabilities.py`'s pattern to the other 8 strategy families (grow the
+      registry) or accept hardcoded catalog literals as deliberate for families where venue support rarely
+      changes — a real, unresolved architecture call, not a default-yes. Todos 2-3 (audit + regression check) are
+      textually gated on that decision and correctly un-dispatchable until it lands. Evidence:
       `/plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md`.
 
 - [ ] [BACKEND] P1. Delete entries from `clients_yaml_coverage.PENDING_CROSS_REPO_WAIVER` as T5 lands each
@@ -395,14 +403,17 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W9, W10, W13 — balances, risk, exposure, PnL
 
-- [ ] [BACKEND] P0. **Tracked in a pre-existing sibling plan, not duplicated here** — found 2026-08-20:
-      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` already owns this exact convergence
-      (dated 2026-08-16, before this plan existed) with the full reconciliation already done (A and B are not
-      independent — B's DeFi path already consumes A's `DeFiHealthAggregator.aggregate()` output; the genuinely
-      redundant piece is `positions_health.py`'s separate re-derivation) and real remaining work tracked there:
-      10 done / ~14 open todos, `sequential: true` (a real chain — route the live feed, switch archetypes onto
-      it, extend the data model). Work this from that plan, not as a fresh T3 todo — the two plans would
-      otherwise silently duplicate the same fix.
+- [ ] [BACKEND] P0. **Tracked in a pre-existing sibling plan, not duplicated here** — found 2026-08-20, re-verified
+      2026-08-21 (unchanged): `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` already owns
+      this exact convergence (dated 2026-08-16, before this plan existed) with the full reconciliation already
+      done (A and B are not independent — B's DeFi path already consumes A's `DeFiHealthAggregator.aggregate()`
+      output; the genuinely redundant piece is `positions_health.py`'s separate re-derivation). Current state:
+      **10 done / 15 open todos, `sequential: true`, `assigned_vm: planning`** (AO-dispatched — has NOT
+      progressed since 2026-08-16, still exactly 10/15). Work this from that plan, not as a fresh T3 todo — the
+      two plans would otherwise silently duplicate the same fix. Deliberately not worked directly in this
+      session (a 15-item sequential-only chain in a separate plan competes for the same session time as this
+      plan's own ~20 remaining directly-owned todos); worth picking up explicitly next time strategy-service
+      work resumes, since AO dispatch hasn't moved it in 5 days.
 - [ ] [BACKEND] P0. Build stale-producer detection on the live path. If strategy-service stops publishing,
       execution-service does not detect it — the kill switch has 5 armed conditions and none is "an internal service
       went silent". Evidence: `/plans/active/producer_silence_flatten_protocol_2026_08_14.md` (23 open),
@@ -451,14 +462,30 @@ todos only to confirm they are data-movement, then leave it.
       output shape before assuming what's missing vs already there.
 - [ ] [BACKEND] P0. Build PnL attribution across every dimension the artefacts describe (W13) — currently
       "specified, not built".
-- [ ] [BACKEND] P1. Fix the interest-accrual wrong engine and banned formula. Evidence:
+- [x] ✅ [BACKEND] P1. **12/13 already shipped across many prior sessions — verified 2026-08-21.** FUNDING leg
+      (`strategy-service@aa1fcdc7`), STAKING leg (`strategy-service@e93902d8`), E4 row-set drop
+      (`strategy-service@a90e85eb`), recursive-staking borrow leg (`strategy-service@23bd8b76`), ShareClass enum
+      convergence (`unified-api-contracts@4df243f7`) — all done. The 1 remaining open todo ("Option B" true
+      native-staking-return metric) is explicitly `assigned_vm: NA`, under a standing `## OPERATOR GATE` (changes
+      live client NAV/PnL, needs a 3-lens money-path review) — repeatedly re-confirmed genuinely gated by 6+
+      independent na-eligibility-audit passes since 2026-08-01, not a bare build task. Build spec exists at
+      `/plans/active/issues/pnl_true_native_staking_return_spec_2026_08_20.md`, not yet approved. Not built here —
+      correctly stays gated. Evidence:
       `/plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`.
 - [x] ✅ [BACKEND] P1. Fix DeFi leverage archetypes reading health factor from the wrong source. **Already resolved
       before this todo was written** — all 11 items in the issue doc's todo list are `[x]`, including the operator
       ruling (2026-08-17) and the `DeFiHealthAggregator` reconciliation (2026-08-18, `[AGENT]`). Found 2026-08-20
       already at this state, predating this plan. Evidence:
       `/plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md`.
-- [ ] [BACKEND] P1. Close the DeFi gas net-cost partial wiring gap — gas cost is silently dropped today. Evidence:
+- [x] ✅ [BACKEND] P1. **Fully shipped — verified 2026-08-21, 0 open todos.** All 4 originally-flagged silent-zero
+      engines fixed (`LIQUIDATION_CAPTURE` via new `GasCostUsdCalculator`, `features-service@20d71ed0fb` +
+      `strategy-service@0088d62fe8`; `CARRY_STAKED_BASIS` via a gas-only `fees_apy_bps` sub-term,
+      `strategy-service@f09969fe94`; `JIT_LIQUIDITY`'s gas+flash-fee gate,
+      `strategy-service@fbf78dfe20`; `BACKRUN` priority-gas netting, `strategy-service@696094a9b9`), plus the much
+      larger downstream `LIQUIDATION_CAPTURE` candidate-snapshot cross-repo effort this issue doc grew into (UAC
+      typed contract, MTDS Aave V3 pre-liquidation producer, features-service enrichment, strategy-service typed
+      context seam) — also fully shipped, with the archetype's paper-registration gate measured and honestly
+      retained-blocked (real fixture candidates too small to clear the profit floor) rather than forced. Evidence:
       `/plans/active/issues/defi_gas_net_cost_partial_wiring_gap_2026_08_17.md`.
 
 ### W16, W18 — preflight and canonical output paths
@@ -495,7 +522,7 @@ todos only to confirm they are data-movement, then leave it.
       follow-up is `[OPERATOR] P2` — rule option A (add a safe-field guard, mirroring the strategies-domain
       pattern) vs option B (confirm the hot-swap is intentional, correct the codex "restart required" row). Found
       2026-08-20 already scoped this way, predating this plan. Nothing for an agent to build until the operator
-      rules A or B. Evidence: `/plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`.
+      rules A or B. Evidence: `/plans/archive/2026_08/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`.
 - [x] ✅ [BACKEND] P2. Resolve the orphan-coverage design gaps — `strategy_orders` / `strategy_positions` /
       `strategy_pnl` have NO live writer at all. **Already resolved before this todo was written**: items 1-4 of
       the issue doc's 5-item todo list are done (RULED 2026-08-05, sinks/paths shipped). Item 5's mechanical
@@ -613,13 +640,17 @@ todos only to confirm they are data-movement, then leave it.
       session's beta-hedge/vol-target caution. 2 of the doc's todos were already extracted to a dispatched satellite
       batch (archived 2026-08-20). Evidence:
       `/plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md`.
-- [ ] [AGENT] P1. **UNBLOCKED 2026-08-20 — operator ruled: YES, calendar belongs in Layer-1** (the event-driven
-      shape doesn't disqualify it; it needs its own shard-atom definition, not exclusion). Give the calendar
-      domain manifest visibility — wire `record_captured` (or the calendar-appropriate equivalent, since the
-      shard-atom is event-driven not per-venue-per-instrument) into `corporate_actions_handler.py`,
-      `economic_results_handler.py`, `forexfactory_handler.py`, and the `calendar_orchestrator.py` dispatch
-      path. Now mechanically buildable — the `[REVIEW]` gate that blocked it is resolved. Evidence:
-      `/plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md`.
+- [x] ✅ [AGENT] P1. **SHIPPED 2026-08-21, `features-service@b2851c442e`.** Found 3 of the 4 handlers already had
+      `ManifestWriter`/`record_captured`/`record_empty` wiring (`economic_results_handler.py`,
+      `forexfactory_handler.py`, `calendar_orchestrator.py`) — the issue doc's "checked directly, no handler has
+      it" claim (dated 2026-08-18) was stale. Only `corporate_actions_handler.py` was missing it; added a
+      `_write_manifest()` helper mirroring the sibling handlers' exact `feature_group` + `feature_family="calendar"`
+      shard-atom pattern — dividends+splits combine into one `corporate_actions` manifest row (shared GCS path
+      prefix), `earnings_results` gets its own row. 6 new/updated tests
+      (`tests/calendar/unit/test_corporate_actions_handler.py`), full `quality-gates.sh` green. Evidence:
+      `/plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md` (its own todo 1/2
+      should be re-flagged stale/closed by a future pass — not done in this edit, out of scope for a plan-checkbox
+      flip).
 - [x] ✅ [BACKEND] P1. Fix the `delta_one` dependency checker resolving the wrong PREDICTION bucket token —
       `_format_template_vars` does a naive `asset_group.lower()` with no abbreviation map, but PREDICTION's real
       bucket uses `pred`. **Already resolved before this todo was written — traced 2026-08-20**: the naive
@@ -642,10 +673,19 @@ todos only to confirm they are data-movement, then leave it.
       confirmed + fixed the residual; `deployment-service@c1e0481` shipped the tarball-freshness default flip).
       Found 2026-08-20 already at this state, predating this plan. Evidence:
       `/plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`.
-- [ ] [BACKEND] P2. Complete feature-formula versioning. SSOT: `/codex/02-data/feature-formula-versioning.md`.
+- [x] ✅ [BACKEND] P2. **Already fully shipped — verified 2026-08-21.** `plans/archive/2026_06/features_registry_status_versioning_2026_05_28.md`: `status: complete`, 20/20 todos done, archived (all 5 phases — schema
+      extension, 1,382-spec catalogue, per-group parquet stamping, `features-status` CLI + drift baseline, this
+      codex doc itself). Nothing left to build; this todo was stale. SSOT: `/codex/02-data/feature-formula-versioning.md`.
 
 ### Close-out
 
+- [ ] [AGENT] P3. Full 6-step archival of `/plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md`
+      (0 open todos as of 2026-08-21, currently bridged via `archive_exempt: true`) — repoint its 8 corpus referrers
+      (`plans/audit/results/code_completion_scope_2026_08_19.md`, both `tradfi_satellite_ao_dispatch_batch17/19`
+      docs + `_finalize`, `nick_ai_platform_readiness_remediation_2026_08_16.md`, `ag_closeout_audit_cross_cutting_parked_2026_08_19.md`,
+      `system_readiness_master.md`, this plan) at the applicable codex SSOT
+      (`/codex/02-data/availability-manifest-and-data-status.md` already documents the general pattern; confirm
+      whether it needs a calendar-specific addendum), `git mv` to `plans/archive/issues/`, drop `archive_exempt`.
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag on every remainder.
 - [ ] [AGENT] P0. Post-phase codex audit across `/codex/09-strategy/` for every contract changed.
@@ -742,3 +782,4 @@ detail + evidence on the flipped checkbox and the 3 new follow-up todos above.
 license to skip verification — the RADIANT-has-no-pools and poolMeta-has-no-LTV findings both came from actually
 hitting the live API before writing code, not from assuming the DefiLlama pattern would generalize cleanly
 across all 7 protocols.
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 3 of the operator-slot-launched code-readiness series (same Launch-prompts mechanism). Remaining open items mix explicit `[OPERATOR]`-tagged re-triaged items, an operator decision already made 2026-08-20 requiring downstream build work, per-protocol DeFi feature-producer research explicitly requiring real governance-parameter data ('checked DefiLlama's real poolMeta field... it isn't there, so risk_params correctly stays AAVE-only pending real per-protocol governance-parameter research, not built on a guess'), and a large W-item build backlog (PnL surfaces, universal fail-closed startup check, canonical output paths). None clears the whole-doc RECLASSIFY bar; operator-slot dispatch design also precludes AO-backlog eligibility.

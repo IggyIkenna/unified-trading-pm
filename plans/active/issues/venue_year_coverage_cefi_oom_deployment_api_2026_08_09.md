@@ -469,6 +469,15 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       INFRA todo above should be re-run against the deployed revision containing this SHA once it also picks up the
       still-open `filter_to_mvp` fix (mvp scope) for a genuinely clean 3-scope pass.
 
+- [x] ✅ [BACKEND] P0. **Narrow `provenance_breakdown()`'s per-row-group working frame** — live revision
+      `uts-shared-deployment-api-00675-rpm` (100% traffic) still timed out all three cefi scopes at 90s and logged
+      gunicorn worker timeouts/SIGABRT at `data_status_union.py:266` during the group-column `fillna` path. The
+      function copied every manifest column before reducing, although it only uses group keys, cell keys, capture
+      status, transport, and cadence. `deployment-api@d5d1078749` now copies only that required projection, preserving
+      the existing rank/tie-break and output semantics. Full `quality-gates.sh --no-fix`: **5414 passed, 11 skipped**;
+      all gates passed (188s). The live acceptance probe remains the open INFRA todo above and must be rerun after this
+      revision reaches production.
+
 ## Progress Log
 
 - **2026-08-09**: Filed during `cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md`'s real-data verify (findings

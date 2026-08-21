@@ -216,3 +216,4 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
   not new design work.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:8750ba313ec956d0]: KEEP-NA, valid — item 1 is downstream of item 2's operator placeholder; item 2 is explicitly operator-only (needs an owner+target date assigned); item 3 is an unresolved design fork with no stated preference.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — all 3 remaining items stay genuinely gated: item 1 is downstream of item 2's operator placeholder; item 2 is explicitly `[OPERATOR]`-tagged (assign an owner + target date, "not worker-determinable" per its own text); item 3 (`aave_live.py` `paper_trade: bool` arg) is an explicit "decide" design call. No new bounded item found on this re-read.

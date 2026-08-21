@@ -15,7 +15,7 @@ summary: >-
   position-state-safe, or does it need the same enforced/restart-required treatment) does not silently evaporate now
   that the parent doc is archived — this doc exists specifically to keep it a tracked `- [ ]` todo per
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [strategy]
@@ -41,7 +41,7 @@ execution_scope: local-only
 estimate_class: research
 drift_direction: needs-decision
 depends_on: []
-resolved_by:
+resolved_by: operator-ruling-2026-08-21-option-B-live-hotswap-blessed
 locked_by:
 locked_since:
 context_scope:
@@ -51,6 +51,10 @@ context_scope:
     /codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
   ]
 ---
+
+> **📦 ARCHIVED 2026-08-21 — RESOLVED.** Operator ruled option B: the live instrument-universe hot-swap is
+> intentional and safe; the codex row in `/codex/04-architecture/live-strategy-config-hot-reload.md` was
+> corrected in the same turn. No guard added; no successor plan needed.
 
 # Live instrument-universe hot-swap position-state safety — still unruled
 
@@ -85,9 +89,9 @@ Left unruled, the codex SSOT keeps contradicting the shipped code on a live-trad
 
 ## Follow-ups
 
-- [ ] [OPERATOR] P2. Rule A vs B above for live instrument-universe hot-swap position-state safety. Once ruled, either
-      implement the guard in `strategy-service/strategy_service/config_reloaders.py` (option A) or correct
-      `/codex/04-architecture/live-strategy-config-hot-reload.md`'s "Underlying instruments" row (option B).
+- [x] ✅ [OPERATOR] P2. RULED 2026-08-21: **option B — the live hot-swap is intentional and safe.** Codex row
+      corrected in the same turn (`/codex/04-architecture/live-strategy-config-hot-reload.md` "Underlying
+      instruments" now reads ruled-safe with the contradiction preserved as historical context). No guard added.
 
 ## Progress Log
 

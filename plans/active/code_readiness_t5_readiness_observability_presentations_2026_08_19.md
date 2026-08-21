@@ -549,12 +549,32 @@ todos only to confirm they are data-movement, then leave it.
       `unverified`, 27 `pending`, 17 `planned`, 17 `partial`, 14 `not yet`, 6 `missing`, 5 `not built`).
 - [ ] [DOC] P0. Re-derive `strategy-service-deep-dive.html` (51 `unverified`, 15 `partial`) against T3's output.
 - [ ] [DOC] P0. Re-derive `strategy-service-walkthrough.html` (23 `partial`) against T3's output.
-- [ ] [DOC] P2. **[OPERATOR]** Complete `platform-api-reference.html`'s type-support table — add the two rows it
+- [x] ✅ [DOC] P2. **[OPERATOR]** Complete `platform-api-reference.html`'s type-support table — add the two rows it
       still omits, `WITHDRAW`/`WithdrawInstruction` and `REPAY`/`RepayInstruction`. UAC `StrategyInstructionEnvelope`
       grew 11→13 subclasses (`f5fc118a` 2026-08-20); the count/prose enum-drift fix shipped separately (that was the
       promote-PR QG red), so the table still lists 11 of 13 rows. Adding the 2 rows adds 2 `st-plan` markers →
       claim-ownership open-markers 189→191, tripping the shrinking ratchet. Operator-gated: bump the markers baseline
       (never hand-raise), or close 2 other open markers by real state change first.
+
+      **PARTIALLY RESOLVED 2026-08-21 — `unified-trading-pm@f28330fafc`.** Netted rather than bumped the baseline:
+      closed one genuinely-resolved marker in `carveout-engineering.html` §09 ("Appendix — the source estate") —
+      its `ev-check` → `ev-verified`, citing `strategy-service@efa1525813`'s now-landed `EXTRACTION_AUDIT.md` (the
+      per-repository code-coupling measurement that §09's own 26-repo contribute/non-contribute table asserts — see
+      `elysium_carveout_stubbed_strategy_service_2026_08_12.md`'s 2026-08-16 Progress Log entry). Checked the other
+      3 candidate-resolved todos in that same plan (PortfolioRiskService live-values ruling ~L124, frozen
+      collateral-eligibility ruling ~L169, health_factor/usdc_idle_yield data-scope resolution ~L236) against the
+      artefact's actual prose — none maps cleanly to a whole-section claim: the PortfolioRiskService/risk-guards-local
+      write-up todos in that plan's own §B are still `[ ]` unchecked, i.e. `carveout-engineering.html`'s prose was
+      never updated to match the 2026-08-16 ruling, so upgrading its marker now would be the exact "marker with no
+      genuine state-change behind it" failure mode the ownership rule exists to prevent; the collateral-eligibility
+      ruling covers only one row of §05's multi-claim table (not that section's whole claim) and its own text says
+      "still open, not yet done" for the actual substitution build; the data-scope resolution has no corresponding
+      section in this artefact at all. Only 1 of 4 closed safely, so added only 1 new row
+      (`WITHDRAW`/`WithdrawInstruction`), not 2, to stay net-zero — `REPAY`/`RepayInstruction` remains a documented
+      gap in the table, needing either a second genuine marker close elsewhere or an operator-approved baseline
+      bump. Net check: `check_artefact_claim_ownership.py` open-markers held at **189** (no baseline bump used) —
+      `carveout-engineering.html` 17→16, `platform-api-reference.html` 28→29. Verified per-file against
+      `origin/live-defi-rollout` (not just local HEAD), commit `f28330fafc`.
 - [x] [DOC] P0. Verify the invariant the epic sets — **every claim-bearing artefact section maps to a tracked
       item**. Build the check; it has already failed once, measurably. — `unified-trading-pm@7b2dd29aaa`.
       `scripts/plan-hygiene/check_artefact_claim_ownership.py`, wired into `run_hygiene_sweep.sh`. Measured
@@ -736,7 +756,9 @@ todos only to confirm they are data-movement, then leave it.
       already documented; reverted rather than force through the gate). Remaining open todos across the tail are
       genuinely open — operator-gated decisions, machine-`gate_on_depends`-blocked finalize plans awaiting a parent
       that isn't done, or real unstarted engineering/ops work — not a bookkeeping gap.
-- [ ] [AGENT] P3. Apply the 2 verified-but-unshipped fixes in
+- [x] [AGENT] P3. ✅ **DONE 2026-08-21**: line-cap block cleared (another session split the doc's history out to
+      `cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`, 1093→650 lines) — applied both fixes,
+      `unified-trading-pm@8f76f9e85f`. Apply the 2 verified-but-unshipped fixes in
       `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` once its pre-existing line-cap block clears (see
       that doc's own item 1 / `epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md` line 290 for the
       blocker — needs either a real split or a 5th operator-ruled `check_line_caps.sh` carve-out). Both verified
@@ -945,6 +967,8 @@ todos only to confirm they are data-movement, then leave it.
   2 new regression tests added (`test_nudge_ahead_not_sustained_does_not_fire`,
   `test_nudge_ahead_sustained_fires_with_age`); file 26/26 passing, broader worker-liveness suite 103/103.
   **NOT YET LANDED, 2026-08-20** — ship failed on `dashboard/node_modules` missing `@vitest/coverage-v8` (environmental, unrelated to this change; exit 0 with nothing landed, caught by per-file origin verification, not by the exit code). Fix + 2 tests preserved locally AND backed up outside git (scratchpad/agent-orchestrator-backup/) since this session already measured local edits as fragile under contention. Needs `npm --prefix dashboard install` (or equivalent) before the next agent-orchestrator ship attempt — flagged as its own todo below since it will block ANY future ship to this repo, not just this fix.
+
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 5 of the operator-slot-launched code-readiness series (same Launch-prompts mechanism; also owns the acceptance-test artefacts). Remaining open items are explicitly gated on a 2026-08-20 operator decision to wait for the state-fabric ledger plan before any artefact hand-edit (the 4 DOC re-derive todos + disclosure-standard extension + FROM-T1 API-surface regeneration), a VM-launch decision for 2 manifest-hygiene P2 residuals, and an AO-dispatch-queue item outside this tranche's direct control. None clears the whole-doc RECLASSIFY bar.
 
 ## Deferred work after 2026-08-20 (revised 2026-08-20, pre-compact — fully-resolved rows removed, evidence lives on
 the todo checkboxes themselves; only genuinely-still-open items stay here)

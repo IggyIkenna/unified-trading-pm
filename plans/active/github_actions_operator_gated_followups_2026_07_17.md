@@ -728,3 +728,10 @@ genuine host rebuild.
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 4 open items confirmed by direct grep, matching the doc's own most recent full audit (2026-08-10: 'Full read (1001 lines, both pages) + grep confirm 4 open todos, matching phase0=4'). Item 1 (STEP 2d) is dependency-blocked on the still-open digest-drift-sweep investigation per the D3 table's 2026-08-12 correction. Item 2 (bare-host bootstrap) is structurally blocked — the doc itself flags the GCP-ADC leg as 'interactive', i.e. needs a human auth step a worker cannot perform, plus...
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries)
+
+**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — unchanged since the 2026-08-18 verdict
+(11th+ consecutive confirmation). 4 open items confirmed by direct grep: (1) STEP 2d assert-not-decorative,
+dependency-blocked on the still-open digest-drift-sweep investigation; (2) bare-host bootstrap PROVE, structurally
+blocked — the GCP-ADC leg is flagged "interactive" (needs a human auth step), tied to the upcoming planning-VM
+rebuild; (3) the RULED/scheduled operator item, already time-gated per its own dated ruling; (4) the longer-horizon
+REVIEW item, explicitly "NOT recommended to start now." No new facts since 08-18. No `assigned_vm` change.

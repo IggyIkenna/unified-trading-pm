@@ -479,3 +479,7 @@ full per-event detail beyond the summary above.
   confirmation, force-kill-vs-retry-cap ordering, context-plateau detection, re-check learned windows once fleet
   fully on sonnet-5) stay KEEP-NA valid — live-dispatch-critical-path watchdog machinery still being actively
   characterized, consistent with 5+ prior audit passes' caution on this exact doc.
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — re-affirms the 2026-08-17 marker; the
+  4 remaining items (auto-submit /compact confirmation, force-kill-vs-retry-cap ordering, context-plateau detection,
+  re-check learned windows once fleet fully on sonnet-5) still touch live-dispatch-critical-path context-lifecycle/
+  watchdog machinery under active characterization. No new evidence changes the disposition.

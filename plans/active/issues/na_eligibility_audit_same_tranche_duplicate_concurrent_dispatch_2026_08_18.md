@@ -184,3 +184,4 @@ safe outcome was a timing accident, not a property of the current design.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:f6a1c78847a68470]: RECLASSIFY (per-todo split) — todo 2 (harden the same-tranche concurrent-dispatch case) extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 2. Doc stays NA for todo 3 ([OPERATOR] SKILL.md-update decision).
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — sole open item (`[OPERATOR] P3`, decide whether this warrants a SKILL.md update) is an explicit operator-authority preference call over documentation wording, not a bounded/deterministic worker outcome.

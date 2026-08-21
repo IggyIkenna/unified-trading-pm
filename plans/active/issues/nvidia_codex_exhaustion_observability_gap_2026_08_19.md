@@ -62,6 +62,7 @@ source: >-
   accounts touched).
 assigned_role: infra
 drift_direction: none
+archive_exempt: true
 ---
 
 # NVIDIA/Gemma and Codex/Luna have zero exhaustion detection — proactive or reactive
@@ -308,7 +309,8 @@ additions this surfaces, worth stating precisely rather than just appended:
       `setup-token`/`ANTHROPIC_API_KEY` split, but shifts billing from whatever ChatGPT plan is behind the
       current login to metered OpenAI API credits. An operator decision (cost tradeoff), not something to
       switch unilaterally. Repo: agent-orchestrator.
-- [ ] [BACKEND] P3. **Stronger proof, if wanted**: reproduce the NVIDIA 429 through a real (isolated,
+- [x] ✅ [BACKEND] P3. **CLOSED 2026-08-21 (na-eligibility-audit) — moot by construction, doc's own evidence.**
+      Was: "Stronger proof, if wanted": reproduce the NVIDIA 429 through a real (isolated,
       non-fleet) AO dispatch path end-to-end and confirm via the instance's own `activity_log`/
       `AccountUsageRow` whether anything gets recorded — the piece explicitly not done in this doc (see
       "What was NOT done" above). Not urgent — the code-trace + real-429 combination already
@@ -320,8 +322,20 @@ additions this surfaces, worth stating precisely rather than just appended:
       not merely deferred. The adjacent real end-to-end proof this todo asked for WAS achieved for the
       NVIDIA-hosted path before deregistration (real backlog task dispatched via `switch_slot_account`,
       completed successfully, closed a real CI escalation — see 2026-08-20 entry below for the fuller
-      round-robin validation this was part of). Leaving this line item open only as a historical record;
-      no further action possible against it. Repo: agent-orchestrator.
+      round-robin validation this was part of). **Closure evidence**: independently confirmed via
+      `kimi_gemma_provider_onboarding_2026_08_16.md`'s own 2026-08-19/08-20 Progress Log — the two NVIDIA-hosted
+      Gemma accounts (`nvidia-diffusiongemma`, `nvidia-gemma-4-31b-it`) were removed from `accounts.json` and
+      replaced with `gemma-self-hosted` (`agent-orchestrator@5598fd0412`/operator-run SSM swap, 2026-08-19) — the
+      doc's own text already said "no further action possible against it"; formally checked off rather than left
+      as a dangling historical-record open box. Repo: agent-orchestrator.
+
+**`archive_exempt: true`, 2026-08-21 (na-eligibility-audit)**: closing the sole remaining open todo above brings
+this doc to 0/8 open todos, tripping `check_archive_candidates`. Set `archive_exempt: true` (the sanctioned bridge
+per that checker's own header comment) rather than run the full 6-step archival ritual in this pass — the doc is a
+rich, actively-cross-referenced investigation record (`codex_luna_heartbeat_sandbox_network_stuck_loop_2026_08_20.md`
+cites it directly, and `plans/audit/results/code_readiness_allocation_2026_08_19.json` references it) and its
+`status: open`/`resolved_by:` fields are not this pass's call to settle. Flagged as a genuine future archival
+candidate, not resolved here.
 
 - [x] [BACKEND] P1. **Real, separate production bug found + fixed 2026-08-20: codex-bridge 501'd every
       interactive turn, not just resumed ones** — the actual reason Codex/Luna never completed a real turn

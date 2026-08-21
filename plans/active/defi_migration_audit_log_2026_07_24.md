@@ -999,3 +999,4 @@ speed-note (both deferred optimisations, non-blocking).
 - **na-eligibility-audit 2026-08-19**: 7→6 open todos, 1 closed by citation; MISCLASSIFIED item flagged in this
   run's blocks doc (doc at line cap). Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-read end to end; 6 open todos unchanged since the 2026-08-19 verdict (context-scout-only touch on 2026-08-20). All remain gated: GATE C (instruments-store-defi v9 write), Era-B legacy retirement (gated on cefi+tradfi G4 apply complete), and destructive-delete operator sign-off items. Doc stays `assigned_vm: NA`.

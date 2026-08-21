@@ -102,6 +102,13 @@ table, sharing a common row dataclass and helper in `archetype_slots_common.py`.
 consolidate there; each file is a data table for a distinct asset class's legacy dispatch strings, not independent
 eligibility logic.
 
+## OPERATOR RULING 2026-08-21 — generalisation shape
+
+ONE declarative capability-gated resolver per R17 (`/codex/04-architecture/cross-domain-state-fabric.md` §12):
+each archetype DECLARES its venue requirements; a single generic resolver checks them against the UAC venue
+capability registry; fail closed. No per-archetype bespoke gates. This closes the Wave-0 "venue-eligibility
+generalisation shape" open ruling.
+
 ## Todos
 
 - [ ] [OPERATOR] P1. **Decide the generalization shape**: extend `venue_capabilities.py`'s existing pattern to

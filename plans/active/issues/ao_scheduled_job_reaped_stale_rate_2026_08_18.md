@@ -30,8 +30,8 @@ related:
   ]
 created: "2026-08-18"
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 assigned_role: infra
@@ -153,3 +153,16 @@ reduce this across every job, not just the worst offenders.
   edit, so its open `[OPERATOR] P1` (record reasons for the 3 still-unexplained pauses) remains accurate and live,
   not stale.
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: RECLASSIFY (whole-doc) — Track B (the doc that previously
+  conflict-parked this one on 2026-08-19) closed out 2026-08-20 and this doc's own 2026-08-20 entry already
+  confirmed it is the un-parked, active owner of the investigation, with real evidence its own scope is more
+  complete/current than Track B's synthesis. Re-read all 4 open todos: each is a bounded measurement/data-pull task
+  with a stated done-when (shard `context_scout_auditor` mirroring an established sharding pattern already used by
+  3 sibling jobs; re-measure `docs_reconciler`'s real per-run duration; pull a full-week per-job baseline; root-cause
+  whichever job the baseline confirms as the real driver by reading its role script + transcripts) — no open
+  design/judgment fork, each follows a precedent or a direct measurement. Conflict-check: grepped `plans/active/`
+  for "reaped-stale"/"reaped_stale" — hits are either this doc's own sibling synthesis doc (already cross-referenced,
+  not duplicative), the general tmux-session-death root-cause doc (a different, broader investigation this doc's own
+  text already correlates against but does not duplicate), or unrelated passing mentions — no doc claims this
+  specific per-job full-week measurement. Flipped `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent`; `assigned_role: infra` was already correct.

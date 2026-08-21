@@ -995,3 +995,4 @@ against). Moved verbatim, nothing summarized, to
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-18** (agt-2c8a26): KEEP-NA, valid — 2 open items (R4 coverage-scoring, residual canon walk C2-C12) unchanged, both still infra-gated on the R3/rebuild VM chain reaching a terminal state (not re-checked live this pass, out of scope). No RECLASSIFY-eligible items. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-20**: re-verified context_scope, no change needed (6 entries) — all 6 paths still resolve.
+- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-read end to end (2 Read calls); 2 open items (R4 coverage-scoring, residual canon walk C2-C12) unchanged since the 2026-08-18 verdict, both still infra-gated on the R3/rebuild VM chain reaching a terminal state. No new RECLASSIFY-eligible items. Doc stays `assigned_vm: NA`.

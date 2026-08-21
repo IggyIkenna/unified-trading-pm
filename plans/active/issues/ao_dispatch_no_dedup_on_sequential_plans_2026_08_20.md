@@ -85,3 +85,10 @@ wasted compute + merge friction that compounds with plan size, not a one-off.
 - **2026-08-20**: Filed during `/pre-compact` — the finding existed only as prose in an archived plan's Progress Log
   (mentioned to the operator in a chat summary but never converted into a real tracked todo, a HARD RULE violation
   this filing corrects) after being observed twice live in the same session.
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — first audit pass for this doc. Both open todos
+  are explicitly, self-declaredly a judgment/design question per the doc's own text ("should the dispatcher hold
+  back a plan's remaining todos while one is already claimed, and how — a slot-affinity lock? a plan-level in-flight
+  flag?"), with todo 2 gated on todo 1's outcome. Cross-referenced (see `ao_consolidated_closeout_2026_08_12.md`'s
+  own 2026-08-21 marker) against a related-but-distinct sequential-dispatch investigation already open there — not
+  a duplicate (different symptom: concurrent-claim dedup here vs. dispatch-order/derivation there), noted for
+  whoever picks up either. Doc stays `assigned_vm: NA`.

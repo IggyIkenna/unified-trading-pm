@@ -146,3 +146,4 @@ COMPETITOR.
 Manager, Glassnode is NOT a removed vendor, and per `/codex/02-data/external-data-always-available-rule.md` exhausting
 the free path is a credential ask rather than a descope. Tracked for the operator on
 `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.
+- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; sole remaining item (promote GlassnodeAdapter into VENUE_REGISTRY/get_adapter()) is genuinely CREDENTIAL_BLOCKED per the external-data-always-available HARD RULE — `glassnode-api-key` still unprovisioned. Doc stays `assigned_vm: NA`.

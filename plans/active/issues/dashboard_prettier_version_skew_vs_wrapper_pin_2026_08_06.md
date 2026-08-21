@@ -38,8 +38,8 @@ source:
   "agent, interactive session — surfaced while formatting a dashboard CSS/TSX change for the AO context-saturation work;
   the wrapper reported success while a local `--check` reported failure on the same files, which is what exposed the
   two-version split"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.08
@@ -139,3 +139,4 @@ and the gate passed, so nothing was blocked.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:88a164971a98eb0d]: KEEP-NA, valid — the mechanical version-bump work already shipped; sole remaining item is a genuine undecided design/policy call (whether the dashboard should gate on formatting at all), reaffirmed across 3 prior audit passes.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries) — entries unchanged, still accurate
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: RECLASSIFY (whole-doc) — the operator's design/policy decision this doc was parked on ("decide whether the dashboard should gate on formatting at all") was RESOLVED 2026-08-19 (trust-mode ruling: YES, gate on it) — no na-eligibility-audit pass evaluated the doc since that decision. The sole remaining open todo ("wire `npm run format:check` into `agent-orchestrator/scripts/quality-gates.sh`'s dashboard leg") is now purely mechanical with a stated done-when (a deliberately-misformatted file fails the gate, current tree passes clean); the 2026-08-19 entry's own text confirms it was left unimplemented only to avoid same-night contention on `agent-orchestrator`, not because further judgment was needed. Conflict-check: `ao_satellite_ao_dispatch_batch8_2026_08_08.md` mentions this doc's items in its excluded-items list, but only as a pre-2026-08-19 "operator-gated, no default" note — not a dispatch claim, and it predates the decision that resolved the fork. No genuine conflict. Flipped `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`.

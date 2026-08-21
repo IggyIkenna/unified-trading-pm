@@ -103,3 +103,4 @@ NA` is correct; not auto-dispatchable as-is.
   (external on-chain address sourcing under the registry's provenance rule; AAVE-PLASMA archetype-catalogue
   strategic decision). `grep -cE '^[[:space:]]*[-*] \[ \]'` = 2, matching Phase-0's open_todos=2.
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed, no change since 2026-08-18. Both open items remain cleanly `[OPERATOR]`-tagged (external on-chain address sourcing under the registry's provenance rule; AAVE-PLASMA archetype-catalogue strategic decision). Doc stays `assigned_vm: NA`.

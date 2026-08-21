@@ -70,3 +70,4 @@ confirmation the lock is stale.
 ## Progress Log
 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item requires either the 4 named docs' own resolution path to naturally archive them, or an operator-approved unlock before any `context_scope` backfill — the todo's own text explicitly forbids autonomous action on a locked doc. Re-verified live: all 4 docs (`empty_reprobe_disagreement_all_2026_08_18`, `_2026_08_19`, `manifest_hygiene_red_all_2026_08_18`, `manifest_hygiene_red_cefi_2026_08_16`) still present at `plans/active/issues/`, still `status: resolved` + `locked_by: live-defi-rollout`, unarchived since 2026-08-20 — no change to the underlying ask.

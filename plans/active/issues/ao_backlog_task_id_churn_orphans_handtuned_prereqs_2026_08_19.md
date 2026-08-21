@@ -130,3 +130,9 @@ Filed this issue doc rather than hand-editing the root-clone `backlog.yaml` myse
 per RULES.md §4, which scopes backlog-yaml tuning to main agent + operator). Skipping the sports todo's task with
 `reason_code: GATED` per worker.md §4c.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, valid — first audit pass for this doc. Todo 1 is
+  explicitly self-declared a design call by the doc's own text ("this needs a design call, hence `assigned_vm: NA`")
+  — a genuine choice between stabilizing the task-id derivation vs. carrying tuning forward across regen ticks, both
+  requiring changes to `regen_backlog_from_plan.py`'s core id-minting/regen logic. Todo 2 is a root-clone
+  `backlog.yaml` write explicitly scoped to main-agent/operator access only, outside any regular worker session's
+  authorized scope. Doc stays `assigned_vm: NA`.

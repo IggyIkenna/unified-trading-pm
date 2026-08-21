@@ -128,3 +128,14 @@ confirms whether this is worth the added complexity"). Tagged todo 2 `MISCLASSIF
 deferred on timing) and todo 3 `OPERATOR_QUESTION`. Doc stays NA; no extraction this pass.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries) — the two workflow files still open, the shipped
   QG workflow, and the ci-alerting SSOT all resolve.
+
+**na-eligibility-audit 2026-08-21** (ci tranche wave 2): **RECLASSIFY, extraction.** The 2026-08-18 pass tagged todo
+2 (extend `streak_start_sha` linkage to `ldr-to-main-promote.yml`'s drain-bot messages) `MISCLASSIFIED_LIKELY_AO_
+ELIGIBLE`, ready to extract but deferred pending `ci_satellite_ao_dispatch_batch15_2026_08_16.md` "meaningfully
+draining" (23 open todos at filing time). Re-checked this pass: batch15 is now at 11 open / 14 done (was ~14 open at
+the 08-18 check) — more than half-drained since filing, satisfying the deferral condition. Extracted todo 2 into
+`ci_satellite_ao_dispatch_batch16_2026_08_21.md` (todo 3), citing `ag_closeout_audit_ci_parked_2026_08_16.md`'s own
+prior conflict-check ("conflict-checked clear this run, ready to extract without further triage") rather than
+re-running it. Todo 3 (whether `ldr-ci-monitor.yml`'s RED→GREEN posts should also cite `streak_start_sha`) stays
+`assigned_vm: NA` — still explicit operator-gated ("Done when: the operator confirms whether this is worth the added
+complexity"). Doc stays NA overall (extraction, not whole-doc reclassify).

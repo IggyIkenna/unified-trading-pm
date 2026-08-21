@@ -333,3 +333,4 @@ Operator reported agents "keep respawning without finishing their tasks and burn
   `overage_status` other than `rejected` for a sustained period, this is safe to revert — not yet met. Todo stays
   open (this is a status check-in against a still-unmet condition, not a final answer).
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item is an explicit [OPERATOR]-tagged tuning-flag revert decision; per the 2026-08-19 live check, Anthropic capacity had still not recovered (every `sub-*` account still `overage_status: rejected`), so the revert condition remains unmet. Converges with the 2026-08-19 verdict.

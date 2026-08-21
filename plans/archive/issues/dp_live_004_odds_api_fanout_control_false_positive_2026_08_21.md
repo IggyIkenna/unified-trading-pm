@@ -5,7 +5,7 @@ summary: >-
   The live Odds API shard was reported as still attempting but never captured because the productivity watcher
   compared the coarse ODDS_API polling control instrument with captured bookmaker fan-out rows. The writer was
   producing data; healthy control buffers were being materialised as misleading empty manifest cells.
-status: open
+status: resolved
 nature: process
 asset_group: [sports]
 stage: [meta]
@@ -18,7 +18,7 @@ created: 2026-08-21
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P1
-resolved_by:
+resolved_by: market-tick-data-service@9097603c86
 locked_by:
 context_scope:
   - /codex/05-infrastructure/data-pipeline-alerts.md
@@ -29,6 +29,8 @@ source:
   - DP-LIVE-004
   - agt-a1445b
 ---
+
+> **📦 ARCHIVED 2026-08-21** — resolved by `market-tick-data-service@9097603c86`; active-path completion and archival commits were separate per the cross-repo archival rule.
 
 # DP-LIVE-004 false-positive for live Odds API fan-out control shards
 
@@ -57,4 +59,10 @@ simulated upstream failure still creates `attempted_failed`.
 
 ## Todos
 
-- [ ] [CODE] P1. Ship and verify the fan-out control-buffer fix in `market-tick-data-service` — escalation `agt-a1445b`.
+- [x] [CODE] P1. Ship and verify the fan-out control-buffer fix in `market-tick-data-service` — `market-tick-data-service@9097603c86` + Evidence: `bash scripts/quality-gates.sh --no-fix` passed (11,108 passed, 28 skipped, 82.02% coverage); targeted DP-LIVE-004 read-only check returned `fired=[]` for VM `mtds-live-sports-odds-api-odds-20260816-145019` and showed fresh bookmaker captures through 2026-08-21T01:07:14Z.
+
+- [x] [DOCS] P3. Archive this resolved issue under `plans/archive/issues/` — completed in `f282d99729`; correction finalized in this commit.
+
+## Progress Log
+
+- 2026-08-21T01:07Z — Read the exact per-VM shard from `market-data-tick-sports-prd-central-element-323112` under an 8 GiB/30-second bound. The ODDS_API source group was credited with bookmaker fan-out capture through 01:07:14Z; `check_live_capture_productivity(..., dry_run=True)` returned `fired=[]`. Healthy control buffers are no longer reported as unproductive, while the shipped regression covers preservation of upstream failure recording.

@@ -313,3 +313,7 @@ shipped independently or these findings would still be sitting entirely undocume
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:6380ba61bc43c0dd]: KEEP-NA-STALE (already-duplicated) — reconfirms the 2026-08-17 verdict verbatim: ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md (active, gate_on_depends: true) owns reconciling/flipping this doc's checkboxes per this doc's own governance rule; all 4 items' underlying fixes are shipped (agent-orchestrator@d279c22/@6e3d06c/@ef73a44/@1e2ecac/@3ba4ba4/@9cd1fa0), checkboxes deliberately left unflipped pending the finalize pass. Not reclassifying.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA-STALE (already-duplicated) — reaffirmed. Directly
+  checked `ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`: still `status: active`, still not yet run its
+  own reconciliation pass, so this doc's checkboxes correctly stay unflipped pending that finalize plan per its own
+  governance rule. Not reclassifying.

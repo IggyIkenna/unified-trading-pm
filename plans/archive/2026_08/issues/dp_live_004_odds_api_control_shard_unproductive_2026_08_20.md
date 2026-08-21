@@ -11,7 +11,7 @@ summary: >-
   runner currently treats an empty coarse control buffer as a real shard, which
   creates misleading empty manifest cells and triggers DP-LIVE-004. The fix must
   suppress only healthy fan-out control empties and retain failure recording.
-status: open
+status: resolved
 nature: process
 asset_group: [sports]
 stage: [live, data]
@@ -34,8 +34,8 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
-last_updated: 2026-08-20
+resolved_by: slot-10 (data_engineering), 2026-08-21
+last_updated: 2026-08-21
 locked_since:
 context_scope:
   [
@@ -52,6 +52,8 @@ source: >-
 ---
 
 # DP-LIVE-004: live Odds API fan-out control buffer is mistaken for a data shard
+
+> **🟢 RESOLVED / ARCHIVED 2026-08-21 (slot-10, data_engineering).** The targeted MTDS fix is shipped at `market-tick-data-service@9097603c86`; the production DP-LIVE-004 dry-run against the named RUNNING shard observed fresh bookmaker fan-out captures and returned `FIRED=[]`. Both todos are complete and no successor work remains.
 
 ## What I found
 
@@ -75,3 +77,27 @@ track their control ids, skip only empty control buffers when no connectivity
 gap or upstream failure is present, and add regression tests for both healthy
 and failed control buffers. Re-run the focused websocket tests and the MTDS
 quality gate before shipping.
+
+## Verification
+
+- [x] [CODE] P1. Ship and verify the fan-out control-buffer fix — `market-tick-data-service@9097603c86` is an
+  ancestor of `origin/live-defi-rollout`; the required quality gate completed green with 11,108 passed, 28 skipped,
+  1 xpassed, and 17 warnings.
+- [x] ✅ [VERIFY] P1. Re-run the DP-LIVE-004 candidate check against the named live shard and confirm no new false
+  empty-confirmed rows — `deployment-service`'s production `check_live_capture_productivity` reader ran in dry-run mode
+  against `mtds-live-sports-odds-api-odds-20260816-145019` on 2026-08-21. The VM was RUNNING in `asia-northeast1-c`;
+  its `ODDS_API/odds` group had `last_captured_at=2026-08-21T02:20:50.647175+00:00` via bookmaker fan-out, 30
+  bookmaker groups were also fresh, and the checker returned `FIRED=[]` with exit code 0.
+
+## Progress Log
+
+**2026-08-21 — escalation `agt-a1445b`.** The MTDS fix landed through quickmerge on `origin/live-defi-rollout` as
+`9097603c86` (including the connector marker, control-id tracking, healthy-empty suppression, and failure-preserving
+regressions). The read-only live candidate check was attempted but timed out before a terminal result; no fresh live
+pass is asserted.
+
+
+**2026-08-21 — verification `dp_live_004_odds_api_control_shard_unproductive-31eee91d7f93`.** Re-ran the production
+`deployment-service` DP-LIVE-004 reader in dry-run mode against the named shard. It resolved the running VM and its
+per-VM parquet shard, observed fresh captured bookmaker fan-out rows (including the `ODDS_API/odds` source group), and
+returned `FIRED=[]` with exit code 0. No new false `empty_confirmed` candidate was emitted.

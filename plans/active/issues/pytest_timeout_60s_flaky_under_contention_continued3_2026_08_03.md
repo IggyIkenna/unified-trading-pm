@@ -564,3 +564,19 @@ per qg-host-governor.sh) is itself direct evidence recurrence continued PAST the
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries).
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 2 open P3 todos, near-verbatim copies of continued2's todos 1/3, same capacity-root-cause gate (per this doc's own 2026-08-10 na-eligibility-audit note). A dedicated 2026-08-11 post-fix monitoring pass (slot-2) surveyed the latest 3 quality-gates-v2 runs across all 10 primary tracked repos and found zero Timeout(>150s)/pytest-timeout recurrence anywhere (26/27 terminal runs success; the 3 failures independently job-level-verified as unrelated defects) -- but the doc-chain's own established...
+
+**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid — with a material correction to avoid a
+future false "all clear." Verified `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`
+is genuinely `status: complete` (Phase 2's 73-min cross-repo soak: 0 OOM, 0 false 80%-valve aborts, 0 ghost
+reservations across 8 successful samples) — so both open todos' "once Phases 2-3 land" precondition IS now met.
+However, todo 1/3's further condition — "AND HOLD" / "re-check whether this entire doc-chain... self-resolves" — is
+**NOT yet supported by evidence**: grepping `plans/active/issues/*.md` for the `Failed: Timeout`/`pytest-timeout`
+signature found 2 FRESH occurrences filed after the fix landed and well past the 2026-08-11 monitoring pass's
+zero-recurrence reading — `deployment_api_qg_pre_existing_red_inventory_classification_2026_08_19.md` (2026-08-19)
+and `utl_qg_host_pressure_perf_and_fd_failures_2026_08_20.md` (2026-08-20), both hitting the same
+host-contention-timeout signature class in repos/tests outside this chain's originally-tracked set. The underlying
+fleet capacity-contention root cause is evidently still live; it is just being caught by fresh, separately-filed
+incident docs rather than reopening this specific 4-doc chain. Both open todos correctly stay open — do NOT close
+or archive on the Phase 2-3 landing alone. Out of this tranche-wave's scope to touch the sibling founding/`continued2`
+docs that would need coordinating for the "archive all four together" outcome todo 3 anticipates; flagging this
+finding for whoever next touches the chain rather than folding it in silently. No `assigned_vm` change.

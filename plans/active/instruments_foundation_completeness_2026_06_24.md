@@ -376,3 +376,4 @@ autonomous-run narrative and the Phase-0 child's "Autonomous run results" sectio
   execution lives in delegated child plans), a partially-shipped DESIGN item (DeFi completeness oracle — schema landed,
   probe implementation still pending), and genuine per-AG retirement/registry work — none clear the whole-doc RECLASSIFY
   bar.
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — reaffirms the chain of prior audit passes (2026-08-02/06/07), unchanged: gated umbrella whose entire premise is per-gate operator sign-off ('ask every time — do not run ahead'); GATE 0 is not recorded signed off and remaining todos are per-AG G-gate work delegated to child plans plus a partially-shipped DeFi completeness-oracle DESIGN item.

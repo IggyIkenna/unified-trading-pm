@@ -217,3 +217,10 @@ more forensic depth, not a new third occurrence, so that threshold is not yet me
   Added the Correction section reconciling both docs' evidence; the shipped retry-hardening + reorder stand as safe
   improvements but neither claims to have prevented the actual ~20-40min incident.
 - **context-scout 2026-08-20**: re-verified context_scope (5 entries), unchanged.
+
+**na-eligibility-audit 2026-08-21** (ci tranche wave 2): KEEP-NA, valid. Sole open todo (`[OPERATOR] P3`, confirm
+whether the `glue-1` self-hosted runner's `_work/<repo>/unified-trading-pm` checkout is reused across successive
+job runs) explicitly requires runner-host SSH/log access — a live-infra check outside a worker's normal reach, and
+the doc's own text already downgrades it to secondary priority (the incident's primary mechanism — a genuinely
+persistent dangling-link break, not runner staleness — is understood for at least 2 of 9 repos). No `assigned_vm`
+change.

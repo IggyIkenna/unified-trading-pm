@@ -770,3 +770,12 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   Track 2.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- re-verified all 6 still resolve; unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — this is the explicit, dated,
+  case-specific operator-chosen LOCAL/human-track origin plan for the very skill this run executes under (operator
+  asked directly 2026-07-26, chose LOCAL "since this is real per-doc judgment work"); per the round7-round11
+  precedent chain already established on this exact doc, that specific ruling is not overridden by a later general
+  default. All 13 open items (9 Phase-1 per-tranche audit checkboxes deliberately left unflipped per the doc's own
+  honest-accounting convention, Phase-2's conflict-check/fold-in pair, Phase-3's pre-filter-widening work, and the
+  `lst_rate_honest_coverage` line-cap-gated citation) remain genuinely unexecuted judgment/process work, unchanged
+  since the 2026-08-10 marker. Not re-litigated — a strong circularity caution also applies given this doc is the
+  origin of the very skill performing this verdict.
