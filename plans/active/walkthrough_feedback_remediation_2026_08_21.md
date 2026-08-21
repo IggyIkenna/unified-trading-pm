@@ -75,19 +75,41 @@ drift_direction: advance-code
       data-source registry, do NOT bucket it. Closes the declared(201)-vs-bucketed(177) gap the walkthrough
       discloses as 192-vs-177 (count drifted +9 since its 2026-08-19 measurement). Source:
       `market_data_categories.py:2644` (dict), `:387` (buckets).
+      **BLOCKED — premise stale, needs operator ruling 2026-08-21**: `VENUES_BY_ASSET_GROUP["defi"]` is not a
+      literal list to append to — it's DERIVED (`list(dict.fromkeys(v for v in _ALL_DEFI_VENUES if
+      _DEFI_VENUE_PHASE.get(v) == "live"))`, `market_data_categories.py` ~line 528). All 20 of the 23 named
+      venues checked (AAVE_V3-SCROLL, AAVE_V3-ZKSYNC, COMPOUND-ETHEREUM, COMPOUND_V3-POLYGON,
+      COMPOUND_V3-SCROLL, EULER_V2-ARBITRUM, MORPHO-ARBITRUM, MORPHOVAULTS-ETHEREUM, FRAX-ETHEREUM,
+      IDLE-ARBITRUM, YEARN_V3-OPTIMISM, BEEFY-POLYGON, UNISWAP-ETHEREUM, PANCAKESWAP_V3-ARBITRUM,
+      STARGATE-ETHEREUM, ACROSS-ETHEREUM, FLASHBOTS-ETHEREUM, LIFINITY-SOLANA, METEORA-SOLANA,
+      PHOENIX-SOLANA — `defi_venues.py`) are already declared with `_DEFI_VENUE_PHASE == "pipeline"`, i.e.
+      deliberately NOT counted "live"/IS-producible yet. "Bucketing" them means flipping pipeline→live, which is
+      an IS-producibility/readiness call on 20 real venues, not a registry-hygiene fix — needs an explicit
+      operator ruling on which of the 20 are actually ready, or this todo is mis-scoped and should be re-pointed
+      at the honest-coverage denominator story instead. Left unflipped pending that ruling. The ALCHEMY-ONCHAIN
+      re-home sub-item is separately scoped and equally not started in this pass (same blocker: budget).
 - [ ] [BACKEND] P1. Converge the three DeFi venue sets to one coherent story: dedup `ALL_DEFI_VENUES`
       (`defi_venues.py:32` — 174 entries, 35 exact duplicates, 139 unique) and prune-or-capability the 18
       identities with no capability row (incl. the deliberately-cefi-reclassified CLOBs — annotate as
       cross-referenced, not missing). Target: 139/121/103 becomes explainable in one sentence per set, or the
       sets converge.
-- [ ] [BACKEND] P2. `VENUE_CHAIN_MAP` (`venue_constants.py:907`) — verified 2026-08-21: zero consumers outside
+      **DEFERRED — not attempted this pass**: budget did not extend to a safe multi-file dedup + capability
+      audit across `ALL_DEFI_VENUES`/`VENUE_DATA_TYPE_CAPABILITIES`/capability declarations; needs its own
+      focused pass.
+- [x] [BACKEND] P2. `VENUE_CHAIN_MAP` (`venue_constants.py:907`) — verified 2026-08-21: zero consumers outside
       UAC itself (wallet-grouping only, derives `SHARED_WALLET_GROUPS`). Either complete it for every DeFi venue
-      with a shared-wallet chain or rename/docstring it so it can never be mistaken for chain-coverage truth.
+      with a shared-wallet chain or rename/docstring it so it can never be mistaken for chain-coverage truth. —
+      unified-api-contracts@<PENDING-SHA> + evidence: took the low-risk rename+docstring option — added a
+      docstring to `VENUE_CHAIN_MAP` and `SHARED_WALLET_GROUPS` in `venue_constants.py` stating it is a
+      deliberately-curated wallet-grouping subset, NOT a chain-coverage inventory, and pointing consumers at
+      `ALL_DEFI_VENUES`/`ChainKind` instead. No behavior change (dict contents untouched); QG-gated.
 - [ ] [BACKEND] P1. Delete the deprecated third prediction grouping axis: migrate `PredictionMarketCategory`
       consumers (`_mvp_scope_rules.py`, `predictions/cross_venue_mapping.py`,
       `internal/schemas/_prediction_market_taxonomy.py`) onto `CanonicalQuestionGroup` +
       `two_axis.PredictionUnderlying`, then delete the legacy singular `canonical/domain/prediction/` package
       and its re-exports. Manifest supersession flagged to T2 (no-migration scope here).
+      **DEFERRED — not attempted this pass**: 3-consumer migration + legacy package deletion + whole-repo grep
+      for other consumers needs its own focused pass; budget did not extend to it.
 - [ ] [BACKEND] P0. Resolve ALL 12 unresolved (venue, data_type) pairs from `venue_instrument_type_triples()`
       (enumerated live 2026-08-21; 678 triples total now, walkthrough says 660/12): AAVE-PLASMA/lending_indices,
       BINANCE-FUTURES/futures_chain, BYBIT/futures_chain, COINBASE-ETHEREUM/oracle_prices,
@@ -97,20 +119,38 @@ drift_direction: advance-code
       is real (Era-B: chains are instrument_types whose data_type is `trades`), or relabel/retire the stale
       pre-Era-B RAW-dict key — BINANCE-FUTURES's dated quarterlies map to leaf `future`, not a chain bundle.
       Then the walkthrough's "12 unresolved, disclosed" line is deleted, not softened.
+      **DEFERRED — not attempted this pass**: needs a per-pair fix decision (venue-specific roster override vs.
+      relabel/retire stale RAW-dict key) across 12 pairs plus a measured re-run; budget did not extend to it.
 - [ ] [BACKEND] P1. Fix the CeFi instrument_type roster over-fan: ASTER (perp-only per the registry's own
       comment at `market_data_categories.py:2114`) shows Futures-chain/Options-chain buckets in the artefact
       because `venue_instrument_type_axis.py`'s CeFi path probes the full asset-group roster with no venue-level
       chain exclusion (the module docstring names exactly this failure mode; DeFi/sports already have the
       narrowing). Add the chain-instrument_type gate restricting futures_chain/options_chain candidacy to real
       chain-bundle venues (DERIBIT for cefi; CME/ICE/CBOE for tradfi).
-- [ ] [BACKEND] P0. Fix `unified_api_contracts.execution.get_venue_asset_group()` silently returning "cefi" for
+      **DEFERRED — not attempted this pass**: needs the DeFi/sports narrowing pattern located and mirrored in
+      `venue_instrument_type_axis.py`'s CeFi path; budget did not extend to it.
+- [x] [BACKEND] P0. Fix `unified_api_contracts.execution.get_venue_asset_group()` silently returning "cefi" for
       every venue its lookup misses (P0 issue filed 2026-08-19) — fail loud or resolve via
-      `VENUES_BY_ASSET_GROUP`.
-- [ ] [DOC→T5 handoff] P1. Stale-claims note for the artefact re-derive: Plasma IS a `ChainKind` member since
+      `VENUES_BY_ASSET_GROUP`. — unified-api-contracts@HEAD (no code change needed) + evidence: already fixed.
+      `unified_api_contracts/execution.py::get_venue_asset_group()` (lines 57-87) resolves via
+      `classify_venue_asset_group()` then the capability-source table, and raises `UnknownVenueAssetGroupError`
+      on a genuine miss — it does not default to "cefi". The originating P0 issue doc
+      (`uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`) is already archived under
+      `plans/archive/2026_08/issues/`, confirming this was resolved before this pass; the walkthrough plan's
+      todo text is stale.
+- [x] [DOC→T5 handoff] P1. Stale-claims note for the artefact re-derive: Plasma IS a `ChainKind` member since
       unified-api-contracts@27ebc544b (2026-08-19) and PACIFICA-SOLANA has a full capability row since
-      @88cd9f912 (2026-08-20, cefi bucket per 2026-08-14 operator ruling); `ChainKind.BITCOIN` exists with
+      @88cd9f912 (2026-08-20, cefi bucket per 2026-08-14 operator ruling, see
+      /plans/active/pacifica_solana_perp_reintegration_2026_08_14.md); `ChainKind.BITCOIN` exists with
       non-EVM sentinel chain-id 0 in `MAINNET_CHAIN_IDS`. Replace the walkthrough's "registry gap" callouts for
-      these with the fixed reality.
+      these with the fixed reality. — unified-api-contracts@HEAD (verification only, no code change) + evidence:
+      all three facts confirmed true 2026-08-21: `git log --oneline --all | grep 27ebc544` →
+      `27ebc544 fix(registry): declare ChainKind the chain SSOT and recognise SCROLL/PLASMA venues`;
+      `git log --oneline --all | grep 88cd9f91` → `88cd9f91 fix(uac): declare PACIFICA-SOLANA in
+      VENUE_DATA_TYPE_CAPABILITIES (readiness/coverage gap)`; `rg -n "BITCOIN" venue_constants.py`... resolved
+      via `unified_api_contracts/registry/chain_env.py:33` — `"BITCOIN": 0,  # Not EVM -- handled separately` in
+      `MAINNET_CHAIN_IDS`. Facts still hold against repo HEAD — T5 can replace the artefact's "registry gap"
+      callouts for these three with the fixed reality.
 
 ## Todos — execution/transfer cluster (T4 scope: execution-service)
 
@@ -147,8 +187,11 @@ drift_direction: advance-code
 
 ## Todos — presentation cluster (T5 scope: the artefact itself; run AFTER the clusters above land)
 
-- [ ] [DOC] P0. Sticky left-hand TOC sidebar: contents pinned left, scroll-spy highlighting the current
-      section, click-to-jump. Wide content keeps its own overflow scroll.
+- [x] [DOC] P0. Sticky left-hand TOC sidebar: contents pinned left, scroll-spy highlighting the current
+      section, click-to-jump. Wide content keeps its own overflow scroll. — unified-trading-pm@<shipping-sha>.
+      Fixed `.toc-sidebar` panel (min-width:1680px) built from the existing in-flow `nav.contents` anchors,
+      `IntersectionObserver` scroll-spy, `body{overflow-x:hidden}` guard; existing wide tables/diagrams already
+      carry their own `.scroll-x`/`overflow-x` containers (unchanged).
 - [ ] [DOC] P0. Voice pass — remove internal-audit framing: every "Verified directly:" → "Source:"; delete
       correction narratives (16-chain grep-artefact story, one-day-fresher re-run block, "TWO DIFFERENT
       HOW-MANY QUESTIONS" block, "DEFI REFRESHED — why the split moved" block, "12 unresolved, disclosed",
@@ -156,11 +199,23 @@ drift_direction: advance-code
       the single clean number/story. Client-facing "not ready" → "coming soon" (KALSHI perp: "Coming Soon",
       application-gated; market perp: "Coming Soon", API in beta, not officially launched). Remove the plan-doc
       reference in the reference-position/credit section (describe capability, cite no plan files).
+      - 2026-08-21 (wave-2-prep lane) — completed the mechanical half only: all 3 literal
+        `"Verified directly:"` occurrences → `"Source:"` (lines carrying the exact colon form; the 9
+        `"Verified directly against"` citations were left as-is, out of this mechanical pass's scope).
+        Correction-narrative blocks, "not ready"→"coming soon", and the plan-doc-reference removal are
+        content/wave-1-dependent and were NOT touched — unified-trading-pm@<shipping-sha>.
 - [ ] [DOC] P0. Request/response examples for EVERY named endpoint: external instruction API (REST
       `POST /external/instructions` with a real `StrategyInstructionV2` payload + response, and the Pub/Sub
       EventTransport variant), cancel path, strategy wizard endpoint (once T3 ships it), hot-config-reload
       pattern, coverage/data retrieval, transfers. Strategy instruction envelope re-formatted as a bunched
       endpoint-call example, not prose. Protocols + parameters explicit throughout.
+      - 2026-08-21 (wave-2-prep lane) — completed only the format-only sub-item: §08 "The instruction
+        envelope" now renders as a `POST /external/instructions` JSON-body example (fields unchanged —
+        action, instrument, quantity, reference_price, execution_policy_ref, urgency, eligible_venues,
+        venue_constraints, reference_position, credit, position_adjustment_bps_per_unit_risk — no fields
+        invented). The per-endpoint request/response examples (external instruction API real payload,
+        cancel path, wizard endpoint, hot-config-reload, coverage/data retrieval, transfers) are content
+        work gated on wave-1 landing and were NOT done — unified-trading-pm@<shipping-sha>.
 - [ ] [DOC] P1. Content additions: parquet rationale (typed + compressed; open to other formats/flat CSV);
       shard schemas list ALL data types' schemas plainly (no "pending"), colour distinction type vs column;
       "declared since: not declared" legend note (live-only capability, no batch start date — not "not real");
@@ -177,6 +232,16 @@ drift_direction: advance-code
       extended to every section; strategy-instructions section completed + linked to per-instrument breakdowns
       of venues/instrument types/shared dimensions; complete "The external execution API — two ways to run it"
       and the shard-level coverage drilldown.
+      - 2026-08-21 (wave-2-prep lane) — completed 3 format-only sub-items: (1) §06 "Getting the data" gained a
+        "Why parquet" callout (typed + compressed; open to other compression codecs or flat CSV on request);
+        (2) §07 "Shard schemas" got a CSS class pass (`.fld` spans + `#s7 .code i`) colour-distinguishing
+        column tokens from type tokens on the 4 already-documented schemas (trades/book/candles/funding) — no
+        schema content added or removed, the "list ALL data types" half (on-chain/sports/prediction/TradFi) is
+        data work, NOT done; (3) header legend gained the "Declared since: not declared" note. Every other
+        sub-item in this bundle (execution 4th path, PnL dimensions, readiness promote line, collateral
+        reframe, manual-trade reframe, security expansion, fees/gas exposure, measured-vs-projected,
+        venue-error extension, strategy-instructions completion, §25/§27 completion) is content work gated on
+        wave-1 landing and was NOT done — unified-trading-pm@<shipping-sha>.
 - [ ] [DOC] P0. Full naming-consistency audit across the artefact: everything named anywhere appears everywhere
       relevant (venues, instrument types, data types, dimensions cross-referenced); every number re-derived
       same-day at one stated grain after the upstream fixes; TradFi "90% coverage but drill-down not-ready"
@@ -237,3 +302,14 @@ fresh same-day run; then the re-audit todo."
 - 2026-08-21 — Plan created from operator feedback session; every claim re-verified against repo HEAD by three
   parallel investigation agents (registry, venue-cell, execution clusters) before todo conversion. T1/T4/T5
   tranche plans are over the 1000-line hard cap, so their clusters live here with pointer todos there.
+- 2026-08-21 — T1 registry-cluster pass (unified-api-contracts): flipped 3/8 todos. Shipped VENUE_CHAIN_MAP
+  docstring fix (low-risk rename+docstring option, no behavior change). Verified-only, no code needed:
+  `get_venue_asset_group()` already fails loud (the cited P0 issue was already resolved and archived before
+  this pass — todo text was stale); the T5-handoff stale-claims note (Plasma/PACIFICA-SOLANA/BITCOIN facts all
+  confirmed true against HEAD). Todo 1 (venue bucketing) found premise-stale on investigation:
+  `VENUES_BY_ASSET_GROUP["defi"]` is DERIVED from `_DEFI_VENUE_PHASE`, not a literal list — all 20 checked
+  venues are already declared but deliberately phase="pipeline" (non-live); "bucketing" them is an
+  IS-producibility/readiness ruling on 20 real venues, not a registry-hygiene edit, so left BLOCKED pending
+  operator input rather than flipped unsafely. Todos 2 (venue-set convergence), 4 (PredictionMarketCategory
+  deletion), 5 (12 unresolved triples), 6 (ASTER roster over-fan) each need their own focused multi-file pass —
+  left DEFERRED, not silently skipped; see inline blocker notes under each todo.
