@@ -69,6 +69,25 @@ Integration Guide → https://claude.ai/code/artifact/952680c2-2bda-4735-b298-8e
       framework (AWS + GCP today, IONOS integration in progress — cite the IONOS plan; Azure on request; regions
       near the client; cross-cloud same-region streaming into the client's own account to cut streaming cost).
       Verify every claim's code/plan basis before writing.
+- [x] [DOC] P0. **Operator content additions 2026-08-21, second tranche (both docs; compact in api-reference,
+      fuller in the walkthrough) — About Us / engagement models / research-as-a-service / DART / security /
+      DeFi LP** — About Odum Research (main site, who-we-are, tear sheet, the 1yr+ consultancy engagement, and
+      the same client's separate bespoke-execution negotiations, DeFi today/CeFi planned); three engagement
+      models (Allocate / Signals — cross-linked to the §06(api-ref)/§26(walkthrough) signal-leasing surface as
+      its literal integration contract / Run in your ecosystem); research-and-backtest-as-a-service + the
+      backtest mirror, citing `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`'s ε=0
+      paper↔batch determinism proof; a new DART — Data Analytics Research Terminal section (walkthrough) +
+      pointer (api-ref), grounded in `unified-trading-system-ui` + `codex/08-workflows/platform-walkthrough-and-
+      demo-context.md` + `prospect-questionnaire-flow.md`; dual-authorization (tiered SMALL=1/MEDIUM=2/LARGE=3
+      quorum withdrawal approval, `deployment-api/deployment_api/routes/client_treasury.py`) and custody-adapts-
+      to-the-client (pluggable signing: CLOUD_KMS_ENCRYPTED shipped, Copper MPC production for DeFi +
+      non-Binance CeFi) folded into walkthrough §15 + api-ref §04; DeFi LP marketing (Uniswap V3 mint/burn
+      landed execution-service@0aa709f076 across 5 EVM chains, broader connector roster, "more on demand").
+      This is a SEPARATE operator directive from the P0 item above — supersedes nothing there; reconciliation
+      prominence / WebSocket rotations / position handshake / SLAs / disaster recovery / T+1 backfill / intraday
+      replay / credit-reference-price / cloud-agnostic remain open in that item. Marker check re-verified
+      202/247 (unchanged) post-ship. Evidence: unified-trading-pm@40ac124b0f (walkthrough),
+      unified-trading-pm@b50711e8b7 (api-reference), both confirmed ancestors of origin/live-defi-rollout.
 - [ ] [BACKEND] P2. UAC `PortfolioPnLAttribution.staking_pnl` first-class field — drop the documented carry fold
       (strategy-service@21937bb2cf).
 - [ ] [AGENT] P1. Verify BLRS recon_excluded landed on origin; if absent re-run its recorded quickmerge, flip its
