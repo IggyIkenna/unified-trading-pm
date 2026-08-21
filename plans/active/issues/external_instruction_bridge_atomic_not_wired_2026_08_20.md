@@ -1,19 +1,15 @@
 ---
 doc_type: issue
 title: >-
-  `POST /external/instructions` (execution-service) — BRIDGE and ATOMIC now route through real handlers; the
-  venue-side ATOMIC multi-leg execution engine and compensation semantics remain open
+  `POST /external/instructions` (execution-service) — BRIDGE stays HTTP 501; ATOMIC now routes through the shared multi-leg signal path, while real venue-side atomic compensation remains open
 summary: >-
   Filed while wiring 2 of the remaining 9 `StrategyInstructionV2` action types (TRANSFER, CANCEL) onto
   `execution-service/execution_service/api/external_instruction_api.py`'s external HTTP front door (the other 7 —
   SWAP/LEND/WITHDRAW/BORROW/REPAY/STAKE/UNSTAKE — are a SEPARATE gap, tracked in
-  `external_instruction_defi_handlers_simulation_only_2026_08_20.md`; do not conflate the two). BRIDGE and ATOMIC were
-  deliberately NOT wired in the original 2026-08-20 change; both were subsequently wired — ATOMIC through the shared
-  router, BRIDGE through the transfer-wiring seam — verified from the live code (not guessed), see the Resolution
-  sections below:
+  `external_instruction_defi_handlers_simulation_only_2026_08_20.md`; do not conflate the two). BRIDGE and ATOMIC are
+  deliberately NOT wired in the prior change; ATOMIC was subsequently wired through the shared router, verified from the live code (not guessed):
 
-  **BRIDGE** (as found 2026-08-20, since resolved — see "Resolution (BRIDGE, 2026-08-21)" below) —
-  `execution_service/engine/handlers/transfer_handler.py`'s own module docstring lists
+  **BRIDGE** — `execution_service/engine/handlers/transfer_handler.py`'s own module docstring lists
   `BRIDGE: stub (cross-chain bridge execution is complex)`, and `TransferHandler._execute_bridge_transfer` is a
   real, live stub: it logs a warning and unconditionally returns `_create_failure_result(instruction, "Bridge
   transfers are not yet implemented")` — never attempts a real cross-chain move. Separately,
@@ -24,9 +20,7 @@ summary: >-
   neither has a real target to route to.
   **ATOMIC**: there is no `OperationType.ATOMIC` handler; the external API now uses the existing multi-leg `DeFiSignal`/`InstructionRouter.route_signal()` path. The translation is covered by the shipped two-leg HTTP test and returns structured per-leg results. The underlying venue-side atomic engine still does not honor `AtomicExecutionMode`/`leader_leg`/`hedge_deadline_ms`/`compensation_policy`; that live execution follow-up remains open and is not represented as complete by this issue.
 
-  Cross-reference: `plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md` now records BOTH the
-  completed HTTP/router P0 todo AND the completed BRIDGE P2 todo. The venue-side ATOMIC engine plus compensation
-  semantics remain the one open item under the follow-ups below. This issue is the durable record of that boundary.
+  Cross-reference: `plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md` now records the completed HTTP/router P0 todo. BRIDGE remains unimplemented, and the venue-side ATOMIC engine plus compensation semantics remain open under the follow-ups below. This issue is the durable record of that boundary.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -65,24 +59,11 @@ context_scope:
 drift_direction: advance-code
 ---
 
-# BRIDGE and ATOMIC now reach real handlers; the venue-side ATOMIC multi-leg engine is the one open item
+# BRIDGE remains 501; ATOMIC now reaches the shared multi-leg router
 
 ## Resolution (2026-08-21)
 
-The external API now accepts `InstructionActionV2.ATOMIC`, translates each `AtomicLeg` into the shared `ExecutionInstruction` contract, and submits the resulting `DeFiSignal` through `InstructionRouter.route_signal()`. A two-leg HTTP verification returned `200 COMPLETED_SUCCESS` with two per-leg results. This proves the paper/router path required by the parent plan; it does not claim a venue-side atomic engine, compensation semantics, or real multi-leg live execution. BRIDGE was still an honest 501 at the time of this note; it was wired the same day — see "Resolution (BRIDGE, 2026-08-21)" below.
-
-## Resolution (BRIDGE, 2026-08-21)
-
-Shipped: `execution-service@0aa709f0` ("wire BRIDGE/LP_MINT/LP_BURN through real live-execution engines"). BRIDGE
-routes through the SAME transfer wiring as TRANSFER — `TransferHandler` gained a new `force_transfer_type`
-override, and a new `LiveBridgeTransferAdapter` wraps the pre-existing (but never-wired) `SocketBridgeConnector`
-(Socket v2 bridge-route aggregator across Across/Stargate/CCTP/Hop), backed by a new durable GCS
-`TransferStateStore` for cross-chain leg state. Source-chain-leg broadcast success returns `PENDING`, never a
-fabricated instant success; destination-chain settlement is not confirmed synchronously. This closes the BRIDGE
-half of this issue's original scope — resolved by routing through `TransferHandler` instead of building the
-dedicated `BridgeHandler` class the original "What real work would close this" section below speculated would be
-needed. Tests: `tests/unit/test_transfer_handler_bridge.py`, `tests/unit/test_live_bridge_adapter.py`,
-`tests/unit/test_external_instruction_bridge_lp_translation.py`. Evidence: `bash scripts/quality-gates.sh --no-fix`.
+The external API now accepts `InstructionActionV2.ATOMIC`, translates each `AtomicLeg` into the shared `ExecutionInstruction` contract, and submits the resulting `DeFiSignal` through `InstructionRouter.route_signal()`. A two-leg HTTP verification returned `200 COMPLETED_SUCCESS` with two per-leg results. This proves the paper/router path required by the parent plan; it does not claim a venue-side atomic engine, compensation semantics, or real multi-leg live execution. BRIDGE remains an honest 501 because its execution handler is still unimplemented.
 
 ## What was checked (2026-08-20, direct code read)
 
@@ -94,22 +75,18 @@ needed. Tests: `tests/unit/test_transfer_handler_bridge.py`, `tests/unit/test_li
 
 ## Why this matters for the plan that assumed otherwise
 
-The parent plan originally assumed BRIDGE and ATOMIC were both ready for the same translation-shim pass. Both are
-now wired on the external HTTP surface (ATOMIC via the shared multi-leg router, BRIDGE via the transfer-wiring
-seam) — see the Resolution sections above. The venue-side ATOMIC engine plus compensation semantics remain the one
-genuinely open follow-up. Read this issue before extending that path.
+The parent plan originally assumed BRIDGE and ATOMIC were both ready for the same translation-shim pass. The HTTP/router portion of ATOMIC is now complete; BRIDGE remains unimplemented, and the venue-side ATOMIC engine plus compensation semantics remain open follow-ups. Read this issue before extending either path.
 
 ## What real work would close this
 
-- ~~**BRIDGE**: needs a real `BridgeHandler` or equivalent implementing actual cross-chain bridge execution (route selection, source-chain lock/burn, destination-chain mint/unlock, and confirmation tracking).~~ DONE 2026-08-21 — see "Resolution (BRIDGE, 2026-08-21)" above. Routed through `TransferHandler` + `LiveBridgeTransferAdapter`/`SocketBridgeConnector` rather than a dedicated `BridgeHandler` class.
+- **BRIDGE**: needs a real `BridgeHandler` or equivalent implementing actual cross-chain bridge execution (route selection, source-chain lock/burn, destination-chain mint/unlock, and confirmation tracking).
 - **ATOMIC**: needs a real venue-side multi-leg execution engine honoring `AtomicExecutionMode`, `leader_leg`, `hedge_deadline_ms`, and `compensation_policy`, including per-leg order placement and partial-fill or leg-failure compensation.
 
 ## Follow-ups
 
-- [x] [BACKEND] P2. ✅ SHIPPED 2026-08-21 — execution-service@0aa709f0. Wired `BRIDGE` on
-      `POST /external/instructions` (execution-service) via `TransferHandler`'s new `force_transfer_type` override
-      + `LiveBridgeTransferAdapter`/`SocketBridgeConnector`, not the originally-speculated dedicated `BridgeHandler`
-      class. See "Resolution (BRIDGE, 2026-08-21)" above.
+- [ ] [BACKEND] P2. Design + build a real `BridgeHandler` for cross-chain bridge execution, then wire `BRIDGE` on
+      `POST /external/instructions` (execution-service) using the same translation-shim pattern already
+      established for TRANSFER/CANCEL. Blocked on: bridge-protocol selection (which bridge(s) to integrate first).
 - [ ] [BACKEND] P2. Design + build a real live multi-leg execution engine for `ATOMIC` (new `OperationType`/handler,
       real per-leg order placement, partial-fill/compensation handling per `AtomicExecutionMode`), then wire
       `ATOMIC` on the same surface. This is a genuinely new execution-engine design effort, not a translation shim
@@ -120,8 +97,3 @@ genuinely open follow-up. Read this issue before extending that path.
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — both open todos are brand-new execution-engine design +
   build efforts (a real BridgeHandler, a real live multi-leg execution engine for ATOMIC), each explicitly framed
   in-doc as needing its own dedicated plan, not mechanical wiring. Cross-cutting tranche, batch 2 of 3.
-- **W22 epic-reconciliation pass 2026-08-21**: BRIDGE follow-up flipped to done — `execution-service@0aa709f0`
-  landed after the na-eligibility-audit entry above and wires BRIDGE for real (verified via commit diff + new
-  tests, not the commit message alone). Only the ATOMIC venue-side engine follow-up remains genuinely open; title,
-  summary, and "What real work would close this" updated to match so this doc stops misleading readers into
-  thinking BRIDGE is still unwired.
