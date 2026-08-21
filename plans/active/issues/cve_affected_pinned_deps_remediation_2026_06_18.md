@@ -642,27 +642,12 @@ CVE-2026-13346` to `QG_PIP_AUDIT_COMMON_IGNORES` — same recipe as every other 
 as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `pyproject.toml`, `uv lock`, verify
 `quality-gates.sh` green, ship.
 
-- [x] ✅ [SCRIPT] P2. **unified-trading-pm** — land the already-verified-locally `pip>=26.2` bump (pyproject.toml + uv.lock;
+- [ ] [SCRIPT] P2. **unified-trading-pm** — land the already-verified-locally `pip>=26.2` bump (pyproject.toml + uv.lock;
       confirmed clean `quality-gates.sh` run during agt-614918's triage, reverted before shipping only because it
-      cascades into the canonical-alignment check below). (repo: unified-trading-pm) — unified-trading-pm@55dbb3ef42
-      (+ ed51483291, ef1f90b10f) + evidence: verified already-landed on `origin/live-defi-rollout` (HEAD ancestor-or-
-      equal confirmed via `git merge-base --is-ancestor`) — `pyproject.toml` declares `"pip>=26.2"`, `uv.lock` resolves
-      `pip==26.2.1`, and the canonical floor (`workspace-constraints.toml`/`canonical-dependency-manifest.json`) is
-      already raised to `pip>=26.2` (`ed51483291`, "raise canonical pip floor to >=26.2, closes PYSEC-2026-3721"); no
-      new code required, another slot landed this between the todo's authoring and this pickup. The 14-repo fleet
-      sweep below + the ignore-drop todo remain open (`QG_PIP_AUDIT_COMMON_IGNORES` still carries the temporary
-      `--ignore-vuln PYSEC-2026-3721 --ignore-vuln CVE-2026-13346`, correctly, since not every repo is bumped yet).
-- [x] ✅ [SCRIPT] P2. **DONE — verified already-landed.** **alerting-service** — pip CVE-2026-13346 bump per recipe
-      above (was 26.1.2). (repo: alerting-service) — alerting-service@56e88093 ("fix(deps): raise pip floor to
-      >=26.2, closes PYSEC-2026-3721"), verified HEAD ancestor-or-equal of `origin/live-defi-rollout` via
-      `git merge-base --is-ancestor`; `pyproject.toml` declares `"pip>=26.2"`, `uv.lock` resolves `pip==26.2`. No new
-      code required — landed directly (main/harsh) between the todo's authoring and this pickup.
-- [x] ✅ [SCRIPT] P2. **DONE — verified already-landed (2026-08-21, slot-10).** **client-reporting-api** — pip
-      CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: client-reporting-api) —
-      client-reporting-api@15c2afa8 ("fix(deps): raise pip floor to >=26.2, closes PYSEC-2026-3721"), verified HEAD
-      (`8e481d3`) ancestor-or-equal of `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml`
-      declares `"pip>=26.2"`, `uv.lock` resolves `pip==26.2`, working tree clean. No new code required — landed
-      directly (main/harsh) between the todo's authoring and this pickup.
+      cascades into the canonical-alignment check below). (repo: unified-trading-pm)
+- [ ] [SCRIPT] P2. **alerting-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: alerting-service)
+- [ ] [SCRIPT] P2. **client-reporting-api** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      client-reporting-api)
 - [ ] [SCRIPT] P2. **deployment-api** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). NOTE: this repo also has
       a pre-existing, unrelated `internal_in_manifest_not_pyproject` (dep: deployment-service) alignment gap surfaced by
       the same `check-dependency-alignment.py` run — out of scope here, diagnose separately. (repo: deployment-api)
@@ -731,11 +716,3 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
   `scripts/quality-gates-base/**` — `unified-trading-pm@7e298f4807`, verified on `origin/live-defi-rollout`) and added
   the "NEW 2026-08-21" todo section above tracking the real 15-repo fleet sweep + canonical bump + ignore-drop, same
   shape as the cryptography sweep this doc already ran once.
-- **2026-08-21 (slot 10)**: flipped the `unified-trading-pm` pip>=26.2 todo — confirmed already landed
-  (`unified-trading-pm@55dbb3ef42` regenerates `uv.lock`; `ed51483291` raises the canonical floor), HEAD verified
-  ancestor-or-equal of `origin/live-defi-rollout`. No code change needed. Note for whoever picks up the remaining
-  14-repo sweep: the canonical floor (`workspace-constraints.toml`/`canonical-dependency-manifest.json`) was already
-  raised to `pip>=26.2` alongside PM's own bump, ahead of the doc's own stated sequencing ("(then) canonical + drop
-  ignore. Once every repo above is verified...") — the other 14 repos may now show a canonical-vs-source alignment
-  gap (source behind canonical) rather than a fresh CVE finding; worth checking `check-dependency-alignment.py`
-  output when picking up any of those per-repo todos rather than assuming a clean bump-and-ship.

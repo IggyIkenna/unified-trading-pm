@@ -186,31 +186,6 @@ operator call, not a worker's.
 
 ## Progress Log
 
-- **2026-08-21 (interactive session, slot 15) — recurred TWICE in one session, AFTER the
-  2026-08-20 liveness fix (`agent-orchestrator@616e15a4ca`) shipped, and correlated with a
-  separate near-data-loss.** `agent-orchestrator/.venv` in slot 15 vanished mid-session
-  twice (~17:00 and ~18:50 UTC), each time surfacing as `quality-gates.sh` aborting with
-  "no usable .venv/bin/python" rather than a false-red — the shipped fix's `abort, don't
-  silently mis-green` behavior worked correctly; only the underlying sweep-an-active-slot
-  root cause is not fully closed. Fixed live both times with `uv sync --frozen`, no code
-  change. Adds a THIRD data point to the open "second-sweep, no logged pass" todo below,
-  now from an INTERACTIVE session (not an AO-dispatched worker) — worth checking whether
-  the shipped liveness signal (`/proc/<pid>/cwd` under the worktree) actually covers an
-  interactive Claude Code session's process tree the same way it covers a spawned
-  worker's, since this is a genuinely different process shape than the slot-7/slot-21
-  cases the fix was built against.
-
-  **Separately, and possibly connected**: between the two venv-vanish incidents, a
-  `chore(orphan-wip)` auto-commit (AO's `DirtyStateResolution.COMMIT_AND_PUSH` pre-spawn
-  dirty-state gate) fired on this same slot at 17:04:58Z, and the branch was then reset to
-  `origin/live-defi-rollout` — orphaning that commit and 4 files of in-progress work
-  (recovered from the reflog: `git checkout 530af5d3 -- <paths>`, no permanent loss, but a
-  close call). Not confirmed causally linked to the venv sweep — noted here rather than
-  filed separately since both point at the same underlying question this doc's `[OPERATOR]
-  P2` todo below already asks: does an interactive slot correctly register as "live" to
-  AO's own liveness/dirty-state machinery, or does it look indistinguishable from an idle
-  worker slot to both the disk-guard AND the dirty-state gate?
-
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
 - **2026-08-20 (infra, slot 21)**: Fixed the P1 liveness signal — `vm-disk-guard.sh` no longer sweeps a slot whose
   worktree hosts any live process (tmux-session check retained as a secondary signal + `/proc/<pid>/cwd` read as the

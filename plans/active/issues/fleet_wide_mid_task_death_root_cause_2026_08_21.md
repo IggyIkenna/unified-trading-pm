@@ -226,32 +226,6 @@ duplicated.
 - [ ] [DOC] P3. Monitor for recurrence: confirm no new cross-slot broad-pkill-style mass-death bursts appear
       now that the pkill-guard-bin fix is live, and confirm the classification-gap fixes correctly reduce the
       "unexplained" share of new deaths (re-run this doc's scoping query in a week+).
-- [ ] [OPERATOR] P1. `gemini-3-5-flash-lite-proj4` and `gemini-3-7-flash-proj5` have NO credential env file on
-      this host (`~/.claude-accounts/<id>.env` does not exist) — confirmed live 2026-08-21 18:24-18:47 UTC via
-      repeated `autospawn_failed` events on slots 3/4/25, all with the identical error
-      `env_file ... does not exist; cannot authenticate spawn`. Every respawn attempt AO makes onto these two
-      accounts fails instantly, which is directly stalling recovery for whichever slot gets picked next (a
-      normal orphan-reclaim or one-task-per-session recycle then can't find a working account to resume onto).
-      Needs `claude setup-token` run on a browser machine for both accounts, per
-      `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
-- [ ] [BACKEND] P2. **NEW, found 2026-08-21 while live-validating the day's fixes on slots 3/4/25**: a normal,
-      already-correctly-tagged intentional teardown can still misclassify as "unexplained" if the IMMEDIATE
-      respawn attempt that follows it fails/stalls long enough to push `tmux_pruner`'s actual detection past
-      the classifier's 90s `_INTENTIONAL_SIGNAL_LOOKBACK_SECONDS` window. Concretely reproduced on slot 25: a
-      completely ordinary `worker_one_task_per_session_reset` fired at 18:43:55.628 (task
-      `w15_close_out_gate_and_line_cap` had just finished cleanly) — `kill_session(reason="manual")` followed
-      2ms later (confirmed via `ausearch`: the `tmux kill-session -t orch-slot-25` EXECVE record's `ppid` matches
-      the live orchestrator process exactly, so this was AO's own code, not an external actor). The immediate
-      respawn landed on `gemini-3-5-flash-lite-proj4` (the missing-credentials account above) and failed
-      instantly at 18:45:11 — `tmux_pruner`'s next sweep didn't confirm the session actually gone until
-      18:45:35, ~100 seconds after the reset event, just past the 90s window. Result: a perfectly-explained
-      death read `death_class="unexplained"`, `death_class_signal_event=null`, and (being the first-ever
-      confirmed positive external-kill hit post the `ausearch` PATH fix above) briefly looked like a genuine new
-      external-kill mystery before the timeline was traced. Candidate fixes, not yet decided: widen the lookback
-      window; have the FAILED-RESPAWN path itself write a distinctly-tagged event so the classifier has
-      something within its own window regardless of the original reset's age; or have `tmux_pruner` re-check
-      further back when the intervening slot history shows a failed respawn immediately after a kill. Needs a
-      design decision before implementing.
 
 ## Progress Log
 
@@ -272,16 +246,3 @@ duplicated.
   `.tabs/12`. Filed this as a new, dedicated doc (split from `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
   to keep that doc under its 1000-line hard cap) rather than merged, matching the precedent that doc's own
   Cluster-B finding already set.
-- 2026-08-21 (same session, continued): operator asked to check slots 3, 4, and 25 specifically (killed very
-  recently) and find the real reason. Traced each directly from live `activity_log` + `journalctl` +
-  (for slot 25) `ausearch` — the first genuinely useful live test of today's `ausearch` PATH fix. Slots 3/4:
-  real GLM 429s (the already-documented GLM blind-quota gap above), correctly reclaimed via today's
-  `orphan_session_reclaim` fix (`death_class=intentional_teardown` confirmed in the DB) — then stalled because
-  the respawn landed on the missing-credentials Gemini accounts. Slot 25: genuinely new finding, folded into a
-  new todo above — a legitimate reset misclassified as unexplained purely due to a timing gap against the
-  classifier's 90s lookback, discovered via `ausearch`'s first-ever positive external-kill hit (which turned
-  out to be AO's own process, confirmed by matching `ppid`, not an external actor — a real, reassuring
-  confirmation that the earlier "structural os.kill blind spot" finding doesn't mean every future ausearch hit
-  is untrustworthy, just that AO's OWN internal os.kill()-based reaping sub-step stays invisible to it).
-  Reported findings directly in chat; converted both into tracked todos (the missing-credentials operator ask,
-  the lookback-window timing gap) before this checkpoint per the workspace's own no-chat-only-findings rule.

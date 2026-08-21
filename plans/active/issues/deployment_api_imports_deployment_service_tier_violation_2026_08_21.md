@@ -149,63 +149,12 @@ DIFFERENT escalation, `agt-614918`); not this doc's scope, not touched here, cro
       evidence. The doc's original two named files (`_aws_deployments.py`, `_cloud_run_executions.py`) had already
       moved their SPECIFIC violation elsewhere by the time this session found them; both still have OTHER, unfixed
       `deployment_service.backends`/`data_pipeline_monitors` imports (see the 7-file list above).
-- [ ] [BACKEND] P2. **Fully scoped 2026-08-21 (interactive session, slot 17) — ready to implement, see the
-      Progress section below for the concrete per-item design.** All 7 remaining call sites investigated;
-      NONE are simple relocations like the first two (both `_gcp_sdk.py` and `cli/utils/manifest_reader.py` turn
-      out to be **explicitly-documented, audited exceptions** in `QUALITY_GATE_BYPASS_AUDIT.md` §2.5/§2.18 with
-      their own stated resolution paths — not oversights — and `launcher_registry`'s 400-line dict is guard-tested
-      against deployment-service's own file tree, a poor relocation candidate). Operator decision 2026-08-21:
-      build real new deployment-service API endpoints for the genuinely-live/credentialed pieces, matching the
-      exact existing `get_cloud_run_status_batch`/`POST /api/v1/cloud-run/status-batch` pattern in
-      `deployment_service_client.py`, rather than relocating or overriding the documented exceptions. Execute
-      each item below one at a time — design, implement, `quality-gates.sh` green in both repos, ship via
-      quickmerge, flip this todo's checklist — same rigor as the two already-shipped fixes. Repo: deployment-api +
-      deployment-service.
-      - [ ] `_gcs_tail` (`_aws_deployments.py:162`, `read_terminal_exit_code`) — genuinely portable (takes an
-            injected UTL `StorageClient`, no deployment-service state). Relocate a SELF-CONTAINED copy of
-            `read_terminal_exit_code`/`read_text_tail`/`_call_with_timeout`/`EXIT_STATUS_BLOB`/`RUN_LOG_BLOB` to a
-            new UTL module — deliberately NOT importing deployment-service's own `_gcs.py`/`_gcs_tail.py` copies
-            back out, since `_gcs.py` is a 959-line module with 5 OTHER internal deployment-service consumers
-            (`exit_code_fleet_monitor.py`, `heartbeat_stall_watcher.py`, `scripts/vm/vm_zombie_watchdog.py` + 3
-            test files) not worth the blast radius to touch — accept this one small, low-drift-risk duplication
-            rather than widening scope. Lowest-risk item, do first.
-      - [ ] `manifest_reader` (`_deploy_turbo.py:606`, `ManifestReader.get_coverage_summary`) — **no new endpoint
-            needed.** deployment-service already exposes `GET /api/v1/data-coverage-summary`
-            (`deployment_service/api/routes/state.py:592`) wrapping the exact same call
-            (`ManifestReader.get_coverage_summary(service, asset_groups)`). Add a `get_data_coverage_summary`
-            async client method to `deployment_service_client.py` (mirror `get_cloud_run_status_batch`'s
-            shape) and swap `_deploy_turbo.py`'s import for a client call — the route is already `async def`
-            with `await asyncio.to_thread(...)`, so this is a straight swap, no async-conversion needed.
-      - [ ] `launcher_registry` (`vm_admin.py:262`, `resolve_launcher_for_vm`) — add a tiny new
-            `GET /api/v1/vm/{vm_name}/launcher` deployment-service endpoint (returns `{launcher: str|null}`) +
-            matching client method; convert `vm_admin.py`'s restart-decision route to call it instead of
-            importing the registry directly.
-      - [ ] `_gcp_sdk` cluster (4 files, 5 operations — the biggest piece): add new deployment-service endpoints
-            for each, following `get_cloud_run_status_batch`'s exact request/response shape convention:
-            - `list_cloud_functions(project_id, region)` (`_gcp_cloud_functions.py:95`) → new endpoint
-            - `list_cloud_run_services(project_id, region)` (`_cloud_run_services.py:124`) → new endpoint
-            - `latest_execution_by_job(project_id, region)` (`_cloud_run_executions.py:130`) → new endpoint
-            - `list_job_executions(project_id, job_short_name, region, limit)` (`_cloud_run_executions.py:203`)
-            → new endpoint (detail-popover run-history, page_size=limit vs the thin-list's page_size=1 —
-            keep this cost distinction in the new design)
-            - `gcp_cloud_run_revisions(cfg)` (`artifact_pipeline/providers.py:442`) — reuses
-            `list_cloud_run_services` internally + lists revisions per service (`RevisionsClient`); design
-            as its own endpoint or fold into the cloud-run-services response, whichever avoids a second
-            services-list RPC (the existing code deliberately reuses one list to avoid exactly that)
-            Each of the 4 deployment-api call sites converts from its current sync function (some already
-            called from async routes via a sync boundary) to an async client call — verify each call site's
-            actual caller context before converting, since `providers.py`'s usage may differ from the route
-            files'. Preserve the "honest degradation to `[]`/`{}` on any error, never a crash" contract exactly
-            — every existing function already documents this as deliberate.
-      - [ ] `aws_census` (`_aws_deployments.py:69,432` — `list_batch_census`/`list_ec2_census`/
-            `list_ecs_census`/`list_lambda_census`): add ONE combined new deployment-service endpoint
-            returning all 4 census types together (matches how `_aws_deployments.py`'s own `load_aws_inventory`
-            already calls all 4 together for one inventory build — no reason to split into 4 round-trips).
-            Preserve the existing `importlib.util.find_spec` degrade-to-`[]` guard's INTENT (the AWS census
-            seam being genuinely unavailable) as an HTTP-level equivalent (a clean error response the caller
-            degrades on, not a crash).
-      - [ ] Once every site above is converted, re-run `check-dependency-alignment.py --repo deployment-api
-            --json` and confirm `aligned: true`.
+- [ ] [BACKEND] P2. Fix the 7 remaining call sites (5 `_gcp_sdk`, 1 `aws_census` x2-sites, 1 `_gcs_tail`, 1
+      `launcher_registry`, 1 `manifest_reader` — see Progress section above for exact file:line). For each,
+      determine whether it's genuinely stateless like the two already fixed (relocate to UTL, no new dependency) or
+      genuinely needs deployment-service's own runtime/credentials (wrap behind `deployment_service_client.py`'s
+      existing async-HTTP pattern instead). `_gcp_sdk` (5 of 7 sites) is the highest-leverage one to investigate
+      first. Repo: deployment-api (+ deployment-service if anything needs a new API endpoint).
 - [ ] [SCRIPT] P2. Once ALL `deployment_service.*` imports are gone from deployment-api, remove the stale
       `deployment-service` entry from `workspace-manifest.json`'s `deployment-api.dependencies` array (added by
       `e9b9ff3b65`, predates this doc) — re-run `check-dependency-alignment.py --repo deployment-api --json` and
@@ -215,11 +164,6 @@ DIFFERENT escalation, `agt-614918`); not this doc's scope, not touched here, cro
 
 ## Progress Log
 
-- **2026-08-21 (slot 17, interactive), later same session**: fully scoped the remaining 7 call sites (design
-  above) — no code changes yet, investigation + design only. Also verified live: every repo in slot 17 clean +
-  `ahead=0 behind=0` against `origin/live-defi-rollout` (pulled `unified-trading-pm` 16 commits forward — was
-  behind), `unified-trading-ci` confirmed clean on its own `main` branch (exempt from the LDR-alignment check).
-  Confirmed no other session had landed any of these 7 fixes in the interim (fresh grep post-pull, same counts).
 - **2026-08-21 (slot 17, interactive)**: shipped the 2-function UTL relocation (see Progress section above).
   Process note: removing conftest.py's `deployment_cluster_registry`/`revocation_gate` mock shims initially broke
   `test_route_deployments_inventory_aws.py`'s OWN, unrelated namespace-repair helper — that test's helper relied on

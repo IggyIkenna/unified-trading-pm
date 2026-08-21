@@ -246,10 +246,6 @@ exercised different strings, so a green suite carried no signal about the live p
       duplicating it into 14 files, or add a startup/pre-spawn check that refuses (loudly) on
       a token/master-key mismatch. `check_prod_model_names_resolve.py` deliberately does NOT
       read auth tokens, so it cannot catch this class — a separate check is needed.
-- [ ] [OPERATOR] P2. **Decide whether to grow the configured slot count** to actually reach a
-      40-worker ceiling (needs ~15 more configured slots given the current 32-slots/7-reserve
-      arithmetic — see the Lessons entry above), or accept 25 as the real ceiling for now.
-      Not a code fix — it is a capacity/cost decision.
 - [ ] [INFRA] P1. **Run `check_prod_model_names_resolve.py` on a schedule** — it is
       currently only run by hand, which is the same "nobody thinks to look" gap that let
       the original bug live for days. Wire it into `/ao-watchdog`'s pass (cheapest) or its
@@ -336,17 +332,6 @@ exercised different strings, so a green suite carried no signal about the live p
   confirmed loaded in the live process's `/proc/<pid>/environ`, not the hardcoded default 10 a
   code read alone would suggest); disk pressure (19.25% free vs a 3% halt threshold); a dead
   AutoSpawnLoop (it was ticking and attempting spawns throughout).
-- **2026-08-21 (later, operator-directed) — raised `ORCHESTRATOR_FLEET_WORKER_CAP` 20 → 40 in
-  root `agent-orchestrator/.env.local`, restarted `orchestrator.service` to load it (backup
-  `.env.local.bak-2026-08-21T170000Z-fleetcap` kept), and MEASURED the real effect rather than
-  trusting the configured number: the live code's own clamp warning fired on the next tick —
-  `configured=40 CLAMPED to 25 by slot arithmetic (configured_slots=32 - reserve=7 [ci=3 +
-  scheduled=4]) — raising ORCHESTRATOR_FLEET_WORKER_CAP above 25 has NO effect`. So the real
-  ceiling moved 20→25, not to 40; 25 is the hard maximum with today's 32 configured slots and
-  7 reserved (3 CI-escalation + 4 scheduled-task). Getting to 40 needs either ~15 more
-  configured slots or cutting a reserve — the latter reopens the exact scheduled/CI-escalation
-  starvation the reserve was built to prevent
-  (`ao_escalation_and_scheduled_dispatch_slot_starvation_2026_07_27`), so not done unilaterally.
 
 - **A phantom "every repo is diverged" signal that cost real investigation time — recorded so
   the next person doesn't chase it.** An early sweep flagged `unified-trading-ci` as 5 commits
