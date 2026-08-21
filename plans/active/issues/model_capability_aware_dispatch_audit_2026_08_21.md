@@ -134,14 +134,82 @@ copied there as its own closing synthesis per that plan's own open todo — not 
   already-diagnosed infra bug blocking every single attempt regardless of task complexity — routing
   ANYTHING to them today has a near-100% observed failure rate for reasons unrelated to model capability.
 
+## Part 3 — agent-type dispatch catalog (DONE 2026-08-21)
+
+Every `select_account_for_spawn`/`select_account_with_non_strict_retry`/`_pick_headroom_account` call
+site audited. Confirmed: every real dispatch path — Class-A refill, resume, bulk account-rotation
+sweep, CI escalation, scheduled-job (`plan_health`) dispatch, the singleton main agent, review-role,
+and the usage-cap failover watchdog — routes through the SAME picker family; no separate/alternate
+selection mechanism exists anywhere.
+
+**One real, previously-unknown bug found**: `server/autospawn.py::ensure_review_agents()` (called from
+`main_agent_keeper.py`'s `AgentKeeper` tick) is a `for slot_id in sorted(review_ids):` batch-loop —
+the exact bug-4a/5 shape — calling `select_account_for_spawn` with **zero** `exclude_ids`. Dormant
+today (`ORCHESTRATOR_REVIEW_SLOTS` defaults to 1 slot, so there's nothing to pile up onto), but real
+the moment a second review slot is configured. Fixed (see Part 4).
+
+**Confirmed definitively — no capability-awareness existed anywhere before this doc's fix (Part 4)**:
+`model_tier.py::equivalence_class()`'s own docstring stated outright *"a gemini-flash-lite-class model
+is just as acceptable a substitute as opus today... INTERIM PLACEHOLDER, not real capability data"*
+and named this bake-off by path as the eventual fix. The Phase-4 stratified rotation reads task
+difficulty only to pick a fairness cursor, never to bias account choice. `AccountDef.variant` was read
+in exactly 3 places, none capability-related (a DeepSeek pro/flash A/B split ratio, Gemini's RPM/RPD
+ceiling lookup, telemetry naming). The only pre-existing capability-ish gate was the coarse
+opus/fable-tier hard-pin (Claude-only) — sonnet-tier work (the overwhelming majority of dispatch) had
+zero capability signal.
+
+## Part 4 — capability-tier dispatch implemented (SHIPPED 2026-08-21)
+
+Implementation, reusing the ALREADY-BUILT `exclude_ids` mechanism from bugs 4a/5 rather than adding a
+new sort-preference parameter threaded through `_pick_headroom_account`'s ~9 internal call sites (a
+much larger, riskier diff for the same-day-shippable, easily-reversible shape a preference-not-filter
+change should take):
+
+- `model_tier.py`: new `capability_tier(provider, variant) -> int` (3 tiers: `CAPABILITY_TIER_STRONG`
+  = Anthropic/DeepSeek [established, not bake-off targets] + `gemini`/`3.5-flash-lite` [bake-off
+  STRONG-VERIFIED]; `WEAK_VERIFIED` = `glm`; `UNVERIFIED` = everything else). `equivalence_class()`
+  deliberately left untouched — it governs cross-model SUBSTITUTION eligibility, a different, blunter
+  question than this ROUTING PREFERENCE; touching it would change `model_strict` retry behavior for
+  every caller uniformly, a bigger blast radius than warranted today. Docstring updated to explain why.
+- `autospawn.py`: new `low_capability_account_ids(session) -> frozenset[str]` — classifies the live
+  `accounts.json` roster, returns everything below `CAPABILITY_TIER_STRONG`.
+- `autospawn.py::ensure_review_agents()`: fixed the Part 3 batch-loop bug (threads `review_picked`
+  across the loop, mirroring `_run_one_tick`/`_resume_pass`) AND applies capability preference (review
+  is judgment-heavy) — 2-pass select (capability+round-robin exclusion, then round-robin-only relaxed
+  retry), true exhaustion falls through to the existing "no account, retry next tick" handling.
+- `escalation.py::escalate()`: 2-pass capability-preferred select wrapping
+  `select_account_with_non_strict_retry` (capability exclusion first, full-pool fallback second) — a
+  CI-escalation is a judgment call. `model_strict=True` correctly skips the fallback retry too (exactly
+  one search attempt total, matching that flag's existing "never retry" contract — caught by a
+  pre-existing regression test that failed on the first implementation attempt, fixed same session).
+- Class-A backlog dispatch (`_run_one_tick`/`_resume_pass`) deliberately UNCHANGED — stays
+  capability-agnostic, matching the audit's own recommendation (routine work doesn't need bias away
+  from fair headroom-based spreading).
+- Tests: 4 new `model_tier` tests (tier classification per provider/variant), 4 new `autospawn` tests
+  (classification helper + review-agent capability-preference/fallback/multi-slot-spreading), 3 new
+  `escalation` tests (preference/fallback/strict-skip).
+- Evidence: `quality-gates.sh` green — ruff clean, basedpyright 0 errors, 5295 passed/4 skipped/0
+  failed, coverage 86.07% (above the 85.86% ratchet baseline). Shipped
+  `agent-orchestrator@36d56d8638`. One coverage-ratchet run (of 3 total across this shipping session)
+  transiently failed by 0.66 points; re-run TWICE more against the IDENTICAL tree both came back
+  clean (86.07%/86.07%, both above baseline) — cross-checked against a before/after per-line coverage
+  diff on all 3 touched files showing ZERO newly-uncovered lines from this change (missed-line counts
+  identical before/after, only line numbers shifted by the insertion offset) — confirmed pre-existing
+  test-run flakiness in this suite, not a real regression from this change.
+
+**Deliberately NOT done in this pass** (scoped out, tracked below): a hard hierarchy encoding EXACTLY
+which task types require which tier beyond escalation/review (e.g. per-`wall_type` granularity) — the
+bake-off data doesn't yet support that fine a cut; today's 2 capability-sensitive callers (escalation,
+review) cover the operator's explicit ask (CI-escalation dispatch) plus the other clearly judgment-
+heavy caller found during the audit.
+
 ## Todos
 
 - [x] [DATA] P1. ✅ **DONE 2026-08-21.** Re-verify CI-escalation single-account concentration claim —
       see Part 1. Repo: agent-orchestrator.
-- [ ] [DATA] P1. Complete the agent-type dispatch catalog (investigation dispatched, pending). Produce
-      a table of every call site, agent type served, batch-vs-single pick, exclude_ids correctness.
-      Fix any newly-found unfixed batching gap the SAME way bugs 4a/5 were fixed (thread `exclude_ids`/
-      `select_account_with_tick_spread`). Repo: agent-orchestrator.
+- [x] [DATA] P1. ✅ **DONE 2026-08-21 — see Part 3.** Agent-type dispatch catalog complete: every call
+      site audited, one real batching bug found (`ensure_review_agents`) and fixed (Part 4), no
+      separate/alternate selection mechanism exists. Repo: agent-orchestrator.
 - [x] [DATA] P1. ✅ **DONE 2026-08-21 — see Bake-off synthesis result above.** Completed
       `multi_provider_model_capability_bakeoff_2026_08_19.md`'s own open `[DATA] P2` todo (synthesis +
       routing recommendation). Its sibling `[REVIEW] P1` diff-vs-diff todo turned out to be
@@ -151,17 +219,27 @@ copied there as its own closing synthesis per that plan's own open todo — not 
       verdict. **Follow-on**: copy this synthesis + recommendation into the bake-off plan itself
       (its own todo asked for the table to live there) and flip both its remaining todos. Repo:
       unified-trading-pm.
-- [ ] [BACKEND] P1. Design + implement a capability-tier classification (derived from the bake-off
-      synthesis + `accounts.json`'s `provider`/`variant` fields) and wire it into `autospawn.py`'s
-      selection pipeline: capability-sensitive callers (CI-escalation, review-role, any judgment-heavy
-      dispatch) should PREFER higher-capability accounts, falling back to weaker ones only under real
-      exhaustion of the stronger pool — never a hard block that could stall dispatch entirely. Routine
-      Class-A backlog dispatch stays capability-agnostic (any headroom account, current behavior).
-      Include regression tests mirroring the existing `select_account_for_spawn` test patterns. Repo:
-      agent-orchestrator.
-- [ ] [SCRIPT] P2. Once the fix ships, update `/codex/04-architecture/agent-orchestrator-autospawn.md`
-      (the primary account-pick-rotation SSOT, already rewritten once today) with the new
-      capability-tier layer. Repo: unified-trading-pm.
+- [x] [BACKEND] P1. ✅ **DONE 2026-08-21 — see Part 4.** Capability-tier classification implemented and
+      wired into escalation + review-role dispatch as a PREFERENCE (graceful fallback, never a hard
+      block). Class-A backlog dispatch deliberately left capability-agnostic. 11 new regression tests,
+      full `quality-gates.sh` green. Repo: agent-orchestrator.
+- [x] [SCRIPT] P2. ✅ **DONE 2026-08-21.** Added a new "Capability-tier dispatch preference" section to
+      `/codex/04-architecture/agent-orchestrator-autospawn.md` (the primary account-pick-rotation SSOT)
+      covering the mechanism, the 2 wired-in callers, the distinction from `equivalence_class`, and the
+      `ensure_review_agents` bug fix. Frontmatter `related:`/`authoritative_for:`/`code_refs:` updated
+      too. Repo: unified-trading-pm.
+- [ ] [BACKEND] P2. **Found during this session's live-checkout-write incident (Progress Log).**
+      Neither `SUB_AGENT_MANDATORY_RULES.md`'s guidance nor any tool enforces that a write actually
+      lands under `.tabs/<N>/` — today it's self-verification discipline only, and this incident shows
+      that's insufficient even for the main interactive session, not just a delegated sub-agent (the
+      class the existing `SUB_AGENT_MANDATORY_RULES.md` fix from
+      `ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md` targets). Investigate a mechanical guard
+      — e.g. a pre-commit/pre-write hook on the bare-root checkouts specifically that refuses a write
+      when a `.tabs/<N>/` sibling exists for the same repo and the caller isn't `ao-self-pull.sh`
+      itself, or a lighter periodic dirty-tree canary alert. Scope + design this as its own small
+      investigation before implementing — not obviously worth a hard block given legitimate direct
+      bare-root writes may exist (operator-driven, host-level ops). Repo: unified-trading-pm
+      (guidance) and/or agent-orchestrator (a guard script, if one is built).
 - [ ] [SCRIPT] P3. **Found while archiving the bake-off plan** (its own last 2 todos closed above, hit
       0 open todos, archived per the HARD RULE). 2 OTHER active docs still cite its pre-archival
       active-path form of `multi_provider_model_capability_bakeoff_2026_08_19.md` in their own
@@ -178,3 +256,37 @@ copied there as its own closing synthesis per that plan's own open todo — not 
   Part 1 and audit/fix Part 2. Part 1 verified and closed same session. Part 2's two investigations
   dispatched in parallel (read-only, independent files/topics); this doc will be updated with their
   findings and the resulting implementation.
+- **2026-08-21 (interactive session) — incident: accidentally edited the LIVE bare-root checkout
+  instead of slot 13, wedged `ao-self-pull.sh` ~20+ min, recovered clean, no data lost.** While
+  implementing Part 4, a sequence of `nohup`/backgrounded shell commands (chasing an unrelated
+  `.venv`-missing problem, itself caused by the SAME underlying cwd confusion) left the session
+  believing it was operating in `.tabs/13/agent-orchestrator` when several `Edit` calls actually
+  landed in `/home/ubuntu/unified-trading-system-repos/agent-orchestrator` — the bare, LIVE checkout
+  `orchestrator.service` runs from and `ao-self-pull.sh`'s 2-minute cron actively manages. Caught by:
+  a QG run reporting a suspiciously clean baseline (no trace of the new code in its own log despite
+  believing it had just been added), then `git status`/`grep` run with explicit `git -C <path>`
+  (cwd-independent) on BOTH checkouts confirming the 6 modified files sat in the bare root, not slot
+  13. Live evidence the wedge was real and already detected:
+  `/tmp/ao-self-pull-dirty-wedge.alerted` (created 15:06 UTC) and `/tmp/ao-self-pull-dirty.ticks`
+  (at 11 ticks by the time this was caught, ~15:20+ UTC) — the exact same failure shape as this
+  session's earlier `ao_self_pull_wedged_by_kimi_removal_wip_2026_08_21.md` incident, root-caused
+  there as "a delegating prompt named the wrong path"; this one shows the SAME root cause can hit the
+  main interactive session too, not just a delegated sub-agent — the `SUB_AGENT_MANDATORY_RULES.md`
+  fix from that incident doesn't cover this case.
+
+  **Recovery** (no `git reset --hard`, no destructive command): `git -C <bare-root> diff >
+  /tmp/.../recovery.patch` (475 lines, 6 files — captured the FULL uncommitted change safely) →
+  `git apply --check` then `git apply` the SAME patch onto slot 13 (byte-identical application,
+  verified via `grep -c capability_tier` before/after) → `git -C <bare-root> checkout --
+  <the 6 files>` (safe: this was 100% my own accidental WIP, not foreign work, so reverting it is
+  correcting my own mistake, not destroying someone else's) → confirmed bare root
+  `git status` clean, `ahead=0/behind=0` against origin, ready for `ao-self-pull.sh`'s next tick to
+  resume normally on its own (its dirty-wedge markers are the script's own bookkeeping — left alone
+  to clear themselves rather than hand-edited).
+
+  **New todo, found while diagnosing**: neither `SUB_AGENT_MANDATORY_RULES.md`'s existing "verify an
+  absolute `.tabs/<N>/` path" guidance nor any existing tool wraps a HARD, mechanical check that a
+  `git -C <target-path>` write is actually landing under `.tabs/<N>/` before an Edit/Write/Bash call —
+  today it's discipline (self-verification via `pwd`), not enforcement, and this incident shows
+  discipline alone isn't sufficient even for the main interactive session, not just delegated
+  sub-agents. See Todos below.
