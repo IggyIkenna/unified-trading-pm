@@ -657,8 +657,12 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       >=26.2, closes PYSEC-2026-3721"), verified HEAD ancestor-or-equal of `origin/live-defi-rollout` via
       `git merge-base --is-ancestor`; `pyproject.toml` declares `"pip>=26.2"`, `uv.lock` resolves `pip==26.2`. No new
       code required — landed directly (main/harsh) between the todo's authoring and this pickup.
-- [ ] [SCRIPT] P2. **client-reporting-api** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
-      client-reporting-api)
+- [x] ✅ [SCRIPT] P2. **DONE — verified already-landed (2026-08-21, slot-10).** **client-reporting-api** — pip
+      CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: client-reporting-api) —
+      client-reporting-api@15c2afa8 ("fix(deps): raise pip floor to >=26.2, closes PYSEC-2026-3721"), verified HEAD
+      (`8e481d3`) ancestor-or-equal of `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml`
+      declares `"pip>=26.2"`, `uv.lock` resolves `pip==26.2`, working tree clean. No new code required — landed
+      directly (main/harsh) between the todo's authoring and this pickup.
 - [ ] [SCRIPT] P2. **deployment-api** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). NOTE: this repo also has
       a pre-existing, unrelated `internal_in_manifest_not_pyproject` (dep: deployment-service) alignment gap surfaced by
       the same `check-dependency-alignment.py` run — out of scope here, diagnose separately. (repo: deployment-api)
