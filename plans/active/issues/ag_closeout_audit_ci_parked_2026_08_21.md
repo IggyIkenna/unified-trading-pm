@@ -54,7 +54,7 @@ orphaned_never_touched 28 · exclude_cross_cutting 2.
 | `issues/ff_pull_fleet_drift_rca_2026_08_11.md` | real owner is `infra` tranche (per-tab-worktrees mechanics) |
 | `issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` | RETRY_PER_TICK scaling design |
 | `issues/fleet_wide_qg_cascade_pm_manifest_race_recurrence_2026_08_19.md` | secondary-priority confirmation |
-| `issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md` | monitoring-gap, MISCLASSIFIED_LIKELY_AO_ELIGIBLE flag never actioned |
+| `issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md` | ✅ **EXTRACTED 2026-08-21 (Phase 3)** → `ci_satellite_ao_dispatch_batch17_2026_08_21.md` — the MISCLASSIFIED_LIKELY_AO_ELIGIBLE flag is now actioned (a starting threshold-N was supplied rather than treated as a permanent blocker) |
 | `issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md` | design question |
 | `issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md` | time-gated GitHub retention retry |
 | `issues/mdps_qg_tests_slice_oserror_cannot_send_recurrence2_2026_08_19.md` | conditional (3rd occurrence trigger) |
@@ -89,3 +89,16 @@ orphaned_never_touched 28 · exclude_cross_cutting 2.
 
 - **2026-08-21**: Doc created directly from the 2026-08-21 /ag-closeout-audit ci Phase-1 sweep (2 batches). No
   mechanical fixes applied yet.
+- **2026-08-21 (Phase 3, AO-dispatch batch drafting)**: re-verified this doc's own mechanical-hygiene flags —
+  the STEP 2d/D3 stale-citation issue was already corrected (confirmed live in
+  `github_actions_operator_gated_followups_2026_07_17.md`'s D3 table, dated 2026-08-21); the `ff_pull_fleet_drift_
+  rca_2026_08_11.md` and `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md` stale
+  cross-tranche `ci` tags were also already dropped (both docs' live `asset_group`/tags confirmed clean of `ci`).
+  Read 3 of the ~28 `orphaned_never_touched` rows in full: 1 genuinely bounded item found and extracted
+  (`glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`'s sole remaining monitoring-gap todo, previously
+  self-flagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` 2x without ever being extracted) →
+  `ci_satellite_ao_dispatch_batch17_2026_08_21.md`. `mdps_qg_tests_slice_oserror_cannot_send_recurrence2_2026_08_19.md`
+  re-confirmed still conditional (3rd-occurrence trigger not yet met); `pytest_timeout_60s_flaky_under_contention_
+  2026_07_29.md` re-confirmed already `assigned_vm: planning` (not a true NA orphan — it's live-dispatchable
+  through the normal backlog already, no extraction needed). Did NOT reach the remaining ~25 orphan rows —
+  explicitly not exhaustively re-verified this pass.

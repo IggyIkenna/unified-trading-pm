@@ -61,7 +61,7 @@ broken 3+ weeks), item 9 (ao_tmp disk-full P0).
 | `issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` | slots 10/11 SIGTERM root-cause, setsid-safe reap exemption |
 | `issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md` | soft turn-count circuit breaker design |
 | `issues/autospawn_fleet_cap_headroom_throttling_routine_sla_miss_2026_08_09.md` | capacity/tuning tradeoff |
-| `issues/backlog_500_malformed_depends_on_comment_2026_08_19.md` | 2 bounded P3 fixes — good batch candidate |
+| `issues/backlog_500_malformed_depends_on_comment_2026_08_19.md` | ✅ **EXTRACTED 2026-08-21 (Phase 3)** → `ao_satellite_ao_dispatch_batch4_2026_08_21.md` (both P3 todos) |
 | `issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md` | park-drift alerting design |
 | `issues/backlog_regen_reverted_p1_2_park_2026_08_01.md` | park-drift standing assertion |
 | `issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md` | agent-orchestrator design fork |
@@ -112,3 +112,14 @@ broken 3+ weeks), item 9 (ao_tmp disk-full P0).
 
 - **2026-08-21**: Doc created directly from the 2026-08-21 /ag-closeout-audit ao Phase-1 sweep (3 batches). No
   mechanical fixes applied yet.
+- **2026-08-21 (Phase 3, AO-dispatch batch drafting)**: re-verified this doc's own mechanical-hygiene flags —
+  already resolved by an earlier session today (dead `plan_reconciler_findings_ao_2026_08_19.md` lock cleared;
+  `kimi_gemma_provider_onboarding_2026_08_16.md`'s stated checkbox status confirmed already accurate, no stale
+  claim found on re-check). Read ~11 of the ~50 `orphaned_never_touched` rows in full (fresh, not trusting this
+  doc's one-line taxonomy alone): 1 genuinely bounded item found and extracted
+  (`backlog_500_malformed_depends_on_comment_2026_08_19.md`'s 2 remaining P3 parser-hardening todos) →
+  `ao_satellite_ao_dispatch_batch4_2026_08_21.md`. The rest sampled (citadel-004 repeat-wedge, creds-env-poller,
+  slot2-wedge, ao-scheduled-jobs-health-audit, ao-tmux-session-loss carried finding) re-confirmed genuinely
+  operator-gated/design-fork/still-investigating on fresh read — no reclassification. Did NOT reach the remaining
+  ~40 orphan rows (mostly AO-design-fork/investigation/human-plan-by-design docs per this doc's own summary) —
+  explicitly not exhaustively re-verified this pass; a future pass should pick up where this one stopped.

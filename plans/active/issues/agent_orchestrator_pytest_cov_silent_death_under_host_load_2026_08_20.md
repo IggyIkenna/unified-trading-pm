@@ -129,10 +129,12 @@ Two independent tracks:
 - [ ] [BACKEND] P2. Wire the split-coverage-with-separate-`COVERAGE_FILE`-then-`coverage combine` workaround into
       `scripts/quality-gates.sh`'s pytest+coverage step permanently, so every local/CI full-suite run on this host is
       immune to this failure mode rather than requiring a manual workaround each time. Repo: agent-orchestrator.
+      **➡️ EXTRACTED 2026-08-21 (ag-closeout-audit, infra tranche Phase 3) → `plans/active/infra_satellite_ao_dispatch_batch2_2026_08_21.md` todo 12.**
 - [ ] [BACKEND] P3. Cross-check this finding against repo-blocker `RB-34953de6`'s own diagnosis (different slot/
       escalation, same day, same repo, same class of symptom: coverage/collection failures under concurrent host load)
       once that blocker is worked — confirm whether it's the identical root cause or a distinct one, and fold findings
       together if so. Repo: agent-orchestrator.
+      **➡️ EXTRACTED 2026-08-21 (ag-closeout-audit, infra tranche Phase 3) → `plans/active/infra_satellite_ao_dispatch_batch2_2026_08_21.md` todo 13.**
 
 ## Progress Log
 
