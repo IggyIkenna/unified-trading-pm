@@ -340,10 +340,11 @@ No code was changed or tests run for this read-only audit. The HIGH findings req
       scope isolation, 50-thread concurrency with zero collisions, reuse-across-instances for all three venues
       incl. Kraken Spot+Futures sharing one key); quality-gates.sh green (182s, sentinel matched committed HEAD);
       post-push ancestry verified.
-- [ ] [BACKEND] P0. Enforce finite-positive quantity/price, strict side/order-type/symbol, and bounded
+- [x] ✅ [BACKEND] P0. Enforce finite-positive quantity/price, strict side/order-type/symbol, and bounded
       market-order expiry/slippage semantics at every native order and amend boundary; HIGH findings: checklist
       points 3 and 4 (bitfinex_native.py:337-365, bitget_native.py:274-315,
-      kraken_rest_adapter.py:230-344,437-472, kraken_futures_orders.py:49-123,163-177).
+      kraken_rest_adapter.py:230-344,437-472, kraken_futures_orders.py:49-123,163-177). — execution-service@a57d7fba93
+      + evidence: shared validators in _native_base.py, wired pre-body-build into all 4 files; QG green.
 - [ ] [BACKEND] P0. Preserve one client-order id across native submissions and reconcile ambiguous responses before
       retrying; do not discard invalid/missing IDs or allow a fresh retry to double-place an order; HIGH finding:
       checklist point 6 (bitfinex_native.py:337-368, bitget_native.py:274-318,
