@@ -172,6 +172,27 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- **2026-08-21 ~15:15 London (todos 1+2 CODE-COMPLETE, ship pending)** — mtds@d188fb2e (LOCAL commit, 10 files
+  +557/-29; NOT yet on LDR — quickmerge dirty-deps-blocked, see choke point below). Root causes: (1)
+  `_lending_grain.py:141-145` `_PROTOCOL_TO_CANONICAL_VENUE` mapped kamino_lending/solend/marginfi to GLUED
+  `X-SOLANA` venues — feeds risk_params/lending_indices handlers; `write_defi_rows`'s `build_canonical_instrument_id`
+  glues AGAIN → double-glued path+id; fixed to bare. (2) `solana_lst_archival.py:737,757` SOLBLAZE-SOLANA → bare
+  SOLBLAZE. (3) `canonical_write.py:85` `_normalize_venue` docstring falsely claimed glue-stripping — corrected. (4)
+  NEW `_rebuild_defi_retired_guard.py` wired into `rebuild_defi_manifest.py` scan: skips RETIRED
+  `dex_pools` (dex_swaps deliberately EXCLUDED — real content) + double-glued-id detector via UAC
+  `split_glued_venue_chain`. 18 new/updated tests. QG: own tests green; 1 fail + 1 collection error from unrelated
+  same-day peer commit f7cdd18b (sports registry / pipeline_e2e_check) — peer sessions are actively shipping
+  fixes/skip-marks for exactly those.
+- **2026-08-21 ~15:15 London (execution state)** — Todo 3 purge apply RUNNING (Kleene-mask fix applied to
+  `purge_evm_glued_phantom_venue_defi_rows_2026_08_21.py` — non-Kleene or_/and_ nulled the whole mask on NULL-chain
+  rows; consolidator cron PAUSED for the write, resume after terminal verdict). Todo 7 projection VM launch attempt 2
+  ABORTED at the tarball-freshness gate (dirty UAC checkout). **Single choke point: co-occupant sessions' uncommitted
+  WIP in slot-3 UAC (`venue_instrument_type_axis.py`, actively being QG'd by its owner) + UTL (`ledger/run_writer.py`)
+  blocks ALL of: MTDS ship (d188fb2e), IS seeder-fix ship, deployment-service launcher ship, and the VM tarball
+  publish.** Dep-clean watcher armed (60s poll, 45min cap) → on fire: relaunch VM + retry all three quickmerges.
+  Purge agent also left `scripts/one_offs/rekey_solana_glued_venue_defi_rows_2026_08_21.py` (task-5 manifest re-key,
+  untracked) — run after task-3 completes + copies verified.
+
 - **2026-08-21 (slot 3, interactive + /autonomous)** — Plan created from a 4-agent live census (manifest census /
   distinct-values trace / plans census / UAC+consumer audit). Key numbers in § Evidence base. Census artifacts in the
   session scratchpad (`venue_census.csv`, `datatype_census.csv`, `instrumenttype_census.csv`, `chain_census.csv`,
