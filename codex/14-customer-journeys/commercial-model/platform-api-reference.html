@@ -973,76 +973,9 @@
     </div>
   </header>
 
-  <section id="about">
-    <div class="sec-head">
-      <span class="num">§</span>
-      <h2>About Odum Research</h2>
-    </div>
-    <p class="lede">
-      Odum Research is the firm behind this platform — an investment-management and quantitative-research business
-      that researches, backtests and runs trading strategies across CeFi, DeFi, TradFi, sports and prediction
-      markets, and makes the same infrastructure available to counterparties who want to allocate to it, lease its
-      signals, or run their own strategy on it. Odum has been under an ongoing strategy-building consultancy
-      engagement with a client for over a year; that same client is separately negotiating bespoke execution
-      services on this platform — DeFi strategies today, CeFi expected to follow.
-    </p>
-    <p>
-      <a href="https://www.odum-research.com/" target="_blank" rel="noopener">odum-research.com</a> ·
-      <a href="https://www.odum-research.com/who-we-are" target="_blank" rel="noopener">who we are</a> ·
-      <a href="https://www.odum-research.com/odum-tearsheet-5cda11d0928332808a3fcd57.html" target="_blank" rel="noopener"
-        >live tear sheet</a
-      >
-      — all on the same site, no separate login between them.
-    </p>
-    <div class="keypoints">
-      <div>
-        <b>1 — Allocate</b>
-        <span
-          >Deploy into Odum's investment-management business; one strategy live today with a verifiable track
-          record (tear sheet above), more on offer toward year-end.</span
-        >
-      </div>
-      <div>
-        <b>2 — Signals</b>
-        <span
-          >Lease a signal slot — <a href="#s6">§06</a> below is the literal integration contract: full schema,
-          pull/push, acknowledgement.</span
-        >
-      </div>
-      <div>
-        <b>3 — Run in your ecosystem</b>
-        <span
-          >A carved-out strategy for full ownership, or build-and-license on bespoke terms — any strategy, any
-          asset group, negotiated case by case.</span
-        >
-      </div>
-    </div>
-    <p>
-      We research and backtest every strategy for the client before it goes live, and promotion does not rewrite
-      the code that produced the backtest — it runs it: <code>paper(W)</code> equals <code>batch-rerun(W)</code>
-      trade-for-trade (ε=0 proof), down to latency assumptions and book-triggered events, with execution alpha
-      measured as the one intentional delta at the live fill boundary
-      (<code>/codex/09-strategy/operational/paper-batch-live-reconciliation.md</code>). Taking a strategy live means
-      moving it onto that same proven infrastructure, not migrating to a different stack.
-    </p>
-    <p>
-      DART — Data Analytics Research Terminal — is the same in-house research/backtest/paper/live terminal Odum
-      runs its own strategies on, shareable with clients; see
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §dart.
-    </p>
-    <p style="font-size: 0.9rem; color: var(--ink-3)">
-      Full narrative version of all three engagement models, plus DeFi liquidity-pool engagement detail: see
-      <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §about/§engage/
-      §research-service/§dart/§defi-lp.
-    </p>
-  </section>
-
   <nav class="contents">
     <h2>Contents</h2>
     <ol>
-      <li>
-        <a href="#about"><span class="num">§</span><span class="ttl">About Odum Research</span></a>
-      </li>
       <li>
         <a href="#s0"><span class="num">00</span><span class="ttl">How to read this</span></a>
       </li>
@@ -2324,40 +2257,6 @@
       <code>execution_service/api/external_instruction_defi.py</code> (all 16 of 16 action types routed to real
       execution through this endpoint)
     </p>
-
-    <div class="callout">
-      <span class="tag">Any asset group, including decentralized liquidity — LP is just an instruction</span>
-      <p>
-        <code>LP_MINT</code>/<code>LP_BURN</code> above are not a special integration path — they are strategy
-        instructions on the same envelope as everything else on this page. Concentrated-liquidity position
-        management on Uniswap V3 is live across five EVM chains (Ethereum, Arbitrum, Base, Optimism, Polygon)
-        alongside an already-broad DeFi execution roster (AAVE V3 lending, Lido staking, and connectors spanning
-        yield, restaking and Solana DEXs). More protocols and pools are added on demand — a client either
-        parametrizes an LP/yield instruction against our existing execution, or we custom-build the specific
-        integration. Full list:
-        <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span> §defi-lp.
-      </p>
-    </div>
-    <div class="callout">
-      <span class="tag">Dual authorization on treasury movements, and custody that adapts to the client</span>
-      <p>
-        The number of independent, HMAC-signed approvals a withdrawal needs before it executes scales with the
-        client's configured tier — SMALL needs 1, MEDIUM needs 2, LARGE needs 3 — accumulated server-side until
-        quorum is reached; a duplicate approval or one submitted after quorum is already met is rejected outright,
-        not silently accepted
-        (<code>deployment-api/deployment_api/routes/client_treasury.py::approve_withdrawal</code>, signed via
-        <code>execution_service.custody.withdrawal_signing.sign_withdrawal_approval()</code>). For MEDIUM and
-        LARGE that is genuine multi-person sign-off enforced server-side, not policy alone. Underneath it, the
-        signing surface itself is pluggable and declared per deployment rather than hardcoded — HSM-backed
-        cloud-KMS envelope encryption is shipped, and Copper MPC custody is the production provider for every DeFi
-        chain and non-Binance CeFi venue — so integrating a client's own custodian or wallet arrangement is a
-        deployment-time configuration choice within an existing extension point, not a platform rebuild.
-      </p>
-      <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>,
-        <code>execution-service/execution_service/engine/handlers/transfer_handler.py::TransferHandler</code>.
-      </p>
-    </div>
 
     <details class="ep">
       <summary>
