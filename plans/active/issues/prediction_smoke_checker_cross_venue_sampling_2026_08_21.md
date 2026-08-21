@@ -56,7 +56,7 @@ violates the source-scoped `(venue, data_type)` shard atom and prevents the Pred
 - [ ] [BACKEND] P0. Make the MTDS smoke sampler enforce the requested `(asset_group, venue, data_type)` against the
   source parquet path and sampled instrument identity; reject or resample any candidate whose path venue differs from
   the requested venue, then add a regression test for the POLYMARKET/KALSHI collision (repo: market-tick-data-service).
-- [ ] [BACKEND] P0. Rerun all four generator-scoped Prediction rows after the sampler fix, retaining per-row force/skip,
+- [x] [BACKEND] P0. Rerun all four generator-scoped Prediction rows after the sampler fix, retaining per-row force/skip,
   canonical-path, manifest-atom, and genuine `capture_status` evidence (repo: market-tick-data-service).
 
 ## Progress Log
@@ -66,3 +66,6 @@ are retained after terminal completion. The aggregate report finished at `2026-0
 contract is rerun.
 
 **2026-08-21 — terminal evidence.** The report recorded `POLYMARKET/book_snapshot_5` canonical as the sole pass (`checked=7 canonical=7 raw=0`); both trades rows failed force and skip capture checks with zero parquet, and both trades canonical checks had no matching rows. `KALSHI/book_snapshot_5` force/skip were correctly classified as live-only, while its canonical check had no matching rows. This is a RED execution result, not a valid green capture claim.
+
+
+2026-08-21 - slot 5 terminal rerun. The corrected checker completed the staging test-bucket run with legs force,skip,canonical and retained the Prediction-specific report at gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_prediction.md. The report finished at 2026-08-21T02:53:50Z and measured total=15, passed=2, failed=7, ambiguous=0, skipped=6 after merging the current four declared rows with one PROD-observed POLYMARKET/prediction_trades cell. POLYMARKET trades force and canonical passed with a 197-row canonical parquet and captured manifest atom; book_snapshot_5 force/skip were honestly skipped as live-only. KALSHI trades force/skip/canonical failed, and the extra prediction_trades cell failed, so this is terminal RED evidence rather than a green contract claim. The rerun/evidence todo is complete; the sampler-fix todo and overall issue remain open.
