@@ -246,3 +246,7 @@ Objects: 28158  Days: 497  Bytes: 1060914050589 (988.05 GB)
   reclassification migration gated on that root cause.
 - **na-eligibility-audit 2026-08-16** [body-hash:e0e6e2c3ca7c4051]: KEEP-NA, valid — Doc read in full end-to-end. Todo 1 (writer root-cause) is genuinely DONE: independently verified commit market-tick-data-service@06c07089 is an ancestor of origin/live-defi-rollout (checked pre- and post-fetch in the slot's own c…
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — writer root-cause fix is DONE (todo 1); remaining item
+  bundles a corpus-wide re-census (~988GB, predates the fix) with an undecided split-vs-reclassify-in-place design
+  fork over a large prod-data migration — not worker-determinable as a single bounded unit. Matches the 2026-08-19
+  ag-closeout-audit's own too-large-or-risky classification.

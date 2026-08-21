@@ -219,3 +219,6 @@ a re-fire of the SAME already-root-caused condition, NOT a new regression.
 
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries) — added the VM-deployment codex doc backing
   the "Re-fire resolution" section's root cause (manual tarball deploy vs. LDR self-pull).
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — 2 open items remain explicitly conditional/contingent
+  (other Aster endpoints' weight, only relevant if a future alert fires; VM re-run self-recovery, no manifest write
+  needed) — not currently actionable.
