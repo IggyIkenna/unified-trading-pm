@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
+#
+# Real, PATH-resolved executable guard wrapper for `pgrep` — see ./pkill for the
+# full rationale (identical mechanism, applied to pgrep instead of pkill).
+set -euo pipefail
+_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../pkill-guard.sh
+source "${_dir}/../pkill-guard.sh"
+_pkill_guard_check "pgrep" "$@" || exit 1
+exec /usr/bin/pgrep "$@"
