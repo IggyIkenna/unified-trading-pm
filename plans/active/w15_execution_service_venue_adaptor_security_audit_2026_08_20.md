@@ -329,10 +329,17 @@ No code was changed or tests run for this read-only audit. The HIGH findings req
 - [x] ✅ [BACKEND] P0. Make Bybit position/balance read failures observable instead of returning empty positions or zero balance, while preserving the already honest failed-order result; MEDIUM finding related to checklist point 7 (bybit.py:136-176). — execution-service@f1565e8a5e + evidence: `fetch_positions()`/`fetch_balance()` now log at ERROR and re-raise instead of swallowing adapter-init/CCXT read failures into `[]`/`Decimal("0")`; consistent with existing callers (`bybit_deposit.py`'s poll loop already try/excepts around `fetch_balance`, `perp_hedge_wiring.py`'s HL-side readers already let real errors propagate); 2 tests updated to assert the raise instead of the old silent fallback; quality-gates.sh green (292s, sentinel matched committed HEAD).
 - [ ] [BACKEND] P0. Confirm Pacifica's future live enablement retains the current fail-closed boundary (supports_live=False) and validates the configured Solana keypair/account relationship before changing that flag; HIGH-risk signing/auth guardrail (pacifica.py:31-48,286-328,610-645).
 
-- [ ] [BACKEND] P0. Add a process/key-scoped monotonic nonce allocator for Bitfinex, Bitget, and Kraken native
+- [x] ✅ [BACKEND] P0. Add a process/key-scoped monotonic nonce allocator for Bitfinex, Bitget, and Kraken native
       signing, including concurrency protection and reuse across adapter instances; HIGH finding: checklist point 2
       (bitfinex_native.py:179-199, bitget_native.py:145-166, kraken_rest_transport.py:308-310,
-      _native_base.py:75-82).
+      _native_base.py:75-82). — execution-service@cc6c2ee171 + evidence: new `allocate_monotonic_nonce()` in
+      `_native_base.py` (module-level lock + last-issued-per-scope registry, scope_key=`f"{venue_name}:{api_key}"`);
+      wired into `bitfinex_native.py`, `bitget_native.py`, and `kraken_rest_transport.py`'s `_make_nonce()`
+      (Kraken Spot + Futures share the one method); 11 new regression tests in
+      `tests/unit/cefi_execution/test_native_nonce_allocator.py` (monotonic increase, no-regression-on-clock-step,
+      scope isolation, 50-thread concurrency with zero collisions, reuse-across-instances for all three venues
+      incl. Kraken Spot+Futures sharing one key); quality-gates.sh green (182s, sentinel matched committed HEAD);
+      post-push ancestry verified.
 - [ ] [BACKEND] P0. Enforce finite-positive quantity/price, strict side/order-type/symbol, and bounded
       market-order expiry/slippage semantics at every native order and amend boundary; HIGH findings: checklist
       points 3 and 4 (bitfinex_native.py:337-365, bitget_native.py:274-315,
