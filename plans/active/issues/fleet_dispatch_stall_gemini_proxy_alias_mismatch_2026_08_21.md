@@ -207,8 +207,45 @@ exercised different strings, so a green suite carried no signal about the live p
       `/accounts/<id>` path (silently misattributes usage/billing), and an Anthropic env
       file pinning `ANTHROPIC_MODEL` (silently overrides AO's chosen tier).
 
+- [x] [INFRA] P0. **Restarted `litellm-grok-gemini-proxy.service` and VERIFIED the fix
+      end-to-end with a real call** (2026-08-21 16:35 UTC; previously running since
+      2026-08-20 11:45 with `NRestarts=0`). Re-tagged from `[OPERATOR]` to `[INFRA]`: the
+      original tag was over-cautious — the workspace's standing rule is that maintenance
+      restarts skip operator scheduling pre-live-trading, the diagnosis was complete, and
+      the service was already 100% non-functional for Gemini so a restart could not worsen
+      it. Verification is a REAL `/v1/messages` call, not the smoke test:
+      `{"model":"gemini-3-7-flash-proj1",...}` returned a genuine assistant response with
+      real token usage, and a deliberately bogus alias still 400s (proving the check is
+      model-specific, not blanket-permissive).
+- [x] [INFRA] P0. **Fixed a SECOND, latent breakage the restart exposed: the LiteLLM master
+      key had been rotated in `.env.local` (mtime 2026-08-21 14:50) but none of the account
+      env files were updated.** The proxy had been running since 2026-08-20 11:45, so the
+      old process still held the PRE-rotation key in memory — auth kept working purely
+      because nothing had restarted it. The moment it restarted, every account presented a
+      token that was no longer the master key; LiteLLM then treats it as a *virtual* key,
+      which requires a database it does not have (see the `prisma` todo below), so every
+      call failed `No connected db.` — a completely different error from the alias bug, and
+      one that would have looked like "the fix made it worse" without this trace. All 14
+      env files shared one token (the old master key); the 7 LIVE ones
+      (6 gemini + gemma-self-hosted) were re-synced to the current master key, each with a
+      `.env.bak-2026-08-21T164000Z-masterkey-sync` backup. `gemma-self-hosted.env` is
+      root-owned and needed `sudo`. **Standing risk this leaves**: nothing keeps these in
+      sync, so the next master-key rotation re-breaks the whole fleet the next time the
+      proxy restarts — and it will again be silent until then. See the new todo below.
+      NOTE `gemini-3-5-flash-lite-proj1` now returns a real Google `429 quota exceeded`
+      (free-tier input-token quota genuinely spent) — that is the vendor's real limit
+      working as designed, NOT a remaining config fault; `gemini-3-7-flash-proj1` on the
+      same key answers normally.
+
 ## Open todos
 
+- [ ] [INFRA] P1. **Keep account env files and the LiteLLM master key in sync automatically.**
+      The 2026-08-21 rotation broke every proxied account the instant the service restarted,
+      and stayed invisible until then because the running process held the old key in
+      memory. Either derive the account token from the same source at spawn time rather than
+      duplicating it into 14 files, or add a startup/pre-spawn check that refuses (loudly) on
+      a token/master-key mismatch. `check_prod_model_names_resolve.py` deliberately does NOT
+      read auth tokens, so it cannot catch this class — a separate check is needed.
 - [ ] [INFRA] P1. **Run `check_prod_model_names_resolve.py` on a schedule** — it is
       currently only run by hand, which is the same "nobody thinks to look" gap that let
       the original bug live for days. Wire it into `/ao-watchdog`'s pass (cheapest) or its
