@@ -5,14 +5,16 @@ summary: >-
   SSOT for the live=batch event-log persistence spine — MTDS/MDPS/features/strategy/ml/execution all publish/read via
   the UTL EventTransport facade (InMemoryTransport for paper, Pub/Sub for live), three automatic persistence tiers
   (hot/warm/cold) classified by SINK_MATRIX + RetentionClass, giving paper(W)==batch-rerun(W) trade-for-trade
-  determinism (epsilon=0); Pub/Sub topics + warm-GCS subscriptions + daily compaction provisioned in Terraform.
+  determinism (epsilon=0); Pub/Sub topics, pull readers, warm-GCS subscriptions, and daily compaction are provisioned
+  in Terraform.
   Shard/topic counts drift as connectors are added — verify against the live SINK_MATRIX/Terraform before citing an
   exact number (see § SINK_MATRIX below).
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, e2e-testing]
+repos:
+  [deployment-service, e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: [live-trading, event-log, pipeline-mode, reconciliation, data-pipeline, mtds, mdps]
 related:
@@ -30,12 +32,13 @@ authoritative_for:
 referenced_by:
   [
     /codex/05-infrastructure/pubsub-topic-inventory.md,
-    plans/audit/results/vm_deployment_events_audit_2026_05_15.md,
+    /plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md,
+    /plans/audit/results/vm_deployment_events_audit_2026_05_15.md,
     plans/archive/2026_08/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
     plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md,
   ]
 owner:
-last_reviewed: 2026-06-26
+last_reviewed: 2026-08-21
 code_refs:
 ---
 
@@ -52,7 +55,9 @@ determinism (GCS contents could change between write and read).
 ```
 MTDS live tick → CanonicalPersistEnvelope(source=MTDS) → UTL facade publish()
 MDPS → UTL facade read() → tick payload_inline → OHLCV aggregate → CanonicalPersistEnvelope(source=MDPS) → UTL facade publish()
-features/strategy/ml/execution → UTL facade read() → process → UTL facade publish()
+features → UTL facade read() → execution FeatureTickSubscriber → QuoteMaintainer
+strategy AtomicInstruction → UTL facade publish() → execution StrategyInstructionSubscriber → Instruction → ExecutionOrchestrator
+strategy/ml/execution → UTL facade read() → process → UTL facade publish()
 ```
 
 ### Three persistence tiers (automatic via SINK_MATRIX)
@@ -70,16 +75,14 @@ BQ external table = view over warm GCS (no BQ subscription, no second copy, no i
 - `REPRODUCIBLE` — data can be re-derived from upstream; finite cold TTL (per SINK_MATRIX)
 - `STREAM_ONLY` — system of record; cold GCS forever, `cold_ttl_days=None`
 
-Execution fills/positions/PnL/paper_ledger are `STREAM_ONLY`. All market-data and derived-feature shards are
-`REPRODUCIBLE`.
+Execution fills/positions/PnL/paper_ledger and strategy-emitted `atomic_instruction` envelopes are `STREAM_ONLY`.
+All market-data and derived-feature shards are `REPRODUCIBLE` unless their SINK_MATRIX entry says otherwise.
 
 ### SINK_MATRIX
 
 `unified_api_contracts.events.sink_matrix.SINK_MATRIX` — keyed by `(asset_group, data_type)`. Wildcard `"*"` in
-asset_group matches any. `sinks_for()` raises `KeyError` on unknown shard (no silent default). **As of 2026-08-21,
-SINK_MATRIX carries 54 entries** (measured directly from `unified_api_contracts/events/sink_matrix.py`, up from the 52
-at this doc's authoring) — this count grows as new connectors go live; verify against the live file rather than citing a
-fixed number.
+asset_group matches any. `sinks_for()` raises `KeyError` on unknown shard (no silent default). The matrix is the machine-readable source of truth; its entry set grows as new connectors go live, so verify the live
+file rather than copying a fixed count into this document.
 
 ### EventTransport (UTL facade)
 
@@ -87,7 +90,8 @@ fixed number.
 
 - `InMemoryTransport` — paper/colocated (same code path → determinism)
 - `RedisStreamTransport` — existing Redis Streams wrapper
-- `PubSubTransport` — live Pub/Sub (stub pending full provisioning)
+- `PubSubTransport` — live Pub/Sub via the UTL `MessageBus` abstraction; publishes to the shard topic and pulls from
+  the corresponding `-reader` subscription
 - `publish(envelope, transport?)` / `read(asset_group, data_type, after?, transport?)` — module-level API
 
 ## Determinism guarantee
@@ -108,19 +112,38 @@ Proven in `e2e-testing/tests/unit/test_live_persist_determinism.py` (4 tests):
    2026-08-12; the doc previously cited a `test_sink_matrix_covers_all_52_shards` name that no longer exists in
    `unified-api-contracts/tests/unit/test_persist_envelope.py`)
 
+The strategy/execution seam is also proven in
+`e2e-testing/tests/unit/test_atomic_instruction_live_routing_seam.py`: the publish-side
+`publish_atomic_instruction()` writes a real envelope to `InMemoryTransport`, and the execution-side
+`route_atomic_instructions()` reads it and drives `AtomicLegExecutor` to a settlement report. The deployed
+`execution-service` entrypoint additionally starts `StrategyInstructionSubscriber` and `FeatureTickSubscriber` in
+its `api.main` lifespan; both retain per-shard cursors and are cancelled during shutdown.
+
 ## Topic naming
 
-One Pub/Sub topic per shard `(asset_group, data_type)`. Wildcard shards use topic `persist-all-{data_type}`. Retention
-1d (REPRODUCIBLE) to 3d (STREAM_ONLY cold seeding); warm GCS subscription is the durable copy.
+One Pub/Sub topic per shard `(asset_group, data_type)`. Wildcard shards use topic `persist-all-{data_type}`; the
+atomic-instruction execution reader uses concrete topics `persist-{asset_group}-atomic-instruction` with the matching
+`-reader` subscription for `cefi`, `defi`, and `prediction`. Retention is 1d for REPRODUCIBLE and 3d for STREAM_ONLY
+cold seeding; the warm GCS subscription is the durable copy.
 
 ## Terraform provisioning
 
-54 wildcard/declared Pub/Sub sink topics (measured 2026-08-21, `deployment-service/terraform/gcp/live_event_log/`) +
-Cloud Storage subscriptions (warm GCS). Strategy atomic instructions additionally require concrete asset-group topics
-and execution-reader subscriptions because `PubSubTransport` publishes and reads `persist-{asset_group}-*` names.
+The `deployment-service/terraform/gcp/live_event_log/` module provisions the wildcard/declared Pub/Sub sink topics and
+their Cloud Storage subscriptions (warm GCS). `strategy_atomic_instruction.tf` additionally provisions concrete
+asset-group atomic-instruction topics, execution-reader subscriptions, warm-GCS subscriptions, and matching BigQuery
+external tables because `PubSubTransport` publishes and reads `persist-{asset_group}-*` names.
 
 - BigQuery external tables + daily compaction Cloud Run Job deployed in
   `deployment-service/terraform/gcp/live_event_log/`.
+
+## Live transport selection boundary
+
+The Pub/Sub transport implementation and production resources are real, but `get_transport()` with no topology argument
+intentionally returns `InMemoryTransport`. The strategy publish helpers and `execution_service.api.main` currently rely
+on that default unless a caller explicitly injects `get_transport("pubsub")` or a `PubSubTransport`. The landed subscriber
+and startup work therefore proves the shared contract and the in-memory round trip; it does not by itself prove that the
+deployed strategy and execution entrypoints exchange instructions over Pub/Sub. Verify topology selection/injection
+separately before claiming production inter-service delivery.
 
 ## Cross-references
 

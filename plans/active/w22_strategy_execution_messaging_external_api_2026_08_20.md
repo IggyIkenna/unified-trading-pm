@@ -244,10 +244,11 @@ context_scope:
 
 ### Close-out
 
-- [ ] [AGENT] P0. Post-phase codex audit — update `/codex/02-data/live-data-persistence-and-event-log.md` and
-      `/codex/04-architecture/tier-and-import-architecture.md` if this plan's messaging-bridge implementation
-      changes anything either doc currently states as unbuilt; cross-link the delta-proxy issue doc both
-      directions once the features-service subscription todo lands.
+- [x] [AGENT] P0. ✅ Post-phase codex audit — updated `/codex/02-data/live-data-persistence-and-event-log.md` with
+      the measured Pub/Sub reader, atomic-instruction subscriber, Terraform, and warm/BQ surfaces; the tier/import
+      SSOT had no stale messaging claim. Cross-linked and narrowed the remaining generic-reader todo in
+      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`. Evidence: PM diff review;
+      `e2e-testing/tests/unit/test_atomic_instruction_live_routing_seam.py` and deployed `api.main` wiring verified.
 - [ ] [AGENT] P0. Confirm the epic's own W22 section (`/plans/epics/system_readiness_master.md`) reflects this
       plan's real landed state once every todo above is done or explicitly re-scoped — the epic's todos should
       point here, not duplicate the detail.

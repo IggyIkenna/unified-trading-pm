@@ -60,6 +60,7 @@ related:
     /plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md,
     /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
+    /plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md,
     /plans/epics/system_readiness_master.md,
   ]
 locked_by:
@@ -657,11 +658,10 @@ POST_ONLY as two independently composable fields.
       `RuleEvalContext` fields**, given the confirmed-2026-08-19 finding that `preflight_gate.py` has zero
       `ExposureAggregator` imports — either wire it to the real aggregator, or document the independent
       computation explicitly so the two same-named fields stop reading as one source of truth.
-- [ ] [INFRA] P2. **Provision the EventTransport seam's `-reader` pull subscriptions** (`persist-{ag}-{dt}-reader`)
-      — confirmed absent 2026-08-19 (measurement run, slot 14): production `persist-*` topics carry only
-      `warm-sink-*` GCS push subscriptions, so `PubSubTransport.read()` fails against them today. Includes
-      provisioning the missing `persist-all-atomic-instruction` topic (already a known codex gap) so the
-      strategy→execution seam is actually readable in live.
+- [ ] [INFRA] P2. **Provision the remaining EventTransport seam `-reader` pull subscriptions**
+      (`persist-{ag}-{dt}-reader`) for generic matrix shards. W22 provisioned the concrete atomic-instruction
+      execution readers for `cefi`, `defi`, and `prediction`, plus their warm-GCS and BigQuery surfaces; the
+      remaining generic readers still need provisioning before every `PubSubTransport.read()` consumer is live.
 - [ ] [REVIEW] P2. **Re-evaluate the BACKRUN / LIQUIDATION_BUNDLE "12s block budget is generous enough" reasoning
       with the measured transport cost** — measured 2026-08-19 (slot 14, `unified-trading-library@418ce99c`):
       EventTransport `PubSubTransport` publish→receive round-trip ~2.2–2.7s median / ~4.7–5.0s p95 / ~4.9–5.0s max
