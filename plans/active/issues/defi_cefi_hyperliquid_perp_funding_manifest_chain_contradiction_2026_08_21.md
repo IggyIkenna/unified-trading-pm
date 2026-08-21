@@ -111,16 +111,69 @@ the measured contradiction only.
 
 ## Recommended next step
 
-- [ ] [DIAG] P2. **Root-cause the HYPERLIQUID `perp_funding` chain contradiction.** Determine which of the three
+- [x] [DIAG] P2. **Root-cause the HYPERLIQUID `perp_funding` chain contradiction.** Determine which of the three
       candidate explanations above (or another) actually explains why live `chain=""` diverges from the code's
       enforced `chain="HYPERLIQUID"`, then either (a) fix the code to match the correct value (mirroring the
       KALSHI-PERP `_CHAINLESS_VENUES`-carve-out pattern if the ruling comes back the same way, or a different fix if
       it's deployment drift / a second writer), or (b) confirm `chain="HYPERLIQUID"` genuinely is correct and get an
       explicit ruling on restamping the 979 existing `chain=""` rows instead. Repo: market-tick-data-service. Source:
       this doc. **Done when**: the root cause is identified with evidence (not guessed), the correct chain
-      convention for this exact shard is confirmed (via code investigation and/or an explicit operator ruling if the
+      convention for this exact shard is confirmed (via code investigation and/or an explicit operator decision if the
       evidence is ambiguous), any resulting code/data fix ships with `quality-gates.sh` green, and this doc's status
-      flips to resolved.
+      flips to resolved. **Resolved 2026-08-21**: candidate #1 (deployment drift) confirmed for this handler —
+      `perp_funding_handler.py::_run_process`'s `_chain_map` already contained `"hyperliquid": "HYPERLIQUID"` before
+      this round's edits; the deployed tarball lagged HEAD, not a code defect. Operator ruling 2026-08-21 (recorded
+      in this doc's own "Operator ruling" section below, and in the sibling doc
+      `/plans/active/issues/mtds_aster_dead_chain_default_and_unverified_instrument_catalogue_field_2026_08_21.md`)
+      also confirmed `chain="HYPERLIQUID"` (not blank) is the permanently-correct value going forward. See the
+      section below for the code fix, the small backfill for this doc's own 979/3,013-row scope, and a
+      related-but-separate larger finding this investigation surfaced.
+
+## Operator ruling 2026-08-21 (fix all three: Polymarket, Hyperliquid, Aster)
+
+Operator ruled, with confirmed web-research evidence: HYPERLIQUID keeps its real chain identifier
+(`ChainKind.HYPERLIQUID_L1`, wire value `"HYPERLIQUID"` — UAC SSOT per
+`three_chain_registries_disagree_none_authoritative_2026_08_19.md`), same treatment as POLYMARKET-PERP (→
+`"POLYGON"`, Polymarket settles on-chain there) and ASTER (→ `"BSC"`). Only KALSHI-PERP stays chainless
+(CFTC-regulated, confirmed no blockchain) — this REVERSES the interim over-generalization in
+`market-tick-data-service@f7cdd18b21` that had wrongly added POLYMARKET-PERP to `_CHAINLESS_VENUES` alongside
+KALSHI-PERP.
+
+**Code fix** (`perp_funding_handler.py::_run_process`'s `_chain_map`): confirmed already-correct for `hyperliquid`
+(no change needed); `polymarket_perp` added → `"POLYGON"`. `_defi_manifest.py::_CHAINLESS_VENUES` narrowed back to
+`frozenset({"KALSHI-PERP"})`.
+
+**Backfill, this doc's original scope** (`perp_funding` data_type only): HYPERLIQUID 3,013 total / 979 captured
+chain="" rows; POLYMARKET-PERP 3,273 total / 13 captured chain="" rows (shared script, see restamp doc below) —
+6,286 rows combined, small enough to run interactively. Dry-run via
+`scripts/restamp_polymarket_hyperliquid_perp_funding_chain_2026_08_21.py` verified exact expected counts
+(`{'HYPERLIQUID': 3013, 'POLYMARKET-PERP': 3273}`) before any write.
+
+**Related but separate finding surfaced during this investigation**: `onchain_perp_batch_handler.py::_venue_chain()`
+— a DIFFERENT handler governing HYPERLIQUID's `derivative_ticker`/`trades`/`book_snapshot_5`/`futures_chain`/
+`liquidations`/`ohlcv_1m`/`options_chain`/`volatility_index` data_types — unconditionally returned `""` for every
+cefi venue including HYPERLIQUID, per the (now-overridden) `restamp_cefi_onchain_perp_venue_chain_2026_07_21.py`
+cleanup that had deliberately blanked HYPERLIQUID's chain there alongside ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC.
+Same operator ruling applies: HYPERLIQUID (and ASTER) should carry their real chain on this domain too. Fixed in
+code via `_REAL_CHAIN_OVERRIDE = {"HYPERLIQUID": "HYPERLIQUID", "ASTER": "BSC"}` in `onchain_perp_batch_handler.py`
+(EXTENDED-STARKNET/LIGHTER-ZKSYNC/PACIFICA-SOLANA deliberately left out of scope — out of this ruling). This is a
+MUCH larger backfill than the perp_funding one above:
+
+- [ ] [OPERATOR] P2. **Dispatch a VM-based restamp of the `onchain_perp_batch_handler.py`-domain HYPERLIQUID
+      manifest rows (`chain=""` → `chain="HYPERLIQUID"`)** — ~1,457,141 total / ~681,716 captured rows measured
+      2026-08-21, across derivative_ticker/trades/book_snapshot_5/futures_chain/liquidations/ohlcv_1m/
+      options_chain/volatility_index. Code fix already shipped (see Progress Log for commit). This exceeds
+      interactive-session scale per `/codex/05-infrastructure/vm-launcher-runbook.md` (full-corpus manifest
+      rewrite) — do NOT attempt locally. Follow the `restamp_cefi_onchain_perp_venue_chain_2026_07_21.py` precedent
+      pattern (streaming CAS read/write, pre-apply snapshot, pre-write count gate, post-write verification) — this
+      is functionally the REVERSE of that script's HYPERLIQUID branch. A near-identical, near-double-sized companion
+      backfill for ASTER (`chain=""` → `chain="BSC"`, ~2,571,675 total rows measured 2026-08-21) is tracked in
+      `/plans/active/issues/mtds_aster_dead_chain_default_and_unverified_instrument_catalogue_field_2026_08_21.md` —
+      consider launching both in the same VM dispatch (same script pattern, same target bucket
+      `market-data-tick-cefi-prd-central-element-323112`). Repo: market-tick-data-service. Source: this doc +
+      operator ruling 2026-08-21. **Done when**: VM launched + verified started + ongoing progress + terminal state
+      per async-wait discipline; post-write verification confirms every affected row now carries
+      `chain="HYPERLIQUID"` with total row count unchanged.
 
 ## Codex SSOTs
 
@@ -133,3 +186,12 @@ the measured contradiction only.
   only been left as a code comment + a footnote in the resolved issue doc's Resolution section, not a tracked
   `- [ ]` todo. Re-verified the measurement live before filing (979 captured rows, 100% `chain=""`, current HEAD
   still hardcodes `chain="HYPERLIQUID"`) rather than trusting the earlier same-day observation unchecked.
+- **2026-08-21 (same day, later)**: Operator ruling ("fix all three — Polymarket, Hyperliquid, Aster") confirmed
+  `chain="HYPERLIQUID"` is correct going forward and surfaced the parallel `onchain_perp_batch_handler.py` finding
+  (see "Operator ruling" section above). Code shipped `market-tick-data-service@10da166e15` (`live-defi-rollout`,
+  QG green, verified ancestor of origin post-push). This doc's own perp_funding-scope backfill (HYPERLIQUID 3,013 /
+  POLYMARKET-PERP 3,273 rows) applied via `scripts/restamp_polymarket_hyperliquid_perp_funding_chain_2026_08_21.py
+  --apply`, streaming CAS write, pre-apply snapshot taken, post-write verification pending confirmation in this log.
+  The larger `onchain_perp_batch` HYPERLIQUID backfill (~1,457,141 rows) is NOT executed — tracked as the new
+  `- [ ]` todo above for VM dispatch, per this workspace's heavy-I/O rule. Doc stays `status: open` until that
+  backfill lands.
