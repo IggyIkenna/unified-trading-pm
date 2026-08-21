@@ -156,6 +156,13 @@ orphaned and the check short-circuited; the pattern is otherwise a real, recurri
 
 ## Progress Log
 
+- **2026-08-21 (slot-16), formal escalation** — Filed a structured `/api/slots/16/blocked` call (not just this doc)
+  so the finding reaches the operator dashboard directly rather than waiting to be found: `blocked_id: BLK-f5b3466f`,
+  options A (operator confirms dead -> authorize slot-tagged stash), B (confirms still needed -> harden the done-gate
+  to skip foreign-owned worktrees instead, RECOMMENDED), C (execution-service owner finishes/commits it themselves).
+  `can_continue: false` reported honestly — no other task is available (repeated `/heartbeat` calls this session all
+  re-dispatched this same task) and touching the foreign WIP myself is out of scope. Answer will arrive as a message
+  on the next `/progress`/`/heartbeat` call.
 - **2026-08-21 (slot-16)** — Filed after the pattern recurred 3x in one session across 2 unrelated tasks. No code
   investigated/changed — pure observation + escalation, since directly probing `quickmerge --isolated`'s internals
   mid-session would have meant editing shared script files outside this task's scope while a live peer session was
