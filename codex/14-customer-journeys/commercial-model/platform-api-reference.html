@@ -950,7 +950,7 @@
       <h2>How to read this</h2>
       <b
         class="own"
-        title="plans/epics/system_readiness_master.md § W21 — this section's own prose-embedded '? check' mark (describing an untyped-return convention) is what makes it claim-bearing; owned by the disclosure standard enforced by scripts/plan-hygiene/check_artefact_claim_ownership.py"
+        title="This section's own '? check' mark, describing a dynamic-return convention, is what makes it a tracked claim."
         >owner: system_readiness_master</b
       >
     </div>
@@ -979,11 +979,11 @@
       </div>
     </div>
     <p>
-      This document does not execute anything and is not a live capture — the operator's own framing was "not
-      necessarily live, but with examples everywhere." Every field name, every default, and every error string below is
-      read directly from the router or schema file cited at the point it is used. Where the router's own return type is
-      untyped (it hands back whatever a DataFrame or an upstream JSON payload happens to contain), this page says so
-      explicitly with a <b class="ev ev-check">? check</b> mark rather than inventing a shape.
+      This reference is generated from the platform's source code, not from a live session. Every field name, every
+      default, and every error string below is read directly from the router or schema file cited at the point it is
+      used. Where the router's own return type is dynamic (it passes through whatever a DataFrame or an upstream JSON
+      payload happens to contain), this page says so explicitly with a <b class="ev ev-check">? check</b> mark rather
+      than inventing a shape.
     </p>
     <p>
       For the narrative version of this same surface — what the platform is, why it is organised this way, and how the
@@ -1000,8 +1000,8 @@
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       <b
         class="own"
-        title="plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md -- T1 owns unified-trading-library/cloud_interface/api_auth.py, the shared auth dependency this section documents"
-        >owner: code_readiness_t1_contracts_library_externalapi</b
+        title="Owns unified-trading-library/cloud_interface/api_auth.py, the shared auth dependency this section documents."
+        >owner: code_readiness_t1_contracts_library_externalapi_2026_08_19</b
       >
     </div>
     <p class="lede">
@@ -1133,7 +1133,7 @@
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       <b
         class="own"
-        title="plans/epics/instruments_master.md — reference-data completeness for the canonical instrument/venue registry"
+        title="Reference-data completeness for the canonical instrument/venue registry."
         >owner: instruments_master</b
       >
     </div>
@@ -1399,7 +1399,7 @@
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       <b
         class="own"
-        title="plans/epics/system_readiness_master.md — W1: Add a LIVE-feed leg to market_tick_data (currently batch-only)"
+        title="Adding a live-feed leg to market_tick_data (currently batch-only)."
         >owner: system_readiness_master</b
       >
     </div>
@@ -1855,7 +1855,7 @@
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       <b
         class="own"
-        title="plans/epics/execution_master.md — non-TRADE instruction actions (swap/lend/borrow/stake/...) return HTTP 501; strategy-service's own signal-leasing surface is documented separately in §06"
+        title="Non-TRADE instruction actions (swap/lend/borrow/stake/...) return HTTP 501; strategy-service's own signal-leasing surface is documented separately in §06."
         >owner: execution_master</b
       >
     </div>
@@ -1891,7 +1891,7 @@
         outside LIVE/MANUAL operational mode, same convention as BORROW/REPAY.
         Source: <code>execution-service@0aa709f076</code> (BRIDGE/LP_MINT/LP_BURN engines + gate wiring),
         <code>unified-api-contracts@3204e607e4</code> (OperationType.LP_MINT/LP_BURN parity + JSON round-trip
-        coverage for the three envelope types, which already existed in the schema before this pass).
+        coverage for the three envelope types, already present in the schema).
       </p>
       <p>
         <code>QUOTE</code> is the one remaining partial case — worth stating precisely rather than rounding it either
@@ -2330,13 +2330,13 @@
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       <b
         class="own"
-        title="plans/epics/global_ledger_pnl_attribution_master.md — client-reporting-api is a named repo in this epic's scope; owns NAV/PnL/HWM/attribution reader correctness"
+        title="client-reporting-api owns NAV/PnL/HWM/attribution reader correctness."
         >owner: global_ledger_pnl_attribution_master</b
       >
     </div>
     <p class="lede">
-      A large, previously-undocumented external surface found while auditing this page against the router source
-      directly: <b>102 routes</b> across 24 route modules, gated by the same shared
+      A large external surface not previously documented here, confirmed directly against the router source:
+      <b>102 routes</b> across 24 route modules, gated by the same shared
       <code>create_api_auth("client-reporting-api")</code> dependency as §01, plus a second, per-route layer this
       service adds on top — entitlement scoping tied to <code>client_id</code>.
       <code>client-reporting-api/client_reporting_api/api/main.py</code> and
@@ -2355,7 +2355,7 @@
         index below is tagged with whichever of these it calls, verified per-route by reading the function body, not
         assumed from the route's file or prefix.
       </p>
-      <p>Three findings from a 2026-08-20 audit pass, all fixed 2026-08-21:</p>
+      <p>Three items identified and corrected as of 2026-08-21:</p>
       <p>
         <b class="ev ev-verified">✓ verified — fixed 2026-08-21</b>
         <code>GET /api/v1/stream/reports</code> (<code>reports_stream.py</code>) used to carry
@@ -2546,7 +2546,7 @@
             <code>CLOUD_MOCK_MODE=true</code> (<code>UnifiedCloudConfig().is_mock_mode()</code>), this endpoint returns
             three fixed demo rows (<code>_mock_hwm_timeline</code>, <code>hwm.py:30-63</code>) regardless of the real
             client. Otherwise it reads <code>read_fee_recognition_rows(client_id, date_from, date_to)</code> —
-            <code>core/hwm_reader.py</code>, not independently read this pass, so its backing data source carries a
+            <code>core/hwm_reader.py</code>, not independently read, so its backing data source carries a
             <b class="ev ev-check">? check</b> rather than a confirmed real-data claim.
           </p>
         </div>
@@ -2587,8 +2587,8 @@
       <span class="tag">Which routes return real data vs. fixture data — measured, not assumed</span>
       <p>
         Verified by reading the three route files most likely to matter first (<code>exports.py</code>,
-        <code>performance.py</code>, <code>hwm.py</code>) — not re-verified for every one of the 102 routes below, so
-        treat this as a confirmed sample rather than a full audit.
+        <code>performance.py</code>, <code>hwm.py</code>) — not confirmed for every one of the 102 routes below, so
+        treat this as a confirmed sample rather than exhaustive verification.
       </p>
       <p>
         <b class="ev ev-verified">✓ verified — fixed 2026-08-21</b> <code>GET /api/v1/exports/trades</code>,
@@ -2674,7 +2674,7 @@
               <tr>
                 <td colspan="3">
                   <b>Performance, positions &amp; balances</b> — performance.py and reporting/performance.py (two
-                  parallel implementations under different prefixes, same shape — not deduplicated in this pass)
+                  parallel implementations under different prefixes, same shape — not yet deduplicated)
                 </td>
               </tr>
               <tr>
@@ -3225,7 +3225,7 @@
                 <td>
                   DocuSign webhook receiver — no client_id concept on a webhook payload, so internal-only is the
                   strictest gate; whether this validates a DocuSign signature independent of
-                  <code>create_api_auth</code> is still not verified in this pass
+                  <code>create_api_auth</code> is still not independently verified
                 </td>
               </tr>
               <tr>
@@ -3485,7 +3485,7 @@
           <b class="ev ev-check">? check</b> Response is
           <code>_EmissionEnvelope{"emissions": [...]}</code> (<code>transport.py</code>) wrapping
           <code>SignalPayload</code>-shaped records from <code>EmissionRingBuffer.fetch()</code> — the exact
-          per-emission wrapper fields beyond the payload shape documented above were not independently read this pass.
+          per-emission wrapper fields beyond the payload shape documented above have not been independently read.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -3601,7 +3601,7 @@
           <code>BacktestPaperLiveEnvelope{"rows": …}</code> — filtered server-side to
           <code>cp.allowed_slots</code> (<code>BacktestPaperLiveStore.rows_for(counterparty_id, entitled_slots=…)</code
           >), so a counterparty cannot read reconciliation rows for a slot it is not entitled to. Row shape
-          <b class="ev ev-check">? check</b>, not independently read this pass. Same 403/401/503 auth errors as above.
+          <b class="ev ev-check">? check</b>, not independently read. Same 403/401/503 auth errors as above.
         </p>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py:493-503</p>
       </div>
