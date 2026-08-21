@@ -30,7 +30,7 @@ related:
   ]
 created: 2026-08-13
 last_updated: "2026-08-13"
-parent_epic: uac_master
+parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
@@ -190,3 +190,7 @@ So the lookahead risk the original text worried about is modelled by an existing
   for the remaining-work targets: the ready-to-run latency-measurement script (P3) and the codex doc to update (P2),
   plus the billing-suspension doc explaining why Yahoo is the interim source.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries)
+- **ag-closeout-audit 2026-08-21 (tradfi tranche, Phase 2 sweep)**: re-routed `parent_epic` from `uac_master` →
+  `tradfi_master` — this is single-AG tradfi content (`asset_group: [tradfi]`, a tradfi-only `ohlcv_1h`
+  availability-semantic gap), not genuinely cross-cutting UAC work; per the asset-group-specific-content routes to the
+  owning AG epic rule (CLAUDE.md "Epic assignment (HARD RULE)").
