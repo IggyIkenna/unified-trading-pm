@@ -589,6 +589,11 @@ todos only to confirm they are data-movement, then leave it.
       converter) discovered and partially done. **Operator ruled 2026-08-21: YES, convert the root too — write
       the public-API import-parity test first, then the hand-designed lazy root.** Real measured win once all land: 1,766→1,295 modules (~27%) on
       `from unified_api_contracts.internal import StrategyArchetype`.
+      **2026-08-21: `_VENUES` loop shipped `unified-api-contracts@ab0f9dba7c`** (sys.meta_path finder +
+      PEP 562 `__getattr__`/`__dir__`, import-parity tested). Still open: the top-level file's other ~1098 eager
+      re-exports remain unconverted — that mechanical conversion was attempted and deliberately REVERTED
+      2026-08-20 after a silent data-corruption bug, root cause unresolved. Full detail:
+      `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md`'s "Layer 2 (UAC)" todo.
 - [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
       (`[FROM-T2]` above). **2026-08-20: investigated and designed, not yet implemented.** Read the real
       implementation (`_writer_io.py`'s `_flush_per_vm_pending`/`_read_per_vm_shard`,
