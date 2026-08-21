@@ -27,7 +27,7 @@ tags: [multi-agent-safety, agent-orchestrator, dispatch, death-forensics, classi
 related:
   [
     /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
-    /plans/archive/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md,
+    /plans/active/issues/pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md,
     /plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md,
   ]
 created: "2026-08-21"
@@ -209,18 +209,11 @@ duplicated.
       run. Shipped in the same commit as above.
 - [x] ✅ [INFO] P2. Gemini proxy model-name mismatch — confirmed already fixed independently
       (`agent-orchestrator@bee25ba8`); no action needed here.
-- [x] ✅ [INFRA] P2. **DONE 2026-08-21** — `agent-orchestrator@31c90ca3c1`. Found: no such event_type existed at
-      all (a genuine gap, not just a missing tuple entry) — `worker_liveness_watchdog.py`'s
-      `_resume_or_fresh_respawn` kills the old session then tries to `--resume` on the SAME account (correct for
-      an ordinary heartbeat-silence, wrong when the account is frozen); the resume-spawn raises, and the except
-      branch wrote `status="killed"` with ZERO `activity_log` signal anywhere on that path. Added a
-      `"heartbeat_resume_respawn_failed"` `log_activity()` call there and to the classifier tuple. Note: a
-      pre-existing comment on the tuple called this exact case (grouped with 3 siblings) "inert" to add, reasoning
-      the old session name gets overwritten by a fresh respawn before `tmux_pruner` ever sees it — but
-      `tmux_session` is never cleared in that except branch, so it's a genuine RACE, not a guarantee; this fix
-      only helps the sub-case where `tmux_pruner`'s tick wins the race (a real row IS produced and was
-      misclassified `unexplained`) and is a no-op, never a regression, when the respawn wins first. New test
-      asserts the activity event; full quality-gates.sh green.
+- [ ] [INFRA] P2. Identify the exact event type AO's generic heartbeat-staleness watchdog emits when it
+      force-kills a slot whose account is frozen by an account-wide Claude session-limit hit (distinct from
+      `worker_account_unusable_killed` — the generic staleness path, not the headroom-failover one), and add it
+      to `_INTENTIONAL_TEARDOWN_SIGNAL_EVENTS`. Affects `sub-d-odum1default`/`sub-f-odum2default` per this
+      investigation's sample.
 - [ ] [INFRA] P3. `death_forensics.check_external_kill`'s EXECVE-based search is structurally blind to AO's own
       `kill_session()` calls (direct `os.kill()` syscalls, not an execve'd subprocess) — needs a different audit
       rule type (auditd SIGNAL records) to close, not attempted this session.
@@ -247,10 +240,7 @@ duplicated.
       `status: disabled` for both post-call. This stops the respawn-failure loop above from recurring; the
       credential-provisioning ask itself is unchanged and still needs the operator. Re-enable each only after
       its `~/.claude-accounts/<id>.env` exists and `claude setup-token` has been run.
-      **Operator asked directly 2026-08-21 (continued)**: chose "defer for now" — both accounts stay disabled,
-      no further action from either side until revisited. Not stale; explicitly reviewed and deferred, not
-      forgotten.
-- [x] ✅ [BACKEND] P2. **NEW, found 2026-08-21 while live-validating the day's fixes on slots 3/4/25**: a normal,
+- [ ] [BACKEND] P2. **NEW, found 2026-08-21 while live-validating the day's fixes on slots 3/4/25**: a normal,
       already-correctly-tagged intentional teardown can still misclassify as "unexplained" if the IMMEDIATE
       respawn attempt that follows it fails/stalls long enough to push `tmux_pruner`'s actual detection past
       the classifier's 90s `_INTENTIONAL_SIGNAL_LOOKBACK_SECONDS` window. Concretely reproduced on slot 25: a
@@ -263,19 +253,11 @@ duplicated.
       18:45:35, ~100 seconds after the reset event, just past the 90s window. Result: a perfectly-explained
       death read `death_class="unexplained"`, `death_class_signal_event=null`, and (being the first-ever
       confirmed positive external-kill hit post the `ausearch` PATH fix above) briefly looked like a genuine new
-      external-kill mystery before the timeline was traced.
-
-      **DONE 2026-08-21** — `agent-orchestrator@6d8f314f01`. Went with the third candidate (targeted re-check),
-      not a global window widen (risks an unrelated OLDER signal explaining away a genuinely new death) or a
-      new failed-respawn event (the existing `autospawn_failed` event already covers this — no new event
-      needed). When the normal 90s lookback finds nothing, check for a recent `autospawn_failed` event on the
-      same slot within that same 90s; if found, re-run the SAME signal search over a bounded 180s window
-      instead. A new `death_class_widened_lookback` detail field marks when this path fired, so a widened match
-      stays auditable rather than silently indistinguishable from a normal fast one. 2 new tests (reproduces the
-      slot-25 timeline exactly; confirms an old signal WITHOUT a recent respawn failure still correctly stays
-      unexplained); full quality-gates.sh green. Also documented `death_forensics.py`'s real ~25-30min auditd
-      retention constraint (measured this session — see the two historical-forensics todos above) directly in
-      its module docstring.
+      external-kill mystery before the timeline was traced. Candidate fixes, not yet decided: widen the lookback
+      window; have the FAILED-RESPAWN path itself write a distinctly-tagged event so the classifier has
+      something within its own window regardless of the original reset's age; or have `tmux_pruner` re-check
+      further back when the intervening slot history shows a failed respawn immediately after a kill. Needs a
+      design decision before implementing.
 
 ## Progress Log
 

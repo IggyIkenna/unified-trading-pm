@@ -120,18 +120,13 @@ source: >-
       Evidence: unified-trading-pm@<pending>. Source:
       `execution_state_does_not_survive_restart_2026_08_20.md` todo "Enumerate execution-service classes with
       tests but no non-test instantiation".
-- [x] ✅ [REVIEW] P2. **Close the audit's own open questions** — read in full and report ABSENT/PRESENT (with
+- [ ] [REVIEW] P2. **Close the audit's own open questions** — read in full and report ABSENT/PRESENT (with
       evidence) for recovery-state-machine/fencing/reconciliation content in: `engine/orphan_monitor.py`,
       `venue_failover.py`, `venue_cascade_monitor.py`, `manual_pending_queue.py`, `order_rejection_tracker.py`,
       `utils/fidelity_selector.py`, `trade_execution/adapters/_rate_limit.py` (confirm/deny it's fencing-adjacent),
       and `sports_execution/monitoring/venue_health.py:23 VenueHealthStatus`. Pure read + report, no fix. Done
       when: each named file has a recorded PRESENT/ABSENT verdict with a one-line citation. Source:
       `execution_state_does_not_survive_restart_2026_08_20.md` todo "Close the audit's own open questions".
-      **Done 2026-08-21** — 8/8 ABSENT (each with a one-line citation; `_rate_limit.py` fencing-adjacency DENIED as
-      implemented — in-process `threading.Lock` token bucket, no fcntl/flock). Two docstring-drift side-findings
-      filed as a new P3 todo in the source doc. Full findings + method in
-      `execution_state_does_not_survive_restart_2026_08_20.md`'s new "Findings — the audit's own open questions
-      closed (2026-08-21)" section. Evidence: unified-trading-pm@9ae3de3566.
 
 ## From `external_market_data_response_leaks_vendor_pipeline_mode_2026_08_20.md`
 
@@ -192,17 +187,12 @@ source: >-
       (market-tick-data-service@8addeac2). Full evidence in
       `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`'s new "Findings — sibling
       parameter audit (2026-08-21)" section. Evidence: unified-trading-pm@<pending>.
-- [x] ✅ [AGENT] P2. **Sweep the three external routers for silent-no-op parameters generally**
+- [ ] [AGENT] P2. **Sweep the three external routers for silent-no-op parameters generally**
       (`instruments-service/.../external.py`, `market-tick-data-service/.../external.py`,
       `execution-service/.../external_instruction_api.py`) — a parameter accepted, silently ignored, and returning
       200 is indistinguishable from a working one. Pure investigation/report, no fix. Done when: each router has a
       recorded list of any silent-no-op parameters found (or a clean verdict). Source:
-      `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md` todo 3. **Done 2026-08-21** —
-      instruments-service + MTDS routers CLEAN; execution-service `external_instruction_api.py` NOT CLEAN, 3
-      confirmed silent-no-op fields (`TradeInstruction.stop_loss_price`/`take_profit_price`,
-      `BridgeInstructionV2.bridge_hint`, `QuoteInstruction.skew_on_inventory`). Full evidence in
-      `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`'s new "Findings — general sweep of
-      the three external routers for silent-no-op parameters (2026-08-21)" section. Evidence: unified-trading-pm@<pending>.
+      `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md` todo 3.
 
 ## From `main_backmerge_backmerge_cycle_reverts_caller_stub_comment_fix_2026_08_20.md`
 
@@ -237,9 +227,3 @@ source: >-
   endpoint), `date` UNAFFECTED (applied unconditionally), `venue` UNAFFECTED (the conditioning parameter itself).
   Only `data_type` was ever affected by the silent-drop bug, already fixed. Full evidence in
   `mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md`'s new Findings section.
-- **2026-08-21 (slot-3)** — Closed the audit open-questions todo: 8/8 ABSENT verdicts with one-line citations
-  (`_rate_limit.py` fencing-adjacency denied); two docstring-drift side-findings → new P3 todo in
-  `execution_state_does_not_survive_restart_2026_08_20.md`. Side quest (review messages): measured instruction-type
-  ground truth = 16 (`check_artefact_enum_drift.py` + the `StrategyInstructionV2` union), fixed 9 stale spelled-out
-  count claims across 3 commercial-model artefacts, filed
-  `commercial_model_instruction_counts_and_wiring_claims_stale_2026_08_21.md` for the enumeration/wiring rewrites.
