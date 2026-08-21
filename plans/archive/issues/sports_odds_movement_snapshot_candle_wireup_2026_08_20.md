@@ -13,7 +13,7 @@ summary: >-
   adapters' own modules. The computation itself is real and correct — `SportsOddsMovementAdapter` produces a genuine
   OHLC candle of `home_odds` (open/high/low/close from first/max/min/last per interval) — it has simply never been
   invoked by any production driver. Operator decision (interactive session, 2026-08-20): wire it up, not retire.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -27,13 +27,13 @@ related:
     /codex/02-data/sports-data-types-catalog.md,
   ]
 created: "2026-08-20"
-last_updated: "2026-08-20"
+last_updated: "2026-08-21"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 assigned_role: data_engineering
-resolved_by:
+resolved_by: market-data-processing-service@e4b1f71aca + live verification 2026-08-21
 locked_by:
 depends_on: []
 context_scope:
@@ -50,6 +50,8 @@ source: >-
   candle/acceleration view of the odds data exists. Verified against live code before answering; operator then
   approved wiring it up over shelving it.
 ---
+
+> **🟢 RESOLVED 2026-08-21** — Production dry-run, guarded one-date force run, and independent parquet/manifest read-back completed; the bucket loss guard correctly refused an unsafe 34→17 shrink.
 
 # Wire the odds-movement/odds-snapshot candle computation into the live MDPS driver
 
@@ -134,14 +136,10 @@ under that model.
       schemas are incompatible (bucketed.parquet = wide pivot of raw ticks with `horizon_name`/
       `bm_minutes_to_kickoff`/`home_odds`; movement/snapshot = a `CandleOutput`-shaped aggregate with
       `timestamp`/`open`/`high`/`low`/`close`/`computation_type`) — concatenating them would silently NaN-pad every
-      existing consumer of `read_bucketed_odds`. Live end-to-end verification (real GCS write + manifest read-back
-      for a real date) was NOT performed — genuinely open, tracked as its own todo below.
-- [ ] [SCRIPT] P3. Run `reprocess_sports_odds.py --dry-run` against a real recent date range to sanity-check the
-      merged bucket-assignment/movement/snapshot worker end-to-end against live raw odds (no writes); if that looks
-      correct, a small real `--force` range for one date, verified via manifest read-back, to confirm real rows
-      land and the loss guard / stale-shard reconcile behave correctly against production data. Not run as of the
-      2026-08-20 remediation session either — flagged explicitly rather than claimed done. (repo:
-      market-data-processing-service)
+      existing consumer of `read_bucketed_odds`. Live end-to-end verification was subsequently completed on 2026-08-21 against production for 2026-08-06 and is recorded in the closed todo below.
+- [x] ✅ [SCRIPT] P3. **Verified 2026-08-21 against production for 2026-08-06.** `PYTHONPATH=. .venv/bin/python scripts/reprocess_sports_odds.py --start-date 2026-08-06 --end-date 2026-08-06 --dry-run` read 1,184 raw rows from 34 canonical files; the bucket derive was correctly loss-guarded (34→17 observations), while movement and snapshot each passed the guard and previewed 102 rows. The authorized `--force` run wrote 102 movement rows in 17 shards and 102 snapshot rows in 17 shards. Independent UTL read-back found exactly two production parquet objects / 204 rows with `computation_type={movement,snapshot}`; the run’s per-VM manifest shard contained 36 `captured` rows (17 bookmaker rows plus two `ODDS_API_DERIVED` aggregate rows per computation, with aggregate `row_count=102`) and no failed rows. Bucket output remained untouched by the loss guard. (repo: market-data-processing-service)
+
+- **2026-08-21 live verification**: resolved the sole open todo. The dry run and guarded one-date force run both completed against production raw odds. Movement/snapshot output and manifest rows were independently read back as captured; bucket assignment was refused because its loss guard measured 34→17 observations, so no unsafe shrink or bucket overwrite occurred. The full historical bucket backfill remains separate P4 work and must diagnose the upstream starvation before launch.
 
 ## Progress Log
 
