@@ -929,8 +929,10 @@ underlying. Consistent with the standing "strategy reads only processed data, ne
    pending order at 100% through `A` AND treat it as full inventory risk elsewhere unless deliberately conservative.
 4. **Substrate-conditional transport** — should derived topology take deployment substrate as input (colo L2 ->
    multicast; cloud -> unicast/relay) given per-receiver cloud multicast billing?
-5. Five outstanding Wave-0 rulings: CloudKmsCustodyProvider wallet check, UAC `__init__` restructure scope,
-   instruments catalogue ratification, instrument-universe hot-swap safety, venue-eligibility generalisation shape.
+5. Five Wave-0 rulings — **ALL RESOLVED 2026-08-21 (operator)**: CloudKMS wallet check closed by measurement
+   (no live wallet-config in any prod GCP bucket — evidence in the CloudKMS issue doc); UAC `__init__` root →
+   convert (parity test first); catalogue → enumerate+fix writer-vs-contract diffs, then lock+version;
+   hot-swap → option B, blessed, codex corrected; venue-eligibility → one declarative R17 resolver, fail closed.
 
 - [ ] [DOC] P0. **Write the full build spec** — a CTO-level document covering slow/fast split, worked examples,
       infrastructure, feed arbitration, instrument selection for fast updates, and the options fast path. A peer

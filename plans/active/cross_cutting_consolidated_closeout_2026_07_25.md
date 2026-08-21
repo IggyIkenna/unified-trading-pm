@@ -690,7 +690,7 @@ batch)
   — **RESOLVED 2026-08-14** (strategy-config half only): operator-confirmed 2026-08-12 ruling (option A) implemented via
   `strategy-service@c688512912` (safe-field allow-list + `UnsafeConfigChangeError`, strategies domain); doc archived.
   The instrument-universe half of the original concern was split off, still unruled:
-  [`instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`](/plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md).
+  [`instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`](/plans/archive/2026_08/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md).
 
 ### Genuinely cross-cutting, real open work, currently uncovered (orphaned_never_touched)
 

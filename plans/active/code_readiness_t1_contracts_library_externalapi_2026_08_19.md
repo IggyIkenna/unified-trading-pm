@@ -585,7 +585,8 @@ todos only to confirm they are data-movement, then leave it.
       (`unified-api-contracts@34b81221ef`) all shipped; a 4th file not in the original plan
       (`unified_api_contracts/__init__.py` itself,
       the top-level package root — its `_VENUES` eager-import loop needs hand-written design, not the mechanical
-      converter) discovered and partially done. Real measured win once all land: 1,766→1,295 modules (~27%) on
+      converter) discovered and partially done. **Operator ruled 2026-08-21: YES, convert the root too — write
+      the public-API import-parity test first, then the hand-designed lazy root.** Real measured win once all land: 1,766→1,295 modules (~27%) on
       `from unified_api_contracts.internal import StrategyArchetype`.
 - [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
       (`[FROM-T2]` above). **2026-08-20: investigated and designed, not yet implemented.** Read the real
