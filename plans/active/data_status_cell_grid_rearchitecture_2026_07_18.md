@@ -109,16 +109,13 @@ real fix is to never load the whole manifest per request.
       serves every filter-free request (incl. full-history) cheaply today — no new precompute job needed. Its
       documented gap (row-filtered / venue-filtered requests bypass it, `any_row_filter` in `manifest.py`) is
       pre-existing and out of this plan's scope. See 2026-08-20 Progress Log entry.
-- [x] ✅ [UI] P2. **Lift the 90-day default** — once the backend is bounded/precomputed, allow full-history windows in the
+- [ ] [UI] P2. **Lift the 90-day default** — once the backend is bounded/precomputed, allow full-history windows in the
       UI without the OOM-guard stopgap; add a pw:L2 regression spec for a full-history render. **Scope note (2026-08-20):
       the "All" full-history preset already exists (`deployment-ui/src/components/DataStatusTab.tsx`,
       `FULL_HISTORY_START_DATE`) as an explicit one-click action, and the operator's 2026-07-14 ruling
       (`data-status-default-range.spec.ts`) deliberately keeps 90-day as the silent DEFAULT — this todo does NOT
       require changing `DEFAULT_LOOKBACK_DAYS`, only proving the "All" preset renders reliably + adding its pw:L2
-      spec.** Done-when: a `pw:L2` regression spec exercises the "All" preset at full history and passes. —
-      deployment-ui@18ba0178; evidence: `tests/e2e/data-status-default-range.spec.ts` covers the explicit "All"
-      preset, asserts no request fires until "Check Status", and verifies the full-history request uses
-      `start_date=2018-01-01`; source implementation is `DataStatusTab.tsx`.
+      spec.** Done-when: a `pw:L2` regression spec exercises the "All" preset at full history and passes.
 - [ ] [BACKEND] P2. **Load-test at full history** — prove a full-history cell-grid request stays within Cloud Run memory
       at production concurrency (cite memory p99 + latency); retire the per-request OOM guard. **Do not mark this done
       on Bound alone** — see the full-history limitation recorded in the 2026-08-20 Progress Log entry; this gate is

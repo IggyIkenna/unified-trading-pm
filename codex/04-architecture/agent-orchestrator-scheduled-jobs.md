@@ -280,15 +280,6 @@ causing hard spawn refusals with "branch-state quarantine" in the 503 body. The 
 `no_capacity` (silent/benign), masking 42 genuine spawn failures over 3 days. The allowlist approach makes new refusal
 phrases fail loudly by default rather than silently sliding into the benign bucket.
 
-**A `quarantined` dispatch retries on a DIFFERENT slot, with an exclude-set** (operator-approved 2026-07-28, landed
-`agent-orchestrator@e69f528`): mirrors the pre-existing "benign:" TOCTOU-race retry, but a branch-quarantine failure
-never spawns a tmux session on the target slot (the gate runs before `tmux_spawn.spawn`), so unlike the benign-race
-case — where the racing session naturally makes the slot look busy on retry — `_pick_free_slot` would otherwise keep
-re-picking the SAME quarantined slot every attempt. Fixed by threading an explicit exclude-set through the retry loop.
-The scheduled-dispatch family (`ag-closeout-auditor`/`na-eligibility-auditor`'s `ao`/`ci` tranches) also has its
-auto-heal ahead-commit-age recency guard narrowed from 900s to 300s specifically for this one-shot family, trading
-some quarantine-detection margin for fewer missed daily tranches.
-
 ---
 
 ## Capacity sizing

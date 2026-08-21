@@ -33,8 +33,8 @@ estimate_calibrated_ai_days: 0.72
 assigned_role: review
 assigned_vm: NA
 execution_scope: local-only
-locked_by:
-locked_since:
+locked_by: plan_reconciler (agt-be3ce1) since 2026-08-19T18:33:39Z
+locked_since: "2026-08-19"
 supersedes:
 superseded_by:
 resolved_by:
@@ -255,6 +255,3 @@ None — all 54 non-grace docs in the `ao` tranche's working set were read in fu
   refresh `plan_hygiene_master.md`'s `related_plans:` roster) are genuine, bounded, mechanical documentation tasks —
   flagged here as candidates for a future extraction pass rather than pulled into this batch's own satellite doc
   (out of this pass's time budget); doc stays `assigned_vm: NA` pending that follow-up.
-- **ag-closeout-audit 2026-08-21 (ao tranche hygiene fix)**: cleared a stale `locked_by: plan_reconciler (agt-be3ce1)`
-  lock, ~2 days old at time of check. Verified dead via `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh`
-  — `agt-be3ce1` does not appear anywhere in live AO status output, confirming the dispatch is no longer running.

@@ -379,13 +379,11 @@ Full findings, root cause, and evidence for every todo below live in the three s
       directory; Phoenix listed as a live spot/CLMM venue is stale — Phoenix Legacy deprecated, Phoenix Perpetuals
       is private-beta only). Everything else checked (Deribit, Hyperliquid, dYdX, CME futures, Camelot,
       Kalshi/Polymarket) confirmed accurate.
-- [x] ✅ [BACKEND] P2. **Corrected 2026-08-21 — already ruled, todo was stale.** The source issue doc carries a
-      2026-08-21 OPERATOR RULING (citing `/codex/04-architecture/cross-domain-state-fabric.md` §12, R17 — ONE
-      declarative capability-gated resolver, generalized to every family,
-      fail-closed) that answers this exact question — fixed the issue doc's own stale todo to match. Remaining
-      buildable scope (resolver + regression check + the 2 drift fixes) is now `[AGENT]`-tagged there, not
-      operator-blocked. Evidence:
-      [venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16](/plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md).
+- [ ] [OPERATOR] P2. Decide the venue-eligibility generalization shape — extend `venue_capabilities.py` to every
+      strategy family, or accept the hardcoded catalog literals as deliberate. **Not fully clean**: the prior
+      todo found 2 real drift items (CME event root symbols, Phoenix) needing a fix either way, independent of
+      this decision. If generalizing, add a regression check so a catalog row whose venue lacks the assumed
+      capability fails loudly at build/test time rather than shipping a slot that can't actually trade.
 - [ ] [OPERATOR] P2. Design the mode-aware dispatch (batch / live / paper-testnet / paper-live) for the
       centralized DeFi position-risk read, once the earlier routing/switch todos land.
 - [ ] [BACKEND] P3. Update

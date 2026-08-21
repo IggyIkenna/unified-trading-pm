@@ -632,7 +632,7 @@ todos only to confirm they are data-movement, then leave it.
       evidence, `unified-trading-pm@2d743a57d3`. Genuinely 2 `[OPERATOR]` decisions + ~11 human-judgment items
       remain; not a bounded mechanical pass.
 - [x] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
-      `/plans/archive/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`. — **Checked 2026-08-20**: the
+      `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`. — **Checked 2026-08-20**: the
       wiring itself is done — 6 of 7 todos `[x]` (dispatch handler, role wrapper, install script, cadence update,
       tests, operator cadence decision). The sole remaining item is `[OPERATOR] P2. Re-run
       install-ao-watchdog-timer.sh on the central orchestrator VM` — needs VM SSH access this tranche doesn't

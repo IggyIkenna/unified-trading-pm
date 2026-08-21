@@ -264,15 +264,6 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       have >1 manifest row (multi-schema-version + `instrument_type` casing + capture_status collisions). Fix
       WRITER-side row-key idempotency + instrument_type normalization so the ~76/96 repair scripts stop being needed.
       Repo: unified-trading-library (writer) + instruments-service. (MIGRATED FROM: same.)
-      **Checked 2026-08-21 (T2) — the named script doesn't exist anywhere in the workspace.** Zero hits for
-      `dedupe_manifest_schema_drift.py`, or any `schema_drift_dup`/`dedupe_manifest`-named module, across
-      instruments-service, unified-trading-library, and market-tick-data-service. Either it was never built, or
-      it was renamed/removed since this todo's last edit — not found either way. Genuinely large, risky work
-      (writer-side row-key idempotency is core production write-path logic) — not attempted this pass without
-      first re-establishing whether the 16% figure is still current (the cited measurement predates this
-      session and the script that presumably produced it is gone). Left `[ ]` open at its real P3 weight;
-      re-measuring the 16% figure fresh, without the missing script, would need a new bounded manifest read —
-      worth scoping as its own next step, not assumed away.
 - [x] ✅ [MTDS] P3. **Split the `instruments-service` `engine/orchestrator.py` (8,192 lines, 9Ã the 900 cap)** into
       focused modules (buckets/emission/weather/fixtures/manifest). Repo: instruments-service. **NB: distinct from the
       MTDS `engine/orchestrator.py` (4,219L) split tracked in M-2 — same filename, different repo; do not conflate.**

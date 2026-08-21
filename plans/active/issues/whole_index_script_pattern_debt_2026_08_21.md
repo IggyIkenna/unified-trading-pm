@@ -102,12 +102,9 @@ The proven replacement pattern (shipped + verified in
       reconcile}.py`) so every future stamped script inherits it — mirror the proven AAVEV3 purge
       script structure (generation-pinned read, iter_batches scan, few-column mask view, Arrow filter,
       CAS write, server-side snapshot).
-- [ ] [CODE] P2. `measure_honest_coverage.py` (daily, permanent): RE-SCOPED 2026-08-21 after a deeper
-      read — the census's coarse regex overcounted its risk: it ALREADY column-projects
-      (`_read_parquet_safe`, 5-6 columns) and preserves dictionary encoding, and its dedicated VM was
-      already OOM-bumped to e2-highmem-8/64GB on 2026-08-15 after a measured 31.68GB anon-rss peak on
-      32GB. Remaining work is headroom VERIFICATION under index growth (defi doubled to 7.5GB in 12
-      days — re-measure peak RSS on the next scheduled run vs the 64GB ceiling), not an urgent rewrite.
+- [ ] [CODE] P1. `measure_honest_coverage.py` (daily, permanent): audit its index read path + host
+      memory headroom against the 7.5GB-and-growing defi index; convert to streaming/column-projected
+      reads before it becomes the next silent OOM casualty.
 - [ ] [CODE] P2. Same conversion for the remaining permanent-lifecycle whole-frame tools listed in the
       Finding (catalogue builder, phantom reconcilers/sweepers, sports rescan, prediction split,
       wave_launcher, MTDS manifest reconcile) — one PR per repo, shared helper preferred.
@@ -115,12 +112,9 @@ The proven replacement pattern (shipped + verified in
       `stream_availability_index(bucket, columns, batch_size)` + `rewrite_availability_index_cas(...)`)
       and whether a QG ratchet should ban NEW whole-frame index reads in `scripts/` (baseline-only-down,
       matching existing ratchet conventions).
-- [ ] [INFRA] P3. `launch-canonical-migration-vm.sh`: REFINED 2026-08-21 — a blanket default bump off
-      `e2-standard-8` (32GB) was deliberately NOT shipped: the launcher also runs per-shard STREAMING
-      content passes for which 32GB is right-sized, and a blanket bump would oversize the common case.
-      The correct change is category-scoped: size only the whole-index categories (index
-      download+filter+rewrite CAS ops) to 64GB, keyed on the category/task flag at launch — make that
-      call when next actually running one against today's 7.5GB+ indexes.
+- [ ] [INFRA] P2. `launch-canonical-migration-vm.sh`: raise the whole-index default off `e2-standard-8`
+      (32GB) or gate per-AG machine sizing on live index size; its own 90-min idle threshold currently
+      just postpones the reap when the workload livelocks.
 - [ ] [INFRA] P2. Add `PREFIX_IDLE_THRESHOLDS` entries for the whole-index `bucket=None` prefixes named
       in the Finding (same `(90, 360)` shape as `canonical-migration-` / `defi-aavev3-bare-alias-purge-`),
       then relaunch the zombie-watchdog VM once (its running copy never re-fetches).
@@ -133,37 +127,3 @@ The proven replacement pattern (shipped + verified in
 - **2026-08-21 (interactive session, slot-2)**: census run + doc created directly off the AAVEV3
   root-cause session (see related issue's 2026-08-21 Progress Log for the measured mechanism). No code
   changed under this issue yet; the AAVEV3 purge script itself is the reference implementation.
-- **2026-08-21 (same session, later — templates + infra AUTHORED, ship pending)**: implemented in the
-  slot-2 deployment-service tree (all `py_compile`/`bash -n` clean; full QG in flight; COMMIT BLOCKED
-  behind the same peer UAC migration as the AAVEV3 [SHIP] P1 todo — these files ride that ship):
-  - `migration_common.py`: new whole-index safety helpers — `download_index_with_generation` /
-    `download_bytes_with_generation` (one consistent GET: content + CAS pin),
-    `stream_filter_parquet` (record-batch streaming scan/filter, bounded ~1M-row peak, Arrow-layer
-    kept-row writes, per-batch `on_batch` stats hook), `cas_upload_bytes` (raises
-    `ManifestCasConflictError` on a lost generation race), `snapshot_object_serverside` (exact-bytes
-    server-side snapshot).
-  - `template_purge.py`: REQUIRED `PurgeConfig.predicate_scope` (`"row_local"` streams via the new
-    helpers; `"whole_frame"` keeps legacy semantics for cross-row predicates, now with a stated
-    memory budget); BOTH scopes CAS-write pinned to the read generation; snapshots are server-side
-    copies; `manifest_index_updater` overrides are whole_frame-only (loud ValueError otherwise).
-    `tests/unit/test_template_purge.py` rewritten: both scopes parameterized, real pyarrow streaming
-    exercised (not mocked), CAS-pin/conflict/ordering/required-scope coverage added.
-  - `template_canonicalize.py` / `template_reconcile.py` / `template_backfill.py`: generation-pinned
-    reads + CAS write-backs (canonicalize CAS-pins only the in-place case; a different output path
-    stays a plain fresh-object write), backfill's snapshot switched to the server-side copy; explicit
-    whole-frame memory notes. Streaming for these three remains open ([DESIGN] P2's shared-helper
-    adoption) — their transform/comparator hooks take whole frames by contract.
-  - Consumers updated in-change: `purge_bad_prediction_manifest_rows.py` + the purge worked example
-    pin `predicate_scope="whole_frame"` (bit-identical legacy behavior; the example's "superseded"
-    predicate is genuinely cross-row).
-  - `vm_zombie_watchdog.py`: idle-threshold entries added for the remaining whole-index bucket=None
-    prefixes (`defi-manifest-force-consolidate-`, `defi-manifest-projection-`,
-    `mdps-cefi-manifest-merge-`, `backfill-candle-manifest-`, `cefi-itype-casing-apply-rw-`), same
-    (90, 360) shape as `canonical-migration-`; requires the one-time watchdog VM relaunch already
-    tracked in the AAVEV3 [SHIP] P1 todo.
-  - `lib/launcher_common.sh`: `KEEP_VM=true` supervised-diagnostic mode generalized into
-    `lc_gcloud_create` (metadata flip + `keep=true` label) — every launcher inherits it.
-  - Census corrections applied above per measurement-claims discipline: `measure_honest_coverage.py`
-    re-scoped to P2 headroom-verification (already column-projected + on a 64GB VM since 08-15);
-    canonical-migration sizing refined to category-scoped (blanket bump rejected as oversizing its
-    streaming content passes).

@@ -42,18 +42,9 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 - [ ] [BACKEND] P1. Record one testnet verdict for every Sports venue, including matching-engine simulation where appropriate; Gate: every distinct venue has a written verdict.
 - [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; file an operator credential request when a credential gap is confirmed. Gate: no missing credential is treated as a wiring absence.
 - [ ] [BACKEND] P1. Track every failed or absent Sports row with its source and data type; Gate: expected-unattempted is never presented as captured.
-- [x] ✅ [BACKEND] P0. Verify the Sports data floor and source-scoped Databento/canonical checks with a negative control; Gate: pre-floor or no-data probes fail rather than pass. — `unified-api-contracts@25bcebdd` + runtime evidence below.
+- [ ] [BACKEND] P0. Verify the Sports data floor and source-scoped Databento/canonical checks with a negative control; Gate: pre-floor or no-data probes fail rather than pass.
 
 ## Progress Log
 
 **2026-08-20 — forked from W5.** Sports keeps the data-floor rule in its context scope and follows W4's five-todo
 AG batch shape.
-
-**2026-08-21 — slot-4 verification.** The managed UAC quality gate completed with `ALL QUALITY GATES PASSED`
-(390s). The runtime generator measured 364 declared pairs, 8 exact Databento exemptions, 356 in-scope rows, and 39
-Sports rows. Direct assertions confirmed every Sports row resolves to a non-Databento source; each distinct resolved
-source/data-type pair rejects the pre-floor `2020-06-05` window with the documented empty/inverted-range signal; and
-the canonical-path negative control is rejected by `canonical_path_violations(require_pipeline_mode=True)`. The
-source-scoped negative control `CBOE/ohlcv_24h -> yahoo` remains in scope and outside the eight-cell exemption set.
-This closes only the floor/source/oracle verification todo; row-level production capture, manifest atoms, and genuine
-capture statuses remain open under the first todo.
