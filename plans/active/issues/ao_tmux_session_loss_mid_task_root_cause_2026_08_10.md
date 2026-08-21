@@ -440,6 +440,33 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       2026-08-21, see Progress Log entry below), sticky, fleet-wide, via the existing operator-disable mechanism
       (`server/state_store/account_usage.py::disable_account`) — no auto-clear path exists, so this requires an
       explicit action, not a passive wait.
+- [ ] [INVESTIGATE] P1. **DeepSeek's dominant mid-task death mechanism — PARTIALLY root-caused 2026-08-21, genuinely
+      not closed.** Normalized 24h death rate (`unexplained`/`autospawn_succeeded`): `deepseek-v4-flash` 25/27=93%
+      (worse per-spawn than codex-luna's 63%), `deepseek-v4-pro` 13/20=65%. Read the actual `.jsonl` transcripts (not
+      just `activity_log` correlation) for two genuine mid-task `unexplained` deaths, 2026-08-20 15:19-15:20 cluster:
+      slot 8 (`deepseek-v4-pro`, `.claude-configs/orch-slot-8/.../77872753-9ef4-40ad-bd58-0fcf299fc23e.jsonl`) and slot
+      12 (`deepseek-v4-flash`, `.../ef0eeaaf-f163-4e49-a5e1-c9fb75b7cf1a.jsonl`) — both were killed while a full
+      `quality-gates.sh` run was genuinely in progress (slot 8: foreground `Bash` tool call,
+      `timeout=600000`, only ~97s into it; slot 12: BACKGROUNDED via `run_in_background`, and Claude Code's own
+      harness delivered an explicit `<status>killed</status>` task-notification for that backgrounded QG process
+      ~49s before the outer pane also died) — neither was idle or genuinely frozen. Ruled out for both: OOM
+      (`death_forensics.py` genuinely ran, `oom_kill_suspected: false`), the already-known `orphan_reap` setsid gap
+      (zero `orphan_process_reaped` events fired in either window), and the worker-liveness kicker's forced
+      auto-respawn escalation (`worker_kick_failed` appears once for slot 8 but no `slot_auto_respawned`/
+      `slot_auto_respawn_failed` event followed — the escalation path was never reached, ruling out an earlier
+      working hypothesis this session that the kicker's own force-respawn was the mechanism). Host `load_avg`/
+      `ram_percent`/`swap_percent` snapshots at time of death were NORMAL for both (3-13 load, 24-36% RAM, 7.5-9.7%
+      swap) — unlike codex-luna's Pattern A, this does NOT look like host-wide resource exhaustion, at least not at
+      the single post-death snapshot point sampled. `external_kill.checked: false` for both — likely just STALE
+      (these deaths are 2026-08-20 15:19-15:20, and the `ausearch` date-format bug's fix landed later that same
+      day per this doc's own 2026-08-20 entry above), not a new gap — my own live reproduction of the identical
+      `ausearch` call today succeeds cleanly and would compute `checked: true`. **Not confirmed** because zero
+      DeepSeek `unexplained` mid-task deaths have recurred since (checked through 2026-08-21 morning) to test the
+      fix against post-hoc. Genuinely still open: what killed the quality-gates.sh child process (and, moments
+      later, the parent pane) in both cases if none of the above fired — next step is exactly this doc's own
+      established method (live-catch the NEXT DeepSeek death and immediately check `external_kill` + a fresh
+      per-process/per-cgroup memory check DURING the QG run, not just the post-death snapshot, since a QG run's
+      peak RSS is transient and could exceed a per-slot cgroup limit invisibly by the time forensics samples it).
 
 ## Progress Log
 
