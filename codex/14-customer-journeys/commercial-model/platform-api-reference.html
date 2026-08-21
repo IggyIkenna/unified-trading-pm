@@ -1740,10 +1740,10 @@
         (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
-        internal DART manual-trade surface uses in production. The other fourteen variants — SWAP, LEND, BORROW, WITHDRAW, REPAY, STAKE,
-        UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL, LP_MINT, LP_BURN — parse successfully (they are real, valid members of the
-        union) but return an honest <code>501</code>: not a silent drop, but not the same contract either
-        (<code>external_instruction_api.py:129-136</code>).
+        internal DART manual-trade surface uses in production. The other fourteen variants — SWAP, LEND, BORROW,
+        WITHDRAW, REPAY, STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL, LP_MINT, LP_BURN — parse successfully
+        (they are real, valid members of the union) but return an honest <code>501</code>: not a silent drop, but not
+        the same contract either (<code>external_instruction_api.py:129-136</code>).
       </p>
     </div>
 
