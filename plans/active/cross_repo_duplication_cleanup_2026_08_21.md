@@ -272,3 +272,27 @@ Three audit findings collide with plans that already own those files. Per the fi
       (last true regen 2026-05-16, reverted the same day in `91e45bdf`). The `uic-openapi-sync.yml` template fix has
       landed but `rollout-workflow-templates.sh` was NOT run, so the live per-repo workflow still carries the old
       fallback.
+
+### Exact contract for the e2e-testing wrapper fix (derived 2026-08-21, do not re-derive)
+
+The 42 features-service failures are `AttributeError`s: the new wrappers expose only `DomainSmokeConfig` and
+`main`, but `features-service/tests/*/unit/test_smoke_matrix.py` loads the wrapper via `importlib` and calls
+module-level symbols with the ORIGINAL (config-free) signatures. Measured call sites vs shared signatures:
+
+| Test calls on the loaded module      | Shared function in `scripts/_smoke_matrix_shared.py`                    |
+| ------------------------------------ | ----------------------------------------------------------------------- |
+| `mod._viable_cells(None)`            | `_viable_cells(cfg, filter_asset_group)` — L127                         |
+| `mod._build_cli_invocation(ag, date)`| `_build_cli_invocation(cfg, asset_group, date)` — L137                  |
+| `mod._test_bucket("p", cat)`         | `_test_bucket(cfg, project_id, asset_group)` — L150                     |
+| `mod._run_cell(asset_group=…, …)`    | `_run_cell(cfg, asset_group, date, project_id, dry_run)` — L280         |
+| `mod.run_matrix(asset_group_filter=…)`| `run_matrix(...)` — L313                                                |
+| `mod.SUPPORTED_ASSET_GROUPS`         | `CONFIG.supported_asset_groups`                                         |
+
+So a plain re-export is NOT enough — the signatures differ by the leading `cfg`. Each wrapper must bind its own
+CONFIG (e.g. `functools.partial(_shared._viable_cells, CONFIG)`) and define `SUPPORTED_ASSET_GROUPS`. Check
+`mock.patch` targets still resolve after binding — several tests patch `_invoke_cli`, and a `partial` is not a
+function object.
+
+- [ ] [AGENT] P1. Apply the binding above to all 5 e2e-testing wrappers, then re-gate features-service. BLOCKED
+      until the `docs/VM_BACKFILL_GUIDE.md` unmerged entry is resolved — git refuses to commit any path in that repo
+      while it exists.
