@@ -39,7 +39,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Execution attempt complete — gate RED, not a false pass.** The final staging CeFi report measured `total=294`, `passed=7`, `failed=79`, `skipped=208`; the staging catalogue and terminal VM evidence are retained, while `no_parquet_under`, self-deleted-VM/no-exit-status, and canonical-object failures remain tracked in [/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md]. The no-zero-row-success contract is therefore not yet satisfied.
+- [x] [BACKEND] P0. **Execution attempt complete — gate RED, not a false pass.** The final staging CeFi report measured `total=294`, `passed=7`, `failed=79`, `skipped=208`; the staging catalogue and terminal VM evidence are retained, while `no_parquet_under`, self-deleted-VM/no-exit-status, and canonical-object failures remain tracked in [/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md]. The no-zero-row-success contract is therefore not yet satisfied. — Evidence: retained terminal VM log/report and open blocker issue; this checkbox records the RED execution attempt, not a green smoke-gate result.
 - [ ] [BACKEND] P1. Record one testnet verdict for every CeFi venue, including simulation where no venue testnet exists; Gate: every distinct venue in the live work list has a verdict.
 - [ ] [BACKEND] P1. Add or run testnet smoke coverage where credentials are available or provisionable and record an honest unavailable result for the remainder; file an operator credential request when a credential gap is confirmed. Gate: every attempted path has a measured terminal result.
 - [ ] [BACKEND] P1. Track every failed or absent CeFi row with its source and data type; Gate: no failure is hidden behind a declared-absence or expected-unattempted status.
@@ -87,3 +87,5 @@ unreported launch: remote `/tmp/vm-exec-5628.exit_status` is `1`, the driver log
 The P0 checkbox remains open pending bounded per-cell remediation. Evidence: VM log
 `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260820-2217-cefi/run.log`;
 report `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`.
+
+**2026-08-21 — slot 7 completion flip.** Verified the recorded terminal aggregate report (`total=294`, `passed=7`, `failed=79`, `skipped=208`) and the still-open blocker issue. Flipped only the execution-attempt todo; the row-level smoke contract remains intentionally unchecked because `no_parquet_under`, self-deleted-VM/no-exit-status, and canonical-object failures remain.
