@@ -109,15 +109,17 @@ correctly-empty until a captured row is confirmed post-fix.
 
 ## Todos
 
-- [ ] [CODE] P2. Add subscribe/unsubscribe ack-frame recognition + INFO-level logging to the receive loop in
-      `market-tick-data-service/market_tick_data_service/live/connectors/bybit_futures_book_ticker_ws.py`
-      (`stream()`/`_handle_frame`/`_handle_orderbook_frame`, ~lines 264-330) — a frame with `"op"` present and no
-      `"topic"` is a subscribe/unsubscribe ack, not silently-dropped noise. DoD: a unit test asserts a
-      `{"success": false, "ret_msg": "...", "op": "subscribe"}` frame produces a logged WARNING (or equivalent),
-      and a `{"success": true, ...}` frame produces a logged INFO. (repo: market-tick-data-service)
-- [ ] [CODE] P2. Same fix, `bybit_ws.py`'s trades connector (`_open_and_subscribe`/`_handle_text`/the receive
-      loop around lines 292-386) — identical silent-drop gap confirmed by direct grep. Pair with the todo above;
-      do both together (same root cause, same shape). (repo: market-tick-data-service)
+- [x] ✅ [CODE] P2. **DONE 2026-08-21 (slot-10, infra) — market-tick-data-service@efd0e788.** Added a shared
+      `_log_subscribe_ack()` helper in `bybit_ws.py` (a control frame has `"op"` present, `"topic"` absent) that
+      logs WARNING on `success: false` / INFO otherwise, and wired it into both `_BybitBookStateConnector._handle_frame`
+      and `BybitFuturesTickerWSConnector._handle_frame` in `bybit_futures_book_ticker_ws.py` (covers book_snapshot_5,
+      depth_of_book_10, derivative_ticker). Unit tests added to `tests/unit/test_bybit_futures_book_ticker_ws_coverage.py`
+      asserting the exact DoD shape (`{"success": false, "ret_msg": ..., "op": "subscribe"}` → WARNING,
+      `{"success": true, ...}` → INFO) for both connector classes. Full QG green.
+- [x] ✅ [CODE] P2. **DONE 2026-08-21 (slot-10, infra) — market-tick-data-service@efd0e788.** Same
+      `_log_subscribe_ack()` helper wired into `bybit_ws.py`'s `BybitFuturesWSFeedConnector._handle_text` (trades
+      connector). Unit tests added to `tests/unit/test_bybit_ws_connector.py` (rejected→WARNING, accepted→INFO) plus
+      a dedicated `TestLogSubscribeAck` class covering the helper directly (ack-with-topic / no-op-key → False).
 - [ ] [DATA] P2. After both land + the next `mtds-live-cefi-consolidated-*` relaunch, re-verify BYBIT-FUTURES via
       a direct per-VM manifest-shard read (same method as this doc's evidence). If the ack log now shows a Bybit
       REJECT, file that as its own follow-up (a genuine, now-diagnosable Bybit-side limit); if it shows ACCEPT
@@ -128,6 +130,12 @@ correctly-empty until a captured row is confirmed post-fix.
 
 ## Progress Log
 
+- **2026-08-21 (slot-10, infra, task `dp_live_004_bybit_stale_vm_tarball-9fedd3a6cca7`)**: Shipped todos 1+2
+  (ack-frame recognition + logging in all four BYBIT-FUTURES connectors — trades, book_snapshot_5,
+  depth_of_book_10, derivative_ticker) via `market-tick-data-service@efd0e788`, verified on
+  `origin/live-defi-rollout`. Full local `quality-gates.sh` green (11212 passed, 0 failed). Todo 3 (re-verify via
+  a per-VM manifest-shard read after the next `mtds-live-cefi-consolidated-*` relaunch) is NOT done — it requires
+  a live VM relaunch to pick up this code, out of scope for this code-only task.
 - **2026-08-21 (data_engineering, slot 19)**: filed from
   `dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md` todo 2 (post-relaunch captured-row verification). Full
   evidence above — stable 5x-repeated per-VM shard read (no fluctuation), cross-checked against a known-healthy

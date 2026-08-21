@@ -105,11 +105,23 @@ external action and is not performed by this escalation without that decision.
       `SPOT_PAIR` errors appear in any Bybit log (unlike the old VM). **Old VM
       left RUNNING/undeleted** — the decommission half of this todo is NOT done;
       see the new todo below for why.
-- [ ] [INFRA-or-BACKEND] P1. **DUPLICATE OF `/plans/archive/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md`
+- [x] ✅ [INFRA-or-BACKEND] P1 — **DONE 2026-08-21 (slot-10, infra) — code fix shipped:
+      market-tick-data-service@efd0e788.** Was: **DUPLICATE OF `/plans/archive/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md`
       todo 2** (the canonical, already-consolidated doc for this same VM/incident; verified status: open,
       not archived) — this todo's diagnostic progress feeds that doc's own "verify a real captured row / if
       unproductive, inspect subscribe acks" open todo directly; do not diagnose independently in both places.
-      **NEW FINDING 2026-08-21 (slot-3, infra) — investigate
+      That doc's own todo 2 was itself resolved 2026-08-21 (negative captured-row result, root-caused, follow-up
+      filed at `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`) — root
+      cause: Bybit's own subscribe/unsubscribe ack control frames were silently dropped, unlogged, by every Bybit
+      connector's receive loop, so there was no way to tell a rejected subscribe from an accepted one producing
+      no ticks. Shipped the fix that follow-up doc's todos 1+2 called for: added a shared `_log_subscribe_ack()`
+      helper (`bybit_ws.py`, aliased into `bybit_futures_book_ticker_ws.py`) that recognizes a control frame (has
+      `"op"`, no `"topic"`) and logs it at WARNING (rejected) or INFO (accepted) in all four BYBIT-FUTURES
+      connectors (trades, book_snapshot_5, depth_of_book_10, derivative_ticker), plus unit tests per that doc's
+      DoD. Full QG green (11212 passed). **Remaining work — todo 3 of the follow-up doc** (re-verify via a
+      per-VM manifest-shard read after the next `mtds-live-cefi-consolidated-*` relaunch deploys this fix) is
+      NOT done by this todo — it requires a VM relaunch + live observation, tracked there, not here.
+      **Original NEW FINDING 2026-08-21 (slot-3, infra) — investigate
       why BYBIT-FUTURES produces ZERO captured rows on the new VM despite the
       filter fix being present and the universe resolving correctly.** On
       `mtds-live-cefi-consolidated-20260821-200626`, the per-VM manifest
@@ -151,6 +163,19 @@ external action and is not performed by this escalation without that decision.
 
 ## Progress Log
 
+- **2026-08-21 (slot-10, infra, task `dp_live_004_bybit_stale_vm_tarball-9fedd3a6cca7`)**: Shipped the code fix
+  the linked follow-up doc (`dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`) root-caused and
+  called for — Bybit's subscribe/unsubscribe ack control frames were silently dropped, unlogged, by every
+  BYBIT-FUTURES connector's receive loop. Added a shared `_log_subscribe_ack()` helper (`bybit_ws.py`) recognizing
+  a control frame (`"op"` present, `"topic"` absent) and logging WARNING (rejected) / INFO (accepted); aliased into
+  `bybit_futures_book_ticker_ws.py` for the book/depth/ticker connectors. Applied at all four call sites
+  (`bybit_ws.py::_handle_text`, `bybit_futures_book_ticker_ws.py`'s `_BybitBookStateConnector._handle_frame` and
+  `BybitFuturesTickerWSConnector._handle_frame`). Added unit tests in both existing test files (rejected→WARNING,
+  accepted→INFO, non-ack frames still parse normally) per the follow-up doc's stated DoD. Full local
+  `quality-gates.sh` green (11212 passed, 0 failed). Shipped `market-tick-data-service@efd0e788` via quickmerge,
+  verified on `origin/live-defi-rollout`. This closes THIS doc's own open todo (which was itself a duplicate of
+  the already-resolved canonical doc's todo 2) — the remaining re-verify-after-relaunch step lives in the
+  follow-up doc's todo 3, not here.
 - **dedup pass 2026-08-21**: This is the SAME incident (identical VM `mtds-live-cefi-consolidated-20260817-025031` →
   identical replacement VM `mtds-live-cefi-consolidated-20260821-200626`, identical root cause — stale pre-filter
   BYBIT tarball predating `market-tick-data-service@5f88715e4b`) as the already-canonical, already-consolidated doc
