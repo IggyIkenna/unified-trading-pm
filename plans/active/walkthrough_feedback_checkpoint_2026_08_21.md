@@ -55,7 +55,9 @@ Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-44
 | Republish BOTH artifacts once lanes land | not done (same paths/URLs) | lanes above |
 | BETMGM/BETWAY historical rows disposition | operator-owned (delete-safety) | operator |
 | Kalshi perps TRADING integration (DATA landed instruments-service@2dcee7e149) | operator-owned (venue rights) | venue |
-| MTDS `_write_prefix_candidates` multi-hyphen venue/chain defect fix (`SOLANA-NATIVE-SOLANA`→`venue=SOLANA-NATIVE/chain=SOLANA/`, root-caused to `mtds@06531f00`) | fix verified locally (target test 10/10; full isolated-worktree suite 11114 passed / 28 skipped / 1 xpass, only 1 unrelated collection error), NOT landed | `market_interface/sports/registry.py:67` raises `ValueError: Unknown sports venues in adapter registry: {'onexbet'}` at import — confirmed live on `origin/live-defi-rollout@1e2baca8` (not a local-tree artifact), blocking the FULL quality-gate for ANY MTDS quickmerge right now; tracked in `issues/sports_bookmaker_roster_classification_2026_08_21.md` (in-flight 6-bookmaker cross-repo removal) — retry once that lands |
+| MTDS `_write_prefix_candidates` multi-hyphen venue/chain defect fix (`SOLANA-NATIVE-SOLANA`→`venue=SOLANA-NATIVE/chain=SOLANA/`) | LANDED — `market-tick-data-service@b24b0d59`+`2f0a5369` (slot-31 AO worker; real bug was MTDS's own `_defi_partition_parts` naively `.upper()`-ing `parse_defi_venue`'s slug, `parse_defi_venue` itself was never broken — see `/plans/archive/issues/mtds_defi_prefix_parser_multi_hyphen_solana_native_2026_08_21.md`) | — |
+| onexbet registry retirement (`market_interface/sports/registry.py` import-time `ValueError: Unknown sports venues in adapter registry: {'onexbet'}`) | LANDED — `market-tick-data-service@e106c1d8`+`b24b0d59` | — |
+| MTDS 7-handler `IS_TEST_RUN`-unaware bucket routing (data-correctness, PROD writes during test runs) | LANDED — `market-tick-data-service@473c9c866c` (see `issues/defi_manifest_bucket_ignores_is_test_run_2026_08_21.md`) | — |
 
 ## Todos
 
