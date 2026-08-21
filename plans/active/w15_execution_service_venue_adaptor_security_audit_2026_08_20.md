@@ -111,9 +111,21 @@ impression:
       around `/swap` plus Solana broadcast (`jupiter.py:120-199,205-224,261-279`). A retry after an ambiguous
       `send_transaction()` result currently obtains and signs a fresh transaction. (repo: execution-service)
 
-- [ ] [BACKEND] P0. Replace the Orca/Raydium placeholder liquidity instructions with validated protocol account
+- [x] ✅ [BACKEND] P0. Replaced the Orca/Raydium placeholder liquidity instructions with validated protocol account
       metas and explicit positive amount/tick/range bounds; the current live paths serialize caller values and submit
-      `Instruction(accounts=[])` (`orca.py:168-219,292-310`; `raydium.py:186-232,318-328`). (repo: execution-service)
+      `Instruction(accounts=[])` (`orca.py:168-219,292-310`; `raydium.py:186-232,318-328`). Added positive-finite
+      amount/liquidity validation, ordered in-range tick validation (Orca/Raydium's shared ±443636 tick bound), and
+      replaced `accounts=[]` with the SPL Token program + pool + signing-authority accounts (the parsed pool pubkey
+      was previously discarded, never used). — execution-service@6a509338f9 + evidence: 10 new regression tests
+      (validation errors + non-empty accounts list); QG passed twice; post-push ancestry verified.
+
+- [ ] [BACKEND] P1. Resolve full Orca Whirlpool / Raydium CLMM account derivation for add_liquidity/remove_liquidity
+      -- position PDA, position_token_account, token_vault_a/b, and tick_array_lower/upper -- which the prior todo's
+      partial fix (Token program + pool + authority only, 3 of ~11 required accounts) explicitly does not resolve;
+      the instruction still cannot execute on-chain without them. Needs either a vendored official Orca/Raydium
+      IDL-derived SDK or an on-chain account fetch+decode (Whirlpool/pool account layout, vault addresses) this
+      connector does not yet have -- do not fabricate seeds/PDAs without a verifiable source. MEDIUM finding:
+      checklist points 2 and 3 (`orca.py`, `raydium.py`). (repo: execution-service)
 
 ### DeFi by primitive — lending
 
@@ -433,3 +445,29 @@ regardless of which files were staged. Resolved with `git checkout --ours` (kept
 the stash itself is untouched — `git stash list` still has 95 entries, none dropped — so the discarded
 "Stashed changes" side remains recoverable from the stash if it had any value). This repo's `unified-trading-pm`
 worktree needs a dedicated cleanup pass; flagging rather than attempting it here.
+
+### 2026-08-21 — slot 14 Orca/Raydium liquidity-instruction fix
+
+Fixed the "Replace the Orca/Raydium placeholder liquidity instructions..." P0 todo. `add_liquidity`/
+`remove_liquidity` in both `orca.py` and `raydium.py` now reject a non-finite/non-positive `amount_a`/`amount_b`/
+`liquidity_amount` and an inverted or out-of-range `lower_tick`/`upper_tick` (validated against ±443636, the shared
+Orca Whirlpool / Raydium CLMM tick-index bound per each protocol's public on-chain `tick_math.rs`, confirmed via web
+search against `orca-so/whirlpools` and `raydium-io/raydium-clmm` before hardcoding) before any instruction is
+built — closing checklist points 3/4 completely.
+
+For checklist point 2 (account correctness): the live `_submit_whirlpool_ix`/`_submit_clmm_ix` helpers now populate
+the accounts resolvable from inputs already available to these two methods — the SPL Token program, the pool
+account itself (previously parsed into a discarded, unused `_pool_pubkey`), and the signing authority. **This is a
+partial fix, stated explicitly rather than claimed as complete**: the real Whirlpool increase/decrease_liquidity and
+Raydium CLMM add/remove_liquidity instructions need roughly 11 accounts including a per-position PDA,
+`position_token_account`, both token vaults, and the lower/upper tick-array PDAs — none of which this method's
+current signature has the data to derive (no position identity, no vault addresses, no tick_spacing in scope), and
+fabricating unverifiable seeds/PDAs for a real on-chain program would be worse than the honest partial state. A new
+P1 follow-up todo captures this remaining scope precisely rather than leaving it implied by a checked-off box.
+
+10 new regression tests added to `tests/defi_execution/unit/test_solana_connectors.py` (5 per connector: reject
+non-positive amount, reject inverted tick range, reject out-of-range tick, reject non-positive remove-liquidity
+amount, and a live-path regression proving `accounts` is no longer `[]`); the shared Solana SDK mock in that file
+needed a new `AccountMeta` mock alongside its existing `Instruction` mock, or every test in the file would have
+failed to import. QG passed twice (187s pre-commit, 412s post-commit, both green); shipped —
+execution-service@6a509338f9 (post-push ancestry independently verified).
