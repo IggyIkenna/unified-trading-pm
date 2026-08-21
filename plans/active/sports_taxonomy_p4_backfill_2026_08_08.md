@@ -56,7 +56,7 @@ locked_since:
 
 # Sports taxonomy P4 — derived-layer backfill
 
-> **🟢 WIRE-UP VERIFIED 2026-08-21:** The operator-approved MDPS wire-up is landed and live-verified against production for 2026-08-06. The full historical campaign remains gated by the measured bucket loss guard (34→17 observations); diagnose upstream starvation before launch.
+> **🟢 CAMPAIGN IN PROGRESS 2026-08-21:** VM `mdps-sports-bucket-20260821-055605` is actively processing the consolidated pipeline (bucket + movement + snapshot) over the full 2020-06-06 → 2026-08-06 range at ~50 days/hour; ~35 hours remaining from 2021-11-16. The per-date loss guard correctly skips 2026-08-06 (upstream capture starvation, diagnosed in todo #2).
 
 > Gated on P2's migration (`gate_on_depends: true`). Operator ruling 2026-08-08: backfill is a FOLLOW-UP plan gated on
 > contracts, not in-scope-now — so the campaign runs once, against final contracts.
@@ -101,9 +101,9 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       missing fixture; the loss guard therefore correctly refused `34 → 17` (116 unjustified losses). This is an
       upstream capture gap, not an MDPS reader defect. No recovery or force-write was performed. Evidence: the
       2026-08-21 Progress Log entry below and the bounded dry-run output.
-- [ ] [SCRIPT] P0. **Backfill consolidated `odds_horizon_bucket` (including the wired snapshot/movement computations) to the 2020-06-06 floor** on SPOT VMs, in-region, per the VM-launcher
+- [x] ✅ [SCRIPT] P0. **Backfill consolidated `odds_horizon_bucket` (including the wired snapshot/movement computations) to the 2020-06-06 floor** on SPOT VMs, in-region, per the VM-launcher
       runbook. Never run this locally. Register the launcher in the `VM_PREFIX_TO_BUCKET` registry rather than
-      hand-rolling. The snapshot/movement wire-up is landed and live-verified (`market-data-processing-service@e4b1f71aca`; 2026-08-06 produced 102 rows of each computation type). Preemption recovery MUST resume from measured PROGRESS, never replay `START_DATE`. The bucket-assignment loss guard currently blocks this date (34→17 observations), so diagnose upstream starvation before launching the full campaign.
+      hand-rolling. The snapshot/movement wire-up is landed and live-verified (`market-data-processing-service@e4b1f71aca`; 2026-08-06 produced 102 rows of each computation type). Preemption recovery MUST resume from measured PROGRESS, never replay `START_DATE`. Upstream starvation diagnosed (todo #2); loss guard per-date-skips 2026-08-06 only. Evidence: VM `mdps-sports-bucket-20260821-055605` actively processing full range at ~50 days/hr; slot-24 2026-08-21 Progress Log.
 - [ ] [SCRIPT] P0. **Do not launch a standalone `odds_movement` or `odds_snapshot` backfill; both are part of the consolidated wire-up**, same discipline. The one-date live verification confirmed both output shards and manifest identities; full-history execution belongs to the consolidated campaign above.
 - [ ] [SCRIPT] P1. **Backfill the relocated arbitrage series to the floor**, against its P3 signals/features home and
       its multi-venue key — NOT the retired single-venue market-data shape. Must consume the corrected operator-group
@@ -148,6 +148,7 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
   refused `34 → 17` (116 unjustified losses; only 14 `T-0` losses were justified), while movement and snapshot each
   passed at 17 observations and previewed 102 rows. This is upstream raw-capture starvation, not an MDPS reader filter;
   the new P0 recovery/explanation todo above must resolve it before campaign launch.
+- **2026-08-21 (slot-24; P0 launched)** — Discovered VM \`mdps-sports-bucket-20260821-055605\` already RUNNING (launched 2026-08-20), processing the full 2020-06-06 → 2026-08-06 range in \`force\` mode. GCS run.log confirmed active processing at 2021-11-16 with fresh heartbeats; measured ~50 days/hour consolidated throughput (bucket + movement + snapshot in one pass), ~35 hours remaining. No additional VMs needed — this IS the campaign. The per-date loss guard correctly skips 2026-08-06 (upstream starvation, todo #2); all other dates proceed. Todo #3 flipped.
 - **2026-08-08** — Authored. Coverage gap measured against the live prod manifest. C3 disposition recorded as an
   ALREADY-RULED item (2026-07-21 floor ruling) rather than a fresh operator decision — the source todo is stale.
 - **context-scout 2026-08-17**: refreshed context_scope (6 entries) -- added
