@@ -211,7 +211,8 @@ impression:
 - [ ] [BACKEND] P2. Fix Aave typed-params entry points (`supply_from_params`, `borrow_from_params`, `repay_from_params`, `flash_loan_from_params`) which unconditionally divide the wei amount by `10**18` regardless of the token's actual decimals -- same bug class as the already-tracked Morpho decimals finding above, but for Aave. Currently dead code (zero callers anywhere in the repo, confirmed via grep), so P2 not P0/P1; MEDIUM finding: checklist point 3 (`aave.py:739,747,755,763` -- the `Decimal(params.amount) / Decimal(10**18)` conversions). (repo: execution-service)
 - [x] ✅ [BACKEND] P0. Harden Morpho Blue writes: validate amount/LLTV/market-id inputs, use configured loan-token decimals rather than unconditional 18-decimal conversion, and add durable idempotency across approval plus operation retries; HIGH findings: checklist points 3 and 6 (`morpho.py`). — execution-service@77e649239a + evidence: quality-gates.sh green (153s, sentinel matched committed HEAD); 12 new regression tests (`tests/defi_execution/unit/test_morpho_hardening.py`); see Progress Log entry below.
 - [ ] [BACKEND] P2. Fix Morpho typed-params entry points (`supply_from_params`, `borrow_from_params`, `repay_from_params`, `flash_loan_from_params`) which unconditionally divide the wei amount by `10**18` regardless of the loan token's actual decimals -- same bug class as the already-tracked Aave P2 item above, but for Morpho. Currently dead code (zero callers anywhere in the repo, confirmed via grep) and the synthetic `market_id` these methods construct (`f"{loanToken}_{collateralToken}"`) does not match any real `config["morpho_markets"]` key, so the live branch already fails closed via the just-landed "market not found" error regardless; only the backtest-simulation branch is affected. MEDIUM finding: checklist point 3 (`morpho.py:499-524` -- the `Decimal(params.amount) / Decimal(10**18)` conversions). (repo: execution-service)
-- [ ] [BACKEND] P0. Validate Kamino transaction intent before signing: enforce positive amount and address/mint relationships, inspect/allowlist fee payer, programs, accounts, and token-approval scope in API-produced transactions, and add retry idempotency; HIGH findings: checklist points 2, 3, 5, and 6 (`kamino.py`).
+- [x] ✅ [BACKEND] P0. Validate Kamino transaction intent before signing: enforce positive amount and address/mint relationships, inspect/allowlist fee payer, programs, accounts, and token-approval scope in API-produced transactions, and add retry idempotency; HIGH findings: checklist points 2, 3, 5, and 6 (`kamino.py`) — execution-service@09452cd7dd
+- [ ] [BACKEND] P1. Cross-check Kamino's `market_address` against the reserve's actual on-chain market (kamino.py's `_verify_reserve_mint()` currently only cross-checks `token_mint` against the reserve, since `KaminoReserve`/`_build_reserve_from_payload()` carry no market field) -- needs either a Kamino markets-list API call this connector doesn't otherwise make, or raw on-chain reserve-account deserialization; see the 2026-08-21 slot-5 Progress Log entry below for why it wasn't done inline. (repo: execution-service)
 - [ ] [BACKEND] P0. Harden Idle vault writes: validate positive amounts, enforce caller minimum-output/deadline bounds for mint/redeem, fail closed instead of simulating success in incomplete live mode, and add durable idempotency across approval plus mint retries; HIGH findings: checklist points 3, 4, 6, and 7 (`idle.py`).
 - [ ] [BACKEND] P0. Harden Lido, EtherFi, and Rocket Pool writes: validate finite positive amounts before `to_wei()`, fail closed when `is_live` lacks loaded credentials instead of entering simulation, and add durable idempotency across approval-plus-wrap sequences and retries; HIGH findings: checklist points 3 and 6 (`lido.py:217-292,316-359,376-389`; `etherfi.py:211-325`; `rocket_pool.py:160-214`).
 - [ ] [BACKEND] P0. Replace Marinade's placeholder `Instruction(accounts=[])` writes with validated protocol account metas, enforce positive lamport-safe amounts, and add retry/idempotency protection around Solana broadcast; HIGH findings: checklist points 2, 3, and 6 (`marinade.py:176-202`).
@@ -749,3 +750,59 @@ green (153s, sentinel matched the committed HEAD — first pass caught a method-
 `_live_market_call` at 75 lines against the 50-line cap, fixed via the `_resolve_live_market()`/
 `_send_market_operation()` split above, then re-verified green). Shipped via quickmerge —
 execution-service@77e649239a; post-push ancestry independently verified.
+
+### 2026-08-21 — slot 5 Kamino security fix (checklist points 2, 3, 5, 6)
+
+Fixed the "Validate Kamino transaction intent before signing..." P0 todo, closing the four findings
+recorded in the 2026-08-20 slot-5 lending audit entry above (checklist points 2, 3, 5, 6).
+
+**Point 3** (unconstrained amounts, no local address/relationship validation): added
+`_validate_op_params()` — rejects a non-positive/non-finite Decimal amount, rejects any of
+`reserve_address`/`token_mint`/`market_address` that isn't a valid base58 Solana pubkey shape, and
+rejects the three addresses colliding with each other. Added `_verify_reserve_mint()` — a real on-chain
+cross-check via the existing `get_vault_info()` call, rejecting a caller-supplied `token_mint` that
+disagrees with the reserve's actual mint. **Partial fix, stated explicitly**: Kamino's reserve API
+payload carries no `market` field, so `market_address` cannot be cross-checked the same way without an
+extra markets-list API call this connector doesn't otherwise need; a new P1 follow-up todo below captures
+this remaining scope.
+
+**Point 2** (opaque VersionedTransaction signed with no fee-payer/blockhash/signer/program checks): added
+`_validate_decoded_transaction()`, run on every decoded tx before signing — rejects a fee payer that
+isn't our own wallet, a transaction requiring more than 1 signature, an empty/zero `recent_blockhash`,
+and any instruction whose program isn't on an allowlist (Kamino's own lend program + the standard
+SPL Token / Token-2022 / Associated-Token-Account / System / Compute-Budget programs). **Found and fixed
+in the same change**: this module's docstring had the WRONG Kamino Lend program ID
+(`KLend2g3cP87ber41GXWsSZQhDqc7juFGkhGJk2HRFUj`) — independently verified via web search against Kamino's
+own docs (mintlify.com/kamino-finance/klend/operations/deployment) and Solscan that the real production ID
+is `KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD`; corrected the docstring and used the verified ID for the
+new `KAMINO_LEND_PROGRAM_ID` constant/allowlist (an uncorrected wrong ID would have made the allowlist
+reject every legitimate Kamino transaction).
+
+**Point 5** (opaque instructions sent with no approval/delegate-scope allowlist): any SPL Token
+`SetAuthority` instruction is rejected outright (no legitimate deposit/withdraw/borrow/repay reassigns
+token-account authority); any `Approve`/`ApproveChecked` instruction's decoded delegated amount is bounded
+against the requested operation amount (decimals-agnostic ceiling via the file's existing
+`_DEFAULT_DECIMALS=9` constant — generous enough for any legitimate token while still catching a
+runaway/effectively-unbounded delegation).
+
+**Point 6** (fresh transaction + broadcast on every retry, no idempotency): added an in-memory
+ambiguous-outcome-blocks-resubmission guard mirroring `jupiter.py`'s `execute_swap()` precedent exactly —
+`_op_intent_key()` fingerprints (op + market + reserve + mint + amount); a `send_transaction()` exception
+marks the intent ambiguous and blocks a same-intent retry until `clear_ambiguous_kamino_attempt()` is
+called; a clean success is cached and replayed byte-identical on retry (no second broadcast); a clean
+failure clears the guard (nothing durable was submitted, safe to retry).
+
+18 new regression tests added to `tests/defi_execution/unit/test_solana_connectors.py::TestKaminoConnector`
+covering: amount/address/distinctness validation, reserve/mint mismatch rejection, decoded-tx fee-payer/
+non-allowlisted-program/SetAuthority/oversized-approve rejection plus a well-formed-tx acceptance case, and
+idempotent-replay + ambiguous-outcome-blocks-resubmission-until-cleared. 7 pre-existing operational tests
+were using an invalid-shaped placeholder `reserve_address` ("Reserve1111", 11 chars) that the new
+validation now correctly rejects — updated to a valid-shaped fixture (`KAMINO_RESERVE_ADDR`); the two
+live-path "resign" tests additionally patch out `_validate_decoded_transaction` (their focus is the
+decode-then-resign path, not tx-content validation, which has its own dedicated tests) and enrich their
+shared `FakeAiohttpSession` payload with a matching `tokenMint` so the new reserve/mint cross-check passes.
+Full `quality-gates.sh` green (151s, sentinel matched the committed HEAD). Shipped via quickmerge —
+execution-service@09452cd7dd; post-push ancestry independently verified.
+
+New P1 follow-up todo added above (market_address/reserve relationship cross-check infeasible with the
+current `get_vault_info()` payload shape, which carries no market field).
