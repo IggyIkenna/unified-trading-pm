@@ -1,6 +1,6 @@
 ---
 doc_type: issue
-title: A quickmerge --isolated worktree from a DIFFERENT slot/session appears nested inside slot 16's own directory tree, repeatedly blocking /done's dirty-check for unrelated tasks
+title: A quickmerge --isolated worktree from a DIFFERENT slot/session appears nested inside slot 16's own directory tree
 summary: >-
   Slot 16's worktree contains `.tabs/16/oms-wt.oc3YkB` — a git worktree whose HEAD commit author has been observed
   under 3 DIFFERENT identities across one session (`ikennaigboaka [slot-2·laptop]`, `github-actions[bot]`,
@@ -55,6 +55,14 @@ context_scope:
 ---
 
 # Foreign `--isolated` quickmerge worktree nested in the wrong slot's directory
+
+> **CORRECTION (2026-08-21, slot-14) — the title's core premise is wrong.** `oms-wt.oc3YkB` is **NOT** a foreign
+> worktree from a different slot — its own `.git` file's `gitdir:` pointer resolves to
+> `.tabs/16/execution-service/.git/worktrees/oms-wt.oc3YkB` (confirmed both directions via the reverse `gitdir`
+> pointer too), i.e. its parent clone IS slot 16's own `execution-service` checkout. It sits correctly inside its
+> own slot. The commit-author identities below (`slot-2·laptop`, bots) are a genuine red herring — see todo 3's
+> resolution and the 2026-08-21 (slot-14) Progress Log entry for the full evidence. Left the sections below
+> unedited as the historical record of what was observed; do not re-chase the "wrong slot" hypothesis.
 
 ## What was found (measured, 2026-08-21, slot 16)
 
@@ -140,19 +148,50 @@ orphaned and the check short-circuited; the pattern is otherwise a real, recurri
       (b) if confirmed dead, have someone with execution-service context run the sanctioned
       `git stash push --include-untracked -m 'orchestrator-slot-16-<task_id>'` recovery themselves. Until then this
       stays a live-adjacent block from the done-gate's perspective (unactioned, not unresolved-observation).
-- [ ] [SCRIPT] P2. **NARROWED 2026-08-21**: since `scripts/quickmerge.sh --isolated` is now evidenced NOT to be the
+      **STILL OPEN 2026-08-21 (slot-14)**: unchanged by this session's work — todos 3/4's fix stops this WIP from
+      blocking OTHER slots'/sessions' unrelated `/done` calls, but does not touch or resolve the WIP itself. The
+      operator decision on whether it's safe to stash/discard is still needed.
+- [x] ✅ [SCRIPT] P2. **NARROWED 2026-08-21**: since `scripts/quickmerge.sh --isolated` is now evidenced NOT to be the
       creator (see todo 1 above), this todo is no longer "fix quickmerge.sh's path resolution" — it is instead
       **locate the actual tool that creates `<tag>-wt.<random>`-style directories flat inside `.tabs/<N>/`** (grepped
       clean across every repo's `scripts/`+top-level `*.sh`/`*.py`+`unified-trading-ci`'s workflows — try the peer
       directly, or a broader host-wide search e.g. `find / -newer <ref> -iname '*-wt.??????'` type approaches an
       AO worker shouldn't run unbounded) before any fix can be scoped. Once located: same original intent — make it
-      nest under the INVOKING session's own slot directory or a done-gate-excluded shared location.
-- [ ] [SCRIPT] P2. **Alternatively/additionally**: harden `/api/slots/<N>/done`'s dirty-check to recognize and skip a
+      nest under the INVOKING session's own slot directory or a done-gate-excluded shared location. **RESOLVED
+      2026-08-21 (slot-14) — no tool located, ruled out with source evidence (full detail in Progress Log)**:
+      quickmerge `--isolated`, `safe-doc-push.sh`'s always-on isolation, and `ship-from-worktree.sh` all root under
+      `${TMPDIR:-/tmp}` with the literal repo name as leaf — none produce a flat `.tabs/<N>/<tag>.<random6>` path.
+      Also checked this host's shell configs/`~/.local/bin`/crontab/systemd — nothing matches. Conclusion: no
+      reusable tool exists; this is an ad-hoc `git worktree add` a worker session ran directly. **Also corrects this
+      doc's own title/premise** (see the correction banner at the top): `oms-wt.oc3YkB`'s `gitdir` pointer resolves
+      to slot 16's OWN `execution-service` clone — not a foreign slot's. "Nest under the invoking slot" was already
+      true; the actionable remainder ("done-gate-excluded shared location") is implemented as todo 4 below — one
+      commit closes both. — agent-orchestrator@01a82fd9f3
+- [x] ✅ [SCRIPT] P2. **Alternatively/additionally**: harden `/api/slots/<N>/done`'s dirty-check to recognize and skip a
       nested `oms-wt.*`/other-slot-owned worktree (distinguishable via its own commit author identity not matching
       slot N's own configured identity) rather than treating it as slot N's own WIP — this closes the symptom even if
-      the root-cause path-resolution bug above turns out to be by-design/unfixable.
+      the root-cause path-resolution bug above turns out to be by-design/unfixable. **DONE 2026-08-21 (slot-14),
+      implemented differently than proposed**: commit-author identity is unreliable (proven a red herring by todo 3
+      — it reflects whichever upstream commit a routine fast-forward last pulled in, not who created the worktree).
+      Instead: `worktree_clean_check._report.check_slot_clean` now tags each `RepoDirtyReport.is_linked_worktree`
+      (`.git` is a FILE, not a DIR) — reliable because no sanctioned isolation tool ever places a worktree flat under
+      `.tabs/<N>/` (see todo 3), so a `.git`-file worktree found there is, by construction, never the current task's
+      own shippable-unit WIP. `slots_worker._enforce_done_clean_gate` now excludes worktree-only dirt from the 409
+      block (still blocks on any real primary-checkout dirt — verified via a mixed-dirt test) and logs it
+      non-blocking instead. Deliberately did NOT change `SlotCleanReport.is_clean`'s own semantics or touch
+      `_resolve.py`'s FM2/FM3/FM8 orphan-WIP coordinator, `slot0_self_clean.py`, or the `slots_ops.py` pre-spawn
+      check — all consume `check_slot_clean` too but were out of this task's verified scope. New tests:
+      `test_check_slot_clean_flags_linked_worktree_flat_under_slot`,
+      `test_done_gate_ignores_dirty_linked_worktree_flat_under_slot`,
+      `test_done_gate_blocks_on_primary_dirt_but_excludes_dirty_linked_worktree_from_payload`. Full
+      `quality-gates.sh` green (5300 passed/2 skipped Python; 468/468 dashboard). —
+      agent-orchestrator@01a82fd9f3
 - [ ] [REVIEW] P3. **Once the fix lands**: verify by re-checking `.tabs/16/` (or whichever slot next reproduces the
-      symptom) no longer shows a foreign worktree's dirty state blocking its own `/done` calls.
+      symptom) no longer shows a foreign worktree's dirty state blocking its own `/done` calls. **READY FOR
+      VERIFICATION 2026-08-21 (slot-14)**: fix shipped as `agent-orchestrator@01a82fd9f3`. `oms-wt.oc3YkB` itself
+      is still present (untouched — whether it's safe to stash/discard is todo 2's still-open operator-gated call,
+      not this fix's concern); the thing to verify is that slot 16's `/done` calls no longer 409 on it now that the
+      fix is live.
 
 ## Progress Log
 
@@ -186,3 +225,49 @@ orphaned and the check short-circuited; the pattern is otherwise a real, recurri
   strengthening todo 3's case (harden the done-gate to skip foreign-owned worktrees) as the more tractable fix vs.
   waiting for `oms-wt.oc3YkB` to clear naturally. Stopped retrying again per Step 7.2; no further `/done` attempts
   planned until either this worktree disappears or todo 3 lands.
+- **2026-08-21 (slot-14)** — Resolved todos 3 & 4 in one commit, `agent-orchestrator@01a82fd9f3`.
+  **Tool search (todo 3)**: ruled out every candidate with source-level evidence — `quickmerge.sh`'s `--isolated`
+  mode (`_qm_iso_wt="$_qm_iso_parent${_qm_slot_seg}/$_qm_repo_name"`,
+  `_qm_iso_parent="${TMPDIR:-/tmp}/qm-iso-$$"`) and `safe-doc-push.sh`'s always-on isolation
+  (`_sdp_iso_wt="$_sdp_iso_parent${_sdp_slot_seg}/unified-trading-pm"`, same `/tmp`-rooted parent shape) both use
+  the LITERAL repo name as the leaf directory, never a dot-random suffix, and always root under
+  `${TMPDIR:-/tmp}`; `ship-from-worktree.sh` names `${TMPDIR:-/tmp}/ship-wt-<repo>-<timestamp>-<pid>/<repo>` — same
+  story. Also checked this host's `~/.bashrc`/`~/.bash_aliases`/`~/.profile`/`~/.local/bin/*.sh`/`~/.local/bin/*.py`
+  /`crontab -l`/`/etc/cron.d`/systemd units for a personal tool matching `worktree|mktemp.*wt|oms-wt|pm-ship` —
+  nothing. Conclusion: no reusable tool exists; `oms-wt.oc3YkB` (and the similarly-shaped `pm-ship.MpuQMt`,
+  `pm-pred-XprePf`, `pm-qg-origin-N3l1QW` found in a fleet-wide `find .tabs -path '*/.git/worktrees/*'` sweep
+  across other slots) is an ad-hoc `git worktree add` a worker session ran directly, inventing its own tag on the
+  spot — not a bug in any committed tool.
+  **Premise correction**: the same fleet-wide sweep located `oms-wt.oc3YkB`'s admin registration at
+  `.tabs/16/execution-service/.git/worktrees/oms-wt.oc3YkB`, and the worktree's own `.git` file content
+  (`gitdir: .tabs/16/execution-service/.git/worktrees/oms-wt.oc3YkB`) round-trips back to the same path — i.e. its
+  parent clone IS slot 16's own execution-service checkout, not a foreign slot's. The commit-author identities
+  this doc's earlier entries chased (`slot-2·laptop`, `github-actions[bot]`, `uts-backmerge-bot`) were a genuine
+  red herring: the worktree's own `logs/HEAD` reflog shows every `merge origin/live-defi-rollout: Fast-forward`
+  entry authored `ikennaigboaka [slot-16·planning]` — slot 16's OWN sessions did every fast-forward, via
+  `worker.md`'s routine fresh-pull loop (`[ -e "$repo_dir/.git" ]` is true for a worktree `.git` FILE exactly as
+  for a primary clone `.git` DIR — the loop's own comment already documents this tolerance: "`-e` also tolerates a
+  legacy worktree `.git` FILE if any remain"). Each fast-forward pulled in whatever was on
+  `origin/live-defi-rollout` at the time, including bot-authored upstream commits already in history — that's what
+  produced the shifting author appearance across checks; nothing about it implies a different slot or a live human
+  session. The reflog also shows `checkout: moving from slot16-oms-persistence to live-defi-rollout` — a named
+  branch matching (by naming convention only; content does NOT match — the staged files are DeFi-transfer/bridge/
+  repricer work, not the OMS-persistence plan's own files, which touch `postgresql.py`/`order_adapter.py`/`oms.py`
+  instead) `w_execution_orchestrator_oms_persistence_impl_2026_08_21.md`, confirming this was a deliberate, if
+  undocumented, worktree some session set up and later abandoned — not evidence the staged content itself came
+  from that plan.
+  **Fix (todo 4, converges with todo 3's own "done-gate-excluded shared location" alternative)**: since "nest
+  under the invoking slot" was already true, the fix targets the done-gate directly rather than a worktree-creation
+  path. `worktree_clean_check._report.check_slot_clean` now tags each `RepoDirtyReport.is_linked_worktree`
+  (`.git` is a file vs. a directory); `slots_worker._enforce_done_clean_gate` splits `dirty_repos` into blocking
+  (primary-checkout) vs. non-blocking (linked-worktree) before deciding whether to raise the 409, logging the
+  non-blocking set instead of silently dropping it. Deliberately did NOT change `SlotCleanReport.is_clean`'s own
+  semantics (kept it meaning "any dirty repo at all") or touch `_resolve.py`'s FM2/FM3/FM8 orphan-WIP coordinator,
+  `slot0_self_clean.py`, or the `slots_ops.py` pre-spawn check — all three also consume `check_slot_clean` and
+  were read (call sites enumerated) but not modified, since verifying their correctness under a changed `is_clean`
+  was outside this task's scope; the fix is scoped to `_enforce_done_clean_gate` alone. Todo 2 (whether
+  `oms-wt.oc3YkB`'s own staged DeFi-transfer WIP is safe to stash/discard) remains untouched and still gated on
+  that same operator decision as before — this fix only stops it from blocking OTHER unrelated `/done` calls, it
+  does not resolve or touch the WIP itself. Evidence: `quality-gates.sh` full run green (5300 passed, 2 skipped
+  Python; 468/468 dashboard TS), 3 new tests added covering the tag + both the worktree-only-non-blocking and
+  mixed-dirt-still-blocks cases, `agent-orchestrator@01a82fd9f3` ancestry-verified on `origin/live-defi-rollout`.
