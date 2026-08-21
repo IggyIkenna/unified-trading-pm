@@ -111,8 +111,19 @@ Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-44
       replay / credit-reference-price / cloud-agnostic remain open in that item. Marker check re-verified
       202/247 (unchanged) post-ship. Evidence: unified-trading-pm@40ac124b0f (walkthrough),
       unified-trading-pm@b50711e8b7 (api-reference), both confirmed ancestors of origin/live-defi-rollout.
-- [ ] [BACKEND] P2. UAC `PortfolioPnLAttribution.staking_pnl` first-class field — drop the documented carry fold
-      (strategy-service@21937bb2cf).
+- [x] ✅ [BACKEND] P2. UAC `PortfolioPnLAttribution.staking_pnl` first-class field — drop the documented carry fold
+      (strategy-service@21937bb2cf) — **done**. UAC: added `staking_pnl: Decimal = Decimal("0")` to
+      `PortfolioPnLAttribution` (12th dimension, docstring updated 11→12), extended
+      `test_portfolio_pnl_attribution_round_trip` to cover it. Evidence: `unified-api-contracts@366b74ec08`
+      (ancestor-verified on origin/live-defi-rollout). strategy-service: removed `_UAC_FOLD_TARGET` and the
+      carry-fold branch in `pnl_attribution_aggregator.py` — `staking_pnl` now passes straight through to its
+      own UAC field like every other dimension; updated the 2 staking tests
+      (`test_staking_pnl_is_first_class_uac_dimension` — renamed from `..._folded_into_carry`, asserts
+      `carry_pnl` stays untouched and `staking_pnl` lands on its own field;
+      `test_staking_pnl_defaults_to_zero_when_unspecified` — asserts `staking_pnl == 0`); fixed the stale
+      `_UAC_FOLD_TARGET` comment reference in `test_all_11_dimensions_sum`. Both repos' `quality-gates.sh
+      --no-fix` green before commit. Evidence: `strategy-service@09d6dfaadd` (ancestor-verified on
+      origin/live-defi-rollout).
 - [ ] [AGENT] P1. Verify BLRS recon_excluded landed on origin; if absent re-run its recorded quickmerge, flip its
       todo in the main plan.
 - [x] ✅ [AGENT] P1. RESOLVED — MTDS entitlement landed at market-tick-data-service@746ad763b (with rate-limiting+pagination in the same commit, 11150 green); §01 claim is now true on origin and was rewritten with real citations (unified-trading-pm@f5c4498582). WATCH closed: platform-api-reference.html §01 states the MTDS entitlement seam as landed, but that
