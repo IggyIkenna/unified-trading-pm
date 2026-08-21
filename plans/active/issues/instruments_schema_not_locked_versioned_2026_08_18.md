@@ -112,7 +112,7 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
       `INSTRUMENTS_CATALOGUE_SCHEMA_VERSION`, keyed on `instrument_id`; new `test_instrument_catalogue_contract.py`
       asserts a writer-shaped frame validates with zero violations. QG green (301s), quickmerge landed +
       ancestry-verified on LDR.
-- [ ] [DATA] P2. **BLOCKED on the part-0 reconciliation above** — Wire the per-asset-group `SchemaContract`s to the instruments-service write path — today
+- [ ] [DATA] P2. **UNBLOCKED 2026-08-21 (T1) — the part-0 reconciliation above shipped (unified-api-contracts@910d35da, 2026-08-20); this todo's own text was stale ("BLOCKED") past that point.** Repo is instruments-service (T2), not T1-owned -- UAC's own side of this doc is now fully done (every other todo above is [x]); flagging as ready-to-pick-up rather than implementing here, since it is out of T1's repo scope. Wire the per-asset-group `SchemaContract`s to the instruments-service write path — today
       `CEFI_INSTRUMENT_CATALOGUE` / `DEFI_INSTRUMENT_CATALOGUE` / `TRADFI_INSTRUMENT_CATALOGUE` /
       `PREDICTION_INSTRUMENT_CATALOGUE` / `SPORTS_INSTRUMENT_CATALOGUE` are registered into `CONTRACT_REGISTRY` but
       never consulted by any writer or reader (grep-confirmed zero references outside their own definition file).

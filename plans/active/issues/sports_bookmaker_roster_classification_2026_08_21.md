@@ -137,3 +137,14 @@ framing) + 8 Unity child books registered 2026-08-17 (`cross_cutting_satellite_a
 - [ ] [BACKEND] P3. Resolve the Unity 15-book-vision vs `unity_child_books.py` contradiction (PINNACLE, CROWN) —
       update whichever source is stale, cite the resolution.
 - [ ] [BACKEND] P3. Resolve the Betfair-family ↔ Unity "BETFAIR" child-book mapping ambiguity.
+
+## Progress Log
+
+- **2026-08-21 (T1 tranche)**: The cross-repo risk this doc's own P1 todo flagged (removing `bookmaker_registry.py`'s
+  onexbet entry would break execution-service's module-level import) materialized when a T1 session completed the
+  removal in the untouched second registry family — deleting `unified_api_contracts/external/onexbet/` broke
+  `execution-service/sports_execution/adapters/bookmaker_api/onexbet.py`'s import chain for real. Caught and fixed
+  same-session (execution-service@0c81d75501, a concurrent session independently found and fixed the identical
+  break — reconciled via rebase). Full incident writeup:
+  [uac_bookmaker_removal_broke_execution_service_onexbet_import_2026_08_21.md](/plans/archive/issues/uac_bookmaker_removal_broke_execution_service_onexbet_import_2026_08_21.md).
+  This closes the "coordinated two-repo removal" follow-up (b) flagged in this doc's own P1 todo above.
