@@ -19,6 +19,7 @@ summary: >-
   philosophy ("raising a wall-clock timeout to absorb scheduling variance is not weakening the check") as a repo-local,
   low-blast-radius mitigation.
 status: open
+archive_exempt: true # na-eligibility-audit 2026-08-21: sole open todo just closed w/ hard evidence, leaving 0 open -- but this doc is one of a 4-doc pytest-timeout-under-host-contention incident chain that sibling `_continued3`'s still-open todo 3 says should archive TOGETHER once the whole class self-resolves; fresh same-signature recurrences 2026-08-19/20 (see `_continued3`'s 2026-08-21 correction) show it hasn't yet fleet-wide, so coordinated archival isn't ready -- non-durable 0-open snapshot, not archiving standalone. Revisit when the chain-wide archival condition is met.
 nature: issue
 asset_group: [ci]
 stage: [meta]
