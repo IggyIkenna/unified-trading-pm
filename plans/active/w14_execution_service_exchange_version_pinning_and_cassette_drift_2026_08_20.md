@@ -106,7 +106,7 @@ context_scope:
       endpoint or contract. Phase 2 must record these markers; Phase 3 must hash normalized structure (field names,
       container shape, and scalar types; ignore values, timestamps, ordering, and secrets). Cross-reference W15 for
       contract/security findings and do not duplicate).
-- [ ] [AGENT] P1. **Decide the cassette-drift-detection mechanism.** Options to evaluate: (a) a scheduled job that
+- [x] [AGENT] P1. **Decide the cassette-drift-detection mechanism.** Options to evaluate: (a) a scheduled job that
       re-records a small canary request per venue against the LIVE API (read-only, safe endpoints only — e.g.
       exchange-info/ticker, never anything that could place an order) and diffs its shape against the checked-in
       cassette, alerting on structural drift (field added/removed/type-changed) rather than value drift (a price
@@ -114,6 +114,7 @@ context_scope:
       cassette exceeds N days old, forcing a manual re-record + review; (c) both, layered (age check catches
       "nobody looked at this in months," live-diff check catches "the shape actually changed"). Write the decision
       + reasoning down; this determines the shape of every build todo below.
+      Decision (2026-08-21): choose the offline layered mechanism: schema fingerprints plus a configurable max-age check, not a live canary. It is credential-free and cannot place an order; live canary re-recording remains a separately gated follow-up.
 
 ### Phase 2 — build per-transport version pinning
 
@@ -132,10 +133,11 @@ context_scope:
 
 ### Phase 3 — build cassette drift detection
 
-- [ ] [AGENT] P0. **Build the decided drift-detection mechanism** (Phase 1's choice) as a real, runnable check —
+- [x] [AGENT] P0. **Build the decided drift-detection mechanism** (Phase 1's choice) as a real, runnable check —
       not a design doc. If it's a live-diff canary job, it must be READ-ONLY and safe to run unattended (never a
       write/order-placing call); if it's an age check, it must be wired into `quality-gates.sh` or a scheduled job,
       not a manual reminder nobody runs.
+      Evidence: execution-service offline checker and checked-in schema baseline; non-zero on drift/staleness, zero only on a clean baseline.
 - [ ] [AGENT] P1. **Wire the drift check into CI or a scheduled job** (whichever this repo's existing infra
       supports more cleanly — check for an existing scheduled-job pattern in this repo before inventing a new
       one) so drift surfaces automatically, not only when someone happens to run the check by hand.
@@ -171,3 +173,5 @@ context_scope:
 - **2026-08-20, slot 4, Phase 1 inventory**: measured by `rg --files` plus top-level class declarations. Counts: **CCXT-wrapped CeFi 8** (`trade_execution/adapters/{aster,binance,bybit,coinbase,deribit,hyperliquid,okx,upbit}_ccxt.py`); **native-REST CeFi 3 concrete venues** (`bitfinex_native.py`, `bitget_native.py`, `kraken_rest_adapter.py`; `kraken_rest_transport.py` is a shared mixin); **DeFi 31 connectors** (`defi_execution/protocols/{aave,aster,beefy,bybit,cctp,convex,eigenlayer,etherfi,hyperliquid,idle,jito,jito_restaking,jupiter,kamino,karak,kelpdao,lido,marinade,morpho,orca,pacifica,pendle,puffer,raydium,renzo,rocket_pool,solblaze,symbiotic,uniswap,weth,yearn}.py`, excluding bases/helpers); **sports 7 external bookmaker/exchange adapters** (`sports_execution/adapters/aggregator/odds_api.py`, `bookmaker_api/{api_football,onexbet}.py`, `exchanges/{betfair,kalshi,matchbook,polymarket_clob}.py`; paper and Unity are non-venue); **TradFi 7 gateways** (`trade_execution/adapters/{cboe_adapter,cme_adapter,fx_adapter,ibkr_tradfi,ice_adapter,nasdaq_adapter,nyse_adapter}.py`). Legacy `trade_execution/adapters/sports_adapter.py` and `polymarket_adapter.py` facades are outside the requested sports surface and not double-counted.
 
 - **2026-08-20, slot 4, Phase 1 version-semantics decision**: Evidence from the real adapter walk and scoped cassettes supports a transport-specific marker: native CeFi and sports use URL/endpoint API path versions with normalized response-schema fingerprints where no explicit version exists; CCXT records the exact lock-resolved library version but does not assert an upstream venue API version; on-chain DeFi uses chain/network plus contract-address and ABI/selector fingerprints, while REST-backed DeFi follows the native rule; TradFi inherits the shared IBKR gateway protocol and has no independent exchange version. Structural hashes ignore values, timestamps, ordering, and secrets.
+- 2026-08-21, slot 14: real run at 2026-08-21T00:00:00Z inspected 17 cassettes, found 13 stale at the 90-day budget and 4 undated sports cassettes, and exited 1. This confirms an actionable failure state rather than a forced-green stub.
+- **2026-08-21, slot 14, implementation ship**: `execution-service@1d7c1cf4a6` landed via quickmerge after `bash scripts/quality-gates.sh --no-fix` exited 0 (8,898 passed, 22 skipped, 1 XPASS; 82.69% coverage). The checker is offline and read-only: it fingerprints normalized response structure, ignores values/order/timestamps, and applies a 90-day capture-date budget; the live run reported 13 stale and 4 undated cassettes for Phase 4 follow-up.
