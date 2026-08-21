@@ -222,7 +222,7 @@ impression:
 - [ ] [BACKEND] P1. Wire the real on-chain calls the fail-closed guards above stand in for: Symbiotic/Karak/KelpDAO/Renzo `delegate()` (no network/operator-delegation contract call exists in any of the four), KelpDAO/Puffer/Renzo's own withdrawal-queue contracts (delayed exit, not instant redeem), and EigenLayer's `completeQueuedWithdrawals()` (needs the full on-chain `Withdrawal` struct -- delegatedTo/nonce/startBlock -- tracked from the `queue_withdrawal()` step, which this connector does not currently retain) plus `RewardsCoordinator.processClaim()`. Each currently fails closed (`success: False`) in live mode rather than fabricating success, pending a verified ABI/contract address per protocol -- do not fabricate one without a verifiable source. (repo: execution-service)
 - [ ] [BACKEND] P0. Enforce a real minimum-output bound on Kelp DAO deposits instead of the hardcoded `minRSETHAmountExpected=0`, and add minimum-output/deadline bounds plus correct instant-vs-delayed withdrawal reporting across the rest of the second staking/restaking group; HIGH finding: checklist point 4 (`kelpdao.py:201-210`); MEDIUM findings: checklist point 4 (`symbiotic.py:171-202,243-263`; `karak.py:173-203,244-268`; `puffer.py:156-186,214-242`; `renzo.py:119-154,178-225`; `jito.py:104-125,228-305`; `jito_restaking.py:210-250`; `solblaze.py:164-202,204-242`). (repo: execution-service)
 - [ ] [BACKEND] P1. Add the missing ERC-20 approval before EigenLayer's `depositIntoStrategy()` and replace Karak's hardcoded low-confidence vault address with a validated/derived one; MEDIUM findings: checklist points 5 and 2 (`eigenlayer.py:200-208,379-411`; `karak.py:80-84,194-202`). (repo: execution-service)
-- [ ] [BACKEND] P0. Harden the shared CCXT order boundary with explicit side/type/symbol/finite-positive amount/price validation before `create_*_order`; HIGH finding: checklist point 3 (`ccxt_common.py` plus each adapter's `_submit_ccxt_order`).
+- [x] ✅ [BACKEND] P0. Harden the shared CCXT order boundary with explicit side/type/symbol/finite-positive amount/price validation before `create_*_order`; HIGH finding: checklist point 3 (`ccxt_common.py` plus each adapter's `_submit_ccxt_order`). — execution-service@3685010a0f + evidence: quality-gates.sh green (233s, sentinel matched committed HEAD; 8952 passed); shared `validate_ccxt_order_params()` in `ccxt_common.py` called from all 8 adapters' `_submit_ccxt_order()`; 42 new regression tests in `tests/trade_execution/unit/test_ccxt_order_validation.py`; see Progress Log entry below.
 - [ ] [BACKEND] P0. Add bounded execution semantics to every CCXT adapter: require a safe market-order price/slippage guard and a finite expiry (or venue-equivalent bounded time-in-force), rather than defaulting to unbounded market execution/GTC; HIGH finding: checklist point 4 (all eight adapters' `_submit_ccxt_order` paths).
 - [ ] [BACKEND] P0. Make CCXT order placement durable and retry-safe: require/persist one client-order id across ambiguous retries, use each venue's verified parameter name, and reconcile an uncertain submission before resubmitting; HIGH finding: checklist point 6 (all eight adapters, with Coinbase's `client_oid` deviation at `coinbase_ccxt.py:116-146`).
 - [ ] [BACKEND] P0. Enforce fail-closed credential initialization and redacted error logging for the CCXT group; Coinbase currently constructs a real exchange without a missing-key guard (`coinbase_ccxt.py:44-52`), and all order error paths persist raw exception text (`*_ccxt.py` order handlers plus `ccxt_common.py:372-405`); HIGH/MEDIUM findings: checklist point 1.
@@ -897,3 +897,35 @@ pre-existing "no rewards to claim" failure reason still surfaces first for a liv
 accumulated rewards (not shadowed by the new guard). Full `quality-gates.sh` green (227s, sentinel
 matched the committed HEAD). Shipped via quickmerge — execution-service@862d5377b2; post-push
 ancestry independently verified.
+
+### 2026-08-21 — slot 25 CCXT order-boundary input-validation fix (checklist point 3)
+
+Fixed the "Harden the shared CCXT order boundary..." P0 todo, closing the checklist-point-3 HIGH
+finding the slot-21 CCXT audit recorded: all eight adapters cast caller `side`/`order_type` and
+converted `quantity`/`price` straight to `float` before
+`create_market_order()`/`create_limit_order()`, with no local finite-positive amount/price check,
+side/type allowlist, or symbol check. A distinct, more dangerous variant of this gap: every
+`_submit_ccxt_order()` branches only on `if ccxt_type == "market": ... else: (limit)` — an
+unsupported/typo'd `order_type` (e.g. "stop") silently fell through to the LIMIT branch and was
+submitted as an unintended limit order rather than being rejected.
+
+**Fix**: added a single shared `validate_ccxt_order_params(symbol, side, order_type, quantity,
+price)` in `ccxt_common.py` — rejects an empty symbol, a `side` outside `{buy, sell}`, an
+`order_type` outside `{market, limit}` (closing the silent-fallthrough gap above), and a
+non-finite/non-positive `quantity` or (when present) `price`. Called from the top of every
+adapter's `_submit_ccxt_order()` (aster/binance/bybit/coinbase/deribit/hyperliquid/okx/upbit),
+before any exchange call — a bad order now raises `ValueError` and reaches zero
+`create_market_order`/`create_limit_order` calls on every venue. Plain `ValueError` (not a CCXT
+exception subclass) propagates cleanly through each adapter's existing `except
+ccxt.InsufficientFunds/InvalidOrder/NetworkError/BaseError` chain, the same way the pre-existing
+"Limit order requires price" check already did.
+
+42 new regression tests in `tests/trade_execution/unit/test_ccxt_order_validation.py`: 10
+direct-unit cases against the shared validator (empty symbol, invalid side, invalid type,
+zero/negative/non-finite quantity, non-positive/non-finite price, valid market and valid limit
+orders), plus 4 parametrized wiring-confirmation test functions run across all 8 adapters (32
+cases total — invalid side, invalid type, non-positive quantity, non-positive limit price) proving
+each adapter's own `_submit_ccxt_order()` actually invokes the validator (not just that the helper
+is correct in isolation), asserting zero `create_market_order`/`create_limit_order` calls on
+rejection. Full `quality-gates.sh` green (233s, sentinel matched the committed HEAD; 8952 passed).
+Shipped via quickmerge — execution-service@3685010a0f; post-push ancestry independently verified.
