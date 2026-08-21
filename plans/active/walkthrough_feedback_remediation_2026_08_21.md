@@ -129,7 +129,7 @@ drift_direction: advance-code
       test, not just prediction ones — 4079 collection errors measured). Same root cause + shape as the sibling
       `deployment_api_prediction_catalogue_broken_by_uac_category_deletion_2026_08_21.md` issue this todo's own
       "Manifest supersession flagged to T2" line anticipated; filed as
-      `/plans/active/issues/instruments_service_polymarket_broken_by_uac_prediction_market_mapper_deletion_2026_08_21.md`.
+      `/plans/archive/issues/instruments_service_polymarket_broken_by_uac_prediction_market_mapper_deletion_2026_08_21.md`.
       test file) + `unified_api_contracts/prediction.py` facade + every re-export in `unified_api_contracts/`,
       `canonical/domain/`, and `predictions/__init__.py`. `rg 'PredictionMarketCategory|canonical/domain/prediction[^s]'`
       is zero in live code (only historical-migration-note prose in docstrings/comments remains) — **that `rg` ran
@@ -991,3 +991,10 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   polling every 60s, never forced/committed foreign work) rather than working around it; both ships landed clean
   once that session's own commit (`unified-api-contracts@4f25d5f0`) cleared the dependency.
   Shas: `unified-api-contracts@3204e607e4`, `execution-service@0aa709f076`.
+
+- 2026-08-21 — Resolved the `4f25d5f0` deployment-api fallout: `PredictionMarketCategory`/`category_for_group`
+  deletion (filed P0 issue) fixed as a canonical-axis (`PredictionUnderlying`) projection; a SECOND same-commit
+  break found in the same pass (`prediction_markets_config_descriptor` deletion, cascaded to ALL of
+  `deployment_api.routes`, 456 collection errors) fixed via `CLASSIFIER_STABILITY_HASH`/`CLASSIFIER_VERSION`.
+  `deployment-api@9947cc40ae`, quality-gates.sh green (5427 passed). Issue archived + resolution documented:
+  `/plans/archive/issues/deployment_api_prediction_catalogue_broken_by_uac_category_deletion_2026_08_21.md`.
