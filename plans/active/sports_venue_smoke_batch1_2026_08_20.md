@@ -71,7 +71,7 @@ zero rows and every downstream leg failed closed on the empty result.
 
 **This run used the wrong CLI mode.** `--mvp-only` invokes the plain MVP shard enumeration, not the
 `--generator-scoped-sports` mode `market-tick-data-service@aaa0c8b1b6` shipped specifically for Sports
-(`/plans/archive/issues/sports_venue_smoke_checker_scope_and_canonical_gap_2026_08_20.md`, which this plan's own
+(`/plans/active/issues/sports_venue_smoke_checker_scope_and_canonical_gap_2026_08_20.md`, which this plan's own
 context_scope did not surface because it lives under the sibling `venue_smoke_test_bar` doc's issue tree, not this
 plan's own). The result: 25 shards / 75 checks measured here does not match the 39-row canonical UAC work-list
 denominator this todo's Gate requires ("every current Sports row"). The zero-capture/`No active venues` finding
@@ -95,7 +95,7 @@ for force/skip and `canonical_no_matching_objects_in_test_bucket` for the canoni
 mis-scored. Root cause: the `--auto-day` sampler resolves per-shard days (2026-08-20, 2026-07-26, 2025-09-10 all
 observed) where the sampled venue+league combination had no scheduled fixture/odds activity, so the force leg wrote
 zero rows and every downstream leg correctly failed closed on the empty result — reproducing the exact `No active
-venues for date=<day> asset_groups=['SPORTS']` mechanism `/plans/archive/issues/sports_venue_smoke_checker_scope_and_canonical_gap_2026_08_20.md`
+venues for date=<day> asset_groups=['SPORTS']` mechanism `/plans/active/issues/sports_venue_smoke_checker_scope_and_canonical_gap_2026_08_20.md`
 already found on `SPORTS:PINNACLE:odds`/2025-12-20, now confirmed across the wider generator-scoped set. **Gate
 verdict**: rows, canonical paths, manifest atoms, and capture statuses ARE genuinely measured per unit (the Gate's
 literal requirement) — the result is RED (zero real Sports capture in the test-bucket path for this window), not a
