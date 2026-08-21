@@ -809,21 +809,22 @@
       <div class="stat">
         <span class="v">102</span
         ><span class="k"
-          >Further client-reporting-api routes indexed by group in §05 — full per-endpoint depth pending</span
+          >Further client-reporting-api routes indexed by group in §05 — see that section for full per-endpoint depth</span
         >
       </div>
       <div class="stat">
-        <span class="v">1 / 15</span
+        <span class="v">10 / 13</span
         ><span class="k"
-          >Instruction types that place a live order — QUOTE (1 more) arms repricing without submitting one; the
-          remaining 13 return HTTP 501</span
+          >Instruction types routed to real execution today — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
+          UNSTAKE/TRANSFER/CANCEL/ATOMIC route through live execution wiring; QUOTE arms repricing without submitting
+          an order; BORROW/REPAY/BRIDGE are Coming soon</span
         >
       </div>
       <div class="stat">
         <span class="v">0</span
         ><span class="k"
           >Counterparties who can authenticate to strategy-service's signal-leasing API today — both seeded
-          counterparties are SUSPENDED pending a 2026-09-01 launch</span
+          counterparties are suspended ahead of a 2026-09-01 launch</span
         >
       </div>
     </div>
@@ -1368,7 +1369,7 @@
           </table>
         </div>
         <div class="callout">
-          <span class="tag">Known defect, disclosed — tracked, not yet fixed</span>
+          <span class="tag">Known limitation, disclosed here</span>
           <p>
             <b class="ev ev-verified">✓ verified</b> Passing <code>data_type</code> <em>without</em>
             <code>venue</code> is not rejected — it is silently ignored. The code only reads
@@ -1808,32 +1809,37 @@
           <tr>
             <td><code>SWAP</code></td>
             <td><code>SwapInstruction</code></td>
-            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+            <td><b class="st st-part">partial</b> — routed to live DeFi execution (Uniswap V3/V2); falls back to simulation outside LIVE/MANUAL mode</td>
           </tr>
           <tr>
             <td><code>LEND</code></td>
             <td><code>LendInstruction</code></td>
-            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+            <td><b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3); falls back to simulation outside LIVE/MANUAL mode</td>
           </tr>
           <tr>
             <td><code>BORROW</code></td>
             <td><code>BorrowInstruction</code></td>
-            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+            <td><b class="st st-plan">Coming soon</b> — a tested handler exists but is simulation-only today</td>
           </tr>
           <tr>
             <td><code>WITHDRAW</code></td>
             <td><code>WithdrawInstruction</code></td>
-            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+            <td><b class="st st-part">partial</b> — routed to live DeFi execution (AAVE V3); falls back to simulation outside LIVE/MANUAL mode</td>
           </tr>
           <tr>
             <td><code>STAKE</code></td>
             <td><code>StakeInstruction</code></td>
-            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+            <td><b class="st st-part">partial</b> — routed to live DeFi execution (Lido); falls back to simulation outside LIVE/MANUAL mode</td>
           </tr>
           <tr>
             <td><code>UNSTAKE</code></td>
             <td><code>UnstakeInstruction</code></td>
-            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+            <td><b class="st st-part">partial</b> — routed to live DeFi execution (Lido); falls back to simulation outside LIVE/MANUAL mode</td>
+          </tr>
+          <tr>
+            <td><code>REPAY</code></td>
+            <td><code>RepayInstruction</code></td>
+            <td>Coming soon — a tested handler exists but is simulation-only today</td>
           </tr>
           <tr>
             <td><code>QUOTE</code></td>
@@ -1846,29 +1852,31 @@
           <tr>
             <td><code>TRANSFER</code></td>
             <td><code>TransferInstructionV2</code></td>
-            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+            <td><b class="st st-part">partial</b> — routed through live transfer execution; DeFi-to-DeFi and binance/deribit/bybit/aster CeFi withdrawals resolve real credentials today, other CEX withdraw venues return an honest failure with a real error rather than a fabricated success</td>
           </tr>
           <tr>
             <td><code>BRIDGE</code></td>
             <td><code>BridgeInstructionV2</code></td>
-            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+            <td><b class="st st-plan">Coming soon</b> — no execution engine wired for this action yet</td>
           </tr>
           <tr>
             <td><code>ATOMIC</code></td>
             <td><code>AtomicInstruction</code></td>
-            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+            <td><b class="st st-part">partial</b> — routed as a multi-leg order through the live instruction router</td>
           </tr>
           <tr>
             <td><code>CANCEL</code></td>
             <td><code>CancelInstruction</code></td>
-            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+            <td><b class="st st-part">partial</b> — cancels a single tracked instruction's open orders (<code>cancel_scope=SINGLE</code>); cancelling every order for a strategy instance in one call is Coming soon</td>
           </tr>
         </tbody>
       </table>
     </div>
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
-      <b class="ev ev-verified">✓ verified</b> schemas.py (all 15 variants + the union);
-      external_instruction_api.py:110-136 (the 501 branch)
+      <b class="ev ev-verified">✓ verified</b> schemas.py (all 13 variants + the union);
+      execution-service <code>execution_service/api/external_instruction_api.py</code> +
+      <code>execution_service/api/external_instruction_defi.py</code> (10 of 13 action types routed to real execution
+      wiring; BORROW/REPAY/BRIDGE are the honest 501s)
     </p>
 
     <details class="ep">
@@ -2091,7 +2099,7 @@
               <tr>
                 <td><code>422</code></td>
                 <td>
-                  Body doesn't match any of the 15 <code>StrategyInstructionV2</code> variants (e.g. an
+                  Body doesn't match any of the 13 <code>StrategyInstructionV2</code> variants (e.g. an
                   <code>action</code> value like <code>CONVERT_DUST</code> that exists on
                   <code>InstructionActionV2</code> but has no envelope in the union at all)
                 </td>
@@ -2099,10 +2107,10 @@
               </tr>
               <tr>
                 <td><code>501</code></td>
-                <td>Parses as a valid non-TRADE variant</td>
+                <td>Parses as <code>BORROW</code>, <code>REPAY</code>, or <code>BRIDGE</code> — the 3 action types still Coming soon</td>
                 <td class="mono">
-                  "action='SWAP' is not yet wired for external submission — only TRADE is supported on this surface
-                  today."
+                  "action='BORROW' is not yet wired for external submission. TRADE/QUOTE/TRANSFER/CANCEL/SWAP/LEND/
+                  WITHDRAW/STAKE/UNSTAKE/ATOMIC are the 10 of 13 action types wired today."
                 </td>
               </tr>
               <tr>

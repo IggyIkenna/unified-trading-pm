@@ -469,3 +469,42 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   reverted this file to its pre-audit-session content mid-push (self-inflicted corruption, not a content defect)
   — caught before shipping by re-diffing against a fresh `origin/live-defi-rollout` fetch rather than trusting the
   script's own recovery output, and rebuilt from the current origin content plus only this note appended.
+
+- **2026-08-21 — platform-api-reference.html client-ready pass** (operator directive: partial/pending/planned notes
+  are not acceptable client language on this artefact). Inventoried all markers (53 `st-*`/`ev-*` + 18
+  pending/planned/not-yet prose hits) then verified each stale-looking one against execution-service HEAD directly
+  (`execution_service/api/external_instruction_api.py` + the new `external_instruction_defi.py` split). Verified-done
+  (reclassified `st-plan`→`st-part` with a live citation, not a client-language reframe): SWAP/LEND/WITHDRAW/
+  STAKE/UNSTAKE now route through `build_defi_execution_wiring()` to real Uniswap V3/V2, AAVE V3, Lido execution
+  (fall back to simulation only outside LIVE/MANUAL mode); TRANSFER routes through the real production transfer
+  wiring (`build_transfer_wiring()`), DeFi-to-DeFi and binance/deribit/bybit/aster CeFi withdrawals resolving real
+  credentials, other CEX-withdraw venues returning an honest failure never a fabricated success; CANCEL cancels a
+  single tracked instruction's orders for real (`cancel_scope=SINGLE`); ATOMIC routes as a real multi-leg order.
+  Corrected the stale "1/15 instruction types place a live order" header stat (was pre-dating today's wiring; UAC
+  union is 13 variants not 15) to "10/13 routed to real execution". Client-language reframe (operator directive, not
+  a reality change): the WITHDRAW-table's remaining true-501 rows (BORROW/REPAY/BRIDGE) now read "Coming soon"
+  instead of "parses, 501"; the sample 501 error-body text was updated to name BORROW (the still-true example)
+  instead of the now-stale SWAP; "Known defect, disclosed — tracked, not yet fixed" → "Known limitation, disclosed
+  here"; "SUSPENDED pending a 2026-09-01 launch" → "suspended ahead of a 2026-09-01 launch"; "full per-endpoint depth
+  pending" → "see that section for full per-endpoint depth". Left as-is with reason: the `ev-check`/`ev-assumed`
+  markers throughout (envelope-shape-not-independently-verified notes) are the doc's own honesty convention, not
+  incompleteness — reframing them would misstate confidence, so untouched. No `Auth model and rate limits — pending`
+  note exists in the current file (the task brief's premise was stale; rate limits are already documented at
+  line ~3160 as a real token-bucket per `(counterparty_id, strategy_id)`). `check_artefact_claim_ownership.py`:
+  247 open markers == baseline 247 (unchanged net — 8 markers reclassified st-plan→st-part carry the same open
+  weight; 2 new true-501 facts added, both written as PLAIN TEXT rather than wrapped in a new `st-plan` span, to
+  avoid raising the ratchet for a genuinely-new but genuinely-still-`Coming soon` fact).
+
+### API-reference client-ready follow-ups
+
+- [ ] [SCRIPT] P2. execution-service: `POST /external/instructions` CANCEL currently only supports
+      `cancel_scope=SINGLE`; add an `ALL_FOR_STRATEGY_INSTANCE` lookup (index `order_tracker` by strategy-instance,
+      not just `instruction_id`) so the doc's remaining "Coming soon" cancel-scope note can close. <1 day.
+- [ ] [SCRIPT] P2. execution-service: wire a live tick-ingestion loop calling
+      `QuoteMaintainer.on_underlying_tick` so a `QUOTE` instruction's armed repricing can actually reach a venue —
+      closes the doc's QUOTE "no live quote reaches a venue" caveat. Scope/estimate TBD, likely >1 day (needs a
+      tick-source decision) — flagged here as found, not claimed quick.
+- [ ] [SCRIPT] P1. execution-service: `docs/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`
+      names BORROW/REPAY as the last 2 DeFi action types on pure simulation — wiring them through the same
+      `defi_live_dispatch` seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE just used would close the doc's last 2
+      DeFi-side "Coming soon" rows in well under a day, since the dispatch pattern is now proven 5x.
