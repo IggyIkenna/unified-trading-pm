@@ -158,30 +158,51 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
 
 ## Recommended decision
 
-- [ ] [INFRA] P1. Determine why no Cloud Build has fired for `market-tick-data-service` since
-      `2026-08-21T10:18:11Z` despite the `49a8dd80` digest-bump commit landing on `live-defi-rollout` at
-      `16:07:59Z` and passing `quality-gates-v2`. Check the Cloud Build trigger config
-      (`gcloud builds triggers list --region=asia-northeast1`, filtered to this repo) for what event it fires
-      on (push to LDR vs. promotion to `main` vs. something else) and whether it's genuinely stalled or simply
-      hasn't been reached yet by the promotion pipeline. If stalled, trigger it via the sanctioned path (not
-      an ad-hoc `gcloud builds submit`) and cite `Evidence: cloudbuild=<id>` resolving SUCCESS per
-      `plans/PLAN_FORMAT.md` § 8b. Repo: deployment-service (owns the build triggers) /
-      market-tick-data-service.
-- [ ] [DATA] P1. Once the new image is confirmed deployed (`gcloud run jobs executions list` shows a fresh
-      execution with real merge activity — `shards>0`/`rows_in>0`, not `error=locked`), verify the defi
-      canonical `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` blob's
-      `generation`/`last_modified` has advanced past `2026-08-21T06:38:39Z`. If the guard fix causes the cron
-      to loud-fail instead of self-healing (i.e. defi's full corpus also exceeds
-      `CONSOLIDATOR_UNPROVABLE_MERGE_MAX_SHARDS`), the SAME manual marker-restore recovery
-      `manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md`'s Progress Log documents step-by-step
-      (pause cron -> confirm holder dead -> clear orphaned lock -> metadata-only restamp
-      `consolidator_content_write_at` to the last genuine merge's listing time, NOT `now` -> resume -> execute)
-      applies here too — do not attempt without first determining the correct restamp timestamp from Cloud
-      Logging, per that doc's own explicit data-loss warning. Repo: unified-trading-library /
-      market-tick-data-service (execution only, no new code expected).
+- [x] [INFRA] P1. ✅ **CORRECTED — this was a measurement artifact, not a real deploy-chain gap.** `gcloud builds
+      list` (no `--region` flag) silently omits regional builds — it does NOT error, it just returns fewer rows,
+      so the earlier "no Cloud Build has fired" claim looked confirmed when it was actually querying the wrong
+      scope. Re-checked WITH `--region=asia-northeast1`: `market-tick-data-service-live-defi-rollout` trigger
+      (id `46d60bf7-4880-4b38-8ed4-87e1249ee4ed`, push-on-`^live-defi-rollout$`) fired 6 SUCCESS builds between
+      `17:22:59Z` and `18:17:34Z`. The `18:17:34Z→18:27:39Z` build (`079dfe0d-fc07-4f1b-8854-ed5602235a83`) built
+      commit `ed967279` (`git merge-base --is-ancestor 49a8dd80 ed967279` confirms it descends from the
+      digest-bump commit) and pushed `:latest` — `Evidence: cloudbuild=079dfe0d-fc07-4f1b-8854-ed5602235a83`
+      (SUCCESS). The Cloud Run Job's image ref is the mutable
+      `.../unified-trading-system/market-tick-data-service:latest` tag (confirmed via `gcloud run jobs
+      describe`), so it resolves the new digest automatically on the next execution — no manual repin needed,
+      exactly per this doc's own original assumption. **The deploy gap is closed.** Correcting this doc's own
+      misdiagnosis per CLAUDE.md "a doc/comment/pointer that MISLED you is a finding — fix it in the same turn":
+      a future worker re-running the same fleet-wide `gcloud builds list` sanity check without `--region` will
+      hit the identical false-negative — flagged as a new follow-up todo below rather than silently left to
+      recur.
+- [ ] [DATA] P1. **IN PROGRESS as of 19:16Z, not yet done-when-satisfied.** New image confirmed deployed and
+      picked up: execution `uts-prod-manifest-consolidator-market-data-defi-p6hrc` (started `18:57:05Z`, after
+      the `18:27:39Z` build) cleared the prior holder's stale orphaned lock (age 9048.7s > 9000s TTL),
+      reacquired, hit the same missing-`consolidator_content_write_at`-marker "cutoff UNPROVABLE" warning, but
+      — unlike the cefi incident — its `shards=2`/`shards=3` count is far under `_UNPROVABLE_MERGE_MAX_SHARDS`
+      (default 50000), so the guard did NOT fast-fail it; instead it proceeded into a genuine
+      `phase=duckdb_merge_start mode=incremental memory_limit=24GB threads=4 chunk_days=30 chunks=106
+      date_range=2018-01-01..2026-08-21` — a chunked full-history incremental merge (`canon_rows=161,763,519`
+      downloaded first), still running as of this edit. **This asset_group's "unprovable merge" shape is
+      chunked, not a single doomed pass** — genuinely different code path than cefi's, so whether it completes
+      inside the 7200s Cloud Run task timeout is not yet known; a background monitor is tracking it to a
+      terminal state this session. Once terminal: if SUCCESS, verify canonical `generation`/`last_modified`
+      advanced past `2026-08-21T06:38:39Z` (done-when met, close this todo). If SIGKILLed by the 7200s timeout,
+      the SAME manual marker-restore recovery
+      `manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md`'s Progress Log documents (pause cron ->
+      confirm holder dead -> clear orphaned lock -> metadata-only restamp `consolidator_content_write_at` to the
+      last genuine merge's listing time, NOT `now` -> resume -> execute) applies here too — do not attempt
+      without first determining the correct restamp timestamp from Cloud Logging, per that doc's own explicit
+      data-loss warning. Repo: unified-trading-library / market-tick-data-service (execution only, no new code
+      expected).
 - [ ] [DATA] P2. Cross-link this doc's confirmed mechanism into
       `mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`'s open
       "hypothesis 2" — done in the same edit as this filing (see that doc's Progress Log).
+- [ ] [INFRA] P3. Add a `--region=asia-northeast1` reminder (or a wrapper script) for the "check whether a Cloud
+      Build fired" pattern — `gcloud builds list` with no region flag silently under-reports (returns fewer
+      rows, not an error), which produced a false "deploy gap" diagnosis in this doc's own first pass (see todo
+      1's correction above). Worth a one-line callout in `/codex/05-infrastructure/dual-cloud-image-builds.md`
+      or `/codex/12-agent-workflow/measurement-claims-discipline.md` so a future worker doesn't repeat the same
+      false-negative. Repo: unified-trading-pm (docs-only).
 
 ## Codex SSOTs
 
@@ -201,3 +222,22 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
   doc-only filing ships via `safe-doc-push.sh`. `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id,
   so skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
   covered the FYI.
+- **2026-08-21T19:1xZ (data_pipeline_failure escalation worker, slot 31, agt-401353)**: dispatched off a
+  RE-FIRE of the same DP-WATCHER-002 alert (`age_min≈732` this time, vs. 566 at the prior filing — same cron,
+  same bucket, no new slug given, alert carried the details directly). Found this open doc immediately via the
+  pre-task issue-conflict grep and continued it rather than re-diagnosing or filing a duplicate.
+  **CORRECTED todo 1's "no Cloud Build fired" claim — it was a measurement artifact**: re-ran the same
+  `gcloud builds list` check WITH `--region=asia-northeast1` (the prior pass omitted it) and found 6 SUCCESS
+  builds for this repo between `17:22:59Z`-`18:17:34Z`, including one (`079dfe0d`) building commit `ed967279`
+  (confirmed via `git merge-base --is-ancestor 49a8dd80 ed967279` to descend from the digest-bump commit) and
+  pushing `:latest`. The Cloud Run Job's image ref is the mutable `:latest` tag, so it auto-picked up the fix —
+  **the deploy gap this doc opened with is closed, no manual action was needed.** Live-traced the CURRENT lock
+  holder: execution `p6hrc` (started `18:57:05Z`, i.e. with the new image already live) cleared a stale
+  orphaned lock and is running a genuine `mode=incremental` chunked merge (106 chunks, full `2018-01-01..
+  2026-08-21` date range) — **not** hitting the `_UNPROVABLE_MERGE_MAX_SHARDS` guard (its `shards=2`/`3` count
+  is far under the 50000 threshold), so this asset_group's "unprovable merge" shape is a chunked pass, not a
+  single doomed one like cefi's. Armed a bounded background monitor (Monitor task `bbtyf60sj`, ~18min cap,
+  heartbeating this session's liveness every ~3min) to catch p6hrc's terminal state and, if SUCCESS, confirm the
+  canonical index advanced past `06:38:39Z`. Todo 1 flipped done (corrected); todo 2 updated in-place with this
+  finding rather than duplicated; added todo 3 (P3, docs-only) so the `gcloud builds list`-needs-`--region`
+  false-negative doesn't recur for the next worker who runs the same sanity check.

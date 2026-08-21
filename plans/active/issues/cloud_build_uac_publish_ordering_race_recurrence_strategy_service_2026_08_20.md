@@ -285,6 +285,15 @@ This incident was one of six alerts the operator asked to be triaged together. D
 
 ## Progress Log
 
+- **2026-08-21 (ci_reconciler, interactive `/ci-reconcile` session)** — Independently re-diagnosed the SAME
+  `instruments-service` build (`95687259-49f9-48ab-ae2c-25779f33d853`) already logged in the `agt-069c25` entry above,
+  arrived cold from `#ci-failures` history rather than this doc, before finding this doc via an operator question.
+  Confirms nothing new about the root cause (identical evidence: `instruments-service==0.104.0` needed
+  `unified-api-contracts>=0.158.0,<1.0.0`, AR only had `<=0.157.1.dev1` at fail time) — logging as an independent
+  corroboration, not a new investigation. Did NOT implement the pending fix (still explicitly
+  operator-review-gated); flagging to the operator directly in this session that it has now sat unreviewed since
+  2026-08-20 through 3+ further same-class recurrences.
+
 - **2026-08-20 (cicd slot-11, escalation `agt-8ab43f`)** — Verified resolved LIVE: failing build `77fbf981` root-caused
   to the UAC publish-ordering race; UAC `0.149.0` wheel confirmed live+resolvable on AR (HTTP 200); re-ran
   `strategy-service-build` on the same main HEAD → `10283751` SUCCESS (11:30:26→11:38:13Z), log shows

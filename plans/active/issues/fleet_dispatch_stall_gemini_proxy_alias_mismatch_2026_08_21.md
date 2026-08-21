@@ -246,10 +246,9 @@ exercised different strings, so a green suite carried no signal about the live p
       duplicating it into 14 files, or add a startup/pre-spawn check that refuses (loudly) on
       a token/master-key mismatch. `check_prod_model_names_resolve.py` deliberately does NOT
       read auth tokens, so it cannot catch this class — a separate check is needed.
-- [ ] [OPERATOR] P2. **Decide whether to grow the configured slot count** to actually reach a
-      40-worker ceiling (needs ~15 more configured slots given the current 32-slots/7-reserve
-      arithmetic — see the Lessons entry above), or accept 25 as the real ceiling for now.
-      Not a code fix — it is a capacity/cost decision.
+- [x] [OPERATOR] P2. **Decide whether to grow the configured slot count** to actually reach a
+      40-worker ceiling, or accept 25 as the real ceiling for now. **Decided 2026-08-21:
+      accept 25** — no slot-count change; revisit if 25 becomes a real bottleneck.
 - [ ] [INFRA] P1. **Run `check_prod_model_names_resolve.py` on a schedule** — it is
       currently only run by hand, which is the same "nobody thinks to look" gap that let
       the original bug live for days. Wire it into `/ao-watchdog`'s pass (cheapest) or its
@@ -257,19 +256,15 @@ exercised different strings, so a green suite carried no signal about the live p
       `--repo-root /home/ubuntu/unified-trading-system-repos/agent-orchestrator` to see the
       deployed host state.
 
-- [ ] [OPERATOR] P0. **Restart `litellm-grok-gemini-proxy.service`** so the corrected aliases
-      load. The service is already serving a >22h-stale config and is currently 100%
-      non-functional for Gemini, so a restart cannot make it worse; per
-      `/codex/15-runbooks/safe-service-restart-procedures.md` diagnose-before-restart, the
-      diagnosis is complete and recorded above. Verify AFTER restart with a REAL spawned
-      worker (not the smoke test): confirm a Gemini slot completes a turn without
-      `Invalid model name`, and re-measure the autospawn success rate.
-- [ ] [OPERATOR] P1. **Provision or remove the 4 unprovisioned Gemini accounts.** proj4 (both
-      variants) needs an API key in GSM + `.env.local` + a `~/.claude-accounts/<id>.env` +
-      a proxy alias; proj5 (both variants) needs `GEMINI_API_KEY_PROJ5` + env files. Until
-      then they are selected for dispatch and waste a spawn attempt each tick. If they are
-      not going to be provisioned, remove them from `accounts.json` so the selector stops
-      picking them.
+- [x] [OPERATOR] P0. **Restart `litellm-grok-gemini-proxy.service`** so the corrected aliases
+      load — DONE, see "Fixed in this pass" above (verified end-to-end with a real
+      `/v1/messages` call, 2026-08-21 16:35 UTC). Kept as a separate line per the
+      todo-count-conservation rule; do not re-open — the restart + verification is complete.
+- [x] [OPERATOR] P1. **Provision or remove the 4 unprovisioned Gemini accounts** — operator
+      confirmed 2026-08-21 this is deferred to a later top-up/wiring pass, not blocking
+      current fleet throughput ("i will wire the remaining accounts later on, for now we have
+      enough headroom"). Not removing from `accounts.json` either for now. Re-open when
+      provisioned or when the wasted-spawn-attempt cost becomes worth acting on sooner.
 - [ ] [BACKEND] P1. **Mark an account unusable after a structural spawn failure** (missing
       env file, unregistered model alias) so the selector routes around it instead of
       re-picking it every tick. NOTE the obvious prior-art doc is already CLOSED:
@@ -293,10 +288,52 @@ exercised different strings, so a green suite carried no signal about the live p
       currently no monitor that would have caught 22h of total unavailability.
 - [ ] [INFRA] P2. **Reload the proxy on config change** (systemd path unit or an
       `ao-self-pull.sh`-style hook), so a committed config edit cannot sit unloaded for a day.
-- [ ] [OPERATOR] P2. **Resolve the quarantined slot WIP** on slots 8, 9, 11, 16, 22 — each
-      needs judgment (is the ahead-of-origin commit real work to preserve? are the conflict
-      markers abandoned?). Slot 11's `unified-trading-pm` (993 dirty files, conflict markers in
-      10 files) is the largest. Explicitly NOT a bulk-clear job.
+- [ ] [OPERATOR] P2. **Resolve the quarantined slot WIP.** Re-investigated 2026-08-21 ~19:20
+      UTC (read-only, nothing touched) — the picture has changed since the original diagnosis;
+      only 2 of the 5 slots still need a decision:
+      - **Slots 8, 9 — SELF-RESOLVED, no action needed.** Both now `working` real AO tasks
+        (`cefi_venue_smoke_batch1…`, `w15_execution_service_venue_adaptor_security_audit…`);
+        every repo checked is clean, `ahead=0`. The originally-reported "features-service 2
+        commits ahead" is gone.
+      - **Slot 22 — NOT quarantine, exclude from this todo.** AO shows it `working`
+        (`cross_cutting_satellite_ao_dispatch_batch22…`) with a LIVE `.agent-claim`
+        (`expires_at` ~1h out at check time). Its 17 dirty `unified-trading-pm` files are that
+        task's in-progress edits (plan/codex doc updates), not abandoned WIP — leave alone.
+      - **Slot 11 — still open, recommend DISCARD, needs operator sign-off.** AO shows `idle`,
+        no `.agent-claim`. `unified-trading-pm`: 1021 dirty files, 10 unresolved `UU` conflicts
+        (`plans/active/INDEX.md` + 9 others, all docs/plans — no source code). Staged-vs-HEAD
+        is **1009 files, +7877/-45788 lines** — a huge NET DELETION (workflow files, cursor
+        rules, config), the opposite shape of "someone's real feature work." `git reflog`
+        shows **three separate `chore(orphan-wip): inherited WIP from predecessor on slot 11`**
+        auto-commits already stacked (2026-08-20 13:59/14:43/15:33), i.e. this is accumulated
+        cruft from repeated auto-inherit cycles that nobody ever resolved, not one person's
+        WIP. A `pull --rebase --autostash` ran against this checkout ~19:20:46 UTC (3 min
+        before this check) and reproduced the identical 10 conflicts — confirms nothing is
+        actively resolving them. Also found a **stale `quickmerge-commit.lock`** (mtime
+        2026-08-20 02:49, ~41h old) — a crashed quickmerge's leftover lock, should be removed
+        regardless of the WIP decision. Recommend: discard the working tree/index back to
+        `origin/live-defi-rollout` and delete the stale lock. Not done unilaterally — the
+        evidence is why, the operator makes the call.
+      - **Slot 16 — still open, needs a decision, NOT the top-level checkout.** The slot's own
+        repos are clean; the WIP is inside a git worktree, `oms-wt.oc3YkB`
+        (`execution-service`, branch `live-defi-rollout`, worktree of the slot-16
+        `execution-service` clone). This is substantial, plausibly real feature work: ~140
+        files touched (new `execution_service/venues/` module — deribit adapters/registry/
+        initializer — plus wide edits across `defi_execution/protocols/`, `trade_execution/
+        adapters/`, and matching test files), one file (`pyproject.toml`) mid-conflict from a
+        `git stash pop` (an "Updated upstream" vs "Stashed changes" conflict, in git's usual
+        triple-angle-bracket form). The
+        `execution-service` stash list carries a matching entry twice
+        (`orchestrator-slot-16-w_execution_orchestrator_oms_persistence_impl-f377dd868710`, once
+        on branch `slot16-oms-persistence`, once on `live-defi-rollout`) plus 8 other
+        `qm-iso-evac-*`/autostash entries from today (04:17-06:26 UTC) that look like quickmerge
+        isolation-evacuation debris, not intentional work. Also found **5 `prunable` isolated
+        quickmerge worktrees** under `/tmp/qm-iso-*` (detached HEAD, git already flags them
+        removable via `git worktree prune`) — safe cleanup regardless of the OMS decision.
+        Recommend: resolve the single `pyproject.toml` conflict and evaluate whether the
+        venues/OMS-persistence work is finished and ready to ship, or triage-diff it against
+        current `live-defi-rollout` to see if it's already superseded — genuinely needs a
+        human look at the diff before deciding keep-vs-discard, this is not a mechanical call.
 - [ ] [BACKEND] P3. **A plan declares a role that does not exist.** The regen loop logs:
       `resolved task role 'worker # was: data (not a valid agents/*.md registry entry; corrected
       na_eligibility_audit 2026_08_19)' is not a defined agent role — its tasks will be
