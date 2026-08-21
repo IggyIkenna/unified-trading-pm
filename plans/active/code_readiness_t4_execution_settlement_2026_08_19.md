@@ -477,7 +477,7 @@ todos only to confirm they are data-movement, then leave it.
       **Final status (2026-08-20):** Phase 1+2 shipped real (`execution-service@458c70c48e`/`e856d72999`/
       `945d84d946`/`32ad0cfa4a`); Phase 3 startup-wiring deliberately `BLOCKED-OPERATOR` (a genuine, deeper
       prerequisite gap found mid-dispatch — nothing in the live order-submission path durably persists order
-      state — spun into its own design plan, `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md`).
+      state — spun into its own design plan, `/plans/archive/2026_08/w_execution_orchestrator_oms_persistence_2026_08_20.md`).
 - [x] ✅ [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — FIXED** —
       **execution-service@9c79bfa0ef** (landing verified by an empty `git diff --stat origin/live-defi-rollout`
       over all three files plus grepping the landed `api/main.py` for `manual_router`). The defect existed only in
@@ -686,7 +686,7 @@ todos only to confirm they are data-movement, then leave it.
       **Final status (2026-08-20):** Phase 1+2 shipped real (`execution-service@458c70c48e`/`e856d72999`/
       `945d84d946`/`32ad0cfa4a`); Phase 3 startup-wiring deliberately `BLOCKED-OPERATOR` (a genuine, deeper
       prerequisite gap found mid-dispatch — nothing in the live order-submission path durably persists order
-      state — spun into its own design plan, `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md`).
+      state — spun into its own design plan, `/plans/archive/2026_08/w_execution_orchestrator_oms_persistence_2026_08_20.md`).
 - [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
       `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`, per the 2026-08-19
       operator ruling. Sized into 11 phases against a real, enumerated ~85-file adapter inventory (bridge/
