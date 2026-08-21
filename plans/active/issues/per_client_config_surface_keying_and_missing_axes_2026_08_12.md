@@ -365,7 +365,10 @@ same tick. That is the difference between an implementation that works and one t
       name collision (its own docstring cites this issue doc). Four live config-loading entry points remain,
       verified against current code:
       - `config.py:361` `load_strategy_config()` — local YAML only, hardcoded "Pure Lending" fallback at line 390.
-        `config.py:579` `load_config()` is a dead alias — zero callers found anywhere in the tree.
+        `config.py:579` `load_config()` — **corrected 2026-08-21**: NOT a dead alias. Grepped
+        `tests/` (this pass only checked production code) and found 6 files / 25+ real call sites
+        using it as fixture setup, plus a dedicated integration test validating
+        `load_strategy_config()` loads every real default template end-to-end. Do not delete.
       - `engine/core/config_loader.py:310` `ConfigLoader.load_config()` / `load_config_from_path()` — GCS,
         `configs/{strategy_id}.json`, with caching + risk-block validation.
       - `engine/core/strategy_config_loader.py:44,88` `load_strategy_config_gcs()` / `load_strategy_config_by_type()`
@@ -432,3 +435,8 @@ same tick. That is the difference between an implementation that works and one t
 - **na-eligibility-audit 2026-08-17** [body-hash:ee5f924d08d302cb]: KEEP-NA, valid -- Grep-verified 12 open checkboxes (lines 159,163,182,233,263,267,271,279,346,348,351,354), matching inventory_open_todos=12. Doc carries multiple explicit, dated, verbatim-quoted operator rulings (2026-08-12) throughout its own text, satisfying NEVER-RE-LITIGATE rule (a) directly. Two items are explicitly [OPERATOR]-tagged unresolved decisions (leverage/venue/coin axis scope; tighten-vs-loosen risk asymmetry). The remaining items are real cross-service design+build work (a governing config schema spanning six areas, an execution-algo selection-criteria UAC contract crossing the strategy/execution service seam under the no-service-deps rule, and determinism-critical event-log integration for dynamic param changes) -- none of these clear the bounded-outcome bar; each requires an open design call the doc itself is still working through. Noted but did not act on: todo at line 159 ('Implement the client-first layout') may partially overlap with the later, broader '(client_id, slot_label)' ruling which states it 'supersedes the narrow ClientsYamlEntry shape' -- this is a plausible staleness signal but not a clean citation (the doc doesn't explicitly say to close the earlier todo), so left as GENUINE_WORK rather than guessed into stale_items_to_close.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 8 open checkboxes (164/183/234/264/268/272/280/357), matching Phase-0 exactly -- down from 12 at the last na-eligibility-audit pass (2026-08-17); 4 items completed since, one flipped as recently as today. (3/8 items tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for next-run reassessment.)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — 8 open checkboxes,
+  unchanged in count and content since the 2026-08-19 pass (only a context-scout metadata refresh landed since).
+  Re-affirms: genuine cross-service design/build work (a governing `(client_id, slot_label)` config schema, an
+  execution-algo selection-criteria UAC contract crossing the strategy/execution seam, determinism-critical
+  event-log integration) plus 2 explicit `[OPERATOR]`-tagged unresolved decisions. No change to the verdict.

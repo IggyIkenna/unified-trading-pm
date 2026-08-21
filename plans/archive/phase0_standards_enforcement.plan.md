@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: Phase 0 — System-Wide Standards Enforcement
-summary:
-status: complete
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: [unified-api-contracts, unified-trading-library]
-scope: [engineer, admin]
-tags: []
-related: []
-created: "2026-03-05"
-overview: "Establish a verified baseline across all repos before any hardening work begins.
+summary: 'Establish a verified baseline across all repos before any hardening work begins.
 
   Every repo must meet minimum standards (coverage, file/function/method/class size,
 
@@ -21,9 +11,16 @@ overview: "Establish a verified baseline across all repos before any hardening w
 
   QUALITY_GATE_BYPASS_AUDIT.md. Phase 0 blocks Phase 1, Phase 2, and Phase 3 — must pass
 
-  before any hardening work starts. Run in tier order (T0 first), parallel within each tier.
-
-  "
+  before any hardening work starts. Run in tier order (T0 first), parallel within each tier.'
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-03-05"
 todos:
   - {
       id: p0-t0-parallel,

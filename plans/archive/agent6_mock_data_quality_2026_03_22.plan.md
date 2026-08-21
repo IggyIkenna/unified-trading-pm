@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: agent6-mock-data-quality
-summary:
+summary: Enhance seed data realism, add org-scoped filtering, persona-based entitlement filtering, deterministic seeding
+  for CI
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,8 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-22"
-overview:
-  Enhance seed data realism, add org-scoped filtering, persona-based entitlement filtering, deterministic seeding for CI
 todos:
   - {
       id: a6-p0-persona-ssot,

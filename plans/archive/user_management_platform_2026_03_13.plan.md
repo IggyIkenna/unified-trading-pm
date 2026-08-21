@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: user-management-platform-2026-03-13
-summary:
+summary: 'New repo user-management-ui: Odum''s own Okta replacement. Full lifecycle user management — onboard, modify, off-board
+  with one click. Provisions GitHub, Slack, Microsoft 365 (Outlook + SharePoint), GCP IAM, and website portal access per
+  role. Matches deployment-ui visual style.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
-overview: 'New repo user-management-ui: Odum''s own Okta replacement. Full lifecycle user management — onboard, modify, off-board with one click. Provisions GitHub, Slack, Microsoft 365 (Outlook + SharePoint), GCP IAM, and website portal access per role. Matches deployment-ui visual style.'
 todos:
 - {id: unblock-microsoft-admin, content: '[HUMAN BLOCKER — must complete before implementation starts] (1) Grant Femi Amoo Microsoft 365 admin role in Microsoft 365 Admin Center. (2) Grant Femi Slack Workspace Admin role. (3) Detach Outlook from Okta: M365 Admin Center → Azure AD → Enterprise Apps → remove Okta as IdP. (4) Detach Slack from Okta: Slack Admin → Authentication → remove Okta SAML/SSO. Document completion in unified-trading-pm/docs/okta-migration.md.', status: blocked}
 - {id: scaffold-repo, content: '- [x] Create IggyIkenna/user-management-ui GitHub repo. Scaffold from deployment-ui as visual template: same React 19 + Vite + Tailwind setup. Install @unified-admin/core (auth, types) + @unified-trading/ui-kit (design tokens, components). Same sidebar nav pattern, same AppShell, same auth wrapper as deployment-ui. Port 5184. Collaborators: datadodo, CosmicTrader (admin).', status: done}

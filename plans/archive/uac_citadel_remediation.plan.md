@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: uac-citadel-remediation
-summary:
+summary: 'Remediation plan for incomplete items from the UAC Citadel Architecture execution.
+
+  The structural foundation is in place (facades, domain sub-packages, tier model, capability registry)
+
+  but several cleanup items were marked done prematurely. This plan tracks the actual remaining work.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,13 +15,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-15'
-overview: 'Remediation plan for incomplete items from the UAC Citadel Architecture execution.
-
-  The structural foundation is in place (facades, domain sub-packages, tier model, capability registry)
-
-  but several cleanup items were marked done prematurely. This plan tracks the actual remaining work.
-
-  '
 type: code
 epic: epic-code-completion
 completion_gates: {code: C4, deployment: none, business: none}

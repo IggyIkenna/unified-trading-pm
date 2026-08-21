@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: promote-workflow-backtest-to-paper-to-live
-summary:
+summary: End-to-end re-audit of the promote workflow — backtest is scored + ranked, operator picks a candidate via UI button
+  click → API → "candidate" status → next paper-trading deployment → live production. Re-walk every code path, DART UI surface,
+  configuration shape, event stream, service interaction, approval gate, rollback affordance.
 status: plan-spawned
 nature: record
 asset_group: [cross-cutting]
@@ -29,10 +31,6 @@ related:
     plans/epics/defi_master_2026_05_07.md,
   ]
 created: 2026-05-08
-overview:
-  End-to-end re-audit of the promote workflow — backtest is scored + ranked, operator picks a candidate via UI button
-  click → API → "candidate" status → next paper-trading deployment → live production. Re-walk every code path, DART UI
-  surface, configuration shape, event stream, service interaction, approval gate, rollback affordance.
 type: question
 audit_completed: 2026-05-10
 operator: ikenna

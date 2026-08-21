@@ -1,7 +1,14 @@
 ---
 doc_type: plan
 title: venue-axis-asset-group-vocabulary-2026-04-25
-summary:
+summary: 'Align code and docs on the trading **venue axis** vocabulary: **asset group** (CeFi / DeFi / TradFi / Sports /
+  Prediction)
+
+  with UAC SSOT dict keys unchanged (`cefi`, `defi`, …). Waves A–B shipped in UAC, UTL, MDPS, MTDS; remaining waves cover
+
+  features services, execution consumer JSON keys, and deployment/SIT parity. Agent context lives in
+
+  `unified-trading-pm/cursor-configs/CLAUDE.md` + this plan.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,17 +19,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-25"
-overview: "Align code and docs on the trading **venue axis** vocabulary: **asset group** (CeFi / DeFi / TradFi / Sports
-  / Prediction)
-
-  with UAC SSOT dict keys unchanged (`cefi`, `defi`, …). Waves A–B shipped in UAC, UTL, MDPS, MTDS; remaining waves
-  cover
-
-  features services, execution consumer JSON keys, and deployment/SIT parity. Agent context lives in
-
-  `unified-trading-pm/cursor-configs/CLAUDE.md` + this plan.
-
-  "
 type: mixed
 epic: epic-code-completion
 archived_on: 2026-05-07

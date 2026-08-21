@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: UAC Canonical Normalization Master
-summary:
+summary: 'Single consolidated plan for UAC canonical normalization: (1) minimal-split layout by data type (options, futures,
+  perpetuals, cefi spot, tradfi, defi, sports); (2) common cross-domain (OHLCV, instruments, rate limits); (3) infrastructure
+  canonical layer (CloudStorage, OLAPTable — cloud-agnostic names mapped to GCP/AWS raw); (4) features interface and UFCL/UTL
+  consolidation; (5) provider manifest expansion. Supersedes the three separate plans.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +14,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-14'
-overview: 'Single consolidated plan for UAC canonical normalization: (1) minimal-split layout by data type (options, futures, perpetuals, cefi spot, tradfi, defi, sports); (2) common cross-domain (OHLCV, instruments, rate limits); (3) infrastructure canonical layer (CloudStorage, OLAPTable — cloud-agnostic names mapped to GCP/AWS raw); (4) features interface and UFCL/UTL consolidation; (5) provider manifest expansion. Supersedes the three separate plans.'
 todos:
 - {id: nesting-sports-market, content: 'Move sports market data (odds, live, bookmaker, arbitrage) to canonical/market/sports/', status: pending}
 - {id: nesting-sports-reference, content: 'Move sports reference data (mappings, fixture, events, injury, lineup, player_stats) to canonical/reference/sports/', status: pending}

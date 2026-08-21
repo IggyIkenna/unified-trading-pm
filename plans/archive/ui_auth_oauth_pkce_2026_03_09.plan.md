@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: unified-trading-ui-auth — Provider-Agnostic OAuth 2.0 PKCE Refactor
-summary:
-status: completed
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: []
-scope: [engineer, admin]
-tags: []
-related: []
-created: 2026-03-09
-overview: 'unified-trading-ui-auth is currently hardwired to Google''s implicit-flow id_token (no PKCE, no
+summary: 'unified-trading-ui-auth is currently hardwired to Google''s implicit-flow id_token (no PKCE, no
 
   refresh). batch-audit-ui uses @okta/okta-auth-js + @okta/okta-react — a provider not used by any
 
@@ -31,9 +21,16 @@ overview: 'unified-trading-ui-auth is currently hardwired to Google''s implicit-
 
   AuthProvider + config pattern. No @okta/* dependencies anywhere in the workspace after this plan
 
-  completes. Package version bumped (minor) for new public API.
-
-  '
+  completes. Package version bumped (minor) for new public API.'
+status: completed
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-03-09
 completed: 2026-03-10
 updated: 2026-03-10
 isProject: false

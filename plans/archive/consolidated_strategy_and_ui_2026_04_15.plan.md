@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: consolidated-strategy-and-ui
-summary:
+summary: 'Consolidated remaining strategy intelligence and UI work from 5 source plans.
+
+  Covers: cross-domain alpha features, strategy lifecycle, composable strategies,
+
+  client config E2E, UI walkthrough alignment, UI sync hardening.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,13 +23,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-04-16"
-overview: "Consolidated remaining strategy intelligence and UI work from 5 source plans.
-
-  Covers: cross-domain alpha features, strategy lifecycle, composable strategies,
-
-  client config E2E, UI walkthrough alignment, UI sync hardening.
-
-  "
 type: mixed
 epic: epic-code-completion
 archived: 2026-05-07
@@ -174,7 +171,7 @@ A. Client config and UI alignment are nearly done (2 items each).
       post-Plan A 5-dim catalogue; archetype variants already provide composition surface.]
 - [ ] [AGENT] P0. slv-p2-auto-retune: Add auto-retuning trigger in ml-inference-service. [AUDIT 2026-05-07:
       PARTIALLY-FRESH — `ml-inference-service/ml_inference_service/engine/drift_monitor.py` ships
-      `auto_retune_enabled:     bool` + monitor pipeline (lines 8 + 110); needs the actual retune-trigger publish wiring
+      `auto_retune_enabled: bool` + monitor pipeline (lines 8 + 110); needs the actual retune-trigger publish wiring
       to ml-training-service.]
 - [ ] [AGENT] P0. slv-p2-lineage: Add prediction lineage tracking. [AUDIT 2026-05-07: PARTIALLY-FRESH — ml-inference
       `69d6313` threads service-run job_id + model_family into manifest writes; ml-training `f7369f2` companion. That's
@@ -232,4 +229,4 @@ A. Client config and UI alignment are nearly done (2 items each).
       `/codex/05-infrastructure/runtime-tiers-and-deployment.md`.
 - [ ] [AGENT] P1. ui-p9b-qg-validation: Run quality gates: vitest + vite build + playwright. [AUDIT 2026-05-07: FRESH —
       final QG gate. Note: `unified-trading-system-ui` is Next.js (not Vite for dev/test); command names should be
-      `npm     test` (vitest) + `npm build` + `npx playwright test` per `package.json` standard across the workspace.]
+      `npm test` (vitest) + `npm build` + `npx playwright test` per `package.json` standard across the workspace.]

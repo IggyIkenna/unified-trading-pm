@@ -12,6 +12,12 @@
 # Owner resolution is a HARD check with no baseline: every `owner:` tag must
 # resolve to a doc path that exists, an epic workstream heading, or a plan slug.
 #
-note: Seeded 2026-08-20 alongside the checker.
+note: >-
+  Re-seeded 2026-08-21: the 2026-08-20 seed (189) was measured against artefacts TRUNCATED by the
+  cef0bcfa8e content-loss revert (~4,400 lines / whole sections missing). The five artefacts were restored to
+  their pre-clobber state (see walkthrough_file_shared_checkout_repeated_content_loss_2026_08_20.md), whose
+  full marker inventory is 247. This is a baseline CORRECTION to match restored reality, not a marker
+  regression; the ratchet shrinks from here. Escalation agents: NEVER close this gate by reverting/editing
+  artefact content — fix real state or raise this baseline with a dated note like this one.
 untagged_sections: 0
-open_markers: 189
+open_markers: 247

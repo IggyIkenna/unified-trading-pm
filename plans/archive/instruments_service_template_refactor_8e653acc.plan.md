@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Instruments Service Template Refactor
-summary:
+summary: Refactor instruments-service from ~104 files/12,000+ lines to ~18-20 files/~1,800 lines by making URDI the sole
+  external API path, removing all service-level infrastructure, canonicalization, aggregation, and validation logic, and
+  delegating every cross-cutting concern to UTL/UDC/UCI/UAC. The result is the template all other services follow.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -15,7 +17,6 @@ remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_1
 superseded_by: [consolidated_operational_validation_2026_04_15.plan.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
-overview: Refactor instruments-service from ~104 files/12,000+ lines to ~18-20 files/~1,800 lines by making URDI the sole external API path, removing all service-level infrastructure, canonicalization, aggregation, and validation logic, and delegating every cross-cutting concern to UTL/UDC/UCI/UAC. The result is the template all other services follow.
 todos:
 - {id: t0a-uac-naming-fix, content: 'TRACK 0a — repo: unified-api-contracts. Fix naming inconsistency in unified_api_contracts/canonical/canonical_mappings.py: VenueMapping.all_tardis_exchanges uses lowercase API names (e.g. binance-futures) but DATA_SOURCE_TO_VENUES[''tardis''] uses uppercase canonical names (e.g. BINANCE-SPOT). Align all_tardis_exchanges entries to uppercase canonical names matching venue_constants.py. This unblocks deletion of normalizer shims in instruments-service. Run: cd unified-api-contracts && bash scripts/quickmerge.sh ''fix: align Tardis venue names to uppercase canonical format'' --agent', status: completed}
 - {id: t0b-uac-ticker-registry, content: 'TRACK 0b — repo: unified-api-contracts. Add TRADFI_TICKER_UNIVERSE dict to unified_api_contracts/registry/ alongside representative_sample.py. Copy content from instruments-service/instruments_service/config/data/tickers.json (keys: sp500_tickers, etf_tickers, nasdaq_tickers). Export from unified_api_contracts/__init__.py. After this, instruments-service config_reloaders.py will import from unified_api_contracts.registry instead of the local tickers.json. Run: cd unified-api-contracts && bash scripts/quickmerge.sh ''feat: add TRADFI_TICKER_UNIVERSE to UAC registry'' --agent', status: completed}

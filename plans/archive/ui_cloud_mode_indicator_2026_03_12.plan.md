@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: ui-cloud-mode-indicator
-summary:
-status: superseded
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: [deployment-ui]
-scope: [engineer, admin]
-tags: []
-related: []
-created: '2026-03-12'
-overview: 'Add a dynamic cloud provider + mock/live indicator to every UI''s top-right
+summary: 'Add a dynamic cloud provider + mock/live indicator to every UI''s top-right
 
   header. Each UI fetches cloud_provider and mock_mode from its backing API''s
 
@@ -21,9 +11,16 @@ overview: 'Add a dynamic cloud provider + mock/live indicator to every UI''s top
 
   to all 12 UI repos. Improves operator situational awareness: seeing "GCP •
 
-  MOCK" vs "AWS • LIVE" instantly surfaces environment misconfiguration.
-
-  '
+  MOCK" vs "AWS • LIVE" instantly surfaces environment misconfiguration.'
+status: superseded
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-12'
 type: feature
 epic: epic-observability
 superseded_by: cicd_code_rollout_master_2026_03_13

@@ -18,9 +18,36 @@
 # Same liveness-gated pattern as cleanup-stale-qg-tmp.sh /
 # cleanup-stale-manifest-consolidate-tmp.sh: never touches a file with a live holder.
 #
+# SECOND, DISTINCT offender class (added 2026-08-21): a `PrivateTmp=yes` systemd unit
+# (e.g. codex-bridge.service) gives its whole process tree an isolated /tmp namespace
+# bind-mounted at the host path `/tmp/systemd-private-<boot-id>-<unit>-<random>/tmp`.
+# Every descendant of that unit's `/tmp` writes lands there instead of the shared /tmp —
+# INCLUDING full `quickmerge --isolated` worktrees (`qm-iso-*`), `prek` scratch, and QG
+# scratch, when that unit's children run those tools (e.g. a Codex/Luna-backed agent
+# session shipping code). The sweep above never sees these paths: they're a real,
+# distinct filesystem location, invisible unless you glob for the `systemd-private-*`
+# dirs specifically. Confirmed live 2026-08-21: one such dir alone held the ENTIRE 8G
+# tmpfs (17895 files) and caused live `sqlite3.OperationalError: database or disk is
+# full` on orchestrator.service. Unlike the glob-scoped sweep above (whose NAME_GLOBS
+# are deliberately narrow so as not to touch unrelated /tmp content), this second sweep
+# takes everything under a discovered private-tmp root — that root is BY CONSTRUCTION
+# nothing but transient scratch for one unit's child processes, so an unnamed generic
+# offender (`tmp.XXXXXXXX`, `uv-*.lock`, one-off log files, ...) is exactly as safe to
+# reap as a named one; enumerating every tool a Codex-driven session might invoke would
+# be permanent whack-a-mole. `tmux-*` is excluded (a live tmux server socket dir, not
+# scratch). Same liveness gate (fuser) as every other class here.
+#
+# NOTE (2026-08-21): the outer `systemd-private-*` dir is `drwx------ root:root` — ONLY
+# root can traverse into it. This script's own sweep-2 loop is therefore a no-op when
+# run as a non-root operator (confirmed live: 0 candidates found running as `ubuntu`,
+# vs. full visibility running as root over SSM). The cron that invokes this script MUST
+# run with root privilege for sweep 2 to do anything at all — see the codex SSOT's
+# "Cadence" section for the root-systemd-timer mechanism this requires.
+#
 # Usage:
 #   cleanup-stale-tmp-parquet-scratch.sh                   # sweep, 6h threshold
 #   cleanup-stale-tmp-parquet-scratch.sh --min-age 720     # custom threshold (minutes)
+#   cleanup-stale-tmp-parquet-scratch.sh --private-tmp-min-age 60  # PrivateTmp sweep threshold
 #   cleanup-stale-tmp-parquet-scratch.sh --dry-run         # report only, don't delete
 #   cleanup-stale-tmp-parquet-scratch.sh --quiet           # only print removals, not no-ops
 #
@@ -34,15 +61,21 @@ set -euo pipefail
 
 MIN_AGE_MIN=360 # 6h: comfortably past a single run's runtime, short enough that an
                 # 8G tmpfs can't accumulate to 100% from a killed run between sweeps.
+PRIVATE_TMP_MIN_AGE_MIN=60 # tighter: the whole-namespace sweep is liveness-gated the
+                # same as everything else, so age here is a courtesy buffer, not the
+                # real safety net — a lower threshold is fine and, given this class has
+                # already taken a shared tmpfs to 100% once, deliberately conservative
+                # toward reclaiming fast rather than toward a long grace period.
 DRY_RUN=0
 QUIET=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --min-age) MIN_AGE_MIN="$2"; shift 2;;
+        --private-tmp-min-age) PRIVATE_TMP_MIN_AGE_MIN="$2"; shift 2;;
         --dry-run) DRY_RUN=1; shift;;
         --quiet) QUIET=1; shift;;
-        -h|--help) sed -n '2,35p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0;;
+        -h|--help) sed -n '2,49p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0;;
         *) echo "Unknown arg: $1" >&2; exit 2;;
     esac
 done
@@ -108,5 +141,43 @@ for root in "${CANDIDATE_ROOTS[@]}"; do
     done
 done
 
-log summary "[done] removed=${removed} skipped_live=${skipped_live} min_age_min=${MIN_AGE_MIN} dry_run=${DRY_RUN}"
+# Second sweep: discover PrivateTmp-namespaced service roots and reap their whole
+# contents by age + liveness (no name-glob restriction — see header comment for why).
+PRIVATE_TMP_DENYLIST=("tmux-*")
+
+is_denylisted() {
+    # $1=basename. True (0) if it matches an exclusion pattern.
+    local base="$1" pat
+    for pat in "${PRIVATE_TMP_DENYLIST[@]}"; do
+        # Intentional glob match against an unquoted pattern var, not a literal.
+        # shellcheck disable=SC2053
+        [[ "${base}" == ${pat} ]] && return 0
+    done
+    return 1
+}
+
+private_tmp_removed=0
+private_tmp_skipped_live=0
+
+while IFS= read -r -d '' private_root; do
+    [ -d "${private_root}/tmp" ] || continue
+    while IFS= read -r -d '' f; do
+        base="$(basename "${f}")"
+        is_denylisted "${base}" && continue
+        if is_in_use "${f}"; then
+            private_tmp_skipped_live=$((private_tmp_skipped_live + 1))
+            log live "[skip-live] ${f}"
+            continue
+        fi
+        if [ "${DRY_RUN}" = "1" ]; then
+            log removal "[dry-run] would remove (private-tmp) ${f}"
+        else
+            rm -rf -- "${f}"
+            private_tmp_removed=$((private_tmp_removed + 1))
+            log removal "[removed] (private-tmp) ${f}"
+        fi
+    done < <(find "${private_root}/tmp" -maxdepth 1 -mindepth 1 -mmin "+${PRIVATE_TMP_MIN_AGE_MIN}" -print0 2>/dev/null)
+done < <(find /tmp -maxdepth 1 -type d -name "systemd-private-*" -print0 2>/dev/null)
+
+log summary "[done] removed=${removed} skipped_live=${skipped_live} min_age_min=${MIN_AGE_MIN} private_tmp_removed=${private_tmp_removed} private_tmp_skipped_live=${private_tmp_skipped_live} private_tmp_min_age_min=${PRIVATE_TMP_MIN_AGE_MIN} dry_run=${DRY_RUN}"
 exit 0

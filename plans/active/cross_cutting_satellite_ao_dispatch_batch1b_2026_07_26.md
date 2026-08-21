@@ -180,6 +180,24 @@ context_scope:
           delete/relocate clauses are not — do not re-flip this checkbox until the governance-audit plan's Phase-1
           delete/deprecate/promote execution actually lands.
 
+          **Re-verified 2026-08-21 (context-scout stall-audit) — still correctly gated, not neglected; one
+          precondition partially clarified, none satisfied.** Re-read `repo_scripts_governance_audit_2026_06_18.md`
+          end-to-end: its Phase-1 Delete-EXECUTION todo is still `[ ]` open (only the "immediately-safe ~40" subset
+          landed 2026-08-15; the campaign-gated big cohort — instruments-service 64 / MTDS 22 scripts — is still
+          unexecuted), its DEPRECATE-remediation todo (~10 cloud-discipline scripts) is still `[ ]` open, and its
+          PROMOTE-TO-CLI todo was extracted to `infra_satellite_ao_dispatch_batch18_2026_08_17.md` items 9-12 but is
+          not yet executed there either — so Phase-1 has not landed and this checkbox correctly stays unflipped. New
+          finding, logged rather than acted on: the campaign-gate's own rule requires an AG's
+          `*_manifest_canonicalisation_2026_06_01.md` plan to **archive** before its dated one-offs are even
+          delete-eligible — all 7 (sports/cefi/tradfi/defi/prediction/downstream_services/instruments) have in fact
+          left `plans/active/` now, but 6 of 7 carry `status: superseded` (only `instruments_manifest_canonicalisation`
+          is `status: complete`) — ambiguous whether "superseded" satisfies the gate's intent (campaign genuinely
+          done) or means the work continued under a different plan (campaign scripts still needed). Did not resolve
+          this ambiguity myself — it's exactly the ownership/judgment call `repo_scripts_governance_audit`'s own
+          Finding 1 reserves for a human-reviewed pass, not an unsupervised sweep. Even if resolved favorably, the
+          gate's OTHER half — a real GCS-orphan-sweep per script before any delete — has not been run for either
+          cohort. No code/doc-content changed beyond this status note; no scripts touched.
+
 - [x] ✅ [CODE] P2. **features-service — fix `odds_features_exporter.py` velocity-accel fallback NaN/math semantics
       (dead-code + a legit-`0.0`-drop bug).** `_compute_velocity_from_pivoted`'s (lines ~509-514) elif/else acceleration
       branches are unreachable dead code today: `np.nan` satisfies `isinstance(x, float)`, so the line-509 guard always
@@ -734,6 +752,14 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-21 (stall-audit re-verification)**: investigated whether the sole remaining `[SCRIPT] P2` todo's
+  classify/delete/relocate sub-item could now be safely closed given its 21-day-stale
+  "PARTIAL PROGRESS 2026-07-31" note. Verdict: still correctly gated, not neglected — see the dated note inline on
+  the todo above. `repo_scripts_governance_audit_2026_06_18.md`'s Phase-1 delete/deprecate/promote has real remaining
+  scope (campaign-gated 86-script delete cohort pending GCS-orphan-sweep, ~10-script DEPRECATE remediation,
+  extracted-but-unexecuted PROMOTE-TO-CLI) — this is genuine human-judgment/investigation work per that plan's own
+  `assigned_vm: NA` + "GATED + REVIEWED" framing, not mechanical cleanup an AO worker should force through. No
+  checkbox flipped; plan remains active with 1 open todo.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified context_scope, no change needed (4 entries) -- dispatch-batch coordinator

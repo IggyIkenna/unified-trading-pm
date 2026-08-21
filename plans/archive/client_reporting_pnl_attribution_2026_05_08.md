@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: client-reporting-pnl-attribution
-summary:
+summary: Client reporting API + unified-trading-system UI surface — NAV / PnL / metrics per client, invoicing, PnL attribution.
+  Internal-strategy vs external-strategy (via client-supplied API keys). Is it solved end-to-end and could PnL attribution
+  be offered as a standalone service?
 status: plan-spawned
 nature: record
 asset_group: [cross-cutting]
@@ -17,10 +19,6 @@ related:
     plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md,
   ]
 created: 2026-05-08
-overview:
-  Client reporting API + unified-trading-system UI surface — NAV / PnL / metrics per client, invoicing, PnL attribution.
-  Internal-strategy vs external-strategy (via client-supplied API keys). Is it solved end-to-end and could PnL
-  attribution be offered as a standalone service?
 type: question
 plan_spawned: 2026-05-10
 operator: ikenna

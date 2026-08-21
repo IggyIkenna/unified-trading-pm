@@ -470,7 +470,8 @@ todos only to confirm they are data-movement, then leave it.
       fill), so that is what the map encodes — real venues do cancel partially-filled orders, but the doc is the
       SSOT and the map is its projection, so amending it is a codex change first. Filed as a `[FROM-T1]` P2
       question on T4's plan rather than guessed at. Evidence:
-      `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
+      `/plans/archive/2026_08/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md` (archived
+      2026-08-21, resolved).
 ### Walkthrough feedback 2026-08-21
 
 - [ ] [AGENT] P0. Execute the registry cluster of the 2026-08-21 walkthrough feedback, tracked in

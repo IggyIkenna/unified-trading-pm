@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: elysium-defi-system-fork-2026-03-10
-summary:
+summary: Create a standalone elysium-defi-system repo forked from DeFi strategy/execution components, delivered as a private
+  GitHub repo + Docker image for Elysium Capital
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
-overview: Create a standalone elysium-defi-system repo forked from DeFi strategy/execution components, delivered as a private GitHub repo + Docker image for Elysium Capital
 type: code
 epic: epic-code-completion
 superseded_by: cicd_code_rollout_master_2026_03_13

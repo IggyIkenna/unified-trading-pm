@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: CI/CD Mock Infrastructure Hardening (Citadel-Grade)
-summary:
+summary: 'Harden all 63 repos to Citadel-grade mock/sim/demo testability: credential-free CI gate, protocol-faithful GCP
+  emulators (Pub/Sub, GCS, BigQuery), AWS moto coverage, WebSocket feed simulator, Hyperliquid responses mock, cassette
+  UAC parity checks, nightly drift detection, fault injection, tick replay engine, and full demo-mode orchestration. Extends
+  production_mock_e2e_plan_d90c8f20.md with 14 missing CI/CD hardening items.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +14,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-11'
-overview: 'Harden all 63 repos to Citadel-grade mock/sim/demo testability: credential-free CI gate, protocol-faithful GCP emulators (Pub/Sub, GCS, BigQuery), AWS moto coverage, WebSocket feed simulator, Hyperliquid responses mock, cassette UAC parity checks, nightly drift detection, fault injection, tick replay engine, and full demo-mode orchestration. Extends production_mock_e2e_plan_d90c8f20.md with 14 missing CI/CD hardening items.'
 todos:
 - {id: h5-2-cassette-parity, content: 'P0: Create unified-api-contracts/tests/test_cassette_schema_parity.py — loads every committed cassette YAML and validates response body against UAC Pydantic model; fails QG on violation; zero network calls', status: completed}
 - {id: h8-credential-free-gate, content: 'P0: Create unified-trading-pm/scripts/dev/network_block_plugin.py (pytest plugin — responses passthrough=False for full session); add credential-free CI step to system-integration-tests workflow with CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true', status: completed}

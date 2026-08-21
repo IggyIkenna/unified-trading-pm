@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: website-repo-integration-2026-03-13
-summary:
+summary: Clone datadodo/odum_website to eggyakana/odum-research-website. Integrate into workspace manifest with quality
+  gates, CI/CD, workspace config files, and codex checklist.
 status: superseded
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-13'
-overview: Clone datadodo/odum_website to eggyakana/odum-research-website. Integrate into workspace manifest with quality gates, CI/CD, workspace config files, and codex checklist.
 type: infra
 epic: epic-website
 superseded_by: website_master_2026_03_13

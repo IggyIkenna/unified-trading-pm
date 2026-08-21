@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: defi-pipeline-extension-followups-2026-05-03
-summary:
+summary: Closeout follow-ups to the defi_pipeline_extension Phase 8 ship — calculator fetch_data wiring, target-universe
+  seed slots for the 6 new archetypes, instruments-service + MTDS adapters for the 12 new chains and 5 new lending protocols,
+  and CODEX ratchet floors back down
 status: complete
 nature: record
 asset_group: defi
@@ -13,7 +15,6 @@ related: []
 created: 2026-05-03
 plan_type: mixed
 owner: ikenna
-overview: Closeout follow-ups to the defi_pipeline_extension Phase 8 ship — calculator fetch_data wiring, target-universe seed slots for the 6 new archetypes, instruments-service + MTDS adapters for the 12 new chains and 5 new lending protocols, and CODEX ratchet floors back down
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D2, business: B3}
@@ -305,7 +306,7 @@ Phase 7 — Closeout (SEQUENTIAL after all phases)
 
 - id: p6-1-scanner-refactor content: |
   - [x] [AGENT] P2. Sibling-shipped — `chain_event_scanners.py` 5 oversize methods split into focused helpers
-        (`_fetch_distributor_logs / _issue_getlogs_request / _solana_day_window_unix / _read_signature_entry /     _extract_init / _spl_transfer_gate / _post_balance_to_event`) +
+        (`_fetch_distributor_logs / _issue_getlogs_request / _solana_day_window_unix / _read_signature_entry / _extract_init / _spl_transfer_gate / _post_balance_to_event`) +
         ParquetDustLoader.\_read_all_rows_for_day split into `_safe_list_blobs / _read_partition_frames`. Function-size
         section now clean. status: done.
 - id: p6-2-cloud-uri-cleanup content: |

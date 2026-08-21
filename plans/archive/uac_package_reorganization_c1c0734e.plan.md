@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: UAC Package Reorganization
-summary:
+summary: 'Comprehensive UAC refactor: package layout (external rename, config/registry moves), domain taxonomy (market,
+  execution, reference, analytics, errors), reference data consolidation, SDK/alt-data placement, sports/DeFi nesting, provider
+  live/historical modes, and adoption/orphan discipline.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-14'
-overview: 'Comprehensive UAC refactor: package layout (external rename, config/registry moves), domain taxonomy (market, execution, reference, analytics, errors), reference data consolidation, SDK/alt-data placement, sports/DeFi nesting, provider live/historical modes, and adoption/orphan discipline.'
 todos:
 - {id: phase1-rename-external, content: 'Rename unified_api_contracts_external to external; create config/, registry/', status: pending}
 - {id: phase1-move-files, content: 'Move domain_config, provider_api_versions, endpoints, venue_constants, mappings, vcr_endpoints', status: pending}

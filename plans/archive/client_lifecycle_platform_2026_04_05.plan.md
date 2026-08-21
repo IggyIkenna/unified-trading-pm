@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: client-lifecycle-platform
-summary:
+summary: 'Client lifecycle platform: exchange data collection, performance dashboards, invoice lifecycle, trade history,
+  CSV exports'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-04-14'
-overview: 'Client lifecycle platform: exchange data collection, performance dashboards, invoice lifecycle, trade history, CSV exports'
 type: mixed
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: none, business: B6}

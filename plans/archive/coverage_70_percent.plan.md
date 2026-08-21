@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: Coverage 70% Plan
-summary:
+summary: Achieve MIN_COVERAGE=70% across all Python repos (libraries, services, api-services). T0 first, then T1→T2→T3→services.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +11,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-05"
-overview:
-  Achieve MIN_COVERAGE=70% across all Python repos (libraries, services, api-services). T0 first, then
-  T1→T2→T3→services.
 todos:
   - { id: set-min-coverage, content: Set MIN_COVERAGE=70 in scripts/quality-gates.sh per repo, status: completed }
   - {

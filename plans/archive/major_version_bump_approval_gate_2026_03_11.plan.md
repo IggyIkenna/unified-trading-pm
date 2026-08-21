@@ -1,7 +1,13 @@
 ---
 doc_type: plan
 title: major-version-bump-approval-gate-2026-03-11
-summary:
+summary: "Any MAJOR version bump — including the initial release to 1.0.0 — for ANY repo MUST go through\na human-approval\
+  \ gate: GitHub Issue created automatically, Telegram alert sent with the issue URL,\nuser comments /approve on the issue,\
+  \ GHA then bumps pyproject.toml on the staging branch and updates\nworkspace-manifest.json staging_versions in unified-trading-pm.\
+  \ Applies equally to:\n  - Autonomous semver-agent.yml detecting a post-1.0.0 MAJOR bump\n  - Any human or agent requesting\
+  \ the initial 0.x.x → 1.0.0 promotion\nNO agent (GHA autonomous, overnight orchestrator, interactive Claude, Cursor) may\
+  \ directly set a\nMAJOR version without this approval loop. This rule propagates to AGENTS.md, SUB_AGENT_MANDATORY_RULES,\n\
+  cursor rules, overnight-orchestrator tier prompts, and GHA agent prompt injections."
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,15 +17,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-03-11"
-overview:
-  "Any MAJOR version bump — including the initial release to 1.0.0 — for ANY repo MUST go through\na human-approval
-  gate: GitHub Issue created automatically, Telegram alert sent with the issue URL,\nuser comments /approve on the
-  issue, GHA then bumps pyproject.toml on the staging branch and updates\nworkspace-manifest.json staging_versions in
-  unified-trading-pm. Applies equally to:\n  - Autonomous semver-agent.yml detecting a post-1.0.0 MAJOR bump\n  - Any
-  human or agent requesting the initial 0.x.x → 1.0.0 promotion\nNO agent (GHA autonomous, overnight orchestrator,
-  interactive Claude, Cursor) may directly set a\nMAJOR version without this approval loop. This rule propagates to
-  AGENTS.md, SUB_AGENT_MANDATORY_RULES,\ncursor rules, overnight-orchestrator tier prompts, and GHA agent prompt
-  injections.\n"
 type: infra
 epic: epic-infra
 completion_gates: { code: C5, deployment: D1, business: none }

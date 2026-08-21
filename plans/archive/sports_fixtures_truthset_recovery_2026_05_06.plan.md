@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: sports-fixtures-truthset-recovery-2026-05-06
-summary:
+summary: Use api_football per-(league, season) enumeration as the truth-set to detect (a) league-mapping breakage — leagues
+  that exist but were never fetched — and (b) phantom-write-on-fixture-day cases — dates that DO have fixtures per api_football
+  but were silently recorded as empty/failed/zero-row in our manifest. Then targeted-fetch the diff. Then run downstream
+  chain. Honest coverage end-to-end.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -19,11 +22,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: "2026-05-06"
-overview:
-  Use api_football per-(league, season) enumeration as the truth-set to detect (a) league-mapping breakage — leagues
-  that exist but were never fetched — and (b) phantom-write-on-fixture-day cases — dates that DO have fixtures per
-  api_football but were silently recorded as empty/failed/zero-row in our manifest. Then targeted-fetch the diff. Then
-  run downstream chain. Honest coverage end-to-end.
 type: code
 epic: epic-sports-honest-coverage
 locked_by: live-defi-rollout
@@ -286,7 +284,7 @@ Pattern mirrors the existing `flip_phantom_*` scripts. ~30 min implementation.
       `capture_status=captured` now in canonical (captured FIXTURES count: 29,273 → 63,856). Spot-check on ALLSVENSKAN
       2018-04-01 confirms 4 real fixtures with full 32-column schema + correct `data_available_at = kickoff − 7d`.
 - [ ] [HUMAN] P0. Operator triggers Phase 3 chain runner via:
-      `tmux new-session -d -s phantom-chain bash deployment-service/scripts/vm/run-sports-phantom-downstream-chain.sh     --start-date 2020-06-06 --end-date 2026-05-04`.
+      `tmux new-session -d -s phantom-chain bash deployment-service/scripts/vm/run-sports-phantom-downstream-chain.sh --start-date 2020-06-06 --end-date 2026-05-04`.
       Runs PLAYER_STATS / FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES sequentially against the
       now-correct FIXTURES manifest. ~3-5h total.
 - [ ] [AGENT] P1. Implement + run Phase 4 drift audit (cross-check residual `empty_confirmed` rows on per-fixture

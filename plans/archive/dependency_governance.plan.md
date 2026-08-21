@@ -1,7 +1,15 @@
 ---
 doc_type: plan
 title: Dependency Governance
-summary:
+summary: 'Verify and enforce workspace-wide external dependency governance. workspace-constraints.toml,
+
+  canonical-dependency-manifest.json, and propagate-canonical-versions.py all exist and are
+
+  substantially implemented. This plan verifies alignment is complete, propagates canonical
+
+  versions to all repos, removes any requirements.txt parallel sources, and confirms all
+
+  uv.lock files are committed and current. Covers audit S4.1–S4.12.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,17 +19,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-05'
-overview: 'Verify and enforce workspace-wide external dependency governance. workspace-constraints.toml,
-
-  canonical-dependency-manifest.json, and propagate-canonical-versions.py all exist and are
-
-  substantially implemented. This plan verifies alignment is complete, propagates canonical
-
-  versions to all repos, removes any requirements.txt parallel sources, and confirms all
-
-  uv.lock files are committed and current. Covers audit S4.1–S4.12.
-
-  '
 todos:
 - {id: dg-validate-conflicts, content: 'Run unified-trading-pm/scripts/manifest/validate-dependency-conflicts.py — fix any version conflicts (same package, different ranges across repos). Record all conflicts in QUALITY_GATE_BYPASS_AUDIT.md if a conflict cannot be resolved.', status: completed}
 - {id: dg-propagate-versions, content: Run unified-trading-pm/scripts/propagation/propagate-canonical-versions.py across all repos — verify every pyproject.toml aligns with workspace-constraints.toml canonical versions. Fix any divergence (manual edits that drifted from canonical)., status: completed}

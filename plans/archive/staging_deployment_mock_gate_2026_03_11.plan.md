@@ -1,17 +1,7 @@
 ---
 doc_type: plan
 title: staging-deployment-mock-gate-2026-03-11
-summary:
-status: complete
-nature: record
-asset_group: [cross-cutting]
-stage: [meta]
-repos: []
-scope: [engineer, admin]
-tags: []
-related: []
-created: '2026-03-11'
-overview: 'Add a per-repo deployment smoke test as the third required gate on the staging branch
+summary: 'Add a per-repo deployment smoke test as the third required gate on the staging branch
 
   (alongside quality-gates and staging-lock-check). Each service/API repo builds its own
 
@@ -21,9 +11,16 @@ overview: 'Add a per-repo deployment smoke test as the third required gate on th
 
   check. Libraries (no HTTP server) auto-pass. This gives a fast (<10 min) container-level
 
-  smoke test on every staging PR before SIT runs the full cross-service deployment-tests suite.
-
-  '
+  smoke test on every staging PR before SIT runs the full cross-service deployment-tests suite.'
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-11'
 type: infra
 epic: epic-infra
 completion_gates: {code: C5, deployment: D2, business: none}

@@ -91,15 +91,18 @@ full per-doc agentic classification pass to notice them incidentally, the way th
       file — the exact shape of all 4 instances found this run. Done when: run against the current full NA corpus
       and it re-discovers these 4 (now-fixed) instances as a smoke test, then run for real to find any others still
       outstanding corpus-wide (not just tradfi).
-- [ ] [DOC] P3. **Now actionable — corrected 2026-08-19 (plan_reconciler, cross-cutting): the checker DID run**
-      (`cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 2, same day as this doc's own 2026-08-17
-      audit entry below, which was never cross-checked against it) and found 3 live instances, not yet routed:
-      `plans/active/issues/dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md` (extracted to
-      `ao_satellite_ao_dispatch_batch10_2026_08_09.md`), `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md`
-      (extracted to `sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md`), and
+- [ ] [DOC] P3. **Narrowed 2026-08-21 (na-eligibility-audit, cross-cutting) — 1 of 3 instances already resolved, 2
+      remain live**, of the 3 instances `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 2's
+      checker found: `plans/active/issues/dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md` is now
+      MOOT — all 3 of its own todos are `[x]` checked (verified 2026-08-21), so there is nothing left to route for
+      that instance. The remaining 2 still need routing to their owning (sports) tranche's next
+      `/na-eligibility-audit` pass: `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md`
+      (extracted to `sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md` — its own 2026-08-17 audit
+      entry already noted the extraction, but the raw checkbox at line 68 was still `[ ]` as of 2026-08-21) and
       `plans/active/sports_live_arb_strategy_and_execution_routing_2026_08_14.md` (extracted to
-      `mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md`). Route each to its owning tranche's next
-      `/na-eligibility-audit` pass rather than fixing them all from this doc.
+      `mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md` — this doc carries many other genuinely
+      open todos beyond the citation issue, so is out of scope for a pure citation-flip pass). Route these 2 to the
+      sports tranche rather than fixing them from this doc (cross-cutting tranche is not the owner).
 
 ## Progress Log
 
@@ -107,3 +110,8 @@ full per-doc agentic classification pass to notice them incidentally, the way th
 - **na-eligibility-audit 2026-08-17** [body-hash:092494416dea3b5d]: KEEP-NA, valid -- Self-referential meta doc (about this same audit's own extraction-citation bug). Confirmed it does NOT exhibit its own documented bug: its checker-prototype todo is correctly closed citing cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 2. The 1 remaining item (route any further instances the checker finds to their owning tranche) is dependency-blocked on that checker actually running, which hasn't happened yet. Cross-cutting tranche audit.
 - **plan_reconciler 2026-08-19** (cross-cutting tranche): **correction — the checker DID run, same day.** This entry's "hasn't happened yet" was stale relative to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 2, which ran the checker for real that same 2026-08-17 and found 3 live instances (see the todo above, now updated with the full list). The remaining item is actionable now, not dependency-blocked.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, stale items — verified the 3 instances the batch14 checker found:
+  `dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md` is now fully resolved (all 3 todos `[x]`),
+  narrowing the routing ask from 3 to 2 remaining sports-tranche instances. This doc's own single remaining todo
+  stays `assigned_vm: NA` — routing to another tranche's audit pass is coordination work. Doc's own `assigned_vm:
+  NA` unchanged. Cross-cutting tranche, batch 2 of 3.

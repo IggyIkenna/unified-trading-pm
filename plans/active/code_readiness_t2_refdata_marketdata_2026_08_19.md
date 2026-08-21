@@ -221,31 +221,56 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Walkthrough feedback 2026-08-21 — refdata/coverage cluster (operator feedback on platform-external-api-walkthrough.html)
 
-- [ ] [BACKEND] P1. Kalshi perp — REPOINT, not build (corrected 2026-08-21; the earlier "zero adapter code"
-      claim was a search artefact): `instruments-service/.../adapters/cefi/kalshi_perp.py` EXISTS with a
-      write-guard layer, enumeration disabled (`_REPOINT_PENDING = True`) after the events-host contamination
-      incident. MEASURED 2026-08-21: an RSA-PSS-signed probe with the EXISTING GSM creds (kalshi-api-key-id +
-      kalshi-private-key-pem) returned HTTP 200 on `external-api.kalshi.com/trade-api/v2/margin/markets` (live
-      perp market data: bid/ask, leverage, liquidation marks) and 200 on portfolio/balance — our membership
-      ALREADY has margin/perps API access; no separate application or kalshi-perp-api-key secret is needed.
-      (`/margin/funding_rates` 404s at that literal path — discover the correct funding subpath during repoint.)
-      Do: repoint the adapter per its own Phase-2 plan, wire RSA-PSS auth from the existing secrets, flip
-      `_REPOINT_PENDING`, and update the adapter docstring + issue docs that still say access is
-      credentials-blocked. Artefact: "Coming Soon" until data flows. Market-perp venue (beta API, not launched)
-      stays "Coming Soon" with the beta note.
-- [ ] [AGENT] P1. Classify the sports bookmaker roster for the operator (NOT for the artefact): for each of the
-      27 kept books, is it (a) an odds-api bookmaker, (b) covered by the Unity central-wallet integration
-      (enumeration lives in sports_master.md / mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md
-      / e2e docs — the 2026-08-21 verification pass could not find one clean list, so build it), or (c) neither
-      — legacy arbitrage-research leftovers. Deliver the (c) list as a removal proposal; removal itself is
+- [ ] [BACKEND] P1. **Kalshi perp — DATA-ONLY repoint, PROCEED (operator ruling 2026-08-21, final).** Wire
+      RSA-PSS auth from existing GSM secrets (kalshi-api-key-id + kalshi-private-key-pem — MEASURED 2026-08-21:
+      HTTP 200 with real perp market data on `external-api.kalshi.com/trade-api/v2/margin/markets`), repoint
+      `kalshi_perp.py` enumeration to the margin host, flip `_REPOINT_PENDING`, keep the write-guard, discover
+      the real funding-rates subpath (the docstring's literal path 404s), update the stale BLOCKED-CREDENTIALS
+      docstring claim. Never re-enable against the events host. An EARLIER same-day hold ("auth probe ≠ perps
+      trading rights, do not repoint") applied before the operator distinguished the data path — it is
+      SUPERSEDED for data capture and remains in force ONLY for TRADING integration, which stays gated on the
+      member-by-member perps rights signup.
+- [x] ✅ [AGENT] P1. Classify the sports bookmaker roster for the operator (NOT for the artefact): for each of the
+      27 kept books, is it (a) an odds-api bookmaker, (b) covered by the Unity central-wallet integration, or (c)
+      neither — legacy arbitrage-research leftovers. Deliver the (c) list as a removal proposal; removal itself is
       operator-gated. Artefact side (T5): sports data types are odds, arbitrage_opportunity,
       odds_horizon_bucket, trades, trades_inplay; execution = Unity integration central-wallet, "coming soon —
       available faster on demand".
+      **2026-08-21 — built the missing clean list, classified all currently-kept venues.** Full table + evidence:
+      `/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md`. The "27" is a stale 2026-08-08
+      snapshot; the CURRENT kept roster is 39 (27 original + 4 Betfair-family/Pinnacle + 8 Unity child books added
+      2026-08-17, after the count was taken) — all 39 classified. 25 actively odds_api-fetched, 9 Unity-covered (1
+      dual-covered), 4 **HIGH-confidence removal candidates** (BETOPENLY, NOVIG, ONEXBET, PROPHETX — canonical
+      token + odds_api key exist but were never wired into the live fetch scope, zero manifest presence of any
+      kind in the 2026-08-20 coverage.json, no Unity coverage — arbitrage-research vintage), 2 LOW-MEDIUM
+      confidence flags (BETMGM, BETWAY — same unwired pattern but some real captured rows, an operator judgment
+      call rather than a clean removal). 2 Unity-roster contradictions surfaced, not resolved (code SSOT vs
+      `sports_master.md`'s historical vision doc disagree on PINNACLE/CROWN). Operator + follow-up todos filed in
+      the issue doc, not here.
 - [ ] [BACKEND] P2. Unattributed manifest tokens (24 in the 2026-08-19 manifest, incl. 76 pre-canonical
       bare-protocol DeFi tokens in the wider decomposition): land the manifest-side attribution/canonicalisation
       CODE so the "Unattributed" bucket disappears from client-facing surfaces (migration run itself stays out
       of tranche scope). Chains without data (e.g. bitcoin mother-chain): get the connectors in and prove data
       acquisition so the chain appears canonically, per operator feedback.
+      **BLOCKED 2026-08-21 — plan-conflict found, not shipped as code.** `/plans/active/state_fabric_artefacts_2026_08_20.md`
+      § "T2 — the 24 unattributed tokens (investigation complete)" already investigated this exact 24-token set
+      same-week and reached a **contrary verdict**: all 24 are real, well-formed `PROTOCOL-CHAIN` DeFi venues in
+      genuine `DEFI_VENUE_PHASE == "pipeline"` status (none malformed/duplicate/manifest-artifact);
+      `VENUES_BY_ASSET_GROUP["defi"]` is deliberately live-phase-only by design. That doc's own prescribed fix is
+      explicit and DOC-only: relabel the bucket "DeFi — pipeline phase, not yet live" and **do NOT add these 24 to
+      `VENUES_BY_ASSET_GROUP["defi"]`** — new attribution/canonicalisation CODE here would directly produce the
+      "misrepresent pipeline venues as backfilled" outcome that doc warns against. Not force-shipped without
+      reconciling the two docs first (findings-triage HARD RULE: outside-plan ambiguous → diagnose both sides,
+      don't silently pick one). Bitcoin mother-chain connector sub-item is a genuine net-new adapter build,
+      untouched this pass — split out below.
+      - [ ] [BACKEND] P2. Reconcile this todo against `state_fabric_artefacts_2026_08_20.md`'s T2 finding before
+            either doc's box flips again — either the DOC-relabel there supersedes this CODE ask, or an operator
+            ruling says client-facing surfaces additionally need a resolver-side fallback into the phase-aware
+            DeFi venue registry (not a manifest rewrite).
+      - [ ] [BACKEND] P2. Bitcoin mother-chain connector: build the connector(s) and prove real data acquisition
+            so `bitcoin` appears canonically on the chain axis (currently a chain-without-data gap per operator
+            feedback) — instruments-service and/or market-tick-data-service, whichever owns chain-connector
+            registration for BTC.
 
 ### W3 — granularity and the shard denominator
 
@@ -832,7 +857,18 @@ todos only to confirm they are data-movement, then leave it.
       archived issue doc.
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag. 31 docs in your allocation are flagged `excluded_data_movement` — confirm and leave them.
-- [ ] [AGENT] P0. Post-phase codex audit across `/codex/02-data/` for every contract you changed.
+- [x] ✅ [AGENT] P0. Post-phase codex audit across `/codex/02-data/` for every contract you changed.
+      **2026-08-21 — checked `honest-coverage-model.md`'s "coverage.json v2 schema" section (`authoritative_for`
+      that exact schema) against every field this tranche shipped this session; found 2 real gaps, fixed both.**
+      The JSON schema block and its "New-in-v2 keys" prose were missing `by_venue_instrument_type_data_type_league`
+      (level 5e, `instruments-service@6056d46d5c`) and `hollow_instrument_type_fraction`
+      (`instruments-service@540a3bd94d`) entirely — both shipped, live, and populated in the real artefact
+      (confirmed two todos above), just never reflected in the schema doc a future reader would consult. Added
+      both to the JSON example + the key-list prose with their SHAs. The narrative "Projected atom vs declared
+      atom" section and the shard-atom-identity `league_id` banner were already fixed earlier this session (see
+      that todo above). Did not find further drift in `availability-manifest-and-data-status.md` — this session's
+      findings there CONFIRMED its existing shard-atom text rather than contradicting it, so no edit was needed.
+      Scope: `/codex/02-data/` only, per the todo's own text — did not sweep other codex sections.
 - [x] ✅ [AGENT] P0. Confirm every artefact coverage marker owned by this tranche now reads live with a stated
       denominator and date, or is one of the five allowed pending states.
       **2026-08-21 — MEASURED against the live artefact, not assumed shipped.** Downloaded
@@ -850,66 +886,52 @@ todos only to confirm they are data-movement, then leave it.
 > Append-only. One entry per shippable unit — what you changed, the `<repo>@<sha>`, and what you MEASURED (not what
 > you assume). This log is the handoff document if this agent's context ends and a fresh one resumes the tranche.
 
-- 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
-  against the 892-doc active corpus. No code work started yet.
-
-- 2026-08-20 — **T5 unblocked; the coverage-grain axes were already live.** Read the live artefact
-  `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json` (`schema_version: 2`) through T5's own
-  engine (`cursor-configs/skills/honest-coverage-dump/scripts/shard_universe.py`) rather than inspecting the
-  writer. MEASURED: both `by_venue_instrument_type` (172 `(ag, venue)` pairs) and
-  `by_venue_instrument_type_data_type` (184 pairs) are populated for all 5 asset_groups; `detect_grain()` returns
-  `"instrument_type"`; `iter_shard_cells()` yields **3,962** cells at `(asset_group, venue, instrument_type,
-  data_type)` grain. The "add `instrument_type`/`data_type` columns to the coverage payload" todo was therefore
-  already satisfied in production before this tranche started — the work left was not ADDING the axes but making
-  them HONEST (below). Notified T5 in their plan's `## Inbound requests` with the two caveats they must carry into
-  the re-run.
-
-- 2026-08-20 — **Shard-atom defects in the coverage writer: found by measurement, fixed, regression-tested.**
-  Three defects in `instruments-service/scripts/measure_honest_coverage.py`, each measured against the live
-  2026-08-19 payload before any code was touched, each with a test PROVEN to fail on the pre-fix source and pass
-  on the fixed one (ran the suite against `git show HEAD:` of the file to confirm, rather than assuming):
-
-  1. **Level-5 display label was unstable across data_types — 24 groups.** `_representative_instrument_type()` was
-     called inside each `(venue, itype_fold, data_type)` group, so the case-majority could differ per data_type
-     and one logical shard grew TWO keys with its data_types split between them. `sports/LADBROKES` carried both
-     `'ODDS'` (`data_types=['trades']`) and `'odds'` (`data_types=['odds']`). Level 4 was already clean (0 splits)
-     — only level 5 leaked, so the two projections disagreed about what one shard is called. Fix: resolve the
-     label ONCE per `(venue, case-folded instrument_type)` in the level-4 pass and have level 5 reuse it.
-  2. **`'nan'` leaked as a real instrument_type key — 26 keys beside 85 blank ones.** `astype(str)` renders a
-     missing value as the literal `"nan"`, and the grouping key never consulted
-     `_BLANK_INSTRUMENT_TYPE_SENTINELS` (which already contained `"nan"` — defined, but unused for grouping).
-     Fix: normalise every null spelling to `""` in `_casefold_instrument_type_series`, so one "never stamped an
-     instrument_type" shard is one cell rather than up to five.
-  3. **`data_type` was never case-folded — 6 split groups** (`sports` `ODDS_MOVEMENT`/`odds_movement` and
-     `ODDS_SNAPSHOT`/`odds_snapshot`; `prediction` `MARKET_LIFECYCLE`/`market_lifecycle`). Fix: new
-     `_casefold_data_type_series`, applied at level 5 ONLY. Deliberately NOT applied to level 3
-     `by_venue_data_type`: that dict's KEYS feed deployment-api's `/distinct-values/{asset_group}` drift panel,
-     which case-sensitively tracks the in-flight uppercase migration — merging there would blind the panel to the
-     drift it exists to surface. A test pins both halves of that asymmetry.
-
-  **Denominator impact, stated as a dated change per W3's "never a silent edit" rule:** these three collapse 86
-  duplicate cells, so the true distinct-shard count at this grain is **3,876**, not the 3,962 the artefact
-  currently reports (nor the 3,960 the headline quotes). Per-status ROW totals are unchanged — this re-partitions
-  cells, it does not drop shards: captured 58,494,203 / attempted_failed 9,648,732 / expected_unattempted
-  51,892,497 / empty_confirmed 93,065,443, reachable denominator 120,035,432 on 2026-08-19. The corrected count
-  reaches the artefact on the next nightly `measure-honest-coverage` cron run; this tranche does not launch it.
-
-  **Also measured, NOT fixed here** (needs an operator ruling on denominator semantics, so it is a tracked todo
-  rather than a silent edit): level 4 drops fully-retired keys via `_drop_fully_retired_nested` and level 5 does
-  not, so the two levels still disagree about which shards EXIST even though they now agree on naming.
-
-- 2026-08-20 — **T1 inbound #2 worked; T1's stated cause was wrong, the underlying defect was real and worse.**
-  T1 reported three hand-rolled `KNOWN_CHAINS` literals in `instruments-service` that "will not receive the
-  SCROLL/PLASMA fix". MEASURED: all three already contained SCROLL and PLASMA, so that specific claim does not
-  hold. The real drift ran in BOTH directions and predates it: each copy was missing `ASTER` (a venue that is its
-  own L1 — `…-ASTER` venues therefore never split) and carried a phantom `STARKNET` that UAC deliberately
-  excludes (`EXTENDED-STARKNET` is a CeFi on-chain perp CLOB that must NOT be DeFi-split, per
-  `engine/orchestrator/writers.py`'s `VENUE_TO_ASSET_GROUP` guard). `build_instrument_catalogue.py`'s comment
-  claimed it "Mirrors the UAC `KNOWN_CHAINS` set" — it did not; that comment is corrected in place rather than
-  left to mislead the next reader. All three now import the UAC set
-  (`unified_api_contracts.registry.capability_declarations._defi.KNOWN_CHAINS`, the path every already-correct
-  consumer in the repo uses). Verified after the change by importing the module and asserting
-  `_CATALOGUE_KNOWN_CHAINS is KNOWN_CHAINS` → True, `ASTER` present, `STARKNET` absent. This is a real behaviour
-  change to the catalogue read-side venue split, in the correcting direction.
-- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- 2026-08-19/2026-08-20 entries (plan authoring, T5-unblock measurement, 3 shard-atom-defect fixes, T1-inbound
+  #2 KNOWN_CHAINS fix, context-scout) — **moved to
+  `/plans/active/code_readiness_t2_progress_history_2026_08_20.md` verbatim** (2026-08-21 line-cap split, parent
+  crossed the 1000-line hard cap; mirrors the T3/T5 sibling plans' identical split). Read that doc for the full
+  audit trail; nothing here was lost, only relocated.
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche, first audit pass): KEEP-NA, valid — Tranche 2 of the operator-slot-launched code-readiness series (same Launch-prompts mechanism as the coordinator/T1). Remaining open items include multiple BLOCKED-UPSTREAM(T1/UAC or T1/UTL) items, a BLOCKED-OPERATOR multi-instrument candle bundle write-race fix, an explicit operator-decision-needed denominator-semantics question (level-4 vs level-5 fully-retired-key disagreement, deliberately not silently edited per W3's 'never a silent edit' rule), a sports-bookmaker roster classification for the operator, and a large atomic MDPS adapter-protocol/polars-seam migration across 18 files. None clears the whole-doc RECLASSIFY bar; the doc's own structural design (operator-slot dispatch) also precludes AO-backlog eligibility.
+- **wave-1d walkthrough-feedback remediation pass 2026-08-21** (instruments-service / market-tick-data-service scope
+  only) — three assigned items, all resolved without a code ship this session:
+  1. **Kalshi perp repoint — NOT touched, correctly BLOCKED-OPERATOR.** The plan's own text (line 224, dated
+     2026-08-21) already carries an explicit operator ruling: a successful RSA-PSS auth PROBE against the margin
+     host is not proof the account holds perps trading rights — Kalshi's perps product rolls out member-by-member.
+     `_REPOINT_PENDING` stays `True`, `kalshi_perp.py` untouched, no RSA-PSS wiring added, no funding-rates subpath
+     probed. This todo's own task summary (asking for a repoint) conflicted with the plan section, which is ground
+     truth per the dispatch instructions — no code change was the correct outcome, not a shortfall.
+  2. **Sports bookmaker roster classification — already delivered by a prior session, verified not re-done.** The
+     checkbox above was already `[x]` with a full table cited in
+     `/plans/active/issues/sports_bookmaker_roster_classification_2026_08_21.md`. Reproduced here for the record:
+
+     | Group | Count | Venues / disposition |
+     |---|---|---|
+     | (a) odds-api, live fetch scope | 25 | Actively in `REQUESTED_ODDS_API_BOOKMAKERS`, confirmed captured in coverage.json |
+     | (a)-key-only, never fetched | 6 | BETMGM, BETOPENLY, BETWAY, NOVIG, ONEXBET, PROPHETX |
+     | (b) Unity-covered | 9 | MATCHBOOK (dual a+b) + 8 net-new Unity child books (3ET, BROKER5, CROWN, SBO, SHARPBET, VX, BETDEX, IBC) — subscription pending, zero-capture, forward-looking, not leftovers |
+     | (c) neither — HIGH-confidence removal candidates | 4 | BETOPENLY, NOVIG, ONEXBET, PROPHETX — canonical token + odds_api key exist, never wired into live fetch scope, zero manifest presence, no Unity coverage; arbitrage-research vintage |
+     | (c) neither — LOW-MEDIUM confidence flags | 2 | BETMGM (captured=1,591), BETWAY (captured=1,803) — same unwired pattern but real historical rows; operator judgment call, not proposed for removal |
+
+- [ ] [BACKEND] P1. **Operator ruling 2026-08-21: REMOVE ALL 6 stale bookmakers** — BETOPENLY, NOVIG, ONEXBET,
+      PROPHETX (high-confidence) AND BETMGM, BETWAY (operator chose removal over retention). Registry removal in
+      unified-api-contracts (handed to the wave-1a registry lane — same-file discipline on
+      `market_data_categories.py`) MUST follow the entity-rename/split consumer-migration rule: enumerate and
+      migrate EVERY consumer in the same change (a token grep misses path-prefix/filename/registry-membership
+      binders; sports paths via `candidate_parquet_paths()`); manifest/GCS row disposition for BETMGM/BETWAY's
+      historical rows is data-side and stays out of this code pass (flag as follow-up, no deletion of prod data
+      without the delete-safety protocol).
+
+     Removal of the 4 HIGH-confidence candidates and the BETMGM/BETWAY judgment call both stay `[OPERATOR]`-gated
+     in the issue doc's own todos — nothing removed this session, per the dispatch instructions ("removal itself
+     stays operator-gated — do NOT remove anything").
+  3. **24 unattributed manifest tokens — plan-conflict found, no code shipped.** Investigated before writing any
+     attribution code and found `/plans/active/state_fabric_artefacts_2026_08_20.md` already ran the identical
+     investigation same-week with a contrary, DOC-only prescribed fix (see that todo's own edit above for detail).
+     Shipping new manifest-side attribution CODE without reconciling the two docs first risks contradicting a
+     completed, evidenced investigation — held per the findings-triage HARD RULE (ambiguous → diagnose both sides,
+     don't silently pick one) and split into two tracked follow-up todos instead. Bitcoin mother-chain connector
+     build is untouched — genuine net-new adapter work, not attempted this pass.
+
+  No `instruments-service`/`market-tick-data-service` commits this session — every assigned item resolved to
+  either "already done," "correctly blocked by the plan's own ground truth," or "needs doc reconciliation before
+  code, tracked as a follow-up," so nothing met the QG-green-tree-then-quickmerge bar.

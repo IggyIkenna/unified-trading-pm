@@ -106,11 +106,18 @@ code, since the debounce mechanism itself is what's defeated at scale. Candidate
 investigation + design work, not a pre-committed implementation, since this is a shared-infra performance change needing
 its own review):
 
-- [ ] [BACKEND] P2. Investigate an append-only "delta shard" pattern for the per-VM manifest write path
-      (`unified_trading_library/manifest_writer/_writer_io.py`) — write new rows to a small, cheap delta file per flush
-      instead of rewriting the whole shard, with periodic (or close()-time) compaction into the canonical per-VM
-      parquet. Must preserve the existing SIGKILL-durability guarantee (no entry lost on a hard kill) and not regress
-      the small-shard case. (repo: unified-trading-library)
+- [x] ✅ [BACKEND] P2. **Investigation DONE 2026-08-20** — see this doc's own 2026-08-20 Progress Log entry for the
+      full proposed shape (append-only delta blob per non-final flush, glob-based read-back, close-time
+      compaction, crash-safety analysis). The consolidator already tolerates a delta-shard file with zero changes
+      (last-write-wins on content key, not source-file identity). Real code change tracked as a new todo below
+      (still NA — needs its own review pass + test-authored-first cycle per the same 2026-08-20 entry's own
+      conclusion). (repo: unified-trading-library)
+- [ ] [BACKEND] P2. **Implement the delta-shard pattern per the 2026-08-20 design** (this doc's own Progress Log) —
+      non-final flush uploads `pending_new` alone as `{instance}.delta.{uuid4}.parquet` (O(new rows) only);
+      `_read_per_vm_shard` globs `{instance}.parquet` + `{instance}.delta.*.parquet`; final flush reads base + all
+      matching deltas, merges/dedups, uploads one consolidated file, deletes the deltas. Needs a SIGKILL-mid-delta
+      integration test authored first, plus its own review pass (real code change to a hot, durability-critical,
+      fleet-wide-shared write path) — not a same-tick implementation. (repo: unified-trading-library)
 - [ ] [BACKEND] P3. **(reworded 2026-08-19, `/plan-reconcile security_and_cross_cutting_master` Phase 1 — line-1
       completeness fix; content unchanged, action moved to line 1, dated annotation moved after)** As a cheaper
       interim alternative to the P2 delta-shard todo above, investigate making the per-VM flush debounce
@@ -197,3 +204,7 @@ its own review):
   everything else this session has already shipped today. Flagging this as ready for someone to pick up and
   implement against, not asking for another round of "is this still NA" — the investigation this todo asked for is
   now done.
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, stale items — closed the "investigate a delta-shard pattern" todo
+  with evidence (the 2026-08-20 entry above already did the investigation and produced a full proposed design).
+  Added a new todo for the actual implementation, which stays `assigned_vm: NA` — needs its own review pass +
+  test-authored-first cycle. Doc's own `assigned_vm: NA` unchanged. Cross-cutting tranche, batch 2 of 3.

@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: data_status_comprehensive_test_coverage_2026_05_07
-summary:
+summary: Build a comprehensive regression-test net for the data-status surface — Python unit tests for SSOT alignment +
+  cutoffs + deploy-missing + cloud-agnostic behavior, Vitest component tests for the UI, and a Playwright e2e suite that
+  walks every (service, asset_group) pair. Premise — the data-status surface keeps breaking because (a) writers + readers
+  + UI live in different repos with no contract test gluing them, (b) the pieces are mocked individually but never end-to-end,
+  (c) cloud-agnostic claims aren't tested.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -17,12 +21,6 @@ related:
     /plans/archive/deploy_missing_auto_launch_2026_05_07.md,
   ]
 created: "2026-05-07"
-overview:
-  Build a comprehensive regression-test net for the data-status surface — Python unit tests for SSOT alignment + cutoffs
-  + deploy-missing + cloud-agnostic behavior, Vitest component tests for the UI, and a Playwright e2e suite that walks
-  every (service, asset_group) pair. Premise — the data-status surface keeps breaking because (a) writers + readers + UI
-  live in different repos with no contract test gluing them, (b) the pieces are mocked individually but never
-  end-to-end, (c) cloud-agnostic claims aren't tested.
 type: code
 epic: epic-deployment
 completion_gates: { code: C5, deployment: none, business: none }

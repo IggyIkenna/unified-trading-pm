@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: mtds-defi-data-normalization
-summary:
+summary: Complete pipeline-wide per-instrument sharding (MTDS→MDPS→Features), DeFi normalization, data quality fixes, data
+  status, multi-chain expansion, GCS migration — 55 items across 11 repos
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -15,7 +16,6 @@ remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 superseded_by: [consolidated_defi_data_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
-overview: Complete pipeline-wide per-instrument sharding (MTDS→MDPS→Features), DeFi normalization, data quality fixes, data status, multi-chain expansion, GCS migration — 55 items across 11 repos
 type: code
 epic: epic-code-completion
 archived_date: 2026-05-06

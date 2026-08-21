@@ -1,7 +1,15 @@
 ---
 doc_type: plan
 title: Coverage Remediation Plan — 2026-03-10
-summary:
+summary: 'Raise test coverage to meet floor across all failing repos.
+
+  Formula: MIN_COVERAGE = max(floor, actual_coverage - 1)
+
+  Floors: service/api-service/infrastructure/ui = 70%; library = 80%
+
+  Source: python3 unified-trading-pm/scripts/repo-management/coverage-audit.py
+
+  14 repos currently below floor (audit 2026-03-10).'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,17 +19,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
-overview: 'Raise test coverage to meet floor across all failing repos.
-
-  Formula: MIN_COVERAGE = max(floor, actual_coverage - 1)
-
-  Floors: service/api-service/infrastructure/ui = 70%; library = 80%
-
-  Source: python3 unified-trading-pm/scripts/repo-management/coverage-audit.py
-
-  14 repos currently below floor (audit 2026-03-10).
-
-  '
 todos:
 - {id: close-gap-execution-results-api, content: 'execution-results-api: DONE 2026-03-10. 66%->79% (MIN_COVERAGE=78). Fixed syntax errors and Pydantic mock data in agent-written tests.', status: done}
 - {id: close-gap-features-cross-instrument, content: 'features-cross-instrument-service: DONE 2026-03-10. 64%->92% (MIN_COVERAGE=90). Was stale; added CLI+sentiment tests.', status: done}

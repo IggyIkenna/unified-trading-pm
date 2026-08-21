@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: defi-full-data-coverage
-summary:
+summary: Build all missing DeFi data handlers in MTDS — lending indices, DEX pools, LST rates, perp funding, liquidations,
+  bridge flows
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -12,7 +13,6 @@ tags: []
 related: []
 created: '2026-04-14'
 remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
-overview: Build all missing DeFi data handlers in MTDS — lending indices, DEX pools, LST rates, perp funding, liquidations, bridge flows
 type: code
 epic: epic-code-completion
 completion_gates: {code: C5, deployment: D3, business: B4}

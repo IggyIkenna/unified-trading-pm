@@ -1,7 +1,15 @@
 ---
 doc_type: plan
 title: cloud-infra-extended-bootstrap
-summary:
+summary: 'Extended cloud infrastructure bootstrap: Pub/Sub topics + subscriptions, Redis/Memorystore,
+
+  Cloud SQL (PostgreSQL for execution-service order state), Artifact Registry (Docker + wheels),
+
+  billing budget alerts with daily breakdown, deployment cleanup scripts, and SIT smoke tests
+
+  for all of the above. Both GCP (primary) and AWS (blocked until creds) equivalents.
+
+  Strategy: test what''s real now; mock/skip AWS; validate everything via SIT smoke tests.'
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,17 +19,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-10'
-overview: 'Extended cloud infrastructure bootstrap: Pub/Sub topics + subscriptions, Redis/Memorystore,
-
-  Cloud SQL (PostgreSQL for execution-service order state), Artifact Registry (Docker + wheels),
-
-  billing budget alerts with daily breakdown, deployment cleanup scripts, and SIT smoke tests
-
-  for all of the above. Both GCP (primary) and AWS (blocked until creds) equivalents.
-
-  Strategy: test what''s real now; mock/skip AWS; validate everything via SIT smoke tests.
-
-  '
 type: infra
 epic: epic-infra
 completion_gates: {code: C5, deployment: D3, business: none}

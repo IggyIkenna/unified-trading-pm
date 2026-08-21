@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: UI Consolidation UX Hardening
-summary:
+summary: Consolidate 13 UIs into 7 institutional-grade surfaces with cross-linking, dimensional hierarchy (Fund > Client
+  > Strategy > Position), shared filters/search, and Citadel-grade UX. Reuse existing repo names; phase out 6 redundant
+  repos by merging their pages into the 7 kept repos.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +13,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: '2026-03-17'
-overview: Consolidate 13 UIs into 7 institutional-grade surfaces with cross-linking, dimensional hierarchy (Fund > Client > Strategy > Position), shared filters/search, and Citadel-grade UX. Reuse existing repo names; phase out 6 redundant repos by merging their pages into the 7 kept repos.
 todos:
 - {id: phase-0-surface-registry, content: 'Add surface-registry.ts, CrossLink, EntityLink components to ui-kit', status: pending}
 - {id: phase-0-global-nav, content: Add GlobalNavBar component to ui-kit with surface links and global search, status: pending}

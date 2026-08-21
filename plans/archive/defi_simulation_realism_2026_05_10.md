@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: defi-simulation-realism
-summary:
+summary: Matching engine extension for per-pool-shape AMM models (Uniswap V3 tick-bucket, Curve D-invariant, Balancer weighted+boosted,
+  Solana CLMM, Jupiter aggregator) + lending rate-impact-from-own-trade simulator + governance proposal capture + simulation
+  harness + staking + restaking yield-stream simulator + slashing tail-risk MC. May-23 cutover scope per all-in operator
+  directive.
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -26,11 +29,6 @@ related:
     plans/active/master_to_live_defi_2026_05_23.md,
   ]
 created: 2026-05-10
-overview:
-  Matching engine extension for per-pool-shape AMM models (Uniswap V3 tick-bucket, Curve D-invariant, Balancer
-  weighted+boosted, Solana CLMM, Jupiter aggregator) + lending rate-impact-from-own-trade simulator + governance
-  proposal capture + simulation harness + staking + restaking yield-stream simulator + slashing tail-risk MC. May-23
-  cutover scope per all-in operator directive.
 type: plan
 deadline: 2026-05-23
 horizon: ~13 calendar days; ~40-70 AI-days at full multi-agent saturation
@@ -161,7 +159,7 @@ Owner: ikenna (cross-cutting design); harsh implements.
       (unified-api-contracts@`7f978f5` — `LendingMarketState` BaseModel + `ProtocolIRMShape` StrEnum (AAVE_KINKED /
       COMPOUND_V3 / MORPHO_ADAPTIVE) + `compute_borrow_rate_compound_v3()` + protocol- dispatched
       `compute_borrow_rate_for_state()` + Phase 1B+3A canonical
-      `post_trade_rate(state, supply_delta,     borrow_delta) → (supply_apy, borrow_apy)`. Backwards-compat
+      `post_trade_rate(state, supply_delta, borrow_delta) → (supply_apy, borrow_apy)`. Backwards-compat
       `from_aave_pool_params()` builder promotes legacy `AavePoolParams` to the new model. Smoke-test: Aave V3 USDC
       +100k supply borrow_apy=2.02% supply_apy=0.83%; Compound V3 cUSDCv3 +100k borrow (above kink) borrow_apy=8.00%
       supply_apy=6.48%. basedpyright `rate_model.py`: 0 errors.)
@@ -187,7 +185,7 @@ Owner: ikenna (cross-cutting design); harsh implements.
       status note (DexPoolDayRecord / LendingIndexRecord / LiquidationRecord / LstRateRecord / PerpFundingRecord named
       in `unified_api_contracts/internal/__init__.py` `__all__` but not imported) fixed at
       `unified-api-contracts@570cb58` — added all 5 to the existing defi import block alphabetically. Smoke test
-      `from unified_api_contracts.internal import DexPoolDayRecord, LendingIndexRecord,     LiquidationRecord, LstRateRecord, PerpFundingRecord`
+      `from unified_api_contracts.internal import DexPoolDayRecord, LendingIndexRecord, LiquidationRecord, LstRateRecord, PerpFundingRecord`
       returns OK. basedpyright re-run on internal/**init**.py shows no `reportUnsupportedDunderAll` errors for these
       symbols.
 
@@ -417,7 +415,7 @@ Owner: ikenna for design + harsh for implementation.
       `governance_proposals` data_type rows; 19 unit tests green; QG PASSED.
 - [x] [AGENT] P0. **4B — `GovernanceProposalSimulator`** in execution-service. (execution-service@`9259edb9` — NEW
       `governance/proposal_simulator.py`:
-      `simulate_proposal_execution(proposal, fork_block, affected_assets,     tenderly_client)` returns per-asset
+      `simulate_proposal_execution(proposal, fork_block, affected_assets, tenderly_client)` returns per-asset
       `ParameterDelta(before, after)` after running `governor.execute` on a Tenderly fork (pre-snapshot → simulate →
       post-snapshot). `AssetParameters` frozen dataclass unions Aave V3 / Compound V3 / Spark / Lido getter fields
       (reserve_factor, LTV bps, liquidation_threshold_bps, supply/borrow caps, IRM slopes, optimal_utilization_rate,
@@ -432,7 +430,7 @@ Owner: ikenna for design + harsh for implementation.
 - [x] [AGENT] P0. **4C — Strategy-side scenario API**. (execution-service@`1dea6e91` — NEW `cli/simulate_proposal.py`:
       `defi-simulate-proposal` CLI with argparse surface (`--proposal-id` / `--protocol` / `--archetype` /
       `--fork-block` / `--affected-assets` / `--time-T` / `--historical`) +
-      `run_cli(proposal, archetype, fork_block, affected_assets, tenderly_client, historical) -> dict[str,     object]`
+      `run_cli(proposal, archetype, fork_block, affected_assets, tenderly_client, historical) -> dict[str, object]`
       that wraps Phase 4B `simulate_proposal_execution` + emits the canonical JSON shape (archetype + proposal_id +
       protocol + fork_block + per-asset `parameter_deltas[]` with before/after + delta helpers + placeholder
       `expected_pnl_delta_bps` / `confidence_interval_bps` Phase 8 fills + `validation_status`
@@ -572,7 +570,7 @@ Owner: harsh.
       adjustment using LST/native exchange rate stream from Phase 1A captures (jitoSOL/SOL, mSOL/SOL, bSOL/SOL,
       rETH/ETH, stETH/ETH, weETH/ETH). Per-tick or per-bar rebalance trigger when |peg_drift| > N bps. **Implementation
       home**: SAME wire-in as 6B-WIRE-IN above (strategy-service@ `6431955`) — `CarryStakedBasisEngine.on_tick` calls
-      `compute_dynamic_hedge_ratio(eth_qty,     margin_haircut, lst_native_rate_now, last_rebalance_rate, peg_drift_threshold_bps)`;
+      `compute_dynamic_hedge_ratio(eth_qty, margin_haircut, lst_native_rate_now, last_rebalance_rate, peg_drift_threshold_bps)`;
       the size formula is `perp_short_units = eth_qty * lst_native_rate * (1 - margin_haircut)`. Hysteresis band
       parameter `peg_drift_threshold_bps` configurable per archetype via the engine `params` dict (default 25 bps based
       on observed historical jitoSOL/SOL daily-stddev ≈ 8 bps; 3-stddev hysteresis ≈ 25 bps). Phase 6B-WIRE-IN closure
@@ -622,7 +620,7 @@ Owner: harsh.
       `matching_engine/lending/slashing_calibration.py`: `PER_CHAIN_EPOCH_SECONDS` (Ethereum beacon 384s / Solana
       validator-day 86400s) + `TYPICAL_VALIDATOR_SET_SIZE` (Ethereum ~900k / Solana ~1.5k Q1-2026 observed) +
       `default_cumulative_validator_epochs(chain, lookback_days)` derives the MC denominator +
-      `calibrate_chain(chain,     events, lookback_days|cumulative_validator_epochs, n_paths, horizon_epochs, seed)`
+      `calibrate_chain(chain, events, lookback_days|cumulative_validator_epochs, n_paths, horizon_epochs, seed)`
       orchestrator that wraps Phase 7B `SlashingTailRiskMC.calibrate()` with per-chain glue. Mutually-exclusive
       `lookback_days` vs `cumulative_validator_epochs` gives operators a sane default + an explicit override path.
       Smoke: 50 ATTESTER_SLASHING ETH events × 180-day lookback → `p_per_val_epoch=1.37e-9`, `severity_mean=0.5`,

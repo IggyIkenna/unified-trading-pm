@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: features-sports-honest-coverage
-summary:
+summary: Honest-coverage backfill for features-sports-service — distinguish NaN-expected (out-of-coverage) from genuinely-missing
+  upstreams; phased per-source then cross-source then enriched
 status: complete
 nature: record
 asset_group: [cross-cutting]
@@ -11,9 +12,6 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-05
-overview:
-  Honest-coverage backfill for features-sports-service — distinguish NaN-expected (out-of-coverage) from
-  genuinely-missing upstreams; phased per-source then cross-source then enriched
 type: mixed
 epic: data-pipeline-completion
 owner: Iggy
@@ -619,7 +617,7 @@ BEFORE Phase 1 starts. That way the rest of the pipeline lights up with halftime
       compute on. Per-fixture join is now self-consistent (both sides use SFI hex IDs). Final result: **2073 captured
       days + ~243 empty days (no SFI coverage) + 0 failed**.
 - [x] [SCRIPT] P0.6.E. Spot-check 6 representative dates from VM #7's output (all bounds correct —
-      `ht_start ∈ [38,     61]` min, `ht_duration ∈ [4, 19.5]` min, mean detected HT start ~49 min, mean duration ~7-8
+      `ht_start ∈ [38, 61]` min, `ht_duration ∈ [4, 19.5]` min, mean detected HT start ~49 min, mean duration ~7-8
       min):
 
   | Sample date   |   n | Detected |    Rate | Method breakdown               |
