@@ -76,7 +76,7 @@ Execution fills/positions/PnL/paper_ledger are `STREAM_ONLY`. All market-data an
 ### SINK_MATRIX
 
 `unified_api_contracts.events.sink_matrix.SINK_MATRIX` — keyed by `(asset_group, data_type)`. Wildcard `"*"` in
-asset_group matches any. `sinks_for()` raises `KeyError` on unknown shard (no silent default). **As of 2026-08-12,
+asset_group matches any. `sinks_for()` raises `KeyError` on unknown shard (no silent default). **As of 2026-08-21,
 SINK_MATRIX carries 54 entries** (measured directly from `unified_api_contracts/events/sink_matrix.py`, up from the 52
 at this doc's authoring) — this count grows as new connectors go live; verify against the live file rather than citing a
 fixed number.
@@ -115,9 +115,8 @@ One Pub/Sub topic per shard `(asset_group, data_type)`. Wildcard shards use topi
 
 ## Terraform provisioning
 
-53 Pub/Sub topics (measured 2026-08-12, `deployment-service/terraform/gcp/live_event_log/main.tf` — 1 fewer than the 54
-live SINK_MATRIX entries; the `atomic_instruction` wildcard shard has no matching `persist_all_atomic_instruction` topic
-resource yet, a provisioning gap worth a follow-up, not re-derived here) + Cloud Storage subscriptions (warm GCS)
+54 Pub/Sub topics (measured 2026-08-21, `deployment-service/terraform/gcp/live_event_log/main.tf`) + Cloud Storage
+subscriptions (warm GCS), including the wildcard `atomic_instruction` strategy-instruction shard.
 
 - BigQuery external tables + daily compaction Cloud Run Job deployed in
   `deployment-service/terraform/gcp/live_event_log/`.
