@@ -250,7 +250,7 @@ duplicated.
       **Operator asked directly 2026-08-21 (continued)**: chose "defer for now" — both accounts stay disabled,
       no further action from either side until revisited. Not stale; explicitly reviewed and deferred, not
       forgotten.
-- [ ] [BACKEND] P2. **NEW, found 2026-08-21 while live-validating the day's fixes on slots 3/4/25**: a normal,
+- [x] ✅ [BACKEND] P2. **NEW, found 2026-08-21 while live-validating the day's fixes on slots 3/4/25**: a normal,
       already-correctly-tagged intentional teardown can still misclassify as "unexplained" if the IMMEDIATE
       respawn attempt that follows it fails/stalls long enough to push `tmux_pruner`'s actual detection past
       the classifier's 90s `_INTENTIONAL_SIGNAL_LOOKBACK_SECONDS` window. Concretely reproduced on slot 25: a
@@ -263,11 +263,19 @@ duplicated.
       18:45:35, ~100 seconds after the reset event, just past the 90s window. Result: a perfectly-explained
       death read `death_class="unexplained"`, `death_class_signal_event=null`, and (being the first-ever
       confirmed positive external-kill hit post the `ausearch` PATH fix above) briefly looked like a genuine new
-      external-kill mystery before the timeline was traced. Candidate fixes, not yet decided: widen the lookback
-      window; have the FAILED-RESPAWN path itself write a distinctly-tagged event so the classifier has
-      something within its own window regardless of the original reset's age; or have `tmux_pruner` re-check
-      further back when the intervening slot history shows a failed respawn immediately after a kill. Needs a
-      design decision before implementing.
+      external-kill mystery before the timeline was traced.
+
+      **DONE 2026-08-21** — `agent-orchestrator@6d8f314f01`. Went with the third candidate (targeted re-check),
+      not a global window widen (risks an unrelated OLDER signal explaining away a genuinely new death) or a
+      new failed-respawn event (the existing `autospawn_failed` event already covers this — no new event
+      needed). When the normal 90s lookback finds nothing, check for a recent `autospawn_failed` event on the
+      same slot within that same 90s; if found, re-run the SAME signal search over a bounded 180s window
+      instead. A new `death_class_widened_lookback` detail field marks when this path fired, so a widened match
+      stays auditable rather than silently indistinguishable from a normal fast one. 2 new tests (reproduces the
+      slot-25 timeline exactly; confirms an old signal WITHOUT a recent respawn failure still correctly stays
+      unexplained); full quality-gates.sh green. Also documented `death_forensics.py`'s real ~25-30min auditd
+      retention constraint (measured this session — see the two historical-forensics todos above) directly in
+      its module docstring.
 
 ## Progress Log
 

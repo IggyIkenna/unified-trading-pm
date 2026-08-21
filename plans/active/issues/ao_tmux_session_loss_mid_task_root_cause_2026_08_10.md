@@ -270,9 +270,12 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
         - All TypeScript/Playwright E2E tests (interact with seeded state / backend APIs, do not directly spawn raw tmux sessions).
       - **Exposed / Unscoped**:
         - `agent-orchestrator/dashboard/tests/e2e/run-e2e-backend-chat.sh` (E2E test fixture/backend runner script that spawns real `tmux new-session` / `tmux kill-session` without setting or isolating `TMUX_TMPDIR`, defaulting to the ambient default tmux socket `/tmp/tmux-<uid>/default`).
-- [ ] [INFRA] P3. Once confidence is high (extended clean window, no new `tmux_session_lost` bursts), tear down the
-      `strace_tmux_server_supervisor.sh` + `auditctl tmux_exec_watch` diagnostic instrumentation — they were built for
-      this investigation, not intended as permanent fixtures, and the strace log alone runs several MB/hour.
+- [ ] [INFRA] P3. **Checked 2026-08-21 — NOT yet safe, still open.** Queried the full classifier-era `unexplained`
+      timeline (2026-08-15 onward, via live `/api/activity`): rate is CLIMBING, not falling (~1.6-1.8/hr on
+      08-17/08-18 up to ~5.5-6.5/hr on 08-20/08-21 — worse the last two days, not better). Longest genuine clean gap
+      in the whole record is 12.6h (2026-08-17, over 4 days stale). The last `unexplained` event fired ~3 minutes
+      before this check ran — there is no clean window in progress at all right now. Do not tear down the
+      instrumentation; re-check this same query before revisiting.
 - [x] ✅ [INFRA] P3. **DONE 2026-08-21** — documented as `/codex/05-infrastructure/tmux-socket-isolation-pattern.md`:
       the 4-part pattern (isolate your own server's socket; unset all three of TMUX_TMPDIR/TMUX/TMUX_PANE in
       anything dispatched, not just the tmpdir var; self-heal the isolation directory before every spawn, not
@@ -289,9 +292,10 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       (`git merge-base --is-ancestor 6cd0d6c3ce origin/live-defi-rollout` → true), commit
       "fix(infra): tmpfs-disk-cleanup denylist missing ao-fleet-tmux socket dir", matching this doc's own 2026-08-13
       17:46Z Progress Log entry ("landed clean: unified-trading-pm@6cd0d6c3ce").
-- [ ] [INFRA] P2. Re-verify with a genuinely long clean window under the NEW (v2) instrumentation before any
-      re-declaration of closure or archival — the prior "50min clean window" claim was contradicted by two further
-      deaths the very next check, so the bar for the next closure claim should be materially higher than that.
+- [ ] [INFRA] P2. **Checked 2026-08-21 — bar still NOT met, still open.** Same investigation as the instrumentation-
+      teardown todo above (same underlying question): the best the full classifier-era record offers is a 12.6h
+      clean gap, itself over 4 days stale and not sustained (the rate ROSE afterward, to its two highest days ever
+      measured, 08-20/08-21). No genuinely long RECENT clean window exists. Do not declare closure yet.
 - [x] [INFRA] P0. Fourth gap (orphan tmux SERVER processes, distinct from the per-claude-process orphan sweep)
       root-caused + fixed — DONE 2026-08-13, `agent-orchestrator@d813ef1703`, dry-run by default.
 - [x] ✅ [OPERATOR] P1. **DONE 2026-08-16 (plan_reconciler)** — same-doc 2026-08-13 17:46Z-18:10Z Progress Log entry
@@ -330,15 +334,18 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [ ] [INFRA] P2. Consider whether AO needs its own periodic self-check that the fleet's actual live server pid matches
       the isolated socket (not just per-slot `has-session`) — the split-brain here persisted ~3h because nothing was
       cross-checking "is the CURRENT server on the path we think it's on."
-- [ ] [INVESTIGATE] P2. Root-cause slots 10 & 11's genuine mid-task SIGTERM at 2026-08-14 23:33:47-48Z (part of the
-      5-slot cluster investigated below) — no OOM (`cgroup oom_kill=0` both), no elevated host load/RAM/swap at
-      detection, no `concurrent_recent_spawns` storm, `tmux_server_alive=True` for both (rules out this doc's confirmed
-      kill-server signature, which requires `alive=False`), and no explanatory exception/traceback in
-      `orchestrator.service`'s journal within the surrounding ±2min. Affected tasks:
+- [ ] [INVESTIGATE] P2. **Checked 2026-08-21 — confirmed permanently unrecoverable, same as death #2 above, still
+      open (waiting on recurrence).** Root-cause slots 10 & 11's genuine mid-task SIGTERM at 2026-08-14 23:33:47-48Z
+      (part of the 5-slot cluster investigated below) — no OOM (`cgroup oom_kill=0` both), no elevated host
+      load/RAM/swap at detection, no `concurrent_recent_spawns` storm, `tmux_server_alive=True` for both (rules out
+      this doc's confirmed kill-server signature, which requires `alive=False`), and no explanatory
+      exception/traceback in `orchestrator.service`'s journal within the surrounding ±2min. Affected tasks:
       `dp_exit_code_monitor_sweep_overlap_storm-4944c6c02138` (slot 11, marked resume-pending) and the `cicd` craft
-      `ldr_qg_failure deployment-api#617` (slot 10, 2288s runtime, reaped-stale, requeued fresh). Still open — same
-      "pane vanished before the pruner's next tick" class this doc already tracks generally, not confirmed as a new
-      distinct mechanism.
+      `ldr_qg_failure deployment-api#617` (slot 10, 2288s runtime, reaped-stale, requeued fresh). A real
+      `ausearch -ts 08/14/26 23:28:00 -te 08/14/26 23:38:00` query returned a clean `<no matches>` — same ~25-30min
+      auditd retention window as death #2, 7 days too old to reach this timestamp. Not recoverable via forensics
+      now; only a fresh recurrence can be caught live. Same "pane vanished before the pruner's next tick" class this
+      doc already tracks generally, not confirmed as a new distinct mechanism.
 - [ ] [INFRA] P3. `check-ao-recent-deaths.sh`'s `burst_size` (and the doc's own "burst = server-wide crash" heuristic)
       conflates ordinary same-tick `one_task_per_session` recycles (`kill_session reason="manual"`, logged right after a
       normal `slot_done`/`slot_done_verified`) with genuine crash/kill losses — both land as `tmux_session_lost` rows
@@ -357,9 +364,14 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       bug. Fixed 2026-08-20 (2-digit-year, date+time as separate argv tokens, live-verified against the actual VM) —
       `agent-orchestrator@5d48a60b5b`. Deployed (service restarted 06:00:47Z, after the fix landed) but not yet
       exercised by a genuine post-fix unexplained death.
-- [ ] [INFRA] P1. Get a real OOM-vs-external-kill verdict from `check_external_kill` now that it actually runs —
-      the next `death_class=unexplained` row should show `external_kill.checked=true`; if none do within a
-      reasonable window, the fix itself needs re-verifying live rather than trusted on read-back.
+- [x] ✅ [INFRA] P1. **DONE 2026-08-21** — got the real verdict: queried the correct event type
+      (`unexplained_death_forensics`, a SEPARATE event `_run_unexplained_death_forensics` logs per slot rather than
+      mutating the original `tmux_session_lost` row — a sub-agent's first pass queried `tmux_session_lost` itself
+      and found nothing, which is expected, not a bug). All 8 `unexplained_death_forensics` rows since the
+      `orchestrator.service` restart (19:44:23Z) show `external_kill.checked=true`: 5 genuinely clean
+      (`suspected=false`), 3 positively matched a real `tmux kill-session` EXECVE record
+      (`suspected=true, evidence="tmux kill-session"`, slots 3/11/13). The fix is confirmed fully live and working,
+      not just deployed.
 - [x] [INVESTIGATE] P1. **New lead, 2026-08-20; read to a NEGATIVE result same day — no shared dangerous operation
       found, unlike the original bats-test-tmux-fixture bug.** Fleet-wide query (last 24h) confirms this is NOT
       slot-specific — slot 2 is 16/16 unexplained, slot 4 10/15, slot 1 9/15, slot 10 8/15, slot 11 6/7
