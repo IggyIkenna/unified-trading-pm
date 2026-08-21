@@ -262,16 +262,34 @@ Full findings, root cause, and evidence for every todo below live in the three s
       the generic protocol-level rate-index data it actually reads and states plainly it is NOT used for
       strategy-service risk gating (per-wallet Aave polling was never real). Landed via quickmerge, verified
       post-push ancestor of `origin/live-defi-rollout`.
-- [ ] [BACKEND] P2. **NEW 2026-08-18 — Delete `positions_health.py`'s redundant `derive_snapshot_from_lending()` re-derivation once its wallet-keyed HTTP contract is reconciled with the client_id-scoped cache.** The
-      reconciliation todo's decision (above) and this doc's P0 done-note both said this deletion should follow
-      once the in-process read path exists — it now does (`margin_health_cache.py`), but `/positions/health`'s
-      route is keyed by `wallet_id` (consumed cross-service by execution-service's `run_wallet_preflight_checks`),
-      while the new cache is keyed by `client_id`+scope — deleting the redundant path requires resolving a
-      `wallet_id -> (client_id, protocol)` mapping first, a genuine small design decision (not build-and-ship),
-      to avoid silently breaking that cross-service HTTP contract. Only the hardcoded-threshold half of this todo
-      was fixed this session (see above) — the deletion half is this new todo. Done-when: `derive_snapshot_from_
-      lending()`/`update_wallet_health_from_lending()` are deleted and `/positions/health` reads the same generic
-      cache instead of re-deriving.
+- [x] ✅ [BACKEND] P2. **Deletion half DONE 2026-08-21, `strategy-service@bfa778f4ab`; re-pointing is a
+      genuinely separate follow-up, correctly split out below.** The "wallet_id → (client_id, protocol)
+      mapping" concern this todo was originally gated on turned out to be MOOT, not a design call: a
+      full-repo grep found `derive_snapshot_from_lending()`/`update_wallet_health_from_lending()`
+      have ZERO real callers anywhere (the "called by DeFi adapters whenever they write fresh
+      lending positions" docstring was never true) — nothing populates `/positions/health`'s cache
+      via this path in production, so deleting it needs no client_id reconciliation at all. Deeper
+      finding while verifying the route's OTHER claimed consumer: `run_wallet_preflight_checks`
+      Layer-4's `position_health_fn` callback is real, but grepped execution-service end to end —
+      neither of its two call sites (`manual_instruction_submit.py`, `manual_instruction_helpers.py`)
+      ever passes it, so Layer 4 is always skipped in production today too. `/positions/health` is
+      dead on BOTH ends, not just the writer side this todo originally scoped. Deleted the 3 dead
+      functions + their 6 tests (5 real route tests remain, all passing); corrected the module
+      docstring's false "consumed by Layer-4" claim. **Re-pointing `/positions/health` onto
+      `margin_health_cache` is a real, separate follow-up** (new todo below) — `CachedMarginReading`
+      carries a raw HF/margin-usage `value`, not the richer `ltv`/`liquidation_threshold` split this
+      response shape wants; that schema mapping is a genuine design call, not invented here.
+- [ ] [BACKEND] P3. **NEW 2026-08-21 — Design the schema mapping to re-point `/positions/health` onto
+      `margin_health_cache.get_current_margin_health()`** instead of its now-permanently-empty local
+      cache. Needs: (a) how a raw HF-mode `value` (health factor, ~1.0-2.0) or MMR-mode `value`
+      (margin_usage_pct, 0-100) maps onto `PositionHealthSnapshot`'s `ltv`/`liquidation_threshold`/
+      `margin_ratio`/`maintenance_margin` split — they are not the same metric; (b) the route only
+      has `wallet_id` today, but `margin_health_cache` is keyed `(subject, scope)` where
+      scope=protocol — decide whether to add `protocol` as a required query param (simplest, matches
+      the cache's real shape) or attempt multi-protocol aggregation. P3 since nothing consumes this
+      route in production today (see the finding above) — low urgency, but worth closing since a
+      declared, seemingly-real endpoint that always 404s is a real trap for the next person who
+      wires a Layer-4 caller assuming it works.
 - [ ] [BACKEND] P1. **NEW 2026-08-18 — Build the real live perp-margin sourcing adapter for `staked_basis.py`'s LST_AS_MARGIN gate.** Surfaced while shipping the P0 switch-over above: `staked_basis.py`'s health gate is
       correctly wired to `get_current_margin_health(client_id, perp_venue, ...)` but nothing feeds that scope —
       `perp_venue` (Deribit/Bybit) is a CeFi/perp-margin position, not a DeFi lending position, so
