@@ -441,7 +441,7 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   `AsterLiquidationsWSConnector`) subscribes ONE small all-market `!forceOrder@arr` stream — none of the
   per-symbol subscribe-frame-size/connection-count limits that broke `book_snapshot_5`/`BYBIT-FUTURES` apply
   here — and a prior investigation (`scripts/check_aster_liquidations_capture_rate_2026_08_02.py`,
-  `/plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md` todo #5)
+  `/plans/archive/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md` todo #5)
   already confirmed real liquidation events DO get captured for this venue, just at a genuinely low natural
   event rate — consistent with an occasional 3d-staleness-budget trip, not a code defect.
   **Attempted the P2 live-verify todo, result MIXED, not a clean pass — leaving P2 open, refining scope for the

@@ -6,7 +6,7 @@ summary: >-
   `BASEDPYRIGHT_MAX_ERRORS` 1511->1517 (later 1523->1539->1555). RESOLVED 2026-06-24 by making basedpyright WARN-ONLY
   for PM `scripts/` (`unified-trading-pm@22b2f89d7`, PR #523), aligning with the lifecycle-marker SSOT (scripts =
   ruff-only); optional debt-paydown / scan-exclusion todos remain P3.
-status: open
+status: archived
 nature: notes
 asset_group: [infrastructure]
 stage: [meta]
@@ -25,7 +25,6 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 context_scope:
   [
@@ -40,6 +39,10 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **ARCHIVED** — 2026-08-21. All todos done (basedpyright made WARN-ONLY then `scripts/` fully excluded from the
+> basedpyright scan, closing the ratchet-bump trap for good; the fleet-wide `check-pyrightconfig-extrapaths.py`
+> dormancy finding was fixed separately). `archive_exempt` bridge (set 2026-08-12 pending this follow-on pass) dropped.
 
 ## What I found
 
