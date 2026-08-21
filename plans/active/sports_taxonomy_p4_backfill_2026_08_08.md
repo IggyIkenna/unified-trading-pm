@@ -23,7 +23,7 @@ related:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
   ]
 created: 2026-08-08
-last_updated: 2026-08-21
+last_updated: 2026-08-08
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -92,15 +92,12 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       16,521/16,470 figures to zero real captures; the operator-approved wire-up issue must settle the consolidated
       odds_horizon_bucket output grain before shard-days, runtime, SPOT cost, or parallelisation can be measured.
       No VM was launched. Evidence: /plans/archive/issues/sports_odds_movement_snapshot_candle_wireup_2026_08_20.md.
-- [x] ✅ [DATA] P0. **Explained 2026-08-21 — upstream capture starvation, no safe recovery available.** For
+- [ ] [DATA] P0. **Recover or explain the missing upstream fixture before the consolidated campaign.** For
       `2026-08-06` the canonical raw census is exactly 34 objects (17 bookmakers × `odds`/`trades`), all carrying
       `event_id=32896c1b8de6efecb2c7213469dbaa88`; the existing bucket corpus also carries
       `event_id=4e5c385bec9516e786c4876ac68413f7` across the same 17 bookmakers. Reconcile the MTDS/source capture
-      for the missing fixture, then rerun the bounded dry-run and require the loss guard to pass. The bounded
-      read-only inventory found no alternate pipeline mode, venue, or canonical raw file shape containing the
-      missing fixture; the loss guard therefore correctly refused `34 → 17` (116 unjustified losses). This is an
-      upstream capture gap, not an MDPS reader defect. No recovery or force-write was performed. Evidence: the
-      2026-08-21 Progress Log entry below and the bounded dry-run output.
+      for the missing fixture, then rerun the bounded dry-run and require the loss guard to pass. Never force the
+      bucket shrink or treat the missing raw input as an MDPS reader defect.
 - [ ] [SCRIPT] P0. **Backfill consolidated `odds_horizon_bucket` (including the wired snapshot/movement computations) to the 2020-06-06 floor** on SPOT VMs, in-region, per the VM-launcher
       runbook. Never run this locally. Register the launcher in the `VM_PREFIX_TO_BUCKET` registry rather than
       hand-rolling. The snapshot/movement wire-up is landed and live-verified (`market-data-processing-service@e4b1f71aca`; 2026-08-06 produced 102 rows of each computation type). Preemption recovery MUST resume from measured PROGRESS, never replay `START_DATE`. The bucket-assignment loss guard currently blocks this date (34→17 observations), so diagnose upstream starvation before launching the full campaign.
@@ -140,7 +137,7 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 - **2026-08-20** — Sizing todo closed without launch: P2 live census disproved the standalone snapshot/movement counts (zero real captures), and the operator-approved wire-up issue now gates any consolidated derived-layer sizing.
 - **2026-08-21** — Operator-approved wire-up live-verified on production 2026-08-06: 1,184 raw rows read; 102 movement rows + 102 snapshot rows written and read back from two parquet objects; 36 per-VM manifest rows captured. The bucket derive was safely refused by the loss guard (34→17 observations), so the full-history campaign remains gated on upstream-starvation diagnosis rather than a forced shrink.
-- **2026-08-21 (slot-10 diagnosis; P0 explained)** — Re-ran the bounded read-only `reprocess_sports_odds.py --force --dry-run`
+- **2026-08-21 (slot-10 diagnosis)** — Re-ran the bounded read-only `reprocess_sports_odds.py --force --dry-run`
   for `2026-08-06`: 1,184 raw rows from 34 objects → one fixture (`32896c…`) and 17 bookmaker observations;
   existing bucket shards contain 34 observations, including `4e5c…` across all 17 bookmakers. An inventory of the
   entire raw-date prefix found no alternate pipeline mode, venue, or file shape containing `4e5c…`; it contained only
