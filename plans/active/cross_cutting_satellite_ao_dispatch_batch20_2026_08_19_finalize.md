@@ -5,7 +5,7 @@ summary: >-
   Gated finalize for `cross_cutting_satellite_ao_dispatch_batch20_2026_08_19.md`. Reconciles each item's landed
   evidence back into its source doc's citation, archives each source doc once left at zero open todos, then
   archives batch20 itself.
-status: active
+status: blocked
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -69,3 +69,9 @@ source: >-
 - **2026-08-19 (ag_closeout_auditor, dispatch agt-ae73cd, slot 27)**: drafted alongside batch20 per the mandatory
   finalize-plan rule.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **ag-closeout-audit 2026-08-21 (cross-cutting tranche, Phase 2 sweep)**: mechanical hygiene fix — flipped
+  `status: active` → `blocked`. `cross_cutting_satellite_ao_dispatch_batch20_2026_08_19.md` (this plan's sole
+  `depends_on` + `gate_on_depends: true` target) is still `status: draft` and was never promoted to `active`
+  (never dispatched, per PLAN_FORMAT.md's "status: draft = WIP → NOT ingested"), so its own todos can never flip
+  to `[x]` and this gated finalize is structurally unable to complete until an operator promotes batch20. `active`
+  was misleading — `blocked` states the real reason. Re-flip to `active` only once batch20 is promoted.

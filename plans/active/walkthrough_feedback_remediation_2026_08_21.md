@@ -367,7 +367,7 @@ drift_direction: advance-code
 ## Todos — presentation cluster (T5 scope: the artefact itself; run AFTER the clusters above land)
 
 - [x] [DOC] P0. Sticky left-hand TOC sidebar: contents pinned left, scroll-spy highlighting the current
-      section, click-to-jump. Wide content keeps its own overflow scroll. — unified-trading-pm@<shipping-sha>.
+      section, click-to-jump. Wide content keeps its own overflow scroll. — unified-trading-pm@b8f4fea784.
       Fixed `.toc-sidebar` panel (min-width:1680px) built from the existing in-flow `nav.contents` anchors,
       `IntersectionObserver` scroll-spy, `body{overflow-x:hidden}` guard; existing wide tables/diagrams already
       carry their own `.scroll-x`/`overflow-x` containers (unchanged).
@@ -382,7 +382,7 @@ drift_direction: advance-code
         `"Verified directly:"` occurrences → `"Source:"` (lines carrying the exact colon form; the 9
         `"Verified directly against"` citations were left as-is, out of this mechanical pass's scope).
         Correction-narrative blocks, "not ready"→"coming soon", and the plan-doc-reference removal are
-        content/wave-1-dependent and were NOT touched — unified-trading-pm@<shipping-sha>.
+        content/wave-1-dependent and were NOT touched — unified-trading-pm@b8f4fea784.
 - [ ] [DOC] P0. Request/response examples for EVERY named endpoint: external instruction API (REST
       `POST /external/instructions` with a real `StrategyInstructionV2` payload + response, and the Pub/Sub
       EventTransport variant), cancel path, strategy wizard endpoint (once T3 ships it), hot-config-reload
@@ -394,7 +394,7 @@ drift_direction: advance-code
         venue_constraints, reference_position, credit, position_adjustment_bps_per_unit_risk — no fields
         invented). The per-endpoint request/response examples (external instruction API real payload,
         cancel path, wizard endpoint, hot-config-reload, coverage/data retrieval, transfers) are content
-        work gated on wave-1 landing and were NOT done — unified-trading-pm@<shipping-sha>.
+        work gated on wave-1 landing and were NOT done — unified-trading-pm@b8f4fea784.
       - 2026-08-21 (api-reference merge lane) — partial: merged the extra depth `platform-api-reference.html`
         carries into §26 "External API reference" (the six-endpoint reference) — canonical-instrument-ID
         reference, the `data_type` vocabulary table, the full 15-member instruction type-support table (incl.
@@ -406,7 +406,7 @@ drift_direction: advance-code
         NOT reproduced in full here (out of §26's own "six reachable endpoints" scope per §02). Per-endpoint
         request/response examples for the OTHER named endpoints this todo lists (cancel path, wizard endpoint,
         hot-config-reload, coverage/data retrieval, transfers) remain NOT done — content work gated on wave-1
-        landing. `platform-api-reference.html` itself is unchanged. unified-trading-pm@<shipping-sha>.
+        landing. `platform-api-reference.html` itself is unchanged. unified-trading-pm@62828f01cb.
 - [ ] [DOC] P1. Content additions: parquet rationale (typed + compressed; open to other formats/flat CSV);
       shard schemas list ALL data types' schemas plainly (no "pending"), colour distinction type vs column;
       "declared since: not declared" legend note (live-only capability, no batch start date — not "not real");
@@ -432,7 +432,7 @@ drift_direction: advance-code
         sub-item in this bundle (execution 4th path, PnL dimensions, readiness promote line, collateral
         reframe, manual-trade reframe, security expansion, fees/gas exposure, measured-vs-projected,
         venue-error extension, strategy-instructions completion, §25/§27 completion) is content work gated on
-        wave-1 landing and was NOT done — unified-trading-pm@<shipping-sha>.
+        wave-1 landing and was NOT done — unified-trading-pm@b8f4fea784.
 - [ ] [DOC] P0. Full naming-consistency audit across the artefact: everything named anywhere appears everywhere
       relevant (venues, instrument types, data types, dimensions cross-referenced); every number re-derived
       same-day at one stated grain after the upstream fixes; TradFi "90% coverage but drill-down not-ready"

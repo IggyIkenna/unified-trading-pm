@@ -228,7 +228,6 @@ Findings are against the fixed seven-point checklist and cite the inspected impl
 - `cctp.py`: (1) FINDING MEDIUM — `bridge()` uses `self._wallet_address or recipient` at lines 240-244, allowing a destination address to stand in for missing source credentials. (2) PASS — source signing delegates to `BaseConnector.sign_and_send_transaction()` and destination signing injects pending nonce, gas, chain ID, and the configured private key at lines 428-450. (3) FINDING HIGH — line 241 converts arbitrary Decimal values to integer micro-USDC without positivity, precision, or range checks; `_address_to_bytes32()` accepts malformed/short values via `zfill()` at lines 497-500. (4) PASS/N-A — CCTP burn-and-mint has no price-bearing swap leg; timeout enforcement is tracked separately. (5) PASS — approval is exactly `amount_units` at lines 357-360. (6) FINDING HIGH — `uuid4()` is generated for every call at line 240; `_pending_burns` is process-local and retries repeat approval/burn. (7) FINDING HIGH — `_pending_burns` is keyed by transfer ID at line 157, while `get_bridge_status()` supplies its bridge-tx-hash argument to a direct transfer-ID lookup at lines 268-271 and 467-469, so a valid source tx hash remains `BRIDGING` indefinitely; receive failures are reported, but timeout/terminal semantics are incomplete.
 
 No code was shipped in this audit unit; every HIGH finding is represented by an explicit P0 triage todo immediately above the Close-out section.
-## Progress Log
 
 - **2026-08-20 (slot-7, backend_engineer) — swap/DEX security audit complete.** Reviewed `uniswap.py`, `uniswap_encoding.py`, `uniswap_live.py`, `orca.py`, `raydium.py`, and `jupiter.py` against all seven checklist points, with exact source references:
   - **Uniswap:** credentials/signing and exact-amount approvals PASS; MEDIUM input-validation gap (`uniswap.py:332-355`, `uniswap_encoding.py:180-205`) because positive amount, fee/slippage range, and address shape are not enforced at the connector/encoding boundary. HIGH deadline/idempotency findings: the public `deadline` is accepted but dropped before `_execute_live_swap()` (`uniswap.py:332-355`), and `_Web3SwapExecutor` allocates a fresh pending nonce for each approval/swap with no retry key (`uniswap_live.py:71-111`). HIGH honest-error finding: `burn_position()` returns `success=True` after decrease+collect even when optional burn fails, storing only `burn_error` (`uniswap.py:529-538,568-580`).
@@ -357,6 +356,13 @@ Reviewed every file named by the native-adapter phase against all seven checklis
 - `_rate_limit.py`: (1) MEDIUM — the registry and timeout message retain/expose the first eight characters of the API key (`:91-92,136-138,185-205`); this is credential material and should not be logged or used as a persisted identity without an explicit redaction/hash contract. (2) PASS/N-A — no signing. (3) PASS/N-A — no write boundary. (4) PASS/N-A — no execution semantics. (5) PASS/N-A — no approval path. (6) MEDIUM — the documented multi-VM file-lock/token-counter protection is not implemented by the actual `get_bucket()`/`VenueRateLimitBucket` API; only an in-process token bucket exists (`:1-21,83-205`), so cross-process retries/rate limits are not protected. (7) PASS — rate-limit timeout raises rather than reporting a request as successful.
 
 The HIGH findings are represented by the native validation/bounds, replay-safe nonce, and idempotency/envelope triage todos above; the MEDIUM support findings are represented by the native observability/rate-limit todo. No code changes or tests were required for this read-only audit.
+
+### ag-closeout-audit 2026-08-21 (cross-cutting tranche, Phase 2 sweep)
+
+Mechanical hygiene fix: this doc had two top-level `## Progress Log` H2 headers (a concurrent-editing artifact —
+the bridge/CCTP entry and the swap/DEX entry had each been appended under their own header instead of sharing
+one). Removed the duplicate header so every dated entry lives under a single `## Progress Log` section; no entry
+content, findings, or todos were changed.
 
 ### 2026-08-21 — slot 24 findings triage sweep
 
