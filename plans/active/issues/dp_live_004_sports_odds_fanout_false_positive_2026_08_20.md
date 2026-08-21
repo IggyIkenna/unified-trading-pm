@@ -9,7 +9,7 @@ source:
   - DP-LIVE-004
 locked_by: live-defi-rollout
 summary: "DP-LIVE-004 flags the productive sports ODDS_API live VM because the detector groups fan-out rows by bookmaker venue while the source attempt rows remain under ODDS_API."
-status: resolved
+status: open
 nature: process
 asset_group: [sports]
 stage: [meta]
@@ -23,7 +23,7 @@ related:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 priority: P1
-resolved_by: deployment-service@c4f2b1d048 + market-tick-data-service@9097603c86
+resolved_by:
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -36,9 +36,6 @@ context_scope:
 ---
 
 # DP-LIVE-004 sports ODDS_API fan-out productivity false positive
-
-> **ARCHIVED 2026-08-21** — Duplicate closure record; canonical resolution is
-> `/plans/archive/2026_08/issues/dp_live_004_odds_api_control_shard_unproductive_2026_08_20.md`.
 
 ## What I found
 
@@ -73,7 +70,3 @@ Update the productivity oracle in `deployment-service` to model source-to-output
 ## Progress Log
 
 - 2026-08-20T23:43Z — Verified the exact VM is RUNNING and productive. The per-VM shard contained fresh captured odds rows for 30 bookmaker venues; the patched ODDS_API/odds source group reported last_captured_at=2026-08-20 23:43:03Z, so the false positive is cleared. The check ran read-only under a 2 GiB cap and 120-second timeout.
-
-- 2026-08-21T02:36Z — The latest successful `uts-prod-dp-meta-watchers-gsj6w` execution completed with `meta sweep complete`
-  and emitted no DP-LIVE-004 finding for the exact VM. This record is resolved and superseded by the archived canonical
-  fan-out false-positive record at `/plans/archive/2026_08/issues/dp_live_004_odds_api_control_shard_unproductive_2026_08_20.md`.

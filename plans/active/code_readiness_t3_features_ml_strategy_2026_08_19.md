@@ -522,7 +522,7 @@ todos only to confirm they are data-movement, then leave it.
       follow-up is `[OPERATOR] P2` — rule option A (add a safe-field guard, mirroring the strategies-domain
       pattern) vs option B (confirm the hot-swap is intentional, correct the codex "restart required" row). Found
       2026-08-20 already scoped this way, predating this plan. Nothing for an agent to build until the operator
-      rules A or B. Evidence: `/plans/archive/2026_08/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`.
+      rules A or B. Evidence: `/plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`.
 - [x] ✅ [BACKEND] P2. Resolve the orphan-coverage design gaps — `strategy_orders` / `strategy_positions` /
       `strategy_pnl` have NO live writer at all. **Already resolved before this todo was written**: items 1-4 of
       the issue doc's 5-item todo list are done (RULED 2026-08-05, sinks/paths shipped). Item 5's mechanical
