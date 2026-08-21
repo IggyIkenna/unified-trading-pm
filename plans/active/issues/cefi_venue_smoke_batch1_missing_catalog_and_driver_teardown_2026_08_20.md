@@ -77,6 +77,8 @@ shared cap and produces false skips/failures.
 
 ## Progress Log
 
+**2026-08-21 — slot 5.** Shipped `deployment-service@905794b381`, which makes the launcher’s `VM_TARDIS_CONSUMER` metadata stamp use the same venue predicate as the concurrency guard; native-REST ASTER/HYPERLIQUID cells no longer falsely consume the shared Tardis lease. Quality gates passed (`3655 passed, 5 skipped`; integration `6 passed, 2 deselected`; basedpyright clean). A staging canonical-only rerun completed with terminal report `total=98`, `passed=8`, `failed=51`, `skipped=39` at `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`; the force/skip legs were not launched because the shared guard remained at `1` active HYPERLIQUID peer lease across repeated checks. P0 remains open; no peer VM was modified.
+
 **2026-08-20 — slot 18.** Captured the failed full-driver and bounded diagnostic evidence above. P0 remains open.
 
 **2026-08-20 — slot 14 correction.** The earlier "missing staging catalogue" claim was a path-resolution error: an
