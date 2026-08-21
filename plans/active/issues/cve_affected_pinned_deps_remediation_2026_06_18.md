@@ -681,12 +681,8 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       HEAD ancestor-or-equal of `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml`
       declares `"pip>=26.2"`, `uv.lock` resolves `pip==26.2`, working tree clean. No new code required — landed
       directly (main/harsh) between the todo's authoring and this pickup.
-- [x] ✅ [SCRIPT] P2. **DONE — verified already-landed (2026-08-21, slot-10).** **ibkr-gateway-infra** — pip
-      CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: ibkr-gateway-infra) —
-      ibkr-gateway-infra@11a4985 ("fix(deps): raise pip floor to >=26.2, closes PYSEC-2026-3721"), verified HEAD
-      ancestor-or-equal of `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml` declares
-      `"pip>=26.2"`, `uv.lock` resolves `pip==26.2.1`, working tree clean. No new code required — landed directly
-      (main/harsh) between the todo's authoring and this pickup.
+- [ ] [SCRIPT] P2. **ibkr-gateway-infra** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      ibkr-gateway-infra)
 - [ ] [SCRIPT] P2. **instruments-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
       instruments-service)
 - [ ] [SCRIPT] P2. **market-data-processing-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:

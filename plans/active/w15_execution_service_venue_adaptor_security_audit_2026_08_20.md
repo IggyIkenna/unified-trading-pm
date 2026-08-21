@@ -281,7 +281,7 @@ Findings use the fixed seven-point checklist and exact implementation lines. EVM
 No code was changed or tests run for this read-only audit. The HIGH findings require the existing triage phase to add explicit fixes/todos before W15 close-out.
 - [x] ✅ [BACKEND] P0. Harden perp/CLOB order boundaries across Hyperliquid, Aster, Pacifica, and the DeFi-side Bybit wrapper: reject non-finite/non-positive size and price, reject unknown side/order-type values, and preserve the underlying adapter's validation before any live submission; HIGH finding: checklist point 3 (hyperliquid.py:370-402,504-516; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132). — execution-service@e7481a0d13 + evidence: new shared `validate_perp_order_params()` in `_perp_order_validation.py` (mirrors `ccxt_common.validate_ccxt_order_params`), called from each connector's `place_order`/`_build_order_params` before dispatch to sim or live; 14 new regression tests in `tests/defi_execution/unit/test_perp_clob_order_validation.py`; quality-gates.sh green (293s, sentinel matched committed HEAD); post-push ancestry verified.
 - [ ] [BACKEND] P0. Define caller-controlled slippage and expiry/deadline bounds for market and resting perp orders; remove the implicit Hyperliquid 5% IOC buffer and make Aster/Pacifica/Bybit market semantics explicit and bounded; HIGH finding: checklist point 4 (hyperliquid.py:381-391; aster.py:394-427; pacifica.py:489-515; bybit.py:105-132).
-- [x] ✅ [BACKEND] P0. Add durable idempotency/client-order IDs and ambiguous-outcome recovery for the perp/CLOB order paths; thread client_order_id through the Bybit wrapper into BybitCCXTAdapter, and prevent duplicate retries for Hyperliquid nonce-based, Aster timestamp-based, and Pacifica timestamp/expiry-based submissions; HIGH finding: checklist point 6 (hyperliquid.py:504-546; aster.py:479-519; pacifica.py:559-655; bybit.py:105-132). — execution-service@2d1766ef96 + evidence: quality-gates.sh green (186s, sentinel matched committed HEAD exactly); see Progress Log entry below.
+- [ ] [BACKEND] P0. Add durable idempotency/client-order IDs and ambiguous-outcome recovery for the perp/CLOB order paths; thread client_order_id through the Bybit wrapper into BybitCCXTAdapter, and prevent duplicate retries for Hyperliquid nonce-based, Aster timestamp-based, and Pacifica timestamp/expiry-based submissions; HIGH finding: checklist point 6 (hyperliquid.py:504-546; aster.py:479-519; pacifica.py:559-655; bybit.py:105-132).
 - [x] ✅ [BACKEND] P0. Make Bybit position/balance read failures observable instead of returning empty positions or zero balance, while preserving the already honest failed-order result; MEDIUM finding related to checklist point 7 (bybit.py:136-176). — execution-service@f1565e8a5e + evidence: `fetch_positions()`/`fetch_balance()` now log at ERROR and re-raise instead of swallowing adapter-init/CCXT read failures into `[]`/`Decimal("0")`; consistent with existing callers (`bybit_deposit.py`'s poll loop already try/excepts around `fetch_balance`, `perp_hedge_wiring.py`'s HL-side readers already let real errors propagate); 2 tests updated to assert the raise instead of the old silent fallback; quality-gates.sh green (292s, sentinel matched committed HEAD).
 - [x] ✅ [BACKEND] P0. Confirm Pacifica's future live enablement retains the current fail-closed boundary (supports_live=False) and validates the configured Solana keypair/account relationship before changing that flag; HIGH-risk signing/auth guardrail (pacifica.py:31-48,286-328,610-645). — execution-service@9d0753d6ff + evidence: `supports_live` confirmed still `BaseConnector`'s fail-closed `False` default, no override (`base.py:312,330-336`). Real gap found + fixed: `sign_pacifica_payload` always set `account` to the signing keypair's own pubkey with no `agent_wallet` header — silently wrong for Pacifica's documented delegated "Agent Key" mode (verified via WebFetch of `docs.pacifica.fi/api-documentation/api/signing/api-agent-keys.md`: "Still use the original wallet's public key for `account`" + a required `agent_wallet` header). Added optional `wallet_account_address` config + `account_address`/`_signing_headers()`; `supports_live` itself untouched. 8 new regression tests; `quality-gates.sh` green (354s, sentinel matched committed HEAD `3ae00b8a`); post-push ancestry independently verified after a quickmerge push-race rebase.
 
@@ -462,14 +462,13 @@ speculative claim added, every statement traced to a `grep`/file-read done this 
 No production code was changed (doc-only correction). Codex fix not yet shipped as of this entry — see the
 close-out todo above for the commit SHA once quickmerge lands.
 
-### 2026-08-21 — slot-7 perp/CLOB idempotency (checklist point 6) — SHIPPED
+### 2026-08-21 — slot-7 perp/CLOB idempotency (checklist point 6) — IN PROGRESS, NOT YET SHIPPED
 
-Landed as `execution-service@2d1766ef96`, post-push ancestry verified against `origin/live-defi-rollout`. Two
-method-size-cap violations found by an interim QG pass (`pacifica.py.__init__()` at 52L, `aster.py.place_order()` at
-52L against the workspace's 50-line/method hard gate) were fixed by extracting the bodies into new private helper
-methods (`PacificaConnector._init_runtime_state()`; `AsterConnector._try_build_order_params()` +
-`_place_order_live_dispatch()`) — logic unchanged, just re-homed to stay under the cap. Final confirmation run:
-`quality-gates.sh` green (186s), sentinel `.qg_last_passed_sha` matched the committed HEAD SHA exactly.
+Implemented but **NOT COMMITTED** when this session hit its context-compaction threshold mid-QG-verification.
+The next session picking up this todo (`- [ ] ... Add durable idempotency/client-order IDs...` at line 284) should
+resume from HERE, not re-derive the design — the implementation is believed complete; only the QG run (Pass 1, full
+`bash scripts/quality-gates.sh` from `execution-service/`) needs to finish, then commit/quickmerge/flip in the SAME
+session.
 
 **Design**: new `execution_service/defi_execution/protocols/_perp_idempotency.py` mirrors the already-established
 `staking_idempotency.py` pattern (injectable `TransferStateStore`, namespace `"perp_order"`, in-flight-lock +
@@ -516,10 +515,24 @@ connector's own docstring already states its live path is "NOT independently ver
 `is_live=True` raises at construction), matching the existing test-coverage convention for this connector; the
 shared module's own tests already cover the underlying mechanism Pacifica reuses verbatim.
 
-**Files landed** (9, `execution-service@2d1766ef96`):
+**Files touched, all currently uncommitted** (`git status --porcelain` in `execution-service/` at compaction time):
 `execution_service/defi_execution/protocols/{_perp_idempotency.py (new), hyperliquid.py, aster.py, pacifica.py,
 bybit.py}`, `tests/defi_execution/unit/{test_perp_idempotency.py (new), test_aster_connector.py}`,
 `tests/unit/defi_execution/{test_hyperliquid_perp_idempotency.py (new), test_bybit_connector.py}`.
+
+**Next session — resume here**: `cd execution-service && git status --porcelain` to confirm the 9 files above are
+still present and unchanged (this is a shared multi-slot checkout — verify nothing else landed on top first, per
+CLAUDE.md's "stale local content" guard). If present: run `bash scripts/quality-gates.sh` (full, no flags) fresh; fix
+whatever it reports (most likely candidates given the design: a basedpyright complaint on the `cast()` calls added
+around the shared `dict[str, object]` return type, or a line-length violation — none of the logic is expected to be
+wrong, this was written carefully against the established `aave_idempotency.py`/`staking_idempotency.py` patterns and
+syntax-checked, but never run). Once green: commit (message: "fix(perp-order): durable idempotency + ambiguous-error
+propagation for hand-rolled connectors"), ship via `quickmerge --agent --files '<the 9 files>'`, then flip this
+todo (line 284) + this Progress Log entry's own header (drop "IN PROGRESS, NOT YET SHIPPED") in the SAME turn per the
+Commit+Push+Flip rule, citing the landed SHA. Two todos in this same "DeFi by primitive — perp / CLOB on-chain"
+section remain open after this one: the checklist-point-4 slippage/deadline-bounds todo (line 283) and the
+close-out epic-reflection todo near the end of this plan — pick point-4 next per the plan's own top-to-bottom
+ordering, it's the natural sibling (same four files, same audit phase).
 
 **UPDATE 2026-08-21 (slot 10) — the above WIP was never committed and is not recoverable from this checkout.**
 Verified in this slot's own `execution-service` clone: `git status --porcelain` is clean at `live-defi-rollout` HEAD,
@@ -549,14 +562,3 @@ unity line 192), and this close-out todo itself.
 satisfied** — the 3 open P0s above are genuine unresolved HIGH findings, not re-scoped/deferred work, so the
 checkbox below stays `[ ]` rather than being falsely flipped. No production code was changed; this is a doc-accuracy
 fix only (epic doc + this Progress Log entry).
-
-**Correction (2026-08-21, slot-7)**: slot 10's "not recoverable" finding above applied only to slot 10's own
-checkout — slot 7's original uncommitted WIP survived in this session's own worktree across the context-compaction
-that produced it, and was completed and shipped as `execution-service@2d1766ef96` (see the "SHIPPED" entry earlier
-in this same Progress Log, and the flipped checkbox at line 284). The close-out todo's P0 count above is therefore
-stale by one: 2 open P0 fixes remain, not 3 — perp/CLOB slippage/deadline bounds (line 283) and native-REST
-client-order-id idempotency (line 304). The close-out todo's own checkbox stays `[ ]` (still 2 genuine open P0s plus
-the 2 unstarted audit phases), but its epic-doc correction should be re-run once those clear rather than trusted as
-current. Two todos remain open in this "DeFi by primitive — perp / CLOB on-chain" section: the checklist-point-4
-slippage/deadline-bounds todo (line 283) and the close-out epic-reflection todo above — pick point-4 next per the
-plan's own top-to-bottom ordering, it's the natural sibling (same four files, same audit phase).
