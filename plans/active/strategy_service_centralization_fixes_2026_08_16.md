@@ -304,28 +304,16 @@ Full findings, root cause, and evidence for every todo below live in the three s
       live perp venues (Deribit, Bybit) — add it (a UAC registry change + a strategy-service consumer bump).
       Done-when: `get_current_margin_health(client_id, perp_venue)` returns a real reading for a live
       `LST_AS_MARGIN` slot, and DERIBIT has a registered `MarginModel`.
-- [x] [BACKEND] P2. ✅ SHIPPED 2026-08-21 — `strategy-service@f56af3b94e`. **Corrected premise**: no
-      `unhealthy_account_` feature key exists anywhere in `features-service` (confirmed by a full-repo grep before
-      building — this todo's "likely sourced from features-onchain-service" guess did not pan out), and no
-      on-chain event-scanner infra exists to build on cheaply either. Built instead, real not fabricated:
-      `strategy_service/position/core/aave_candidate_discovery.py` — a bounded, TTL-cached borrower watch-list
-      queried from Aave V3's public subgraph via the already-existing `UnifiedCloudConfig.thegraph_gateway_url`/
-      `thegraph_secret_name` Secret-Manager-backed key pool (the same infra `market-tick-data-service`'s
-      `TheGraphBaseClient` already draws from) — plus `strategy_service/position/core/
-      candidate_wallet_health_poller.py`, which polls each candidate's REAL on-chain health factor via the
-      existing `AavePositionAdapter.get_lending_position()` eth_call (same one `defi_health_poller.py` uses for
-      own-client wallets) and writes it to `margin_health_cache.record_margin_health(subject=<address>,
-      scope="aave_v3", ...)`. Wired into `monitor_handler.py`'s existing reconciliation loop alongside
-      `poll_all_defi_wallets`. New tests: `test_aave_candidate_discovery.py`, `test_candidate_wallet_health_poller.py`.
-      **Honest scope note — do not overclaim "both archetypes now live-functional"**: this inherits the SAME
-      real limitation `defi_health_poller.py`'s own docstring already documents — no caller in strategy-service
-      resolves the Alchemy RPC secret in production today, so a live poll attempt raises inside
-      `resolve_defi_rpc_url()` (caught per-candidate, logged, never fabricated) until that secret-wiring lands.
-      Ethereum/Aave V3-only, matching `defi_health_poller.py`'s own documented scope limit. Done-when met
-      mechanically (discovery→poll→cache wiring is real and unit-tested end to end with mocked HTTP/eth_call),
-      but the full chain has NOT been verified against a live discovered candidate address with real RPC
-      credentials in production — that verification is gated on the pre-existing Alchemy-RPC-secret-wiring gap,
-      not new work from this todo.
+- [ ] [BACKEND] P2. **NEW 2026-08-18 — Build a candidate-wallet liquidation-health scanner.** Surfaced while
+      shipping `liquidation_capture.py`/`liquidation_bundle.py`'s switch-over above: both archetypes now correctly
+      read `get_current_margin_health(subject=<candidate wallet>, scope=<protocol>)`, but nothing populates that
+      cache for third-party wallets — this needs a discovery/watch-list mechanism (which candidate addresses to
+      poll, likely sourced from features-onchain-service's `unhealthy_account_` feature keys or an on-chain event
+      scanner) plus a periodic poll per watched wallet calling `record_margin_health()`, analogous in shape to the
+      DeFi wallet poller (`defi_health_poller.py`) but keyed by discovered candidate address instead of a static
+      per-client config. Until this lands both archetypes correctly never fire (fail-closed), which is honest but
+      means neither is live-functional yet. Done-when: a live scanner populates
+      `get_current_margin_health(subject=<address>, scope=<protocol>)` for at least one discovered candidate.
 - [ ] [BACKEND] P2. **Corrected 2026-08-21 — the "delete dead" half of this todo is WRONG, the
       source issue doc's claim needs its own fix.** `strategy_service/config.py::load_config`/
       `load_strategy_config` are NOT dead: grepped `tests/` fresh and found 6 files with real,

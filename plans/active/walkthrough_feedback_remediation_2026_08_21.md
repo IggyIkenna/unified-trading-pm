@@ -308,18 +308,6 @@ drift_direction: advance-code
         invented). The per-endpoint request/response examples (external instruction API real payload,
         cancel path, wizard endpoint, hot-config-reload, coverage/data retrieval, transfers) are content
         work gated on wave-1 landing and were NOT done — unified-trading-pm@<shipping-sha>.
-      - 2026-08-21 (api-reference merge lane) — partial: merged the extra depth `platform-api-reference.html`
-        carries into §26 "External API reference" (the six-endpoint reference) — canonical-instrument-ID
-        reference, the `data_type` vocabulary table, the full 15-member instruction type-support table (incl.
-        the QUOTE variant, previously undocumented in the walkthrough — it registers delta-proxy repricing but
-        does not place an order), the QUOTE example request/response, and the auth header-precedence table +
-        "what auth does not do" disclosure. Also added two short indexed callouts naming the two counterparty
-        surfaces `platform-api-reference.html` documents beyond these six (client-reporting-api's 102 routes,
-        strategy-service's signal-leasing API) with a pointer to the companion doc for full per-route depth —
-        NOT reproduced in full here (out of §26's own "six reachable endpoints" scope per §02). Per-endpoint
-        request/response examples for the OTHER named endpoints this todo lists (cancel path, wizard endpoint,
-        hot-config-reload, coverage/data retrieval, transfers) remain NOT done — content work gated on wave-1
-        landing. `platform-api-reference.html` itself is unchanged. unified-trading-pm@<shipping-sha>.
 - [ ] [DOC] P1. Content additions: parquet rationale (typed + compressed; open to other formats/flat CSV);
       shard schemas list ALL data types' schemas plainly (no "pending"), colour distinction type vs column;
       "declared since: not declared" legend note (live-only capability, no batch start date — not "not real");
@@ -401,14 +389,6 @@ refdata/coverage cluster'. Same ship rules."
 codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html. Re-derive every number from a
 fresh same-day run; then the re-audit todo."
 
-## Deferred work — migrated to:
-
-Four P0/P1 todos above (venue-set convergence, `PredictionMarketCategory` deletion, the
-12 unresolved (venue, data_type) triples, and the ASTER roster over-fan) were explicitly
-DEFERRED this pass — each stays open with its own inline blocker note; see:
-plans/active/walkthrough_feedback_remediation_2026_08_21.md (this doc — no separate
-successor plan, the work remains tracked here as still-open todos, not lost).
-
 ## Progress Log
 
 - 2026-08-21 — T4 execution/transfer-cluster wave-1b session (this session): drafted an independent
@@ -469,70 +449,3 @@ successor plan, the work remains tracked here as still-open todos, not lost).
   reverted this file to its pre-audit-session content mid-push (self-inflicted corruption, not a content defect)
   — caught before shipping by re-diffing against a fresh `origin/live-defi-rollout` fetch rather than trusting the
   script's own recovery output, and rebuilt from the current origin content plus only this note appended.
-
-- **2026-08-21 — platform-api-reference.html client-ready pass** (operator directive: partial/pending/planned notes
-  are not acceptable client language on this artefact). Inventoried all markers (53 `st-*`/`ev-*` + 18
-  pending/planned/not-yet prose hits) then verified each stale-looking one against execution-service HEAD directly
-  (`execution_service/api/external_instruction_api.py` + the new `external_instruction_defi.py` split). Verified-done
-  (reclassified `st-plan`→`st-part` with a live citation, not a client-language reframe): SWAP/LEND/WITHDRAW/
-  STAKE/UNSTAKE now route through `build_defi_execution_wiring()` to real Uniswap V3/V2, AAVE V3, Lido execution
-  (fall back to simulation only outside LIVE/MANUAL mode); TRANSFER routes through the real production transfer
-  wiring (`build_transfer_wiring()`), DeFi-to-DeFi and binance/deribit/bybit/aster CeFi withdrawals resolving real
-  credentials, other CEX-withdraw venues returning an honest failure never a fabricated success; CANCEL cancels a
-  single tracked instruction's orders for real (`cancel_scope=SINGLE`); ATOMIC routes as a real multi-leg order.
-  Corrected the stale "1/15 instruction types place a live order" header stat (was pre-dating today's wiring; UAC
-  union is 13 variants not 15) to "10/13 routed to real execution". Client-language reframe (operator directive, not
-  a reality change): the WITHDRAW-table's remaining true-501 rows (BORROW/REPAY/BRIDGE) now read "Coming soon"
-  instead of "parses, 501"; the sample 501 error-body text was updated to name BORROW (the still-true example)
-  instead of the now-stale SWAP; "Known defect, disclosed — tracked, not yet fixed" → "Known limitation, disclosed
-  here"; "SUSPENDED pending a 2026-09-01 launch" → "suspended ahead of a 2026-09-01 launch"; "full per-endpoint depth
-  pending" → "see that section for full per-endpoint depth". Left as-is with reason: the `ev-check`/`ev-assumed`
-  markers throughout (envelope-shape-not-independently-verified notes) are the doc's own honesty convention, not
-  incompleteness — reframing them would misstate confidence, so untouched. No `Auth model and rate limits — pending`
-  note exists in the current file (the task brief's premise was stale; rate limits are already documented at
-  line ~3160 as a real token-bucket per `(counterparty_id, strategy_id)`). `check_artefact_claim_ownership.py`:
-  247 open markers == baseline 247 (unchanged net — 8 markers reclassified st-plan→st-part carry the same open
-  weight; 2 new true-501 facts added, both written as PLAIN TEXT rather than wrapped in a new `st-plan` span, to
-  avoid raising the ratchet for a genuinely-new but genuinely-still-`Coming soon` fact).
-
-### API-reference client-ready follow-ups
-
-- [ ] [SCRIPT] P2. execution-service: `POST /external/instructions` CANCEL currently only supports
-      `cancel_scope=SINGLE`; add an `ALL_FOR_STRATEGY_INSTANCE` lookup (index `order_tracker` by strategy-instance,
-      not just `instruction_id`) so the doc's remaining "Coming soon" cancel-scope note can close. <1 day.
-- [ ] [SCRIPT] P2. execution-service: wire a live tick-ingestion loop calling
-      `QuoteMaintainer.on_underlying_tick` so a `QUOTE` instruction's armed repricing can actually reach a venue —
-      closes the doc's QUOTE "no live quote reaches a venue" caveat. Scope/estimate TBD, likely >1 day (needs a
-      tick-source decision) — flagged here as found, not claimed quick.
-- [ ] [SCRIPT] P1. execution-service: `docs/plans/active/issues/external_instruction_defi_handlers_simulation_only_2026_08_20.md`
-      names BORROW/REPAY as the last 2 DeFi action types on pure simulation — wiring them through the same
-      `defi_live_dispatch` seam SWAP/LEND/WITHDRAW/STAKE/UNSTAKE just used would close the doc's last 2
-      DeFi-side "Coming soon" rows in well under a day, since the dispatch pattern is now proven 5x.
-
-- 2026-08-21 — **[FROM-BLRS] batch-live-reconciliation-service consuming-half session**: built the ledger-matching
-  skip + explicit auditability surfacing for `TradeFillRecord.recon_excluded` (traced the consumer chain per the
-  P2 follow-up todo above under "Todos — execution/transfer cluster"). `_exclude_recon_excluded()` in
-  `engine/daily_determinism_stage.py` (already shipped at `batch-live-reconciliation-service@1ba1a6260c` per this
-  plan's own T4 log entry above) now returns the excluded fills alongside the kept ones rather than just dropping
-  them; added a BLRS-local `ExcludedFillRecord` model (`models/recon_report.py` — CORRECT-LOCAL, not a UAC
-  contract, so no schema-change stop needed here) and threaded it through `run_daily_determinism_stage()`
-  (now a 3-tuple: `report, rollup, excluded_fills`) into `DailyDeterminismHandler.run()`'s result dict as
-  `excluded_from_recon` — excluded fills are booked/audited/skipped-from-matching but never invisible. Two new
-  tests: `test_recon_excluded_fill_skipped_from_matching_and_reported` (one recon_excluded fill skipped from
-  matching + surfaced in `excluded_fills`, one normal fill unaffected) plus the existing handler tests updated for
-  the 3-tuple + asserting `excluded_from_recon == []` on the no-exclusions path. `quality-gates.sh --no-fix` green
-  locally (sentinel `0a6553da95364d79256f97124b9c1ffdc9ac08fe`). **Not shipped this session**: `quickmerge.sh`
-  pre-flight blocked on a LIVE sibling-repo dependency — `unified-api-contracts` has uncommitted changes from a
-  concurrently-running session (file mtimes ~40s old at check time, matching this same plan's T1
-  registry-cluster PredictionMarketCategory-deletion work-in-progress, todo 4 above) — per the multi-agent-safety
-  liveness gate (mtime <120s → PROTECT), those foreign uncommitted changes were left untouched rather than
-  committed. Work is intact, uncommitted, in the `batch-live-reconciliation-service` worktree at
-  `.tabs/2/batch-live-reconciliation-service` (5 files: `models/recon_report.py`,
-  `engine/daily_determinism_stage.py`, `cli/handlers/daily_determinism_handler.py`,
-  `tests/unit/test_daily_determinism_stage.py`, `tests/unit/test_daily_determinism_handler.py`) — ready to
-  `quickmerge.sh` once `unified-api-contracts`'s dependency state is clean. The one link this session did NOT
-  build (confirmed genuinely out of `batch-live-reconciliation-service`'s own scope): the real GCS
-  `LedgerRow`-writer path in `unified-trading-library` still needs to be confirmed to thread `recon_excluded`
-  through from `execution-service`'s `log_event()` call — same open item as the P2 follow-up todo above; this
-  session's BLRS-side change consumes whatever `recon_excluded` value the ledger reader ultimately sees, it does
-  not change how that value gets there.

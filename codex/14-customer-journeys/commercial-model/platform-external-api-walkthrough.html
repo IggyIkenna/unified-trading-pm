@@ -18168,34 +18168,6 @@ Content-Disposition: attachment; filename="instruments_cefi_BINANCE-SPOT_2026-08
         </div>
       </details>
 
-      <details class="ref">
-        <summary>Canonical instrument IDs — how <code>instrument_id</code> is built<span class="tag-ref">Reference</span></summary>
-        <div class="plate-body scroll-x">
-          <p>
-            Every <code>instrument_id</code> above comes from the single dispatch entry point,
-            <code>build_canonical_instrument_id()</code> —
-            <code>unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py</code>. The
-            CeFi spot-pair instrument-type token is <code>SPOT_PAIR</code>, not <code>SPOT</code> — the literal
-            <code>InstrumentType.SPOT_PAIR</code> enum value, confirmed at <code>canonical_id_builder.py:134</code>
-            (membership) and <code>:268-270</code> (<code>_build_cefi_simple</code>, the function that renders it).
-          </p>
-          <div class="plate">
-            <div class="plate-body">
-              <div class="code">// VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL
-build_canonical_instrument_id("cefi", "binance_spot", InstrumentType.SPOT_PAIR, "BTCUSDT")
-// -&gt; "BINANCE_SPOT:SPOT_PAIR:BTCUSDT"
-build_canonical_instrument_id("defi", "aave_v3", InstrumentType.LENDING, "USDC", chain="arbitrum")
-// -&gt; "AAVE_V3-ARBITRUM:LENDING:USDC"
-build_canonical_instrument_id("tradfi", "cme", InstrumentType.FUTURE, "ES", expiry_date=date(2026, 6, 20))
-// -&gt; "CME:FUTURE:ES-20260620"</div>
-            </div>
-          </div>
-          <p style="font-size: 0.9rem; color: var(--ink-3)">
-            <code>canonical_id_builder.py:1027-1174</code> (dispatch), <code>:77-92</code> (docstring examples).
-          </p>
-        </div>
-      </details>
-
       <h3>market-tick-data-service — availability and delivery</h3>
       <p>
         Ask what is captured, then take it as a daily batch file or a live stream — the same two-step model narrated
@@ -18473,177 +18445,12 @@ Content-Type: application/x-ndjson
         </p>
       </details>
 
-      <details class="ref">
-        <summary>The real <code>data_type</code> vocabulary, by asset group and instrument type<span class="tag-ref">Reference</span></summary>
-        <div class="plate-body scroll-x">
-          <p>
-            <code>data_type</code> is not a free-text field — it is drawn from
-            <code>VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE</code>
-            (<code>unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1503+</code>), keyed
-            by <code>(asset_group, instrument_type)</code>. A representative slice:
-          </p>
-          <table>
-            <thead>
-              <tr>
-                <th>Asset group</th>
-                <th>Instrument type</th>
-                <th>Valid data_type values</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>cefi</code></td>
-                <td><code>spot_pair</code></td>
-                <td class="mono">trades, book_snapshot_5, ohlcv_1m</td>
-              </tr>
-              <tr>
-                <td><code>cefi</code></td>
-                <td><code>perpetual</code></td>
-                <td class="mono">trades, book_snapshot_5, derivative_ticker, liquidations, ohlcv_1m, perp_funding</td>
-              </tr>
-              <tr>
-                <td><code>tradfi</code></td>
-                <td><code>future</code></td>
-                <td class="mono">trades, ohlcv_1s, ohlcv_1m, ohlcv_15m, ohlcv_24h, tbbo, mbp_10</td>
-              </tr>
-              <tr>
-                <td><code>tradfi</code></td>
-                <td><code>equity</code></td>
-                <td class="mono">
-                  trades, ohlcv_1s, ohlcv_1m, ohlcv_15m, ohlcv_1h, ohlcv_24h, tbbo, mbp_10, corporate_action_confirmed,
-                  earnings_result
-                </td>
-              </tr>
-              <tr>
-                <td><code>tradfi</code></td>
-                <td><code>spot_pair</code> (FX)</td>
-                <td class="mono">trades, ohlcv_1s, ohlcv_1m, ohlcv_15m, ohlcv_24h, tbbo</td>
-              </tr>
-            </tbody>
-          </table>
-          <p style="font-size: 0.9rem; color: var(--ink-3)">
-            <code>market_data_categories.py:1503-1600</code> — the full table is longer, every asset_group ×
-            instrument_type pair is enumerated there, not reproduced in full on this page.
-          </p>
-        </div>
-      </details>
-
       <h3>execution-service — instruction submission</h3>
       <p>
         A thin authenticated front door that translates a real, declared instruction envelope
         (<a href="#s8">§08</a>) into the internal shape and routes it through the SAME handler the internal
         manual-trade surface uses — no parallel execution logic. Only the <code>TRADE</code> action is wired; every
         other action on the envelope returns an honest HTTP 501, disclosed in full at <a href="#s2">§02</a>.
-      </p>
-
-      <p style="font-size: 0.9rem; color: var(--ink-3)">
-        <code>QUOTE</code> is a third case, distinct from both TRADE and the thirteen 501s — worth stating precisely
-        rather than rounding it either way. It does not 501: <code>_register_quote_instruction()</code> is real and
-        runs (<code>external_instruction_api.py:133-171</code>), arming <code>DeltaProxyRepricer</code> with this
-        instrument's delta/gamma via <code>QuoteMaintainer.register_quote_instruction()</code> and returning
-        <code>status="REGISTERED"</code>. It does not place an order either: per the router's own docstring, "the
-        two-sided quote is only submitted when something calls
-        <code>QuoteMaintainer.on_underlying_tick</code>, and no live tick-ingestion loop exists in
-        execution-service yet." A <code>REGISTERED</code> response means repricing parameters are armed, not that a
-        quote is resting on any venue.
-      </p>
-
-      <div class="plate">
-        <div class="plate-head"><span class="label">Instruction type support</span><span class="note">All 15 members of the StrategyInstructionV2 union</span></div>
-        <div class="plate-body scroll-x">
-          <table>
-            <thead>
-              <tr>
-                <th>Action</th>
-                <th>Schema</th>
-                <th>Status on this endpoint</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>TRADE</code></td>
-                <td><code>TradeInstruction</code></td>
-                <td>Parses and executes, routed to <code>LiveOrchestrator</code></td>
-              </tr>
-              <tr>
-                <td><code>QUOTE</code></td>
-                <td><code>QuoteInstruction</code></td>
-                <td>Arms delta-proxy repricing (<code>status: "REGISTERED"</code>); no live quote reaches a venue,
-                  because the tick-ingestion loop that would submit one is not built</td>
-              </tr>
-              <tr>
-                <td><code>SWAP</code></td>
-                <td><code>SwapInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>LEND</code></td>
-                <td><code>LendInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>BORROW</code></td>
-                <td><code>BorrowInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>WITHDRAW</code></td>
-                <td><code>WithdrawInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>REPAY</code></td>
-                <td><code>RepayInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>STAKE</code></td>
-                <td><code>StakeInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>UNSTAKE</code></td>
-                <td><code>UnstakeInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>TRANSFER</code></td>
-                <td><code>TransferInstructionV2</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>BRIDGE</code></td>
-                <td><code>BridgeInstructionV2</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>ATOMIC</code></td>
-                <td><code>AtomicInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>CANCEL</code></td>
-                <td><code>CancelInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>LP_MINT</code></td>
-                <td><code>LpMintInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-              <tr>
-                <td><code>LP_BURN</code></td>
-                <td><code>LpBurnInstruction</code></td>
-                <td><b class="pend">planned</b> — parses, <code>501</code></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Verified against <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>
-        (all 15 variants + the union) and <code>external_instruction_api.py:110-171</code> (the 501 branch and the
-        QUOTE registration branch).
       </p>
 
       <details class="ref">
@@ -18770,35 +18577,6 @@ Content-Type: application/json
           instruction is logged as <code>EXTERNAL_INSTRUCTION_RECEIVED</code>/<code>_RESULT</code>/<code>_FAILED</code>
           (<a href="#s16">§16</a>).
         </p>
-        <div class="plate">
-          <div class="plate-head">
-            <span class="label">The QUOTE variant, on the same endpoint</span><span class="note">Registers, does not execute</span>
-          </div>
-          <div class="plate-body">
-            <div class="code">POST /external/instructions HTTP/1.1
-{ "instruction_id": "instr-quote-7c21", "action": "QUOTE", ... }
-
-200 OK
-{
-  "instruction_id": "instr-quote-7c21",
-  "status": "REGISTERED",
-  "detail": {
-    "underlying_instrument_id": "BINANCE-SPOT:SPOT_PAIR:BTCUSDT",
-    "delta": "0.52",
-    "gamma": "0.03",
-    "original_bid": "65480.00",
-    "original_ask": "65520.00",
-    "note": "Delta-proxy repricing is armed for this instrument. No order was placed: quote submission requires
-             an underlying-tick loop calling QuoteMaintainer.on_underlying_tick, which is not wired in
-             execution-service yet."
-  }
-}</div>
-          </div>
-        </div>
-        <p style="font-size: 0.9rem; color: var(--ink-3)">
-          Every field above, including the exact <code>note</code> string, is read directly from
-          <code>_register_quote_instruction()</code>, <code>external_instruction_api.py:133-171</code>.
-        </p>
       </details>
 
       <h3>Error codes, across all six endpoints</h3>
@@ -18911,73 +18689,6 @@ Content-Type: application/json
         header at all returns 401 naming <code>POST /auth/login</code> as the way in.
       </p>
 
-      <p>
-        The dependency checks headers in this exact order — the first one present wins
-        (<code>unified-trading-library/unified_trading_library/cloud_interface/api_auth.py:319-387</code>):
-      </p>
-      <div class="plate">
-        <div class="plate-body scroll-x">
-          <table>
-            <thead>
-              <tr>
-                <th>Order</th>
-                <th>Header</th>
-                <th>Resolves to</th>
-                <th>Failure</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td><code>DISABLE_AUTH</code> / mock mode</td>
-                <td>Auto admin context — local dev only, hard-blocked in staging/production by <code>_check_production_safety</code></td>
-                <td>—</td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td><code>X-Service-Token</code></td>
-                <td>Internal/admin <code>AuthContext</code> (S2S) if it matches the configured service token</td>
-                <td><code>403</code> <span class="mono">Invalid X-Service-Token</span></td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td><code>X-API-Key</code> (legacy)</td>
-                <td>Admin <code>AuthContext</code>, <code>is_api_key=true</code>, if it matches <code>UnifiedCloudConfig().api_key</code></td>
-                <td><code>401</code> <span class="mono">Invalid API key</span></td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td><code>Authorization: Bearer &lt;jwt&gt;</code></td>
-                <td>HS256 JWT — claims become the <code>AuthContext</code></td>
-                <td><code>401</code> <span class="mono">Token expired — please log in again</span> or <span class="mono">Invalid token: …</span></td>
-              </tr>
-              <tr>
-                <td>5</td>
-                <td>None of the above</td>
-                <td>—</td>
-                <td><code>401</code> <span class="mono">Not authenticated. POST /auth/login to get a token, then send Authorization: Bearer &lt;token&gt;.</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="callout">
-        <span class="tag">What auth does not do on these three routers, stated exactly</span>
-        <p>
-          On instruments-service, the endpoint itself discards <code>AuthContext</code> after the dependency runs
-          (<code>del auth</code>, <code>instruments-service/instruments_service/api/routers/external.py:86</code>)
-          — every authenticated caller sees the same catalogue, because this is public reference data, not a
-          per-client ledger. On market-tick-data-service the auth dependency is mounted at the router level
-          (<code>dependencies=[Depends(_api_auth)]</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:52-56</code>) and no
-          endpoint function receives an <code>AuthContext</code> argument at all — auth is a gate, not a scope. On
-          execution-service, <code>auth.org_id</code> is written to the audit log alongside the instruction
-          (<code>execution_service/api/external_instruction_api.py:144</code>) but is not checked against the
-          instruction's own <code>identity.client_id</code> — the caller-supplied <code>client_id</code> is not
-          validated against the authenticated org in this router.
-        </p>
-      </div>
-
       <h3>Rate limits and pagination — the honest state</h3>
       <div class="callout">
         <span class="tag">Neither is built yet, on any of the six endpoints</span>
@@ -19000,69 +18711,11 @@ Content-Type: application/json
         </p>
       </div>
 
-      <h3>Two more counterparty surfaces exist beyond these six</h3>
-      <p>
-        client-reporting-api and strategy-service's signal-leasing API were found while auditing this reference
-        against router source directly. Neither is one of the "six reachable endpoints" <a href="#s2">§02</a>
-        scoped this section to, so full per-route depth for both is not reproduced here — indexed instead, with the
-        same status marks used throughout this reference.
-      </p>
-      <div class="callout">
-        <span class="tag">client-reporting-api — 102 routes across 24 modules</span>
-        <p>
-          Gated by the same shared <code>create_api_auth("client-reporting-api")</code> dependency as the table
-          above, plus a second per-route layer this service adds on top:
-          <code>enforce_entitlement(auth, client_id)</code> lets an internal/admin caller through unconditionally,
-          but for an external caller it 403s unless <code>auth.org_id == client_id</code> — the caller can only
-          ever read their own <code>client_id</code>. <code>require_internal(auth)</code> is stricter, 403ing any
-          non-internal caller regardless of <code>client_id</code>. Two findings worth flagging: <code>GET
-          /api/v1/stream/reports</code> carries no auth dependency at all — a global SSE fan-out where every
-          subscriber sees every client's report events; and 13 of the 102 routes (<code>alerts.py</code>,
-          <code>compliance.py</code>, <code>documents.py</code>, <code>docusign.py</code>,
-          <code>reporting/investor_relations_archive.py</code>) call neither entitlement function — still behind
-          the blanket token check, but with no <code>client_id</code> scoping confirmed. Some routes return fixture
-          data unconditionally rather than a real per-client read (<code>GET /api/v1/exports/trades</code>,
-          <code>/coin-breakdown</code>, <code>/daily-summary</code>, <code>/hourly-snapshots</code>, DocuSign
-          envelope status) — the <code>daily-equity</code>, <code>transfers</code> and <code>hwm-timeline</code>
-          exports (production candidates) read real backing stores.
-        </p>
-        <p style="font-size: 0.9rem; color: var(--ink-3)">
-          Full 102-route index, grouped by module, with reachability per route:
-          <code>codex/14-customer-journeys/commercial-model/platform-api-reference.html</code> §05.
-        </p>
-      </div>
-      <div class="callout">
-        <span class="tag">strategy-service signal-leasing API — built and wired, operationally dark until 2026-09-01</span>
-        <p>
-          Mounted at <code>/signal_broadcast</code>, six endpoints (<code>GET /emissions</code>, <code>POST
-          /acknowledge</code>, <code>GET /delivery-health</code>, <code>GET /backtest-paper-live</code>, <code>GET
-          /pnl-attribution</code>, <code>POST /pnl-attribution</code>) — a real REST-pull/webhook-push surface for
-          leasing strategy signals, distinct auth from the rest of this page: a per-counterparty HMAC secret via
-          <code>CounterpartyCredentialsManager</code>, hot-reloaded from Secret Manager every 300s.
-          <code>unified_api_contracts/internal/domain/signal_broadcast/registry.py</code> seeds exactly two
-          counterparties, both <code>CounterpartyStatus.SUSPENDED</code>, with placeholder endpoint URLs — no
-          counterparty can authenticate against this surface today (<code>transport.py</code>'s
-          <code>_authenticate()</code> 403s any non-<code>ACTIVE</code> counterparty before anything else). Launch
-          window: <b>2026-09-01T00:00:00Z</b>. Payload depth (<code>MINIMAL</code> / <code>STANDARD</code> /
-          <code>RICH</code>) and rate-limit profile (<code>default</code> 10 req/s, <code>minimal</code> 5 req/s,
-          <code>burst</code> 25 req/s) are both per-counterparty entitlements, not per-request choices.
-        </p>
-        <p style="font-size: 0.9rem; color: var(--ink-3)">
-          Full endpoint depth (parameters, example bodies, error tables):
-          <code>codex/14-customer-journeys/commercial-model/platform-api-reference.html</code> §06.
-        </p>
-      </div>
-
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Verified directly against <code>instruments-service/instruments_service/api/routers/external.py</code>,
         <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>,
-        <code>execution-service/execution_service/api/external_instruction_api.py</code>,
-        <code>unified_trading_library/cloud_interface/api_auth.py</code>,
-        <code>client-reporting-api/client_reporting_api/api/main.py</code> +
-        <code>api/routes/**/*.py</code>, and <code>strategy-service/strategy_service/signal_broadcast/</code>. The
-        full OpenAPI-shaped companion, with every endpoint on this page (and the two above) at full per-route
-        depth, is
-        <code>codex/14-customer-journeys/commercial-model/platform-api-reference.html</code>.
+        <code>execution-service/execution_service/api/external_instruction_api.py</code> and
+        <code>unified_trading_library/cloud_interface/api_auth.py</code>.
       </p>
     </details>
   </section>
