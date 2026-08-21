@@ -975,18 +975,18 @@ todos only to confirm they are data-movement, then leave it.
       ONEXBET/PROPHETX still appear as stale nodes/rows as of `710db834`) — no in-repo generator script was found
       for either file during this session's grep of `scripts/`; locate or rebuild the generator first, then run it
       (never hand-edit the generated output).
-- [ ] [BACKEND] P3. **Second registry family for the same 6 tokens, found but explicitly NOT touched this session**
-      (STOP condition, see the DONE entry above) — `unified_api_contracts/canonical/domain/bookmaker_registry.py`
-      + `canonical/domain/sports/{_registry_us,_registry_exchanges,_registry_intl_scrapers,odds_api_mapping}.py`
-      + `registry/venue_manifest/betting_sports.py` + `registry/sports_bookmaker_league_coverage.py` still declare
-      all 6 tokens. Removing `"onexbet"` from `BOOKMAKER_REGISTRY` requires a COORDINATED two-repo change: first
-      retire `execution-service`'s `sports_execution/adapters/bookmaker_api/onexbet.py` (`OneXBetAdapter` + its
-      test `tests/sports_execution/unit/bookmaker_api/test_onexbet_adapter.py`) — already flagged dead/unrouted by
-      `sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md` finding 11 — THEN remove `"onexbet"` from
-      `bookmaker_registry.py`. The other 5 tokens (BETOPENLY/NOVIG/PROPHETX/BETMGM/BETWAY) have no dedicated
-      execution-service adapter class, only string-mapping references in the confirmed-dead-in-prod
-      `aggregator/odds_api.py` and declarative CLI venue frozensets (`live_execution_venues.py`) — lower risk, but
-      still need the same enumerate-and-migrate treatment before removal.
+- [x] ✅ [BACKEND] P3. **Second registry family, ONEXBET half — execution-service side DONE; UAC side landed
+      out-of-order.** `unified-api-contracts@cdb8ae88` ("complete the 6-bookmaker removal") deleted
+      `canonical/domain/bookmaker_registry.py` + `external/onexbet/` WITHOUT waiting for execution-service's side
+      first — violating this todo's own STOP-condition ordering — which broke execution-service's entire test
+      collection (`ModuleNotFoundError` transitively via conftest.py). Retired `OneXBetAdapter` +
+      `test_onexbet_adapter.py` + dangling re-exports to match (re-confirmed dead/unrouted first) —
+      execution-service@f4391ac596. See `w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`'s
+      2026-08-21 slot-21 Progress Log entry for full detail.
+- [ ] [BACKEND] P3. The other 5 tokens (BETOPENLY/NOVIG/PROPHETX/BETMGM/BETWAY) still have stale string-mapping
+      references in execution-service's `aggregator/odds_api.py` and `cli/handlers/live_execution_venues.py` (no
+      dedicated adapter class, lower risk than ONEXBET, but same enumerate-and-migrate treatment needed) —
+      UAC-side tokens for all 6 are already gone per `unified-api-contracts@cdb8ae88`.
   3. **24 unattributed manifest tokens — plan-conflict found, no code shipped.** Investigated before writing any
      attribution code and found `/plans/active/state_fabric_artefacts_2026_08_20.md` already ran the identical
      investigation same-week with a contrary, DOC-only prescribed fix (see that todo's own edit above for detail).

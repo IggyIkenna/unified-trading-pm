@@ -64,8 +64,6 @@ baseline:
     count: 4
   execution-service/execution_service/sports_execution/adapters/bookmaker_api/api_football.py:
     count: 4
-  execution-service/execution_service/sports_execution/adapters/bookmaker_api/onexbet.py:
-    count: 7
   execution-service/execution_service/sports_execution/adapters/exchanges/betfair.py:
     count: 8
   execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py:
