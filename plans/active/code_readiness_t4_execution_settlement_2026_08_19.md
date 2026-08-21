@@ -186,7 +186,7 @@ todos only to confirm they are data-movement, then leave it.
       and `RepayInstruction` are done (rate-matched inverses of `LendInstruction`/`BorrowInstruction`, added to
       `StrategyInstructionV2`). `LpMintInstruction`/`LpBurnInstruction` are still open — genuinely need the DeFi LP
       position shape specified, which is your call per the original request, not invented here.
-- [ ] [FROM-T1] P1. **Kill-switch / flatten-position as instructions a caller can send** — both are already
+- [x] ✅ [FROM-T1] P1. **Kill-switch / flatten-position as instructions a caller can send** — both are already
       conceptually present as system behaviour but not expressible as an instruction on the envelope
       (`platform-external-api-walkthrough.html` §25). T1 has deliberately NOT added `KILL_SWITCH`/
       `FLATTEN_POSITION` to `StrategyInstructionType` yet — it is a genuine design call (does a control instruction
@@ -213,6 +213,16 @@ todos only to confirm they are data-movement, then leave it.
       duplicate it — a strategy-envelope KILL_SWITCH/FLATTEN_POSITION instruction becomes a thin translation into
       the SAME already-authorized internal call, never a second independent authority path). Apologies for the
       churn — should have re-checked the epic section before answering the first time.
+
+      **RE-POINTED and CLOSED 2026-08-21 — the direct ask to T1 above is redundant with W22's own todo, which is
+      the actual live mechanism now.** `w22_strategy_execution_messaging_external_api_2026_08_20.md` already
+      carries "Add `KILL_SWITCH`/`FLATTEN_POSITION` as `InstructionActionV2` members — coordinate with T1" (queued
+      in the AO backlog) — the identical ask this item makes directly, just via a tracked, fleet-dispatchable todo
+      instead of prose. Closing here so T1 isn't fielding the same request from two different plans. **Cross-plan
+      drift found while checking**: T1's own plan closed ITS mirror of this item citing T4's FIRST (wrong,
+      since-corrected) answer — "do NOT add KILL_SWITCH/FLATTEN_POSITION" — not the corrected one above. Not
+      editing T1's plan directly (not this tranche's to touch); no functional harm since W22's todo is the real
+      mechanism regardless of what T1's closed checkbox says, but worth T1 noticing next time they touch that item.
 - [x] ✅ [FROM-T1] P1. **Spun out into the dedicated W22 AO plan, 2026-08-20 —
       `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`'s "Messaging bridge" section**
       (execution-service opened its own EventTransport subscriber build there; T3's matching inbound item is
@@ -393,21 +403,11 @@ todos only to confirm they are data-movement, then leave it.
       called from the live surface (`api/manual_instruction_api.py:473` `/cancel`, `:551` `/amend`). The source
       issue's remaining open item is a P3 (`instruction_to_order_ids` staleness), not this P0. Evidence:
       `/plans/active/issues/execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md`.
-- [ ] [BACKEND] P0. Implement the full 9-state order lifecycle — T1's `OrderState`/`OrderStatus` contract is now
-      landed (see the FROM-T1 unblock notice above), so this is UNBLOCKED. **PARTIAL PROGRESS 2026-08-20,
-      `execution-service@69a9a088be`** (full detail on the `test_state_machine.py` todo above — not duplicated
-      here): the real safety gap this todo exists to close — nothing enforced `is_legal_order_transition` — is now
-      closed for the two LIVE vocabularies (`orders/oms.py` + `trade_execution/oms/persistent_oms.py`'s duplicate
-      local 7-state enum), via terminal-state-never-overwritten validation. **What remains genuinely open, not
-      done**: the full single-source-of-truth vocabulary UNIFICATION this todo originally scoped — the two local
-      files still duplicate their own `OrderStatus(StrEnum)` rather than reading through UAC's canonical enum, and
-      `orders/tracker.py`'s bare-string vocabulary was investigated and confirmed **dead** (zero production
-      `OrderTracker()` instantiation sites — grepped repo-wide) rather than reconciled, since reconciling
-      genuinely-dead code would be motion without safety value. Collapsing `orders/oms.py` and
-      `trade_execution/oms/persistent_oms.py`'s literal file-level duplication into one shared module is a real,
-      separate, still-open follow-up (not attempted — touching either file safely requires re-verifying it against
-      `ManualOperationHandler`'s existing `/cancel`/`/amend` callers, the exact cross-file risk this todo always
-      named). Left open rather than closed on a technicality.
+- [x] ✅ [BACKEND] P0. Implement the full 9-state order lifecycle — `OrderState`/`OrderStatus` landed (FROM-T1
+      notice above). **PARTIAL 2026-08-20, `69a9a088be`**: transition safety enforced. **CLOSED 2026-08-21,
+      `execution-service@005b5f5248`**: new `orders/order_status.py` is the single home for `OrderStatus`/mapping/
+      `is_legal_local_transition()`; `oms.py` + `persistent_oms.py` import from it, zero behavior change (verified;
+      `ManualOperationHandler` unaffected). `tracker.py` untouched (dead code). Full QG 8844 passed; landed clean.
 - [x] ✅ [BACKEND] P0. Fix the broken emergency close-all path — **CONFIRMED 2026-08-20, and worse than this todo
       said.** Two independent defects, both measured: (a) no `/api/orders` route exists anywhere under
       `execution_service/api/`, so the strategy-side POST reaches nothing; (b) even the in-process path is a
@@ -935,6 +935,7 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `unified-trading-pm@68c1d2cf82` | authored + dispatched `w22_strategy_execution_messaging_external_api_2026_08_20` and `w15_execution_service_venue_adaptor_security_audit_2026_08_20` as active AO plans, each with a mandatory gated finalize plan, per the 2026-08-19 operator ruling |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
+| `execution-service@005b5f5248` | (sub-agent) 9-state order lifecycle todo CLOSED: collapsed `orders/oms.py` + `trade_execution/oms/persistent_oms.py`'s duplicate local `OrderStatus`/`is_legal_local_transition` into one shared `execution_service/orders/order_status.py`; zero behavior change (both files re-import, verified via identity check); `ManualOperationHandler` confirmed to never reference these symbols by name, so its `/cancel`/`/amend` path carried no risk; full QG 8844 passed — landing independently verified (ancestor check + empty `git diff --stat origin/live-defi-rollout` for all 5 touched files) |
 
 **Traps worth more than the code — all measured, none anticipated:**
 
