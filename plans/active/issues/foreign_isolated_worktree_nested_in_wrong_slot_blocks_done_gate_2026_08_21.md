@@ -119,3 +119,14 @@ orphaned and the check short-circuited; the pattern is otherwise a real, recurri
   with the identical `oms-wt.oc3YkB` dirty-file list (30 files, same set as before). Per pre-compact Step 7.2, two
   identical consecutive failures = stable condition, not flapping — stopped retrying; the already-shipped todo-1 work
   (`unified-trading-pm@832b8de031`+`19d99de82a`) stays acked-pending, no data at risk since it's already on origin.
+- **2026-08-21 (slot-16), post-/heartbeat resume** — Third check, new session tick: `/heartbeat` re-dispatched the
+  identical task (`dispatch_reason: "resume"`), confirming the server itself still considers this task open pending
+  `/done`. `oms-wt.oc3YkB` HEAD had advanced to a new commit (still `github-actions[bot]`) but the staged dirty-file
+  set was byte-identical to the two prior checks (same 30 files, same M/D markers) — the live session is committing
+  but never reaching a clean staged tree. `/done` retried once more (3rd attempt, spaced across a full compaction
+  cycle, not blind-looped) and rejected with the identical dirty list. This is now a 3x-identical stable condition
+  across ~1hr+ of wall-clock time, not a transient race — raises confidence this is a long-lived, possibly-stuck-open
+  live session (or one that will simply never present a clean tree until it finishes its own multi-commit sequence),
+  strengthening todo 3's case (harden the done-gate to skip foreign-owned worktrees) as the more tractable fix vs.
+  waiting for `oms-wt.oc3YkB` to clear naturally. Stopped retrying again per Step 7.2; no further `/done` attempts
+  planned until either this worktree disappears or todo 3 lands.
