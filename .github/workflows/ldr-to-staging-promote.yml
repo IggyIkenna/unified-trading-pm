@@ -299,21 +299,8 @@ jobs:
             # proximate cause of the billing wall). Identical tree SHAs == byte-identical content
             # regardless of squash history — the exact "content, not commit-count" signal. On tree-equal,
             # also close any phantom open drain PR (an armed one would still squash an empty commit).
-            # sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08 P3: don't swallow the
-            # real error — a live GitHub outage vs a genuine per-repo API regression must be
-            # distinguishable from THIS step's own log, not require an out-of-band status check.
-            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.commit.tree.sha' 2>/dev/null)
-            if [ -z "$LDR_TREE" ]; then
-              LDR_TREE_ERR=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" 2>&1 >/dev/null)
-              echo "::warning::$REPO: gh api commits/live-defi-rollout (tree) failed — ${LDR_TREE_ERR:0:300}"
-              LDR_TREE="ERR_LDR"
-            fi
-            STG_TREE=$(gh api "repos/$OWNER/$REPO/commits/staging" --jq '.commit.tree.sha' 2>/dev/null)
-            if [ -z "$STG_TREE" ]; then
-              STG_TREE_ERR=$(gh api "repos/$OWNER/$REPO/commits/staging" 2>&1 >/dev/null)
-              echo "::warning::$REPO: gh api commits/staging (tree) failed — ${STG_TREE_ERR:0:300}"
-              STG_TREE="ERR_STG"
-            fi
+            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_LDR")
+            STG_TREE=$(gh api "repos/$OWNER/$REPO/commits/staging" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_STG")
             if [ "$LDR_TREE" = "$STG_TREE" ]; then
               echo "SKIP $REPO: staging tree == LDR tree (content-identical; ahead_by=$AHEAD is squash-accounting noise)"
               PHANTOM_PR=$(gh pr list --repo "$OWNER/$REPO" --base staging --head live-defi-rollout \
@@ -602,11 +589,13 @@ jobs:
   notify:
     name: Slack — Tier C LDR→staging promotion
     needs: [promote-ldr-to-staging]
-    if: always() && needs.promote-ldr-to-staging.outputs.conflicted_count != '0' &&
+    if:
+      always() && needs.promote-ldr-to-staging.outputs.conflicted_count != '0' &&
       needs.promote-ldr-to-staging.outputs.conflicted_count != ''
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message: "Tier C LDR→staging: ${{ needs.promote-ldr-to-staging.outputs.promoted_count }} promoted, ${{
+      message:
+        "Tier C LDR→staging: ${{ needs.promote-ldr-to-staging.outputs.promoted_count }} promoted, ${{
         needs.promote-ldr-to-staging.outputs.blocked_count }} dep-order-blocked, ${{
         needs.promote-ldr-to-staging.outputs.conflicted_count }} CONFLICTED (conflict-resolution-agent dispatched): ${{
         needs.promote-ldr-to-staging.outputs.conflicted }}"

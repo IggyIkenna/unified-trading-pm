@@ -184,22 +184,3 @@ coverage there too.
   `market-data-processing-service@907ff58912` (round-2 diag), `unified-trading-library@3095f35151` (round-3 diag +
   pip CVE fix, PYSEC-2026-3721). `defi_satellite_ao_dispatch_batch19_2026_08_21.md` item 3 and the source issue doc's
   extracted todo both stay open, cross-referencing this doc for the real next step.
-- **2026-08-21 (data_pipeline_failure escalation worker, slot 22, agt-6ea9c3)**: this doc's own "hypothesis 2"
-  ("Consolidator incremental-merge correctness gap … not directly evidenced this session; flagged as a hypothesis
-  only") is now CONFIRMED with a precise mechanism, via a DP-WATCHER-002 (`DP_CRON_DID_NOT_FIRE`) escalation for
-  the same bucket that landed independently. `gcloud logging read` against
-  `uts-prod-manifest-consolidator-market-data-defi`'s own execution logs (15:53Z-16:25Z) shows every cycle logging
-  `"skipping cycle … fresh lock present (sibling cron still running)"` + a self-diagnosing `CRITICAL "SILENT STALL
-  … streak=N … needs consolidate(bucket, force=True)"`, `N` climbing 206→239 across that window — i.e. the
-  consolidator is NOT doing frequent legitimate no-op passes, it is WEDGED on an orphaned lock, and this doc's own
-  `06:38:39Z` canonical-freeze timestamp is exactly `566.2 min` before the DP-WATCHER-002 alert's `16:04:51Z` fire
-  time, confirming both detection paths are reading the SAME frozen blob. Root cause + the already-shipped fix are
-  documented in full on the new
-  `/plans/active/issues/dp_watcher_002_defi_market_data_consolidator_lock_wedge_2026_08_21.md` (bit-for-bit the
-  same wedge `manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md` already root-caused and fixed for
-  cefi — `unified-trading-library@af783d92e4`/`53abdf72f3` — blocked purely on that doc's still-open MTDS-image-
-  rebuild deploy step). This does NOT yet answer this doc's own open P1 todo ("does DEFI raw-tick capture data
-  newer than 2025-05-31 actually exist") — that remains a separate, real question about the UNDERLYING data once
-  the consolidator is unwedged and can actually merge it; this entry only explains WHY the consolidated view has
-  been frozen, not what it will show once fresh. No code shipped this session (repo: market-tick-data-service — the
-  fix belongs to the sibling doc, not duplicated here); doc-only cross-link, shipped via `safe-doc-push.sh`.

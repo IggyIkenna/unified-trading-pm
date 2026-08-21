@@ -133,74 +133,25 @@ below shows no re-pause, the flap may have been transient (the underlying alert 
 still worth confirming what it was, since an unregistered FLEET_HALT-window bug (point 6) is itself
 a real gap worth fixing even if this specific occurrence has now settled.
 
-## 2026-08-21 UPDATE (escalation agt-0b7473, slot 4) — root actuator IDENTIFIED, not FLEET_HALT
-
-Re-fired for the same job (`state: PAUSED`, `userUpdateTime: 2026-08-21T16:27:11.636614Z`) — well after
-agt-2b817b's clean 5-minute watch ended, confirming this is a genuine recurrence, not a stale re-fire.
-Two findings resolve this doc's open "root actuator" question:
-
-**1. FLEET_HALT/RevocationActuator is structurally INCAPABLE of pausing this job — ruled out, not just
-unproven.** `RevocationActuator._pause_schedulers` resolves its job list via
-`_scheduler_jobs_for(target)` (`revocation_actuator.py:124`), which selects names FROM
-`unified_api_contracts...scheduler_registry.SCHEDULER_REGISTRY` — a hand-written, non-generated list
-(confirmed: 15 `SchedulerSpec(` literals, no loop/comprehension). That registry contains **exactly one**
-consolidator-named entry, `"manifest-consolidator-60s"` (`asset_group="infra"`, `target_ref="deployment-api"`,
-a 60s Cloud Run cron unrelated to the per-AG manifest consolidators). **None of the 10 real
-`uts-prod-manifest-consolidator-{market-data|instruments}-{ag}-cron` jobs are registered at all** — so
-`_scheduler_jobs_for()` can never return `uts-prod-manifest-consolidator-market-data-defi-cron`, for any
-`target` string. `_register_maintenance_windows`'s bucket resolver (`consolidator_job_to_bucket()`,
-correctly wired, keys sourced from `meta_targets.consolidator_scheduler_job(ag)`) is a red herring here —
-the job never reaches that function because `_pause_schedulers` never selects it in the first place. This
-answers todo 2 below in favor of "genuinely wasn't FLEET_HALT-driven," not a silent window-write failure.
-Also grepped fleet-wide (deployment-service, market-tick-data-service, unified-trading-library) for any
-OTHER `pause_job`/`CloudSchedulerClient()`/`make_scheduler_pauser()`/`pause_for_maintenance()` caller — zero
-hits outside `revocation_actuator.py` and `scheduler_maintenance.py`'s own CLI entrypoint (which nothing
-calls programmatically). **No in-repo code path can pause this job at all.**
-
-**2. The actual actor: a MacOS-hosted Claude Code CLI session, not a human `gcloud` typo, not an
-in-repo actuator.** Corrected the audit-log query (the original had `--order=asc` + `--freshness`
-interacting badly, silently returning entries back to 2026-05 instead of today — re-ran with default
-descending order + explicit user-agent field). Every one of the 7 pause/resume toggles on this job across
-14:25:49Z-16:27:11Z (3h window) carries `protoPayload.requestMetadata.callerSuppliedUserAgent` identifying
-`google-cloud-sdk ... agent-name/claude-code_2-1-237_agent ... command/gcloud.scheduler.jobs.{pause,resume}
-... client-os/MACOSX ... interactive/False ... from-script/True`, from a consistent IP (`148.252.159.201`,
-one earlier event from `148.252.148.83`) — i.e. a **non-interactive, scripted Claude Code CLI invocation
-running on a Mac**, entirely separate from this fleet's central orchestrator VM (whose escalation workers
-run Linux, e.g. agt-2b817b's own 15:52:59Z resume shows `client-os/LINUX`, IP `13.113.200.22` — the
-orchestrator's own EIP per workspace CLAUDE.md). Full timeline: `14:25 Pause(mac) → 15:35 Resume(mac) →
-15:39 Pause(mac) → 15:52:59 Resume(orchestrator, agt-2b817b) → 16:20:37 Resume(mac, redundant — job was
-already ENABLED) → 16:25:41 Pause(mac) → 16:25:53 Resume(mac, 12s later) → 16:27:11 Pause(mac, 78s later)`.
-The redundant 16:20 resume-of-an-already-enabled-job and the accelerating cadence toward the end (5min →
-12sec → 78sec) reads as active, real-time, hands-on iteration on this exact resource — not a one-off
-mistake, and not a code bug.
-
-**Why I did not resume a 3rd time.** Per this doc's own "Known gap" note in
-`/codex/05-infrastructure/data-pipeline-alerts.md` (DP-WATCHER-004 cannot distinguish an accidental pause
-from a deliberate, plan/session-tracked one) and the directly-analogous near-miss precedent in
-`/plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md` (a triage agent
-resuming mid-flight of someone else's in-progress work), repeatedly resuming a job that a live, currently-
-active session keeps re-pausing every few minutes would very likely just race that work, not fix anything
-— and per the observed cadence would probably be flipped back within minutes anyway. This is a genuine
-judgment call, not something to guess at, so I escalated via `/blocked` (`BLK-fbcafec2`,
-`can_continue: false`) asking whether to leave it paused (assume deliberate active work) or resume anyway.
-No answer arrived within the 2-minute bound — per role protocol, stopping here rather than holding the
-slot; the question persists on the dashboard for the operator, and a later answer re-dispatches a fresh
-worker. **Current live state: still `PAUSED` as of this escalation's close** — deliberately left untouched
-pending that answer, not by omission.
-
 ## Recommended decision
 
-- [x] ✅ [DATA] P1. **ANSWERED 2026-08-21 (agt-0b7473) — NOT FLEET_HALT.** See the UPDATE section above:
-      `SCHEDULER_REGISTRY` has zero entries for any of the 10 real per-AG consolidator jobs, so
-      `_scheduler_jobs_for()` structurally cannot select this job — FLEET_HALT is ruled out, not just
-      unconfirmed. The actual re-pausing actor is a MacOS-hosted Claude Code CLI session (non-interactive,
-      from-script), not any registered DP-* alert_identity — there is no "that alert" to root-cause via
-      the DP-* registry path this todo originally proposed.
-- [x] ✅ [CODE] P2. **ANSWERED 2026-08-21 (agt-0b7473) — not a silent window-write failure; the pause
-      never reached `_register_maintenance_windows` at all**, because `_pause_schedulers`'s upstream job
-      selection (`_scheduler_jobs_for`) never included this job to begin with (see UPDATE section, finding
-      1). The real caller is the MacOS Claude Code CLI session identified in finding 2 — not an in-repo
-      caller, so there is no further code path to grep.
+- [ ] [DATA] P1. Confirm whether the 5-minute post-resume watch (this session, Progress Log) caught
+      a re-pause. If YES: this is an active FLEET_HALT (or equivalent) condition — find the exact
+      `alert_identity` via Cloud Logging (`deployment-api` / `dp-alerting-subscriber` logs around
+      the pause timestamps, grep for `revocation` / `FLEET_HALT` / `market-data-defi` / `defi`) and
+      root-cause THAT alert per its own DP-* class in `/codex/05-infrastructure/data-pipeline-alerts.md`.
+      If NO (stayed enabled 300s+): downgrade to P2, but still complete the two todos below — the
+      missing-maintenance-window question is real regardless of whether this specific occurrence
+      recurs.
+- [ ] [CODE] P2. Determine why `scheduler_maintenance.maintenance_status()` found no live window
+      for `market-data-tick-defi-prd-central-element-323112` at diagnosis time despite
+      `RevocationActuator._register_maintenance_windows` being correctly wired for both production
+      call sites. Check Cloud Logging for the `logger.warning` emitted on a
+      `MaintenanceWindowActiveError`/generic-exception catch in `_register_maintenance_windows`
+      around 14:25Z/15:39Z — either the window write is silently failing (a real bug to fix) or
+      this pause genuinely wasn't FLEET_HALT-driven at all (in which case identify the actual
+      caller — grep further callers of `make_scheduler_pauser()`/`CloudScheduler.PauseJob` beyond
+      `revocation_actuator.py` and the human CLI path). Repo: deployment-service.
 - [ ] [DATA] P3. Cross-check against `/plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`
       (filed earlier the same day, ~10:50 UTC) — that doc found the consolidator running healthily
       every ~1-2 min with a stale OUTPUT blob; this doc found the scheduler ITSELF paused a few
@@ -208,20 +159,6 @@ pending that answer, not by omission.
       share a root cause (something intermittently disrupting the defi consolidator's steady
       state, of which "output blob staleness" and "scheduler flapping paused" are two symptoms) —
       not established this session, flagged as a hypothesis only.
-- [ ] [OPERATOR] P1. Answer blocked question `BLK-fbcafec2` (posted 2026-08-21 by agt-0b7473, unanswered
-      after the 2-minute bound): is the repeated MacOS-session pause/resume of
-      `uts-prod-manifest-consolidator-market-data-defi-cron` deliberate active work (leave alone, no
-      further agent action needed) or a stuck/erroneous local loop (needs stopping, then the job resumed)?
-      Job is currently `PAUSED` pending this answer.
-- [ ] [CODE] P3. Separate, confirmed, genuine gap (not the cause of this incident): if FLEET_HALT is
-      *supposed* to be able to halt the manifest-consolidator schedulers during a defi-scoped revocation
-      (implied by `_register_maintenance_windows`'s own docstring, which assumes the write/read bucket
-      mapping is the only thing that matters), `SCHEDULER_REGISTRY` needs `SchedulerSpec` entries for the
-      10 real `uts-prod-manifest-consolidator-{market-data|instruments}-{ag}-cron` jobs — currently zero
-      exist, so `_scheduler_jobs_for()` can never select them regardless of `target`. If FLEET_HALT was
-      never intended to reach the consolidator crons, close this as a documentation-only clarification
-      instead. Repo: unified-api-contracts (registry) + deployment-service (docstring, if scope is
-      clarified as intentional).
 
 ## Codex SSOTs
 
@@ -247,20 +184,3 @@ pending that answer, not by omission.
   `RevocationActuator._register_maintenance_windows` is correctly wired yet no window was found at
   diagnosis time. Escalation `agt-2b817b` closing out here (one-shot lifecycle); this doc stays
   `assigned_vm: planning` for a future dispatch to pick up todos 1-3.
-- **2026-08-21, data_pipeline_failure escalation agt-0b7473 (slot 4)**: re-fired for the same job, now
-  `PAUSED` again at `16:27:11Z` — confirmed recurrence, not a stale re-fire (well past agt-2b817b's clean
-  5-min watch). Root-caused both previously-open questions: (1) FLEET_HALT/RevocationActuator ruled out
-  structurally — `SCHEDULER_REGISTRY` has zero entries for any of the 10 real per-AG consolidator jobs, so
-  `_scheduler_jobs_for()` can never select this job name; (2) the actual actor across all 7 toggles in the
-  3h window is a MacOS-hosted, non-interactive Claude Code CLI session (`agent-name/claude-code_2-1-237_agent`,
-  consistent IP), not any in-repo code path — grepped fleet-wide for other `pause_job`/`CloudSchedulerClient`
-  callers, zero hits. See the "2026-08-21 UPDATE" section above for full evidence. Did NOT resume a 3rd
-  time — the accelerating toggle cadence (5min → 12sec → 78sec gaps) reads as live, active work on this
-  exact resource, and repeatedly resuming risked racing it (precedent:
-  `defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md`'s near-miss). Escalated via `/blocked`
-  (`BLK-fbcafec2`, recommendation "leave paused"), polled 2 minutes per role protocol, no answer arrived —
-  stopping per protocol rather than holding the slot or guessing. Flipped todos 1-2 (answered); added a new
-  `[OPERATOR]` todo for the blocked-question answer and a new `[CODE]` P3 todo for the separate, confirmed
-  `SCHEDULER_REGISTRY` coverage gap (real bug, not this incident's cause — flagging whether FLEET_HALT is
-  even supposed to reach the consolidator crons is itself an open design question). Job left `PAUSED`
-  deliberately, pending the operator's answer. Doc stays `assigned_vm: planning`, `status: open`.
