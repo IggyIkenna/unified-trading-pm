@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit, finalize]
 related:
   [
-    /plans/active/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md,
+    /plans/archive/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
 created: "2026-08-19"
@@ -37,7 +37,7 @@ gate_on_depends: true
 resolved_by:
 locked_by:
 context_scope:
-  [/plans/active/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md, agent-orchestrator/server/scheduled_dispatch_pause.py]
+  [/plans/archive/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md, agent-orchestrator/server/scheduled_dispatch_pause.py]
 ---
 
 # Finalize — ao_scheduled_dispatch_pause_reasons
