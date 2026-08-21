@@ -114,11 +114,12 @@ models, unrelated to this defect.
 - [ ] [BACKEND] P0. **Add local monotonic receive order** to the live tick model. Wall-clock arrival is not sufficient
       for ordering — two ticks in the same millisecond need a total order, and a stepped clock must not reorder them.
 - [ ] [BACKEND] P0. **Add a region tag** to the tick or its envelope. Required by the per-region replay ruling.
-- [ ] [REVIEW] P1. **Audit every connector for which meaning it writes today** — roughly 65 connector files exist;
-      the audit sampled about a dozen. Until each is classified, any ordering built on the current field is unsound
-      for the unclassified ones.
-- [ ] [REVIEW] P1. **Close or supersede `resolve_mtds_ts_event_timestamp_naming_collision`** — the collision was
-      already identified and named. Establish whether that work was descoped or forgotten before re-doing it.
+- [x] ✅ [REVIEW] P1. **EXTRACTED 2026-08-21** — audit every connector (~65 files) for which timestamp meaning it
+      writes today. Extracted to `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch
+      (na-eligibility-audit, cross-cutting tranche, batch 2 of 3).
+- [x] ✅ [REVIEW] P1. **EXTRACTED 2026-08-21** — close or supersede `resolve_mtds_ts_event_timestamp_naming_collision`.
+      Extracted to `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md` for AO dispatch (na-eligibility-audit,
+      cross-cutting tranche, batch 2 of 3).
 - [ ] [BACKEND] P2. **Add normalizer version and recovery epoch** to the canonical envelope, so a replay can tell
       which code produced a stored event.
 
@@ -131,3 +132,8 @@ use while an ambiguous one does not fail at all.
 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries); all paths re-verified on disk,
   unchanged.
+- **na-eligibility-audit 2026-08-21**: RECLASSIFY (per-todo split) — 2 of 6 open todos are pure investigation
+  tasks with no design call. Extracted to `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`. The 3 P0
+  schema/engineering todos and the P2 envelope extension stay `assigned_vm: NA` — a real, correctness-critical
+  live-schema change across ~65 connector files needing genuine design judgment. Doc's own `assigned_vm: NA`
+  unchanged. Cross-cutting tranche, batch 2 of 3.

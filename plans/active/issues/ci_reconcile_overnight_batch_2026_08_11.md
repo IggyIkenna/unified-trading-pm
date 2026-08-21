@@ -506,3 +506,7 @@ evidence.
   fix target for the one still-open, already-shipped-but-unverified follow-up (item C's `gh auth setup-git` fix).
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries) — escalation.py (the two open wall_type todos),
   the host-concurrency SSOT, and setup-glue-runners.sh all resolve and remain the fix targets.
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed unchanged since 2026-08-17. The sole open todo
+  is [BLOCKED-PERMISSIONS]: this session's AWS identity structurally lacks `ssm:SendCommand` on the target host
+  and has no self-service IAM path to grant it (confirmed distinct from the documented self-service identities in
+  `orchestrator-cloud-identity-self-service.md`), not a bounded worker task. Cross-cutting tranche, batch 2 of 3.
