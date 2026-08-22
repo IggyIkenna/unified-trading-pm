@@ -240,3 +240,28 @@ Evidence: `deployment_service/data_pipeline_monitors/meta_targets.py:54-150` (`m
 --job=uts-prod-dp-meta-watchers --limit=15` (15/15 healthy `*/15` executions, 2026-08-22T12:15-15:45Z);
 `scripts/dev/slack-read-channel.py --channel data-pipeline-alerts --limit 200` (zero DP-FETCH-009/arbitrage/sports
 hits as of 2026-08-22T15:44Z).
+
+## Addendum — QG-allow follow-up commit + deeper capture verification (2026-08-22, slot-3, data_engineering)
+
+The `[DATA] P0` fix above shipped as two commits, not one: `features-service@9e94485e` (the `.add()` →
+`record_captured_from_counts()` fix itself) landed first, then `features-service@735a4e2645` (same session)
+added the `# QG-allow: emission-policy-not-applicable` marker STEP 5.71 requires on any new
+`record_captured*()` callsite in a service with UAC `SERVICE_OUTPUT_POLICIES` entries — without it,
+`quality-gates.sh` fails Pass 1 and the fix cannot ship via quickmerge at all (confirmed: the first commit
+alone failed on exactly this gate). `arbitrage_opportunity` has no `SERVICE_OUTPUT_POLICIES` entry (grepped
+clean), so the marker is a genuine exemption, not a bypass — see the `_record_arb_day` docstring for the full
+reasoning. Also added a unit test
+(`tests/sports/unit/arb/test_arb_detect_handler.py::TestCapturedDayUsesRecordCapturedFromCounts`) asserting
+the captured branch calls `record_captured_from_counts()` (never `.add()`) with the correct per-bookmaker
+observed/expected cluster split — the prior test suite never exercised the captured-with-real-opportunities
+path at all (every existing test's stubbed detector returned zero opportunities).
+
+Independently re-verified `features-arb-backfill-20260822-161439`'s `run.log` (same VM cited above) via UTL
+`download_from_storage()` ~6.5 min after launch: 22 `wrote N opportunity row(s)` writes across ~40 processed
+days (2020-06-06→2020-07-15), 0 `Traceback`, 0 `ValueError`, 0 `banned`, 0 `attempted_failed` — deeper
+confirmation of the same finding, target-artifact-verified over a wider window than the ~1 min/6-date check
+above.
+
+Also fixed a now-stale comment in `launch-features-sports-arb-backfill.sh` that still described the
+captured-day write path as the legacy `ManifestWriter.add()` (it was the launch that surfaced the drift) —
+`deployment-service@0b9ee0ad0b`.
