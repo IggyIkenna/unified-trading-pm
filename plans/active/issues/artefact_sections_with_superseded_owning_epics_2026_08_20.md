@@ -69,15 +69,27 @@ also means T7b will try to reconcile these sections against an owner that does n
 
 ## Todos
 
-- [ ] [REVIEW] P1. Per D38 ruling (2026-08-21, autonomous-dispatch authority): check `superseded_by` frontmatter on
+- [x] ✅ [REVIEW] P1. Per D38 ruling (2026-08-21, autonomous-dispatch authority): check `superseded_by` frontmatter on
       both `global_ledger_pnl_attribution_master` and `dart_and_promote_master` for a successor epic first. Done when:
       for each epic, either a successor is named and cited here, or its absence is confirmed by stating exactly what
       was checked (not inferred from the absence of child plans).
-- [ ] [REVIEW] P1. Per D38 ruling (2026-08-21): if no successor exists for either epic (per the todo above), assign
+      **Resolved 2026-08-22**: both epic files carry an explicit `⚠️ SUPERSEDED-BY 2026-08-18` banner (checked
+      directly in each doc body, not inferred): `global_ledger_pnl_attribution_master.md` and
+      `dart_and_promote_master.md` were both folded into
+      [`plans/epics/strategy_master.md`](/plans/epics/strategy_master.md) per
+      `/codex/11-project-management/epic-taxonomy-2026-08-18.md` (0 corpus references at fold time). `strategy_master`
+      is confirmed `status: active` and its own summary explicitly states it "also owns (folded 2026-08-18) the DART
+      operator UX cockpit + promote workflow, and the global-ledger + PnL-attribution architecture." A successor
+      exists for BOTH epics — same successor for both.
+- [x] ✅ [REVIEW] P1. Per D38 ruling (2026-08-21): if no successor exists for either epic (per the todo above), assign
       PnL-attribution/promote-workflow ownership to the shared-mechanism owning epic per the epic-assignment rule
       (asset-group-specific work → the asset-group epic; shared-mechanism work, even found via one asset group → the
       owning epic). Done when: the chosen owning epic is named and cited here, and its frontmatter updated if
       reassigned.
+      **N/A 2026-08-22** — the prerequisite condition ("if no successor exists") is false per the prior todo: both
+      epics already name `strategy_master` as their live successor, so no shared-mechanism fallback assignment is
+      needed. No frontmatter reassignment made; the artefact sections' owning epic is `strategy_master` (already
+      declared in that epic's own frontmatter/summary, not newly set here).
 - [ ] [DOC] P2. **Record the resolution in the artefact-to-epic coverage map** once that map exists
       ([state_fabric_artefacts](/plans/active/state_fabric_artefacts_2026_08_20.md)), so the next orphan is caught by
       the map rather than by someone re-deriving the mapping by hand.
@@ -96,3 +108,13 @@ todo on the artefacts plan.
 **2026-08-21 — ruling D38 (Superseded-epic artefact ownership)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
 authority, AUTONOMOUS_AGENT_RULES rule 2): Check for successors first, fall back to shared-mechanism epic
 assignment. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+
+**2026-08-22 — review, D38 resolved.** Checked both epics' `superseded_by` banners directly (not inferred from
+zero child plans): both `global_ledger_pnl_attribution_master` and `dart_and_promote_master` were folded into
+`strategy_master` on 2026-08-18, which is `status: active` and explicitly claims both scopes in its own summary.
+Successor exists for both — the shared-mechanism-fallback todo is therefore N/A, no frontmatter changed. The
+orphan is resolved: the walkthrough's PnL-attribution section and the strategy-artefacts' promote-workflow
+coverage are both owned by `strategy_master` going forward. Remaining open todo (record this in the
+artefact-to-epic coverage map) stays open — that map is itself still an unbuilt todo on
+[state_fabric_artefacts_2026_08_20.md](/plans/active/state_fabric_artefacts_2026_08_20.md) as of this check, so
+there is nothing to record into yet.
