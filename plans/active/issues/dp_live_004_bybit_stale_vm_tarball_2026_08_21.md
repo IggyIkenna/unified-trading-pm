@@ -163,6 +163,23 @@ external action and is not performed by this escalation without that decision.
 
 ## Progress Log
 
+- **2026-08-22 (data_pipeline_failure escalation `agt-b28ff1`, slot 33)**: DP-LIVE-004 re-fired again for the OLD VM
+  (`mtds-live-cefi-consolidated-20260817-025031`), venue BYBIT-FUTURES, data_type `trades` this time (previous
+  same-day re-fires were `book_snapshot_5`) — last attempt 0.2h old. `gcloud compute instances list` confirms both
+  VMs still `RUNNING` (old since 2026-08-16T19:50:40-07:00, replacement since 2026-08-21T13:07:39-07:00) — unchanged
+  from every prior escalation today. SSH into the OLD VM: `bybit_ws.py` (the trades connector) shows 7 combined hits
+  for `_log_subscribe_ack|_is_linear_derivative|PERPETUAL` (some filter-related tokens present, unlike the earlier
+  "predates the filter entirely" characterization — worth a closer read next time someone digs into this VM, not
+  re-derived here), but the live `live-bybit-futures-trades.log` tail is all routine `ManifestWriter`/
+  `RESOURCE_SAMPLE` lines and the log still contains 25 `SPOT_PAIR` occurrences — the trades data_type is exhibiting
+  the same symptom (subscribing/erroring on unsupported spot instruments, zero captured rows) as the already-diagnosed
+  book_snapshot_5/depth_of_book_10 data types on this VM. `GET /api/escalations/active` shows only this escalation
+  dispatched; no blocked-questions surface reachable from here to re-check `BLK-9e8ffbb2`'s answer status. Did not
+  re-file a duplicate blocked-question (a 4th identical ask adds noise, not information, per `agt-521494`'s same
+  reasoning) and did not relaunch/decommission any VM (unresolved operator decision). No code/infra/manifest changes
+  made this pass — this is escalation #4 today confirming the identical stalled state; the fix (relaunch the old VM's
+  replacement to pick up `market-tick-data-service@efd0e788`, then verify captured rows, then decommission) remains
+  exactly as scoped in the open todos above, gated on the standing operator answer to `BLK-9e8ffbb2`.
 - **2026-08-22 (data_pipeline_failure escalation `agt-ebe5eb`, slot 31)**: DP-LIVE-004 re-fired again for the OLD VM
   (`mtds-live-cefi-consolidated-20260817-025031`), venue BYBIT-FUTURES, data_type `book_snapshot_5` (last attempt
   0.2h old). `gcloud compute instances list` confirms both VMs still `RUNNING` (old since 2026-08-16T19:50:40-07:00,
