@@ -123,13 +123,36 @@ impression:
       was previously discarded, never used). — execution-service@6a509338f9 + evidence: 10 new regression tests
       (validation errors + non-empty accounts list); QG passed twice; post-push ancestry verified.
 
-- [ ] [BACKEND] P1. Resolve full Orca Whirlpool / Raydium CLMM account derivation for add_liquidity/remove_liquidity
+- [x] ✅ [BACKEND] P1. Resolve full Orca Whirlpool / Raydium CLMM account derivation for add_liquidity/remove_liquidity
       -- position PDA, position_token_account, token_vault_a/b, and tick_array_lower/upper -- which the prior todo's
       partial fix (Token program + pool + authority only, 3 of ~11 required accounts) explicitly does not resolve;
       the instruction still cannot execute on-chain without them. Needs either a vendored official Orca/Raydium
       IDL-derived SDK or an on-chain account fetch+decode (Whirlpool/pool account layout, vault addresses) this
       connector does not yet have -- do not fabricate seeds/PDAs without a verifiable source. MEDIUM finding:
-      checklist points 2 and 3 (`orca.py`, `raydium.py`). (repo: execution-service)
+      checklist points 2 and 3 (`orca.py`, `raydium.py`). — execution-service@8019be35c8 + evidence: on-chain
+      account fetch+decode (Whirlpool/PoolState layouts, not an Anchor/Borsh library) plus PDA derivation, both
+      verified against orca-so/whirlpools and raydium-io/raydium-clmm program source (`state/whirlpool.rs`,
+      `state/position.rs`, `instructions/{increase,decrease}_liquidity.rs`) and raydium-sdk-V2's `pda.ts`/`utils.ts`
+      helpers (position/personal_position/protocol_position/tick_array PDA seeds, incl. Orca's decimal-string vs
+      Raydium's big-endian tick_array seed encoding, and Raydium's truncating- vs Orca's floor-division start-index
+      bucketing) -- not fabricated. All 11 (Orca) / 12 (Raydium) `ModifyLiquidity`/`IncreaseLiquidity`/
+      `DecreaseLiquidity` accounts now resolved in verified order; `add_liquidity`/`remove_liquidity` on both
+      connectors take a new required `position_mint` param (no existing callers/tests, so non-breaking) to identify
+      the target position. Added shared `derive_associated_token_address()`/`_fetch_account_data()` to
+      `BaseSolanaConnector`. quality-gates.sh green (159s, sentinel matched committed HEAD); post-push ancestry
+      verified. **Known remaining gap** (ix_data discriminator/argument encoding still doesn't match the real
+      instruction schema) spun into its own tracked P2 todo below rather than left silent. (repo: execution-service)
+
+- [ ] [BACKEND] P2. Fix the Orca Whirlpool / Raydium CLMM increase_liquidity/decrease_liquidity ix_data encoding
+      (`orca.py`, `raydium.py`): the discriminator bytes are single-byte placeholders (e.g. `0x2a`/`0x2b`/`0x03`/
+      `0x04`), not the real 8-byte Anchor sighash discriminators, and the args pass raw `amount_a`/`amount_b` token
+      amounts where the real instructions want a pre-computed `liquidity` value plus max/min token bounds -- found
+      2026-08-22 while resolving the account-derivation todo above (account list is now correct, but the
+      instruction still can't decode/execute with this data shape). Needs Uniswap-V3-style concentrated-liquidity
+      math (deriving `liquidity` from desired token amounts + the position's tick range + current pool
+      sqrt_price) this connector does not have; do not fabricate the math without a verified formula (e.g. the
+      real `increase_liquidity`/`decrease_liquidity` handler signatures already verified in the todo above's
+      evidence). MEDIUM finding: checklist point 2 (`orca.py`, `raydium.py`). (repo: execution-service)
 
 ### DeFi by primitive — lending
 
