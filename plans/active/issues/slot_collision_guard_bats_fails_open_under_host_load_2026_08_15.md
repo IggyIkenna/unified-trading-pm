@@ -139,6 +139,26 @@ this case and will send the next agent hunting a regression in unrelated files.
       slot-cron-ff-pull venv-resync 6/6. Repo: unified-trading-pm.
 - [ ] [DOC] P2. Correct the re-gate message: "this is a REAL failure, not a lost race" is asserted unconditionally, and
       it is wrong for load-induced flakes. Point at this issue from the BATS hard-fail line. Repo: unified-trading-pm.
+- [x] ✅ [CODE] P1. Root-cause the 2026-08-22 slot-4/slot-10 recurrence (not load after all — see 2026-08-22 slot-10
+      Progress Log entry): `foreign_claude_pids()`'s `pgrep -f claude` call in
+      `cursor-configs/hooks/lib/slot-collision-detect.sh` has no per-slot discriminator (by design — it searches
+      ALL peer slots), so on any AO-spawned worker pane it is unconditionally REFUSED by
+      `scripts/hooks/pkill-guard-bin/pgrep` (PATH-prepended into every such pane per
+      `codex/05-infrastructure/per-tab-worktrees.md`'s pkill/pgrep cross-slot-kill guard), independent of host
+      load — every candidate-pid scan silently returns empty. Fixed by routing that ONE call through
+      `command -p pgrep -f claude` (POSIX default PATH, bypasses the PATH-prepended wrapper) — the guard's own
+      refusal message documents this exact bypass, and the call is read-only detection, never a kill, so this is
+      the guard's sanctioned escape hatch, not a workaround around its purpose. Verified: all three consumers of
+      this lib now pass with REAL detections (not skips) — `test_session_start_collision_check.bats` 10/10 (was
+      3 hard-`not ok`), `test_slot_collision_detect_lsof_batching.bats` 4/4 (was 1 hard-`not ok`),
+      `test_pretooluse_slot_collision_guard.bats` 17/17 (was passing via `skip` on every BLOCK-expectation test —
+      i.e. that suite's actual guard behavior was UNTESTED on this host until this fix, now genuinely exercised).
+      Repo: unified-trading-pm.
+- [ ] [CODE] P3. Adjacent finding, NOT fixed here (out of scope for the shipping task that surfaced this):
+      `scripts/dev/slot-cron-ff-pull.sh` lines ~494/500 also call a bare, undiscriminated
+      `pgrep -f 'pytest|quality-gates|basedpyright'` — the same guard-refusal shape as the fix above, unverified
+      whether it actually degrades that script's own-repo-QG-detection on an AO worker pane. Investigate + apply
+      the same `command -p pgrep` fix if confirmed. Repo: unified-trading-pm.
 
 ## Evidence
 
@@ -174,3 +194,29 @@ this case and will send the next agent hunting a regression in unrelated files.
   change via a direct `git push` (rebase-reconciled, verified ancestor of origin) rather than blocking on this
   pre-existing red — same "PM pipeline-fix blocked behind a broken gate is a deadlock" reasoning already used
   elsewhere in `cve_affected_pinned_deps_remediation_2026_06_18.md`.
+- **2026-08-22 (slot-10)**: hit the identical signature shipping an unrelated `scripts/dev/` change (a new
+  `check_slot0_dirty_alert()` alert path in `slot-git-status-report.sh`, task
+  `bare_root_repo_agent_writes_unenforced-c77574a3f999`). Confirmed pre-existing via a throwaway `git worktree add
+  --detach <scratch> HEAD~1` (per-tab-worktrees.md's "not `git stash`" guidance, since this is a shared slot
+  clone) -- byte-identical `not ok` on the same 4 tests at the commit BEFORE my change, so the red cannot be
+  attributed to my diff. Re-ran the two files standalone 3x post-commit: same 4 failures every time, 0 variance --
+  a threshold reliably crossed on this host right now, not moment-to-moment flakiness (consistent with the
+  2026-08-22 slot-4 finding above). Unlike that entry, `scripts/dev/slot-git-status-report.sh` is NOT in the
+  CLAUDE.md GATE-INFRA direct-push carve-out (`quality_gates/`, `quality-gates-base/`, `hooks/`, `cicd/` only), so
+  that carve-out doesn't apply here -- declared the standard `qg_red` repo-blocker instead (RULES.md § 4b) rather
+  than bypassing the gate.
+- **2026-08-22 (slot-10, continued)**: root-caused rather than waiting on the blocker to self-clear. Directly
+  debugged `foreign_claude_pids()` (`source`d it live) and found it returns empty EVERY time on this AO worker
+  pane, unconditionally: `scripts/hooks/pkill-guard-bin/pgrep` -- the cross-slot-kill guard mechanically sourced
+  into every AO-spawned worker's PATH (per `codex/05-infrastructure/per-tab-worktrees.md`) -- REFUSES the
+  function's bare `pgrep -f claude` call (no per-slot discriminator, since the whole point is finding peers in
+  OTHER slots). This is NOT the load-driven `lsof`-timeout mechanism this issue was originally diagnosed around
+  (that mechanism is real, for the PYTHON guard's `subprocess.run(..., timeout=10)` calls) -- it's a second,
+  independent, 100%-deterministic failure mode specific to the bash-side `pgrep` call, invisible unless you're
+  actually running inside a guarded pane (a plain dev laptop shell has no such PATH entry, which is likely why it
+  went undetected until now). Confirmed via the guard's own bypass (`command -p pgrep -f claude` succeeds where
+  the bare call is refused) and fixed at the one call site -- see the new checked-off todo below. All three
+  consumer suites now pass with GENUINE detections, not skips (`test_pretooluse_slot_collision_guard.bats`
+  17/17 -- previously "green" only because every BLOCK-expectation test silently skipped on this host, meaning
+  its actual guard behavior was never really exercised here). Resolving this repo-blocker (RB-617e13b6) and
+  proceeding to ship both this fix and the originally-blocked `check_slot0_dirty_alert()` change together.
