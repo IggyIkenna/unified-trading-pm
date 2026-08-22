@@ -16995,9 +16995,9 @@ Content-Type: application/json
       dependent steps into one sequence.
     </p>
     <details class="sec-body" open>
-      <summary>Three levels of depth — take as much as you need</summary>
+      <summary>Four levels of depth — take as much as you need</summary>
       <p>
-        Execution can be adopted at three depths, and they are genuinely separable. You do not have to take the smarts
+        Execution can be adopted at four depths, and they are genuinely separable. You do not have to take the smarts
         to get the connectivity.
       </p>
       <div class="plate">
@@ -17022,8 +17022,8 @@ Content-Type: application/json
               <tr>
                 <td><b>2. Algorithms</b></td>
                 <td>
-                  Policy-selected execution algos — <code>TWAP</code>, <code>VWAP</code>, <code>ICEBERG</code> — rather
-                  than straight market orders
+                  Policy-selected execution algos — real-time-scoring order execution, not just static schedules — and
+                  select proprietary algos to capture alpha vs. basic execution
                 </td>
                 <td>You want execution quality without building it</td>
               </tr>
@@ -17031,6 +17031,14 @@ Content-Type: application/json
                 <td><b>3. Sequences</b></td>
                 <td>Chained dependent actions as one governed unit — borrow, then swap, then stake</td>
                 <td>Multi-step on-chain positions</td>
+              </tr>
+              <tr>
+                <td><b>4. Treasury management</b></td>
+                <td>Wallet transfers between venues (<code>TRANSFER</code>), settlements, and DeFi
+                  lend/borrow/stake (<code>LEND</code>/<code>BORROW</code>/<code>STAKE</code>/<code>UNSTAKE</code>/
+                  <code>REPAY</code>) through the same instruction envelope and audit trail as a trade — not a
+                  separate back-office system</td>
+                <td>Managing capital across venues and chains, not just placing orders</td>
               </tr>
             </tbody>
           </table>
@@ -17042,10 +17050,37 @@ Content-Type: application/json
         — not hard-coded per strategy. Changing execution behaviour is a policy change, and because policies are
         versioned, any fill can be traced to the exact policy that governed it.
       </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">The full algorithm registry</span
+          ><span class="note">Reachable from the automated, backtest-driven selector</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Algorithm</th><th>Shape</th></tr></thead>
+            <tbody>
+              <tr><td><code>TWAP</code></td><td>Time-weighted average price — fixed schedule</td></tr>
+              <tr><td><code>VWAP</code></td><td>Volume-weighted average price — schedule follows historical volume curve</td></tr>
+              <tr><td><code>ADAPTIVE_TWAP</code></td><td>TWAP schedule that adapts to realised market conditions</td></tr>
+              <tr><td><code>ALMGREN_CHRISS</code></td><td>Optimal-execution cost model balancing market impact vs. timing risk</td></tr>
+              <tr><td><code>POV_DYNAMIC</code></td><td>Percentage-of-volume participation, dynamically adjusted</td></tr>
+              <tr><td><code>HYBRID_OPTIMAL</code></td><td>Proprietary hybrid — captures alpha beyond the standard schedules above</td></tr>
+              <tr><td><code>PASSIVE_AGGRESSIVE_HYBRID</code></td><td>Proprietary — switches passive/aggressive posture on realised conditions</td></tr>
+              <tr><td><code>BENCHMARK_FILL</code></td><td>Fills at a stated benchmark price — the backtest-determinism default</td></tr>
+              <tr><td><code>SOR</code> / <code>SOR_TWAP</code> / <code>SWAP_TWAP</code></td><td>Smart order routing, plain and TWAP-paced; DEX-swap-paced variant</td></tr>
+              <tr><td><code>ICEBERG</code></td><td>Manual/live-only — real implementation exists but is excluded from the
+                backtest-driven automated selector (can't be realistically backtested); not reachable from a
+                production manual submission today either (see the instruction type-support table above)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>execution-service/execution_service/algorithms/registry.py</code> maps algorithm IDs
-        (<code>TWAP</code>, <code>VWAP</code>, <code>ICEBERG</code>) to their execution and config classes; a straight
-        market order is the default when no policy names an algo.
+        Source: <code>execution-service/execution_service/algorithms/selector.py</code>
+        (<code>ALGORITHMS_BY_INSTRUCTION_TYPE</code>), implementations under
+        <code>execution_service/algorithms/impl/</code>, and
+        <code>/codex/04-architecture/execution-algorithm-selection.md</code>; a straight market order is the default
+        when no policy names an algo.
       </p>
       <h3>Chained sequences</h3>
       <p>
