@@ -421,18 +421,43 @@ events to accounts via each slot's most-recent account-carrying event, run direc
       resolved: root cause was bug 3 (`free_provider_priority` defaulting to `["deepseek"]` only,
       never falling through to GLM). Confirmed live: GLM got 27 selections in the 2h post-fix window,
       both accounts healthy and actively used. No separate GLM-specific bug. Repo: agent-orchestrator.
-- [ ] [DATA] P3. **NEW, found during Part 6's recheck.** `sub-e-odum2default`/`sub-f-odum2default`
-      show elevated death/selection ratios (0.387/0.385) vs. the healthy high-volume Gemini accounts
-      (0.02-0.04) in the 2h window — but on small samples (31/13 selections each), not conclusive.
-      Re-check once more traffic accumulates (a day+); if the ratio holds on a larger sample,
-      investigate why Claude sub-accounts die more often per-selection than Gemini. Repo:
+- [x] [DATA] P3. ✅ **RE-CHECKED 2026-08-22 on a full day of traffic (22h window, slot 12) — the
+      ratio holds, root cause is mixed.** Every one of the 8 Claude sub-accounts now shows a
+      materially higher fail/success ratio than every other provider (0.71-1.69 vs. 0.11-0.32 for
+      Gemini/GLM/codex-luna — `success` here counting `autospawn_succeeded` +
+      `escalation_dispatch_initiated`, not just the `_selected`-suffixed events the original 2h
+      check used; that narrower filter under-counted Claude specifically, since Claude dispatch
+      logs under different event-type names than the free-provider pool — caught while re-running
+      this check, corrected before trusting the result). Two distinct causes, not one: (1) a large,
+      now-resolved spike of `autospawn_failed` events concentrated 2026-08-21 ~14:00-15:30 UTC,
+      citing real unresolved git conflict-marker signatures and stale-ahead-of-origin guards in
+      several repos (unified-trading-pm, oms-wt, features-service) — the dirty-state quarantine
+      (FM9 guard) correctly refusing to spawn over genuinely broken trees rather than clobbering
+      them; only 1 `autospawn_failed` event fleet-wide in the most recent 3h, confirmed cleared.
+      (2) A separate, ONGOING pattern that survives past that spike: `tmux_session_lost` with
+      `death_class="unexplained"` — 18 such events for Claude accounts in the most recent 6h alone,
+      spread across many different slots and accounts (not one stuck slot), `pane_dead_status`
+      empty in every sampled case. Not yet root-caused. Repo: agent-orchestrator.
+- [ ] [DATA] P2. **NEW, found while re-checking the todo above (2026-08-22).** Root-cause the
+      ongoing `tmux_session_lost` / `death_class="unexplained"` pattern that's specifically
+      elevated for Claude/Anthropic accounts vs. every other provider (18 events/6h, all
+      `pane_dead_status` empty). Candidate angles, none yet checked: host resource pressure
+      correlated with sonnet-tier session weight; a difference in how Claude-tier sessions get
+      torn down vs. free-provider ones; whether `pane_dead_status` being empty itself is a
+      `tmux_pruner` capture gap worth fixing first (can't classify what killed a pane if the exit
+      status was never captured). Repo: agent-orchestrator.
+- [x] [DATA] P3. ✅ **RE-CHECKED 2026-08-22 — still real, still recurring at real volume, not
+      chased further this pass either.** 20+ GLM `tmux_session_lost` events found between
+      2026-08-21 14:40 and 22:11 UTC alone, every one carrying an `account_snapshot.account_status`
+      of `"healthy"` at the moment of a real rate-limit death — the lag is not a one-off, it is the
+      normal case for a GLM death event. Still not confirmed to cause an actual mis-routed spawn
+      (the question the original todo asked) — that check wasn't run this pass either. Repo:
       agent-orchestrator.
-- [ ] [DATA] P3. **NEW, found during Part 6's recheck.** 2 GLM `tmux_session_lost` deaths this window
-      were real upstream 429s, but the death event's embedded `account_snapshot.account_status` still
-      read `"healthy"` at the moment of death — a small lag between the real API rejection and the
-      DB's cached account-health state (poller/status-write timing, not a dispatch-routing bug). Not
-      chased further; worth a look if it turns out to cause a mis-routed spawn onto an
-      already-rate-limited account. Repo: agent-orchestrator.
+- [ ] [DATA] P3. **Carried forward.** Confirm whether the GLM account_status poller-lag above ever
+      actually causes a mis-routed spawn onto an already-rate-limited GLM account (vs. being purely
+      a display/log-field staleness with no routing consequence) — the original question, still
+      unanswered after 2 re-checks. If it does cause mis-routing, this becomes a real P2; if it's
+      purely cosmetic, downgrade and close. Repo: agent-orchestrator.
 - [x] [INFRA] P2. ✅ **DONE 2026-08-22 (`/ao-watchdog` run, slot 29) — `gemini-3-7-flash-proj4` disabled.**
       `gemini-3-5-flash-lite-proj4` was already `status: disabled` at check time (done in an earlier pass); this
       run found `gemini-3-7-flash-proj4` still `status: healthy` — the D30 ruling was only half-applied.
