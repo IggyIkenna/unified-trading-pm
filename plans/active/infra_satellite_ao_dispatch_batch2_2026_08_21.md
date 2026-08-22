@@ -23,7 +23,7 @@ related:
   [
     /plans/active/issues/deployment_service_client_broken_functions_2026_08_20.md,
     /plans/active/issues/agent_orchestrator_pytest_cov_silent_death_under_host_load_2026_08_20.md,
-    /plans/active/issues/agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md,
+    /plans/archive/issues/agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md,
     /plans/active/deployment_service_api_integration_cleanup_2026_08_18.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_21.md,
@@ -50,7 +50,7 @@ context_scope:
     /plans/active/issues/deployment_service_client_broken_functions_2026_08_20.md,
     deployment-api/deployment_api/clients/deployment_service_client.py,
     /plans/active/issues/agent_orchestrator_pytest_cov_silent_death_under_host_load_2026_08_20.md,
-    /plans/active/issues/agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md,
+    /plans/archive/issues/agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md,
     agent-orchestrator/scripts/quality-gates.sh,
     scripts/quality-gates-base/qg-host-governor.sh,
   ]

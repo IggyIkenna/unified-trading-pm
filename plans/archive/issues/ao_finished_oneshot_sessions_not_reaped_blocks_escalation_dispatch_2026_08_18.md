@@ -18,7 +18,7 @@ summary: >-
   "the reaper cleans your session," and that isn't happening: a genuinely-finished one-shot worker's
   tmux session survives indefinitely, permanently removing that slot from the free pool until
   something else notices and kills it.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -59,6 +59,9 @@ context_scope:
     /plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18_finalize_2026_08_19.md,
   ]
 ---
+
+> **📦 ARCHIVED 2026-08-22** (issues-corpus executable-queue dispatch, running the finalize twin's own gated
+> archival todo) — all 3 todos done, live re-verified 2026-08-20. 0 open todos, no lock.
 
 # Finished one-shot sessions never reaped — blocks escalation dispatch onto their own slots
 

@@ -67,7 +67,10 @@ drift_direction: advance-code
       process's actual `/proc/<pid>/environ` + code-path proof the poller thread starts; codex SSOT updated to
       reflect verified state. Doc archived to `plans/archive/issues/`. Evidence: unified-trading-pm (commit to
       follow).
-- [ ] [CODE] P1. `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18_finalize_2026_08_19.md` (effort S): Run the standard 6-step archival ritual on ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md (git mv to plans/archive/issues/, fix every... — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
+- [x] ✅ [CODE] P1. `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18_finalize_2026_08_19.md`
+      — done 2026-08-22: 6-step archival ritual run on both the source doc and this finalize twin (both already had
+      0 open todos); referrer `ao_scheduled_job_reaped_stale_rate_2026_08_18.md` repointed (frontmatter + prose).
+      Both docs archived to `plans/archive/issues/`. Evidence: unified-trading-pm (commit to follow).
 - [ ] [CODE] P1. `ao_human_claim_reserved_slot_bypass_2026_08_16.md` (effort S): Check the live review slot's current state via GET /api/state; if the underlying task hasn't self-resolved, kill the wedged session and let ensure_review_agents respaw... — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
 - [ ] [CODE] P1. `ao_scheduled_jobs_health_audit_findings_2026_08_20.md` (effort S): Fold an external-PR-backlog check into escalation-queue-reconciler (or a small dedicated check): query GitHub for open PRs matching known scheduled-job branch patterns... — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
 - [ ] [CODE] P1. `ao_singleton_agent_kind_dedup_kills_concurrent_tranche_workers_2026_08_20.md` (effort S): Investigate why agt-d46d9a/agt-c82f06 did not register as 'owning a live session' (_owns_live/tmux_session) while a concurrent sibling did, for dashboard 'who owns thi... (+1 more units) — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.

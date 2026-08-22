@@ -26,7 +26,7 @@ related:
   [
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
-    /plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md,
+    /plans/archive/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md,
   ]
 created: "2026-08-18"
 parent_epic: agent_operating_framework_master
@@ -47,7 +47,7 @@ context_scope:
     /plans/active/issues/ao_scheduled_jobs_health_audit_findings_2026_08_20.md,
     agent-orchestrator/server/tmux_pruner.py,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
-    /plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md,
+    /plans/archive/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md,
     /plans/archive/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md,
   ]
 ---
@@ -78,7 +78,8 @@ at minimum, plus whichever other jobs weren't individually checked this session)
 ## Relationship to the separate "sessions never reaped" gap (same night, different hunter)
 
 Filed the same night (2026-08-18) as
-`/plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md` — both
+`/plans/archive/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md` (archived
+2026-08-22, fully resolved) — both
 live in the same `tmux_pruner.py` subsystem, so they're worth distinguishing rather than conflating. Code-confirmed
 (`agent-orchestrator/server/tmux_pruner.py` ~line 730-752): `exit_reason="reaped-stale"` is the label the pruner
 applies when it successfully archives a one-shot/scheduled agent whose tmux session it found already gone (a

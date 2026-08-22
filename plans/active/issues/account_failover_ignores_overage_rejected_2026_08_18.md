@@ -182,7 +182,7 @@ list detects that state.
 **Question**: would adding `overage_status=="rejected"` as a 5th failover trigger (feeding
 `rotate_all_slots_off_account`) collide with the CI-escalation/scheduled-task reserve pool (slots
 29-33), which a sibling investigation
-(`/plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md`)
+(`/plans/archive/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md`)
 was independently live-debugging the same day? Read `rotate_all_slots_off_account`
 (`server/server.py:1014`) directly to ground this rather than reason from the docstring alone.
 

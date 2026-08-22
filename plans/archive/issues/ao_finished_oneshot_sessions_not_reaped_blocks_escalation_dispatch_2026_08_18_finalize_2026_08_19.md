@@ -7,7 +7,7 @@ summary: >-
   idle+live slots past the reclaim-tick threshold are actually torn down, and that a queued escalation claims a
   freshly-reaped slot). Machine-gated via depends_on + gate_on_depends: true — will not dispatch until that todo is
   done.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit, finalize]
 related:
   [
-    /plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md,
+    /plans/archive/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
 created: "2026-08-19"
@@ -45,6 +45,9 @@ context_scope:
   ]
 ---
 
+> **📦 ARCHIVED 2026-08-22** (issues-corpus executable-queue dispatch) — both todos done: source doc reconciled +
+> archived. 0 open todos, no lock.
+
 # Finalize — ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch
 
 Machine-gated: `depends_on: [ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18]` +
@@ -68,7 +71,19 @@ Machine-gated: `depends_on: [ao_finished_oneshot_sessions_not_reaped_blocks_esca
       15:14×1) — multi-hour stalls did NOT recur, so conditional DEBUG-logging correctly NOT added; slow-git-sweep
       residual pre-tracked in `idle_lingering_session_reclaim_not_firing_2026_08_19.md`. Note: worker verified
       colocated, not SSM — equivalent/stronger (colocated = already on the VM SSM shells into).
-- [ ] [DOC] P1. Once reconciled, run the standard 6-step archival ritual on
+- [x] ✅ [DOC] P1. **DONE 2026-08-22 (issues-corpus executable-queue dispatch).** Ran the standard 6-step archival
+      ritual on `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md`: added an ARCHIVED
+      banner, `git mv` to `plans/archive/issues/`, fixed the corpus referrer with a structural `related:`/
+      `context_scope:` pointer (`ao_scheduled_job_reaped_stale_rate_2026_08_18.md`, both fields repointed to the new
+      archive path) + this finalize doc's own `related:` citation above. `ao_stuck_escalation_mtds_no_free_slot_
+      2026_08_18.md` is itself already archived (its `related:` link there is a historical archived→archived mention,
+      out of the active-corpus ratchet's scope, not touched). The other 2 corpus mentions
+      (`account_failover_ignores_overage_rejected_2026_08_18.md`, `plan_reconciler_findings_ao_2026_08_22.md`) are
+      prose citations, not structural `related:`/`context_scope:` pointers — left as-is (valid historical references
+      by name). No new codex contract: the fix + its live re-verification are already the durable record (disk-
+      persisted tick-counter pattern mirrors the pre-existing `_heartbeat_resume_count` precedent in the same file,
+      already an established pattern, not a new one to codify). Evidence: unified-trading-pm (commit to follow).
+      Was: **Once reconciled, run the standard 6-step archival ritual on**
       `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md`.
       git mv to `plans/archive/issues/`, SUPERSEDED-not-needed banner not required for a clean close, fix every
       corpus referrer including this finalize doc's own `related:`/`depends_on:` citations and
