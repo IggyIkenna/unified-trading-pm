@@ -135,11 +135,17 @@ drift_direction: advance-code
       captured rows remain, ALL twinless ORCA/RAYDIUM address-keyed Solana pools dated 2025-01-17 (full list in the
       log) — these keep `dex_pools` alive in the distinct-values panel; follow-up todo 16. Scan-guard
       (todo 2, market-tick-data-service@36e4c830) now prevents regrowth.
-- [ ] [DATA] P1. 16. **Migrate the 29 twinless `dex_pools` rows to `dex_pool_state`.** The 29 ORCA/RAYDIUM
-      address-keyed pool rows (2025-01-17, no canonical twin — the only remaining captured `dex_pools` rows) are
-      pool-STATE content: copy their objects to the `data_type=dex_pool_state` canonical path (no new data_type),
-      re-key the 29 manifest rows, delete legacy objects after content-equality + retention qualification. Until then
-      `dex_pools` stays visible in the panel. (repo: market-tick-data-service)
+- [x] [DATA] P1. 16. ✅ **Last captured `dex_pools` rows purged (nothing to migrate).** The mid-state census
+      DISPROVED the migrate premise: all 29 remaining captured rows (RAYDIUM/SOLANA, 2025-01-17, address-keyed) carry
+      **`row_count=0`** — zero-row placeholder captures under the retired data_type, and the canonical
+      `data_type=dex_pool_state` twins for that day already exist (92 symbol-keyed objects). Executed 2026-08-22
+      16:21Z per the banner ruling (4): rows deleted on VM `mtds-defi-blanket-perp-stamp-purge` via
+      `purge_zero_row_dex_pools_rows_2026_08_22.py --apply --expect-delete 29` (pass-1 == 29, snapshot
+      `_index/snapshots/pre_zero_row_dex_pools_purge_*` + `.bak`, CAS → **generation 1787415711357543**, rc=0), then
+      all 99 legacy `data_type=dex_pools/` objects under day=2025-01-17 deleted (retention re-checked 604800s, twin
+      dir verified non-empty, 0 legacy objects remain). `dex_pools` is now 0-captured → drops from the panel at the
+      next rollup. NOTE: attempt 1 hard-aborted rc=3 exactly as designed — a stale-blob monitor false-SUCCESS had
+      resumed the consolidator early and the one-off's PAUSED assert refused to write. (repo: market-tick-data-service)
 - [x] [DATA] P0. 5. ✅ **Migrate Class-B Solana glued objects to canonical** — objects: 213 copied to the canonical
       `venue={BARE}/chain=SOLANA/` path + single-glue filename, pass-2 re-verified (213 present+verified, 0 mismatched,
       0 failed; plan CSV 293 entries). Manifest re-key APPLIED 2026-08-22 01:33 London
@@ -247,6 +253,18 @@ drain, then todo 9. Serialize EVERY index rewrite (CAS makes a race a wasted hou
 
 ## Progress Log
 
+- **2026-08-22 ~17:30 London (todo 16 DONE; operator re-affirmed complete-work mode)** — Operator (interactive):
+  "keep going … complete work even if you fill others' work — the plans and docs are all there." Todo 16 executed
+  end-to-end on a VM (details in the todo). Two more monitor lessons hardened into `monitor_vm_generic.py`: (1)
+  same-name relaunches inherit the prior run's `vm-logs/` blobs — the monitor now takes a launch-epoch and treats
+  older `EXIT_STATUS`/`run.log` as absent (a stale-blob false-SUCCESS had resumed the cron mid-run and correctly
+  tripped the one-off's PAUSED hard-abort — attempt 2 with the epoch gate ran clean); (2) harness bash background
+  tasks die at a 600s cap — monitors are now sized ≤520s and CHAINED via task notifications, and 4h dep-watcher
+  loops are dead (dep state is checked inline each tick instead). MTDS QG for the carve-out ship: KILLED by the
+  resource governor after a 3600s queue wait (host saturated by peer QGs, exit 75) — the 5 one-offs remain
+  untracked-local; ship retries when the host quiets or UTL/DS clean up for normal quickmerge. Projection VM:
+  62/~81 parts at 16:3xZ. PM checkout: peers rebased their 2 parked commits onto newer origin (behind 82→7,
+  ahead=2 unchanged).
 - **2026-08-22 ~12:30 London (mid-state census + operator Q&A)** — Read-only DuckDB census of the live index
   (scratchpad `midstate_*.csv`, generation 1787388651853992): distinct ANY-status = 83 venues / 34 data_types / 17
   itypes / 23 chains (BEFORE: 108/32/16/23); CAPTURED-view = 67 venues, 23 data_types. Remaining captured legacy:
