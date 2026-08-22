@@ -45,6 +45,13 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-22** — the only todo `[x]` done (6/7 dangling citations were already repointed by a prior
+> session, `unified-trading-pm@68566babc5`; this session repointed the 1 remaining hit in
+> `plan_reconciler_findings_ui_2026_08_10.md:201` and re-verified 0 hits corpus-wide under `plans/active` +
+> `plans/epics`), unlocked, not `archive_exempt`; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule.
+
 # Residual prose referrers to the archived locked_by-placeholder doc
 
 ## What I found
@@ -82,15 +89,34 @@ same-line link-repoint") on any of these that are over-cap.
 
 ## Todo
 
-- [ ] [SCRIPT] P3. Repoint all 7 dangling citations of the old active-corpus path listed above (`plans` +
+- [x] ✅ [SCRIPT] P3. Repoint all 7 dangling citations of the old active-corpus path listed above (`plans` +
       `/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`) to point instead at
       `/plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` (same-line path-token
       substitution only), then re-verify via a corpus grep for the old active-form path returning 0 hits under
       `plans/active` + `plans/epics`. Also verify the `plans/epics/security_and_cross_cutting_master.md` bare-filename
-      comment mention and repoint if it resolves as a checked path.
+      comment mention and repoint if it resolves as a checked path. — 6/7 already repointed by a prior session
+      (`unified-trading-pm@68566babc5`); this session fixed the 1 remaining hit
+      (`plan_reconciler_findings_ui_2026_08_10.md:201`) and re-verified 0 hits corpus-wide.
 
 ## Progress Log
 
 - **2026-08-21**: filed during chunk-3 archival-lane processing, discovered as a byproduct of archiving
   `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`. Out of this session's chunk scope (none of
   these 7 files were assigned to this batch), so filed as a tracked follow-up rather than fixed inline.
+- **2026-08-22**: re-verified via a fresh corpus grep — 6 of the original 7 dangling citations were already
+  repointed by an earlier session (`unified-trading-pm@68566babc5`, "fix(plans): repoint dangling active-corpus
+  refs at now-archived docs..."): items 1/2/3/6 (`sports_consolidated_native_ao_extract`,
+  `sports_satellite_ao_dispatch_batch5`, `plan_reconciler_findings_all`, `tradfi_canonical_path_migration_design`)
+  now correctly cite `/plans/archive/issues/...`; item 4 (`features_universe_filter_settlement_suffix_and_vm_tarball_staleness`)
+  was itself archived and its citation moved+fixed with it; item 7 (`pm_scripts_typecheck_debt`) was itself archived
+  2026-08-21 (chunk-6), so it's out of the `plans/active`+`plans/epics` re-verification scope regardless of its
+  internal content. Fixed the 1 remaining genuine hit: `plan_reconciler_findings_ui_2026_08_10.md:201` (same-line
+  `active`→`archive` token substitution only, no other content change). Verified the
+  `plans/epics/security_and_cross_cutting_master.md` bare-filename `locked_by:` comment mention: it names the doc
+  with no path prefix at all (not `/plans/...` or `/codex/...` leading-slash form), so it does not resolve as a
+  `check_reference_paths.py`-checked path — no repoint needed. Re-ran the corpus grep scoped to
+  `plans/active/**.md` + `plans/epics/**.md`: 0 remaining hits of the old active-form path (the only 2 residual
+  matches are inside this doc's own `## What I found`/`## Todo` prose describing the search pattern itself,
+  deliberately written without a leading slash so it doesn't trip the checker — not live references). Todo done,
+  0 open todos, no lock — archiving per the 6-step ritual (single-repo same-commit flip+archival, sanctioned for
+  `doc_type: issue` docs per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
