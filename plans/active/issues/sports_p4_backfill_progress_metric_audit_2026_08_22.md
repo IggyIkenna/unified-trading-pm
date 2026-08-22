@@ -165,12 +165,69 @@ doc's findings and adds two items this doc didn't cover:
    manifest scan (not real-time), and the campaign that produced these rows only ran 2026-08-22 (today) — so this
    may simply mean the scan hasn't run its next cycle yet rather than a genuine coverage gap. Not confirmed either
    way within this audit's scope.
-   - [ ] [SCRIPT] P2. Re-check the `#data-pipeline-alerts` channel (or the Cloud Run job's own run history) after
-         `check_high_attempted_failed`'s next scheduled cycle for a `DP-FETCH-009` hit on
-         `(asset_group=sports, data_type=arbitrage_opportunity)`. If it still hasn't fired despite the cell being
-         well over the `abs>=500` threshold, file that as a genuine alerting-coverage gap per
-         `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md` § "Verify the alert actually
-         fires" (repo: deployment-service).
+   - [x] ✅ [SCRIPT] P2. **Re-checked 2026-08-22 15:44 UTC (slot-5, backend_engineer) — still hasn't fired, and the
+         root cause is now CONFIRMED as a structural alerting-coverage gap, not a timing delay.**
+         - **Re-check performed** (>6.5h after the campaign started at 09:00:11 UTC — well past the `*/15` cron, the
+           2-consecutive-miss (~30 min) paging gate, and the 30-min re-nag cooldown): `#data-pipeline-alerts` Slack
+           channel, last 200 messages — zero `DP-FETCH-009`/`DP_RUN_MOSTLY_EMPTY`/`arbitrage_opportunity`/`sports`
+           hits. Cross-checked the Cloud Run job's own run history (`gcloud run jobs executions list
+           --project=central-element-323112 --region=asia-northeast1 --job=uts-prod-dp-meta-watchers`): 15
+           consecutive successful `*/15` executions from 12:15-15:45 UTC today, each completing in 5-7 min (well
+           inside the 900s timeout) — the watcher itself is healthy, not OOM'ing/timing out.
+         - **Root cause CONFIRMED**: `check_high_attempted_failed`'s target list (`high_attempted_failed_targets()`,
+           `deployment_service/data_pipeline_monitors/meta_targets.py:129-150`) builds exactly one `FreshnessTarget`
+           per asset_group, using ONLY `market_data_bucket(ag)` (line 66:
+           `resolve_bucket_name(kind="market-data", asset_group=ag)`). But `arb_detect_handler.py`'s
+           `_run_historical_backfill` (features-service) constructs its `ManifestWriter` with
+           `catalogue_bucket=config.get_instruments_bucket()` — the INSTRUMENTS-STORE-sports bucket, not
+           market-data-sports. `ManifestWriter.__init__`'s own docstring
+           (`unified_trading_library/manifest_writer/_writer.py:112`) states `catalogue_bucket` IS "the GCS bucket
+           holding `_index/availability_index.parquet`", and every per-VM shard write
+           (`_write_per_vm_shard`/`_flush_per_vm_pending`, `_writer_io.py`) targets `self.catalogue_bucket`
+           exclusively — so the arb campaign's 1,323 `attempted_failed` rows consolidate into a bucket
+           `check_high_attempted_failed` never queries. This is a STRUCTURAL blind spot: DP-FETCH-009 cannot fire
+           for this cell regardless of how many `*/15` cycles run.
+         - **Filed as a genuine alerting-coverage gap** — see the new `[DATA] P1` todo in the 2026-08-22 addendum
+           below.
 
 Evidence: `gcloud compute operations list --project=central-element-323112 --filter="operationType=compute.instances.preempted AND targetLink~mdps-sports"` (single preemption hit, `mdps-sports-bucket-20260821-060513`, `2026-08-21T07:51:04Z`);
 `gcloud compute instances describe mdps-sports-bucket-20260822-{150734,150914} --format="value(metadata.items)"` (relaunch args showing checkpoint-resume, not replay); `features-service/features_service/sports/cli/handlers/arb_detect_handler.py:72-180` (`_arb_preflight_skip` / `_run_historical_backfill` read); `scripts/dev/slack-read-channel.py --channel data-pipeline-alerts --limit 100` (no DP-FETCH-009/arbitrage hit).
+
+## Addendum — DP-FETCH-009 bucket-scope blind spot confirmed (2026-08-22, slot-5, backend_engineer)
+
+Closing the `[SCRIPT] P2` re-check todo above (Step 3 of the `/vm-preemption-billing-waste-audit` pass) found a
+confirmed, structural root cause rather than a timing delay — see that todo's write-up for the full evidence chain.
+Summary: `high_attempted_failed_targets()` only ever resolves `market_data_bucket(ag)`, one bucket per asset_group,
+while a `ManifestWriter` constructed against a DIFFERENT `catalogue_bucket` (here, `config.get_instruments_bucket()`
+— the sports arb handler's actual writer) is invisible to DP-FETCH-009 no matter how long it runs. The
+already-existing `instruments_store_bucket(ag)` resolver (`meta_targets.py:69-79`, the same one `catalogue_targets()`
+already uses) is the ready-made fix ingredient for at least this bucket class.
+
+**Generalization risk (unverified beyond this one confirmed case)**: any data_type across ANY asset_group whose
+`ManifestWriter` is constructed with a `catalogue_bucket` other than that asset_group's `market_data_bucket(ag)` —
+i.e., any features-tier or instruments-tier derived data_type, not just sports/`arbitrage_opportunity` — has the same
+structural blind spot against this 🔴 CRITICAL/paging alert class. Not audited fleet-wide within this task's scope.
+
+- [ ] [DATA] P1. Extend `high_attempted_failed_targets()`
+      (`deployment_service/data_pipeline_monitors/meta_targets.py:129-150`) to also emit a `FreshnessTarget` per
+      asset_group using the existing `instruments_store_bucket(ag)` resolver (mirrors `catalogue_targets()`'s
+      pattern, `meta_targets.py:95-124`), so DP-FETCH-009 covers `ManifestWriter` instances constructed against the
+      instruments-store bucket (confirmed case:
+      `features-service/features_service/sports/cli/handlers/arb_detect_handler.py`'s arb writer) — not just
+      market-data-tier writers. While there, audit whether a THIRD bucket class (a features-tier bucket, e.g.
+      `features-sports-{env}` — no `features_bucket()` resolver currently exists in `meta_targets.py`) also needs its
+      own target, by checking whether any live `ManifestWriter` construction across the fleet passes a
+      `catalogue_bucket` that resolves to neither `market_data_bucket(ag)` nor `instruments_store_bucket(ag)`. Verify
+      the fix by confirming a DP-FETCH-009 page actually fires for the still-open sports/`arbitrage_opportunity` cell
+      (1,323 `attempted_failed`, unchanged until the separate `.add()`→`record_captured_from_counts()` fix lands)
+      once deployed (repo: deployment-service).
+
+Evidence: `deployment_service/data_pipeline_monitors/meta_targets.py:54-150` (`market_data_bucket`,
+`instruments_store_bucket`, `high_attempted_failed_targets`);
+`unified_trading_library/manifest_writer/_writer.py:93-128` (`ManifestWriter.__init__` docstring);
+`unified_trading_library/manifest_writer/_writer_io.py` (per-VM shard write methods, all
+`self.catalogue_bucket`-scoped); `features-service/features_service/sports/cli/handlers/arb_detect_handler.py:147-150`
+(writer construction); `gcloud run jobs executions list --project=central-element-323112 --region=asia-northeast1
+--job=uts-prod-dp-meta-watchers --limit=15` (15/15 healthy `*/15` executions, 2026-08-22T12:15-15:45Z);
+`scripts/dev/slack-read-channel.py --channel data-pipeline-alerts --limit 200` (zero DP-FETCH-009/arbitrage/sports
+hits as of 2026-08-22T15:44Z).
