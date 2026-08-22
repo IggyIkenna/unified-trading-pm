@@ -335,7 +335,7 @@ exercised different strings, so a green suite carried no signal about the live p
         `quickmerge-commit.lock` removed. Verified clean: `git status` empty, `ahead=0`.
       - **Slot 16 — RESOLVED 2026-08-21, operator-directed discard, cross-checked against 2
         independent prior AO investigations first.** Before acting, read
-        `plans/active/issues/foreign_isolated_worktree_nested_in_wrong_slot_blocks_done_gate_2026_08_21.md`
+        `plans/archive/issues/foreign_isolated_worktree_nested_in_wrong_slot_blocks_done_gate_2026_08_21.md`
         — this exact worktree (`oms-wt.oc3YkB`) had ALREADY been investigated twice (slot-16,
         slot-14, same day) and concluded: (a) despite the `slot16-oms-persistence` branch name,
         its staged content is unrelated DeFi-transfer/bridge/repricer work, NOT the OMS-
