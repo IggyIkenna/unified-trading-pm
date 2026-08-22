@@ -2291,37 +2291,32 @@
       </p>
       <div class="stat-row">
         <div class="stat">
-          <span class="v">660</span
+          <span class="v">633</span
           ><span class="k"
             >Venue × instrument-type × data-type triples in scope
-            <span class="u">(12 unresolved, disclosed)</span></span
+            <span class="u">(0 unresolved — resolved 2026-08-21, all 12 fixed)</span></span
           >
         </div>
         <div class="stat">
-          <span class="v">48.54<span class="u">%</span></span
-          ><span class="k">Reachable coverage, volume-weighted <span class="u">denominator 119,500,618</span></span>
+          <span class="v">46.1<span class="u">%</span></span
+          ><span class="k">Reachable coverage, volume-weighted <span class="u">denominator 121,014,703</span></span>
         </div>
-        <div class="stat"><span class="v">3,960</span><span class="k">Shards in scope, measured 2026-08-18</span></div>
         <div class="stat">
-          <span class="v">288</span
+          <span class="v">292</span
           ><span class="k"
-            >Venues in the 2026-08-18 coverage manifest, readiness-dump grain
-            <span class="u">— not directly comparable to registry-declared counts</span></span
+            >Venues in scope, readiness-dump grain (declared ∪ observed)
+            <span class="u">— not directly comparable to <a href="#s3">§03</a>'s registry-declared counts</span></span
           >
         </div>
       </div>
       <div class="callout">
-        <span class="tag">How to read 48.54%</span>
+        <span class="tag">How to read 46.1%</span>
         <p>
           <b>Volume-weighted across shards</b>, not a naive average of asset groups — the same data averaged naively per
-          asset group reads 73.04%. The 25-point spread is method, not data, which is why the basis is stated rather
+          asset group reads 72.62%. The ~26-point spread is method, not data, which is why the basis is stated rather
           than the number quoted alone. Denominator is captured + attempted-failed + expected-unattempted; the
           not-expected class is excluded, since counting a venue's pre-existence as a gap makes a complete dataset look
-          broken.
-        </p>
-        <p>
-          Independently re-derived twice within 0.14 points on 2026-08-17 and 2026-08-18 at different grains — the
-          agreement is what makes it quotable.
+          broken. <b>Source:</b> instruments-service <code>measure_honest_coverage.py</code>, re-run 2026-08-22.
         </p>
       </div>
     </details>
@@ -6344,8 +6339,8 @@
             chain-suffixed <code>PROTOCOL-CHAIN</code>, so the chain level below expands directly into its protocols —
             no separate protocol layer is needed. Each protocol×chain venue then expands into its real instrument types
             (lending markets carry <code>A_TOKEN</code>/<code>DEBT_TOKEN</code>, DEXes carry <code>POOL</code>,
-            liquid-staking carries <code>LST</code>, and so on — <code>venue_instrument_type_triples()</code>, 660 real
-            triples, 12 unresolved cells fleet-wide 2026-08-19) and data types. Coverage state is the same
+            liquid-staking carries <code>LST</code>, and so on — <code>venue_instrument_type_triples()</code>, 633 real
+            triples, 0 unresolved fleet-wide (resolved 2026-08-21) and data types. Coverage state is the same
             <code>market_tick_data</code> BATCH leg used for every other asset group here.
           </p>
           <details class="tree">
@@ -17501,14 +17496,15 @@ Content-Type: application/json
             <tbody>
               <tr>
                 <td>Venue universe size</td>
-                <td>660 (venue × instrument_type × data_type) triples; 288 venues in the coverage manifest</td>
-                <td>2026-08-18</td>
+                <td>633 (venue × instrument_type × data_type) triples, 0 unresolved; 292 venues in the readiness-dump
+                  scope (declared ∪ observed)</td>
+                <td>2026-08-22</td>
                 <td>capability registry, re-run from source</td>
               </tr>
               <tr>
                 <td>Current coverage</td>
-                <td>48.54% reachable, volume-weighted; denominator 119,500,618 over 3,960 shards</td>
-                <td>2026-08-18</td>
+                <td>46.1% reachable, volume-weighted; denominator 121,014,703</td>
+                <td>2026-08-22</td>
                 <td>availability manifest, via the honest-coverage dump</td>
               </tr>
               <tr>
@@ -17678,7 +17674,7 @@ Content-Type: application/json
     <div class="sec-head">
       <span class="num">20</span>
       <h2>Manual trade — the disaster path</h2>
-      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       <b
         class="own"
         title="system_readiness_master.md — W5: Venue registry completeness (manual trade capability for EVERY venue, no exceptions)"
@@ -17706,11 +17702,47 @@ Content-Type: application/json
           ><span>A manual fill is recorded the same way an automated one is — not a side channel</span>
         </div>
       </div>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Two booking options, per instruction</span
+          ><span class="note"><code>ManualInstructionRequest.recon_excluded</code>, built and shipped</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr><th>Option</th><th>Behaviour</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>Standard</b> — <code>recon_excluded: false</code> (default)</td>
+                <td>Booked like any automated fill; participates in normal batch-live-reconciliation ledger-matching</td>
+              </tr>
+              <tr>
+                <td><b>Audited, recon-excluded</b> — <code>recon_excluded: true</code></td>
+                <td>Still fully booked and audited (same <code>TradeFillRecord</code>/<code>LedgerRow</code> path,
+                  same FCA audit trail) but deliberately skipped from ledger-matching comparison — for a fill that
+                  legitimately cannot reconcile against the normal loop (e.g. a disaster-path fill placed while the
+                  automated pipeline was down), so it doesn't manufacture a false reconciliation deviation</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--ink-3)">
+        The flag is orthogonal to <code>ManualExecutionMode</code> (<code>EXECUTE</code> routes to the venue via the
+        orchestrator; <code>RECORD_ONLY</code> skips venue execution and records a fill directly, for OTC or a
+        missed trade) — either mode can be booked standard or recon-excluded. <b>Source:</b>
+        <code>unified_api_contracts/internal/execution.py::ManualExecutionMode</code>,
+        <code>execution_service/api/manual_instruction_ledger.py</code>, shipped
+        <code>execution-service@ee694cf46b</code> + <code>unified-trading-library@707020ff7b</code>.
+      </p>
       <div class="callout">
         <span class="tag">The honest state today</span>
         <p>
-          This is specified, not built, and coverage across venues is unverified. It is a P0 item precisely because it
-          is the fallback for every other P0 item in this document failing at once.
+          The booking mechanics above (both options) are built and shipped. What remains specified, not built: a
+          manual-trade UI/path confirmed reachable for EVERY venue with no exceptions — venue-by-venue coverage of
+          the disaster-path requirement itself is unverified. It is a P0 item precisely because it is the fallback
+          for every other P0 item in this document failing at once.
         </p>
       </div>
     </details>
@@ -17806,7 +17838,7 @@ Content-Type: application/json
     <div class="sec-head">
       <span class="num">22</span>
       <h2>PnL attribution, across every dimension</h2>
-      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       <b class="own" title="system_readiness_master.md — W13: PnL attribution">owner: W13</b>
     </div>
     <p class="lede">
@@ -17822,12 +17854,40 @@ Content-Type: application/json
         number is sliced cannot be reconciled against it, and an unreconcilable pair of numbers is worse than either
         number alone.
       </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">The 12 declared attribution dimensions</span
+          ><span class="note"><code>PortfolioPnLAttribution</code>, UAC canonical schema</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr><th>Dimension</th><th>What it captures</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>delta_pnl</code></td><td>Directional price exposure</td></tr>
+              <tr><td><code>gamma_pnl</code></td><td>Convexity — how delta itself changes with price</td></tr>
+              <tr><td><code>theta_pnl</code></td><td>Time decay</td></tr>
+              <tr><td><code>vega_pnl</code></td><td>Implied-volatility sensitivity</td></tr>
+              <tr><td><code>rho_pnl</code></td><td>Interest-rate sensitivity of an option's own price</td></tr>
+              <tr><td><code>funding_pnl</code></td><td>Perpetual funding payments received/paid</td></tr>
+              <tr><td><code>basis_pnl</code></td><td>Spot-vs-derivative price basis</td></tr>
+              <tr><td><code>interest_rate_pnl</code></td><td>Lending/borrowing rate accrual, distinct from option rho</td></tr>
+              <tr><td><code>carry_pnl</code></td><td>Cost/benefit of holding a position over time, net of the more specific dimensions above</td></tr>
+              <tr><td><code>fx_pnl</code></td><td>Currency conversion effects</td></tr>
+              <tr><td><code>staking_pnl</code></td><td>On-chain staking rewards — first-class field since
+                <code>unified-api-contracts@366b74ec08</code> (was folded into <code>carry_pnl</code> before)</td></tr>
+              <tr><td><code>residual_pnl</code></td><td>Whatever the 11 named dimensions above don't explain — never silently dropped</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div class="keypoints">
         <div>
           <b>Same dimensions as risk</b
           ><span
             >Account, instrument, instrument type — whatever axis exposure is reported on, PnL attributes on the same
-            axis</span
+            axis (<code>by_asset_group</code>/<code>by_strategy</code> groupings, plus <code>total_pnl</code>)</span
           >
         </div>
         <div>
@@ -17836,10 +17896,16 @@ Content-Type: application/json
         </div>
       </div>
       <div class="callout">
-        <span class="tag">The honest state today</span>
+        <span class="tag">The honest state today: the aggregator is built, nothing calls it yet</span>
         <p>
-          This is specified, not built. Nothing in this section is a measured figure, and no PnL attribution is
-          currently reported on this platform in the shape described here.
+          <code>strategy-service</code>'s <code>PnLAttributionAggregator.aggregate()</code> is real and complete — it
+          sums per-position attribution dicts into a <code>PortfolioPnLAttribution</code> across all 12 dimensions
+          above, plus the asset-group/strategy groupings. What is not yet built: no endpoint, periodic job, or event
+          consumer constructs one in production today (confirmed 2026-08-22 — zero non-test call sites). The
+          per-position attribution dicts this aggregator consumes as input are themselves out of this section's
+          scope to verify. <b>Source:</b>
+          <code>strategy_service/position/core/pnl_attribution_aggregator.py</code>,
+          <code>unified_api_contracts/canonical/domain/position/__init__.py::PortfolioPnLAttribution</code>.
         </p>
       </div>
     </details>
