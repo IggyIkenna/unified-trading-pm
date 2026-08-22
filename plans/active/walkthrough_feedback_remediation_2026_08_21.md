@@ -91,6 +91,14 @@ drift_direction: advance-code
       `venue_adapter_keys.py` (2 already had real adapter keys); new regression test
       `tests/unit/test_venue_capability_asset_group_parity.py` locks declared == bucketed parity forever.
       Shipped: unified-api-contracts@326f9a6bfa.
+      **Note (T5, 2026-08-22, merge reconciliation)**: an earlier T5 "DECIDED — defer to Wave 2 framing" note plus
+      a separate sub-agent's independent ALCHEMY-ONCHAIN re-home attempt (`unified-api-contracts@3ce57ed461`) were
+      both superseded by the more complete operator ruling recorded on this same todo above (in this doc,
+      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md`) and dropped during conflict resolution rather
+      than kept — this item's real per-venue verdict table already covers everything both would have said, and a
+      second ALCHEMY-ONCHAIN removal on top of an already-removed venue would either no-op or double-fix; if that
+      second commit shipped independent, unrelated content (the cassette-orphan-checker timeout bump), verify it
+      landed separately rather than assuming it's lost.
 - [x] [BACKEND] P1. Converge the three DeFi venue sets to one coherent story: dedup `ALL_DEFI_VENUES`
       (`defi_venues.py:32` — 174 entries, 35 exact duplicates, 139 unique) and prune-or-capability the 18
       identities with no capability row (incl. the deliberately-cefi-reclassified CLOBs — annotate as
@@ -390,7 +398,7 @@ drift_direction: advance-code
       Fixed `.toc-sidebar` panel (min-width:1680px) built from the existing in-flow `nav.contents` anchors,
       `IntersectionObserver` scroll-spy, `body{overflow-x:hidden}` guard; existing wide tables/diagrams already
       carry their own `.scroll-x`/`overflow-x` containers (unchanged).
-- [ ] [DOC] P0. Voice pass — remove internal-audit framing: every "Verified directly:" → "Source:"; delete
+- [x] [DOC] P0. ✅ Voice pass — remove internal-audit framing: every "Verified directly:" → "Source:"; delete
       correction narratives (16-chain grep-artefact story, one-day-fresher re-run block, "TWO DIFFERENT
       HOW-MANY QUESTIONS" block, "DEFI REFRESHED — why the split moved" block, "12 unresolved, disclosed",
       VENUE_CHAIN_MAP defect callout, Unattributed tree section) once their underlying fixes land; replace with
@@ -554,6 +562,21 @@ drift_direction: advance-code
       section naming a venue-level failure mode (data delivery, transfers, custody).
 - [ ] [DOC] P1. Voice pass residue: "market perp" ("not ready"→"coming soon") — 2026-08-22 grep found no match;
       premise may be stale, or wording differs — re-grep with synonyms before closing.
+- [x] ✅ [DOC] P1. (retro-added 2026-08-22, work already shipped) §08 instruction-envelope contract-shape fix:
+      split "declared today" (17 envelope fields verified from `schemas.py` source; action/sizing fields noted as
+      subtype-level) from the PLANNED per-entry `references: list[InstrumentReferenceEntry]` vector per the
+      Q12-Q16 operator ruling (2026-08-21, recorded in
+      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` § "OPERATOR RULING
+      2026-08-21") + factor-state vehicle note, replacing the superseded flat
+      `reference_position`/`credit`/`position_adjustment_bps_per_unit_risk` trio and the false "real, declared
+      contract" claim — unified-trading-pm@a6fe8b1a39. Sibling deep-dive aligned the same day
+      (@8d21ca2364, tracked + flipped in the repricer issue doc).
+- [x] ✅ [SCRIPT] P2. (retro-added 2026-08-22, work already shipped) First envelope validator:
+      `venue_constraints` keys ⊆ `eligible_venues` `model_validator` on `StrategyInstructionEnvelope` + a
+      `position_mismatch` `RiskRuleTrigger` subtype (closed union, per-entry per Q15) + tests —
+      unified-api-contracts@2178693a63, full QG pass; safety-measured first (zero producers construct either
+      field workspace-wide). Follow-ups (UTL companion, empty-`eligible_venues` semantics) tracked as `- [ ]`
+      todos in `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
 - [ ] [AGENT] P2. Per-venue-leaf readiness refresh: tree headers/aggregates refreshed 2026-08-22, but the
       thousands of individual venue-node badges were not — needs its own `--verbose` pass + diff, not inline.
 - [ ] [REVIEW] P2. Infra finding (out of repo scope, filed for tracking): `.git/hooks/pre-push`'s
