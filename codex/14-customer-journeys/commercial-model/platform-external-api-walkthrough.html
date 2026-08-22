@@ -17600,7 +17600,7 @@ Content-Type: application/json
     <div class="sec-head">
       <span class="num">18</span>
       <h2>Fees and gas, by component</h2>
-      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       <b class="own" title="system_readiness_master.md — W17: Fees and gas">owner: W17</b>
     </div>
     <p class="lede">
@@ -17662,12 +17662,27 @@ Content-Type: application/json
           ><span>So the realised cost is baked into alpha PnL rather than sitting outside it</span>
         </div>
       </div>
+      <p style="font-size: 0.9rem; color: var(--ink-3)">
+        How each component is meant to be exposed, not just what it covers: <b>clearing</b>/<b>broker</b>/
+        <b>exchange</b> are reference data — per-venue commission schedules keyed off a cost-model artifact, not a
+        caller-supplied parameter; <b>gas</b> is likewise reference data by default (a per-venue estimate) but can
+        be overridden per instruction where the caller has a better live quote; <b>other</b> is the one genuinely
+        parameter-driven field, since it exists specifically for costs no reference table can anticipate. None of
+        the five is exposed as its own external API field today (<a href="#s26">§26</a>'s
+        <code>StrategyInstructionV2</code> envelope carries no cost-breakdown field on the request side).
+      </p>
       <div class="callout">
         <span class="tag">The honest state today</span>
         <p>
-          Fee and gas cost is not broken into these components anywhere in the pipeline as of this writing. Nothing in
-          this section is a measured figure — it is the target shape a specified, unbuilt piece of work is expected to
-          take.
+          The <b>exact five-component split</b> (clearing/broker/exchange/gas/other) is not built anywhere in the
+          pipeline. A real, adjacent cost model does exist and is closer than "nothing" —
+          execution-service's <code>estimate_cost()</code> (<code>engine/v2/cost_models.py</code>) prices an
+          instruction against a per-venue <code>CostModelArtifact</code> and returns <code>commission_usd</code> +
+          <code>gas_cost_usd</code> + <code>slippage_cost_usd</code> + <code>total_cost_usd</code> — a 3-component
+          model (commission folds broker+exchange together; slippage is a real dimension this section's target
+          taxonomy doesn't name; clearing and "other" don't exist in it at all). It is called internally, not
+          exposed as an external endpoint or a strategy-service consumer today — the "in strategy-service, so a
+          decision can weigh cost before acting" half of the target design above is not built.
         </p>
       </div>
     </details>
