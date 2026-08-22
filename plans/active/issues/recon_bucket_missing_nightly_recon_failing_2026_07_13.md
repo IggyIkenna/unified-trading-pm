@@ -277,7 +277,7 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       todo's own literal ask (rebuild + redeploy the image off `fc7fa37785`, verify the digest changed) is
       fully met with live evidence; the broader done-when (a fully successful execution writing the marker)
       is NOT yet met — carried by the new todo below.
-- [ ] [BACKEND] P0. Fix (or provision) the missing BigQuery features table backing
+- [x] ✅ [BACKEND] P0. Fix (or provision) the missing BigQuery features table backing
       `ml_service/inference/app/core/feature_subscriber.py::_query_features_from_bigquery` for CEFI 1h
       features — live evidence: execution `uts-prod-ml-service-t1-recon-5p7bl` (2026-08-22T15:03Z, first
       execution against the rebuilt/redeployed image off `ml-service@fc7fa37785`) crashed with `ERROR ...
@@ -293,7 +293,60 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       `features-delta-one` bucket-kind-alias bug) before choosing a fix. Repo: ml-service,
       features-service (likely, pending diagnosis). Done-when: `uts-prod-ml-service-t1-recon`'s next
       triggered/scheduled execution completes successfully and writes `t1-recon/ml/{date}/_SUCCESS` — cite
-      the execution ID (this closes the todo-2/2b chain's own done-when too).
+      the execution ID (this closes the todo-2/2b chain's own done-when too). — DONE (diagnosis + code fix)
+      2026-08-22 (slot-24): confirmed GENUINELY MISSING, not a naming/resolver-alias bug — live `bq show
+      central-element-323112:features_data` 404s ("Not found: Dataset"); no Terraform-managed dataset named
+      `features_data` exists anywhere (`main.tf`'s bare `features` dataset has zero `google_bigquery_table`
+      resources targeting it); the only thing that ever created `features_data` is an orphaned,
+      non-Terraform `deployment-service/scripts/setup_bigquery_features_tables.sh` pointing at
+      `gs://features-delta-one-cefi-${PROJECT}/...` — a bucket the Wave-3 features fold
+      ([[bucket_estate_consolidation_to_sub100_2026_07_13]]) already retired in favor of
+      `features-{ag}-prd-{pid}`. The CURRENT correctly-Terraform-managed BQ external-table system
+      (`deployment-service/terraform/gcp/bigquery_feature_external_tables.tf`, dataset
+      `uts_feature_external` — live-confirmed via `bq ls`, exactly 1 table: `defi_onchain_features`)
+      deliberately EXCLUDES `cefi__delta_one_features` too, pending an already-tracked, separate
+      data-engineering migration (mixed versioned/unversioned partition shapes in
+      `features-delta-one-cefi`'s GCS tree, 1-of-~38-instruments done — see that file's header comment) —
+      genuinely out of this task's scope, same "genuinely out of scope, not just one more bug to fix"
+      framing this doc already used for the strategy-service run-tag gap (see "2026-07-14 update" above).
+      **Root-caused the actual crash mechanism, not just the missing table**: `GCPAnalyticsClient
+      .execute_query()` (`unified_trading_library/cloud_interface/providers/gcp.py:764-768`) has no
+      exception handling at all, so BigQuery's `NotFound` for a missing table propagates uncaught, and
+      `feature_subscriber.py`'s `_query_features_from_bigquery` except clause (`ConnectionError,
+      TimeoutError, OSError, ValueError`) didn't catch it either — so the per-instrument shard-isolation
+      already present one layer up (`run_inference()`/`_resolve_features()`, which already treats "no
+      features" as a graceful skip-and-continue) never got a chance to engage; the whole batch `run()`
+      crashed before reaching `_write_t1_recon_success_marker`. Same narrow-except bug SHAPE already fixed
+      once in this doc (`InferHandler.validate_config()`). **Fixed**: broadened
+      `_query_features_from_bigquery`'s except clause to also catch `google.api_core.exceptions.NotFound`
+      (mirrors the `validate_config()` precedent) — a missing BQ table now degrades to "no BQ features for
+      this instrument/timeframe" (logged, returns `None`) like any other fetch failure instead of crashing
+      the whole run; added 2 unit tests (`TestQueryFeaturesFromBigQuery`) covering the `NotFound` path +
+      the pre-existing exception path. `ml-service@27044a4474`, QG green (`bash scripts/quality-gates.sh` —
+      99s, sentinel keyed to that exact commit SHA), verified an ancestor of `origin/live-defi-rollout`.
+      **NOT YET independently verified end-to-end**: same deployment gap as todos 3/4 above — no Cloud
+      Build trigger exists for ml-service project-wide (confirmed still true,
+      `gcloud builds triggers list` 0 rows — 3rd time this exact gap has blocked a same-day verification in
+      this doc), so the deployed Cloud Run Job's image still predates this commit. A real triggered
+      execution is also needed to confirm degrading-not-crashing is actually sufficient for the batch to
+      reach `_write_t1_recon_success_marker` — confirmed by reading `ml_service/inference/cli/main.py:333-
+      337` that the marker write is unconditional once `run()` returns without raising (NOT gated on
+      100%-per-instrument success, unlike strategy-service's marker). Split the rebuild+redeploy+re-verify
+      step into the new `[INFRA] P0.` todo immediately below (same craft-boundary split pattern as todos
+      2→3, 3→4 above).
+- [ ] [INFRA] P0. Rebuild + redeploy `uts-prod-ml-service-t1-recon`'s Cloud Run Job container image off
+      `ml-service@27044a4474` (the `_query_features_from_bigquery` `NotFound`-handling fix immediately
+      above), e.g. a manual `gcloud builds submit --config=cloudbuild.yaml
+      --substitutions=SHORT_SHA=$(git rev-parse --short HEAD) .` off LDR HEAD (mirrors the todo-4 recipe
+      above — still no standing Cloud Build trigger for ml-service; worth provisioning one given this is
+      now the 3rd manual-submit workaround for this exact repo in this one doc), then verify the deployed
+      image's digest actually changed. Repo: ml-service, deployment-service. Done-when: a real triggered
+      execution of `uts-prod-ml-service-t1-recon` completes successfully and writes
+      `t1-recon/ml/{date}/_SUCCESS` — cite the execution ID (this closes the immediately-preceding todo's
+      own done-when, and the whole todo-2/2b/2c/2d chain's, too). If the execution still fails, diagnose
+      whether it's a genuinely new bug (split further, same pattern) or reveals that skip-on-missing-
+      features needs stronger per-timeframe visibility (e.g. a warning-level Slack signal) rather than
+      silent degradation.
 - [x] ✅ [BACKEND] P0. Implement a run-tag-aware `_SUCCESS`-marker writer in strategy-service's batch CLI
       (`t1-recon/strategy/{date}/_SUCCESS`) and add a self-default date fallback to `_resolve_date_args()`
       (mirroring ml-service/mdps's T-1 default) so the Terraform-provisioned job no longer hard-requires an explicit
@@ -676,3 +729,20 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   scope. Split into a new `[BACKEND] P0.` todo with file:line + live evidence rather than diagnosing/fixing
   it myself (same craft-boundary split pattern used repeatedly in this doc). Did not touch the strategy/BLRS
   todos (5, REVIEW) — out of this task's scope.
+
+- **backend_engineer 2026-08-22 (slot-24, dispatch
+  `recon_bucket_missing_nightly_recon_failing-3bb5587f6622`)**: diagnosed + fixed the BigQuery
+  features-table todo. Confirmed live the table is genuinely missing (no Terraform-managed `features_data`
+  dataset — `bq show` 404s; the only creator is an orphaned pre-fold script pointing at a bucket the Wave-3
+  features fold already retired) and that the current Terraform-managed `uts_feature_external` system
+  deliberately excludes CEFI delta-one too, pending an already-tracked, separate migration — out of this
+  task's scope. Root-caused the actual crash: BigQuery's `NotFound` propagates uncaught through
+  `GCPAnalyticsClient.execute_query()` (no exception handling at all) and wasn't caught by
+  `_query_features_from_bigquery`'s narrow except clause either, so the batch crashed before reaching the
+  per-instrument shard-isolation that already handles "no features" gracefully one layer up in
+  `run_inference()`. Fixed by broadening the except clause to also catch `NotFound` (mirrors the
+  `validate_config()` precedent exactly) — `ml-service@27044a4474`, QG green (99s), 2 new unit tests
+  (`TestQueryFeaturesFromBigQuery`). Flipped the todo `[x]` with a DONE note; split the
+  rebuild+redeploy+re-verify step into a new `[INFRA] P0.` todo — same deployment gap (no Cloud Build
+  trigger for ml-service) that already blocked todos 3→4's same-day verification, now hit a 3rd time in
+  this doc; flagged that provisioning a standing trigger is probably worth doing at this point.
