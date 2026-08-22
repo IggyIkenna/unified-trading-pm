@@ -28,7 +28,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
@@ -310,7 +310,7 @@ def print_report(results: list[RepoResult], c: Colors) -> None:
     oks = [r for r in results if r.status == "ok"]
     excepts = [r for r in results if r.status == "exception"]
 
-    today = date.today().isoformat()
+    today = datetime.now(UTC).date().isoformat()
     print(f"\n{c.BOLD}━━━ Coverage Audit ━━━{c.NC}  ({today})\n")
 
     # [A] Below floor
