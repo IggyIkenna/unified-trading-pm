@@ -167,12 +167,19 @@ assigned_role: backend_engineer
       (items 3-5 below) are NOT part of this todo — this todo only lands the duck-typed interface + its dispatch
       resolver, so `getattr(self._adapter, "execute_collateral_delegation", None)` has somewhere real to resolve
       TO once items 3-5 land.
-- [ ] [BACKEND] P0. **New `TransferHandler._execute_custodian_delegation_transfer` method**
+- [x] ✅ [BACKEND] P0. **New `TransferHandler._execute_custodian_delegation_transfer` method**
       (`execution_service/engine/handlers/transfer_handler.py`, mirroring `_execute_bridge_transfer` at line ~568) —
       routed from `_resolve_transfer_type`/`_dispatch_transfer` when the resolved `BusTransferType` is
       `CUSTODIAN_COLLATERAL_DELEGATION`. Done: a unit test asserts an `ExecutionInstruction` classified as
       `CUSTODIAN_COLLATERAL_DELEGATION` reaches this method (not `_execute_onchain_transfer` or
-      `_execute_custody_transfer`).
+      `_execute_custody_transfer`). — execution-service@5dbeaab1bc: new method calls the already-built
+      `_get_collateral_delegation_execute(instruction)` resolver (mirrors `_execute_bridge_transfer`'s honest-degradation
+      contract exactly), wired into `_dispatch_transfer`'s `CUSTODIAN_COLLATERAL_DELEGATION` branch, uses
+      `instruction.instruction_id` as the idempotency key. New `tests/unit/test_transfer_handler_collateral_delegation_execute.py`
+      (5 tests): happy-path delegation, adapter-failure passthrough, honest-fail-when-unsupported, and the Done-bar's
+      own end-to-end routing proof via `force_transfer_type` (reaches this method, not `_execute_onchain_transfer`/
+      `_execute_internal_transfer`). Full `quality-gates.sh` green (sentinel=5dbeaab1bc322328552eac552f450d8afe74b4d1
+      == HEAD); quickmerge-landed + post-push ancestry independently re-verified on `origin/live-defi-rollout`.
 - [x] ✅ [BACKEND] P0. **New `execution_service/engine/transfers/live_pod_adapter.py` — `LivePodCollateralAdapter`**
       (real REST client, mirrors `live_bridge_adapter.py`'s honest-not-configured-fails-loud shape). Every REST
       endpoint/path is `<TBD-POD-PROVIDES-API-SPEC>` per the proposed schema in Section C — construct the class with
