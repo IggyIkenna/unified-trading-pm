@@ -18,7 +18,16 @@ status: open
 nature: issue
 asset_group: [defi]
 stage: [data, features]
-repos: [features-service, strategy-service, ml-service, e2e-testing, deployment-api, unified-api-contracts]
+repos:
+  [
+    features-service,
+    strategy-service,
+    ml-service,
+    e2e-testing,
+    deployment-api,
+    unified-api-contracts,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: [silent-failure, data-correctness, feature-groups, manifest-honesty, ssot-contradiction, defi]
 related:

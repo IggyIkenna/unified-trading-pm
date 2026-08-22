@@ -189,23 +189,19 @@ todos only to confirm they are data-movement, then leave it.
       exist, and whether the local fill becomes a shadow/comparison value rather than a real position delta once
       live. No existing SSOT covers this — check `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`
       first, it may already define the right pattern for a different reconciliation case.
-- [ ] [FROM-T1] P0. **Do NOT wait on `StrategyInstructionEnvelope.reference_position` / `credit` — they are gated on an
-      unresolved operator ruling, not in progress.** T1 investigated them and deliberately did not implement them, so this
-      edge will NOT clear on its own; plan around it rather than blocking. The shape both tranche plans describe
-      (flat `reference_position: dict[venue, Decimal]` plus a flat `credit`, "same shape as the existing price
-      leg") was SUPERSEDED the same day it was written: the source issue carries a later operator revision ruling
-      it incomplete — it resolves the venue axis but not the INSTRUMENT axis, since one strategy instance holds a
-      universe of instruments, so a single envelope-level triple can only ever describe ONE instrument's reference
-      state. The replacement (`references: list[InstrumentReferenceEntry]`, nesting the per-venue dict one level
-      deeper) is published in that issue under the heading **"Proposed shape (illustrative — not finalized; this
-      is what needs resolving, not what's decided)"**, immediately followed by **"Open questions for the operator
-      — do not resolve unilaterally"** (Q12-Q16). Implementing the todo's literal text would re-commit the exact
-      scalar-shape regression the operator caught; implementing the vector would answer five questions explicitly
-      reserved for the operator.
-      **Two points ARE settled whichever way Q12-Q16 land, so you can design against them today**: `credit` is
-      OPTIONAL (a "flavor", never a mandatory field — pure-passive, fire-immediately and patient-then-escalate are
-      all valid consumers), and it is strategy-COMPUTED and strategy-OWNED, with execution merely consuming it.
-      Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
+- [ ] [FROM-T1] P0. **UNBLOCKED 2026-08-21 — corrected 2026-08-22, this todo was stale.** Q12-Q16 (the
+      operator questions this todo was waiting on) were RULED 2026-08-21 — see that issue doc's
+      "OPERATOR RULING 2026-08-21 — Q12-Q16 answered" section. Real, now-actionable shape:
+      `references: list[InstrumentReferenceEntry]` is the ONE home on `StrategyInstructionEnvelope`
+      (no envelope-level scalar duplication; N=1 is a list-of-one). Each entry carries the full per-instrument
+      reference matrix: `reference_price`, per-venue `reference_position`, `credit` (optional,
+      strategy-computed/strategy-owned), `position_adjustment_bps_per_unit_risk`, `sensitivity_coefficient`
+      (delta), `second_order_coefficient` (gamma), optional `time_decay_coefficient` (theta). Venue axis
+      nested per-instrument (no `(instrument_id, venue)` cross-product). The new position-mismatch
+      `RiskRuleTrigger` evaluates PER ENTRY, needs a UAC PR per `/codex/04-architecture/risk-rule-taxonomy.md`.
+      **This is likely a UAC-schema-first change** (T1's repo) that strategy-service then populates against —
+      confirm ownership split before starting; not investigated further this session. Evidence:
+      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
 - [x] ✅ [FROM-T1] P1. **SHIPPED `strategy-service@8a7f80e8` (2026-08-20 session 6) — checkbox missed at ship
       time, flipped now.** `strategy_instructions` writer/registry DIVERGENCE — your repo's own
       `strategy_service/engine/core/gcs_storage_service.py::write_instructions` hardcodes its own blob-path
