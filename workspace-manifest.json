@@ -73,7 +73,7 @@
     "deployment-ui": "0.1.0",
     "execution-service": "0.116.0",
     "features-service": "0.94.14",
-    "fund-administration-service": "0.12.12",
+    "fund-administration-service": "0.12.15",
     "ibkr-gateway-infra": "0.5.3",
     "instruments-service": "0.106.6",
     "market-tick-data-service": "0.152.2",
@@ -83,8 +83,8 @@
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.32.9",
     "e2e-testing": "0.41.45",
-    "agent-orchestrator": "0.100.67",
-    "greeks-service": "0.18.82",
+    "agent-orchestrator": "0.100.69",
+    "greeks-service": "0.18.87",
     "trading-agent-service": "0.13.27",
     "strategy-service": "0.88.1",
     "ml-service": "0.58.65",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "9e4c6ff5d356bb9c02c2f413a3fac206b0322481"
+      "ldr_ci_status_sha": "9d298e1e0416ba5e67eebb60a82ef81ee8734be3"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1297,7 +1297,7 @@
         "qg_red_reason": null,
         "large_file_count": 7
       },
-      "ldr_ci_status_sha": "f82a159adaccd3b818cb2675d6b76328e2e31cab"
+      "ldr_ci_status_sha": "dfe34c4755d5d1a3c082a93345fa75eeaf15258f"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "01e5ea89459fc7748ad725a6eb89b882eb0ca35f"
+      "ldr_ci_status_sha": "0ae157dea0a65d0625fe6f711f1b1a5b8d764b16"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
