@@ -30,7 +30,6 @@ related:
     /plans/active/cefi_venue_smoke_batch1_2026_08_20.md,
     /plans/active/sports_venue_smoke_batch1_2026_08_20.md,
     /plans/active/tradfi_venue_smoke_batch1_2026_08_20.md,
-    /plans/active/prediction_venue_smoke_batch1_2026_08_20.md,
   ]
 created: 2026-08-16
 last_updated: "2026-08-16"

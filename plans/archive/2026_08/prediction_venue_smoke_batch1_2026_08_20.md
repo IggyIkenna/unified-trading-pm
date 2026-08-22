@@ -2,7 +2,7 @@
 doc_type: plan
 title: prediction venue batch smoke tests — batch 1 — 2026-08-20
 summary: Per-asset-group smoke-test batch for the 4 in-scope Prediction (venue, data_type) rows from the canonical work list.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data, execution]
@@ -32,6 +32,12 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 ---
 
 # Prediction venue smoke-test batch 1
+
+> **🗄️ ARCHIVED 2026-08-22 (slot 18, review) — all todos done, reconciled into the still-active W5 contract.** This
+> batch's row/testnet-verdict findings are recorded durably in
+> [`/plans/active/venue_smoke_test_bar_2026_08_16.md`](/plans/active/venue_smoke_test_bar_2026_08_16.md)'s
+> 2026-08-22 (slot 18) Progress Log entry — read that doc for current state, not this archived copy.
+> `superseded_by`: none (closed out, not superseded by a successor plan).
 
 > **Parent**: [/plans/active/venue_smoke_test_bar_2026_08_16.md](/plans/active/venue_smoke_test_bar_2026_08_16.md).
 > Filter the generator output to `asset_group=prediction`; the four-row count is re-measured at execution time.

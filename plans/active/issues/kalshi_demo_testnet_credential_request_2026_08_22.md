@@ -16,7 +16,6 @@ scope: [engineer, admin]
 tags: [kalshi, prediction, testnet, credential-request, blocked-credentials, venue-readiness]
 related:
   [
-    /plans/active/prediction_venue_smoke_batch1_2026_08_20.md,
     /plans/active/venue_smoke_test_bar_2026_08_16.md,
     /codex/02-data/external-data-always-available-rule.md,
   ]
@@ -37,7 +36,7 @@ supersedes:
 superseded_by:
 context_scope:
   [
-    /plans/active/prediction_venue_smoke_batch1_2026_08_20.md,
+    /plans/active/venue_smoke_test_bar_2026_08_16.md,
     /codex/02-data/external-data-always-available-rule.md,
     execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py,
     execution-service/tests/sports_execution/unit/test_kalshi_adapter.py,
