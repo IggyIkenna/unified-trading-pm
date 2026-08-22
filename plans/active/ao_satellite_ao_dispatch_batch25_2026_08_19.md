@@ -27,7 +27,7 @@ related:
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/active/issues/subagent_wrote_to_foreign_checkout_bare_repo_path_2026_08_18.md,
     /plans/active/issues/na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18.md,
-    /plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md,
+    /plans/archive/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md,
     /plans/active/ao_human_fleet_integration_2026_08_15.md,
     /plans/archive/2026_08/kimi_gemma_provider_onboarding_2026_08_16.md,
     /plans/active/issues/account_failover_ignores_overage_rejected_2026_08_18.md,

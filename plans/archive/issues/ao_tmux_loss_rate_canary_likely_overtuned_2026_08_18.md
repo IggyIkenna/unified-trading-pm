@@ -16,7 +16,7 @@ summary: >-
   at 30+ concurrent slots, causing the threshold to be crossed and un-crossed repeatedly rather
   than only during genuine incidents. Not yet measured precisely — this doc records the hypothesis
   + the concrete next step, not a proven root cause.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -54,6 +54,10 @@ context_scope:
     /plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md,
   ]
 ---
+
+> **📦 ARCHIVED 2026-08-22** — both todos closed (issues-corpus executable-queue dispatch): the 7-day measurement
+> confirmed over-tuning (194 crossings/week, 0.8% benign-attributable); a consecutive-tick gate (2 required)
+> implemented + tested (`agent-orchestrator`). 0 open todos, no lock.
 
 # TmuxSessionLossRateCanary likely over-tuned, not under-deduped
 
@@ -124,14 +128,15 @@ check for this directly rather than only counting raw crossings.
       2026-08-14 23:33 cluster) — if crossings are dominated by benign recycles rather than genuine
       losses, that's a DIFFERENT fix (exclude `reason="manual"` from the count) than raising the
       raw threshold. (repo: agent-orchestrator) Extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
-- [ ] [SCRIPT] P2. If confirmed over-tuned, raise `tmux_session_loss_rate_min_count` and/or
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-22 (issues-corpus executable-queue dispatch).** Added
+      `tuning.tmux_session_loss_rate_consecutive_ticks` (default 2) + a `_gate_on_consecutive_ticks()` helper
+      requiring 2 consecutive raw-breach ticks before paging (persisted via
+      `dedup_state.tmux_session_loss_rate_consecutive_ticks_path()`, mirroring the restart-survival pattern already
+      used for `_heartbeat_resume_count`/`watchdog_idle_session_ticks`). `assess()`/`_maybe_alert()` kept unchanged.
+      4 new regression tests + 2 existing tests' mocks fixed. Evidence: agent-orchestrator (commit to follow).
+      Was: If confirmed over-tuned, raise `tmux_session_loss_rate_min_count` and/or
       `tmux_session_loss_rate_window_seconds`, OR add a "sustained N consecutive ticks over
-      threshold" requirement (the interval is 120s — even 2 consecutive over-threshold ticks
-      would filter out a single-tick blip while still catching a real multi-minute spike).
-      Cite the measured baseline from the todo above in the commit, not a guessed number. (repo:
-      agent-orchestrator) **Ordering NOT machine-enforced**: this todo is conditioned on the
-      confirming measurement extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md`
-      item 3 — no `depends_on`/`gate_on_depends` links the two, the ordering rests on this prose note only.
+      threshold" requirement.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:96033122b406632d]: RECLASSIFY (per-todo split) — todo 1 (7-day ActivityRow rate measurement) extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3. Doc stays NA for todo 2 (the raise-threshold action, correctly conditional on todo 1's own result).
 - **context-scout 2026-08-19**: populated context_scope (5 entries).

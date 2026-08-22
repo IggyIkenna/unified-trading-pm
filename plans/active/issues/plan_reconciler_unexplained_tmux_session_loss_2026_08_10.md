@@ -43,7 +43,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
     /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
-    /plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md,
+    /plans/archive/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md,
   ]
 created: 2026-08-10
 author: agent
@@ -68,7 +68,7 @@ context_scope:
     agent-orchestrator/scripts/orchestrator.service,
     agent-orchestrator/server/tmux_spawn.py,
     agent-orchestrator/server/tmux_session_loss_rate_canary.py,
-    /plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md,
+    /plans/archive/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md,
   ]
 source: >-
   Surfaced 2026-08-10 while working `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 4 (prove ONE plan_reconciler
