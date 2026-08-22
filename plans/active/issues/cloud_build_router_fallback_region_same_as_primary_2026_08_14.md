@@ -63,7 +63,7 @@ locked_by:
 locked_since:
 assigned_vm: NA
 resolved_by:
-last_updated: 2026-08-14
+last_updated: 2026-08-21
 ---
 
 # cloud-build-router regional-fallback: stale escalation + a real but non-urgent mislabeling gap
@@ -102,15 +102,20 @@ same-region "fallback" would just fail the same way the primary did.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P3. Decide the intended shape of Cloud Build regional redundancy: (A) provision real Cloud Build
-      triggers for the fleet in a second region (e.g. `us-central1`) and revert `CLOUD_BUILD_FALLBACK_REGION` to that
-      region — real cost/infra decision, not a worker-determinable outcome; or (B) accept same-region retry as the
-      permanent design and rename `CLOUD_BUILD_FALLBACK_REGION` / the escalation + Telegram message wording (both in
-      `cloud-build-router.yml`) to stop claiming cross-region fallback, so a future transient-retry-succeeded event
-      doesn't misread as a regional outage again.
+- [ ] [INFRA] P3. Rename `CLOUD_BUILD_FALLBACK_REGION` (and the escalation + Telegram message wording, both in
+      `.github/workflows/cloud-build-router.yml`) to stop claiming cross-region fallback — per D51 ruling
+      (ADOPTED-REC 2026-08-21, "no observed failure needed cross-region redundancy; the fix is cheap and prevents
+      documented false-alarm triage"): accept same-region retry-on-transient-error as the permanent design (option
+      B). Done when: the env var name and both message templates no longer imply a second region exists, and
+      `quality-gates.sh` passes green.
 
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:ff32366ad3f7d910]: KEEP-NA, valid — sole open item is an [OPERATOR] decision between provisioning real 2nd-region infra vs accepting same-region retry as permanent design; doc's own text calls it not worker-determinable.
+
+- **2026-08-21 — ruling D51 (Cloud Build 'fallback' naming)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Rename — no observed failure needed cross-region redundancy; the fix
+  is cheap and prevents documented false-alarm triage. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
