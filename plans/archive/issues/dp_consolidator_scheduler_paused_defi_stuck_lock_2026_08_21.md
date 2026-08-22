@@ -24,8 +24,7 @@ summary: >-
   the in-flight merge — every run trigged while the lock is still fresh (<9000s) just no-ops (confirmed: 15 such
   30-42s skip-cycles observed 19:00-19:11 while the earlier stale lock predecessor was held). Resumed the cron directly
   (no maintenance window needed — nothing legitimately depends on the pause).
-status: open
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -71,6 +70,9 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-21
 ---
+
+> **🟢 ARCHIVED 2026-08-22 (slot-9).** The scheduler-state watchdog follow-up and its regression coverage shipped in
+> `unified-trading-library@9956271a9`; the issue is resolved with zero open todos.
 
 # DP_CONSOLIDATOR_SCHEDULER_PAUSED — defi cron, stuck lock + unprotected pause (2026-08-21)
 
