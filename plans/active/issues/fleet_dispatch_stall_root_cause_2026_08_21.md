@@ -391,3 +391,38 @@ query string in access-log lines rather than real events. All figures in this do
 (279/279 `unexplained_death_forensics` rows report `oom_kill_suspected: false`; `dmesg` and
 `journalctl -k` both empty) — every death with a readable pane tail was SIGTERM (143) or
 SIGKILL from AO's own `kill_session`.
+
+**2026-08-22 (`/ao-watchdog` scheduled run, slot 29) — partial answer to the "still open" P1
+re-measure todo above.** Not a full five-metric re-measurement (spawn-failure rate and
+`tmux_session_lost`/day were not re-pulled this run — `GET /api/activity` with a `types=`/`since=`
+filter is a known-flaky route per this skill's own Step 10 notes, not attempted here to keep this
+run bounded), but two of the five headline metrics were measured directly and both confirm the fix
+held:
+
+- **Restarts/day, from `/var/log/ao-self-pull.log` directly (exact grep, `orchestrator restarted`
+  vs `NOT restarting`, not a substring guess)**: 2026-08-20 (full day, entirely pre-fix baseline) =
+  **80 restarts, 0 skips**. 2026-08-21 (mixed day — the restart-relevance gate's first "NOT
+  restarting" skip line is timestamped `22:34:00Z`, i.e. the gate was only live for the day's last
+  ~1.5h) = 59 restarts, 2 skips in that window. 2026-08-22 (fully post-fix, ~2h sampled so far) =
+  **0 restarts, 4 of 4 relevant fast-forwards correctly skipped**. Small post-fix sample, but
+  directionally this beats the doc's own predicted "~59% fewer restarts" — every relevant-check
+  since the gate went fully live has been a correct skip.
+- **`GET /api/fleet-kpis?window_hours=24`'s own `current` vs `baseline` halves** (this is "yesterday
+  vs the day before" in that route's now-anchored sense, not calendar-day, but it brackets the same
+  transition): `baseline` (pre-window) boots=543, dispatches=313, done=119, conversion_pct=38.0,
+  boots_per_done=4.56, boots_to_dispatch_ratio=1.73 → `current` (last 24h) boots=262 (-51.8%),
+  dispatches=217 (-30.7%), done=105 (-11.8%), conversion_pct=48.4 (+10.4pp), boots_per_done=2.5
+  (-45.2%), boots_to_dispatch_ratio=1.21 (-30.1%). `regression_alert` was `null` (no regression, and
+  this delta is the opposite direction — an improvement past the 5x-regression trigger's threshold
+  would never fire on a get-better move anyway, noted so nobody misreads the null as "nothing
+  happened").
+
+Still outstanding from the original todo: spawn-failure rate and `tmux_session_lost`/day were not
+re-measured this run — a future pass (this skill's next daily run, or a manual check) should pull
+those two via `activity_log` (`autospawn_failed`/`autospawn_succeeded`, `tmux_session_lost` counts)
+to complete the five-metric set. Also, while checking the fleet for this run,
+`ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`'s D30-ruling todo (re-disable both
+`gemini-3-5-flash-lite-proj4` and `gemini-3-7-flash-proj4`) was found only half-applied —
+`gemini-3-7-flash-proj4` was still `healthy`, disabled this run (see that doc's Progress Log/todo
+for detail) — unrelated to this doc's own chain, noted here only because it was found in the same
+pass.
