@@ -244,14 +244,34 @@ REUSES the frameworks that already exist rather than building new ones:
       (`/codex/05-infrastructure/live-pipeline-architecture.md`) — a rotation gap is recorded honestly, never
       silently spanned. Done-when — rotation exercised against at least one real venue in paper mode with the
       backfilled gap rows manifest-verified (zero silent loss).
-      Progress 2026-08-22 — code LANDED market-tick-data-service@a06c346ee0: `live/_ws_session_bridge.py`
-      (one WsSessionManager per shard; venue spec + freshness-derived thresholds with a conservative
-      `max(60s, 4×max_age)` rotation floor; single-connector break-then-make with the venue's
-      duplicate-subscription fact honestly downgraded at the session layer; the bridge's rotation flag OR-ed into
-      the runner's STALE-window marking; rotation-request sentinel keyed by feed id; WS_ROTATION_* emission),
-      wired by default in the websocket-streaming handler; 6 unit tests incl. the runner-level
-      STALE-after-rotation proof. Still owed for the flip: the paper-mode rotation run with manifest-verified
-      gap rows.
+      Code LANDED market-tick-data-service@a06c346ee0 (bridge + runner wiring) + @2bdad93bd5 (the
+      fresh-connector-per-generation fix below). ROTATION PROVEN by a real paper-mode drill against BINANCE-SPOT
+      (public trade feed; direct-GCS sink on the `-test-` bucket, local Redis, 300s, rotation requested at t+140s
+      via the real `rotate-websocket` Layer-0 sentinel): make-before-break run → 1 rotation, `gap_windows=[]`, all
+      4 boundary windows FRESH with ticks continuing (1730/9489/1430/1519; reconnects=0), tick parquet
+      `BINANCE-SPOT:SPOT_PAIR:BTC-USDT.parquet` written to
+      `market-data-tick-cefi-test-central-element-323112` (18,586 B). **The drill CAUGHT A REAL DEFECT unit tests
+      could not** (see the batch-6 Progress Log + the fix todo below). **NOT flipped**: the done-when requires
+      manifest-verified gap rows and the drill's `MTDSShardManifestRecorder` captured 14,168 rows in-memory but
+      persisted ZERO to the `-test-` catalogue (no `_index/per_vm/*` shard, `availability_index.parquet` 404) — the
+      writes were silently swallowed by the per-instrument shard-isolation try/except. Tracked as the issue +
+      todo below; the ws-resilience rotation logic itself is proven, this is a `-test-`-bucket manifest-write gap.
+- [ ] [BACKEND] P1. MTDS live manifest-write to the `-test-` catalogue produces zero rows — the paper-mode drill
+      (2026-08-22) captured 14,168 rows via `record_captured`/`record_flush_captured` and called
+      `MTDSShardManifestRecorder.close()` → `ManifestWriter.close()`, but no `_catalogue/_index/*` object landed in
+      `market-data-tick-cefi-test-central-element-323112`; the failure is swallowed by
+      `flush_window`'s per-instrument isolation. Diagnose (SA write grant on the `-test-` bucket? `per_vm_shards`
+      resolution off-VM? a `ManifestWriter.close()` early-return) and make a `-test-`-mode live run write
+      manifest-verified rows — THEN the MTDS C3 done-when flips. Issue:
+      `/plans/active/issues/mtds_live_manifest_write_to_test_bucket_silent_2026_08_22.md`. Done-when — a paper/test
+      live run leaves manifest rows readable from the `-test-` catalogue with honest capture_status.
+- [ ] [BACKEND] P1. Reset the `_closed` latch in `connect()` across the ~37 MTDS ws connectors that set
+      `_closed = True` in `close()` and loop `while not self._closed` in `stream()` — a close()+connect() on the
+      SAME instance (a bare reconnect/rotation without the bridge factory) leaves the replacement socket subscribed
+      but never read (the shard goes dark; found by the 2026-08-22 paper drill, binance_futures_ws.py fixed as the
+      exemplar). The C3 factory path is ALREADY immune (each generation is a fresh instance), so this is defensive
+      hardening for any non-bridge reconnect caller. Done-when — every latching connector resets `_closed` on a
+      successful reopen + a regression test.
 - [x] 4. ✅ [BACKEND] P0. Execution private-stream staleness + position resync — execution-service@42e54a11f8 +
       full `quality-gates.sh --no-fix` green pre-commit. `trade_execution/private_stream_guard.py`
       (`PrivateStreamGuard`) wraps any `BaseOrderFeedHandler` with the UTL `WsSessionManager` and enforces the
@@ -397,6 +417,64 @@ REUSES the frameworks that already exist rather than building new ones:
   decided the winner (same class as the tardis shadowing). Removed with a guarded line-based script (exact-one
   match asserted per spec) rather than 18 hand edits; the remaining non-duplicate cross-family splits now
   surface as a census WARNING with a P2 consolidation todo.
+
+- **2026-08-22 (batch 6 — MTDS C3 rotation drill + fresh-connector fix)** — the paper-mode rotation drill was the
+  first time the ws-resilience runtime met a REAL venue, and it earned its keep: the first drill (break-then-make,
+  report `paper_rotation_report_20260821T233835Z.json`) rotated honestly (1 rotation, 5s gap recorded, the 23:42
+  window correctly STALE) but **the shard went DARK after rotation** — 23:43 captured zero ticks. Root cause is
+  FLEET-WIDE: all 52 MTDS ws connectors set `_closed = True` in `close()` and loop `while not self._closed` in
+  `stream()`; a rotation is close()+connect() on the SAME instance, so the replacement socket was subscribed but
+  the stream loop had already exited on the latch and never read it (37 connectors never reset the latch). **No
+  unit test caught this** — the fakes don't model the real close/stream latch — which is exactly why the C3
+  done-when demanded a real paper-mode run, not unit-test green. Fix (market-tick-data-service@2bdad93bd5): the
+  bridge takes a `connector_factory` and builds a FRESH connector per generation (real make-before-break for
+  duplicate-subscription venues; immune to the latch since each generation is a new instance), the runner reads
+  the live connector through a property over `bridge.connector`, and the STALE flag is now raised by the manager's
+  gap callback (so a zero-gap make-before-break rotation stays FRESH, a break-then-make gap goes STALE). The
+  second drill (`paper_rotation_report_20260821T234848Z.json`) proved it: 1 rotation, `gap_windows=[]`, all 4
+  windows FRESH, ticks continuous (1730/9489/1430/1519), reconnects=0. **Honest gap**: the same drill's manifest
+  recorder captured 14,168 rows but persisted ZERO to the `-test-` catalogue (silently, via shard isolation) — so
+  C3 stays OPEN (its done-when requires manifest-verified rows) with a P1 issue + todo; the rotation LOGIC is
+  proven, the `-test-`-bucket manifest-write path is the remaining gap. The isolated-worktree quickmerge
+  (`--isolated`) was the ship path — a peer's live untracked `lending_indices_radiant.py` (lint-dirty) was
+  failing the shared-tree gate, and isolated mode gates the named files against a clean origin checkout, immune to
+  peer working-tree dirt (verified the landed SHA's content by grep, not by trusting ahead=0).
+
+## Rule-9 final report — 2026-08-22
+
+**Umbrella goal**: per-venue websocket resilience end to end (ws-protocol registry axis, exhaustive per-venue
+error-code mapping, staleness→retry→rotate runtime with make-before-break + honest gap accounting, alerting +
+kill-switch escalation via existing frameworks) — executing `system_readiness_master` W14. **Shipped this
+initiative (all on `origin/live-defi-rollout`)**:
+
+- **Phase A** (UAC schema) — `WsProtocolSpec` axis + error-schema `surface`/`doc_url` — unified-api-contracts@2bebacf085.
+- **Phase B** (per-venue research, ~2,000 doc-cited codes + 28 ws specs across CeFi/DeFi/TradFi/sports/prediction/
+  altdata) — unified-api-contracts@3b13629f9f (+ @54009a4fdd, @2bebacf085). Every entry doc-cited or explicit
+  honest absence.
+- **Phase C1** (UTL `WsSessionManager`) — unified-trading-library@fcfcbf3893; **C2** (rotate-websocket Layer-0
+  vocabulary + sentinel + registry entry + bound-action resolver) — UAC@3b13629f9f + UTL@4fb84f00fe +
+  alerting-service@adef9eb372 (+ deployment-service Layer-0 script authored, ship pending — below); **C3** (MTDS
+  bridge) — market-tick-data-service@a06c346ee0 + @2bdad93bd5, rotation drill-proven, manifest-verification owed;
+  **C4** (execution `PrivateStreamGuard` resync-before-trust) — execution-service@42e54a11f8 + Phase-D escalation
+  @c23b10c01b; **C5/census** (every adaptered venue resolves an error table or explicit absence; dead-dupe purge;
+  UAC STEP 5.110) — unified-api-contracts@235acfea88.
+- **Phase D** (alert rules + kill-switch escalation) — UAC@3b13629f9f (codes/rules/policies/delivery tests) +
+  execution-service@c23b10c01b + market-tick-data-service@a06c346ee0 (emission). **Phase E** (codex audit: new
+  `venue-websocket-resilience.md` SSOT, registry/SLA/matrix/DeFi doc updates, 2 alerting playbooks, RB-CONN-001)
+  — unified-trading-pm@8d35ca1cae.
+- **`system_readiness_master` W14** "every venue error code understood across every consumer" — **flipped** with
+  census-test evidence (unified-trading-pm@e7d99c9275).
+
+**Runtime verification**: the C3 rotation ran against a real BINANCE-SPOT feed and is make-before-break with
+honest gap accounting; the drill also surfaced + fixed a fleet-wide connector-latch defect (batch-6). The C4
+execution guard has unit proof (resync-before-trust, venue-kill escalation) but a real private-stream paper run
+needs venue credentials (`[OPERATOR]`).
+
+**Open (plan stays active — do NOT archive)**: deployment-service `rotate_websocket` ship + C2 flip (blocked on a
+peer's live untracked terraform in the shared checkout); MTDS C3 manifest-write gap (P1 issue above); connector
+`_closed`-latch defensive hardening (P1); C4 real paper run (`[OPERATOR]` credentials); Phase-B P2 residuals
+(binance-futures codes, curve 403, `PROTOCOL_CAPABILITIES`, polymarket-perps probe, versifi `[OPERATOR]`); facade
+hoist (P2); multi-family error-key consolidation (P2); UAC freezegun-hardening (P2).
 
 ## Deferred work after 2026-08-21
 
