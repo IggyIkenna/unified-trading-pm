@@ -573,3 +573,35 @@ itself in the natural commit lull the prior entry predicted. This is the 11th co
 wall type resolving to "self-converges, no code fix." Todos 1 (dedup-key, already `[x]`) and the swallowed-error P3
 (already extracted to `ci_satellite_ao_dispatch_batch16_2026_08_21.md`) are unchanged — this occurrence did not
 exercise either.
+
+**cicd escalation agt-f6a84a, 2026-08-22 ~06:44Z-07:32Z** (`sit_gate_stuck` wall, `agent-orchestrator` 3 straight
+SIT-gate-blocked ticks on `ldr-to-main-promote-fleet.yml`, escalating run
+`https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32557888570`, latest tick at dispatch
+`https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32557751320`): Live-diagnosed via
+`sit_gate_stuck_detector.py` + `gh run view --log` on the fleet-promote ticks, not assumed from the alert text. **Same
+documented moving-tree treadmill, sustained by agent-orchestrator's own commit velocity racing the SIT round-trip — the
+"genuinely racing a busy repo's own commit stream" shape from the 2026-08-21 `execution-service` entry, not a
+genuinely stuck gate.** Sequence: run `32557751320` (06:46:31Z) logged `SIT GATE BLOCK agent-orchestrator: true-delta
+not SIT-validated on this tree (sit_validated_tree='212f453056...', LDR tree='95bf17a843...')` — fail-closed,
+`SIT differ source-dir for agent-orchestrator: server` (consistent breaking-scan classification, not a flip-flopping
+false positive), SIT-on-LDR already dispatched. Watched live for ~48 min (bounded background poll every 3 min +
+direct `gh run list`/`gh api` checks, not inferred from the detector alone): streak climbed 3→4→5 (07:03Z→07:15Z) then
+held FLAT at 5 across 4 consecutive checks (07:15Z-07:22Z, ~15 min) against the SAME latest-tick URL
+(`32558972094`) — not runaway-worsening. Root cause confirmed benign, not a stuck run: `full-workspace-sit` runs
+throughout the window were ALL `success` (`32556151207`, `32557213027`, `32557831355`, `32558509453`, all
+15m29s-17m37s, none red/cancelled), `ldr-to-main-promote-fleet` itself ticked normally every ~12-15 min (all
+`success`, ~2min each — confirming the fleet-bot loop was NOT stalled), `githubstatus.com` reported
+`All Systems Operational` throughout, no `ERR_LDR` at any tick, no orphaned/stale promote PR
+(`gh pr list --search "chore(promote)" --repo IggyIkenna/agent-orchestrator` → empty). Measured why the race
+persisted rather than converging quickly: agent-orchestrator's own `live-defi-rollout` LDR commits landed every
+~10-20 min throughout the window (`06:55Z, 07:03Z` etc.) — close enough to the ~15-18min SIT round-trip that no round
+finished uninterrupted while I watched, the same mechanism the 2026-08-21 `execution-service` entry measured. One red
+herring ruled out: the checkout log referenced a `fix/sit-exclude-agent-orchestrator-phantom` branch — confirmed via
+`gh api repos/.../branches/...` this is a stale, already-`MERGED` (2026-06-08, PR #177) branch unrelated to today's
+occurrence, not a live investigation thread. Exiting with `agent-orchestrator` still technically SIT-gate-blocked
+(streak 5 at hand-off) — same operator-accepted architecture as the 2026-07-20 resolution (accept-and-monitor, not
+eliminate); no code push in any covered repo can shorten a round-trip racing that repo's own live commit velocity, and
+it will self-converge on agent-orchestrator's next natural commit lull. This is the 12th consecutive occurrence of
+this exact wall type diagnosed live and confirmed as the documented treadmill (not a distinct bug). Todos 1
+(dedup-key, already `[x]`) and the swallowed-error P3 (already shipped) are unchanged — this occurrence did not
+exercise either (no `ERR_LDR`, no orphaned PR).
