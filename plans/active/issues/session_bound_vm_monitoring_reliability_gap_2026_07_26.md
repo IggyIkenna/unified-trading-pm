@@ -33,7 +33,7 @@ related:
   ]
 created: 2026-07-26
 author: unknown
-last_updated: 2026-08-09
+last_updated: 2026-08-21
 priority: P2
 parent_epic: security_and_cross_cutting_master
 source:
@@ -118,13 +118,15 @@ in the same way and at the same time when they're the same physical connection.
       `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md` updated with the closed-loop registration
       contract, 8 new unit tests (incl. a synthetic unregistered-launcher case) — all green. Reconciled by
       `infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md` todo 1.
-- [ ] [DATA] P3. **Audit whether the `PREEMPTED` marker's shutdown-script grace period is survivable in practice** — the
-      marker write (`gcloud storage cp` of a one-line file) didn't complete before this instance was reclaimed, which is
-      the SAME mechanism `zombie_watchdog`/`exit_code_fleet_monitor` rely on to classify a gone VM as a benign
-      preemption vs. an unexplained disappearance. If the write frequently loses the race, the marker is not a reliable
-      signal fleet-wide, not just for this one VM. (repo: deployment-service `scripts/vm/lib/launcher_common.sh`'s
-      shutdown-script template). **Done when**: either measured evidence the race is rare (this was a one-off), or a
-      mitigation (e.g. writing the marker earlier / more defensively) is proposed.
+- [ ] [INFRA] P3. **D122 ruling applied 2026-08-21 (issues_corpus_completion_dispatch_2026_08_21.md ledger): switch
+      the preemption-detection signal to the Compute Operations API fallback, not the in-guest `PREEMPTED` marker
+      blob.** Measured evidence (2/2 fresh SPOT preemptions even after the hardened `lc_write_preemption_signal_file`
+      helper) shows the marker write reliably loses the race to `--instance-termination-action=DELETE`'s ~30s grace
+      window; the Compute Operations API (`compute.instances.preempted` systemevent) has no such race. Repo:
+      deployment-service (`zombie_watchdog`/`exit_code_fleet_monitor`, and the shutdown-script template in
+      `scripts/vm/lib/launcher_common.sh`). Done-when: the fleet monitor's preemption classification reads the
+      Compute Operations API (or an equivalent race-free signal) instead of/in addition to the in-guest marker,
+      verified against a real SPOT preemption.
 
 ## Progress Log
 
@@ -191,3 +193,9 @@ in the same way and at the same time when they're the same physical connection.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:5228931265ff90c4]: KEEP-NA, valid — sole open todo re-assessed fresh per the close-the-loop check: measured evidence now shows the race is common not rare, refuting the done-when's easy branch and leaving only a genuine design-judgment choice between 2 named mitigations.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
+
+- **2026-08-21 — ruling D122 (Preemption signal source)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): API fallback — the marker failed 2/2 even after hardening; the API signal has no
+  race. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. Applied: retagged the sole open
+  todo above from an open-ended "propose a mitigation" audit to a concrete "switch to the Compute Operations API"
+  build todo.

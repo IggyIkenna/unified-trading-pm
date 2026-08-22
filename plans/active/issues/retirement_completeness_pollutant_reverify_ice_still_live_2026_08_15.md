@@ -323,3 +323,12 @@ both changed files → `quickmerge --agent --files` (both repos) → dry-run VM 
 dry-run output matches the fresh counts above → pause consolidator → `full` VM run → verify (0 residual
 captured/attempted_failed ICE non-24h rows, GCS re-list confirms 0 non-24h objects) → resume consolidator → flip
 this P2 todo with the VM's evidence.
+
+- **2026-08-21 — ruling D2 (Manifest/GCS correction batch)**: OPERATOR-RULED 2026-08-21 — APPROVED ALL under each
+  item's stated precondition (retention check / fresh dry-run / snapshot-first). Execute serially, one item per
+  verified step, citing the gate result inline. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger. Already applied above (2026-08-22 D2 execution pass): the §3a soft-delete retention precondition passed
+  fresh (604800s), the ICE-leg correction script is built + syntax-validated (not yet shipped, blocked on host
+  contention not the precondition), the CBOE VIX-cash-index leg is confirmed independently resolved (0 rows), and the
+  BARCHART leg is confirmed at its terminal `empty_confirmed` state (no manifest-row-deletion mechanic exists in this
+  codebase). The P2 todo stays open pending the actual VM-run execution once host load is sane.

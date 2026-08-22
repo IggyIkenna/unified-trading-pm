@@ -38,6 +38,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-04
+last_updated: "2026-08-21"
 author: unknown
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -125,14 +126,14 @@ Two independent fix directions, either or both:
       account at all — pin the identity PER-INVOCATION instead~~ — not yet executed, tracked there. Audit
       `deployment-service/scripts/vm/lib/launcher_common.sh` and the `launch-*.sh` family for any bare `gcloud`
       invocation that relies on ambient `core/account` and pin it explicitly. (repo: deployment-service)
-- [ ] [INFRA] P3. Alternative/complementary: give each slot its own NAMED gcloud configuration
-      (`gcloud config configurations create slot-<N>` + `CLOUDSDK_ACTIVE_CONFIG_NAME=slot-<N>` exported in each slot's
-      shell profile / boot env) so `gcloud config set account` inside one slot only ever mutates that slot's own named
-      configuration, never the shared default. Needs a one-time per-slot bootstrap step (likely `setup-tab-worktrees.sh`
-      or the per-slot `.claude/settings.json` env block) and verification that credential FILES (not just the
-      active-account pointer) are still shared/reused rather than re-authenticated per slot — the goal is isolating the
-      MUTABLE selection, not duplicating the credentials themselves. (repo: unified-trading-pm, touches per-slot
-      bootstrap tooling)
+- [ ] [INFRA] P3. DEFERRED-BY-DESIGN — D123 ruling (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md
+      ledger): declined ("No — pinning stops scripts trusting the ambient account; named configs add bootstrap
+      complexity for a closed case"). Fix-direction 1 (per-invocation identity pinning, extracted to
+      `infra_satellite_ao_dispatch_batch18_2026_08_17.md` item 5) is the adopted mitigation instead. Alternative
+      (not building): give each slot its own NAMED gcloud configuration (`gcloud config configurations create
+      slot-<N>` + `CLOUDSDK_ACTIVE_CONFIG_NAME=slot-<N>` exported in each slot's shell profile/boot env) so
+      `gcloud config set account` inside one slot only ever mutates that slot's own named configuration, never the
+      shared default.
 - **[DOC] P3. EXTRACTED 2026-08-09 -> `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.
   ✅ DONE 2026-08-09 — unified-trading-pm@de70cd5aa.** Documented the `gcloud config set account` host-wide-mutation
   hazard as item 5 in `/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover",
@@ -198,3 +199,8 @@ Two independent fix directions, either or both:
   2026-08-17. Sole remaining item (fix-direction 2, per-slot named gcloud configs) still needs an independent
   direction decision.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).
+
+- **2026-08-21 — ruling D123 (Per-slot gcloud configs)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): No — pinning stops scripts trusting the ambient account; named configs add
+  bootstrap complexity for a closed case. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger. Applied: retagged the sole open todo above to DEFERRED-BY-DESIGN.

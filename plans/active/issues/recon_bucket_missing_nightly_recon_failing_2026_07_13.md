@@ -34,7 +34,7 @@ source:
   "2026-07-13 bucket estate audit: shadow-registry research agent flagged recon-{pid} missing; a dedicated verification
   agent confirmed via config.py/launcher reads, live bucket probes (both names 404), Cloud Scheduler + Cloud Run
   execution history (55/56 failures), and the stage0 abort path (stage0_config_pull.py:96-104, orchestrator.py:88-93)."
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -46,7 +46,8 @@ context_scope:
     /plans/archive/issues/terraform_bucket_estate_drift_resurrection_2026_07_13.md,
   ]
 locked_since:
-assigned_vm: NA
+assigned_vm: planning
+last_updated: "2026-08-21"
 resolved_by:
 ---
 
@@ -161,10 +162,32 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
 
 ## Todos
 
-- [ ] [ENGINEER] P0. **Stand up the real green 06:00Z batch-live recon run** — provision the missing execution-service
-      and ml-service Cloud Run Jobs, implement run-tag-aware `_SUCCESS`-marker writers in ml-service/strategy-service,
-      add a self-default date fallback to strategy-service's batch CLI, and un-pause the 7 feature-family schedulers
-      (per the "2026-07-14 update" Conclusion) — no real green scheduled run exists yet.
+> **D121 ruling applied 2026-08-21** (issues_corpus_completion_dispatch_2026_08_21.md ledger): "Promote — well-scoped
+> deterministic multi-repo work; 6+ audits over 5+ weeks reached the same conclusion." Split below into 5 AO-eligible,
+> worker-determinable pieces per the standing na-eligibility-audit recommendation (was one bundled P0 todo).
+
+- [ ] [INFRA] P0. Provision `uts-prod-execution-service-config-snapshot` Cloud Run Job (execution-service),
+      replicating the same container-job Terraform pattern already used for strategy-service/mdps. Repo:
+      execution-service, deployment-service (terraform). Done-when: `gcloud run jobs describe
+      uts-prod-execution-service-config-snapshot` succeeds and a real triggered execution writes
+      `configs/snapshots/{date}/config.json` to the execution-store bucket.
+- [ ] [INFRA] P0. Provision `uts-prod-ml-service-t1-recon` Cloud Run Job (ml-service), wiring the existing
+      (currently unwired) `--run-tag` CLI flag to an actual GCS `_SUCCESS`-marker writer under
+      `t1-recon/ml/{date}/_SUCCESS`. Repo: ml-service, deployment-service. Done-when: a real triggered execution
+      writes a `t1-recon/ml/{date}/_SUCCESS` marker.
+- [ ] [BACKEND] P0. Implement a run-tag-aware `_SUCCESS`-marker writer in strategy-service's batch CLI
+      (`t1-recon/strategy/{date}/_SUCCESS`) and add a self-default date fallback to `_resolve_date_args()`
+      (mirroring ml-service/mdps's T-1 default) so the Terraform-provisioned job no longer hard-requires an explicit
+      `--date`. Repo: strategy-service. Done-when: `uts-prod-strategy-service-t1-recon`'s next scheduled run
+      completes without the `ValueError: batch operation requires --date...` and writes the `_SUCCESS` marker.
+- [ ] [INFRA] P1. Un-pause the 7 feature-family t1-recon schedulers (calendar/delta-one/volatility/cross-instrument/
+      multi-timeframe/commodity/sports) and register the missing `features-onchain` entry in
+      `t1_batch_scheduler.tf`'s service map. Repo: deployment-service. Done-when: `gcloud scheduler jobs list` shows
+      all 8 (7+onchain) feature-family t1-recon schedulers `ENABLED`, each with at least one real triggered
+      execution.
+- [ ] [REVIEW] P0. Once the 4 todos above land, verify a real green 06:00Z `uts-prod-batch-live-reconciliation-service`
+      scheduled run (not a manual `--dry-run`) — cite the execution ID + Stage 5 output. Repo:
+      batch-live-reconciliation-service.
 
 ## Progress Log
 
@@ -270,3 +293,10 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
 
 - **data_pipeline_failure escalation 2026-08-18 (`agt-3896a8`, DP-WATCHER-006/DP_CLOUD_RUN_JOB_FAILED, dispatched ~873m/~14.5h after this alert instance first fired)**: a distinct DP-WATCHER-006 alert target from every prior entry above — this one fired for `uts-prod-strategy-service-t1-recon` itself (the ml/strategy-recon **producer** job this doc's "2026-07-14 update" §(b) already diagnosed), not `uts-prod-blrs-daily-determinism` (the downstream **consumer** every entry above covers). Live diagnosis (`gcloud run jobs executions list --job=uts-prod-strategy-service-t1-recon --region=asia-northeast1`): the job fires daily at 04:00:02 UTC and has failed every day checked (`-vhhrs` 08-18, `-pc7jj` 08-17, `-cjhxj` 08-16, `-z5fzv` 08-15, `-wp4pc` 08-14, all `0/1` complete). `gcloud logging read` on the latest (`-vhhrs`, 2026-08-18T04:02:26Z) confirms the failure is byte-for-byte the SAME already-documented root cause from this doc's "2026-07-14 update" §(b): the container now starts and bootstraps correctly (bucket `strategy-store-prd-central-element-323112` accessible, `ServiceRuntime` initializes cleanly) but `service_entry.py::_resolve_date_args()` still raises `ValueError: batch operation requires --date or both --start-date and --end-date` because the Terraform job args pass neither — the exact "add a self-default date fallback to strategy-service's batch CLI" gap the Conclusion names as one of the 5 bundled deliverables. No new defect; not a regression. **New observation beyond re-confirmation**: this is the first entry in this doc's Progress Log where DP-WATCHER-006 dispatched a worker against the **producer** job directly rather than only the downstream `blrs-daily-determinism` consumer — confirms the same unresolved producer-chain gap is generating (at least) two independently-paging Cloud Run Job targets, not one, and will likely generate a third/fourth once `uts-prod-ml-service-t1-recon`/`uts-prod-execution-service-config-snapshot` are ever provisioned (currently `NOT_FOUND`, so they don't page yet — only already-running-but-broken jobs can fail loudly). No fix applied — same multi-repo, 5-deliverable, 4-repo scope already exhaustively diagnosed and repeatedly declined as one-shot-unsafe by 10 prior escalation-worker entries and 6 `na-eligibility-audit` passes above; a `--date` fallback alone (my alert's specific proximate cause) is a plausible smaller carve-out of the bundle, but this doc's own audits have consistently treated the 5 deliverables as one bounded promotion decision for the operator, not as independently one-shot-dispatchable pieces, so I did not attempt a partial fix unilaterally. No duplicate `/blocked` filed — `BLK-8bb28da4` (2026-08-10) presumed still open (no resolution evidence found), now 8+ days unresolved. Restating the standing recommendation unchanged: (a) answer `BLK-8bb28da4` so the wrapper plan/epic can be created and the producer-chain gap fixed at the root, or (b) run `/escalation-queue-reconcile` / `/data-pipeline-alerts-reconcile` to stop DP-WATCHER-006 from re-dispatching against targets with an already-open, unresolved blocked-question — now confirmed to apply to at least 2 separate Cloud Run Job targets sharing one root cause. Did not investigate/fix the AO dispatcher/dedup code myself (out of this one-shot role's scope).
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 1 open P0 todo (grep-verified, matches Phase-0=1) bundling ~5 distinct multi-repo deliverables (provision 2 Cloud Run Jobs, 2 _SUCCESS-marker writers, a CLI date-fallback, un-pause 7 schedulers). Assessed KEEP-NA by.
+
+- **2026-08-21 — ruling D121 (Batch-live-recon gap promotion)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Promote — well-scoped deterministic multi-repo work; 6+ audits over 5+
+  weeks reached the same conclusion. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+  Applied: flipped `assigned_vm: NA` → `planning`, `execution_scope: local-only` → `orchestrator-agent`, and split
+  the single bundled P0 todo into 5 AO-eligible pieces (see `## Todos` above), per the standing 2026-08-03/08-06/08-17
+  na-eligibility-audit recommendation to promote-and-split rather than flip in place.
