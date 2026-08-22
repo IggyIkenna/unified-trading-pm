@@ -64,11 +64,22 @@ Every alerting mechanism this fleet has (`notify_*` functions, the escalation qu
 no external heartbeat/dead-man's-switch watching the orchestrator host from outside the orchestrator's own process.
 A 6-minute outage with zero pages is the direct, measured consequence.
 
-- [ ] [INFRA] P1. Design + implement an external liveness check for `orchestrator.service` itself — a systemd
+- [x] ✅ [INFRA] P1. Design + implement an external liveness check for `orchestrator.service` itself — a systemd
       `OnFailure=` unit, or a separate lightweight cron/timer on the same VM that polls `/api/healthz` and pages
       Slack directly (bypassing the orchestrator's own notification path, which is exactly what's unavailable when
       this fires) on N consecutive failures. Cite `/codex/04-architecture/agent-orchestrator-alerting.md` for the
-      channel/dedup conventions to follow. (repo: agent-orchestrator)
+      channel/dedup conventions to follow. (repo: agent-orchestrator) — agent-orchestrator@38cf884b25. Implemented as
+      the separate-timer option: `scripts/orchestrator-liveness-guard.sh` + `.service`/`.timer` +
+      `install-orchestrator-liveness-guard-timer.sh` (not yet installed on the live VM — the plan's done_definition is
+      "code shipped", installation is an operator action via the install script). Polls `/api/healthz` every 20s
+      (timer cadence), pages Slack directly on 3 consecutive failures (env webhook or Secret Manager fallback, same
+      resolution order as `fleet-git-health-guard.sh`), re-reminds every 600s while still down, posts a single
+      RESOLVED bookend on recovery — state-transition dedup per
+      `/codex/04-architecture/agent-orchestrator-alerting.md`'s standing convention, which that doc's
+      self-monitoring detector registry now also documents. Proven via `--self-test` (pure state-machine, no
+      network) + a live end-to-end run against a deliberately-unreachable port that produced a real page + RESOLVED
+      pair in `#agent-orchestrator-alerts` (verification artifact, not a real incident — the message names
+      `http://localhost:1`, not the real orchestrator port).
 
 ## Gap 2 — LiteLLM proxy `/health` returns 500, not investigated
 
@@ -94,3 +105,12 @@ probe rather than a bare unauthenticated hit) but not confirmed either way — f
   liveness check for" — zero hits outside this doc. Flipped `assigned_vm: NA → planning`,
   `execution_scope: local-only → orchestrator-agent`; added missing `assigned_role: infra` (matching both todos'
   `[INFRA]` tags).
+- **2026-08-22 (slot 24, infra)**: Gap 1 todo flipped — `agent-orchestrator@38cf884b25` adds
+  `scripts/orchestrator-liveness-guard.sh` (+ `.service`/`.timer`/install script), the separate-timer option named in
+  the todo. Also updated `/codex/04-architecture/agent-orchestrator-alerting.md`'s self-monitoring detector registry
+  with this new detector's row (it's the one row in that table that must keep working while orchestrator.service
+  itself is down, since every other row's paging lives inside that process). Not yet installed on the live VM —
+  `done_definition` for this AO-dispatched todo is "code shipped", not "installed"; installing it is a one-time
+  operator action (`bash scripts/install-orchestrator-liveness-guard-timer.sh --operator <user> --start`) since it
+  needs `sudo` for the systemd unit files. Gap 2 (LiteLLM `/health` 500) is untouched — separate P3 todo below, out of
+  scope for this dispatch.
