@@ -623,10 +623,12 @@ todos only to confirm they are data-movement, then leave it.
       immediately. Part 4 is genuinely blocked on reconciling the contract with the writer, which lives in UAC.
       Filed to T1. The revert is verified: `git status` clean and the 12 `promote_catalogue` tests green again.
 - [ ] [BACKEND] P0. Build the instruments catalogue definitions aggregation and field-change history — monthly-grain
-      aggregation, mutable-field declaration, field-change log, point-in-time-equivalence proof. **The design
-      ratification todo is `[OPERATOR]`-gated** — build everything downstream of it against the documented design
-      and flag the gate. Evidence:
+      aggregation, mutable-field declaration, field-change log, point-in-time-equivalence proof. Evidence:
       `/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`.
+      **2026-08-22 — operator ratified the mechanism: current-state + narrow change log** (over monthly-
+      snapshots-only, which can't resolve an intra-month change, and full-row-versioning, which duplicates every
+      immutable field per change). Mutable-field DECLARATION lives in UAC — filed to T1's Inbound requests. T2
+      builds the monthly catalogue + field-change-log writer, dispatched to a background agent this session.
 - [ ] [BACKEND] P0. Land the venue smoke-test bar and the venue E2E wiring. Evidence:
       `/plans/active/venue_smoke_test_bar_2026_08_16.md`, `/plans/active/venue_e2e_wiring_2026_08_16.md`.
       **NOTE 2026-08-20 (T2, `/autonomous`) — do not duplicate, check status first next session.** Pulled origin

@@ -317,6 +317,31 @@ todos only to confirm they are data-movement, then leave it.
       Once these land, T4's `resolve_settlement` gets 2 more `isinstance` branches, closing the BATCH settlement
       gap todo 5/5, matching the pattern `CONVERT_DUST`/`WITHDRAW`/`REPAY` already established.
 
+- [ ] [FROM-T2] P1. **New declared registry: which leagues does bookmaker venue X actually offer.** Operator
+      ruled 2026-08-22 to extend instruments-service's Layer-1 completeness gate to
+      `(venue, instrument_type, data_type, league_id)` grain for sports. No live sports adapter expresses true
+      per-bookmaker league scope (`odds_api_adapter.py` fetches a sport-wide pool for all ~21 bookmakers alike;
+      `betfair_adapter.py` does ad hoc substring matching, no canonical mapping). Closest existing thing —
+      `sports_bookmaker_league_coverage.BOOKMAKER_LEAGUE_COVERAGE` — is manifest-derived, so it cannot feed the
+      EXPECTED-side denominator (`expected_universe.py`'s own hard rule: never derive EXPECTED from the
+      manifest — circular). **Ask**: declare `EXPECTED_BOOKMAKER_LEAGUE_COVERAGE: dict[str, frozenset[str]]`,
+      seeded from the current `BOOKMAKER_LEAGUE_COVERAGE` snapshot (bootstrapped-then-frozen, same pattern as
+      `VENUES_BY_ASSET_GROUP`), covering at minimum `odds_api`'s ~21 bookmakers + `betfair`'s 3 sub-venues. T2
+      consumes it in `expected_universe.py`/`check_enumeration_completeness.py` (own repo, already scoped) once
+      it lands. Repo: unified-api-contracts.
+
+- [ ] [FROM-T2] P1. **New declared registry: which InstrumentRecord fields are mutable (get historised).**
+      Operator ratified 2026-08-22 the current-state + narrow-change-log design for
+      `instruments_catalogue_definitions_and_field_history_2026_08_17.md` (over monthly-snapshots-only and
+      full-row-versioning — the log-replay approach is the only one that resolves an intra-month change
+      correctly at a cost proportional to actual changes, not row count). **Ask**: declare the mutable-field set
+      explicitly — only tick_size/contract_size/DeFi lending risk params are believed mutable today (per the
+      design doc's own table), DeFi contract-address immutability still needs verifying (tracked separately,
+      `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 12). A field NOT declared mutable that
+      later changes silently is the correctness bug this whole design exists to prevent — the declaration is the
+      control. T2 builds the monthly catalogue + field-change-log writer (own repo, instruments-service) against
+      whichever fields land here. Repo: unified-api-contracts.
+
 ## Todos
 
 ### Registry SSOT — the P0s everything else is wrong without
