@@ -155,13 +155,19 @@ assigned_role: backend_engineer
       `CUSTODIAN_COLLATERAL_DELEGATION`. Done: a unit test asserts an `ExecutionInstruction` classified as
       `CUSTODIAN_COLLATERAL_DELEGATION` reaches this method (not `_execute_onchain_transfer` or
       `_execute_custody_transfer`).
-- [ ] [BACKEND] P0. **New `execution_service/engine/transfers/live_pod_adapter.py` — `LivePodCollateralAdapter`**
+- [x] ✅ [BACKEND] P0. **New `execution_service/engine/transfers/live_pod_adapter.py` — `LivePodCollateralAdapter`**
       (real REST client, mirrors `live_bridge_adapter.py`'s honest-not-configured-fails-loud shape). Every REST
       endpoint/path is `<TBD-POD-PROVIDES-API-SPEC>` per the proposed schema in Section C — construct the class with
       real constructor fields (`api_url`, `credentials_secret`, `sandbox: bool`) but every method raises
       `NotImplementedError("POD API spec pending — see /codex/04-architecture/transfer-architecture.md § POD")`,
       mirroring `CeffuCustodyProvider`'s stub-shipped pattern exactly (see `custody-providers.md` §2.4). This todo is
       NOT gated on POD's spec — the stub shell ships now so the factory/dispatch wiring is provably complete
+      — execution-service@1abe383ccc. Shipped: `LivePodCollateralAdapter` (constructor with `api_url`/
+      `credentials_secret`/`sandbox`, `is_wired` property) + `execute_collateral_delegation`/`get_transfer_status`
+      both raising `NotImplementedError` per the message above, mirroring `CeffuCustodyProvider`'s stub pattern
+      exactly + `tests/unit/test_live_pod_adapter.py` (construction, `is_wired` contract, both methods' raise
+      contract). Not wired into `CompositeTransferAdapter`/`create_transfer_adapter` — that is item 5 below, out of
+      scope for this todo.
       end-to-end against the mock; only the real REST method bodies (tracked separately in the epic) await the spec.
 - [ ] [BACKEND] P0. **New `execution_service/engine/transfers/mock_pod_adapter.py` — `MockPodCollateralAdapter`**.
       Per operator ruling: a FULLER async simulator, not instant success — an in-memory per-`transfer_id` state
