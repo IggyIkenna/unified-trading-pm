@@ -8,7 +8,8 @@ summary: >-
   (extract the V4 branch into its own method) shrinks it to 53L -- still over
   -- and pushes uniswap.py itself from ~900 to 911 lines, past the 900-line
   file-size cap too. This needs a real trim, not a mechanical one-line split.
-status: open
+status: superseded
+superseded_by: execution_service_qg_red_mint_position_method_size_2026_08_22
 nature: issue
 asset_group: [cross-cutting]
 stage: [execution]
@@ -98,3 +99,11 @@ docstring blocks add lines a pure extraction can't avoid).
   Orca/Raydium fix. Declaring a `qg_red` repo-blocker for execution-service
   per RULES.md § 4b rather than attempting a second fix pass under this
   task's own scope.
+- **2026-08-22 (slot-7, dedup pass)**: `POST /api/repo-blockers` came back
+  `created: false` -- slot-24 had already filed the identical finding
+  (same method, same both-caps interaction) minutes earlier as
+  `execution_service_qg_red_mint_position_method_size_2026_08_22.md`
+  (`unified-trading-pm@579b295113`), with an open blocker `RB-f94cb3d7` I've
+  now joined as a waiter. Marking this doc `superseded` rather than deleting
+  it -- the two findings are independently-derived confirmation of the same
+  root cause, not additional information the canonical doc lacks.
