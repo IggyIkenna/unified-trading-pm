@@ -265,6 +265,14 @@ could not track real consumption.
       Playwright-gate cost, so it is worth doing together with the label todo above. Repo:
       agent-orchestrator.
 
+- [ ] [DOCS] P3. **This issue doc is past the 500-line soft cap (541 as of 2026-08-22).** It grew
+      from 285 as five provider arms landed against it. Hard cap is 1000, so nothing is blocked
+      today, but the hygiene sweep flags the soft breach and it will keep growing while the
+      follow-ups below are worked. Split along the natural seam: the GLM incident + its lessons are
+      the ORIGINAL issue and are closed; the per-provider "no exceptions" rollout and its follow-ups
+      (restart gap, credential ask, racy gate, UI label) are a distinct workstream that outlived it.
+      Repo: unified-trading-pm.
+
 - [ ] [BACKEND] P3. Audit the remaining providers for the same estimate-vs-measurement confusion
       now that the pattern is known: confirm each poller's numbers are a genuine vendor read, and
       that each writes `rate_limited_until` (not just percentages) — a percentage alone never
