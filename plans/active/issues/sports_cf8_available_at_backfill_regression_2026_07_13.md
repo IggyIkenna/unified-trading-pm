@@ -440,8 +440,6 @@ consolidation).
       `/plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md` +
       `/plans/active/issues/sports_cf8_out_of_window_mechanism_reconciliation_2026_08_16.md` (6/7 items resolved
       between them) — check those before re-attempting, not a clean unattempted step. (repo: market-tick-data-service)
-      **➡️ DUPLICATE OF** `/plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`
-      (2026-08-21 dedup pass, verified `status: open`) — the real remaining re-attempt work is tracked there.
 
 - [x] ✅ [INFRA] P2. Verify whether the row_count-preferring multi-source dedup tie-break (`manifest_consolidator.py`'s
       `CASE WHEN capture_status = 'captured' AND captured_distinct_sources > 1 THEN COALESCE(TRY_CAST(row_count AS BIGINT), 0) ELSE NULL END DESC`)

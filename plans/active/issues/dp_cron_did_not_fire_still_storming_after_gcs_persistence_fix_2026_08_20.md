@@ -214,23 +214,3 @@ so they are recorded here and tagged for the owning tranche rather than acted on
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — 2 open items (todo 4: reconcile 3 predecessor docs' stale
   status; todo 5: route the CME/sports-odds live capture gaps to the owning data tranche) touch docs/tranches
   outside this cefi-tranche dispatch's own write scope — left open, not this pass's to force.
-- **2026-08-22, 6-hourly data-pipeline-alerts-reconciler sweep (slot 29)**: Re-swept `#data-pipeline-alerts`
-  (24h window, 797 messages, 4 distinct VMs). Storm/dedup fix confirmed still holding — no cooldown-breach
-  pattern in this sample. Independently re-confirmed the CME-trades live gap named in todo 5 is still live and
-  has continued ageing with zero intervention: `mtds-live-tradfi-cme-trades-20260809-163443` now reports last
-  captured **9.0-10.0d ago** (was 8.0d on 2026-08-20, 5.0d on 2026-08-17 — aging roughly 1:1 with wall-clock,
-  i.e. genuinely zero rows captured since). Live process confirmed still running and healthy at the OS level
-  (`ps aux` shows the `websocket-streaming --mode live --asset-group TRADFI --shard-spec tradfi:CME:trades`
-  process up since Aug 9, no crash/restart), so this is not a dead process — the capture itself is silently
-  unproductive. Could NOT determine root cause this pass: the VM is tarball-deployed (no `.git` checkout to
-  diff against LDR, unlike the BYBIT VMs), and `/home/ikennaigboaka/logs/` on the VM holds only a stale 873-byte
-  boot-time `live.log` — the live app log streams to
-  `gs://deployment-scripts-central-element-323112/vm-logs/mtds-live-tradfi-cme-trades-20260809-163443/run.log`,
-  which this role's tooling doesn't have a sanctioned non-`gsutil` read path handy for (UTL `cloud_interface`
-  read wasn't attempted this pass — budget-bounded 6-hourly sweep, not a deep-dive). **Todo 5 (route to the
-  owning data tranche) has now sat open and unrouted for 2+ days across 3 independent re-confirmations
-  (2026-08-20 T5, 2026-08-21 na-eligibility-audit, 2026-08-22 this sweep) while the underlying gap keeps
-  growing** — flagging this explicitly as the "big finding" this pass surfaces per the findings-triage HARD RULE
-  (data-pipeline-correctness, aging, no owner) rather than re-diagnosing further. No code/infra/manifest changes
-  made this pass; no registry append warranted (both dominant events, `DP_CRON_DID_NOT_FIRE` storm and the
-  CME/BYBIT productivity gaps underneath it, are already registered and already tracked).

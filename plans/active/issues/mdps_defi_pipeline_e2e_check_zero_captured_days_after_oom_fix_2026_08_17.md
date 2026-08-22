@@ -18,7 +18,8 @@ summary: >-
   `mdps_mvp_universe(DEFI)` matched any of those 115 keys, at ANY historical day (`--auto-day` found nothing to
   fall back to for any of them) — a 0% intersection between the shard universe and what's actually captured under
   `service_name=market-tick-data-service` in the raw manifest.
-status: archived
+status: open
+archive_exempt: true
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -36,7 +37,7 @@ author: slot-20 (data_engineering)
 assigned_vm: planning
 parent_epic: security_and_cross_cutting_master
 priority: P1
-resolved_by: market-data-processing-service@fae666bef2, market-data-processing-service@6ee153a0, unified-trading-library@11f1ebd1, market-data-processing-service@4990d2361
+resolved_by:
 locked_by:
 source:
   - data_pipeline_check_mdps_features_2026_07_20.md's "mdps-e2e-defi-oom-fix-and-full-matrix-completion" todo —
@@ -53,15 +54,6 @@ context_scope:
     /plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md,
   ]
 ---
-
-> **🟢 ARCHIVED 2026-08-21** — every todo closed: OOM fixed + root-caused
-> (market-data-processing-service@fae666bef2, chain-axis composition fix), the full-manifest read replaced with a
-> row-group-streamed one (market-data-processing-service@6ee153a0, unified-trading-library@11f1ebd1), and cross-leg
-> `gc.collect()` shipped (market-data-processing-service@4990d2361). The re-run goal itself was closed as SUPERSEDED
-> (not achieved) — the "PROVED NOTHING" recurrence was root-caused one layer up (stale consolidated index despite a
-> healthy consolidator) and is tracked separately in
-> `/plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`
-> — read that doc for what's still open, not this one.
 
 # DEFI pipeline_e2e_check: OOM fixed + root-caused, but the driver now proves the shard universe doesn't match captured data
 

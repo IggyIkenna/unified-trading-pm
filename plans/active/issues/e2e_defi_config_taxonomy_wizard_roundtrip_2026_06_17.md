@@ -122,19 +122,7 @@ CARRY_BASIS_PERP(drift-perp). No off-taxonomy venue/instrument_type except D3 be
       execution-service). The stale "not yet approved" framing in the cross-reference below no longer applies. **What's
       still actually blocking D4**: the validation harness this smoke test would run through needs a Tenderly-fork +
       PoolMatcher-fixtures test environment, still `BLOCKED-CREDENTIALS` — a genuine, unrelated credential gap (Tenderly
-      account/API access), not a design-decision gap. **STATUS UPDATE 2026-08-21/22 (D16 operator ruling,
-      execution-service dispatch)**: the Tenderly credential gap is RESOLVED — `tenderly-api-key`/
-      `tenderly-fork-rpc-url`/`defi-wallet-private-key` all provisioned and confirmed working end-to-end against a
-      real Tenderly Virtual TestNet (VNet creation, wallet+contract funding, real on-chain writes all succeeded, see
-      `exec_tenderly_2026_08_15.md`'s Progress Log for the full run evidence). **Still genuinely blocking, but NOT a
-      credential absence anymore**: that same session found a Tenderly account/plan-tier write-RPC limit — the
-      gateway rejects a fork's 6th real on-chain write with `HTTP 403 Forbidden` (reproduced twice, deterministic) —
-      a round-trip smoke exercising real supply/borrow/swap/repay/withdraw legs needs more than 5 real writes, so it
-      would hit the same wall. `e2e-testing` was NOT touched this session (out of that dispatch's execution-service
-      scope) — `recursive_borrow_paper_smoke.py` itself is unchanged; this is a status-accuracy correction to the
-      blocker's actual current shape (credential-tier limit, not credential absence), tracked as the new
-      `[OPERATOR] P3` todo already filed in `exec_tenderly_2026_08_15.md`. **Cross-reference (2026-07-28, historical
-      — the "not built"
+      account/API access), not a design-decision gap. **Cross-reference (2026-07-28, historical — the "not built"
       framing below is now stale, kept for the audit trail)**: `CARRY_RECURSIVE_BORROW_LENDING_ONLY`'s orchestrator-stub
       is already exhaustively investigated and scoped (not built) in
       `plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md:482-660` — the credentials/infra
@@ -284,10 +272,3 @@ sizing — the operator's core question — is **not a parameter anywhere**; it 
   — the real remaining blocker is the Tenderly-fork + PoolMatcher-fixtures validation environment, unaffected by the
   design shipping.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
-- **D16 dispatch, execution-service (slot 6) 2026-08-21/22**: D16 operator ruling provisioned the Tenderly
-  credential this D4 item shares with `exec_tenderly_2026_08_15.md`'s `test_tenderly_fork_full_cycle` — confirmed
-  working end-to-end against a real fork in that sibling doc's own dispatch. Corrected D4's status text: the
-  blocker is no longer "credential absent" (stale) but a specific, newly-found Tenderly write-RPC quota (5 real
-  writes succeed, the 6th gets HTTP 403) — see that doc's Progress Log for the full evidence. `e2e-testing` itself
-  was not touched (out of scope for that dispatch); D4 stays open, correctly reflecting current reality rather than
-  a resolved-but-still-marked-blocked state.

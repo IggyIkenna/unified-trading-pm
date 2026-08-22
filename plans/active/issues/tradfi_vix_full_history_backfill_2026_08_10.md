@@ -21,7 +21,7 @@ summary: >-
   itself documented as an unjustified courtesy cap. All 7 years were therefore launched CONCURRENTLY via `--force` this
   session — see the todo below for VM names and verification. This doc's remaining scope is now MONITORING to completion
   only, not launching; AO dispatch should NOT re-run the launch commands.
-status: archived
+status: open
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -48,12 +48,9 @@ execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true # 0 open todos by design (monitoring + docs done); backfill fix/relaunch tracked in tradfi_vix_backfill_launch_failed_2026_08_10.md
 context_scope: [/plans/archive/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md, /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md, /plans/archive/issues/databento_concurrency_gating_audit_2026_08_09.md, /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md]
 ---
-
-> **ARCHIVED** — 2026-08-21. All todos done; the follow-up doc this one was kept open to contextualize
-> (`tradfi_vix_backfill_launch_failed_2026_08_10.md`) is itself now fully resolved and archived, so the
-> `archive_exempt` justification no longer applies. Dropped.
 
 # VIX futures full-history backfill
 

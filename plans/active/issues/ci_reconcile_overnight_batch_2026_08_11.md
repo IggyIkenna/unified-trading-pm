@@ -55,7 +55,7 @@ context_scope:
   - scripts/self-hosted-runners/setup-glue-runners.sh
 created: 2026-08-11
 author: claude-agent
-last_updated: 2026-08-21
+last_updated: 2026-08-11
 parent_epic: ci_master
 priority: P1
 source: ci-reconcile skill, Slack #ci-failures 2026-08-10T23:14Z-2026-08-11T04:00Z
@@ -453,7 +453,7 @@ not because anything needs follow-up.
       instead of the 5500MB unmeasured-repo fallback. Note: build `49413a09` for `8b8e9a3` (05:55:16Z, still pre-fix)
       also TIMEOUT — expected, it predates `d7453ed`; not a regression. No further action needed. (repo:
       unified-api-contracts, evidence: build=4465fc18-3277-4711-abd3-f86daac715e0)
-- [ ] [INFRA] P3. **Fix the 7 failing `github-glue-slot-refresh-*` systemd units** on host
+- [ ] [CODE] P3. **[BLOCKED-PERMISSIONS] Fix the 7 failing `github-glue-slot-refresh-*` systemd units** on host
       `i-042a6332509482556` (Structural finding C): git-credential failure
       (`could not read Username for 'https://github.com'`) on the periodic mirror-refresh side-timer for
       ao/e2e-testing/execution-service/features-service/market-tick-data-service/ml-service/strategy-service. Does not
@@ -463,19 +463,15 @@ not because anything needs follow-up.
       git's global credential helper, so the refresh timer's later plain `git pull` had nothing to authenticate with.
       Fix adds `gh auth setup-git` (unconditional, every install — repairs an existing pool too, no reclone needed) to
       `setup-glue-runners.sh`, using gh's own persisted token via the credential-helper indirection (same no-PAT-on-disk
-      property as the existing clone). **Live application/verification — per D4 ruling (ATTEMPT-THEN-ASK, 2026-08-21)**:
-      attempt to apply the already-ruled scoped SSM grant to this slot's own AWS identity for
-      `i-042a6332509482556` (IAM self-service rule) and re-run `sudo GH_TOKEN_SECRET=GH_PAT
-      ./setup-glue-runners.sh install` (idempotent, per-repo) for the 7 affected pools, or
-      `sudo -u ubuntu gh auth setup-git` directly, then confirm via
-      `systemctl --no-pager status github-glue-slot-refresh-<repo>.service`. Prior finding: this session's AWS
-      identity (`ikenna-worker`) had no `ssm:SendCommand` on this host and no self-service IAM path to grant it
-      (`SendCommand`/`AssumeRole`/`PutUserPolicy`/`SimulatePrincipalPolicy` all AccessDenied — unlike the ambient
-      `uts-orchestrator-epic-role`'s documented self-service grant in
-      `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`). If this slot's identity genuinely
-      cannot self-grant SSM either, escalate with options (a) grant this identity scoped `ssm:SendCommand` on the
-      host, or (b) fix why dispatches aren't inheriting the orchestrator VM's own instance-profile credentials.
-      Done when: all 7 `github-glue-slot-refresh-*.service` units show `active` (not `failed`).
+      property as the existing clone). **Live application/verification BLOCKED-PERMISSIONS**: this session's AWS
+      identity (`ikenna-worker`) has no `ssm:SendCommand` on `i-042a6332509482556` and no self-service IAM path to grant
+      it (confirmed: `SendCommand`/`AssumeRole`/`PutUserPolicy`/`SimulatePrincipalPolicy` all AccessDenied — unlike the
+      ambient `uts-orchestrator-epic-role`'s documented self-service grant in
+      `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, this is a genuinely different,
+      non-self-service identity). Whoever next has working SSM access to this host: re-run
+      `sudo GH_TOKEN_SECRET=GH_PAT ./setup-glue-runners.sh install` (idempotent, per-repo) for the 7 affected pools, or
+      just `sudo -u ubuntu gh auth setup-git` directly, then confirm via
+      `systemctl --no-pager status github-glue-slot-refresh-<repo>.service`.
 
 ## §6 three-sweep verification checklist (per the `/ci-reconcile` skill)
 
@@ -514,8 +510,3 @@ evidence.
   is [BLOCKED-PERMISSIONS]: this session's AWS identity structurally lacks `ssm:SendCommand` on the target host
   and has no self-service IAM path to grant it (confirmed distinct from the documented self-service identities in
   `orchestrator-cloud-identity-self-service.md`), not a bounded worker task. Cross-cutting tranche, batch 2 of 3.
-
-- **2026-08-21 — ruling D4 (AWS access for worker identities)**: ATTEMPT-THEN-ASK — apply the already-ruled
-  codebuild grant + scoped SSM grant from this slot's AWS identity (IAM self-service rule); fix the
-  credential-resolution path. Only if AWS admin is genuinely absent here, escalate. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

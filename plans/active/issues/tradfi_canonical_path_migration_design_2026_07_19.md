@@ -23,7 +23,7 @@ source: "Full physical GCS enumeration (bny7k1yk6) + investigation workflow (wli
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass. **STALE 2026-08-19 (plan_reconciler, epic-scoped tradfi_master pass): the "0-open-todos" premise no longer holds — the 2026-08-18 pass converted 2 prose-only Deferred-work items into real tracked todos (lines ~603, ~609, both still open). This doc is NOT currently archive-eligible; do not drop this bridge line or git mv until those 2 todos are done. See the corrected note on tradfi_satellite_ao_dispatch_batch15_2026_08_17.md Todo 6.
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass. **STALE 2026-08-19 (plan_reconciler, epic-scoped tradfi_master pass): the "0-open-todos" premise no longer holds — the 2026-08-18 pass converted 2 prose-only Deferred-work items into real tracked todos (lines ~603, ~609, both still open). This doc is NOT currently archive-eligible; do not drop this bridge line or git mv until those 2 todos are done. See the corrected note on tradfi_satellite_ao_dispatch_batch15_2026_08_17.md Todo 6.
 locked_by:
 locked_since:
 assigned_vm: planning
@@ -863,7 +863,7 @@ one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
     follow-on VM-scale work (non-destructive copy+verify), bundled with the short-code→display-name migration per the
     Deferred-work table's "Recommended next"; any subsequent legacy-`combo` delete stays `[OPERATOR]`-gated.
 - **2026-08-12** — `locked_by`/`locked_since` cleared (corpus-wide fix, operator ruling Option B, interactive session
-  2026-08-12; see /plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
+  2026-08-12; see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
   0 open todos, so clearing the placeholder lock immediately makes it archive-eligible. Per the ruling's explicit scope
   ("do NOT auto-archive in this same pass"), archival itself is deferred to a separate follow-on pass; bridged with
   `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in

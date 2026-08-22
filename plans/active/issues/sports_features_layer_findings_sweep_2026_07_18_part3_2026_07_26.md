@@ -401,8 +401,6 @@ that is real — but the catalogue will keep reporting ~0% until its reader is r
       `sports_consolidated_closeout_2026_07_19.md` Track E** (`[CODE] P1` "repoint the remaining stale `entity=fixtures`
       consumers, sweep §R's ~9-file list, now 7") — still open there as of 2026-07-27, one item (`gcs_reader`, § V
       below) already fixed independently. Not duplicated here.
-      **➡️ DUPLICATE OF** `/plans/active/sports_consolidated_closeout_2026_07_19.md` Track E (2026-08-21 dedup pass,
-      verified `status: active`).
 - [x] ✅ [CODE] P1. `competition_phase` / `round_name` / `is_promotion_relegation` are ABSENT as catalogue columns, not
       merely UNKNOWN — the rollup never projects them. Even with a live entity, the derivation from `round` must be
       wired into the catalogue build. **Retracted, wrong layer** — see R-FIXED's own already-flipped entry directly
@@ -457,8 +455,6 @@ level.
       repoint + a re-run; anything reporting stale sports data since 2026-05-23 is suspect. **Owned by
       `sports_consolidated_closeout_2026_07_19.md` Track E** — same item as § R's `[DIAG] P0` above, not duplicated
       here.
-      **➡️ DUPLICATE OF** `/plans/active/sports_consolidated_closeout_2026_07_19.md` Track E (2026-08-21 dedup pass,
-      verified `status: active`).
 
 ### S (2026-07-19) — P1 MEASURED: `total_matchdays` is hardcoded **38 for every league on earth**
 

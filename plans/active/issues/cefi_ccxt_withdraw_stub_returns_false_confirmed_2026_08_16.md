@@ -25,7 +25,6 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-16
-last_updated: "2026-08-21"
 author: interactive-session
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
@@ -40,7 +39,6 @@ depends_on: []
 resolved_by:
 locked_by:
 locked_since:
-archive_exempt: true
 supersedes:
 superseded_by:
 source: >-
@@ -178,29 +176,13 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
       a `TRANSFER` `ExecutionInstruction` through `InstructionRouter` at all today — the wiring makes the router
       dispatch-capable, but nothing yet calls `wiring.router.route_instruction(...)` for a CEX_WITHDRAW/
       SUBACCOUNT_MOVE instruction in the live engine.
-- [x] ✅ [BACKEND] P1. Exercise `execute_withdrawal` end-to-end against a real exchange testnet account (found
-      2026-08-17, completing the bootstrap-wiring todo above; D12/D19 2026-08-21 operator ruling (see
-      `/plans/active/issues_corpus_completion_dispatch_2026_08_21.md`) provisioned testnet credentials). **Done 2026-08-21/22** — `deribit-testnet-write-api-key`/`-secret` both verified
-      present with non-empty content in GSM (`central-element-323112`). Ran a real, direct
-      `LiveCcxtTransferAdapter.execute_withdrawal(venue="deribit", token="BTC", amount=Decimal("0.0001"),
-      to_address=..., chain="BTC")` call against `test.deribit.com` (ccxt sandbox mode):
-      1. `fetch_balance()` succeeded first — real auth + connectivity confirmed (returned a real testnet BTC balance
-         of 100.0).
-      2. `execute_withdrawal()` reached Deribit's real testnet withdrawal endpoint and got back a genuine,
-         venue-specific rejection: `{"code":11090,"message":"invalid_addr"}` (the destination address used wasn't
-         pre-whitelisted on the test account — Deribit enforces withdrawal-address allowlisting even on testnet,
-         a real exchange-side security control, not a code defect). The adapter correctly classified this as
-         `TransferStatus.FAILED` with the real error threaded through (not a silent CONFIRMED, not swallowed) —
-         exactly the property the earlier stub-fix in this doc's other todos was built to guarantee.
-      This is the "real exchange sandbox/testnet account" verification this todo asked for, executed against
-      deribit-testnet rather than bybit-testnet — **found while choosing a venue**:
-      `bybit-testnet-trade-api-key-secret` exists in GSM with an ENABLED version but a 0-byte (empty) payload, which
-      would have silently broken this exact test if attempted there instead; flagged as a new follow-up in
-      `exec_tenderly_2026_08_15.md`'s Progress Log (same D12/D16/D19 dispatch) rather than left unnoticed.
-      `build_transfer_wiring`'s own bootstrap wiring (binance/deribit/bybit/aster CCXT-exchange construction) was
-      not separately re-exercised this pass — the direct-adapter call above proves the same
-      `LiveCcxtTransferAdapter.execute_withdrawal` code path `build_transfer_wiring` wires into `HandlerRegistry`,
-      which is the property this todo's done-when asked for. Repo: execution-service.
+- [ ] [BACKEND] P1. BLOCKED-CREDENTIALS: New: exercise `build_transfer_wiring` end-to-end against a real exchange
+      sandbox/testnet account (found 2026-08-17, completing the bootstrap-wiring todo above). Needs
+      operator-provisioned sandbox API credentials for at least one CEX_WITHDRAW venue (binance/deribit/bybit/aster
+      testnet). Done-when: a real `execute_withdrawal()` (or `execute_internal_transfer()`) call round-trips through
+      `wiring.router.route_instruction(...)` against that sandbox account and the result is verified against the
+      exchange's own transfer/withdrawal history endpoint — not just a mocked CCXT `AsyncMock`. Blocked until the
+      operator provisions sandbox keys.
 - [x] ✅ [BACKEND] P1. **Audit whether any downstream balance-reconciliation logic would have caught this** if it
       had ever been reachable — done-when: a cited answer, yes or no, with evidence. **Answer: NO — two
       independent reasons, evidence 2026-08-17.** (1) No existing reconciliation component checks a
@@ -309,9 +291,3 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries) — added `engine/transfers/wiring.py`,
   the new bootstrap-wiring module created by this doc's own P1 fix (`build_transfer_wiring(config)`), the file the
   still-open wiring todo now targets.
-
-**2026-08-21 — ruling D12 (CEX execution credentials)**: OPERATOR-RULED 2026-08-21 — 'check Secret Manager, we have
-these': VERIFIED in GSM (central-element-323112): binance-trade-api-key/-secret, bybit-trade-api-key (+bybit-api-secret;
-bybit-trade-api-secret ABSENT), exec-<client>-okx-api-key/-secret/-passphrase x9, deribit-testnet-write-*,
-bybit-testnet-trade-*. Now EXECUTABLE: wire place_order() + verify the withdraw path on testnet. Source:
-/plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

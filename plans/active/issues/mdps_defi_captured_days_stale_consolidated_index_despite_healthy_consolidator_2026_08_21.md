@@ -48,6 +48,7 @@ tags:
   ]
 related:
   [
+    /plans/active/issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md,
     /plans/active/defi_satellite_ao_dispatch_batch19_2026_08_21.md,
     /plans/active/issues/defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
@@ -69,6 +70,7 @@ drift_direction: advance-code
 depends_on: [defi_collect_schedulers_paused_since_2026_07_18_2026_08_16]
 context_scope:
   [
+    /plans/active/issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md,
     /plans/active/issues/defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md,
     unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
     unified-trading-library/unified_trading_library/manifest_writer/_staleness_budget.py,

@@ -485,24 +485,10 @@ three in four) pay nothing.
 ## Deploy currency — `ao-self-pull.sh`
 
 The backend runs `uvicorn server.server:app` from the VM's git checkout; nothing else keeps that checkout current.
-**`scripts/ao-self-pull.sh`** (root cron — interval per the installed crontab entry, not a number memorised from a doc)
-FF-pulls `origin/live-defi-rollout` (ff-only, never forces; dirty → logs + skips) and `systemctl restart`s the
-orchestrator only when HEAD moved **and the move touched a restart-relevant path**, or when the running process
-predates the newest restart-relevant commit. A deduped Slack alert (`_alert_wedge`) fires when the pull is wedged AND
-the clone is `≥10` commits behind.
-
-**The restart is relevance-gated (HARD RULE — do not revert to restart-on-any-HEAD-move).** `RESTART_RELEVANT_PATHS`
-= `server/ config/ pyproject.toml uv.lock`; anything else FF-pulls with no restart. `scripts/orchestrator.service` is
-deliberately excluded because `install-orchestrator-service.sh` already owns the unit file and restarts only when it
-genuinely applies a change. The gate fails SAFE (unknown sha / git error ⇒ restart), and the stale-process self-heal
-compares against the newest restart-RELEVANT commit rather than plain HEAD — with plain HEAD it would simply
-re-trigger, one tick later, every restart the gate just skipped. WHY this is a hard rule
-(`/plans/active/issues/fleet_dispatch_stall_root_cause_2026_08_21.md`, measured 2026-08-21): the fleet ships its own
-agent-orchestrator commits to LDR, so restart-on-any-HEAD-move made the fleet restart itself 52x in one day, ~14 min
-apart. Each restart (a) wiped `autospawn._recent_spawn_failures`, the in-memory ring suppressing structurally-broken
-accounts, letting credential-less accounts win the pick again, and (b) let `WorkerLivenessWatchdog`'s first tick
-mass-kill live worker sessions — every `idle_lingering_session_reclaim` burst in a 12h window landed 40-55s after a
-restart, with none in between. A restart is not free; treat it as a fleet-disrupting event. Full SSOT + the open "current-checkout-but-stale-process" hardening gap:
+**`scripts/ao-self-pull.sh`** (15-min root cron) FF-pulls `origin/live-defi-rollout` (ff-only, never forces; dirty →
+logs + skips) and `systemctl restart`s the orchestrator only when HEAD moved, or when the running process predates the
+checkout HEAD. A deduped Slack alert (`_alert_wedge`) fires when the pull is wedged AND the clone is `≥10` commits
+behind. Full SSOT + the open "current-checkout-but-stale-process" hardening gap:
 [overview.md § "Deployment scripts"](/codex/04-architecture/agent-orchestrator-overview.md).
 
 **Deploy currency covers the systemd unit file too, not just app code** (closed 2026-07-31,

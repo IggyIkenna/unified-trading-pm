@@ -331,20 +331,9 @@ The rest is unowned.
       out) to the real canonical `:PERPETUAL:` shape, and added positive/negative filter-coverage tests in both test
       files. DoD's captured-row half NOT YET independently re-verified post-deploy in this session (the fix needs a
       fresh VM cycle to pick up the new code — recorded as a follow-up, not blocking this todo's code-fix closure).
-      - [x] ✅ [INFRA] P2. Once `market-tick-data-service@5f88715e4b`'s tarball reaches a fresh
+      - [ ] [INFRA] P2. Once `market-tick-data-service@5f88715e4b`'s tarball reaches a fresh
         `mtds-live-cefi-consolidated-*` relaunch (routine cycle or the next redeploy), verify at least one real
-        `captured` BYBIT-FUTURES row appears post-relaunch — DoD per the original todo above. — **CLOSED 2026-08-21
-        (negative result, root-caused)**: the 2026-08-21 relaunch (`mtds-live-cefi-consolidated-20260821-200626`,
-        confirmed fix-provenance via SSH) still shows 0 captured BYBIT-FUTURES rows across all 4 data_types (stable
-        across 5 repeated per-VM-shard reads; cross-checked against a genuinely-captured sibling venue on the same
-        shard). Root cause: Bybit subscribe/unsubscribe ack frames are silently dropped, unlogged, in both
-        `bybit_ws.py` and `bybit_futures_book_ticker_ws.py` — confirmed via SSH log inspection (zero
-        subscribe/ack/reject lines across the connector's full run) + a direct code read. Filed
-        `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md` (3 tracked todos:
-        add ack-frame logging to both connectors, then re-verify). Closing THIS verification todo per its own
-        stated fallback ("root cause named + fix filed"); the parent `[DATA] P1` captured-row todo above stays
-        OPEN until a real captured row is confirmed post-ack-logging-fix — this todo only closes the
-        post-relaunch-verification step, not the underlying capture gap.
+        `captured` BYBIT-FUTURES row appears post-relaunch — DoD per the original todo above.
       - [ ] [DATA] P2. File the separate IS daily-catalog PUBLISH-TIMING gap as its own instruments-service issue —
       BYBIT's `instrument_availability/by_date/day=<today>/.../venue=BYBIT/instruments.parquet` was absent at every
       check from VM boot (2026-08-14 03:27 UTC) through 2026-08-15 06:02 UTC, only appearing by 06:07:55 UTC — i.e. the
@@ -518,11 +507,3 @@ and succeeded on all recent runs; the index's age reflects the incremental-cutof
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 7 open todos: 2 explicit OPERATOR/paired-dependency items (phoenix live-phase-promotion ruling + its paired resolver-key fix, 'do both together or neither'), 2 dependency-blocked-on-other-docs items. (4/7 items tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for next-run reassessment.)
 - **context-scout 2026-08-19**: re-verified context_scope, no change needed (6 entries), all paths still resolve, still accurate.
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — reassessed the 4 items flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE 2026-08-19. Phoenix re-registration (Finding B) stays paired with its gating `[OPERATOR]` live-phase-promotion ruling per the todo's own 'do both together or neither' text — not independently dispatchable. Close-pending-captured-row-verification (Finding C) and its 2 nested follow-ups (post-relaunch verify, file the IS daily-catalog publish-timing gap) are observational/wait-then-check items nested inside a 3-bug investigation chain already substantially resolved this session with a shipped fix (`market-tick-data-service@5f88715e4b`) — splitting the residual verification out doesn't reduce genuine judgment content. The projected/filtered defi-index read path (Finding E) is open-ended engineering design ('give consumers X'), not a fully bounded spec. All 4 stay NA; downgrading the flag. 7 open todos unchanged.
-- **2026-08-21 (data_engineering, slot 19, dispatched from `dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md`
-  todo 2)**: closed Finding C's nested `[INFRA] P2` post-relaunch-verification todo — the 2026-08-21
-  `mtds-live-cefi-consolidated-20260821-200626` relaunch still shows 0 captured BYBIT-FUTURES rows across all 4
-  data_types, root-caused to Bybit subscribe-ack frames being silently dropped/unlogged in both connector files.
-  Filed `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`. The parent
-  `[DATA] P1` "close the pending captured-row verification for the four cefi shards" todo stays OPEN (it needs all
-  4 venues, not just BYBIT-FUTURES, and its DoD is still unmet for BYBIT-FUTURES specifically) — see that todo's
-  own text above for the full remaining scope.

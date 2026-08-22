@@ -60,7 +60,7 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3.6
-last_updated: 2026-08-21
+last_updated: 2026-08-01
 supersedes:
 superseded_by:
 depends_on:
@@ -226,13 +226,14 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
       `DataStatusDrilldown.tsx:85` types it opaque (`string`); `DataStatusTab.tsx:4817` / `VenueDetailPanel.tsx:182`
       both render via generic `Object.entries(...).map(...)`. An unrecognized value would print as literal text, not go
       blank or break — so this specific risk (silently-dropped row) is not live.
-- [ ] [DATA] P2. Per D31 ruling (ADOPTED-REC 2026-08-21: "Spot-check — 2 of 3 spot-checked failures were structural
-      manifest non-instrumentation a trace can't fix"): the reconciliation-cadence decision is now RESOLVED as
-      spot-check, not full-trace. Continue spot-checking the remaining findings across the 3 layers (GCS/manifest/
-      deployment-ui), reusing the 2026-07-31/08-01 Finding-A/B/C methodology — re-derive the live remaining-findings
-      count from `mtds_is_full_adapter_smoketest_findings_2026_07_07.md` directly first (its own bug list now shows
-      the majority `[x]` FIXED with shipped commit SHAs; do not trust the stale restated "58"). Done-when: every
-      still-unverified finding in that doc has a per-layer spot-check verdict recorded in this doc's Progress Log.
+- [ ] [DECISION] P2. **The pilot trace (AAVE_V3) has landed (2026-07-08, see body above) — decide the reconciliation
+      cadence for the remaining findings** — full trace per finding (expensive, thorough) vs a lighter spot-check
+      pattern informed by what the pilot revealed about where 3-layer drift actually tends to occur. **Count correction
+      (plan_reconciler 2026-08-18)**: this todo's own "58 findings" figure (and every Progress Log entry re-citing it
+      unchanged since) is stale — `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`'s bug list, the source of
+      that count, now shows the majority `[x]` FIXED with shipped commit SHAs; re-derive the live remaining count from
+      that doc directly before scoping this decision rather than trusting the restated "58" (a hardcoded count
+      re-stales on every bump — deliberately not replacing it with a fresh hardcoded number here either).
 - [x] [DECISION] P2. **Scope whether/when to pursue real `instrument_id` canonicalization** — **DECIDED 2026-07-08**:
       operator chose to canonicalize, full scope, rather than leave unscoped. Moved to its own doc —
       [[instrument_id_format_canonicalization_2026_07_08]] — since it grew into a 6-finding enumeration with real target
@@ -363,7 +364,3 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
   determinable fact; a same-day plan_reconciler correction to the todo's own stale "58 findings" count doesn't change
   that. No reclassification.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
-- **2026-08-21 — ruling D31 (Smoke-test findings reconcile depth)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
-  authority, AUTONOMOUS_AGENT_RULES rule 2): Spot-check — 2 of 3 spot-checked failures were structural manifest
-  non-instrumentation a trace can't fix. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
-  ledger.

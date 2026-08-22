@@ -465,20 +465,13 @@ todos only to confirm they are data-movement, then leave it.
       open — flatten/reduce response logic, not detection), `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md`
       (partially closes — 3 unrelated follow-ups remain).
 - [ ] [BACKEND] P0. Implement W9 account balances as the single strategy I/O.
-- [x] ✅ [BACKEND] P0. **SHIPPED 2026-08-21 — `strategy-service@21475dd24b`.** Corrected 2026-08-20's "confirmed
-      dead" claim before acting on it: `calculate_execution_alpha` is a fill-vs-VWAP-benchmark ratio
-      (dimensionless execution quality), NOT a dollar-PnL component — it covers none of `compute_pnl`'s 3 real
-      dollar-PnL sub-computations (hold-day interest, DeFi lending PnL, sports-settlement routing via
-      `SportsPnLEngine`). Deleting `compute_pnl` would have silently lost real logic. Fix: wired `compute_pnl`
-      as a SECOND engine inside `compute_handler.py::_process_attributions`, merged per-strategy with the
-      execution-alpha rows (`_merge_breakdown_into_attribution`) into one persisted `pnl_attribution` row
-      carrying both dimensions — one wired path, not a deletion. **Critical bug found + fixed in the process**:
-      `PnlComputeHandler.run()` re-parsed `sys.argv` with `parser.py`'s OWN `--operation` choices, which were
-      `["compute"]` only — the real registered top-level operation name is `"pnl-attribution"`
-      (`cli/service_entry.py:1084`), so every real `--operation pnl-attribution` invocation was
-      argparse-exiting(2) before running anything. Likely the actual reason no cron was ever wired — the entry
-      point was silently broken. Fixed (`parser.py` choices widened, `main.py` checks updated to accept both
-      spellings). Original claim's "execution-alpha compute_handler is dead with zero
+- [ ] [BACKEND] P0. Collapse the three competing PnL surfaces to one wired path. **Re-verified 2026-08-20, claim
+      mostly holds but needs correction before acting**: `compute_pnl` (`pnl/engine/orchestrator.py:426`) IS
+      confirmed dead — only test callers (`tests/pnl/unit/test_engine.py`, `test_service_startup.py`), the real
+      CLI compute path routes to `calculate_execution_alpha` instead. **But before deleting it**: it computes
+      hold-day interest + sports-settlement PnL (routes to `SportsPnLEngine`) + standard per-instrument
+      breakdown — confirm none of those three are uniquely-only-here before removing, don't just delete a
+      formula that might not be duplicated elsewhere. The "execution-alpha compute_handler is dead with zero
       readers" half of the claim is **wrong, correct it**: `compute_handler.py` is reachable via the registered
       `--operation pnl-attribution` CLI operation (`service_entry.py:814-822,1008`) — code-live, not dead — but
       no cron/systemd/Terraform trigger was found anywhere in the repo, unlike `--operation paper-run` which is
@@ -510,16 +503,9 @@ todos only to confirm they are data-movement, then leave it.
       exact channel name — SSOT `/codex/04-architecture/agent-orchestrator-alerting.md`'s adjacent
       `/codex/04-architecture/ci-alerting.md` doc names the pattern, not necessarily this exact channel) when
       residual is non-zero beyond a to-be-set tolerance, broken down by asset_group / deployment / instrument.
-      **SHIPPED 2026-08-21 — `strategy-service@21475dd24b`.** New `pnl/engine/residual.py`: alerts to
-      `#uts-live-alerts` via the existing `AlertManager.send_alert()` path (`AlertType.RISK_CRITICAL`/
-      `RISK_WARNING`), `compute_handler`/`parser`/`main`/`config` wired to invoke it, `domain_adapter.py`
-      gained the supporting read path. **Interim data-source caveat, documented in the module docstring**:
-      W9 (account balances as single strategy I/O) isn't wired yet — `total_pnl_change` sources from the
-      EOD `positions` snapshot's summed `notional_usd`, not a real balance ledger, so it does NOT net out
-      deposits/withdrawals/transfers and will misattribute a transfer as residual until W9 lands. Swap the
-      reader once W9 exists; the residual/alerting core doesn't need to change. **Correction — the
-      3-competing-PnL-surfaces collapse (todo directly below) WAS also done in this same shipment**, see that
-      todo for the details and a critical CLI bug fix found in the process.
+      **This is new scope beyond "wire the existing cron"** — the residual-computation + Slack-alerting
+      machinery does not exist yet per this session's investigation; check `compute_handler.py`'s current
+      output shape before assuming what's missing vs already there.
 - [ ] [BACKEND] P0. Build PnL attribution across every dimension the artefacts describe (W13) — currently
       "specified, not built".
 - [x] ✅ [BACKEND] P1. **12/13 already shipped across many prior sessions — verified 2026-08-21.** FUNDING leg

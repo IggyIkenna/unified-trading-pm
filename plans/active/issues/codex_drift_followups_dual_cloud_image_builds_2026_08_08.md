@@ -22,7 +22,7 @@ related:
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-21"
+last_updated: "2026-08-08"
 author: ikennaigboaka [slot-5]
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -133,13 +133,13 @@ access from this worktree).
       write path in `cloud-build-router.yml` / `cloud-build-router-aws.yml` so these fields get populated on a
       successful build, or remove the dead write-intent code and stop presenting the manifest as a provenance source
       anywhere in the codebase. Repo: unified-trading-pm.
-- [ ] [INFRA] P3. Attempt to apply the already-ruled (2026-08-09) read-only `codebuild:ListProjects`/
-      `codebuild:BatchGetBuilds` grant to `ikenna-worker`'s AWS IAM identity from this slot's own AWS identity
-      (IAM self-service rule, per D4 ruling 2026-08-21) — with existing access; if a genuine wall (no AWS admin
-      path from this identity), escalate with options (a) apply the grant via the operator's own AWS console/CLI
-      access, or (b) fix why this dispatch isn't inheriting the orchestrator VM's `uts-orchestrator-epic-role`
-      instance-profile credentials, which DO have self-service grant rights. Done when: `aws codebuild
-      list-projects` succeeds from a worker worktree using this identity.
+- [ ] [OPERATOR] P3. **RULED 2026-08-09 (operator): grant `ikenna-worker`'s AWS IAM identity read-only
+      `codebuild:ListProjects`/`codebuild:BatchGetBuilds`.** STANDING-ACTION — the decision is made, execution is still
+      pending: applying this grant requires the operator's own AWS console/CLI access, not a worker-self-serviceable
+      identity (`ikenna-worker` is a human-owned IAM user, distinct from the self-service `uts-orchestrator-epic-role`
+      covered by `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`). Stays open until the operator
+      (or someone with the operator's AWS access) actually applies the grant; done when a worker re-verifies the
+      capability live (`aws codebuild list-projects` succeeding as `ikenna-worker` from a worker worktree).
 
 ## Progress Log
 
@@ -169,8 +169,3 @@ access from this worktree).
   alongside the existing `dual-cloud-image-builds.md`, since the sole remaining open item (the AWS IAM grant) is exactly
   the self-service-boundary question that doc explains.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-
-- **2026-08-21 — ruling D4 (AWS access for worker identities)**: ATTEMPT-THEN-ASK — apply the already-ruled
-  codebuild grant + scoped SSM grant from this slot's AWS identity (IAM self-service rule); fix the
-  credential-resolution path. Only if AWS admin is genuinely absent here, escalate. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

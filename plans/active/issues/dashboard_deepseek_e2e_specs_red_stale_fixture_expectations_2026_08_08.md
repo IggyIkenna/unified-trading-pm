@@ -24,7 +24,6 @@ tags: [agent-orchestrator, dashboard, e2e, playwright, deepseek, test-fixture, c
 related:
   [/codex/06-coding-standards/ui-testing-layers.md, /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md]
 created: 2026-08-08
-last_updated: 2026-08-21
 author: interactive-session (slot 4)
 priority: P2
 parent_epic: orchestrator_master
@@ -108,13 +107,10 @@ mechanical fix, which is why this is filed rather than patched.
       once the investigation lands, and only if the investigation itself settles which value is authoritative (if it
       stays a genuine semantics call even after tracing the code/history, escalate back to `[OPERATOR]` rather than
       guessing). Repo: agent-orchestrator.
-- [ ] [UI] P2. Wire the dashboard Playwright e2e suite into CI (the two specs this doc tracks are confirmed green
-      as of 2026-08-18) — per D56 ruling (ADOPTED-REC 2026-08-21, "Gate it — this exact ungated gap already
-      produced 2 silent regressions"). It is currently in no gate: `scripts/quality-gates.sh` runs `tsc` + Vitest
-      only, and `quality-gates-v2` does not invoke Playwright. Reference
-      `/codex/06-coding-standards/ui-testing-layers.md` § Gate Enforcement by Branch for where L2/L3 is supposed to
-      run. Done when: a CI run for a PR/push touching `agent-orchestrator/dashboard` visibly executes
-      `tests/e2e/deepseek-*.spec.ts` and fails the build on a red result.
+- [ ] [UI] P2. Once the two specs are green again, decide whether the dashboard Playwright suite should run anywhere
+      automatically. It is currently in no gate: `scripts/quality-gates.sh` runs `tsc` + Vitest only, and
+      `quality-gates-v2` does not invoke Playwright — so these two have been red with nothing reporting it. Reference
+      `/codex/06-coding-standards/ui-testing-layers.md` § Gate Enforcement by Branch for where L2/L3 is supposed to run.
 
 ## Progress Log
 
@@ -202,7 +198,3 @@ mechanical fix, which is why this is filed rather than patched.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:d86463dc898685af]: KEEP-NA, valid — investigation todo now done (2026-08-18, both root causes traced to already-shipped fixes, re-verified passing); sole remaining open todo is an explicit policy/design-fork call (whether to gate the dashboard Playwright suite into CI), cited verbatim in ag_closeout_audit_ao_parked_2026_08_16.md's 'design fork' category. 2 prior audit rounds (2026-08-09, 2026-08-10) already declined reclassification for this same reason.
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item is an explicit policy/design-fork call (whether to gate the dashboard Playwright suite into CI); unchanged since 2026-08-19, 3 prior audit rounds already declined reclassification for this reason.
-
-- **2026-08-21 — ruling D56 (Dashboard Playwright gating)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-  AUTONOMOUS_AGENT_RULES rule 2): Gate it — this exact ungated gap already produced 2 silent regressions. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

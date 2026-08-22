@@ -30,7 +30,6 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-21"
 author: interactive session (/autonomous)
 priority: P2
 parent_epic: security_and_cross_cutting_master
@@ -238,12 +237,9 @@ defect (phantom-venue emission) without touching a registry other code may depen
       + `deployment-service/scripts/vm/launch-defi-aavev3-bare-alias-purge-vm.sh` and remove the
       `defi-aavev3-bare-alias-purge-` entries from `vm_prefix_registry.py` + `vm_zombie_watchdog.py`'s
       `PREFIX_IDLE_THRESHOLDS` (one-offs are temporary; SSOT `/codex/06-coding-standards/script-homes.md`).
-- [ ] [CODE] P3. Centralize alias resolution per D57 ruling (ADOPTED-REC 2026-08-21, "Centralize — eliminates the
-      bug class at the source"): add a `get_protocol_launch_date(protocol, chain)` accessor to `chain_env.py` that
-      canonicalises the alias internally, and migrate every direct `PROTOCOL_LAUNCH_DATES.items()`/dict-lookup
-      consumer (the enumerator, `derive_protocol_launch_dates.py`, and any other identified consumer) onto it.
-      Done when: no consumer iterates/looks up `PROTOCOL_LAUNCH_DATES` directly without going through the
-      accessor, and `test_defi_v2_pre_launch_alias_key_not_duplicated` plus a new accessor-level test both pass.
+- [ ] [DESIGN] P3. Decide whether `chain_env.py`'s `PROTOCOL_LAUNCH_DATES` should keep alias dict-keys at all vs.
+      resolving aliases inside a `get_protocol_launch_date()`-style accessor, removing the defensive- canonicalisation
+      burden from every future iterator-style consumer of the raw dict.
 
 ## Progress Log
 
@@ -503,10 +499,6 @@ defect (phantom-venue emission) without touching a registry other code may depen
   as a Cloud Run Job instead of a raw GCE VM. Neither of these is a code-level "fix another bug" step — both are
   judgment calls for a human or a dedicated infra investigation.
 - **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-read against the freshest content (a peer session actively continued this same-day infra investigation to Attempt #11 while this audit was in flight — content re-verified post-conflict-recovery, not stale). The doc's own conclusion stands: every code-level fix this investigation could find is shipped and verified live, the remaining blocker is external (network/infra, not application code), and the [DATA] P1 purge + [DESIGN] P3 alias dict-key todos both stay genuinely non-worker-determinable. Doc stays `assigned_vm: NA`.
-
-- **2026-08-21 — ruling D57 (PROTOCOL_LAUNCH_DATES aliases)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
-  authority, AUTONOMOUS_AGENT_RULES rule 2): Centralize — eliminates the bug class at the source. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 - **2026-08-21 (interactive session, ROOT CAUSE FOUND + PURGE EXECUTED + VERIFIED — [DATA] P1 closed)**:
   the "still-unexplained environment issue" was neither network nor GCS: **the external
   `vm_zombie_watchdog` daemon deleted every attempt's VM** (Cloud-Logging audit: every delete's

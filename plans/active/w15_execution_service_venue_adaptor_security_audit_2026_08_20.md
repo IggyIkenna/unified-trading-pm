@@ -19,7 +19,7 @@ related:
     /plans/epics/system_readiness_master.md,
     /plans/active/code_readiness_t4_execution_settlement_2026_08_19.md,
     /plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20_progress_log_archive.md,
-    /plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md,
+    /plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md,
   ]
 created: 2026-08-20
 last_updated: 2026-08-21
@@ -185,20 +185,15 @@ impression:
 
 ### Sports / prediction
 
-- [x] ✅ [BACKEND] P1. Audit the sports exchange adapters: `betfair.py`, `betfair_order_mapping.py`, `kalshi.py`,
+- [ ] [BACKEND] P1. Audit the sports exchange adapters: `betfair.py`, `betfair_order_mapping.py`, `kalshi.py`,
       `matchbook.py`, `polymarket_clob.py` (`sports_execution/adapters/exchanges/`), plus
       `polymarket_adapter.py`/`sports_adapter.py` (`trade_execution/adapters/`) and the bookmaker-API group
-      (`api_football.py`, `onexbet.py`, `odds_api.py`). Done-when: same evidence bar as above. — audit-only, no
-      code changes; findings recorded in the Progress Log, HIGH items tracked in 4 new triage todos below.
-      **Stale file reference found and corrected**: `onexbet.py` no longer exists — confirmed retired 2026-08-21 as
-      dead code (see `sports_handler.py`'s own comment + `sports_bookmaker_roster_classification_2026_08_21.md`);
-      nothing to audit there.
-- [x] ✅ [BACKEND] P2. Audit the sports "unity" subsystem as its own group — it is a distinct sub-architecture, not
+      (`api_football.py`, `onexbet.py`, `odds_api.py`). Done-when: same evidence bar as above.
+- [ ] [BACKEND] P2. Audit the sports "unity" subsystem as its own group — it is a distinct sub-architecture, not
       simple per-venue adapters: `bridge.py`, `fill_reports.py`, `mock_feed_connector.py`, `multiplex.py`,
       `protocol.py`, `rollover_tracker.py`, `sidecar.py`, `turnover_tracker.py`
       (`sports_execution/adapters/unity/`). Read `protocol.py` first to understand the subsystem's actual shape
-      before applying the checklist file-by-file. Done-when: same evidence bar as above. — audit-only, no code
-      changes; findings recorded in the Progress Log and the three HIGH-finding follow-ups above.
+      before applying the checklist file-by-file. Done-when: same evidence bar as above.
 
 ### Triage
 
@@ -234,65 +229,13 @@ impression:
 - [x] ✅ [BACKEND] P0. Make CCXT order placement durable and retry-safe: require/persist one client-order id across ambiguous retries, use each venue's verified parameter name, and reconcile an uncertain submission before resubmitting; HIGH finding: checklist point 6 (all eight adapters, with Coinbase's `client_oid` deviation at `coinbase_ccxt.py:116-146`). — execution-service@77c4254543 + evidence: quality-gates.sh green (152s, sentinel matched committed HEAD; 8991 passed); new shared `ccxt_idempotency.py` (`require_client_order_id()` + `place_ccxt_order_idempotent()`) plus `ccxt_common.find_order_by_client_id()`/`reconcile_ccxt_order_by_client_id()`; wired into all 8 adapters' live order-placement paths with each venue's verified client-order-id param (`newClientOrderId`/`orderLinkId`/`client_oid`/`clientOrderId`); see Progress Log entry below.
 - [x] ✅ [BACKEND] P0. Enforce fail-closed credential initialization and redacted error logging for the CCXT group; Coinbase currently constructs a real exchange without a missing-key guard (`coinbase_ccxt.py:44-52`), and all order error paths persist raw exception text (`*_ccxt.py` order handlers plus `ccxt_common.py:372-405`); HIGH/MEDIUM findings: checklist point 1. — execution-service@1e018eabf + evidence: `CoinbaseCCXTAdapter._get_exchange()` now raises `ValueError` when `mode=="real"` and `api_key`/`api_secret` are `None` (mirrors every other CCXT adapter's existing guard); added `redact_secret_text()` in `ccxt_common.py` and wired `api_key`/`api_secret` through the shared order-placement error path (`place_ccxt_order_idempotent`, `emit_adapter_fetch_failed`, `log_amend_failed`) so a live credential occurrence in a CCXT exception's text is redacted before it reaches a persisted `ORDER_FAILED`/`ADAPTER_FETCH_FAILED` event or a log line, across all 8 CCXT adapters; quality-gates.sh green (156s, sentinel matched committed HEAD); 24 new regression tests (`test_ccxt_common.py`'s redaction suite + new `test_coinbase_ccxt.py`); post-push ancestry verified.
 
-- [x] ✅ [BACKEND] P0. Betfair: add a customer-ref/idempotency key to the legacy `place_bet()` order-placement path
-      (`betfair.py:398-421,491-508`) — the canonical `place_order()` path in `betfair_order_mapping.py:155` already
-      threads `client_order_id` through as Betfair's `customerRef`, but `place_bet()` calls
-      `_submit_place_orders()` with no customer_ref at all, so a retry after an ambiguous network failure on the
-      legacy path can double-place a bet; HIGH finding: checklist point 6. — execution-service@10e95008af +
-      evidence: quality-gates.sh green (167s, sentinel matched committed HEAD); `_submit_place_orders()` now takes
-      a `customer_ref` param and threads it into `place_orders`' `customer_ref` kwarg; `place_bet()` passes
-      `order.order_id[:32]` (Betfair's customerRef caps at 32 chars) as the ref; new regression test
-      `test_betfair_place_bet_threads_customer_ref` asserts the kwarg reaches the venue call. (repo:
-      execution-service)
-- [x] ✅ [BACKEND] P0. Kalshi: make `_build_kalshi_headers()` fail closed on a signing error instead of silently
-      substituting a raw SHA-256 digest for a valid RSA-PSS signature on any `ValueError` during key load/sign
-      (`kalshi.py:116-128`); HIGH finding: checklist points 1 and 2 — a broken/misconfigured private key should
-      raise, not construct and send a fabricated "signature". — execution-service@93dada9b04: removed the
-      try/except ValueError fallback so a broken/misconfigured RSA key now raises instead of signing with a
-      fabricated SHA-256 digest; test fixtures switched from a fake PEM string to a real ephemeral RSA key
-      (the fake-PEM tests were unknowingly relying on the fallback path), plus new coverage asserting invalid-PEM
-      and non-RSA-key inputs raise `ValueError`. (repo: execution-service)
-- [ ] [BACKEND] P0. Add durable client-order-id idempotency across Kalshi, Matchbook, and Polymarket CLOB order
-      placement: Kalshi generates a fresh UUID on every call unless the caller explicitly supplies one (no
-      retry-safe reuse across an ambiguous-outcome retry), Matchbook has no client-order-id mechanism at all, and
-      Polymarket CLOB accepts a `client_order_id` param but never sends it to the venue or reconciles a retry
-      against it; HIGH finding: checklist point 6 (`kalshi.py:402-447`; `matchbook.py:399-422`;
-      `polymarket_clob.py:556-577`). Mirror the established `ccxt_idempotency.py`/`native_idempotency.py` durable
-      idempotency pattern already used elsewhere in this plan. (repo: execution-service)
-- [ ] [BACKEND] P1. Enforce finite-positive amount/price validation, plus a strict side/action allowlist, before
-      order submission across Betfair, Kalshi, Matchbook, and Polymarket CLOB — all four cast caller
-      stake/price/size directly to float/int with no bounds check, and Betfair's canonical `place_order()` silently
-      maps any non-"BACK" side string to "L" (lay) instead of rejecting an invalid value; HIGH finding: checklist
-      point 3 (`betfair.py:452-468`; `betfair_order_mapping.py:113-160`; `kalshi.py:238-248,436-447`;
-      `matchbook.py:399-410`; `polymarket_clob.py:409-420,556-577`). (repo: execution-service)
-- [ ] [BACKEND] P1. Add finite-positive stake/price, non-empty identifier, timezone, and direction validation at
-      the Unity placement boundary (`bridge.py:179-210`, `multiplex.py:64-92`) before a `PLACE_BET` can reach the
-      sidecar. The current typed signatures are not runtime validation: negative/NaN/Infinity Decimal values,
-      empty IDs, and invalid direction strings are accepted and serialized into an outbound order; the same
-      unchecked values are accepted by the public `UnityMultiplex.enqueue()` bypass. HIGH finding: checklist point 3.
-      (repo: execution-service)
-- [ ] [BACKEND] P1. Make Unity fill parsing and attribution fail closed: reject non-finite/negative monetary values,
-      invalid odds, impossible matched/requested-stake relationships, and inconsistent settlement fields; convert an
-      unknown child venue from an uncaught `KeyError` into a surfaced bad-fill result (`fill_reports.py:104-226`,
-      `bridge.py:262-277`). The parser currently accepts `NaN`/Infinity and negative Decimal values, and the bridge
-      can crash on an unregistered child venue instead of reporting a real failed fill. HIGH findings: checklist
-      points 3 and 7. (repo: execution-service)
-- [ ] [BACKEND] P1. Add durable sequence/client-order idempotency and send-failure recovery to the Unity bridge:
-      reject duplicate placement IDs, reconcile duplicate `BET_ACK`/`BET_FILL` frames by sequence and client order
-      ID, and retain drained outbound messages until `sidecar.send()` succeeds (`bridge.py:238-260`,
-      `multiplex.py:95-109`). The current `_pending_acks` set only removes IDs after an ACK; it does not prevent a
-      retry from submitting twice or deduplicate fills, while `drain()` marks messages sent before the sidecar write
-      and a send exception loses the already-drained queue. HIGH finding: checklist point 6. (repo: execution-service)
-
 ### Close-out
 
 - [x] ✅ [AGENT] P0. Post-phase codex audit — check whether any codex doc under `/codex/04-architecture/` or
       `/codex/06-coding-standards/` makes a claim this audit's findings contradict (e.g. a doc claiming a
       pattern is "always" applied that a finding shows isn't); correct in place. — unified-trading-pm@9031553091
       + evidence: see Progress Log entry below.
-- [ ] [AGENT] P0. **Reopened 2026-08-21 (slot 19)** — see the "Reopening note" in the Progress Log below; 3 new
-      P0 findings from the sports-exchange audit mean this is no longer done, despite slot 21's earlier same-day
-      confirmation. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
+- [ ] [AGENT] P0. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
       plan's real landed state once every todo above is done or explicitly re-scoped.
 
 ## Progress Log
@@ -453,7 +396,7 @@ execution-service@6a509338f9 (post-push ancestry independently verified).
 
 ### 2026-08-21 — slot 25 Progress Log split (line-cap headroom)
 
-Per `plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`'s "Recommended decision": this
+Per `plans/active/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`'s "Recommended decision": this
 doc was sitting at exactly the 1000-line hard cap with zero headroom, actively blocking the next slot
 to land a fix/evidence entry against any of the still-open todos below. Relocated the 17 Progress Log
 entries whose corresponding todo(s) were already fully `[x]`-checked and which carried no bearing on
@@ -719,146 +662,3 @@ output. Four new tests in `test_hyperliquid_mock.py`: deadline threads into the 
 omitted when not supplied (unchanged prior behavior); a past deadline is rejected before any network call; a
 deadline further than 300s ahead is rejected. `quality-gates.sh` green (9028 passed, sentinel matched committed HEAD
 before the push-time rebase; QG re-ran and stayed green after).
-
-### 2026-08-21 — slot 21 close-out todo: epic W15 section re-confirmed (all P0 clear)
-
-Re-ran slot 10's confirmation now that the 2 P0s slot-7 flagged as still-open at the time (perp/CLOB
-slippage/deadline bounds line 283; native-REST client-order-id idempotency line 304) have both since landed —
-verified directly via `grep -c '^- \[x\]'`/`'^- \[ \]'` against this file: 44 done / 10 open of 54 todos. Listed
-every remaining `- [ ]` by line: 126 (P1 Orca/Raydium full account derivation), 188 (P1 sports-exchange audit,
-unrun), 192 (P2 sports-unity audit, unrun), 213 (P2 Aave typed-params dead-code decimals), 215 (P2 Morpho
-typed-params dead-code decimals), 217 (P1 Kamino market cross-check), 224 (P1 wire real on-chain calls behind the
-staking fail-closed guards), 226 (P1 EigenLayer approval + Karak vault address), 332 (P1 native rate-limit/
-blocking-sleep hardening), and this close-out todo itself. **Zero open P0s** — every remaining item is P1/P2 and
-each already carries its own explicit scope + deferral rationale in its todo text (dead code confirmed via grep,
-needs a vendored SDK/on-chain account fetch not yet available, etc.), satisfying this todo's own done-when ("done
-or explicitly re-scoped"). Corrected the epic's W15 section in place with this accurate zero-P0 breakdown
-(previously stale at "3 P0 fixes... blocking close-out", written before slot-7's two P0 fixes landed). Checkbox
-flipped. No production code was changed — this is a doc-accuracy confirmation only.
-
-### 2026-08-21 — slot 19 sports exchange adapter audit + close-out gate re-check
-
-Dispatched from `plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`'s close-out gate-check todo
-("once the 11 items are all done or explicitly re-scoped, re-run the gate-check"). Re-derived the current open-item
-list first (`grep -n "^- \[ \]"`, not trusted from the issue doc's now-stale 2026-08-21 snapshot): 5 of the original
-11 items were already done or explicitly re-scoped by prior sessions (Orca/Raydium partial-fix re-scope, Aave/Morpho
-dead-code P2 deferrals, Kamino cross-check deferral, wire-real-on-chain-calls deferral, EigenLayer/Karak MEDIUM
-follow-up, native rate-limit MEDIUM follow-up — 6 total, all carrying their own documented deferral reasoning), and
-the CCXT/perp-CLOB/native-REST P0 groups the issue doc listed as open were also already fully landed. The two
-**genuinely open, non-deferred** items were the sports-exchange and sports-unity audit phases — full security
-reviews that had simply not started yet, not deferred-with-reasoning work.
-
-Audited the sports-exchange group per the fixed seven-point checklist: `betfair.py`, `betfair_order_mapping.py`
-(`_BetfairCanonicalOrderMixin`), `kalshi.py`, `matchbook.py`, `polymarket_clob.py`
-(`sports_execution/adapters/exchanges/`), plus the thin delegating wrappers `polymarket_adapter.py` and
-`sports_adapter.py` (`trade_execution/adapters/`) and the bookmaker-API group `api_football.py`/`odds_api.py`
-(`bookmaker_api/`, `aggregator/`). `onexbet.py` no longer exists in the repo (only a stale `.pyc` remains) —
-confirmed via `sports_handler.py`'s own comment and `sports_bookmaker_roster_classification_2026_08_21.md` that it
-was retired as dead code the same day this plan's issue doc was filed; the plan's file list is stale on this one
-name, corrected in place on the checkbox above.
-
-- **Credential handling — PASS with one FINDING HIGH:** Betfair/Kalshi/Matchbook/Polymarket all inject credentials
-  at construction and never log secret material. Kalshi's `_build_kalshi_headers()` has a real fail-open bug: on
-  ANY `ValueError` while loading/signing with the RSA private key, it silently substitutes a raw SHA-256 digest of
-  the message as the "signature" instead of raising (`kalshi.py:116-128`) — a broken/misconfigured key degrades
-  into sending a fabricated signature rather than failing closed.
-- **Signing/auth correctness — PASS:** Kalshi RSA-PSS, Polymarket L2 HMAC-SHA256 (timestamp+nonce present, replay
-  window venue-side), Betfair/Matchbook session-token REST auth all match each venue's documented scheme; no
-  private key/session token is transmitted in a body/URL beyond the documented header contract. (The Kalshi
-  fallback above is a credential/correctness finding, not a scheme-correctness one — the primary RSA-PSS path
-  itself is correct.)
-- **Input validation before order write — FINDING HIGH (all four exchanges):** Betfair (`place_bet`,
-  `place_order`), Kalshi (`place_bet`, `place_order`), Matchbook (`_submit_offer`), and Polymarket CLOB
-  (`place_order`, `_submit_clob_order`) all cast caller stake/price/size directly to `float`/`int` before building
-  the order payload with no local finite-positive or side/action allowlist check — the exact same finding class
-  already fixed for the CCXT/perp-CLOB/native-REST groups elsewhere in this plan. Betfair additionally silently
-  maps any non-"BACK" side string to "L" (lay) rather than rejecting it (`betfair_order_mapping.py:143`) — a wrong
-  caller value flips the bet direction instead of erroring.
-- **Slippage/deadline bounds — PASS/N-A:** all four are LIMIT-order exchanges/CLOBs where the caller-supplied price
-  IS the bound (no unbounded-market-order path exists in this group, unlike the CeFi/perp CCXT group). One MEDIUM
-  note: Polymarket's CLOB supports a GTD (good-til-date) time-in-force per its own docs, but this adapter only ever
-  passes GTC/FOK/IOC through — a caller has no way to bound an order's resting lifetime. No todo added for this
-  MEDIUM-only gap (consistent with how other MEDIUM-only findings were handled elsewhere in this plan).
-- **Approval scope — PASS/N-A:** fiat/USDC.e wagering and CLOB order placement; no ERC-20/SPL token-approval path
-  exists in this adapter group.
-- **Idempotency/retry safety — FINDING HIGH (3 of 4 exchanges, Betfair split):** Betfair's canonical
-  `place_order()` path (`betfair_order_mapping.py:155`) DOES thread `client_order_id` through as Betfair's own
-  `customerRef` (venue-side dedup), but the older, still-live `place_bet()` legacy path (`betfair.py:398-421`)
-  calls `_submit_place_orders()` with no customer_ref at all — zero idempotency on that path. Kalshi mints a fresh
-  UUID every call unless the caller explicitly supplies one (a caller-level retry after a timeout doesn't reuse the
-  same id, defeating Kalshi's own dedup). Matchbook has no client-order-id concept anywhere. Polymarket CLOB accepts
-  a `client_order_id` parameter but never sends it to the venue or uses it to reconcile a retry — pure dead
-  plumbing today.
-- **Honest error handling — PASS:** all four raise `BetRejectedError`/`BookmakerUnavailableError` on a non-success
-  response rather than fabricating success; unexpected exceptions are logged via `UNKNOWN_VENUE_ERROR_RECEIVED` and
-  re-raised, never swallowed.
-
-`api_football.py` and `odds_api.py` are read-only market-data adapters (get_odds only) that are, per their own
-docstrings and the prior 2026-08-01 dead-code audit, not wired into any live execution path — checklist points 2-6
-are N/A by construction (no write surface); points 1 and 7 PASS (credentials not logged; non-200 raises a real
-error). No new finding recorded for either.
-
-No production code or tests were changed for this audit-only unit (matches this plan's established pattern for
-every prior audit phase). Four new P0/P1 triage todos added immediately after the existing Triage section todos,
-above, covering the 4 distinct HIGH-finding groups found (Betfair legacy idempotency; Kalshi fail-open signing;
-cross-venue client-order-id idempotency; cross-venue input validation). Checkbox for the sports-exchange audit
-phase flipped above.
-
-**Close-out gate re-check result: still NOT met.** The sports-unity audit phase (line 192, P2 —
-`sports_execution/adapters/unity/`) remains genuinely unstarted, not deferred/re-scoped, so this todo's own
-done-when ("every todo above is done or explicitly re-scoped") is not yet satisfied. The close-out checkboxes
-(this section, and the sibling checkbox in
-`plans/archive/issues/w15_close_out_gate_and_line_cap_2026_08_21.md`) stay `[ ]` — flipping them now would be a
-false-progress claim. Remaining blockers as of this entry: the 4 new triage todos just added above, plus the
-sports-unity audit phase (line 192) — 5 items, down from 11 at the issue doc's original count.
-
-**Reopening note**: this session landed concurrently with slot 21's close-out confirmation directly above, which
-flipped this plan's close-out checkbox to `[x]` on a "zero open P0s" basis — accurate at the moment slot 21 wrote
-it (before this session's sports-exchange audit existed), but no longer accurate now that the audit above found 3
-new P0 findings. Reverted the close-out checkbox back to `[ ]` in the same edit as this entry; slot 21's entry
-above is left untouched as an accurate record of what was true at the time it was written.
-
-### 2026-08-22 — slot 21 sports Unity subsystem audit
-
-Reviewed `protocol.py` first, then `bridge.py`, `fill_reports.py`, `mock_feed_connector.py`, `multiplex.py`,
-`rollover_tracker.py`, `sidecar.py`, and `turnover_tracker.py` against the fixed seven-point checklist. This is
-the Python boundary around the Java Feed Connector; the mock is simulation-only and is not treated as a live venue.
-
-- **Credential handling — PASS:** `SidecarConfig.credentials_ref` is a Secret Manager reference and
-  `UnityBridge.authenticate()` forwards that reference rather than a private key or plaintext credential
-  (`sidecar.py:39-47`; `bridge.py:132-154`). The Python layer does not log the reference or secret material. The
-  mock echoes the reference in its test-only `AUTH_OK` payload (`mock_feed_connector.py:77-103`), which is not a
-  production path but should not be copied into a real connector.
-- **Signing/auth correctness — PASS at this boundary:** the Java connector owns venue authentication; the Python
-  bridge only sends the configured reference, requires `AUTH_OK`, and moves to `FAILED` on `AUTH_FAIL` or a closed
-  stream (`bridge.py:132-154`). No private key or request signature is constructed in these files.
-- **Input validation before order write — FINDING HIGH:** `UnityBridge.place_bet()` and the public
-  `UnityMultiplex.enqueue()` accept unchecked Decimal amounts/prices, arbitrary direction and empty identifiers,
-  then `_encode_place_bet()` serializes them directly into `PLACE_BET` (`bridge.py:179-210,302-318`;
-  `multiplex.py:64-92`). The fill parser has the corresponding boundary weakness: `_as_decimal()` accepts
-  `NaN`/Infinity and negative values, and `attribute_unity_fill()` trusts the result (`fill_reports.py:104-226`).
-  Unknown child venues raise `KeyError` outside the bridge's `UnityFillReportParseError` handler, so malformed
-  attribution can terminate a pump cycle rather than become an explicit failed fill.
-- **Slippage/deadline bounds — FINDING MEDIUM:** price is carried as the caller's bet price, but the Unity
-  `PLACE_BET` catalogue has no caller deadline, expiry, or time-in-force field (`protocol.py:25-39`;
-  `bridge.py:302-318`). A matched/unmatched order can therefore have no Python-side lifetime bound. This is not
-  upgraded to HIGH because the external book controls matching semantics and the adapter does not expose a market
-  order path separate from the supplied price.
-- **Approval scope — PASS/N-A:** this subsystem places sports bets through the connector and has no token approval
-  or allowance call in the reviewed files.
-- **Idempotency/retry safety — FINDING HIGH:** `_pending_acks` only removes a client-order ID after an ACK; it does
-  not reject duplicate placement IDs or deduplicate repeated `BET_ACK`/`BET_FILL` frames. `UnityMultiplex.drain()`
-  moves messages into `_sent` before `sidecar.send()` succeeds, so a send exception after draining loses the
-  retryable outbound record (`bridge.py:238-260`; `multiplex.py:95-109`). There is no durable sequence/client-order
-  record across process restart.
-- **Honest error handling — FINDING HIGH:** malformed frames become an `ERROR` from `SidecarProcess.recv()`, and
-  explicit sidecar errors are returned in `PumpResult.errors` (`sidecar.py:201-215`; `bridge.py:245-260`). However,
-  bad numeric fills can pass parsing or trigger an uncaught `KeyError`, and duplicate settlement fills are appended
-  and counted repeatedly (`bridge.py:262-277`), allowing accounting to report a successful duplicate or crash
-  instead of surfacing a single failed/reconciled event.
-
-No production code or tests were changed for this audit-only unit. The three concrete HIGH findings are represented
-by the Unity placement-validation, fill-boundary/error-handling, and sequence/client-order-idempotency follow-ups
-added in the Triage section above. Checklist points 1, 2, and 5 are PASS/PASS/N-A; point 4 is recorded as a MEDIUM
-follow-up-free finding under the plan's established policy for MEDIUM-only issues. The Unity audit checkbox is now
-flipped with this evidence; the plan still has open triage work and is not ready for close-out.

@@ -33,7 +33,6 @@ related:
   ]
 created: 2026-07-21
 author: unknown
-last_updated: "2026-08-21"
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
@@ -148,8 +147,7 @@ acting. (The artifact-pipeline page does not depend on this — it reads the Clo
 - [x] ✅ [DEVOPS] P3. **#1** — RESOLVED 2026-07-24 (operator confirmed): the semver-agent is dead deliberately; SHA-only
       tagging is the expected, intentional consequence, not a defect. No dispatch-payload inspection or fix needed.
       Evidence: `artifact_pipeline_observability_2026_07_17.md` Progress Log 2026-07-24.
-- [ ] [DEVOPS] P3. DEFERRED-BY-DESIGN — per D43 ruling (2026-08-21, autonomous-dispatch authority): leave the
-      cicd-events ledger without a `build_id`; low-signal nicety, nothing currently blocked on it. **#3**.
+- [ ] [DEVOPS] P3. **#3** — confirm whether the cicd-events ledger should carry `build_id`; low priority.
 
 ## Progress Log
 
@@ -236,7 +234,3 @@ by ci_satellite_ao_dispatch_batch7_2026_08_09.md same-day: '0 extractable.
 NOT fix here", operator 2026-07-21). 3 of 4 original todos already `[x]` closed with shipped-commit evidence. The
 sole remaining open item (#3, whether the cicd-events ledger should carry `build_id`) is still an explicit
 low-confidence "confirm whether" judgment call with no forcing function. No `assigned_vm` change.
-
-**2026-08-21 — ruling D43 (CI-events ledger build_id)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-AUTONOMOUS_AGENT_RULES rule 2): Leave as-is — low-signal nicety, nothing currently blocked. Source:
-/plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -36,7 +36,7 @@ scope: [engineer, admin]
 tags: [cloud-scheduler, cloud-run, zombie, dead-target, infra-health-audit, gcp, bulk-triage]
 related: [/plans/active/infra_consolidated_closeout_2026_07_25.md]
 created: 2026-08-07
-last_updated: 2026-08-21
+last_updated: 2026-08-20
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -301,18 +301,21 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
          todo beyond the ml-inference deletion.
       Repos touched: unified-trading-pm (this doc, diag-only); no deployment-service change this pass (see follow-up
       todo below for the judgment call finding 2 needs).
-- [ ] [INFRA] P2. Per D39 ruling (2026-08-21, autonomous-dispatch authority): investigate first whether any live
-      consumer depends on `strategy-service-t1-recon`'s `t1-recon/ml/` input or Stage-3 recon's
-      `execution-config-snapshot` prerequisite (trace real callers in strategy-service / batch-live-reconciliation-service,
-      not just the schedule-design comments). If NO real consumer is found, retire both
-      `uts-prod-execution-config-snapshot-t1-schedule` and `uts-prod-ml-t1-schedule` via Terraform (mirroring the
-      sports-t1-recon precedent already executed in this doc), and re-confirm the already-executed
-      `uts-prod-ml-inference-t1-schedule` retirement above is consistent with the finding. If a real consumer IS
-      found, finish the deployment instead — add `google_cloud_run_v2_job` Terraform resources for
-      `uts-prod-execution-service-config-snapshot` and `uts-prod-ml-service-t1-recon` (mirroring the sibling
-      per-family modules in `audit03_cron_provisioning.tf` / `t1_recon_instruments_jobs.tf`). Repo: deployment-service.
-      Done when: the investigation's finding (consumer found / not found) is cited here, and the resulting action
-      (retire or finish-deploy) is shipped with evidence.
+- [ ] [OPERATOR] P2. **NEW 2026-08-15 (slot-22)** — Decide disposition of the `execution-config-snapshot` and `ml`
+      T1-recon Cloud Run Jobs, which were never deployed despite their schedulers existing since inception (root
+      cause + evidence in the DIAG todo above). Two options: **(a) finish the deployment** — add
+      `google_cloud_run_v2_job` Terraform resources for `uts-prod-execution-service-config-snapshot` and
+      `uts-prod-ml-service-t1-recon` (mirroring the sibling per-family modules in `audit03_cron_provisioning.tf` /
+      `t1_recon_instruments_jobs.tf`), since both services' CLI already supports the `--tag t1-recon` mode — this
+      closes a real data-pipeline gap if `strategy-service-t1-recon`'s `t1-recon/ml/` input and Stage-3 recon's
+      execution-config-snapshot prerequisite are genuinely still consumed downstream (not independently verified this
+      pass — check before deploying, since a downstream consumer that's been silently tolerating the gap since
+      inception may have its own fallback by now); or **(b) retire** both schedulers (mirroring this doc's
+      sports-t1-recon precedent) if the T1-recon function for these two families is confirmed obsolete/superseded.
+      Also re-decide `uts-prod-ml-inference-t1-schedule`'s already-executed retirement above in light of whichever way
+      this goes — if (a) is chosen and the unified `ml` job ships, confirm it truly covers the CeFi-specific
+      "ml-inference" phase the original schedule design called for (or file a follow-up if it doesn't). Repo:
+      deployment-service (if (a)); no further action if (b) (already paused, ml-inference already deleted).
 - [ ] [INFRA] P3. **NEW 2026-08-15 (slot-7)** — Clean up 2 orphaned staging Terraform-state entries:
       `google_cloud_scheduler_job.t1_batch_schedule["features-onchain"]` and `["features-sports"]`, tracked in
       staging's state but absent from the current `t1_batch_services_all` map keys entirely. Low-risk/self-resolving
@@ -421,7 +424,3 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
   direct GCP verification. The dead asia target is now `PAUSED`; the real europe-west1 twin is `ENABLED` on the same
   `15 0 * * *` schedule. This was a reversible scheduler-state correction; no Cloud Run Job was deleted.
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries).
-
-**2026-08-21 — ruling D39 (t1-recon zombie schedulers)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-AUTONOMOUS_AGENT_RULES rule 2): Investigate first — if no real consumer depends on t1-recon/ml/, retiring is cheaper
-and matches precedent. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

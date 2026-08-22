@@ -42,7 +42,7 @@ related:
     /cursor-configs/skills/ci-reconcile/SKILL.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-21"
+last_updated: "2026-08-16"
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
@@ -94,11 +94,14 @@ source: >-
       PR-number chain and a sha-identity chain are two different things describing the same
       incident. **Done when**: a superseded-PR INFO post visibly cites the same
       `current_streak_start_sha` a corresponding `notify-qg-fail` CRITICAL used, when one exists.
-- [ ] [BACKEND] P3. DEFERRED-BY-DESIGN — per D48 ruling (ADOPTED-REC 2026-08-21): defer citing
-      `streak_start_sha` on `ldr-ci-monitor.yml`'s RED→GREEN state-transition posts — the
-      higher-value per-run linkage (todo 1) is already fixed, and this LDR-branch-health monitor
-      is intentionally a coarser, already-distinct signal class. No timeline, nothing scheduled;
-      revisit only if a fresh recurrence of the original confusion is reported.
+- [ ] [BACKEND] P3. **Consider whether `ldr-ci-monitor.yml`'s RED→GREEN state-transition posts
+      should also cite `streak_start_sha`** (or the sha that went red) instead of only the
+      recovering sha — this is a separate, LDR-branch-health-focused monitor (not per-run QG
+      alerts), lower priority since it's already a distinct, understood signal class, but still
+      contributes to the "which resolution matches which failure" confusion the operator
+      originally flagged. **Done when**: the operator confirms whether this is worth the added
+      complexity, or explicitly rules it out of scope (LDR-branch-health is intentionally a
+      coarser signal than per-run QG alerts).
 
 ## Progress Log
 
@@ -136,7 +139,3 @@ prior conflict-check ("conflict-checked clear this run, ready to extract without
 re-running it. Todo 3 (whether `ldr-ci-monitor.yml`'s RED→GREEN posts should also cite `streak_start_sha`) stays
 `assigned_vm: NA` — still explicit operator-gated ("Done when: the operator confirms whether this is worth the added
 complexity"). Doc stays NA overall (extraction, not whole-doc reclassify).
-
-- **2026-08-21 — ruling D48 (LDR monitor streak linkage)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-  AUTONOMOUS_AGENT_RULES rule 2): Defer — the higher-value per-run linkage is already fixed. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

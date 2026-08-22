@@ -32,6 +32,10 @@ tags: [sports, ao-dispatch, close-out, batch-5, satellite-docs, fresh-triage]
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_finalize_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
@@ -43,7 +47,7 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2.0
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 supersedes:
@@ -69,12 +73,6 @@ context_scope:
 ---
 
 # Sports satellite AO batch 5 — fresh triage extraction
-
-> Predecessor batches this one follows (resolved, archived — cited here as historical evidence, per the
-> archive-safety ratchet, operator ruling 2026-08-17): `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md`,
-> `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch3_2026_07_25.md`,
-> `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_2026_07_25.md`,
-> `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch4_finalize_2026_07_25.md`.
 
 > **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
 > ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed

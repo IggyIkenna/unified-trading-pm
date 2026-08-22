@@ -33,7 +33,6 @@ related:
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 created: 2026-08-09
-last_updated: "2026-08-21"
 author: slot-5-backend_engineer
 priority: P3
 parent_epic: orchestrator_master
@@ -90,12 +89,10 @@ are irregular (0.6 min to 3h11min) rather than clustered around a fixed per-tick
 
 ## Todos
 
-- [ ] [DOC] P3. Per D40 ruling (2026-08-21, autonomous-dispatch authority): correct `agents/worker.md`'s documented
-      AutoSpawn refill SLA from '~60s' to reflect measured reality (minutes-to-hours under load per this doc's own
-      evidence: slot 10 median ~13min, slot 11 median ~17min, up to 3h11min) — do NOT raise
-      `ORCHESTRATOR_FLEET_WORKER_CAP` further (host-degradation risk without an audit) and do NOT build
-      priority-aware headroom allocation. Repo: unified-trading-pm (worker.md). Done when: worker.md's SLA figure
-      matches this doc's measured range, cited.
+- [ ] [OPERATOR] P3. Decide the fleet_worker_cap/SLA trade-off above (raise cap further / design priority-aware headroom
+      allocation / accept + correct worker.md's documented SLA number) — the actual code/doc change is a quick follow-up
+      once the decision is made, but the decision itself is a capacity/judgment call. Repo: agent-orchestrator +
+      unified-trading-pm (worker.md correction, if option 3).
 
 ## Progress Log
 
@@ -114,7 +111,3 @@ are irregular (0.6 min to 3h11min) rather than clustered around a fixed per-tick
   as 'not resolvable as a bounded worker todo.' Genuine capacity/operator judgment call.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item is a 3-way capacity/tuning tradeoff (raise `ORCHESTRATOR_FLEET_WORKER_CAP` further / design priority-aware headroom allocation / accept-and-document) with real host-degradation risk if picked unilaterally; unchanged since 2026-08-10.
-
-**2026-08-21 — ruling D40 (AutoSpawn refill SLA)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-AUTONOMOUS_AGENT_RULES rule 2): Correct the SLA — impact is bounded to idle capacity; raising the cap risks host
-degradation without an audit. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

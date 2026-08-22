@@ -34,7 +34,7 @@ context_scope:
   - scripts/plan-hygiene/find_moved_doc_referrers.sh
   - /plans/active/ao_satellite_ao_dispatch_batch23_2026_08_17.md
 created: 2026-08-12
-last_updated: 2026-08-21
+last_updated: 2026-08-12
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -122,13 +122,9 @@ is a separate judgement call — worth a deliberate decision rather than leaving
 - [x] ✅ [SCRIPT] P3. **Retire the `--quiet`-workaround rationale in `find_moved_doc_referrers.sh`'s header** —
       extracted (conflict-checked, clear) to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 5. Track
       dispatch/completion there, not here.
-- [ ] [SCRIPT] P3. Per D47 ruling (2026-08-21, autonomous-dispatch authority): add the exemption — a fenced-code-block
-      exemption to `check_reference_paths.py`'s `BARE_CODEX_RE` scan, so a shell example containing a literal
-      repo-relative `codex/NN-name/...md` path inside a fenced code block is not flagged as a FORMAT violation — this
-      removes a recurring false-positive class without weakening enforcement. Record the ruling in
-      [cross-reference-path-convention](/codex/11-project-management/cross-reference-path-convention.md). Repo:
-      unified-trading-pm. Done when: the exemption ships with a regression test (a fenced-code-block bare-codex-path
-      does NOT flag) and the convention doc states the ruling.
+- [ ] [AGENT] P3. **Decide whether fenced code blocks should be exempt** from `BARE_CODEX_RE`, or whether the glob
+      workaround becomes the documented convention. Record the ruling in
+      [cross-reference-path-convention](/codex/11-project-management/cross-reference-path-convention.md).
 
 ## Progress Log
 
@@ -137,7 +133,3 @@ is a separate judgement call — worth a deliberate decision rather than leaving
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added `find_moved_doc_referrers.sh` (the doc's
   own P3 todo's fix target) and `ao_satellite_ao_dispatch_batch23_2026_08_17.md` (where the 3 extracted script fixes
   are now tracked for dispatch/completion, per this same audit pass's own retag above).
-
-**2026-08-21 — ruling D47 (Fenced-code path exemption)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-AUTONOMOUS_AGENT_RULES rule 2): Add the exemption — removes a recurring false-positive class without weakening
-enforcement. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -33,7 +33,6 @@ related:
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
   ]
 created: "2026-08-20"
-last_updated: "2026-08-21"
 author: AO worker slot-8 (dispatch citadel_satellite_ao_dispatch_batch2-2444fa0c8907)
 priority: P2
 parent_epic: batch_live_symmetry_master
@@ -148,14 +147,20 @@ changes BLRS runtime behaviour for every caller while (a) keeps the honest-no-op
       (`/codex/05-infrastructure/gcs-object-operations.md`). Repo: unified-trading-library. Done when: a unit test with a
       fake client returns the newest of several seeded run ids.
       — unified-trading-library@97195cb77d; Evidence: full quality-gates.sh passed (875s), quickmerge post-push ancestry verified.
-- [ ] [INFRA] P2. Per D42 ruling (2026-08-21, autonomous-dispatch authority): implement Option (a) — a wrapper that
-      resolves `paper_ledger_root`/`batch_ledger_root` and triggers `uts-prod-blrs-daily-determinism` via the Cloud
-      Run `:run` API with `overrides.containerOverrides[].env` carrying `PAPER_LEDGER_ROOT`/`BATCH_LEDGER_ROOT`
-      (`ReconConfig` extends `UnifiedCloudConfig` with `case_sensitive=False` and no env_prefix, so the field names
-      map directly) — leave `daily_determinism_handler.py` untouched (do NOT implement Option (b): confining the new
-      behaviour to the scheduler keeps a resolver bug from turning the honest no-op into a fabricated ε=0 verdict).
-      Repo: deployment-service. Done when: the wrapper is implemented and both ledger roots reach Stage-B through it,
-      verified via a real cron execution log showing a non-no-op reconciliation result.
+- [ ] [OPERATOR] P2. **Settle how both ledger roots reach the Stage-B job, then implement it.** Option (a): a wrapper
+      that resolves the roots and triggers `uts-prod-blrs-daily-determinism` via the Cloud Run `:run` API with
+      `overrides.containerOverrides[].env` carrying `PAPER_LEDGER_ROOT` / `BATCH_LEDGER_ROOT` (`ReconConfig` extends
+      `UnifiedCloudConfig` with `case_sensitive=False` and no env_prefix, so the field names map directly) — leaves
+      `daily_determinism_handler.py` untouched. Option (b): resolve inside `DailyDeterminismHandler.run()` when the
+      configured roots are empty, keeping the honest no-op only when resolution genuinely finds nothing — fewer moving
+      parts but changes BLRS behaviour for all callers. Operator/main picks; do not guess. Repos: deployment-service
+      (+ batch-live-reconciliation-service if (b)). Done when: the chosen mechanism is recorded here and implemented.
+      **Gate id `BLK-op-blrs_daily_determinism_ledger_root_wiring_scope-29413eccdd3a`** (operator-gated, no worker
+      spawned). Raised separately via the blocked-queue as `BLK-8d718e56` on 2026-08-20; review declined to resolve it
+      there — deliberately, so two channels cannot answer the same question differently — and routed it back to THIS
+      todo as the single decision point. Review did record that the worker's recommendation of **(a)** "sounds sound",
+      on the reasoning that confining the new behaviour to the scheduler keeps a resolver bug from turning the honest
+      no-op into a fabricated ε=0 verdict. That is an endorsement, NOT the decision: the operator still picks here.
 - [ ] [INFRA] P2. **Add the Stage A2 batch-rerun job + cron to the terraform module and verify the cron logs a real
       verdict.** New `module "batch_rerun_job"` + `google_cloud_scheduler_job` in
       `deployment-service/terraform/gcp/paper_week_determinism_scheduler.tf`, scheduled between Stage A (02:00) and
@@ -185,8 +190,3 @@ changes BLRS runtime behaviour for every caller while (a) keeps the honest-no-op
 
 - **2026-08-20** (AO worker slot-12, backend_engineer): shipped item 2 — added public `resolve_newest_run_id()` beside the client run-prefix helpers, listing only the client-scoped UTL storage prefix and selecting the lexicographically newest timestamp-prefixed run id. Unit coverage verifies multiple runs, client isolation, and nested batch paths; full quality gates passed and quickmerge landed `unified-trading-library@e5ac1c0a4b`.
 - **2026-08-20** (AO worker slot-8, infra): reverified item 2 at `unified-trading-library@97195cb77d`; the bounded full quality-gate run passed tests, type checking, import/codex compliance, and post-push ancestry verification.
-
-**2026-08-21 — ruling D42 (BLRS determinism ledger roots)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-AUTONOMOUS_AGENT_RULES rule 2): External wrapper — keeps a resolver bug from turning the honest no-op into a
-fabricated ε=0 verdict (prior review endorsed). Source:
-/plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

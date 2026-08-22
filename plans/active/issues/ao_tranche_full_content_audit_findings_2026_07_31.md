@@ -27,7 +27,6 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: 2026-07-31
-last_updated: 2026-08-21
 author: unknown
 parent_epic: orchestrator_master
 assigned_vm: NA
@@ -211,10 +210,3 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:f91ba0117fea57b5]: KEEP-NA, valid — sole remaining todo is a standing opportunistic-retag instruction under an explicit 2026-08-06 operator ruling against batching it; never-relitigate case (a)/(c) applies directly.
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item is the standing §2 opportunistic-retag instruction, explicitly barred from batching by the 2026-08-06 operator ruling; re-affirms 8 prior audit passes.
-- **2026-08-21 — ruling D1 (Stale meta-doc disposition)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-  AUTONOMOUS_AGENT_RULES rule 2): Approve all — repeated audits agree these are churn, not live tasks; the two
-  keep-open items and the one split are the only exceptions. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. **No retag applied here** — this doc's
-  sole open todo (the standing §2 opportunistic-retag instruction) is explicitly one of D1's own named "keep-open"
-  exceptions: it is intentionally standing with no deadline ("this todo is expected to sit open for a long time —
-  that is the intended shape, not staleness"), the opposite of the churn D1 rules on.

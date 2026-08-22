@@ -21,6 +21,10 @@ scope: [engineer, admin]
 tags: [plan_reconciler, reconciliation, plan-hygiene, findings, all-tranches]
 related:
   [
+    /plans/archive/2026_08/issues/plan_reconciler_findings_defi_2026_08_09.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_ci_2026_08_09.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_cefi_2026_08_09.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_cross_cutting_2026_08_09.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-12"
@@ -48,13 +52,6 @@ context_scope:
 ---
 
 # plan_reconciler run — 2026-08-12 (interactive, full corpus)
-
-> Per-tranche predecessor findings docs this "all tranches" doc rolls up (resolved, archived — cited here as
-> historical evidence, per the archive-safety ratchet, operator ruling 2026-08-17):
-> `/plans/archive/2026_08/issues/plan_reconciler_findings_defi_2026_08_09.md`,
-> `/plans/archive/2026_08/issues/plan_reconciler_findings_ci_2026_08_09.md`,
-> `/plans/archive/2026_08/issues/plan_reconciler_findings_cefi_2026_08_09.md`,
-> `/plans/archive/2026_08/issues/plan_reconciler_findings_cross_cutting_2026_08_09.md`.
 
 ## What was already fixed directly in this pass (not tracked here again)
 
@@ -366,7 +363,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
 - [x] ✅ [REVIEW] P3. (P2) plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md —
       `locked_by: live-defi-rollout` placeholder-lock corpus-wide bug instance. **DONE (verified 2026-08-16)**:
       `locked_by`/`locked_since` cleared corpus-wide 2026-08-12 (operator ruling Option B, per
-      `/plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`); doc's own Progress Log
+      `/plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`); doc's own Progress Log
       confirms it.
 - [x] ✅ [REVIEW] P3. (P3) plans/active/repo_scripts_governance_audit_2026_06_18.md — same placeholder-lock bug
       instance. **DONE (verified 2026-08-16)**: `locked_by:`/`locked_since:` both empty — already cleared.

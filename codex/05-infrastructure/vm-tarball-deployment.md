@@ -299,21 +299,6 @@ time-based**: every tarball has a sibling `<repo>-code.manifest.json` carrying t
 earlier in the session. Do this for every fix-and-relaunch cycle, especially when the fix landed minutes before the
 relaunch.
 
-**`LONG_LIVED_LIVE` VMs never self-refresh a stale tarball (confirmed via a real production incident, 2026-08-01)**: a
-`lifecycle_class=LONG_LIVED_LIVE` daemon (e.g. `mtds-live-cefi-consolidated-*`) is documented + code-enforced as
-"run until operator tears it down" — its in-VM supervisor loop restarts individual dead SHARD PROCESSES, but that
-re-execs the SAME already-installed venv/tarball, it does NOT re-fetch code. There is no automated restart cadence at
-all; the ONLY way such a VM picks up a rebuilt tarball is a **manual** operator delete+relaunch (or an unplanned crash
-forcing one). Consequence: if a `create-code-tarballs.sh` refresh job silently fails or stalls (as it did for
-`mtds-code` across a ~47.5h window, 2026-07-30T13:02Z→2026-08-01T12:42Z) and the live daemon happens to boot/reboot
-inside that stale window, it keeps running the pre-fix code indefinitely — with no automatic signal that it's stale,
-since the VM's own heartbeat stays healthy throughout. Confirmed root cause of a real data-correctness incident: ASTER
-`book_snapshot_5` ran 100% `empty_confirmed` for the full window plus additional time after the tarball was rebuilt,
-because the affected VM was never relaunched. **Practical implication**: after fixing a `create-code-tarballs.sh`
-staleness incident, don't assume affected `LONG_LIVED_LIVE` daemons self-heal — enumerate them and manually
-relaunch/verify each one via a manifest-level capture-status check, not just a tarball-manifest timestamp check. Full
-incident: `/plans/archive/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`.
-
 ---
 
 ## Singleton-locked launchers (2026-04-20; extended 2026-05-12)

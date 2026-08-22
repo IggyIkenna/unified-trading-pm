@@ -265,35 +265,9 @@ exercised different strings, so a green suite carried no signal about the live p
       current fleet throughput ("i will wire the remaining accounts later on, for now we have
       enough headroom"). Not removing from `accounts.json` either for now. Re-open when
       provisioned or when the wasted-spawn-attempt cost becomes worth acting on sooner.
-- [x] [BACKEND] P1. **Mark an account unusable after a structural spawn failure** (missing
+- [ ] [BACKEND] P1. **Mark an account unusable after a structural spawn failure** (missing
       env file, unregistered model alias) so the selector routes around it instead of
-      re-picking it every tick. — **DONE 2026-08-21 (slot 17), agent-orchestrator@32822b79d4.**
-      Did what this todo asked first: confirmed against the shipped code that
-      `account_is_usable()`/`capability_tier()` have NO concept of a credential file — the only
-      check anywhere is in `_do_spawn`, at the very last step, after the pick has already
-      consumed one of the tick's concurrent-spawn slots and bumped the slot's
-      `spawn_retry_count`. So the gap is real, exactly as this todo suspected.
-      Fix: `_account_credential_file_missing()` in `server/autospawn.py`, called in
-      `_pick_headroom_account` AND `_live_free_combo_ids` **before** the headroom check —
-      order matters, because an unprovisioned account has a NULL `AccountUsageRow` and
-      therefore reads as *maximum* headroom, which is why it sorted FIRST on
-      `(five_hour=0, weekly=0, bound_slots=0)` and won the pick every single tick.
-      Deliberately STATELESS (re-reads the filesystem per call) rather than writing a
-      disabled/unusable flag: the account self-heals back into the pool the moment the env
-      file appears, with no restart and no un-disable step for anyone to remember. That also
-      sidesteps why the existing `_provider_health_ok` failure ring never held the line — it is
-      a module-level in-memory dict and the orchestrator was restarting ~52x/day, wiping it
-      roughly every 15 minutes (root cause: `/plans/active/issues/fleet_dispatch_stall_root_cause_2026_08_21.md`).
-      Deliberately NOT added to `_account_meets_dispatch_headroom`, which is also the
-      mid-session proactive-kill predicate — a running worker already has its env loaded, so a
-      creds file vanishing under it must not kill live work.
-      Test: `tests/test_autospawn_account_credential_preflight.py` (missing / present / unset /
-      `~`-expansion, plus the pool-level exclusion).
-      Scope note: the unregistered-model-alias half of this todo is NOT covered — that needs
-      the proxy's registered-alias list, which this stateless filesystem check cannot see. The
-      sibling `[BACKEND] P1` "a 400 from the provider must not read as a successful spawn" todo
-      below is the right home for it and stays open.
-      NOTE the obvious prior-art doc is already CLOSED:
+      re-picking it every tick. NOTE the obvious prior-art doc is already CLOSED:
       `/plans/archive/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md` is
       `status: resolved` (archived 2026-08-21 — its `account_is_usable()` gap was fixed via
       `model_capability_aware_dispatch_audit_2026_08_21.md`'s `capability_tier()`,

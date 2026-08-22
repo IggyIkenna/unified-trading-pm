@@ -199,19 +199,6 @@ a normal ratchet into a self-reinforcing wall.
       boundary that resets or doesn't inherit the exported var; root-cause and either fix the propagation or document
       the `env`-prefix requirement explicitly in the script's own usage text. Repo: unified-trading-pm
       (`scripts/dev/`, `scripts/plan-hygiene/`).
-- [ ] [SCRIPT] P2. **`check_na_corpus_ratchet.py` (via `generate_na_doc_tranche_inventory.py`) has no aggregator-doc
-      exclusion, unlike `count_open_tasks.py`/`/open-task-count`, which already excludes "aggregator plans (master /
-      batch / consolidated / closeout / satellite) whose todos duplicate the primary plans they roll up" from its
-      count. Confirmed live 2026-08-22: `plans/active/issues_corpus_executable_queue_2026_08_21.md` (a wave-3
-      rollup/queue doc, `assigned_vm: NA`) carries 352 open todos that are pointer-duplicates of todos already
-      separately counted in their own source docs under `plans/active/issues/` (spot-verified:
-      `ag_closeout_audit_ci_parked_2026_08_16.md` counts 3 open todos on its own, and the queue doc's own item 1
-      re-points at the same underlying work) — this single doc alone accounted for ~94% (352/376) of the
-      promote-gate-failing todo-count overage that triggered this remediation's baseline bump. Give
-      `check_na_corpus_ratchet.py` (and/or its shared `generate_na_doc_tranche_inventory.py` counting engine) the
-      same aggregator-exclusion convention `count_open_tasks.py` already uses, so a future rollup/queue doc of this
-      shape inflates the ratchet only once (via its own source docs), not twice. Repo: unified-trading-pm
-      (`scripts/plan-hygiene/`).
 
 ## Progress Log
 
@@ -302,22 +289,3 @@ open items stay `assigned_vm: NA`: the promote-PR re-gate item is an explicit op
 backend change — it narrows a hard gate," per the 2026-08-17 verdict), and the deploy-service/kill-switch-toggle
 journey item touches live-trading kill-switch machinery — genuine care-requiring engineering work, not a bounded
 spec. Doc stays NA overall; this is a split extraction, not a whole-doc reclassify.
-
-- **2026-08-22 (quality_gate_resolution, slot-19, escalation agt-924889)** — **Baseline bumped, root cause identified
-  (organic-creep recurrence #N, not a diff-base-mode regression).** `unified-trading-pm` promote PR #3703 continuously
-  red 180min on `quality-gates-v2` / `QG slice (checks)`: `check_na_corpus_ratchet` hard-failing (baseline mode, not
-  diff-base — the 2026-08-10 lag-guard is confirmed still correctly selected on this PR). Locally reproduced: 2153 NA
-  open-todos > baseline 1777 + buffer 200 (baseline last set 2026-08-21). Traced the 376-todo overage: **352 of it
-  (94%) is one doc**, `plans/active/issues_corpus_executable_queue_2026_08-21.md` (a wave-3 issues-corpus completion
-  rollup/queue, `assigned_vm: NA`, created 2026-08-21) — its checkboxes are pointer-duplicates of todos already
-  separately counted in their own source docs (spot-verified against `ag_closeout_audit_ci_parked_2026_08_16.md`,
-  see the new todo above). This is genuine, reviewed, non-misuse growth — a deliberate, dated, self-consuming
-  retirement-campaign artifact (its whole purpose is retiring/archiving the docs it enumerates, which is the
-  operator's own 2026-08-15-ruled preferred direction), not unretired backlog — so per this check's own sanctioned
-  escape valve (`--update-baseline` after a reviewed pass) and this doc's own repeated precedent for this exact
-  failure class, ran `check_na_corpus_ratchet.py --update-baseline`: `max_na_docs 522→521, max_na_open_todos
-  1777→2155`. Filed the underlying double-counting design gap (aggregator docs should be excluded from this ratchet's
-  count, mirroring `count_open_tasks.py`'s existing convention) as a new todo above rather than fixing the shared
-  counting script live under a promote-gate time pressure. Verified locally post-bump:
-  `check_na_corpus_ratchet.py` exits 0. Shipped via quickmerge:
-  `scripts/plan-hygiene/na_corpus_baseline.yaml` + this doc.

@@ -594,16 +594,9 @@ SSOT for the deploy build context details: `deployment-api/cloudbuild.yaml` step
 
 **agent-orchestrator — self-pull deploy (added 2026-07-12)**: unlike the Cloud-Build-triggered services above,
 agent-orchestrator's single central VM is a long-lived systemd service (not container-redeployed on push; there are no
-epic VMs — that fleet was retired 2026-06-27). Currency is kept by `scripts/ao-self-pull.sh`, a root cron (interval per
-the installed crontab entry — read it, do not trust a number quoted in a doc; it has been retuned more than once) that
-FF-pulls the running checkout from `origin/live-defi-rollout` and `systemctl restart orchestrator` only when HEAD moves
-**and the move touched something the running process actually executes** (`server/`, `config/`, `pyproject.toml`,
-`uv.lock` — `RESTART_RELEVANT_PATHS` in the script), or when the running process predates the newest such commit
-(stale-process self-heal). The relevance gate was added 2026-08-21
-(`/plans/active/issues/fleet_dispatch_stall_root_cause_2026_08_21.md`): restarting on EVERY HEAD move meant the fleet
-restarted itself on its own commits — 52 restarts in one day, 59% of them for commits touching only
-Dockerfile/scripts/tests — and each restart both mass-killed live workers and wiped an in-memory account-health guard.
-Shipped `agent-orchestrator@589b711`;
+epic VMs — that fleet was retired 2026-06-27). Currency is kept by `scripts/ao-self-pull.sh`, a root cron every ~15 min
+that FF-pulls the running checkout from `origin/live-defi-rollout` and `systemctl restart orchestrator` only when HEAD
+moves (or when the running process predates HEAD — stale-process self-heal). Shipped `agent-orchestrator@589b711`;
 hardened `@d16d737` + `@5462959` (wedge alert on a silently-drifted deploy). Full SSOT:
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; service overview:
 `/codex/04-architecture/agent-orchestrator-overview.md`.

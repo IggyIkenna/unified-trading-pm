@@ -37,7 +37,7 @@ context_scope:
   - /plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md
 created: 2026-08-16
 author: claude-agent
-last_updated: 2026-08-21
+last_updated: 2026-08-16
 parent_epic: ci_master
 priority: P2
 source: ci-reconcile skill, scheduled hourly ci_reconciler dispatch agt-17f258 (slot 20)
@@ -102,15 +102,14 @@ needed" assumption and fix this for every future hourly run, not just this one).
 
 ## Todos
 
-- [ ] [INFRA] P2. Attempt to apply the already-ruled scoped `ssm:SendCommand` grant (+ codebuild grant) to this
-      slot's own AWS identity for `i-0c9b283b31d6b5ca7`/the glue-runner host, and fix why `ci_reconciler`
-      dispatches resolve to `ikenna-worker`'s static keys instead of the orchestrator VM's own
-      `uts-orchestrator-epic-role` instance-profile credentials — with existing access (IAM self-service rule,
-      per D4 ruling); if a genuine wall (no AWS admin path from this identity), escalate with options
-      (a) grant `ikenna-worker` scoped `ssm:SendCommand` directly, or (b) fix the credential-resolution path so
-      dispatches inherit the orchestrator VM's own instance-profile role. Done when: `aws sts get-caller-identity`
-      from a `ci_reconciler` dispatch resolves to `uts-orchestrator-epic-role` (or an operator-approved alternate),
-      and a live `aws ssm send-command` against the glue-runner/CI-VM instances succeeds.
+- [ ] [OPERATOR] P2. Decide the resolution path: (a) grant `ikenna-worker` a scoped `ssm:SendCommand` on the
+      specific glue-runner/CI-VM instances if this credential set is the intended ambient identity for
+      `ci_reconciler` dispatches going forward, or (b) fix whatever is causing `ci_reconciler` dispatches to pick
+      up `ikenna-worker`'s static keys instead of the orchestrator VM's own `uts-orchestrator-epic-role`
+      instance-profile credentials (restores the boot doc's "no AWS SSM needed" assumption for every future hourly
+      run). Done when: `aws sts get-caller-identity` from a `ci_reconciler` dispatch resolves to
+      `uts-orchestrator-epic-role` (or an explicitly operator-approved alternate identity with SSM access), and a
+      live `aws ssm send-command` against the glue-runner/CI-VM instances succeeds.
 
 ## Progress Log
 
@@ -143,8 +142,3 @@ needed" assumption and fix this for every future hourly run, not just this one).
   self-service SSOT's own explicit carve-out for a genuinely different, non-assumable identity.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries) — the self-service SSOT, both watchdog scripts,
   and the sibling access-denied issue all resolve and remain the doc's coverage.
-
-- **2026-08-21 — ruling D4 (AWS access for worker identities)**: ATTEMPT-THEN-ASK — apply the already-ruled
-  codebuild grant + scoped SSM grant from this slot's AWS identity (IAM self-service rule); fix the
-  credential-resolution path. Only if AWS admin is genuinely absent here, escalate. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

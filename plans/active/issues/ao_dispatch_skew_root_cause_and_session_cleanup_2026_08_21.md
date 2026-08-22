@@ -34,6 +34,7 @@ tags: [agent-orchestrator, dispatch, round-robin, account-failover, overage, mul
 related:
   [
     /plans/active/issues/account_failover_ignores_overage_rejected_2026_08_18.md,
+    /plans/active/issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
@@ -433,22 +434,13 @@ events to accounts via each slot's most-recent account-carrying event, run direc
       DB's cached account-health state (poller/status-write timing, not a dispatch-routing bug). Not
       chased further; worth a look if it turns out to cause a mis-routed spawn onto an
       already-rate-limited account. Repo: agent-orchestrator.
-- [x] [INFRA] P2. ✅ **DONE 2026-08-22 (`/ao-watchdog` run, slot 29) — `gemini-3-7-flash-proj4` disabled.**
-      `gemini-3-5-flash-lite-proj4` was already `status: disabled` at check time (done in an earlier pass); this
-      run found `gemini-3-7-flash-proj4` still `status: healthy` — the D30 ruling was only half-applied.
-      `POST /api/accounts/gemini-3-7-flash-proj4/disable` (loopback, no token needed) → 200,
-      response confirms `"status":"disabled"`. **Verified**: both accounts now show `disabled` via a fresh
-      `GET /api/accounts` read. **Not independently verified this run**: the second half of the original
-      done-when ("the two reconciler services stop hitting the env_file-does-not-exist error on their next
-      cycle") — that needs the next `data-pipeline-alerts-reconciler.service` / `escalation-queue-reconciler.service`
-      cycle to be observed, not just the account flip. Per D30 ruling (ADOPTED-REC 2026-08-21: "Re-disable —
-      explicitly cancelled as unneeded; a one-line reversible disable beats provisioning an idle spare").
-      **Original context (found live 2026-08-21 15:37-15:42 UTC by an `/ao-watchdog` run)**:
-      the 2026-08-21 12:41-13:49 resume above (`account_status: null` for all 10 gemini-* accounts) put these two
-      back in the live selection pool, but neither ever had a real credential file provisioned — they were created
-      paused on 2026-08-16 (`grok_gemini_translation_proxy_2026_08_14.md`, "paid proj4 pair kept registered-paused
-      as an inert spare") and cancelled the same day ("not needed, no longer relevant"), so unlike proj1/2/3/5
-      nobody ever ran `claude setup-token` for them. Confirmed live:
+- [ ] [OPERATOR] P2. **NEW, found live 2026-08-21 15:37-15:42 UTC by an `/ao-watchdog` run.** The
+      2026-08-21 12:41-13:49 resume above (`account_status: null` for all 10 gemini-* accounts) put
+      `gemini-3-5-flash-lite-proj4` and `gemini-3-7-flash-proj4` back in the live selection pool, but
+      neither ever had a real credential file provisioned — they were created paused on 2026-08-16
+      (`grok_gemini_translation_proxy_2026_08_14.md`, "paid proj4 pair kept registered-paused as an
+      inert spare") and cancelled the same day ("not needed, no longer relevant"), so unlike
+      proj1/2/3/5 nobody ever ran `claude setup-token` for them. Confirmed live:
       `~/.claude-accounts/gemini-3-5-flash-lite-proj4.env` does not exist on the planning VM
       (proj1/proj2/proj3 all do). Every spawn that selects proj4 503s
       (`env_file ... does not exist; cannot authenticate spawn`) — this is what the sibling doc's
@@ -456,9 +448,11 @@ events to accounts via each slot's most-recent account-carrying event, run direc
       3 consecutive `escalation_dispatch_failed` events 13:01-13:26 UTC) was flagging, and it has now
       recurred via a second pathway: `data-pipeline-alerts-reconciler.service` failed at 15:37 UTC and
       `escalation-queue-reconciler.service` failed at 15:42 UTC, both on this exact error, both
-      systemd-timer-driven. Done-when: both accounts show `account_status: disabled` in `accounts.json`/
-      `GET /api/accounts`, and the two reconciler services stop hitting the "env_file ... does not exist" error on
-      their next cycle. Repo: agent-orchestrator (env-file/account-status change is host-level config, not code).
+      systemd-timer-driven so they will keep failing every cycle until either an operator runs
+      `claude setup-token` for proj4/proj4-flash and writes the two `.env` files, or the two accounts
+      are re-disabled. Needs an operator call (credential provisioning is an interactive OAuth flow,
+      not scriptable) — surfaced live in chat the same session this was found. Repo: agent-orchestrator
+      (env-file provisioning is host-level, not a code change).
 - [x] [SCRIPT] P3. **Found while verifying bug 1 post-ship.** The live (gitignored, per-VM)
       `data/config/accounts.json` on the planning VM still carried 3 dead Kimi entries
       (`kimi-k3`/`kimi-k2-6`/`kimi-k2-7-code`) — harmless (gracefully skipped) but not a true "removed
@@ -636,6 +630,3 @@ events to accounts via each slot's most-recent account-carrying event, run direc
   multi-account AUTH doc (`claude-cli-multi-account-headless-auth.md`) was checked and correctly
   left untouched — its scope (per-account credential/token rotation) is genuinely distinct from the
   multi-PROVIDER routing this issue is about, confirmed via grep before deciding not to touch it.
-- **2026-08-21 — ruling D30 (Gemini proj4 accounts)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
-  AUTONOMOUS_AGENT_RULES rule 2): Re-disable — explicitly cancelled as unneeded; a one-line reversible disable
-  beats provisioning an idle spare. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

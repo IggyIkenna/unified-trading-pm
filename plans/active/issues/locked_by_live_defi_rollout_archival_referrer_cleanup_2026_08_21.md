@@ -62,8 +62,8 @@ still returns hits in:
 5. `plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md:201` — prose citation in a closed run-journal.
 6. `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md:26,866` — `archive_exempt:` bridge
    comment (this doc is itself currently NOT archive-eligible per its own 2026-08-19 stale-note) + a prose mention.
-7. `plans/archive/issues/pm_scripts_typecheck_debt_2026_06_11.md` (archived 2026-08-21, chunk-6 archival pass) —
-   `archive_exempt:` bridge comment + a prose mention, both dropped as part of that archival.
+7. `plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md:28,182` — `archive_exempt:` bridge comment + a prose
+   mention.
 
 None of these 7 are in my chunk-3 archival batch, and none were staged in the commit that archived the source doc, so
 `check_reference_paths.py --only` (staged-files-scoped) did not fire on them this round — but the path they cite no

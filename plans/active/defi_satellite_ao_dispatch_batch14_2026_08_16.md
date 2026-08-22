@@ -42,6 +42,7 @@ related:
     /plans/active/defi_satellite_ao_dispatch_batch14_2026_08_16_finalize.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md,
+    /plans/active/issues/mtds_qg_red_morpho_url_and_sports_contract_regression_2026_08_15.md,
     /plans/active/issues/dp_vm_001_mdps_defi_2022_exit_nonzero_singledate_hang_2026_08_15.md,
     /plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md,
     /plans/archive/2026_08/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md,

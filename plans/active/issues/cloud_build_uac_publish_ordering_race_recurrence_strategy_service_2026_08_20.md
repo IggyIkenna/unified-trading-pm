@@ -398,20 +398,3 @@ gated primary fix. No operator review recorded yet as of this pass (doc is 1 day
   BATS finding `RB-fbd8d08f`). Root cause identical to every other entry in this doc: the fix belongs in
   `update-repo-version.yml`'s `resolve-gate`, not in any consumer repo; this entry is additional evidence for the
   still operator-review-gated P2 "Implement" todo, not a new investigation. Escalation closed.
-
-- **2026-08-21 — ruling D52 (UAC publish-ordering race fix)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
-  authority, AUTONOMOUS_AGENT_RULES rule 2): Approve with the self-hosted move dropped — repeated recurrence
-  justifies shipping now; reintroducing public-repo fork-PR exposure isn't worth the minutes saved. Source:
-  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. **Applied against current doc state**: D52
-  approves the "Decided approach" AR-poll-gate design (self-hosted-glue-runner half dropped). That design is
-  already SUPERSEDED by this doc's own later, same-day "⛔ DESIGN DECISION 2026-08-21" section — a different,
-  independently-reviewed session rejected the entire poll-gate approach (three measured disqualifiers: it would
-  wait for a wheel that often never arrives, it would amplify an already-20%-evicting global concurrency-group
-  defect, and its cost premise was inverted since PM is public/unmetered) and shipped a publisher-side fix instead
-  (`unified-trading-library@65d04d5d`, `instruments-service@56869f32`, `unified-trading-pm@c66f71e3d5`). D52's own
-  self-hosted-move exclusion is consistent with, but strictly weaker than, that later rejection (which struck the
-  self-hosted move outright as BOTH a security exposure and a cost regression, not merely "dropped" from this one
-  approval). No todo change made: every todo this ruling could apply to is already `[x]` REJECTED/MOOT with fuller
-  reasoning than this ruling states; the 2 remaining open P3 todos (longer-term AR-confirmation sequencing;
-  optional cloudbuild.yaml defense-in-depth) are outside D52's scope. Recording per the "apply every listed
-  decision" instruction even though it is moot against current content — no ruling invented, no line touched.

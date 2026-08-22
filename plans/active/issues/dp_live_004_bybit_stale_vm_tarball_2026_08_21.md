@@ -17,6 +17,7 @@ tags: [data-pipeline, dp-live-004, bybit-futures, stale-tarball, live-capture]
 related:
   - /plans/active/issues/mtds_live_cefi_redeploy_cold_start_is_universe_gap_2026_08_17.md
   - /plans/active/cross_ag_live_capture_parity_2026_08_14.md
+  - /plans/active/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md
 created: "2026-08-21"
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -37,10 +38,6 @@ context_scope:
 ---
 
 # DP-LIVE-004 BYBIT-FUTURES shard is running a pre-filter MTDS tarball
-
-> Same-shape predecessor (resolved, archived — cited here as historical evidence, per the
-> archive-safety ratchet, operator ruling 2026-08-17):
-> `/plans/archive/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md`.
 
 ## What I found
 
@@ -83,6 +80,7 @@ external action and is not performed by this escalation without that decision.
 
 ## Todos
 
+<<<<<<< Updated upstream
 - [x] ✅ [OPERATOR] P1. **DONE 2026-08-21 (slot-3, infra).** Operator (Harsh, via
       `/ao-watchdog`) APPROVED replacement of the confirmed stale
       `mtds-live-cefi-consolidated-20260817-025031` VM, with an explicit
@@ -105,23 +103,11 @@ external action and is not performed by this escalation without that decision.
       `SPOT_PAIR` errors appear in any Bybit log (unlike the old VM). **Old VM
       left RUNNING/undeleted** — the decommission half of this todo is NOT done;
       see the new todo below for why.
-- [x] ✅ [INFRA-or-BACKEND] P1 — **DONE 2026-08-21 (slot-10, infra) — code fix shipped:
-      market-tick-data-service@efd0e788.** Was: **DUPLICATE OF `/plans/archive/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md`
+- [ ] [INFRA-or-BACKEND] P1. **DUPLICATE OF `/plans/active/issues/dp_live_004_stale_mtds_vm_pre_fix_image_2026_08_20.md`
       todo 2** (the canonical, already-consolidated doc for this same VM/incident; verified status: open,
       not archived) — this todo's diagnostic progress feeds that doc's own "verify a real captured row / if
       unproductive, inspect subscribe acks" open todo directly; do not diagnose independently in both places.
-      That doc's own todo 2 was itself resolved 2026-08-21 (negative captured-row result, root-caused, follow-up
-      filed at `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`) — root
-      cause: Bybit's own subscribe/unsubscribe ack control frames were silently dropped, unlogged, by every Bybit
-      connector's receive loop, so there was no way to tell a rejected subscribe from an accepted one producing
-      no ticks. Shipped the fix that follow-up doc's todos 1+2 called for: added a shared `_log_subscribe_ack()`
-      helper (`bybit_ws.py`, aliased into `bybit_futures_book_ticker_ws.py`) that recognizes a control frame (has
-      `"op"`, no `"topic"`) and logs it at WARNING (rejected) or INFO (accepted) in all four BYBIT-FUTURES
-      connectors (trades, book_snapshot_5, depth_of_book_10, derivative_ticker), plus unit tests per that doc's
-      DoD. Full QG green (11212 passed). **Remaining work — todo 3 of the follow-up doc** (re-verify via a
-      per-VM manifest-shard read after the next `mtds-live-cefi-consolidated-*` relaunch deploys this fix) is
-      NOT done by this todo — it requires a VM relaunch + live observation, tracked there, not here.
-      **Original NEW FINDING 2026-08-21 (slot-3, infra) — investigate
+      **NEW FINDING 2026-08-21 (slot-3, infra) — investigate
       why BYBIT-FUTURES produces ZERO captured rows on the new VM despite the
       filter fix being present and the universe resolving correctly.** On
       `mtds-live-cefi-consolidated-20260821-200626`, the per-VM manifest
@@ -160,77 +146,19 @@ external action and is not performed by this escalation without that decision.
       all four BYBIT-FUTURES data types, decommission the old VM
       (`mtds-live-cefi-consolidated-20260817-025031`) per the 3-signal staleness
       check and confirm DP-LIVE-004 clears.
+=======
+- [ ] [OPERATOR] P1. Approve replacement of the confirmed stale
+      `mtds-live-cefi-consolidated-20260817-025031` VM after the three-signal
+      staleness check, or explicitly choose to leave it running.
+- [ ] [INFRA] P1. If approved, stop/replace the VM using
+      `launch-mtds-live-cefi-consolidated.sh`; verify the launcher freshness gate,
+      startup, process health, and per-VM manifest progress.
+- [ ] [DATA] P1. After replacement, verify captured rows for all four
+      BYBIT-FUTURES data types and confirm DP-LIVE-004 clears.
+>>>>>>> Stashed changes
 
 ## Progress Log
 
-- **2026-08-22 (data_pipeline_failure escalation `agt-b28ff1`, slot 33)**: DP-LIVE-004 re-fired again for the OLD VM
-  (`mtds-live-cefi-consolidated-20260817-025031`), venue BYBIT-FUTURES, data_type `trades` this time (previous
-  same-day re-fires were `book_snapshot_5`) — last attempt 0.2h old. `gcloud compute instances list` confirms both
-  VMs still `RUNNING` (old since 2026-08-16T19:50:40-07:00, replacement since 2026-08-21T13:07:39-07:00) — unchanged
-  from every prior escalation today. SSH into the OLD VM: `bybit_ws.py` (the trades connector) shows 7 combined hits
-  for `_log_subscribe_ack|_is_linear_derivative|PERPETUAL` (some filter-related tokens present, unlike the earlier
-  "predates the filter entirely" characterization — worth a closer read next time someone digs into this VM, not
-  re-derived here), but the live `live-bybit-futures-trades.log` tail is all routine `ManifestWriter`/
-  `RESOURCE_SAMPLE` lines and the log still contains 25 `SPOT_PAIR` occurrences — the trades data_type is exhibiting
-  the same symptom (subscribing/erroring on unsupported spot instruments, zero captured rows) as the already-diagnosed
-  book_snapshot_5/depth_of_book_10 data types on this VM. `GET /api/escalations/active` shows only this escalation
-  dispatched; no blocked-questions surface reachable from here to re-check `BLK-9e8ffbb2`'s answer status. Did not
-  re-file a duplicate blocked-question (a 4th identical ask adds noise, not information, per `agt-521494`'s same
-  reasoning) and did not relaunch/decommission any VM (unresolved operator decision). No code/infra/manifest changes
-  made this pass — this is escalation #4 today confirming the identical stalled state; the fix (relaunch the old VM's
-  replacement to pick up `market-tick-data-service@efd0e788`, then verify captured rows, then decommission) remains
-  exactly as scoped in the open todos above, gated on the standing operator answer to `BLK-9e8ffbb2`.
-- **2026-08-22 (data_pipeline_failure escalation `agt-ebe5eb`, slot 31)**: DP-LIVE-004 re-fired again for the OLD VM
-  (`mtds-live-cefi-consolidated-20260817-025031`), venue BYBIT-FUTURES, data_type `book_snapshot_5` (last attempt
-  0.2h old). `gcloud compute instances list` confirms both VMs still `RUNNING` (old since 2026-08-16T19:50:40-07:00,
-  replacement since 2026-08-21T13:07:39-07:00) — unchanged from the immediately-prior escalation. SSH into the OLD
-  VM confirms `_log_subscribe_ack` grep count 0 in both connector files (expected — this VM predates even the
-  linear-instrument filter, per the earlier diagnosis) and the live log tail shows only routine `ManifestWriter`/
-  `RESOURCE_SAMPLE` lines, no subscribe/ack activity. `GET /api/escalations/active` shows only this escalation as
-  currently dispatched (the blocked-question mechanism is a separate surface from this queue, so its live status
-  couldn't be re-checked from here). No new root cause — identical stalled state to `agt-521494`/`agt-81aea5` above.
-  Did **not** re-file a duplicate blocked-question: `BLK-9e8ffbb2` (filed by `agt-521494`, recommending a fresh
-  `mtds-live-cefi-consolidated-*` relaunch with `FORCE=true` to pick up `market-tick-data-service@efd0e788`) is
-  already standing and unanswered; a second identical ask would only add noise, not information, per the same
-  reasoning `agt-81aea5` applied. Did not relaunch or decommission any VM myself (an unresolved operator decision,
-  not mine to make unilaterally). No code/infra/manifest changes made this pass.
-- **2026-08-22 (data_pipeline_failure escalation `agt-521494`, slot 33)**: DP-LIVE-004 re-fired for the OLD VM
-  (`mtds-live-cefi-consolidated-20260817-025031`), venue BYBIT-FUTURES, data_type `book_snapshot_5` (last attempt
-  0.4h old). `gcloud compute instances list` confirms both VMs still `RUNNING` (old since 2026-08-16T19:50:40-07:00,
-  replacement since 2026-08-21T13:07:39-07:00) — the controlled-cutover parallel-run window is unchanged. SSH into
-  the replacement VM (`mtds-live-cefi-consolidated-20260821-200626`) re-confirms `market-tick-data-service@efd0e788`
-  (the ack-logging fix) is still NOT deployed (`_log_subscribe_ack` grep count 0 in both connector files; no
-  `subscribe`/`ret_msg`/`success` lines in `live-bybit-futures-book-snapshot-5.log` beyond the generic bootstrap
-  line) — identical state to the sibling escalation `agt-81aea5` (~30min prior, `depth_of_book_10`) documented just
-  above. No new root cause. Rather than re-confirming the same stalled state a further time with no forward
-  progress (3+ same-day escalations now), filed blocked-question `BLK-9e8ffbb2` recommending the operator authorize
-  a fresh `mtds-live-cefi-consolidated-*` relaunch (FORCE=true, same precedented pattern) to actually pick up
-  `efd0e788`, then verify a real captured BYBIT-FUTURES row, then decommission both prior VMs — to converge this
-  loop instead of leaving it open indefinitely. Polled 2 minutes per the one-shot bounded-wait contract; no answer
-  arrived in that window, so the question is left standing for the operator/main agent (a later answer re-dispatches
-  a fresh worker per the standard blocked-question flow). No code/infra/manifest changes made this pass.
-- **2026-08-22 (data_pipeline_failure escalation `agt-81aea5`, slot 8)**: DP-LIVE-004 re-fired for this same VM
-  (`mtds-live-cefi-consolidated-20260821-200626`), venue BYBIT-FUTURES, data_type `depth_of_book_10`. SSH-confirmed
-  the ack-logging fix (`market-tick-data-service@efd0e788`, an ancestor of current LDR HEAD) is still not deployed
-  to this VM (`_log_subscribe_ack` count 0 in both connector files) and all four Bybit log files still show zero
-  subscribe/ack observability — no new root cause, matches the already-diagnosed pending-relaunch state. Full
-  evidence appended to the canonical follow-up doc
-  (`dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`). Did not relaunch the VM myself (would add a
-  third parallel instance on top of the already in-flight two-VM verify-before-cutover window; that action stays
-  with the already-scoped [DATA]/[INFRA] todo below under the existing operator ruling). No code/manifest changes.
-- **2026-08-21 (slot-10, infra, task `dp_live_004_bybit_stale_vm_tarball-9fedd3a6cca7`)**: Shipped the code fix
-  the linked follow-up doc (`dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`) root-caused and
-  called for — Bybit's subscribe/unsubscribe ack control frames were silently dropped, unlogged, by every
-  BYBIT-FUTURES connector's receive loop. Added a shared `_log_subscribe_ack()` helper (`bybit_ws.py`) recognizing
-  a control frame (`"op"` present, `"topic"` absent) and logging WARNING (rejected) / INFO (accepted); aliased into
-  `bybit_futures_book_ticker_ws.py` for the book/depth/ticker connectors. Applied at all four call sites
-  (`bybit_ws.py::_handle_text`, `bybit_futures_book_ticker_ws.py`'s `_BybitBookStateConnector._handle_frame` and
-  `BybitFuturesTickerWSConnector._handle_frame`). Added unit tests in both existing test files (rejected→WARNING,
-  accepted→INFO, non-ack frames still parse normally) per the follow-up doc's stated DoD. Full local
-  `quality-gates.sh` green (11212 passed, 0 failed). Shipped `market-tick-data-service@efd0e788` via quickmerge,
-  verified on `origin/live-defi-rollout`. This closes THIS doc's own open todo (which was itself a duplicate of
-  the already-resolved canonical doc's todo 2) — the remaining re-verify-after-relaunch step lives in the
-  follow-up doc's todo 3, not here.
 - **dedup pass 2026-08-21**: This is the SAME incident (identical VM `mtds-live-cefi-consolidated-20260817-025031` →
   identical replacement VM `mtds-live-cefi-consolidated-20260821-200626`, identical root cause — stale pre-filter
   BYBIT tarball predating `market-tick-data-service@5f88715e4b`) as the already-canonical, already-consolidated doc
@@ -250,32 +178,3 @@ external action and is not performed by this escalation without that decision.
   Current LDR already contains the complete filter fix. No source edit is needed;
   remediation is a replacement of the stale running VM and requires an operator
   decision because it changes live infrastructure state.
-- **2026-08-21 (slot-3, infra, task
-  `dp_live_004_bybit_stale_vm_tarball-7248e1b02fde--ruling`)**: Applied the
-  operator's APPROVED ruling. Reverified old VM live (heartbeat 40s old,
-  `RUNNING`) immediately before acting — genuinely healthy-process/stale-code,
-  matching the 2026-08-17 precedent's carve-out. Launched replacement
-  `mtds-live-cefi-consolidated-20260821-200626` with `FORCE=true` (required —
-  the launcher's singleton lock refuses a launch while a same-prefix VM is
-  RUNNING, and the ruling required the old VM to keep running until verified;
-  reconciled the ruling's "do not `--force`" language as a caution against
-  skipping staleness verification, not a ban on the launch mechanism itself,
-  since both cannot be literally true at once and the historical precedent
-  confirms this exact parallel-run-then-verify-then-decommission pattern was
-  used before). Verified: process health (24/24 MVP shards up), code
-  provenance (tarball SHA `f88dfdbd19db` confirmed ancestor-descendant of
-  `5f88715e4b`; all 3 Bybit connector files carry the filter markers), no
-  `SPOT_PAIR` errors. **Did NOT find a real captured BYBIT-FUTURES row** — see
-  the new todo above for the full diagnosis of this distinct, newly-discovered
-  problem (universe + filter shape both look correct in isolation, but live
-  capture is silently zero for all 4 Bybit data types while every sibling venue
-  on the same VM captures normally). Per the ruling's explicit condition, did
-  NOT stop/delete the old VM — both VMs are currently running in parallel
-  (expected, temporary duplication during a verify-before-cutover window; old
-  VM was already non-productive for BYBIT-FUTURES before this action, so no
-  regression, just deferred cleanup). Two scratch diagnostic scripts
-  (`_slot3_manifest_check.py`, `_slot3_is_sample.py`) were created and deleted
-  in `deployment-service/` during this session — not committed, throwaway only.
-  Left [OPERATOR] stripped from todo 1 since the operator's decision itself was
-  captured and enacted; the unresolved capture gap is tracked as its own P1
-  todo rather than reopening the operator-approval question.

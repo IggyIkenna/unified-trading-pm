@@ -805,7 +805,7 @@ Listed for discoverability only — being listed here is NOT dispatch, per this 
 - [`cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`](/plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md)
   — split-out child of `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`; one open `[OPERATOR] P1` todo
   (relaunch-strategy ruling for 10 repeat-failing shards).
-- [`tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`](/plans/archive/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md)
+- [`tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`](/plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md)
   — 8 of 9 todos done as of 2026-08-02 (ASTER book_snapshot_5/liquidations fixes shipped); one open `[DATA] P3` to file
   a follow-up issue for 2 incidentally-found unrelated chronic findings (OKX-FUTURES trades gaps, POLYMARKET-PERP
   perp_funding).
