@@ -207,3 +207,12 @@ this case and will send the next agent hunting a regression in unrelated files.
   Added the concrete fix todo below instead of attempting it inline — extending the timeout-observable-sentinel +
   skip-guard pattern into 2 more files/detector call sites is real, riskful-if-rushed work on safety-relevant
   slot-collision code, not a ≤30-min adjacent fix.
+- **2026-08-22 (slot-18)**: 4th same-day hit of the identical signature (`not ok 269/271/274/284`, same 4 test names)
+  while shipping an unrelated `plans/active/*.md`/`.gitignore`-only change (archiving
+  `data_pipeline_alerts_batch_remediation_2026_07_15.md` + a gitignore-pattern widen). Confirmed byte-for-byte
+  pre-existing via a throwaway `git worktree add <path> HEAD~1` at the pre-change commit (RULES.md §4b's
+  worktree-not-stash variant, since a fresh slot's own dirty tree beyond this single commit made stashing riskier) —
+  identical 4 failures on a tree with none of my changes. Full `quality-gates.sh` run otherwise clean: pytest 2185
+  passed/17 skipped, ruff + basedpyright green. Same reasoning as slot-4/slot-16 above (real suites green,
+  confirmed-pre-existing BATS-only red, no CI-side signal for the repo-blocker mechanism to key off) — proceeding via
+  the same direct-push resolution rather than blocking a docs-only archival on an unrelated host-load flake.
