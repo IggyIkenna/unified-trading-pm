@@ -72,11 +72,18 @@ beyond the earlier 13-day bounded validation window, and the MDPS bucket/movemen
 
 ## Recommended decision
 
-- [ ] [DATA] P0. Fix `features-service/features_service/sports/cli/handlers/arb_detect_handler.py`'s
-      `_run_historical_backfill` to use `ManifestWriter.record_captured_from_counts()` instead of the banned
-      `.add()` for the bundled `arbitrage_opportunity` data_type (see `wave2_polymarket_record_captured_from_counts_2026_05_09`
-      for the reference pattern), then re-launch the full 2020-06-06→present campaign via
-      `launch-features-sports-arb-backfill.sh` (repo: features-service, deployment-service).
+- [x] ✅ [DATA] P0. **Already fixed — features-service@9e94485e ("fix(sports): arb-detect historical backfill uses
+      record_captured_from_counts"), landed on `origin/live-defi-rollout` 2026-08-22T16:04:13Z, before this slot
+      picked up the task.** `_run_historical_backfill`/`_record_arb_day` now call
+      `ManifestWriter.record_captured_from_counts()` for the bundled `arbitrage_opportunity` data_type; the banned
+      `.add()` call is gone. Re-launched the full 2020-06-06→2026-08-22 campaign per the fix's own instruction
+      (`launch-features-sports-arb-backfill.sh`, VM `features-arb-backfill-20260822-161439`, `RESUME_START_DATE
+      2020-06-06 RESUME_END_DATE 2026-08-22`). Verified via TARGET ARTIFACT within ~1 min of launch, not
+      exit_code/activity: `run.log` shows real `sports-arb-detect: wrote N opportunity row(s) ->
+      gs://features-sports-prd-central-element-323112/sports_arb/by_date/day=2020-06-1{3,6,7,9}/...` writes for
+      6+ distinct dates, zero `ValueError`/traceback — the exact failure signature the original audit found is
+      gone. Campaign left running (multi-hour full-window job); continued-to-floor monitoring is the separate
+      still-open REVIEW todos' job, not duplicated here (repo: features-service, deployment-service).
 - [x] ✅ [DATA] P0. **Relaunched 2026-08-22 (slot-23, data_engineering)** — both unresolved MDPS
       bucket/movement/snapshot windows, via the existing `launch-mdps-sports-bucket-vm.sh` pattern (the same 4-way
       sharding this campaign was originally run with), `force` mode on both (matches the two already-completed
@@ -153,10 +160,12 @@ doc's findings and adds two items this doc didn't cover:
    non-retriable shard re-attempted every wave" pattern: any relaunch of this campaign BEFORE the `.add()` →
    `record_captured_from_counts()` fix (already tracked as the `[DATA] P0` todo above) lands will burn ~1,323
    shard-days of compute for a guaranteed identical re-failure, with no `--force` needed to trigger the re-attempt.
-   - [ ] [DATA] P1. **Do not relaunch `launch-features-sports-arb-backfill.sh` (or any wave that revisits this date
-         range) until the `arb_detect_handler.py` `.add()`→`record_captured_from_counts()` fix (see the `[DATA] P0`
-         todo above) has landed and been verified** — a premature relaunch will re-attempt and re-fail the same
-         ~1,323 shard-days for zero benefit (repo: features-service, deployment-service).
+   - [x] ✅ [DATA] P1. **Resolved 2026-08-22 (slot-23, data_engineering) — the fix landed and the relaunch has been
+         verified, so the guard this todo names is now satisfied, not open.** `arb_detect_handler.py`'s
+         `.add()`→`record_captured_from_counts()` fix was already on `origin/live-defi-rollout`
+         (features-service@9e94485e, 2026-08-22T16:04:13Z) before this slot picked up the task; no premature
+         relaunch occurred in the gap. See the `[DATA] P0` todo above for the relaunch + target-artifact
+         verification evidence (repo: features-service, deployment-service).
 
 3. **Alerting check (Step 3, inconclusive) — DP-FETCH-009 (`check_high_attempted_failed`, `abs>=500` threshold)
    should have fired for this cell** (1,323 far exceeds the 500 floor), but a check of the `#data-pipeline-alerts`
