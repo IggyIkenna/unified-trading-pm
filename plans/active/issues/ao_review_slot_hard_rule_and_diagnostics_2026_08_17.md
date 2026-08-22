@@ -108,14 +108,25 @@ own design pass first (see Todo 2), not a copy-paste of this guard.
       roles, not just review + scheduled-reserve (the two already gated per
       `/plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md` and the scheduled-reserve fix in the
       Track 1 tracker). A missing filter for one reserved role is exactly this issue's root cause pattern repeating.
-- [ ] [UI] P2. **Tag reserved-slot assignments visibly in Fleet Overview and Agents Overview**, per the operator's
-      explicit instruction ("the tags inthe fleet oevrview and agents overview make this clear"). Concretely: both
-      dashboard views should visibly distinguish a slot/agent that is a configured reserved role (review, scheduled,
-      cicd, escalation — whatever Todo 1 settles on) from an ordinary worker slot, so an operator glancing at either
-      tab can immediately tell "this IS the real review/cicd/escalation agent" vs. "this is an ordinary worker" —
-      the exact ambiguity that let the masking self-registration in this issue go unnoticed for 23+ hours. Needs
-      `[UI]` + `pw:L2` regression coverage per this workspace's UI testing hard rule
-      (`/codex/06-coding-standards/ui-testing-layers.md`).
+- [x] ✅ [UI] P2. **DONE 2026-08-22.** Tag reserved-slot assignments visibly in Fleet Overview and Agents Overview —
+      `agent-orchestrator@6357540cc4` | pw:L2 ✓ | regression: `dashboard/tests/e2e/agents-reserved-role-badge.spec.ts`,
+      `dashboard/src/layout.test.ts` (`reservedSlotVerification`, 6 cases). Fleet Overview side was ALREADY shipped
+      pre-existing (`ReservedBadge`, ci_escalation/scheduled_task — review/main never appear there, they're filtered
+      into the Agents panel by design). This ships the missing Agents Overview half: `ReservedRoleBadge` cross-
+      references a review/main role holder's `tmux_session` against the live slot roster's server-computed `kind`,
+      rendering "✓ slot #N" (verified) or "⚠ unbound" in the `RoleChat` header — closing the literal gap this issue
+      found (a role="review" self-registration with no real slot behind it read identically to the genuine agent).
+      Scoped to review/main only (the two singleton roles `AgentsPanel` actually tabs) per Todo 1 staying an open
+      design fork for cicd/escalation generalization — not re-litigated here. New e2e fixture: `seed_e2e_state.py`
+      seeds `SlotRow(slot_id=0, tmux_session="orch-agent-main")` + a matching `AgentRow(role="main")` — slot 0 is
+      unconditionally kind="main" (`state_store.classify_slot_kind`), so no `ORCHESTRATOR_REVIEW_SLOTS` override
+      needed; `tmux_session` had to be `main_agent_keeper.MAIN_SESSION_NAME` ("orch-agent-main"), not the generic
+      per-worker `session_name(0)` ("orch-slot-0") — a first attempt using the latter left `AgentKeeper` unable to
+      recognize the fixture as live. Full `quality-gates.sh` green (5521 Python tests, 474 dashboard vitest tests,
+      dashboard `tsc --noEmit` clean) before shipping. Side finding filed separately (not this todo's scope):
+      `/plans/active/issues/e2e_orphan_reap_sweep_kills_other_slots_processes_2026_08_22.md` — running this repo's
+      own e2e Playwright suite appeared to log `orphan_reap sweep ... KILLED` for OTHER slots' PIDs not part of this
+      fixture, worth a backend/infra look.
 - [ ] [BACKEND] P3. **Design (with care — this touches the safety-critical branch-heal path) an auto-dispatch recovery
       agent for `REFUSED-kept-quarantined` git-conflict quarantines**, per the operator's explicit pushback on my
       framing this session: "i disagree i think it can alwasy be automated sure it can alerts in slack for trace but
