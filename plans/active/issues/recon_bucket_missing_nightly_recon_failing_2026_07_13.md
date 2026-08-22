@@ -746,3 +746,30 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   rebuild+redeploy+re-verify step into a new `[INFRA] P0.` todo — same deployment gap (no Cloud Build
   trigger for ml-service) that already blocked todos 3→4's same-day verification, now hit a 3rd time in
   this doc; flagged that provisioning a standing trigger is probably worth doing at this point.
+
+- **review 2026-08-22 (slot-7, dispatch `recon_bucket_missing_nightly_recon_failing-335110672a6f`)**: resumed
+  my own todo (verify a real green 06:00Z run) — live-checked, not read from stale checkboxes. `date -u` =
+  2026-08-22T16:20:22Z. Today's scheduled execution (`uts-prod-batch-live-reconciliation-service-hdzmp`,
+  completed 06:01:36Z) FAILED (`NonZeroExitCode`) — 5th straight failed day checked (08-18 through 08-22, all
+  `NonZeroExitCode`, via `gcloud run jobs executions list --sort-by="~metadata.creationTimestamp"`). Todo 1
+  (execution-config-snapshot) reconfirmed green (`-kj6ht`, succeeded 11:49:27Z). Todo-2 chain: ml-service's
+  most recent execution (`uts-prod-ml-service-t1-recon-5p7bl`, completed 15:07:12Z — the newest of only 3
+  executions total for this job, i.e. no run since) still FAILED — consistent with the doc's own note that
+  `-5p7bl` predates the BigQuery-`NotFound` fix (`ml-service@27044a4474`, landed by slot-24 sometime after
+  15:07); the "rebuild + redeploy off `27044a4474`" todo is genuinely still open. **New observation**: that
+  todo does not currently appear in the live backlog at all (`GET /api/backlog`, filtered for this plan's task
+  prefix, shows only `-890fede80a62` [the P1 "provision 6 feature-family jobs" todo, `dispatched`] and my own
+  task as outstanding — no entry for the rebuild/redeploy todo). Most likely plain `PlanRegenLoop` tick lag
+  (slot-24's fix landed under an hour before this check) rather than a confirmed dispatch bug — flagging, not
+  diagnosing further (out of this review pass's scope to debug the regen pipeline); worth a look if it's still
+  missing on the next pass. Todo-4 chain: strategy-service's most recent execution (`-rkwjg`, 04:01:53Z) still
+  FAILED on the pre-fix `dependency_checker.py` bucket-kind bug, exactly as already documented; the code fix
+  (`strategy-service@6934261192`) has no verifying run yet — next scheduled fire is 2026-08-23T04:00Z (~11.7h
+  out), unchanged from the prior review pass's estimate. **Conclusion unchanged from the 2026-08-22 slot-26
+  review entry**: the earliest a genuinely green 06:00Z run can occur is 2026-08-23 (covering date=2026-08-22),
+  contingent on (a) the ml-service rebuild+redeploy landing and succeeding, and (b) tomorrow's 04:00Z
+  strategy-service run confirming todo 4b — neither producible nor verifiable from this session. Not touching
+  the rebuild+redeploy todo myself (container rebuild/redeploy is infra-craft scope, not review's narrow
+  evidence-gated write capability — review.md § 6 covers only a false-done revert or a 1-3 line code patch).
+  Skipping with `reason_code: GATED` again (monitoring-window wait, not a genuine ambiguity) — will re-dispatch
+  to the next eligible worker once the clock + remaining prereqs allow it.
