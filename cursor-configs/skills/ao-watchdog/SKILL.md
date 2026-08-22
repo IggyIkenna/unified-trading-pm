@@ -351,6 +351,23 @@ account is paused/rate-limited).
 pulled in Step 1). Read the output against the status model
 (`/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`):
 
+**Gap confirmed live (2026-08-22, `ao_watchdog` scheduled run, slot 29): this script is hardcoded to dispatch via
+AWS SSM regardless of where it's invoked from** — it does not branch on the Step-1 "running ON the orchestrator VM"
+case the way this skill's own Step 1 implies. Run directly on the orchestrator VM as a `plan_health`-family
+dispatch (not every interactive laptop session has `ssm:SendCommand` on the instance — this run hit
+`AccessDeniedException: User: arn:aws:iam::427895769566:user/ikenna-worker is not authorized`), it fails outright
+with no data. **Workaround, confirmed working**: the script's own SSM payload just curls
+`http://localhost:8765` internally (`BASE = "http://localhost:8765"` in the script), so when you're already ON
+that host, replicate its two calls directly instead of going through SSM: `GET
+/api/scheduled-jobs/recent?within_hours={hours}` for the "runs" mode (per-row fields include `job_name`, `tranche`,
+`status`, `started_at`/`finished_at`, `detail`, `agent_exit_reason`) and `GET
+/api/agents?include_finished=true` for the "agents" mode. A `status=no_capacity` row's `detail` field often just
+recites the standing pause message (`"mode '<x>' is paused by operator..."`) for one of the known-paused modes
+(Step 5 above) — cross-check `detail` before treating a `no_capacity` count as the legacy-regression pattern; it
+usually isn't. This local-API path was not itself broken — the SSM wrapper script is what needs a
+"detect-you're-already-on-the-VM-and-skip-SSM" branch, tracked as a follow-up rather than fixed inline here (out of
+scope for a doc-only skill file).
+
 - **`quarantined`/`timeout`/`error`** are the three statuses that page — any of these present is a Step-8 finding.
 - **`dispatched` is a spawn receipt, not completion** — cross-check `agent_exit_reason == "lifecycle-complete"` via
   the `agents` mode of the health-check script; a `dispatched` row whose agent went `reaped-stale` is silent data

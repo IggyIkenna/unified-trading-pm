@@ -193,11 +193,12 @@ impression:
       **Stale file reference found and corrected**: `onexbet.py` no longer exists — confirmed retired 2026-08-21 as
       dead code (see `sports_handler.py`'s own comment + `sports_bookmaker_roster_classification_2026_08_21.md`);
       nothing to audit there.
-- [ ] [BACKEND] P2. Audit the sports "unity" subsystem as its own group — it is a distinct sub-architecture, not
+- [x] ✅ [BACKEND] P2. Audit the sports "unity" subsystem as its own group — it is a distinct sub-architecture, not
       simple per-venue adapters: `bridge.py`, `fill_reports.py`, `mock_feed_connector.py`, `multiplex.py`,
       `protocol.py`, `rollover_tracker.py`, `sidecar.py`, `turnover_tracker.py`
       (`sports_execution/adapters/unity/`). Read `protocol.py` first to understand the subsystem's actual shape
-      before applying the checklist file-by-file. Done-when: same evidence bar as above.
+      before applying the checklist file-by-file. Done-when: same evidence bar as above. — audit-only, no code
+      changes; findings recorded in the Progress Log and the three HIGH-finding follow-ups above.
 
 ### Triage
 
@@ -264,6 +265,24 @@ impression:
       maps any non-"BACK" side string to "L" (lay) instead of rejecting an invalid value; HIGH finding: checklist
       point 3 (`betfair.py:452-468`; `betfair_order_mapping.py:113-160`; `kalshi.py:238-248,436-447`;
       `matchbook.py:399-410`; `polymarket_clob.py:409-420,556-577`). (repo: execution-service)
+- [ ] [BACKEND] P1. Add finite-positive stake/price, non-empty identifier, timezone, and direction validation at
+      the Unity placement boundary (`bridge.py:179-210`, `multiplex.py:64-92`) before a `PLACE_BET` can reach the
+      sidecar. The current typed signatures are not runtime validation: negative/NaN/Infinity Decimal values,
+      empty IDs, and invalid direction strings are accepted and serialized into an outbound order; the same
+      unchecked values are accepted by the public `UnityMultiplex.enqueue()` bypass. HIGH finding: checklist point 3.
+      (repo: execution-service)
+- [ ] [BACKEND] P1. Make Unity fill parsing and attribution fail closed: reject non-finite/negative monetary values,
+      invalid odds, impossible matched/requested-stake relationships, and inconsistent settlement fields; convert an
+      unknown child venue from an uncaught `KeyError` into a surfaced bad-fill result (`fill_reports.py:104-226`,
+      `bridge.py:262-277`). The parser currently accepts `NaN`/Infinity and negative Decimal values, and the bridge
+      can crash on an unregistered child venue instead of reporting a real failed fill. HIGH findings: checklist
+      points 3 and 7. (repo: execution-service)
+- [ ] [BACKEND] P1. Add durable sequence/client-order idempotency and send-failure recovery to the Unity bridge:
+      reject duplicate placement IDs, reconcile duplicate `BET_ACK`/`BET_FILL` frames by sequence and client order
+      ID, and retain drained outbound messages until `sidecar.send()` succeeds (`bridge.py:238-260`,
+      `multiplex.py:95-109`). The current `_pending_acks` set only removes IDs after an ACK; it does not prevent a
+      retry from submitting twice or deduplicate fills, while `drain()` marks messages sent before the sidecar write
+      and a send exception loses the already-drained queue. HIGH finding: checklist point 6. (repo: execution-service)
 
 ### Close-out
 
@@ -798,3 +817,48 @@ flipped this plan's close-out checkbox to `[x]` on a "zero open P0s" basis — a
 it (before this session's sports-exchange audit existed), but no longer accurate now that the audit above found 3
 new P0 findings. Reverted the close-out checkbox back to `[ ]` in the same edit as this entry; slot 21's entry
 above is left untouched as an accurate record of what was true at the time it was written.
+
+### 2026-08-22 — slot 21 sports Unity subsystem audit
+
+Reviewed `protocol.py` first, then `bridge.py`, `fill_reports.py`, `mock_feed_connector.py`, `multiplex.py`,
+`rollover_tracker.py`, `sidecar.py`, and `turnover_tracker.py` against the fixed seven-point checklist. This is
+the Python boundary around the Java Feed Connector; the mock is simulation-only and is not treated as a live venue.
+
+- **Credential handling — PASS:** `SidecarConfig.credentials_ref` is a Secret Manager reference and
+  `UnityBridge.authenticate()` forwards that reference rather than a private key or plaintext credential
+  (`sidecar.py:39-47`; `bridge.py:132-154`). The Python layer does not log the reference or secret material. The
+  mock echoes the reference in its test-only `AUTH_OK` payload (`mock_feed_connector.py:77-103`), which is not a
+  production path but should not be copied into a real connector.
+- **Signing/auth correctness — PASS at this boundary:** the Java connector owns venue authentication; the Python
+  bridge only sends the configured reference, requires `AUTH_OK`, and moves to `FAILED` on `AUTH_FAIL` or a closed
+  stream (`bridge.py:132-154`). No private key or request signature is constructed in these files.
+- **Input validation before order write — FINDING HIGH:** `UnityBridge.place_bet()` and the public
+  `UnityMultiplex.enqueue()` accept unchecked Decimal amounts/prices, arbitrary direction and empty identifiers,
+  then `_encode_place_bet()` serializes them directly into `PLACE_BET` (`bridge.py:179-210,302-318`;
+  `multiplex.py:64-92`). The fill parser has the corresponding boundary weakness: `_as_decimal()` accepts
+  `NaN`/Infinity and negative values, and `attribute_unity_fill()` trusts the result (`fill_reports.py:104-226`).
+  Unknown child venues raise `KeyError` outside the bridge's `UnityFillReportParseError` handler, so malformed
+  attribution can terminate a pump cycle rather than become an explicit failed fill.
+- **Slippage/deadline bounds — FINDING MEDIUM:** price is carried as the caller's bet price, but the Unity
+  `PLACE_BET` catalogue has no caller deadline, expiry, or time-in-force field (`protocol.py:25-39`;
+  `bridge.py:302-318`). A matched/unmatched order can therefore have no Python-side lifetime bound. This is not
+  upgraded to HIGH because the external book controls matching semantics and the adapter does not expose a market
+  order path separate from the supplied price.
+- **Approval scope — PASS/N-A:** this subsystem places sports bets through the connector and has no token approval
+  or allowance call in the reviewed files.
+- **Idempotency/retry safety — FINDING HIGH:** `_pending_acks` only removes a client-order ID after an ACK; it does
+  not reject duplicate placement IDs or deduplicate repeated `BET_ACK`/`BET_FILL` frames. `UnityMultiplex.drain()`
+  moves messages into `_sent` before `sidecar.send()` succeeds, so a send exception after draining loses the
+  retryable outbound record (`bridge.py:238-260`; `multiplex.py:95-109`). There is no durable sequence/client-order
+  record across process restart.
+- **Honest error handling — FINDING HIGH:** malformed frames become an `ERROR` from `SidecarProcess.recv()`, and
+  explicit sidecar errors are returned in `PumpResult.errors` (`sidecar.py:201-215`; `bridge.py:245-260`). However,
+  bad numeric fills can pass parsing or trigger an uncaught `KeyError`, and duplicate settlement fills are appended
+  and counted repeatedly (`bridge.py:262-277`), allowing accounting to report a successful duplicate or crash
+  instead of surfacing a single failed/reconciled event.
+
+No production code or tests were changed for this audit-only unit. The three concrete HIGH findings are represented
+by the Unity placement-validation, fill-boundary/error-handling, and sequence/client-order-idempotency follow-ups
+added in the Triage section above. Checklist points 1, 2, and 5 are PASS/PASS/N-A; point 4 is recorded as a MEDIUM
+follow-up-free finding under the plan's established policy for MEDIUM-only issues. The Unity audit checkbox is now
+flipped with this evidence; the plan still has open triage work and is not ready for close-out.
