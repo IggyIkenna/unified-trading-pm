@@ -124,6 +124,17 @@ assigned_role: backend_engineer
   transfer` dispatch + `CompositeTransferAdapter.pod_adapter` wiring test) — both depend on Section B items 2-5
   (still `- [ ]` as of this entry), so they can't land until those adapters/methods exist.
 
+- 2026-08-22 — Section B item 4 shipped (execution-service@44802ab6b2): `MockPodCollateralAdapter` +
+  `tests/unit/test_mock_pod_adapter.py`. **Note for whoever picks up Section E item 2** ("Unit tests for
+  `MockPodCollateralAdapter`'s state machine..."): that item's own text names
+  `execution-service/tests/unit/engine/transfers/test_mock_pod_adapter.py`, but no `tests/unit/engine/transfers/`
+  directory exists anywhere in this repo today (transfer-adapter tests live flat in `tests/unit/`, e.g. the
+  just-shipped `tests/unit/test_live_pod_adapter.py`) — the test file this item's own Done: line required already
+  landed at `tests/unit/test_mock_pod_adapter.py` (flat, mirroring `test_live_pod_adapter.py`'s convention) and
+  covers every scenario Section E item 2 asks for (multi-poll PENDING→CONFIRMED, `force_outcome` overriding both
+  the CONFIRMED and FAILED paths). Section E item 2 is very likely already satisfied by this file — verify against
+  the file at that path (not re-create it at the nonexistent nested path) before doing further work there.
+
 ---
 
 ## Section A — UAC schema (unified-api-contracts)
@@ -207,8 +218,10 @@ assigned_role: backend_engineer
       contract). Not wired into `CompositeTransferAdapter`/`create_transfer_adapter` — that is item 5 below, out of
       scope for this todo.
       end-to-end against the mock; only the real REST method bodies (tracked separately in the epic) await the spec.
-- [ ] [BACKEND] P0. **New `execution_service/engine/transfers/mock_pod_adapter.py` — `MockPodCollateralAdapter`**.
-      Per operator ruling: a FULLER async simulator, not instant success — an in-memory per-`transfer_id` state
+- [x] ✅ [BACKEND] P0. **New `execution_service/engine/transfers/mock_pod_adapter.py` — `MockPodCollateralAdapter`**.
+      Per the operator ruling recorded in this plan's own header blockquote + Progress Log
+      (`/plans/active/w23_pod_collateral_delegation_transfer_rail_2026_08_22.md`): a FULLER async simulator, not
+      instant success — an in-memory per-`transfer_id` state
       machine transitioning `PENDING → CONFIRMED` (or `PENDING → FAILED`) after a configurable number of
       `get_transfer_status()` polls (default: 2nd poll resolves), so `TransferConfirmationPoller.wait_for_confirmation`
       exercises real multi-poll timing in tests, not a first-poll-always-done shortcut like
@@ -216,6 +229,17 @@ assigned_role: backend_engineer
       `force_outcome(transfer_id, status)` to make a specific test deterministic without waiting out the real poll
       count. Done: a test asserts a fresh delegation stays `PENDING` on poll 1 and resolves by poll 2 with default
       config, and `force_outcome` overrides that for a targeted failure-path test.
+      — execution-service@44802ab6b2. Shipped: `MockPodCollateralAdapter` (`execute_collateral_delegation` always
+      starts `PENDING`, idempotency-keyed dedup mirroring `MockTransferAdapter.execute_withdrawal`;
+      `get_transfer_status` advances a per-`transfer_id` poll count and resolves to `CONFIRMED` once
+      `resolve_after_polls` is reached, default 2; unknown transfer_ids fail honestly rather than fabricating a
+      status) + `force_outcome(transfer_id, status, error=None)` test hook mirroring
+      `MockCustodyProvider.set_balance()` + `tests/unit/test_mock_pod_adapter.py` (poll-1-PENDING/poll-2-CONFIRMED
+      with default config, configurable poll count, idempotency dedup, `force_outcome` overriding both CONFIRMED
+      and FAILED, unknown-id honest-failure). Not wired into `CompositeTransferAdapter`/`create_transfer_adapter` —
+      that is item 5 below, out of scope for this todo. Full `quality-gates.sh` green
+      (sentinel=44802ab6b2ba37a7437a4cb7a634d5d620a408a3); quickmerge-landed + post-push ancestry independently
+      verified on `origin/live-defi-rollout`.
 - [ ] [BACKEND] P1. **Wire the new adapter into `CompositeTransferAdapter`/`create_transfer_adapter`**
       (`engine/transfers/factory.py`) — add an optional `pod_adapter: TransferAdapter | None` constructor param to
       `CompositeTransferAdapter`, defaulting to an honestly-not-configured `LivePodCollateralAdapter(None)` exactly
