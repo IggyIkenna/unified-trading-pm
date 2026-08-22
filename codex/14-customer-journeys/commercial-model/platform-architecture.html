@@ -8173,9 +8173,11 @@ Content-Type: application/json
 
       <h3>Cross-wallet and cross-account balancing</h3>
       <p>
-        Capital does not sit in one place. Each share class has a treasury wallet, and each strategy runs on its own hot
-        wallet, which may be on a different chain from the treasury. The platform moves capital between those tiers
-        automatically, on a reserve ratio rather than on somebody watching a balance.
+        This is the engine's own plumbing beneath your two archetypes, not a substitute for the fund administration,
+        NAV and settlement layer you already run: capital does not sit in one place. Each share class has a treasury
+        wallet, and each strategy runs on its own hot wallet, which may be on a different chain from the treasury.
+        The platform moves capital between those tiers automatically, on a reserve ratio rather than on somebody
+        watching a balance, so the staked and cash-basis legs stay funded without a person moving USDC by hand.
       </p>
 
       <div class="eq">
@@ -8223,12 +8225,13 @@ Content-Type: application/json
         Writing those tests surfaced several real weaknesses, which is exactly what they were for.
       </p>
 
-      <h3>Accounting you can hand to a fund administrator</h3>
+      <h3>The attribution feed your fund administrator consumes</h3>
       <p>
+        Your fund administration stays yours; what the strategy hands it is a clean input rather than raw fills.
         P&amp;L is attributed rather than merely totalled: every row carries a factor, delta, funding, basis, carry,
         fees, slippage, a layer separating strategy decisions from execution quality, and a venue and instrument. The
-        strategy reads its own attribution back and adapts to it. High-water marks are computed from the trade ledger by
-        three simultaneous methods (time-weighted return, notional, and P&amp;L recovery) and never from a running
+        strategy reads its own attribution back and adapts to it. High-water marks are computed from the trade ledger
+        by three simultaneous methods (time-weighted return, notional, and P&amp;L recovery) and never from a running
         maximum of raw equity, which is the standard way a high-water mark quietly misstates itself after a capital
         flow.
       </p>
