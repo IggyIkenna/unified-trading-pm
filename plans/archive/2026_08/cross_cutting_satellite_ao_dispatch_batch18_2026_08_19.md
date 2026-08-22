@@ -58,6 +58,10 @@ source: >-
   line below names the exact source doc + todo it was extracted from.
 ---
 
+> **ARCHIVED 2026-08-22** — all 10 items landed and re-verified against reachable commits by the gated finalize plan
+> `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19_finalize.md` (same-commit self-archived). Superseded by
+> nothing; this doc's durable content (the 10 items' evidence) lives inline above, already cited by its 2 source docs.
+
 # cross-cutting satellite AO dispatch batch 18
 
 ## From `execution_delta_proxy_repricer_generalization_2026_08_18.md`
