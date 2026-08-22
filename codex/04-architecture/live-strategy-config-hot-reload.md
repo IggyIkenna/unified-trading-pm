@@ -123,8 +123,9 @@ hot-reload. **Caveat (2026-08-14, updated):** the strategies-domain reload path 
 (`SAFE_STRATEGY_RELOAD_FIELDS` / `UnsafeConfigChangeError`) — an `enabled_strategies` change is rejected on the live
 side. Batch has no equivalent gate (a batch run just picks up whatever config it's given), so this is not yet "the SAME
 validation rules apply both paths", only a live-side-only guard against one specific unsafe field. The instruments
-reload path has the SAME class of guard as of 2026-08-14 (see above); the clients reload path still applies an
-unconditional atomic swap with no validation gate.
+reload path has the SAME class of guard as of 2026-08-21 (see above — its guard shipped a week after the
+strategies-domain one, not the same date); the clients reload path still applies an unconditional atomic swap with no
+validation gate.
 
 ## Cross-references
 

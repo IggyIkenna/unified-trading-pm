@@ -235,7 +235,14 @@ The chain is always: **UI → API (HTTP/SSE) → Service (engine) → Storage/Me
 
 ---
 
-## 2a. Three Batch Research Tiers and UI Naming
+## 2a. Batch Research Tiers and UI Naming
+
+> **Table incomplete (found 2026-08-22 docs-reconcile) — only 1 of the "three" implied tiers is enumerated below.**
+> The heading + prose previously asserted three tiers with one dedicated UI each; the table has only ever listed one
+> (Strategy backtest). The "Repo naming status" list right below names at least 2 more real repos in this same family
+> (`ml-training-ui`, `execution-analytics-ui`) that plausibly ARE 2 of the missing tiers, but this doc doesn't state
+> their Purpose/API-Gateway/Service-engine mapping with enough confidence to safely add table rows — needs someone who
+> knows the current ML-training and execution-backtest UI wiring to complete the table.
 
 Each tier of batch research work has its own dedicated UI. These are separate repos from their backing services.
 
@@ -728,17 +735,17 @@ that input (gracefully). Required upstream data = service fails fast with clear 
 
 ## 9. Current Implementation vs Target (Gaps)
 
-| Area                         | Current State                   | Target State                                                     | Gap Severity                                           |
-| ---------------------------- | ------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------ |
-| ML inference features        | Reads from BigQuery (polling)   | PubSub subscription for live features                            | P1 — violates live messaging rule                      |
-| Strategy position            | Internal PositionMonitor        | PubSub subscription to PBM                                       | P1 — no position reconciliation                        |
-| Execution events             | Fills only published            | Full order lifecycle (created/updated/cancelled/filled/rejected) | P1 — trading analytics UI needs granularity            |
-| Execution + MTDH co-location | Path dependency, WebSocket stub | Co-located VM with in_memory adapter                             | P2 — works via PubSub, co-location is optimization     |
-| Client reporting live        | Batch only                      | Batch + live SSE (streaming P&L)                                 | P2 — live P&L is UX enhancement                        |
-| Market data API candles      | Order book only                 | Order book + candles SSE                                         | P2 — candles available in MDPS, just need SSE endpoint |
-| Alerting circuit breakers    | Stub (Slack only)               | Full rules engine + multi-channel + circuit breaker commands     | P1 — DR workflow depends on this                       |
-| Strategy → PBM data source   | Not connected                   | PBM publishes, strategy subscribes                               | P1 — required for live trading                         |
-| PBM exchange reconciliation  | Consumes fills from execution   | Also needs direct exchange position feed                         | P1 — reconciliation needs both sides                   |
+| Area                         | Current State                   | Target State                                                     | Gap Severity                                                                                                                                                                                          |
+| ---------------------------- | ------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ML inference features        | Reads from BigQuery (polling)   | PubSub subscription for live features                            | P1 — violates live messaging rule                                                                                                                                                                     |
+| Strategy position            | Internal PositionMonitor        | PubSub subscription to PBM                                       | **Not tracked (operator ruling 2026-08-18)** — deliberate in-process shape for now, not an oversight; re-evaluate ahead of `system_readiness_master.md` W7 (Nov 2026), see § Position (current) above |
+| Execution events             | Fills only published            | Full order lifecycle (created/updated/cancelled/filled/rejected) | P1 — trading analytics UI needs granularity                                                                                                                                                           |
+| Execution + MTDH co-location | Path dependency, WebSocket stub | Co-located VM with in_memory adapter                             | P2 — works via PubSub, co-location is optimization                                                                                                                                                    |
+| Client reporting live        | Batch only                      | Batch + live SSE (streaming P&L)                                 | P2 — live P&L is UX enhancement                                                                                                                                                                       |
+| Market data API candles      | Order book only                 | Order book + candles SSE                                         | P2 — candles available in MDPS, just need SSE endpoint                                                                                                                                                |
+| Alerting circuit breakers    | Stub (Slack only)               | Full rules engine + multi-channel + circuit breaker commands     | P1 — DR workflow depends on this                                                                                                                                                                      |
+| Strategy → PBM data source   | Not connected                   | PBM publishes, strategy subscribes                               | P1 — required for live trading                                                                                                                                                                        |
+| PBM exchange reconciliation  | Consumes fills from execution   | Also needs direct exchange position feed                         | P1 — reconciliation needs both sides                                                                                                                                                                  |
 
 ---
 
@@ -1675,11 +1682,11 @@ The API Services Cluster contains 3 FastAPI repos that sit at topological level 
 (L7/L9) and the React UI tier (L11). They are the HTTP boundary: they proxy service engines, enforce auth, and expose
 typed REST/SSE endpoints to UIs.
 
-| Repo                    | Abbrev | Port (dev) | Proxies                        | Serves UIs                                                                                       | Auth                          |
-| ----------------------- | ------ | ---------- | ------------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------- |
-| `execution-results-api` | ERA    | 8002       | execution-service              | trading-analytics-ui, live-health-monitor-ui, strategy-ui, execution-analytics-ui, settlement-ui | None (internal)               |
-| `strategy-api`          | —      | 8004       | strategy-service               | strategy-ui                                                                                      | None (internal)               |
-| `client-reporting-api`  | CRA    | 8003       | pnl-attribution-service output | client-reporting-ui                                                                              | Per-client JWT (Google OAuth) |
+| Repo                    | Abbrev | Port (dev) | Proxies                        | Serves UIs                                                               | Auth                          |
+| ----------------------- | ------ | ---------- | ------------------------------ | ------------------------------------------------------------------------ | ----------------------------- |
+| `execution-results-api` | ERA    | 8002       | execution-service              | trading-analytics-ui, strategy-ui, execution-analytics-ui, settlement-ui | None (internal)               |
+| `strategy-api`          | —      | 8004       | strategy-service               | strategy-ui                                                              | None (internal)               |
+| `client-reporting-api`  | CRA    | 8003       | pnl-attribution-service output | client-reporting-ui                                                      | Per-client JWT (Google OAuth) |
 
 > **Note:** `deployment-api` is **not** in this cluster — it sits at L8 (deployment infrastructure). The L10 API
 > Services cluster is exclusively the 3 repos above.

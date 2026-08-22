@@ -49,7 +49,8 @@ code_refs:
 
 # Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine
 
-> **Status**: partially shipped (G3/G4/G5 DONE; G1/G2 open). Plan-of-record:
+> **Status**: partially shipped (G3/G4/G5 DONE; G1/G2/G6 open — G6 newly found 2026-08-21, see § 7 for detail).
+> Plan-of-record:
 > `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (parent epic `batch_live_symmetry_master`).
 > Composes with `/codex/04-architecture/global-ledger-architecture.md`,
 > `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`,

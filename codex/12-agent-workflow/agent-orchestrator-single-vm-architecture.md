@@ -127,7 +127,10 @@ autospawn machinery below governs.
 - **Trigger**: a `queued`, prereq-met, role-matched task exists and AutoSpawn wakes a free slot for it.
 - **Lifecycle**: `/boot` → claim a task → work → `/done` (clean-tree + checkbox-flip gated) → **drains the next ready
   task in the same session** (persistent; when no task is ready it goes idle → the reclaimer retires it — NOT reaped per
-  task, see § Worker-lifecycle Reap). A dead worker mid-task RESUMES (`--resume`) or requeues.
+  task, see § Worker-lifecycle Reap). **This is the pre-2026-08-04 default only — the one-task-per-session hard rule
+  below now supersedes it by default**: a fresh session spawns per task instead (see "One-task-per-session hard rule
+  SUPERSEDES both persistence gates above by default" further down). A dead worker mid-task RESUMES (`--resume`) or
+  requeues.
 - **Identity**: the task carries `dispatched_to`, `done_sha`, `brief_hash`; the slot carries `current_task`.
 
 ### Class B — Standing & event-driven agents (NOT plan-driven)

@@ -338,6 +338,35 @@ writer.record_captured(row_key=..., df=df)
 
 ---
 
+### Class 4 — Catalogue-residual id-space mismatch (real captures discarded as false `SOURCE_RETURNED_ZERO`)
+
+**Description** (found 2026-07-29/30, `defi_compound_v3_lending_indices_zero_capture_regression_2026_07_29.md`):
+`record_catalogue_residual_empty_typed()` (`_catalogue_filter.py`) computes
+`residual = catalogue_ids - captured_ids_lower` and emits `record_empty(reason=SOURCE_RETURNED_ZERO)` per residual id —
+correct ONLY if `catalogue_ids` and `captured_ids` are drawn from the SAME id space.
+`catalogue_pool_ids_for_shard(..., instrument_type="lending")` builds `catalogue_ids` from the IS catalogue's canonical
+`VENUE-CHAIN:TYPE:SYMBOL` glued `instrument_id` column (e.g. `"compound_v3-ethereum:supply:cusdt"`, per
+instruments-service's `build_instrument_catalogue.py`). A caller whose own `captured_ids` are raw on-chain ADDRESSES
+(not the canonical glued form) will NEVER see any overlap — `residual` always evaluates to the FULL catalogue, so every
+real capture gets a false `SOURCE_RETURNED_ZERO` rejection from the honest-absence gate, routing the whole shard through
+`record_shard_failure` despite the write having already succeeded (shard-level-failure-isolation correctly prevents
+manifest corruption, but real coverage is silently lost). Confirmed hitting BOTH `lending_indices_handler.py`
+(COMPOUND_V3/MORPHO, fixed `market-tick-data-service@d36e2498`) and `risk_params_handler.py` (COMPOUND_V3/MORPHO, fixed
+`market-tick-data-service@674fdd6e`) — both keyed `captured_ids` by raw address via `market_count_map()`/
+`build_market_count_map()`. `evm_defi_collectors.py` and `_lst_rates_write.py` are NOT exposed: both key `captured_ids`
+by the shard's own WRITTEN canonical `instrument_id` column, matching the catalogue's id space by construction.
+
+**Correct fix**: before wiring `record_catalogue_residual_empty_typed()` into any handler, confirm `captured_ids` and
+the catalogue's `instrument_id` column (for the `instrument_type` being queried) are the SAME id form — canonical glued
+`VENUE-CHAIN:TYPE:SYMBOL` for non-`"pool"` instrument_types, raw lowercase address for `"pool"`. If a handler's own
+manifest grain is address-keyed (matching the correct IS-seeded `expected_unattempted` atom, per `market_count_map()`'s
+own docstring), do NOT wire catalogue-residual at all — `record_market_captures()`/the shard's own
+`record_shard_failure` on exception already reconciles correctly without it. **Any handler still carrying this call
+(check `risk_params_handler.py`'s own sibling wiring family, `lst_rates_handler.py`/`evm_defi_handler.py`, was audited
+2026-07-30 and confirmed clean) should be re-checked against this class before assuming it's safe.**
+
+---
+
 ### Related field-level silent-drop: InstrumentRecord extra="forbid" (2026-08-21)
 
 A sibling class, one level down from the manifest-row violations above: `InstrumentRecord` (UAC
@@ -352,11 +381,12 @@ of vanishing. Evidence: unified-api-contracts@cdb8ae8806.
 
 ### Summary anti-pattern table (§6A additions)
 
-| Violation class              | Symptom                                                                                                  | Root cause pattern                                                                 | Required call site                                                                                                                            |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| **In-flight drop** (Class 1) | Exception logged in adapter, no manifest row written; cell absent from expected universe                 | Exception handler exits without calling `record_empty` or `record_failed`          | `record_failed(classify_venue_error(exc))` for network/5xx; `record_empty(SOURCE_RETURNED_ZERO)` for empty-CSV / expected-empty parse results |
-| **Silent-zero** (Class 2)    | Zero rows returned; no manifest row, OR wrong reason (`EXPECTED_NO_FIXTURE` instead of `HTTP_NOT_FOUND`) | `if not rows: return` (no manifest write); wrong reason selection on fetch failure | Inspect `fetch_had_errors`; route to `record_failed` vs `record_empty` explicitly                                                             |
-| **Captured-0-row** (Class 3) | `capture_status=captured` in manifest; 0-row parquet on disk; downstream computes on empty input         | `record_captured(df=empty_df)` called without checking `df.is_empty()` first       | Check `df.is_empty()` before `record_captured`; route to `record_empty` or `record_failed` on empty                                           |
+| Violation class                           | Symptom                                                                                                                                         | Root cause pattern                                                                                      | Required call site                                                                                                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **In-flight drop** (Class 1)              | Exception logged in adapter, no manifest row written; cell absent from expected universe                                                        | Exception handler exits without calling `record_empty` or `record_failed`                               | `record_failed(classify_venue_error(exc))` for network/5xx; `record_empty(SOURCE_RETURNED_ZERO)` for empty-CSV / expected-empty parse results                      |
+| **Silent-zero** (Class 2)                 | Zero rows returned; no manifest row, OR wrong reason (`EXPECTED_NO_FIXTURE` instead of `HTTP_NOT_FOUND`)                                        | `if not rows: return` (no manifest write); wrong reason selection on fetch failure                      | Inspect `fetch_had_errors`; route to `record_failed` vs `record_empty` explicitly                                                                                  |
+| **Captured-0-row** (Class 3)              | `capture_status=captured` in manifest; 0-row parquet on disk; downstream computes on empty input                                                | `record_captured(df=empty_df)` called without checking `df.is_empty()` first                            | Check `df.is_empty()` before `record_captured`; route to `record_empty` or `record_failed` on empty                                                                |
+| **Catalogue-residual mismatch** (Class 4) | Real capture succeeds but gets a false `SOURCE_RETURNED_ZERO` rejection; shard routed through `record_shard_failure` despite a successful write | `captured_ids` and `catalogue_ids` drawn from different id spaces (raw address vs canonical glued form) | Confirm both sides use the SAME id form before wiring `record_catalogue_residual_empty_typed()`; skip it entirely if the handler's manifest grain is address-keyed |
 
 ### Detection
 
@@ -508,92 +538,6 @@ opt-in refinement.
 [`data_pipeline_hardening_self_monitoring_2026_06_22.md`](/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md)
 Phase 1 (keystone) + Phase 5 (escalation hop).
 
----
-
-## §6A honest-absence-violation classes (anti-patterns — codified 2026-05-27)
-
-These three anti-patterns were named in the CeFi remediation audit and apply workspace-wide.
-
-### Class 1 — In-flight shard failure with no manifest marker
-
-**Description**: an adapter failure (connection timeout, Arrow schema error, stream truncation) produces a `WARNING` log
-line but the shard exits without calling `record_empty()` or `record_failed()`. The manifest row is never written (or is
-written as `captured` with 0 rows from a prior run).
-
-**Harm**: the shard is invisible to reconcilers; coverage reports under-count the asset_group; orchestrators re-attempt
-on the next VM run, but manifest state is inconsistent.
-
-**Correct fix**: every in-flight failure handler MUST call `record_failed()` with a typed reason before propagating or
-swallowing the exception. Shard-level failure isolation (no `raise` in per-venue loops) means the handler is always
-reachable. Classification:
-
-- Connection timeout / network error → `CLASSIFIED_VENUE_ERROR` (via `classify_venue_error()`)
-- Empty CSV / zero-byte stream → `SOURCE_RETURNED_ZERO` or `expected_unattempted[EXPECTED_INSTRUMENT_DELISTED]`
-  depending on whether the instrument was alive on the date
-
-**Shipped fix**: `market-tick-data-service@774db33` (Tardis stream adapter).
-
-### Class 2 — Silent zero (source returns 0 rows, no `record_empty`)
-
-**Description**: the source adapter returns an empty DataFrame (no rows, no error) and the writer calls
-`record_captured(...)` with 0 rows — or silently skips the manifest call. The manifest shows `captured` but the parquet
-is empty or missing.
-
-**Harm**: downstream features compute on empty data (NaN or divide-by-zero); coverage metrics show 100% when the data is
-absent; reconcilers miss the gap.
-
-**Correct fix**: after calling the source:
-
-1. If `len(df) == 0` AND the instrument is expected to be alive (IS catalog says alive): call
-   `record_failed(UPSTREAM_SUBGRAPH_ZERO)` (DeFi subgraphs) or emit `ADAPTER_FETCH_FAILED` +
-   `record_failed(CLASSIFIED_VENUE_ERROR)`.
-2. If `len(df) == 0` AND the instrument is known absent (expired, delisted, pre-listing): call
-   `record_empty(reason=EXPECTED_INSTRUMENT_DELISTED / EXPECTED_INSTRUMENT_NOT_LISTED)`.
-3. If `len(df) == 0` AND the source legitimately returned nothing (deprecated subgraph, source gap): call
-   `record_empty(reason=SOURCE_RETURNED_ZERO)`.
-4. NEVER call `record_captured(...)` with 0 rows for an instrument that is expected to be alive.
-
-### Class 3 — Captured-0-row (manifest `captured`, 0-row parquet exists)
-
-**Description**: manifest row has `capture_status="captured"` but the parquet file written has 0 data rows (or
-`row_count=0` in the manifest). This is distinct from Class 2 — the write call was made, just with empty data.
-
-**Harm**: consumers read the parquet, get 0 rows, and may fail silently (features output NaN, rolling windows
-under-count, ML training excludes the date as if the market was closed).
-
-**Correct fix**: `record_captured()` in UTL raises `CapturedZeroRowsError` when `row_count == 0` and the shard is not an
-explicit "zero-activity confirmed" type. Writers MUST pass `row_count=len(df)` to trigger this guard. If the instrument
-is live and data was expected, treat as Class 2 and call `record_failed` instead.
-
-### Class 4 — Catalogue-residual id-space mismatch (real captures discarded as false `SOURCE_RETURNED_ZERO`)
-
-**Description** (found 2026-07-29/30, `defi_compound_v3_lending_indices_zero_capture_regression_2026_07_29.md`):
-`record_catalogue_residual_empty_typed()` (`_catalogue_filter.py`) computes
-`residual = catalogue_ids - captured_ids_lower` and emits `record_empty(reason=SOURCE_RETURNED_ZERO)` per residual id —
-correct ONLY if `catalogue_ids` and `captured_ids` are drawn from the SAME id space.
-`catalogue_pool_ids_for_shard(..., instrument_type="lending")` builds `catalogue_ids` from the IS catalogue's canonical
-`VENUE-CHAIN:TYPE:SYMBOL` glued `instrument_id` column (e.g. `"compound_v3-ethereum:supply:cusdt"`, per
-instruments-service's `build_instrument_catalogue.py`). A caller whose own `captured_ids` are raw on-chain ADDRESSES
-(not the canonical glued form) will NEVER see any overlap — `residual` always evaluates to the FULL catalogue, so every
-real capture gets a false `SOURCE_RETURNED_ZERO` rejection from the honest-absence gate, routing the whole shard through
-`record_shard_failure` despite the write having already succeeded (shard-level-failure-isolation correctly prevents
-manifest corruption, but real coverage is silently lost). Confirmed hitting BOTH `lending_indices_handler.py`
-(COMPOUND_V3/MORPHO, fixed `market-tick-data-service@d36e2498`) and `risk_params_handler.py` (COMPOUND_V3/MORPHO, fixed
-`market-tick-data-service@674fdd6e`) — both keyed `captured_ids` by raw address via `market_count_map()`/
-`build_market_count_map()`. `evm_defi_collectors.py` and `_lst_rates_write.py` are NOT exposed: both key `captured_ids`
-by the shard's own WRITTEN canonical `instrument_id` column, matching the catalogue's id space by construction.
-
-**Correct fix**: before wiring `record_catalogue_residual_empty_typed()` into any handler, confirm `captured_ids` and
-the catalogue's `instrument_id` column (for the `instrument_type` being queried) are the SAME id form — canonical glued
-`VENUE-CHAIN:TYPE:SYMBOL` for non-`"pool"` instrument_types, raw lowercase address for `"pool"`. If a handler's own
-manifest grain is address-keyed (matching the correct IS-seeded `expected_unattempted` atom, per `market_count_map()`'s
-own docstring), do NOT wire catalogue-residual at all — `record_market_captures()`/the shard's own
-`record_shard_failure` on exception already reconciles correctly without it. **Any handler still carrying this call
-(check `risk_params_handler.py`'s own sibling wiring family, `lst_rates_handler.py`/`evm_defi_handler.py`, was audited
-2026-07-30 and confirmed clean) should be re-checked against this class before assuming it's safe.**
-
----
-
 ## Reason taxonomy (codified 2026-05-07 — operator direction)
 
 > **Coverage formula SSOT (2026-05-19)**: consumers computing coverage MUST check the `EXPECTED_*` vs non-`EXPECTED_*`
@@ -694,7 +638,9 @@ the expected universe gets a manifest row, and the row's `error_reason` carries 
    sports as of that audit; re-verify it holds before assuming so for a NEW vendor/asset_group, since the two backlog
    incidents above both originated from a writer whose scope narrowed after the reason-seeding logic was written.
 
-> **[DELTA 2026-06-01 — codex audit status]** **Current state:** 33-reason taxonomy table above + per-source sports
+> **[DELTA 2026-06-01 — codex audit status]** **Current state:** the reason taxonomy table above (33 entries as of
+> this 2026-06-01 snapshot — the table has grown substantially since; count directly, don't trust this historical
+> figure) + per-source sports
 > coverage rules (Wave 3.S, `§ Per-source sports coverage rules`) + 4-state consumer-class table
 > (`§ Per-service consumer-class — 4-state`) + per-reason-group consumer policy quick-reference
 > (`§ Per-reason-group → consumer policy`) all shipped 2026-05-22. One remaining pending item:

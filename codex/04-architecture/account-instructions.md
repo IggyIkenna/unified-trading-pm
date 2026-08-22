@@ -269,7 +269,8 @@ ruling naming the real role(s)/identities per action, mirroring the WITHDRAW rul
 
 ## Audit
 
-Every AccountInstruction is audit-logged with:
+Every AccountInstruction is audit-logged. **Target shape** (see the correction immediately below for what's actually
+shipped today):
 
 - `initiating_operator`
 - `authorization_id`
@@ -278,7 +279,7 @@ Every AccountInstruction is audit-logged with:
 - Venue result (ack + fills + timing)
 - Post-state snapshot
 
-Retention: permanent per compliance.
+Target retention: permanent per compliance.
 
 **(DESIGN TARGET, corrected 2026-08-21 — the earlier version of this note claimed two `log_event` calls
 (`ACCOUNT_INSTRUCTION_RECEIVED`/`ACCOUNT_INSTRUCTION_RESULT`); that was already stale versus the shipped code and is

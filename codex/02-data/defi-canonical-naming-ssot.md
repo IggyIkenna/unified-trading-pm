@@ -191,7 +191,8 @@ Solana) pool state filters by `instrument_type`/`chain`, NOT by a separate `data
 `dex_pool_state` — Solana pools must NOT be re-keyed to a distinct data_type (that would re-split the SSOT). Same logic
 for `lending_indices` (EVM `lending` + Solana `solana_lending` instrument_types under one data_type — market/event
 lending keying is `LENDING`/`SOLANA_LENDING` **permanently**, NOT the holdings A_TOKEN/DEBT_TOKEN split; the
-flat-`LENDING`-retire was reversed twice and is now WON'T-DO — see the instrument_type row above for the
+flat-`LENDING`-retire was reversed once (Wave-B, executed then reverted) — a second attempt (session-3) was
+investigated and abandoned before execution, not a second reversal — and is now WON'T-DO — see the instrument_type row above for the
 `resolve_lending_underlying` resolver that replaces it, and `issues/canonical_closeout_open_questions_2026_07_18.md` § D
 for the superseded history).
 
