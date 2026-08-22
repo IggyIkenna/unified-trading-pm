@@ -72,8 +72,15 @@ _EMPTY_MAP: Mapping[str, object] = {}
 # Fields written by CI automation on main (single authoritative home). On the
 # back-merge these always resolve to main (``theirs``); LDR's copy is
 # non-authoritative (Guard 2(a): all readers read ci_status from main).
-# Per-repo CI-automation fields (under repositories.<name>.<field>):
-_REPO_CI_FIELDS: frozenset[str] = frozenset({"ci_status", "coverage_pct", "ci_failure_reason"})
+# Per-repo CI-automation fields (under repositories.<name>.<field>).
+# ``ldr_ci_status`` / ``ldr_ci_status_sha`` are written by scripts/repo-management/ldr_ci_monitor.py,
+# whose workflow (.github/workflows/ldr-ci-monitor.yml) checks out and pushes MAIN — so they are
+# main-authoritative exactly like ``ci_status``, and the monitor always writes the pair together.
+# Omitting them made any stale LDR-side copy of the pair a genuine-conflict escalation, damming the
+# back-merge AND the LDR->main promotion behind it (2026-08-22, PR #3723).
+_REPO_CI_FIELDS: frozenset[str] = frozenset(
+    {"ci_status", "coverage_pct", "ci_failure_reason", "ldr_ci_status", "ldr_ci_status_sha"}
+)
 # Top-level CI / promotion-state blocks (semver-agent + promoter + ci-status bot):
 _TOPLEVEL_CI_FIELDS: frozenset[str] = frozenset(
     {
@@ -145,22 +152,37 @@ def _merge_value(base: object, ours: object, theirs: object, path: ConflictPath)
     """Standard 3-way merge of a single value. Returns (merged, conflicts)."""
     if ours == theirs:
         return ours, []
+    # Monotonic version surface -> semver-max, applied BEFORE the "only one side changed" shortcuts.
+    # A one-sided *downgrade* must not be taken merely because that side is the one that moved: the
+    # released-version cache only ever climbs, and a regression here is exactly what the
+    # version-alignment gate reports as BEHIND. Live case (2026-08-22, PR #3723): a stash-pop reapply
+    # on LDR put versions.strategy-service back to 0.88.1 while base and main both held 0.88.2.
+    if _is_version_field(path) and isinstance(ours, str) and isinstance(theirs, str):
+        merged_version = _semver_max(ours, theirs)
+        if merged_version is not None:
+            return merged_version, []
     if base == ours:
-        # only theirs changed → take theirs
+        # only theirs changed -> take theirs
         return theirs, []
     if base == theirs:
-        # only ours changed → take ours
+        # Only ours changed. Taking the subtree wholesale would also take any main-authoritative CI
+        # field sitting inside it — the other half of PR #3723, where a stale LDR
+        # repositories.<repo> block was adopted whole (stale ldr_ci_status_sha included) purely
+        # because main happened not to touch that repo in the same window. Recurse instead so
+        # _merge_dict re-applies the per-key authority rules; for every non-CI, non-version key the
+        # result is identical to "take ours". Gated on identical key sets, so a one-sided deletion
+        # is still honoured rather than resurrected from main.
+        if isinstance(ours, Mapping) and isinstance(theirs, Mapping) and ours.keys() == theirs.keys():
+            base_map = cast("Mapping[str, object]", base) if isinstance(base, Mapping) else _EMPTY_MAP
+            return _merge_dict(
+                base_map, cast("Mapping[str, object]", ours), cast("Mapping[str, object]", theirs), path
+            )
         return ours, []
     # both sides changed differently relative to base
     if isinstance(ours, Mapping) and isinstance(theirs, Mapping):
         base_map = cast("Mapping[str, object]", base) if isinstance(base, Mapping) else _EMPTY_MAP
         return _merge_dict(base_map, cast("Mapping[str, object]", ours), cast("Mapping[str, object]", theirs), path)
-    # both-bumped monotonic version scalar → semver-max (never regress, never block)
-    if _is_version_field(path) and isinstance(ours, str) and isinstance(theirs, str):
-        merged = _semver_max(ours, theirs)
-        if merged is not None:
-            return merged, []
-    # scalar/list both-changed → genuine conflict
+    # scalar/list both-changed -> genuine conflict
     return cast("object", ours), [path]
 
 

@@ -201,3 +201,83 @@ def test_version_helpers() -> None:
     assert reconcile_mod._is_version_field(("repositories", "utl", "version")) is True
     assert reconcile_mod._is_version_field(("repositories", "utl", "dependencies")) is False
     assert reconcile_mod._is_version_field(("versions",)) is False
+
+
+def _ldr_ci_manifest(status: str, sha: str) -> dict[str, object]:
+    return {
+        "repositories": {
+            "alerting-service": {
+                "ldr_ci_status": status,
+                "ldr_ci_status_sha": sha,
+                "description": "base",
+            }
+        },
+    }
+
+
+def test_ldr_ci_monitor_fields_take_main_no_conflict() -> None:
+    """``ldr_ci_status`` + ``ldr_ci_status_sha`` are main-authoritative (ldr-ci-monitor.yml checks
+    out and pushes main), so a both-sides divergence resolves to main instead of escalating."""
+    base = _ldr_ci_manifest("GREEN", "aaa")
+    ours = _ldr_ci_manifest("GREEN", "bbb")  # LDR stale snapshot
+    theirs = _ldr_ci_manifest("RED", "ccc")  # main authoritative (monitor's latest run)
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    repos = merged["repositories"]
+    assert isinstance(repos, dict)
+    assert repos["alerting-service"]["ldr_ci_status"] == "RED"
+    assert repos["alerting-service"]["ldr_ci_status_sha"] == "ccc"
+
+
+def test_one_sided_ldr_ci_sha_drift_still_takes_main() -> None:
+    """Main leaving a repo's block untouched must not hand the whole stale LDR block through:
+    the CI-automation pair inside it is still main-authoritative (PR #3723 back-merge dam)."""
+    base = _ldr_ci_manifest("GREEN", "aaa")
+    ours = _ldr_ci_manifest("GREEN", "bbb")  # stale LDR snapshot; main untouched since base
+    theirs = _ldr_ci_manifest("GREEN", "aaa")
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    repos = merged["repositories"]
+    assert isinstance(repos, dict)
+    assert repos["alerting-service"]["ldr_ci_status_sha"] == "aaa"
+
+
+def test_one_sided_ldr_ci_drift_preserves_sibling_ldr_edit() -> None:
+    """The recursion that rescues the CI pair must not cost the LDR-side edit beside it."""
+    base = _ldr_ci_manifest("GREEN", "aaa")
+    ours = _ldr_ci_manifest("GREEN", "bbb")
+    ours_repos = ours["repositories"]
+    assert isinstance(ours_repos, dict)
+    ours_repos["alerting-service"]["description"] = "edited on LDR"
+    theirs = _ldr_ci_manifest("GREEN", "aaa")
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    repos = merged["repositories"]
+    assert isinstance(repos, dict)
+    assert repos["alerting-service"]["ldr_ci_status_sha"] == "aaa"
+    assert repos["alerting-service"]["description"] == "edited on LDR"
+
+
+def test_one_sided_version_downgrade_resolves_to_semver_max() -> None:
+    """A stale LDR snapshot that walks a released version BACKWARDS must not win just because it
+    is the only side that moved — the version surface is monotonic (PR #3723, strategy-service)."""
+    base = {"versions": {"strategy-service": "0.88.2"}}
+    ours = {"versions": {"strategy-service": "0.88.1"}}  # stash-pop reapply of an older manifest
+    theirs = {"versions": {"strategy-service": "0.88.2"}}
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    versions = merged["versions"]
+    assert isinstance(versions, dict)
+    assert versions["strategy-service"] == "0.88.2"
+
+
+def test_one_sided_ldr_key_deletion_is_not_resurrected() -> None:
+    """The recursion is gated on identical key sets, so dropping a key on LDR still sticks."""
+    base = {"repositories": {"alerting-service": {"ci_status": "GREEN", "retired_field": "x"}}}
+    ours = {"repositories": {"alerting-service": {"ci_status": "GREEN"}}}
+    theirs = {"repositories": {"alerting-service": {"ci_status": "GREEN", "retired_field": "x"}}}
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    repos = merged["repositories"]
+    assert isinstance(repos, dict)
+    assert "retired_field" not in repos["alerting-service"]
