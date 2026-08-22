@@ -239,8 +239,11 @@ harsh_orchestrator/backlog.yaml
 # still generated locally by anyone who runs the script, just never diffed against git again.
 docs/repo-management/CICD-WORKFLOW-CATALOG.md
 
-# Ad-hoc Slack-channel-read diagnostic dumps (e.g. via scripts/dev/slack-read-channel.py,
-# redirected to a file at the command line — no single script hardcodes this name, hence the
-# wildcard) — same dirty-worktree /done-rejection class as the catalog above. Never real
-# tracked content, just whatever window an operator/agent happened to pull.
-slack-ci-failures-*.json
+# Ad-hoc Slack-channel-read diagnostic dumps (scripts/dev/slack-read-channel.py writes
+# ./slack-<channel>-<hours>h.json for WHATEVER channel arg was passed, e.g.
+# slack-data-pipeline-alerts-720h.json — the old slack-ci-failures-*.json-only pattern missed
+# every other channel, which is exactly how one such dump (164MB) got swept into a real commit
+# by the orchestrator's dirty-state auto-commit gate on 2026-08-22). Never real tracked content,
+# just whatever window an operator/agent happened to pull — same dirty-worktree /done-rejection
+# class as the catalog above.
+slack-*.json

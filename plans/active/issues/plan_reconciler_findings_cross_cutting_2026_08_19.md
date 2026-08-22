@@ -281,11 +281,11 @@ Tracked as checkboxes per the workspace HARD RULE, grouped by why each wasn't fi
       contradiction. **Cannot fix this run** — this doc is now grace-protected (edited earlier this run for the
       assigned_vm/execution_scope hygiene fix). Either the P1 item is done-but-unchecked, or the "FOLDED IN" claim
       overstates what's covered — needs a closer read next pass.
-- [ ] [DOCS] P2. `data_pipeline_alerts_batch_remediation_2026_07_15.md:96-99,137-140` — sole remaining item is a
-      "genuine real-wall-clock observation window (up to 24h)" blocker, restated unchanged by a 2026-08-07 audit.
-      Today is 35 days after doc creation, 12 days after the last audit — the stated wait has long since elapsed,
-      but nobody has gone back to check the alerting-channel/Cloud Logging history for the RESOLVED bookend the
-      todo itself describes. Needs a live check, not another "still waiting" restatement.
+- [x] ✅ [DOCS] P2. RESOLVED 2026-08-22 (cross_cutting_satellite_ao_dispatch_batch19 item 3, slot 18) — did the live
+      check this finding asked for: 34+ days of `#data-pipeline-alerts` history confirm a RESOLVED bookend posts for
+      every sports/tradfi/cefi `DP_RUN_MOSTLY_EMPTY` cell, including `tradfi/mbp_10`. Source doc's last open todo
+      flipped `[x]` with full evidence and the doc archived (0 open todos) to
+      `plans/archive/2026_08/data_pipeline_alerts_batch_remediation_2026_07_15.md`.
 
 **Out of tranche scope (a sibling tranche/skill's remit):**
 

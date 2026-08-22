@@ -53,7 +53,7 @@ tags:
   ]
 related:
   [
-    ../data_pipeline_alerts_batch_remediation_2026_07_15.md,
+    /plans/archive/2026_08/data_pipeline_alerts_batch_remediation_2026_07_15.md,
     ../master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,
@@ -94,7 +94,7 @@ depends_on: []
 last_updated: 2026-07-15
 context_scope:
   [
-    /plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md,
+    /plans/archive/2026_08/data_pipeline_alerts_batch_remediation_2026_07_15.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,

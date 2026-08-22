@@ -54,7 +54,7 @@ related_plans:
   - ../active/consolidator_throughput_backlog_monitor_2026_07_09.md
   - /plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md
   - ../active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md
-  - ../active/data_pipeline_alerts_batch_remediation_2026_07_15.md
+  - ../archive/2026_08/data_pipeline_alerts_batch_remediation_2026_07_15.md
   - ../active/data_pipeline_self_healing_completion_residual_2026_07_24.md
   - ../active/deployment_registry_firestore_migration_2026_07_14.md
   - ../active/deployment_registry_firestore_p3_cutover_2026_07_14.md
@@ -134,11 +134,6 @@ current roster until the next full regen; the 6 not yet placed into a priority t
 
 **status**: active · **estimate**: 3.0 cal AI-days (class: design) **title**: Data-feed SLA registry (single SSOT) +
 active feed self-healing
-
-### [`data_pipeline_alerts_batch_remediation_2026_07_15`](../active/data_pipeline_alerts_batch_remediation_2026_07_15.md)
-
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Data-pipeline alerts batch remediation —
-drive #data-pipeline-alerts to a clean/accurate state
 
 ### [`deployment_registry_firestore_migration_2026_07_14`](../active/deployment_registry_firestore_migration_2026_07_14.md)
 
@@ -395,10 +390,17 @@ fully-scoped, AO-dispatchable work — un-paused 2026-07-28 (operator gated-deci
 (cost/day accuracy, date-range filter + search, VM log viewer, alerts ingestion + page rebuild, durable
 resource-metrics timeline, Fleet-tab consolidation), split into 7 child plans, all shipped + archived 2026-07-20→28.
 
+### [`data_pipeline_alerts_batch_remediation_2026_07_15`](../archive/2026_08/data_pipeline_alerts_batch_remediation_2026_07_15.md)
+
+**status**: ✅ ARCHIVED 2026-08-22 — the doc's last open item (a 24h+ real-wall-clock observation window watching for a
+RESOLVED/green bookend) closed with live evidence: 34+ days of production `#data-pipeline-alerts` history confirm the
+dedup/RESOLVED-bookend fix works for every sports/tradfi/cefi cell, including `tradfi/mbp_10`. All todos `[x]`, 0 open.
+Moved from `plans/active/` to `plans/archive/2026_08/`.
+
 ### [`data_pipeline_alerts_batch_remediation_closeout_2026_07_24`](../archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md)
 
 **status**: ✅ ARCHIVED 2026-07-24 — closeout & historical narrative for
-[`data_pipeline_alerts_batch_remediation_2026_07_15`](../active/data_pipeline_alerts_batch_remediation_2026_07_15.md);
+[`data_pipeline_alerts_batch_remediation_2026_07_15`](../archive/2026_08/data_pipeline_alerts_batch_remediation_2026_07_15.md);
 all 14 todos it carried are `[x]`, 0 open. Moved from `plans/active/` to `plans/archive/2026_07/` the same day it was
 extracted (plan line-cap remediation) since it was already fully-closed history, not just an over-cap trim.
 

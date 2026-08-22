@@ -22,7 +22,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/dp_exit_code_monitor_cadence_stale_after_hourly_reconcile_2026_08_19.md,
     /plans/active/issues/docs_reconcile_bigger_scope_findings_2026_08_19.md,
-    /plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md,
+    /plans/archive/2026_08/data_pipeline_alerts_batch_remediation_2026_07_15.md,
     /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
     /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,
     /plans/active/mvp_could_exist_rollup_dual_scope_2026_08_12.md,
@@ -90,14 +90,16 @@ prior batches have (a dated note + checkbox flip), not duplicated here.
       separate operator/domain-owner-gated BIG findings untouched. Repo: unified-trading-pm. Source:
       `plans/active/issues/docs_reconcile_bigger_scope_findings_2026_08_19.md`. Done when: all 4 target docs match
       their cited ground-truth source files/scripts and the source doc's Progress Log cites each of the 4 fixes.
-- [ ] [REVIEW] P0. Read the live `#data-pipeline-alerts` channel (`scripts/dev/slack-read-channel.py`) and current
-      data-status/manifest state for the sports/tradfi/cefi `DP_RUN_MOSTLY_EMPTY` conditions named in
-      `data_pipeline_alerts_batch_remediation_2026_07_15.md` — confirm whether a RESOLVED/green bookend has posted
-      since the 2026-07-15/16 fixes landed (34+ days elapsed, well past the doc's own up-to-24h observation-window
-      framing). Repo: unified-trading-pm (read-only investigation; a code fix only if still firing). Source:
-      `plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md`. Done when: the doc's remaining
-      `[REVIEW] P0` checkbox is flipped `[x]` with cited live evidence if clean, or a fresh root-cause issue doc is
-      filed if conditions are still firing — and the doc is archived once 0 items remain open.
+- [x] ✅ [REVIEW] P0. RESOLVED — read 34+ days of live `#data-pipeline-alerts` history (720h via
+      `scripts/dev/slack-read-channel.py`, 56,706 messages) and confirmed a `:white_check_mark: RESOLVED` bookend has
+      posted for EVERY sports/tradfi/cefi cell that fires `DP_RUN_MOSTLY_EMPTY`, including `tradfi/mbp_10` (the cell
+      this source doc's own dead-cell-suppression fix targeted) — the 2026-07-15/16 dedup fix is proven working live,
+      no code fix needed. Full evidence in the source doc's own flipped checkbox. Source doc had 0 open todos left
+      after this flip — archived to
+      `plans/archive/2026_08/data_pipeline_alerts_batch_remediation_2026_07_15.md`. Also flipped the duplicate
+      finding in `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_19.md` and fixed the 3 active-corpus
+      referrers (`plans/epics/observability_master.md`,
+      `plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`) that linked the old active path.
 - [ ] [DATA] P2. File instruments-service's BYBIT daily-catalog publish-timing gap (catalog for a given UTC day
       absent at every check from VM boot through ~06:02 UTC, appearing only ~06:07:55 UTC, confirmed 2026-08-14 and
       08-15) as its own tracked instruments-service issue doc, then re-check the current
