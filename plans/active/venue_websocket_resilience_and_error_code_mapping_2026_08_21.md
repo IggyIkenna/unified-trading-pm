@@ -200,9 +200,16 @@ REUSES the frameworks that already exist rather than building new ones:
       endpoint (found 2026-08-21 during the ws-spec research). Probe the documented hosts and flip
       `supports_live`/`supports_batch`/`base_urls` if the outage is over. Done-when — probe result recorded +
       declaration matches reality.
-- [ ] [OPERATOR] P2. Versifi public API docs — none discoverable (checked 2026-08-21; versifi.io has no developer
-      section) despite its declared `ws_trades` operation; supply a doc link or credentialed access. Its declaration
-      carries an explicit all-None unverified `WsProtocolSpec` until then.
+- [x] [OPERATOR] P2. ✅ Versifi public API docs — unified-api-contracts@423621adde. Operator supplied the
+      credentialed docs.versifi.io site + Telegram domain knowledge (2026-08-22); crawled + permanently mirrored
+      12 pages to `/codex/02-venues/versifi-api-docs-mirror-2026-08-22.md` (password not persisted anywhere).
+      `_defi.py`'s versifi `WsProtocolSpec` populated with doc-cited facts (app-level ping/pong, per-connection
+      signed auth, `execution_report`-only live topic, DEV-only WS URL) and honest-None for undocumented fields;
+      `VENUE_ERRORS_CEFI["versifi"]` added (HTTP-status tier: 400/401/404/409/500). Pre-existing
+      `VersiFiRejectReason = BinanceError | OKXError` typing in `external/versifi/{schemas,normalize}.py` verified
+      correct against the live docs — **correction to the operator's brief**: the `exchange` enum only shows
+      Binance and OKX, not Bybit/Deribit; not extended without evidence. Gated green (1357s, STEP 5.110 zero
+      error-level findings).
 - [x] [BACKEND] P1. Census closure — ✅ unified-api-contracts@235acfea88. `registry_census.py` checks 7-10 +
       `errors/_census_registry.py` (5 `ERROR_KEY_ALIASES`: deribit_options/kalshi_perp/polymarket_perp/fx/
       aave_oracle; 41 `ERROR_CODES_HONEST_ABSENCE` adapter keys — on-chain protocols, oracles, wrapped-staking
@@ -272,6 +279,13 @@ REUSES the frameworks that already exist rather than building new ones:
       exemplar). The C3 factory path is ALREADY immune (each generation is a fresh instance), so this is defensive
       hardening for any non-bridge reconnect caller. Done-when — every latching connector resets `_closed` on a
       successful reopen + a regression test.
+- [ ] [OPERATOR] P1. Real C4 paper-mode private-stream run — `PrivateStreamGuard`'s resync-before-trust and
+      venue-kill escalation are unit-proven (3 tests) but never exercised against a real private (order/position)
+      stream, unlike C3's public-feed drill. Needs test/paper API credentials for at least one CeFi execution
+      venue (binance/bybit/okx/coinbase/deribit — whichever the operator has test-tier access to) supplied via the
+      workspace's standard credential convention (GSM, not a chat-pasted key). Done-when — a real paper-mode
+      private-stream run with a forced rotation proves resync-before-trust + gap-free update flow, mirroring the
+      C3 evidence shape.
 - [x] 4. ✅ [BACKEND] P0. Execution private-stream staleness + position resync — execution-service@42e54a11f8 +
       full `quality-gates.sh --no-fix` green pre-commit. `trade_execution/private_stream_guard.py`
       (`PrivateStreamGuard`) wraps any `BaseOrderFeedHandler` with the UTL `WsSessionManager` and enforces the
@@ -501,8 +515,9 @@ needs venue credentials (`[OPERATOR]`).
 **Open (plan stays active — do NOT archive)**: deployment-service `rotate_websocket` ship + C2 flip (content-ready,
 6 attempts, 5 real blockers already fixed — deferred only on 2026-08-22's severe multi-slot host contention,
 15 concurrent `quality-gates.sh` processes measured); MTDS C3 manifest-write gap (P1 issue above); connector
-`_closed`-latch defensive hardening (P1); C4 real paper run (`[OPERATOR]` credentials); Phase-B P2 residuals
-(binance-futures codes, curve 403, `PROTOCOL_CAPABILITIES`, polymarket-perps probe, versifi `[OPERATOR]`); facade
+`_closed`-latch defensive hardening (P1); C4 real paper run (`[OPERATOR]` credentials — GSM wiring still unresolved,
+see below); Phase-B P2 residuals (binance-futures codes, curve 403, `PROTOCOL_CAPABILITIES`, polymarket-perps probe —
+versifi done, see below); facade
 hoist (P2, now 3 confirmed `qg-deep-import` sites for the same 9 rotation-sentinel symbols — UTL
 `ws_session_manager.py`, MTDS `_ws_session_bridge.py`, deployment-service `rotate_websocket.py`+its test);
 multi-family error-key consolidation (P2); UAC freezegun-hardening (P2).
@@ -514,9 +529,10 @@ multi-family error-key consolidation (P2); UAC freezegun-hardening (P2).
 | deployment-service `rotate_websocket` ship + C2 flip        | content-ready (3 files pass their own content/lint/import checks on every attempt); 5 real blockers already fixed (dirty dep, deep-import, timeout, stale UAC dep, shellcheck flake); attempt 6 hit genuine severe multi-slot host contention (15 concurrent `quality-gates.sh`, terminated in pytest-timeout + grpc auth-plugin exceptions after 58min) — deliberately not retried a 7th time into that load per the "never worsen shared-host contention" rule | a quieter host — retry `cd deployment-service && IGNORE_TIMEOUT=true bash scripts/quickmerge.sh "feat(ws-resilience): rotate_websocket Layer-0 action — request-sentinel drop for a stale ws feed; refetch_feed test reads the bound action verbatim (C2)" --agent --isolated --files 'scripts/recovery/rotate_websocket.py tests/unit/test_rotate_websocket.py tests/unit/test_refetch_feed.py'` when `ps aux \| grep -c quality-gates.sh` is low |
 | C3 paper-mode rotation verification                         | code landed (bridge + runner); done-when needs a real paper-mode run with manifest-verified gap rows                                                                                           | MTDS ship, then a runtime run                                |
 | C5 consumer wiring + W14 epic flip + census closure         | error corpus landed; census test + dedupe (kucoin 109000/163000, kalshi/hyperliquid/polymarket)                                                                                                 | next UAC batch                                               |
-| Phase B residuals: binance-futures codes, curve 403,        | P2 todos above; browser-session retrievals                                                                                                                                                     | nothing (versifi: operator)                                  |
-| PROTOCOL_CAPABILITIES (P1), polymarket-perps probe, versifi |                                                                                                                                                                                                |                                                              |
+| Phase B residuals: binance-futures codes, curve 403,        | P2 todos above; browser-session retrievals                                                                                                                                                     | nothing                                                       |
+| PROTOCOL_CAPABILITIES (P1), polymarket-perps probe          |                                                                                                                                                                                                |                                                              |
 | Facade hoist (P2); UAC freezegun hardening (P2)             | tracked todos above                                                                                                                                                                            | nothing                                                      |
+| C4 real paper-mode private-stream run                       | operator pasted 3 venues' testnet keys (`BASIS_CEX__*`-named env vars) in chat 2026-08-22 — NOT persisted anywhere (no matching GSM secret convention found; naming doesn't match execution-service's actual loader) | operator answer: which GSM secret names the loader expects, whether these are for C4 vs. a separate initiative, and whether they replace or add to existing `bybit-testnet-trade-api-key`/`exec-ik-okx-*` secrets |
 
 Recommended next — land MTDS, then the C5/census UAC batch (the remaining P0); the C3 paper-mode run is the
 remaining runtime-verification gate before the rule-9 report; deployment-service ships whenever the peer clears
