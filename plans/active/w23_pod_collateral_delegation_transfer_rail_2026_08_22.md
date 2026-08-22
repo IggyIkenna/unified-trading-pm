@@ -124,6 +124,14 @@ assigned_role: backend_engineer
   transfer` dispatch + `CompositeTransferAdapter.pod_adapter` wiring test) — both depend on Section B items 2-5
   (still `- [ ]` as of this entry), so they can't land until those adapters/methods exist.
 
+- 2026-08-22 — Slot 26 picked up Section E item 3 ("Unit tests for `_execute_custodian_delegation_transfer` dispatch
+  routing + `CompositeTransferAdapter`'s `pod_adapter` wiring") and found it already fully satisfied by two
+  concurrently-landed commits: execution-service@5dbeaab1 (dispatch-routing tests, Section B item 2's own evidence)
+  and execution-service@aa565c55 (pod_adapter wiring tests — that commit's own message explicitly names this todo).
+  Verified both SHAs are ancestors of HEAD and re-ran a full `quality-gates.sh` self-check rather than trusting the
+  prior claims; flipped the checkbox with no new code. See the checkbox's own evidence note for the specific test
+  names covering the configured/honestly-not-configured paths.
+
 - 2026-08-22 — Section B item 4 shipped (execution-service@44802ab6b2): `MockPodCollateralAdapter` +
   `tests/unit/test_mock_pod_adapter.py`. **Note for whoever picks up Section E item 2** ("Unit tests for
   `MockPodCollateralAdapter`'s state machine..."): that item's own text names
@@ -328,9 +336,26 @@ assigned_role: backend_engineer
       `test_live_pod_adapter.py` / `test_live_bridge_adapter.py` / `test_transfer_handler_collateral_delegation_dispatch.py`
       — a `tests/unit/engine/transfers/` subdirectory does NOT exist in this repo; the prior wording pointed at a
       layout that was never real). Done: green under `execution-service`'s `quality-gates.sh`.
-- [ ] [BACKEND] P0. **Unit tests for `TransferHandler._execute_custodian_delegation_transfer` dispatch routing +
+- [x] ✅ [BACKEND] P0. **Unit tests for `TransferHandler._execute_custodian_delegation_transfer` dispatch routing +
       `CompositeTransferAdapter`'s `pod_adapter` wiring** (both the configured and honestly-not-configured
       fails-loud path). Done: green under `execution-service`'s `quality-gates.sh`.
+      — execution-service@aa565c55 + execution-service@5dbeaab1. Verified rather than assumed: dispatched to this
+      todo, found both halves already landed by two other slots. Dispatch-routing half (Section B item 2) is
+      `tests/unit/test_transfer_handler_collateral_delegation_execute.py` (execution-service@5dbeaab1) — its
+      `test_execute_routes_to_delegation_via_force_transfer_type_override` and
+      `test_execute_without_override_does_not_reach_delegation_adapter` are the routing proof (reaches
+      `_execute_custodian_delegation_transfer`, not `_execute_onchain_transfer`/`_execute_internal_transfer`).
+      `pod_adapter` wiring half (Section B item 5) is `tests/unit/test_transfer_factory.py`
+      (execution-service@aa565c55, whose own commit message explicitly cites this todo: "Tests (Section E item 3,
+      this task): pod_adapter wiring") — covers the honest-default path
+      (`test_live_mode_with_no_pod_config_wires_an_honest_not_wired_pod_adapter`,
+      `test_composite_adapter_without_explicit_pod_adapter_gets_honest_default`), the configured-routing path
+      (`test_composite_adapter_routes_delegation_calls_to_pod_sub_adapter_configured`), and the
+      honestly-not-configured fails-loud path (`test_composite_adapter_delegation_honestly_not_configured_fails_loud`).
+      Both SHAs confirmed ancestors of HEAD (`fc81394a`) via `git merge-base --is-ancestor`. Self-ran full
+      `quality-gates.sh` in this worktree at HEAD=fc81394a: `✅ ALL QUALITY GATES PASSED (216s)`, exit 0, sentinel
+      written=fc81394a08e4bc8f983d8dc5eace39dbd04de86a (matches HEAD). No new code needed — checkbox was simply left
+      unflipped when the two concurrent commits landed.
 - [ ] [AGENT] P1. **End-to-end mock-mode smoke**: construct a `TransferIntent` with
       `transfer_type=CUSTODIAN_COLLATERAL_DELEGATION`, drive it through `TransferHandler.execute` in
       BACKTEST/PAPER mode, confirm a `TransferResult` with `status=CONFIRMED` comes back within the mock's
