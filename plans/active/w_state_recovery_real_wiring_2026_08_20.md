@@ -205,23 +205,30 @@ context_scope:
       persistence backend `PostgreSQLOrderPersistence`, latency tradeoff, `submitted_orders`/`engine-live`
       interaction all decided — see its 2026-08-21 Progress Log entry) and authored the follow-up
       IMPLEMENTATION plan named above:
-      `/plans/active/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md` (+ finalize companion). Once
+      `/plans/archive/2026_08/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md` (+ finalize companion). Once
       that implementation plan lands and threads one shared `UnifiedOrderManager` instance from startup into
       both `OrderRecoveryEngine`'s `OrderBook` and `ExecutionOrchestrator`, re-run Phase 3 todo 1 (below) —
       the empty-`OrderBook` hazard it names will finally be closed.
-- [ ] [AGENT] P0. **`BLOCKED-OPERATOR` + `BLOCKED-CREDENTIALS` (two independent gates, either alone
-      sufficient): run real recovery against every wired venue and record the actual result** — this is the
-      first genuine evidence the mechanism works, not a smoke test. (1) `BLOCKED-OPERATOR`: blocked on the
-      ExecutionOrchestrator todo immediately above (now spun out, see there) — there is no safe "real recovery
-      run" to record while `OrderBook` is structurally guaranteed empty (would prove nothing beyond "the
-      exchange-orphan-cancellation half works," already covered by this session's own real-adapter tests).
-      (2) `BLOCKED-CREDENTIALS`: genuinely making LIVE API calls against real exchanges (even read-only
-      `fetch_open_orders`) requires real operator-provided credentials and explicit authorization to hit
-      production venue APIs from an ad-hoc session — not something a dispatched sub-agent should self-authorize
-      regardless of credential availability. This dispatch's own tests already prove the real code paths
-      correctly (mocked at the ccxt/HTTP boundary, not at `fetch_open_orders` itself, per the dispatch brief's
-      own verification bar) — that is the honest ceiling of what this session could verify. Re-check both gates
-      at finalize time per that plan's own todo 3.
+- [ ] [AGENT] P0. **`BLOCKED-CREDENTIALS` (the remaining gate): run real recovery against every wired venue and
+      record the actual result** — this is the first genuine evidence the mechanism works, not a smoke test.
+      **`BLOCKED-OPERATOR` half CLEARED 2026-08-22**, verified live-in-code by this finalize's review, not
+      trusted from the implementation plan's own "done" claim:
+      `w_execution_orchestrator_oms_persistence_impl_2026_08_21` landed and `execution-service`'s
+      `_run_live_async` (`cli/handlers/live_execution_handler.py`) now builds ONE `UnifiedOrderManager`
+      instance per process (`self._oms`, built in `_create_process_oms`) and threads that SAME instance into
+      both `_create_startup_order_recovery`'s `OrderBook(oms=oms)` and every venue's `OrderAdapter` via
+      `_create_orchestrator_for_venue`'s `shared_oms = oms or self._oms` → `OrderAdapter(venue_client=...,
+      oms=shared_oms)`. `OrderBook` is therefore no longer structurally guaranteed empty at restart — a real
+      order submitted through `OrderAdapter.submit_order()` now persists via `oms.create_order()` before the
+      venue call, so a real recovery run would find genuine pending orders instead of proving nothing.
+      Remaining: **`BLOCKED-CREDENTIALS`** — genuinely making LIVE API calls against real exchanges (even
+      read-only `fetch_open_orders`) requires real operator-provided credentials and explicit authorization to
+      hit production venue APIs from an ad-hoc session — not something a dispatched sub-agent should
+      self-authorize regardless of credential availability. Both this dispatch's and the implementation plan's
+      own tests already prove the real code paths correctly (mocked at the ccxt/HTTP/Postgres-driver boundary,
+      never re-implementing the call itself) — that is the honest ceiling of what a session without live venue
+      credentials can verify. Stays open, single-gate now, until an operator supplies credentials + explicit
+      authorization to run a live recovery pass.
 - [x] ✅ [AGENT] P1. **Post-phase codex audit**: check `/codex/04-architecture/` for any doc describing state
       recovery as already guaranteed (the original T4 todo cited "the artefacts describe this as guaranteed") —
       correct any that were wrong, now that it genuinely is (or precisely isn't, per what actually ships).

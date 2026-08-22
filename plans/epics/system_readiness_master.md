@@ -898,12 +898,21 @@ code-complete, and is it on this list".
 contract, persistence backend (`PostgreSQLOrderPersistence`, a real but 100%-stub class), schema, and
 hot-path latency tradeoff for making `ExecutionOrchestrator`'s live order-submission path durably persist
 into an OMS are all decided (full spec: that plan's 2026-08-21 Progress Log entry). Follow-up implementation
-plan authored: `/plans/active/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md` (+ finalize). The
+plan authored: `/plans/archive/2026_08/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md` (+ finalize). The
 "Execution carries full order lifecycle, state recovery, reconciliation and manual trade on every venue"
 checkbox above stays open — design is not implementation — but the design blocker `w_state_recovery_real_wiring
 _2026_08_20`'s own Close-out section named (nothing in the live order-submission path durably persists order
 state, so `OrderRecoveryEngine`'s `OrderBook` is structurally guaranteed empty at every restart) now has a
 concrete, scoped implementation plan closing it, not an open design question.
+
+**2026-08-22 — W11 order-lifecycle / state-recovery: implementation landed + finalize-reviewed.**
+`w_execution_orchestrator_oms_persistence_impl_2026_08_21` landed (`execution-service@bc2edc16874a3b0828ef692682b69174ddcab4bf`,
+ancestor of `origin/live-defi-rollout`) and its finalize independently re-verified live-in-code that `_run_live_async`
+threads one shared `UnifiedOrderManager` into both `OrderRecoveryEngine`'s `OrderBook` and every venue's
+`OrderAdapter` — `OrderBook` is no longer structurally guaranteed empty. This clears the `BLOCKED-OPERATOR` half of
+`w_state_recovery_real_wiring_2026_08_20`'s "run real recovery" gate; `BLOCKED-CREDENTIALS` remains open pending
+operator-provided venue credentials. The epic checkbox above stays open — real-recovery verification and the epic's
+broader reconciliation/manual-trade criteria are still outstanding.
 
 **2026-08-17 — authored.** Formalised from an operator brain-dump covering the full readiness surface, with a hard
 target of 2026-08-25. Deliberately cross-product rather than per-asset-group: the existing `defi_master` and siblings
