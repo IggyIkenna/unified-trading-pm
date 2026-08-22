@@ -68,6 +68,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-30
+last_updated: 2026-08-21
 author: unknown
 parent_epic: cefi_master
 assigned_vm: NA
@@ -191,22 +192,23 @@ reasoning above.
       (`ruleType=xperp`, excluding the 28 already-known equity/ETF ones), then add them to
       `_OKX_FUTURES_XPERP_EQUITY_BASES` (or a sibling crypto set) in `market-tick-data-service`'s
       `okx_futures_ws.py`. Repo: market-tick-data-service.
-- [ ] [OPERATOR] P2. **NEW 2026-08-18 (slot 15, follow-up gap surfaced while closing the item above).** Live
-      re-verification (`/api/v5/public/instruments?instType=FUTURES`, 2026-08-18) found the confirmed-live xperp
-      universe grew to 128 instruments (125 `state=live`), and — separately from the stale "76" figure — found that
-      4 bases (BTC, ETH, SOL, XAU) carry BOTH live `ruleType=xperp` AND live `ruleType=normal` (near-term
-      weekly/quarterly) contracts. `okx_futures_ws.py`'s reverse mapper (`_instrument_to_okx_futures_inst_id`)
-      disambiguates xperp-vs-normal via a static base-membership check against `_OKX_FUTURES_XPERP_BASES`
-      (renamed from `_OKX_FUTURES_XPERP_EQUITY_BASES`, `market-tick-data-service@6436fcbe01`) — this only works
-      because every OTHER xperp base has no normal-type sibling contract. For these 4 bases the canonical
-      `@LIN-YYYYMMDD` id is genuinely ambiguous (identical shape for both contract types), so they are deliberately
-      EXCLUDED from the set — meaning their own xperp dated-futures remain silently mis-subscribed (same failure
-      mode this whole doc chases), while their normal-type contracts continue to work correctly (unaffected,
-      unambiguous default). This is the exact ambiguity the `[OPERATOR] P1` xperp-marker todo above (RULED
-      2026-08-16, option (b) "encode `_XPERP` in the instFamily field") already anticipated for BTC/ETH — now
-      confirmed live to also apply to SOL and XAU, and still not implemented for any of the 4. Needs an operator
-      decision on the resolution mechanism (the ruled option (b) — instFamily-based lookup at subscribe time — vs.
-      an expiry-date heuristic, vs. accepting the gap) before implementation. Repo: market-tick-data-service.
+- [ ] [DATA] P2. **RULED 2026-08-21 (D15, ADOPTED-REC): implement instFamily-based lookup at subscribe time**
+      (option b) for BTC/ETH/SOL/XAU xperp-vs-normal disambiguation — deterministic and consistent with the
+      already-ruled mechanism for the original xperp ambiguity (`[OPERATOR] P1` above, RULED 2026-08-16). **NEW
+      2026-08-18 (slot 15, follow-up gap surfaced while closing the item above).** Live re-verification
+      (`/api/v5/public/instruments?instType=FUTURES`, 2026-08-18) found the confirmed-live xperp universe grew to
+      128 instruments (125 `state=live`), and — separately from the stale "76" figure — found that 4 bases (BTC,
+      ETH, SOL, XAU) carry BOTH live `ruleType=xperp` AND live `ruleType=normal` (near-term weekly/quarterly)
+      contracts. `okx_futures_ws.py`'s reverse mapper (`_instrument_to_okx_futures_inst_id`) disambiguates
+      xperp-vs-normal via a static base-membership check against `_OKX_FUTURES_XPERP_BASES` (renamed from
+      `_OKX_FUTURES_XPERP_EQUITY_BASES`, `market-tick-data-service@6436fcbe01`) — this only works because every
+      OTHER xperp base has no normal-type sibling contract. For these 4 bases the canonical `@LIN-YYYYMMDD` id is
+      genuinely ambiguous (identical shape for both contract types), so they are deliberately EXCLUDED from the
+      set — meaning their own xperp dated-futures remain silently mis-subscribed (same failure mode this whole doc
+      chases), while their normal-type contracts continue to work correctly (unaffected, unambiguous default).
+      **Done when**: `okx_futures_ws.py` resolves BTC/ETH/SOL/XAU xperp-vs-normal via a live instFamily lookup at
+      subscribe time (not a static base-membership set), and a parity test asserts all 4 bases correctly route to
+      their xperp contract when one is live. Repo: market-tick-data-service.
 
 ## Progress Log (na-eligibility-audit)
 
@@ -287,3 +289,4 @@ reasoning above.
   (instFamily-lookup vs expiry-heuristic vs accept-gap), consistent with this doc's established pattern. Doc stays
   assigned_vm: NA.
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries)
+- **2026-08-21 — ruling D15 (OKX-FUTURES xperp disambiguation)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): instFamily lookup — deterministic and consistent with the already-ruled mechanism for the original xperp ambiguity. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

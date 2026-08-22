@@ -32,7 +32,7 @@ related:
   ]
 created: "2026-08-09"
 author: unknown
-last_updated: "2026-08-09"
+last_updated: "2026-08-21" # was 2026-08-09 -- corrected applying ruling D105 (issues_corpus_completion_dispatch_2026_08_21)
 parent_epic: features_and_ml_master
 assigned_vm: NA
 execution_scope: local-only
@@ -71,7 +71,7 @@ rows total, 20/day). Read-back stats across all 60 rows:
 - `staking_apy_bps`: min -3452.96, max +5848.70, mean 355.6, std 1357.2. **5/60 rows (8.3%) are negative**:
 
   | day   | token   | protocol   | exchange_rate | prev_rate | staking_apy_bps |
-  | ----- | ------- | ---------- | ------------- | --------- | --------------- |
+  | ----- | ------- | ---------- | -------------- | --------- | ---------------- |
   | 04-07 | bSOL    | BLAZESTAKE | 1.285843      | 1.286538  | -1789.51        |
   | 04-07 | jitoSOL | JITO       | 1.269858      | 1.271226  | -3249.99        |
   | 04-08 | mSOL    | MARINADE   | 1.369229      | 1.370083  | -2035.77        |
@@ -119,11 +119,15 @@ within normal LST peg noise) compounds to -18% to -35% "APY".
   `CARRY_STAKED_BASIS` consumes `staking_apy_bps` raw or through a smoothing/clamping layer already — if already
   smoothed, downgrade this to a cosmetic-only note; if raw, treat as the P1 half of this finding. Repo:
   strategy-service.)
-- [ ] [DESIGN] P1. Decide + implement the annualization-noise fix for `lst_features.py`'s `staking_apy_bps` calc (widen
-      lookback / rolling-window fit / clamp+flag) — a quant-math methodology call, not a data-pipeline bug fix. Repo:
-      features-service (`features_service/onchain/engine/lst_features.py`). **Retagged P2→P1 2026-08-09**
+- [ ] [DESIGN] P1. **RULED 2026-08-21 (D105, ADOPTED-REC): widen the lookback window or apply rolling-window
+      smoothing for `staking_apy_bps` in `lst_features.py` — do NOT clamp+flag** (clamping only masks the root
+      statistical cause; widening/smoothing addresses it). Implement the fix for
+      `features_service/onchain/engine/lst_features.py`'s `staking_apy_bps` calc (currently a hardcoded `n_valid=2`
+      single-day delta raised to the 365th power). Repo: features-service. **Retagged P2→P1 2026-08-09**
       (`defi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 1 verdict): `CARRY_STAKED_BASIS` consumes the raw
       single-day value directly with no smoothing/clamp — see that doc's Progress Log for the file:line citations.
+      **Done when**: the recomputed `staking_apy_bps` no longer produces the measured -3453 to +5849 bps swings on
+      the same 2026-04-07..09 sample window, and a regression test pins the new methodology.
 
 ## Progress Log
 
@@ -148,3 +152,4 @@ within normal LST peg noise) compounds to -18% to -35% "APY".
   the same file:line citations, so no stale "still looks open" text remains.
 - **na-eligibility-audit 2026-08-16** [body-hash:3756a5f40913cd65]: KEEP-NA, valid — Of the doc's original 2 todos, todo 1 ([DIAG] P2, a bounded diagnostic: confirm whether CARRY_STAKED_BASIS consumes staking_apy_bps raw or smoothed) was already extracted via this exact skill's per-todo RECLASSIFY-split path on 2026-08-09 (round9-reclassify-satellite-sweep) into `defi_satellite_ao_dispatch_batch12_2026_08_09.md` (now archived, both its todos done) -- it no longer appears as a live `- [ ]` checkbox in this doc (shown only as struck-through/annotated prose, correctly excluded from the grep count).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **2026-08-21 — ruling D105 (staking_apy_bps methodology)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): Widen lookback or smooth — either addresses the root statistical cause; clamping only masks it. Quant-methodology call. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
