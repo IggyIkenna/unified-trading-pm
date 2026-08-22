@@ -146,9 +146,20 @@ context_scope:
       write/order-placing call); if it's an age check, it must be wired into `quality-gates.sh` or a scheduled job,
       not a manual reminder nobody runs.
       Evidence: execution-service offline checker and checked-in schema baseline; non-zero on drift/staleness, zero only on a clean baseline.
-- [ ] [AGENT] P1. **Wire the drift check into CI or a scheduled job** (whichever this repo's existing infra
+- [x] [AGENT] P1. **Wire the drift check into CI or a scheduled job** (whichever this repo's existing infra
       supports more cleanly — check for an existing scheduled-job pattern in this repo before inventing a new
-      one) so drift surfaces automatically, not only when someone happens to run the check by hand.
+      one) so drift surfaces automatically, not only when someone happens to run the check by hand. —
+      execution-service@4604766138: found `.github/workflows/benchmarks.yml` as the repo's existing
+      scheduled-job pattern (weekly cron + workflow_dispatch + path-filtered push, `[self-hosted, glue]`) and
+      followed it in a new `.github/workflows/cassette-drift-check.yml`: daily cron (staleness ages with no
+      code change), push/PR path-filtered on the three cassette trees + the baseline + the checker itself
+      (immediate structural-drift feedback), plus workflow_dispatch. The checker has zero execution-service/
+      workspace imports beyond stdlib + pyyaml, so the job skips the sibling-repo clone the other workflows
+      need. Not added to required-checks/branch-protection — it surfaces (a repo maintainer sees it red) without
+      blocking merges, matching the todo's "surfaces automatically" ask, not "gates automatically". Confirmed
+      live: `python scripts/check_cassette_drift.py` currently exits 1 (13 stale + 4 undated cassettes, matching
+      the 2026-08-21 Progress Log entry) — the job will run red until Phase 4 re-records them, which is
+      expected/by design, not a bug in this wiring.
 - [ ] [AGENT] P2. **Alert routing**: if drift fires, it should reach a real channel per this workspace's own
       alerting conventions (`/codex/04-architecture/ci-alerting.md` / `agent-orchestrator-alerting.md`) — dedup by
       state-transition, never spam every run, and close the alert when the cassette is re-recorded.
@@ -202,3 +213,18 @@ context_scope:
   `test_native_rest_version_pinning.py` (helper behavior + real drift-detection via patched version constants,
   not just happy-path). Full `quality-gates.sh --no-fix` green (9096 passed, 21 skipped, 1 xpassed); shipped via
   quickmerge, verified `200805dada` is an ancestor of `origin/live-defi-rollout`.
+- **2026-08-22, slot 11, drift-check CI wiring**: `execution-service@4604766138`. `benchmarks.yml` is this repo's
+  only existing scheduled-job pattern (weekly cron + workflow_dispatch + path-filtered push on `[self-hosted,
+  glue]`) — followed it for the new `.github/workflows/cassette-drift-check.yml` rather than inventing a
+  different shape: daily cron (the staleness half of the check ages independent of any code change, so a
+  push-only trigger would miss it), push/PR triggers path-filtered on the three cassette trees + the baseline +
+  the checker script (immediate feedback the moment either side of the comparison changes), plus
+  workflow_dispatch. `scripts/check_cassette_drift.py` has no execution-service/workspace imports beyond stdlib
+  + pyyaml, so the job skips the sibling-repo clone every other workflow in this repo needs — kept the runner
+  cost near-zero. Deliberately NOT added to branch-protection required-checks: the todo asks for drift to
+  "surface automatically," not to gate merges, and the checker currently fails (13 stale + 4 undated cassettes,
+  same set the 2026-08-21 entry recorded) — making it a required check today would block unrelated PRs on
+  Phase-4 work that hasn't happened yet. Full `quality-gates.sh --no-fix` green; shipped via quickmerge (the
+  in-flight push raced a concurrent rebase, so the landed SHA `4604766138` differs from the pre-rebase local
+  commit `1d3be2e032` — QG re-ran clean on the rebased HEAD before the second push attempt); verified
+  `4604766138` is an ancestor of `origin/live-defi-rollout`.
