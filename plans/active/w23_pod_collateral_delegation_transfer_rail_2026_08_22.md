@@ -103,7 +103,7 @@ assigned_role: backend_engineer
 
 ## Section A — UAC schema (unified-api-contracts)
 
-- [ ] [BACKEND] P0. **Add `BusTransferType.CUSTODIAN_COLLATERAL_DELEGATION`** to `BusTransferType` in
+- [x] ✅ [BACKEND] P0. **Add `BusTransferType.CUSTODIAN_COLLATERAL_DELEGATION`** to `BusTransferType` in
       `unified_api_contracts/canonical/crosscutting/transfer_events.py` (alongside the existing 13 members, e.g.
       `UNITY_WALLET_OP`/`IBKR_FUND_MOVE`). Docstring: "Cross-venue collateral move mediated by a third-party
       custodian API that resolves wallet/account mapping internally — we instruct, we don't sign or see addresses.
@@ -112,6 +112,12 @@ assigned_role: backend_engineer
       `UNITY_WALLET_OP`/`IBKR_FUND_MOVE` — neither CCXT nor on-chain). Done: `bus_transfer_type_rail(CUSTODIAN_COLLATERAL_DELEGATION)`
       returns `TransferRail.OTHER`; existing `test_cassette_schema_parity`-style enum-completeness test (if one
       exists for `BusTransferType`) still passes with the new member included.
+      — unified-api-contracts@d1b724b5 + evidence: member + docstring added, `BUS_TRANSFER_TYPE_RAIL` entry added
+      (`TransferRail.OTHER`), `test_transfer_events.py`'s member-count test bumped 13→14 (renamed accordingly) +
+      new `test_other_rail_members_do_not_fit_the_cefi_on_chain_binary` assertion, `test_client_lifecycle_events.py`'s
+      closed-set `expected` values updated. Full `quality-gates.sh` green
+      (sentinel=d1b724b5dc32670b1855aa8cd136e58f67ad680d); quickmerge-landed + post-push ancestry independently
+      re-verified on `origin/live-defi-rollout`.
 - [ ] [BACKEND] P1. **Register POD in the UAC capability registry** (`unified_api_contracts/registry/capability.py`'s
       `SourceCapability`/`register_capability` pattern, same shape used for CeFi/DeFi sources) — declare `"pod"` as a
       source with `operation_details` for a `collateral_delegation` operation: `signing_scheme="none"` (POD signs
