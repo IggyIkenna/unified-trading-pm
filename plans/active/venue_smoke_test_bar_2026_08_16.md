@@ -247,3 +247,27 @@ Per-AG reconciliation only — this entry closes Sports' own slice of the shared
 those todos stay unchecked pending the sibling DeFi/CeFi/TradFi/Prediction reconciliations
 (`defi_venue_smoke_batch1_2026_08_20_finalize.md` / `cefi_...` / `tradfi_...` / `prediction_...`, each carrying
 the same-shaped `[REVIEW] P2. Reconcile every <AG> row...` todo).
+
+**2026-08-22 (slot 18, review) — Prediction rows + testnet verdict reconciled.** Re-ran
+`unified-api-contracts/scripts/generate_venue_smoke_test_work_list.py` live this session (347 total in-scope rows at
+this measurement) and confirmed the Prediction cell is unchanged: exactly 4 rows — `KALSHI`/`POLYMARKET` ×
+`trades`/`book_snapshot_5` — matching `prediction_venue_smoke_batch1_2026_08_20.md`'s own four-row citation. Reconciled
+from that batch (all 5 todos closed, evidence independently re-verified against this fresh generator run, not copied
+from the batch's own text):
+
+- **Rows**: all 4 rows have a terminal, venue-scoped force/skip/canonical result (no cross-venue sampling — that
+  defect was fixed and regression-tested, `market-tick-data-service@4d45e5541a`). Current terminal state is RED, not
+  green: driver `pipeline-e2e-check-mtds-20260821-prediction-4d45e5` (`EXIT_STATUS=1`, 12 leg cells, 0 passed, 8
+  failed, 4 skipped as live-only) — both venues' `trades` legs fail on missing/non-canonical capture; `book_snapshot_5`
+  is honestly skipped as live-only for both venues. No row is reported captured/passing that isn't.
+- **Testnet verdict (both declared Prediction venues — `VENUE_TO_ASSET_GROUP["prediction"]` has exactly these two, no
+  third to omit)**: KALSHI has a real, registered testnet (`supports_testnet=True`, demo host live-probed 2026-08-09)
+  with an open, filed credential gap (`BLK-3d8c3d9e` / `/plans/active/issues/kalshi_demo_testnet_credential_request_2026_08_22.md`,
+  `BLOCKED-CREDENTIALS`, not a descope — the demo-account path is scaffolded, awaiting operator provisioning).
+  POLYMARKET has no testnet (`supports_testnet=False`) and is honestly answered by its already-implemented
+  matching-engine simulation (`PolymarketCLOBAdapter.simulate_order_fill()` / `paper_place_order()`).
+
+Prediction's contribution to this doc's still-open "Record the testnet answer per venue" (P1) and definition-of-done
+"Every venue has a recorded testnet verdict" (P1) items is therefore complete and evidence-backed; both items stay
+open pending the same reconciliation from the other 4 in-flight AG batches (CeFi/DeFi/Sports/TradFi) this doc's
+`depends_on` still gates on.
