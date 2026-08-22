@@ -34,7 +34,7 @@ related:
 created: 2026-08-16
 author: unknown
 last_updated: 2026-08-22
-priority: P1
+priority: P0
 parent_epic: sports_master
 source: >-
   Discovered as a side-effect of executing sports_satellite_ao_dispatch_batch9-010 (root-cause the 216
@@ -46,7 +46,7 @@ estimate_class: research
 drift_direction: advance-code
 resolved_by:
 locked_by:
-context_scope: [/plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md, /codex/02-data/honest-absence-downstream-handling.md, /codex/02-data/availability-manifest-and-data-status.md, market-tick-data-service/scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py]
+context_scope: [/plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md, /plans/active/issues/dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md, /codex/02-data/honest-absence-downstream-handling.md, /codex/02-data/availability-manifest-and-data-status.md, market-tick-data-service/scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py]
 depends_on: []
 ---
 
@@ -61,6 +61,29 @@ depends_on: []
 > captured population carries `data_type=odds_horizon_bucket`, a data_type with no raw vendor source by design, whose
 > manifest rows have no backing parquet by construction — an ACTIVE writer bug (still writing as of 2026-08-15), not a
 > seeding artifact. Full detail in todo 1 below and the Progress Log.
+
+> **🚨 REGRESSION (2026-08-22, D2 disposition independent re-verification — this session, ~06:52-07:07 BST, ~6h
+> after the entries below).** The "VERIFIED-ALREADY-ACHIEVED" claims on both `[DATA][OPERATOR] P1` todos below
+> (dated 2026-08-22 00:49-01:17 BST, `market-tick-data-service@a9b1d055c9`) do **NOT hold six hours later**.
+> Re-running that SAME already-committed script fresh (unmodified) found the `batch_odds_api` captured population
+> back at **4,352,441 rows, 86.65% `data_type=odds_horizon_bucket`** (was 211,291 / 0% at 00:57 BST) and a fresh
+> 1,500-row `gcs_describe_object` sample at **100% not_found** (was 0%) — WORSE than the original pre-cleanup
+> baseline (4,281,228 rows / 86.4%, measured 2026-08-17). A follow-up bounded read confirmed the `odds_horizon_bucket`
+> rows span the FULL historical range (2020-06-06 to 2026-08-15, not a narrow recent window) and that the good
+> `data_type=odds` twin data is unaffected (527,541 rows, unchanged since 2026-07-26). Soft-delete retention
+> re-confirmed independently (604800s, unchanged, qualifies) and the prior session's commits are confirmed real and
+> already on `origin/live-defi-rollout` (`git log`/`git status` verified) — this is a genuine regrowth, not a stale
+> read or a fabricated prior claim. **Neither queued row-removal plan was executed this session** — WITHHELD per the
+> dispatch's own gate-failure rule, since removing rows from a population that just re-grew ~20x in 6h would race
+> whatever is rewriting it (strong candidate lead: the long-running `mtds-backfill-odds-20260817-062648` VM, still
+> `RUNNING` as of this check, launched pre-dating every writer fix in this doc and per its own sibling doc
+> `dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md` "does not stop on an exhausted
+> quota" — the-odds-api key was topped up 2026-08-21, which would let this never-restarted, pre-fix-code VM resume
+> writing at full historical scale on the same 00:57→06:52 timeline). New `[DIAG][OPERATOR] P0` root-cause todo filed
+> below (supersedes the "already achieved" verdict); doc `priority` bumped to P0. This is a **big finding** per
+> workspace HARD RULE (active data-correctness regression, cross-repo MTDS/MDPS, contradicts this doc's own
+> same-day-6-hours-earlier verified claim) — surfaced to the operator in this session's report in addition to this
+> banner and the Progress Log entry below.
 
 ## What I found
 
@@ -366,6 +389,61 @@ below (stop the writer, relabel the existing population, investigate the coincid
       genuinely unrecoverable, the manifest-write-coordination-gate SSOT `/codex/02-data/gcs-and-manifest-delete-
       safety-protocol.md` §5 is confirmed to have been satisfied by inspecting the CAS generation history, or the
       gap is explicitly accepted as unrecoverable audit-trail loss with that stated).
+- [ ] [DIAG][OPERATOR] P0. **REGRESSION FOUND 2026-08-22 (D2 disposition independent re-verification, this
+      session) — SUPERSEDES the "VERIFIED-ALREADY-ACHIEVED" verdict on both `[DATA][OPERATOR] P1` todos above.**
+      A fresh, independent re-run of the already-committed `scripts/fresh_precondition_check_d2_odds_2026_08_22.py`
+      (unmodified, new invocation, 06:52-06:54 BST) found the `batch_odds_api` captured population back at
+      **4,352,441** rows (86.65% `data_type=odds_horizon_bucket`) with a fresh 1,500-row sample at **100%
+      not_found** — UP from the 211,291-row / 0%-not_found state that same script measured only 6 hours earlier
+      (00:57 BST, `market-tick-data-service@a9b1d055c9`), and WORSE than the original pre-cleanup peak (4,281,228
+      rows / 86.4%, 2026-08-17). Root-cause this 6-hour, ~20x regrowth **before** executing either queued
+      row-removal plan.
+      A follow-up bounded, single-read, ad-hoc analysis this session (read-only, same `read_availability_index`
+      call already used above, no new script committed given the shared host's QG queue was saturated at check
+      time — reproducible via: load the manifest once, filter `pipeline_mode=="batch_odds_api"` +
+      `capture_status=="captured"`, `value_counts()` on `data_type`, min/max `date` on the `odds_horizon_bucket`
+      slice) found: full breakdown `{odds_horizon_bucket: 3771272, odds: 527541, odds_snapshot: 17951,
+      arbitrage_opportunity: 17851, odds_movement: 17834}` (total 4,352,449, ~1-min read-skew vs the 4,352,441 above
+      is expected under concurrent writes); the `odds_horizon_bucket` rows span **2020-06-06 through 2026-08-15** —
+      the ENTIRE sports-odds historical range, NOT a narrow recent window, which rules out "live cron traffic
+      regressed" and strongly implicates a **bulk historical replay**; the good `data_type=odds` twin data is
+      confirmed intact and unaffected at exactly **527,541** rows (unchanged from every prior measurement since
+      2026-07-26 — the real data was never at risk); the dedicated `batch_mdps_odds_horizon_bucket` mode (the
+      writer-fix's intended destination) also grew slightly to **128,611** rows (up from 109,312), so the fix IS
+      still processing some traffic, just dwarfed by whatever is replaying the full history through the unfixed
+      path.
+      **Leading candidate (strong, not yet confirmed)**: `mtds-backfill-odds-20260817-062648` (historical odds
+      batch-backfill VM) is confirmed **RUNNING right now** (`gcloud compute instances list`) and, per its own
+      sibling doc `dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md`, "does not stop
+      on an exhausted quota" and was launched pre-dating every writer fix in this doc (never restarted, so — per
+      that SAME doc's own precedent finding for a different bug on the SAME VM — it runs frozen pre-fix tarball code
+      that cannot pick up the `resolve_output_pipeline_mode` remap). A full-history date range (2020-06-06 onward)
+      is exactly what a "historical odds backfill" VM would touch. The shared `odds-api-key` was topped up
+      2026-08-21 (D7 resolution) — this VM resuming historical fetch+write once the key started working again
+      lines up with the observed 00:57→06:52 regrowth window. That same sibling doc has an OPEN
+      `- [ ] [OPERATOR] P0` todo to "pause `mtds-backfill-odds-*`" that was never closed — action it as part of
+      this root-cause (pausing/restarting this VM on current LDR would pick up the writer fix and should stop new
+      phantom rows; it does not by itself clean the now-larger existing population, which is the separate,
+      still-gated row-removal work). Rule out the alternative that the still-unattributed mechanism which performed
+      the original 4.28M→211K cleanup (see the sibling `[DIAG][OPERATOR] P2` todo above) is itself lossy/
+      non-idempotent before treating VM-pause as sufficient.
+      Done when: the actual writer/backfill responsible is identified and (if still live) paused/fixed, and a FRESH
+      re-measurement shows the `batch_odds_api`/`odds_horizon_bucket` population stable-or-shrinking (not growing)
+      across ≥2 checks taken hours apart — only then should the queued row-removal plans be re-evaluated against
+      the by-then-current population size. Evidence: re-run of the already-committed
+      `market-tick-data-service@a9b1d055c9` (`scripts/fresh_precondition_check_d2_odds_2026_08_22.py`, no code
+      change) + an ad-hoc uncommitted bounded read this session (exact query above, reproducible) +
+      `gcloud compute instances list --filter="name~mtds-backfill-odds"` (RUNNING, live at check time).
+- [ ] [DATA][OPERATOR] P1. **WITHHELD 2026-08-22 (D2 disposition execution, this session) — precondition FAILED on
+      fresh re-check, action NOT executed.** Per the D2 dispatch's own instruction ("if the precondition fails,
+      WITHHOLD the action and record gate-failed-withheld with the measured value"): the precondition for treating
+      either queued row-removal recipe as a safe, bounded, historical-cleanup-only edit was the population already
+      being at the claimed clean post-state (211,291 rows / 0% not_found per the 00:57 BST check). The 06:52 BST
+      fresh re-check falsifies that (4,352,441 rows / 100% not_found sample — see the `[DIAG][OPERATOR] P0` todo
+      above). Do NOT execute either recipe (league_id-rekey stale-duplicate removal, or odds_horizon_bucket
+      removal) until that root-cause todo is resolved — the retention half of the precondition still independently
+      passes (`gcs_bucket_soft_delete_retention_seconds` = 604800s, ≥7d) but is moot while the "already clean"
+      premise does not hold. Measured (withheld) value: `batch_odds_api` captured population = 4,352,441.
 - [x] ✅ [DIAG] P2. **DONE 2026-08-17 (slot-6, `infra`).** Verdict: **NOT a capture outage — a silent
       MANIFEST-RECORDING gap** while the real fetch/write keeps succeeding. Evidence:
       1. **GCS write side is live, right now.** `uts-prod-sports-scheduler` (Cloud Run Job, `*/5 * * * *`,
@@ -507,6 +585,56 @@ below (stop the writer, relabel the existing population, investigate the coincid
       (`market-tick-data-service@5ac0a32149`).
 
 ## Progress Log
+
+**2026-08-22 (D2 disposition execution — independent re-verification finds a REGRESSION, this session)** —
+dispatched against operator disposition D2 for this same doc (a re-dispatch; the entry immediately below this one
+shows a prior same-day session already ran this exact precondition-check-before-execute flow ~6h earlier). Rather
+than trusting this doc's own "VERIFIED-ALREADY-ACHIEVED" claims, re-ran the FRESH precondition per the dispatch's
+own instruction: re-executed the identical, unmodified, already-committed `scripts/fresh_precondition_check_d2_odds_
+2026_08_22.py` (06:52:24-06:54:59 BST) and found the claimed clean post-state does **NOT hold** — `batch_odds_api`
+captured population is back at **4,352,441** rows (86.65% `data_type=odds_horizon_bucket`, up from 211,291/0% six
+hours earlier at 00:57 BST), and a fresh 1,500-row `gcs_describe_object` sample of `odds_horizon_bucket` rows found
+**100% not_found** (up from 0%) — WORSE than the original pre-cleanup peak (4,281,228/86.4%, measured 2026-08-17).
+First confirmed this is a real regrowth and not a stale/fabricated read: the prior session's commits
+(`aabaa3effe1`, `d552a9b21b`, `a9b1d055c9`) are real, already on `origin/live-defi-rollout`, and this doc's own
+working tree was clean at that HEAD (`git log`/`git status` verified) — the earlier "already achieved" measurement
+was genuinely correct AT THE TIME, it has since regressed. Soft-delete retention re-confirmed independently
+(604800s, unchanged, qualifies — moot while the "already clean" premise fails). Ran a follow-up bounded, ad-hoc
+read-only analysis (same manifest-read primitive, no new GCS walk) which found: the `odds_horizon_bucket` rows span
+the FULL historical range **2020-06-06 to 2026-08-15** (not a narrow recent window — rules out "live cron
+regressed," implicates a bulk historical replay); the good `data_type=odds` twin data is unaffected at exactly
+527,541 rows (unchanged since 2026-07-26); the dedicated `batch_mdps_odds_horizon_bucket` mode (the writer-fix's
+intended destination) grew slightly to 128,611 (up from 109,312) so the fix is still processing some traffic, just
+dwarfed by the regrowth. This ad-hoc analysis was NOT committed as a new script — the shared host's QG queue was
+saturated (host-wide concurrency cap fully busy with ~5+ other slots' full `quality-gates.sh` runs, 8+ min queued
+with no sign of clearing) and an open-ended wait risked losing the whole result if the session ended mid-queue, so
+the exact reproducible query is documented inline in the todo below instead of shipped as source; the CORE finding
+(population count + not_found sample) remains fully evidenced by the already-committed, unmodified
+`fresh_precondition_check_d2_odds_2026_08_22.py`, just re-run. Cross-referenced the sibling `dp_live_004_sports_
+odds_live_shard_never_captured_shared_key_quota_2026_08_20.md` doc and confirmed via live `gcloud compute instances
+list` that `mtds-backfill-odds-20260817-062648` (a historical odds batch-backfill VM that doc already documents as
+"does not stop on an exhausted quota" and running pre-fix frozen tarball code) is still **RUNNING** right now — a
+strong, not-yet-confirmed candidate: the shared odds-api-key was topped up 2026-08-21 (D7), which would let this
+never-restarted VM resume full-history fetch+write exactly on the observed 00:57→06:52 timeline, and that doc has
+its own still-open, never-closed `[OPERATOR] P0` "pause `mtds-backfill-odds-*`" todo. **Did not execute either
+row-removal plan** — WITHHELD per the dispatch's own gate-failure instruction ("if the precondition fails, WITHHOLD
+the action and record gate-failed-withheld with the measured value"); executing a CAS rewrite against an
+actively-regrowing ~3.77M-row population would race whatever is rewriting it and risks masking/losing evidence of
+the live regression, and is VM-scale regardless of the regression (laptop-session heavy-I/O rule). Filed a new
+`[DIAG][OPERATOR] P0` root-cause todo (supersedes the "already achieved" verdict, does not overwrite the historical
+`[x]` record of what was true 6h earlier) and a `[DATA][OPERATOR] P1` WITHHELD todo recording the gate failure with
+its measured value. Bumped doc `priority` P1→P0 and added a top-of-doc regression banner. Added the
+`dp_live_004_...` doc to `context_scope`. **This is a big finding per workspace HARD RULE** (active data-correctness
+regression, cross-repo MTDS/MDPS, directly contradicts this same doc's own same-day-6-hours-earlier verified claim)
+— flagged for operator visibility in this session's report in addition to this entry. **Operational note on this
+checkout's contention**: this same doc edit was made once already this session and was found REVERTED to HEAD
+moments later (working tree returned fully clean, no diff vs HEAD, no matching content in the 2 most recent
+autostash entries either) — this shared `.tabs/6/unified-trading-pm` checkout shows 100+ accumulated autostash/
+pre-reconcile-quarantine entries from concurrent sessions, confirming heavy multi-session contention on this exact
+checkout; re-applied the edit and am shipping it immediately via `safe-doc-push.sh` (isolated-worktree commit) to
+close the vulnerability window rather than leaving it sitting uncommitted. Evidence: re-run of
+`market-tick-data-service@a9b1d055c9` (unmodified) + `gcloud compute instances list
+--filter="name~mtds-backfill-odds"`.
 
 **2026-08-22 (D2 disposition execution)** — took `sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md` as
 `affected_docs[1]` of operator disposition D2 (`.ao_checkpoints/issues_corpus_completion_2026_08_21/dispositions.json`,
