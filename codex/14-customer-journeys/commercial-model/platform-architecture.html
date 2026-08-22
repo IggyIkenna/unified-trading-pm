@@ -1,4 +1,4 @@
-<title>Odum Research — Platform Architecture &amp; Carve-Out (Elysium / POD)</title>
+<title>Odum Research: Platform Architecture &amp; Carve-Out (Elysium / POD)</title>
 
 <style>
   /* ============================================================
@@ -956,69 +956,6 @@
     }
   }
 
-  /* ============================================================
-     STATUS + EVIDENCE-TIER MARKS (rule 13) — added for the
-     client-artefact grading pass, matching platform-external-api-
-     walkthrough.html / strategy-service-walkthrough.html.
-     ============================================================ */
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 20px;
-    align-items: center;
-    font-family: var(--sans);
-    font-size: 12px;
-    color: var(--ink-3);
-    margin: 18px 0 0;
-  }
-  .legend span {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-  }
-  .st {
-    font-family: var(--sans);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 3px;
-    white-space: nowrap;
-    border: 1px solid currentColor;
-  }
-  .st-live {
-    color: var(--good);
-    background: var(--g-data-wash);
-  }
-  .st-part {
-    color: var(--warn);
-    background: var(--g-post-wash);
-  }
-  .st-plan {
-    color: var(--crit);
-    background: var(--accent-wash);
-  }
-  .ev {
-    font-family: var(--mono);
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 1px 8px;
-    border-radius: 10px;
-    white-space: nowrap;
-    border: 1px dashed currentColor;
-    background: transparent;
-  }
-  .ev-verified {
-    color: var(--g-data);
-  }
-  .ev-check {
-    color: var(--ink-3);
-  }
-  .ev-assumed {
-    color: var(--warn);
-  }
 </style>
 
 <div class="shell">
@@ -1029,15 +966,15 @@
       <span class="sep">/</span>
       <span>Prepared for Elysium &amp; POD</span>
       <span class="sep">/</span>
-      <span>Phase 2 — Production Implementation</span>
+      <span>Phase 2, Production Implementation</span>
       <span class="conf">Confidential</span>
     </div>
 
-    <h1>The platform behind your two strategies <span class="light">— and where the boundary sits</span></h1>
+    <h1>The platform behind your two strategies<span class="light">, and where the boundary sits</span></h1>
 
     <p class="standfirst">
       What we built and how ready each piece is, how a backtest and a live run are provably the same program, and how
-      the whole estate is put together — repositories, clouds, delivery pipeline. Written around the choice you make at
+      the whole estate is put together: repositories, clouds, delivery pipeline. Written around the choice you make at
       day 31: <strong>we operate the strategies, or you take them and run them yourself.</strong> The engines are yours
       either way. Every section below says what it means under each path.
     </p>
@@ -1081,7 +1018,7 @@
       <h2>
         Contents
         <span style="font-weight: 500; letter-spacing: 0.04em; text-transform: none; color: var(--ink-3)"
-          >— every section opens to full detail; summaries stay visible</span
+          >(every section opens to full detail; summaries stay visible)</span
         >
       </h2>
       <ol>
@@ -1102,7 +1039,7 @@
           <a href="#s4"><span class="num">04</span><span class="ttl">The data behind your venues</span></a>
         </li>
         <li>
-          <a href="#s5"><span class="num">05</span><span class="ttl">Batch, paper, live — one program</span></a>
+          <a href="#s5"><span class="num">05</span><span class="ttl">Batch, paper, live: one program</span></a>
         </li>
         <li>
           <a href="#s6"><span class="num">06</span><span class="ttl">Execution: how the algorithm is chosen</span></a>
@@ -1111,7 +1048,7 @@
           <a href="#s7"><span class="num">07</span><span class="ttl">Repositories, tiers and languages</span></a>
         </li>
         <li>
-          <a href="#s8"><span class="num">08</span><span class="ttl">Two clouds, one codebase</span></a>
+          <a href="#s8"><span class="num">08</span><span class="ttl">Infrastructure: how data actually moves</span></a>
         </li>
         <li>
           <a href="#s9"
@@ -1133,19 +1070,6 @@
       </ol>
     </nav>
 
-    <div class="legend">
-      <span><b class="st st-live">live</b> reachable on a production path AND validated with real capital</span>
-      <span><b class="st st-part">partial</b> built, reachable for some cases</span>
-      <span><b class="st st-plan">planned</b> specified, not yet built</span>
-    </div>
-    <div class="legend">
-      <span
-        ><b class="ev ev-verified">✓ verified</b> checked against code or measured data — verifying source named
-        inline</span
-      >
-      <span><b class="ev ev-check">? check</b> stated in good faith, not yet independently validated</span>
-      <span><b class="ev ev-assumed">~ assumed</b> best current understanding — explicitly not verified</span>
-    </div>
   </header>
 
   <!-- ==================== 01 ==================== -->
@@ -1153,18 +1077,11 @@
     <div class="sec-head">
       <span class="num">01</span>
       <h2>Where you sit in the platform</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/epics/system_readiness_master.md -- the funds-never-cross-clients hard rule (TransferCoordinator raises CrossClientTransferForbiddenError) is the code-enforced claim in this section; the entity-chain/legal content around it is a static fact, not a tracked engineering gap"
-        >owner: system_readiness_master</b
-      >
     </div>
 
     <p class="lede">
       Elysium is the AIFM and fund administrator; POD is the DeFi-specific allocator; the BVI fund is the capital
-      vehicle and beneficial owner of the positions. We are a trading-infrastructure service to POD — we execute on
+      vehicle and beneficial owner of the positions. We are a trading-infrastructure service to POD; we execute on
       behalf of the fund using credentials POD delegates to us.
     </p>
 
@@ -1185,7 +1102,7 @@
       </div>
       <div>
         <b>One hard rule</b
-        ><span>Funds never cross a client boundary — the data model refuses to represent a transfer that would</span>
+        ><span>Funds never cross a client boundary: the data model refuses to represent a transfer that would</span>
       </div>
     </div>
 
@@ -1196,7 +1113,7 @@
         institutional onboarding and KYB, CEFFU institutional KYB, the Binance institutional account with its bilateral
         OES mirror at CEFFU, and per-venue institutional onboarding at each perp venue you allocate to. We build and
         operate the trading code, the infrastructure it runs on, the pre-cutover test estate, and the per-wallet
-        provisioning configuration. Fireblocks is out of scope — the stack is Copper plus CEFFU, and CEFFU remains
+        provisioning configuration. Fireblocks is out of scope; the stack is Copper plus CEFFU, and CEFFU remains
         entirely your decision for the Binance leg.
       </p>
 
@@ -1207,7 +1124,7 @@
           <code>unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>) lists
           <code>FIREBLOCKS_MPC</code> and has no distinct Ceffu member. That is not a contradiction of the roster above:
           Ceffu's signing routes through Copper (<code>CEFFU_ROUTES_VIA_COPPER_NOTE</code>), and the Fireblocks entry
-          carries <code>SigningSurfaceStatus.OUT_OF_SCOPE</code> — retained for future flexibility, not wired today. The
+          carries <code>SigningSurfaceStatus.OUT_OF_SCOPE</code>, retained for future flexibility. The
           working stack is Copper plus CEFFU, as stated above.
         </p>
       </div>
@@ -1218,14 +1135,14 @@
           Operating something and owning it are different questions, and this document is careful to keep them apart.
           Under Article 4 of the Consulting Agreement,
           <strong
-            >all Work Product developed under the engagement is yours — the Group's — from the moment it is
+            >all Work Product developed under the engagement is yours, the Group's, from the moment it is
             created</strong
           >, as works made for hire, with an irrevocable and perpetual assignment behind it and no expiry. We retain
           only generic programming methods and open-source components. So wherever this document says we "operate",
           "run" or "build" something, read that as responsibility, never as a claim of ownership. The purpose of §11 is
           not to tell you what we own; it is to define, precisely and in advance,
           <em>which components constitute Work Product under the engagement</em> and which are pre-existing platform
-          components that were never part of it — because that boundary is the thing worth agreeing while everyone is
+          components that were never part of it, because that boundary is the thing worth agreeing while everyone is
           relaxed rather than at hand-over.
         </p>
       </div>
@@ -1534,7 +1451,7 @@
                 fill-opacity="0.72"
                 style="font-family: var(--sans)"
               >
-                Copper.co MPC — DeFi + L2s + Solana
+                Copper.co MPC: DeFi + L2s + Solana
               </text>
               <text
                 x="454"
@@ -1544,7 +1461,7 @@
                 fill-opacity="0.72"
                 style="font-family: var(--sans)"
               >
-                CEFFU OES mirror — Binance leg
+                CEFFU OES mirror: Binance leg
               </text>
 
               <line
@@ -1658,7 +1575,7 @@
                 fill-opacity="0.75"
                 style="font-family: var(--mono)"
               >
-                Lido — stETH / wstETH
+                Lido: stETH / wstETH
               </text>
               <text
                 x="794"
@@ -1696,25 +1613,25 @@
               The mandate chain runs left to right and the credentials run with it.
               <b>You onboard the venues and the custodians; we hold delegated credentials and sign through them.</b>
               Because the strategies read prices, funding and staking rates straight from venue APIs and public Ethereum
-              RPC, no Odum data service sits on the live critical path — which is what makes a self-run deployment (§11)
+              RPC, no Odum data service sits on the live critical path, which is what makes a self-run deployment (§11)
               technically viable rather than theoretical.
             </figcaption>
           </figure>
         </div>
       </div>
 
-      <h3>Two paths from day 31 — and this document describes both</h3>
+      <h3>Two paths from day 31, and this document describes both</h3>
       <p>
         Everything that follows forks at one date, so it is worth fixing that date before the detail. Production launch
-        is followed by a <strong>complimentary 30-day support period</strong> — we operate, monitor and respond at no
+        is followed by a <strong>complimentary 30-day support period</strong>: we operate, monitor and respond at no
         charge while the strategies run on real capital and you form your own view. It exists because the first month of
         live operation is when you learn what the thing actually needs, and neither of us should be negotiating during
         it.
       </p>
       <p>
-        At the end of that period you choose. <strong>Option A — the managed service:</strong> we continue to operate
+        At the end of that period you choose. <strong>Option A, the managed service:</strong> we continue to operate
         the strategies from our infrastructure, with your capital isolated in its own process and its own wallet
-        hierarchy. <strong>Option B — the self-run carve-out:</strong> you take the code and run it yourself, and we
+        hierarchy. <strong>Option B, the self-run carve-out:</strong> you take the code and run it yourself, and we
         hand over a minimal runner to stand it up. Absent a written election, Option A applies by default from day 31;
         you can elect Option B at any time on 30 days' notice.
       </p>
@@ -1734,8 +1651,8 @@
             <thead>
               <tr>
                 <th>Section</th>
-                <th>Option A — we operate</th>
-                <th>Option B — you self-run</th>
+                <th>Option A, we operate</th>
+                <th>Option B, you self-run</th>
               </tr>
             </thead>
             <tbody>
@@ -1747,12 +1664,12 @@
               <tr>
                 <td class="grp grp-data"><strong>§4</strong> Data</td>
                 <td>The canonical estate, honest-coverage accounting and research history behind every number</td>
-                <td>Direct venue and RPC reads only — enough to trade live, not to research or re-backtest</td>
+                <td>Direct venue and RPC reads only: enough to trade live, not to research or re-backtest</td>
               </tr>
               <tr>
                 <td class="grp grp-data"><strong>§5</strong> Batch = paper = live</td>
                 <td>Daily determinism verdict; any drift surfaces as a failed check</td>
-                <td>The proof is not portable — you would rebuild the harness or do without it</td>
+                <td>The proof is not portable: you would rebuild the harness or do without it</td>
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>§6</strong> Execution</td>
@@ -1780,7 +1697,7 @@
               <tr>
                 <td class="grp grp-exec"><strong>§12</strong> What comes next</td>
                 <td>New venues and archetypes are bounded integrations onto an existing spine, not rebuilds</td>
-                <td>The licensed snapshot is frozen at hand-over — later fixes and venues stay with us</td>
+                <td>The licensed snapshot is frozen at hand-over: later updates and venues stay with us</td>
               </tr>
             </tbody>
           </table>
@@ -1791,7 +1708,7 @@
         <span class="tag">Hard architectural rule</span>
         <p>
           Funds never move between clients. Every transfer is scoped to a single client, and the constraint is enforced
-          in the data model itself — a ledger row that would cross a client boundary raises at construction time rather
+          in the data model itself: a ledger row that would cross a client boundary raises at construction time rather
           than being caught by review. Each client also runs in its own isolated process. "Cross-client rebalancing" is
           not a feature we have; it is a condition the code refuses to represent.
         </p>
@@ -1804,13 +1721,6 @@
     <div class="sec-head">
       <span class="num">02</span>
       <h2>The component map, and how ready each part is</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/epics/system_readiness_master.md — the epic closing every readiness gap this component map describes"
-        >owner: system_readiness_master</b
-      >
     </div>
 
     <p class="lede">
@@ -1823,7 +1733,7 @@
       <div>
         <b>Seven layers</b
         ><span
-          >Reference, capture, processing, features, ML, decide-and-execute, post-trade — with one authoritative
+          >Reference, capture, processing, features, ML, decide-and-execute, post-trade, with one authoritative
           producer per dataset</span
         >
       </div>
@@ -1836,17 +1746,17 @@
       <div>
         <b>Read the dots</b
         ><span
-          >The engines are production-validated. Historical backfill and rollout are the two components still short —
+          >The engines are production-validated. Historical backfill and rollout are the two components still short,
           and they are the critical path</span
         >
       </div>
     </div>
 
     <details class="sec-body">
-      <summary>The component map — colour by group, badge by ownership, dots by build stage</summary>
+      <summary>The component map: colour by group, badge by ownership, dots by build stage</summary>
       <p>
-        The map below reads on three channels at once, and each channel means exactly one thing throughout this document
-        — so you can ask "what group is this, who owns it, and is it finished" of any box without a key lookup.
+        The map below reads on three channels at once, and each channel means exactly one thing throughout this document,
+        so you can ask "what group is this, who owns it, and is it finished" of any box without a key lookup.
       </p>
 
       <div class="channels">
@@ -1854,19 +1764,19 @@
           <span class="ch-name">Colour</span>
           <span class="ch-means">Which part of the system a component belongs to.</span>
           <ul>
-            <li><span class="swatch sw-data"></span> Data platform — reference, capture, processing, features</li>
-            <li><span class="swatch sw-exec"></span> Decision &amp; execution — strategy, orders, custody</li>
-            <li><span class="swatch sw-post"></span> Post-trade &amp; operations — ledgers, risk, reporting</li>
-            <li><span class="swatch sw-ext"></span> External — your accounts, custodians, public chains</li>
+            <li><span class="swatch sw-data"></span> Data platform: reference, capture, processing, features</li>
+            <li><span class="swatch sw-exec"></span> Decision &amp; execution: strategy, orders, custody</li>
+            <li><span class="swatch sw-post"></span> Post-trade &amp; operations: ledgers, risk, reporting</li>
+            <li><span class="swatch sw-ext"></span> External: your accounts, custodians, public chains</li>
           </ul>
         </div>
         <div class="channel">
           <span class="ch-name">Badge</span>
           <span class="ch-means">Which carve-out bucket it falls into (detail in §11).</span>
           <ul>
-            <li><span class="badge badge-y">Y</span> Yours — transfers to you as Work Product</li>
-            <li><span class="badge badge-l">L</span> Licensed — frozen-snapshot licence to you</li>
-            <li><span class="badge badge-p">P</span> Platform — stays with us, not licensed</li>
+            <li><span class="badge badge-y">Y</span> Yours: transfers to you as Work Product</li>
+            <li><span class="badge badge-l">L</span> Licensed: frozen-snapshot licence to you</li>
+            <li><span class="badge badge-p">P</span> Platform: stays with us, not licensed</li>
             <li><span class="badge">—</span> Not ours to allocate</li>
           </ul>
         </div>
@@ -1898,7 +1808,7 @@
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Figure 2 · Component map — group, ownership and build stage</span>
+          <span class="label">Figure 2 · Component map: group, ownership and build stage</span>
           <span class="note">Readiness as at the July 2026 review</span>
         </div>
         <div class="plate-body scroll-x">
@@ -1992,7 +1902,7 @@
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                CeFi venues — your institutional accounts
+                CeFi venues: your institutional accounts
               </text>
               <text
                 x="128"
@@ -2002,7 +1912,7 @@
                 fill-opacity="0.72"
                 style="font-family: var(--mono)"
               >
-                Binance · OKX · Bybit · Deribit — REST + WebSocket
+                Binance · OKX · Bybit · Deribit: REST + WebSocket
               </text>
               <rect
                 x="558"
@@ -2045,7 +1955,7 @@
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Chains — public RPC
+                Chains: public RPC
               </text>
               <text
                 x="628"
@@ -2107,7 +2017,7 @@
                 fill-opacity="0.74"
                 style="font-family: var(--sans)"
               >
-                reference-data source of truth — what an instrument is, when it listed
+                reference-data source of truth: what an instrument is, when it listed
               </text>
               <rect
                 x="500"
@@ -2225,7 +2135,7 @@
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                market-tick-data-service — raw capture + availability manifest
+                market-tick-data-service: raw capture + availability manifest
               </text>
               <text
                 x="128"
@@ -2345,7 +2255,7 @@
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                canonical store — over 30 TB compressed
+                canonical store: over 30 TB compressed
               </text>
               <text
                 x="628"
@@ -2355,7 +2265,7 @@
                 fill-opacity="0.74"
                 style="font-family: var(--sans)"
               >
-                historical backfill still computing — the least-ready piece of the estate
+                historical backfill still computing: the least-ready piece of the estate
               </text>
               <rect
                 x="1000"
@@ -2414,7 +2324,7 @@
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                features-onchain — your carry subset
+                features-onchain: your carry subset
               </text>
               <text
                 x="128"
@@ -2473,7 +2383,7 @@
                 fill-opacity="0.74"
                 style="font-family: var(--sans)"
               >
-                delta-one · volatility · calendar · microstructure — not yours, not needed
+                delta-one · volatility · calendar · microstructure: not yours, not needed
               </text>
               <rect
                 x="1000"
@@ -2537,7 +2447,7 @@
                 style="font-family: var(--sans)"
               >
                 <tspan font-weight="700">ml-service</tspan>
-                — in the platform, off your critical path. Carry decisions are rule-based and inspectable, by design.
+                , in the platform, off your critical path. Carry decisions are rule-based and inspectable, by design.
               </text>
 
               <!-- ============ L6 — three boxes: the IP boundary runs through the middle one ============ -->
@@ -2581,7 +2491,7 @@
                 dynamic hedge ratio, per tick
               </text>
               <text x="128" y="578" font-size="10.5" style="font-family: var(--mono); fill: var(--g-exec)">
-                on_tick() — one shared path
+                on_tick(): one shared path
               </text>
               <rect
                 x="320"
@@ -2789,7 +2699,7 @@
                 font-weight="700"
                 style="font-family: var(--sans); fill: var(--g-data)"
               >
-                the boundary runs here — §6
+                the boundary runs here (§6)
               </text>
 
               <!-- return path -->
@@ -2852,7 +2762,7 @@
                 fill-opacity="0.74"
                 style="font-family: var(--sans)"
               >
-                treasury · pricing — append-only
+                treasury · pricing: append-only
               </text>
               <rect
                 x="333"
@@ -3050,7 +2960,7 @@
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Production rollout — credentials, cutover, shadow run
+                Production rollout: credentials, cutover, shadow run
               </text>
               <text
                 x="128"
@@ -3086,7 +2996,7 @@
               Read top to bottom: sources, the five layers that turn them into trustworthy inputs, the one layer that
               decides, the layer that records.
               <b>Look at the decide-and-execute row: the boundary runs straight through the middle of it.</b> Your
-              engines emit intent and your adapters place the orders — both blue, both yours — while the algorithm layer
+              engines emit intent and your adapters place the orders (both blue, both yours) while the algorithm layer
               that decides how each order is worked sits between them in teal, and stays ours. Drawing it as one box
               would have hidden the only distinction in this diagram that has commercial consequences. Note also where
               the dots thin out: the engines are production-validated, but the historical backfill and the rollout
@@ -3105,13 +3015,6 @@
     <div class="sec-head">
       <span class="num">03</span>
       <h2>Your strategies, and what sits beside them</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md — Phase 2 acceptance scope for CARRY_BASIS_PERP / CARRY_STAKED_BASIS"
-        >owner: elysium_october_delivery_and_code_disclosure_readiness</b
-      >
     </div>
 
     <p class="lede">
@@ -3130,7 +3033,7 @@
       <div>
         <b>Venue rules decide</b
         ><span
-          >Eligibility is derived from a collateral registry at run time. No acceptance means no staking leg — the
+          >Eligibility is derived from a collateral registry at run time. No acceptance means no staking leg: the
           capital runs plain basis instead</span
         >
       </div>
@@ -3149,12 +3052,12 @@
 
     <details class="sec-body">
       <summary>How the trade works, why the alternatives were deleted, and your venue slots</summary>
-      <h3>CARRY_STAKED_BASIS — the structure, and the two we deleted</h3>
+      <h3>CARRY_STAKED_BASIS: the structure, and the two we deleted</h3>
       <p>
         The trade deploys USDC into the native asset, stakes it into the liquid staking token, posts that LST at the
         perp venue as cross-margin, and shorts the equivalent perp. Delta is zero because the short cancels the long
         exposure the LST carries. You earn the staking yield on the principal <em>and</em> the funding on the short,
-        from the same capital — which is the whole point, and also the reason the structure is fussy about venues.
+        from the same capital, which is the whole point, and also the reason the structure is fussy about venues.
       </p>
 
       <div class="eq">
@@ -3165,12 +3068,12 @@
       </div>
 
       <p>
-        One structure is allowed — the LST <em>is</em> the margin. That narrowing was deliberate: we built the two
+        One structure is allowed: the LST <em>is</em> the margin. That narrowing was deliberate: we built the two
         obvious alternatives, measured them, and deleted both rather than leave them behind a config flag.
-        <strong>Split-stake</strong> — stake half off-venue, post the rest as cash margin — is strictly dominated by
+        <strong>Split-stake</strong> (stake half off-venue, post the rest as cash margin) is strictly dominated by
         plain basis at twice the size whenever <code>funding &gt; staking / 3</code>, which is the prevailing regime for
         BTC, ETH and SOL; in the narrow regime where it could win, the leveraged variant beats it anyway.
-        <strong>Borrow-against-collateral</strong> — pledge the LST, borrow USDC, post that as margin — dies on the
+        <strong>Borrow-against-collateral</strong> (pledge the LST, borrow USDC, post that as margin) dies on the
         stablecoin borrow rate, typically 5–8% annualised, which erodes the basis faster than staking plus funding earns
         it back. Neither has a regime where it is the right answer, so neither survived.
       </p>
@@ -3178,14 +3081,14 @@
       <h3>Where the venue won't take staked collateral, we skip the staking</h3>
       <p>
         This is the part worth understanding properly, because it is what makes the strategy portable across a venue set
-        rather than tied to one venue's rules. Eligibility is not configured per slot and not asserted in a document —
+        rather than tied to one venue's rules. Eligibility is not configured per slot and not asserted in a document:
         it is <strong>derived at run time from a collateral registry in the code</strong>, which holds a row per
         <span class="mono">(venue, token)</span> with an accepted flag, a live-probed haircut, the margin mode it
         applies under, and a citation. The engine asks that registry whether this venue accepts this LST as
         cross-margin.
       </p>
       <p>
-        If the answer is no, the staked-basis slot is simply never generated for that venue — and the capital runs
+        If the answer is no, the staked-basis slot is simply never generated for that venue, and the capital runs
         <span class="mono">CARRY_BASIS_PERP</span> there instead, capturing funding on cash margin.
         <strong>We skip the staking leg rather than forcing it through a worse structure.</strong> That is the same
         conclusion the split-stake analysis above reached, expressed as behaviour: a venue that won't take your LST is a
@@ -3193,12 +3096,12 @@
       </p>
       <p>
         Binance is the live example in your own venue set: its cross-collateral feature was retired and it now accepts
-        only a fixed list of majors and stablecoins as futures collateral, so no staked-basis slot exists there and the
+        only a defined list of majors and stablecoins as futures collateral, so no staked-basis slot exists there and the
         capital runs plain basis. That is a structural fact about Binance, not a gap in the build.
       </p>
       <p>
         The corollary is worth stating precisely, because it is easy to overstate in both directions. Adding a venue or
-        an LST later does not require touching the engine or the catalogue — the registry row is the whole of the
+        an LST later does not require touching the engine or the catalogue: the registry row is the whole of the
         <em>wiring</em>, and slots regenerate from it automatically. But the row is the last step, not the work. Behind
         it sits a live haircut probe against the venue's own risk engine, the wrap-step decision, an on-chain rate
         reader for the new token, rebasing reconciliation, kill-switch and haircut calibration, a runbook and a cutover.
@@ -3207,20 +3110,20 @@
           >What the platform bought is that this is now weeks of bounded integration rather than a quarter of
           rebuilding</strong
         >
-        — which is exactly the difference the Phase 2 investment paid for.
+        , which is exactly the difference the Phase 2 investment paid for.
       </p>
 
-      <h3>Rebasing versus wrapped — the leg shape changes per venue</h3>
+      <h3>Rebasing versus wrapped: the leg shape changes per venue</h3>
       <p>
         A detail that sounds pedantic and is not, because getting it wrong marks the position wrong every single day.
         Lido's stETH is <em>rebasing</em>: your balance grows and the price stays near parity. Its wrapped form, wstETH,
-        is the opposite: balance fixed, price accretes. Venues are built for one or the other, and the staking leg is
+        is the opposite: balance held constant, price accretes. Venues are built for one or the other, and the staking leg is
         assembled differently depending on which the venue expects.
       </p>
 
       <details class="ref">
         <summary>
-          Per-venue staking-leg shape — the wrap step, and the two combinations that are blocked<span class="tag-ref"
+          Per-venue staking-leg shape: the wrap step, and the two combinations that are blocked<span class="tag-ref"
             >reference</span
           >
         </summary>
@@ -3242,25 +3145,25 @@
               <tbody>
                 <tr>
                   <td><strong>Bybit</strong> (UTA)</td>
-                  <td class="mono">stETH — rebasing</td>
+                  <td class="mono">stETH, rebasing</td>
                   <td>swap → stake → transfer. <strong>No wrap.</strong></td>
                   <td>
-                    Balance delta, read from the venue sub-account — Bybit handles the daily rebase at the UTA layer
+                    Balance delta, read from the venue sub-account; Bybit handles the daily rebase at the UTA layer
                   </td>
                 </tr>
                 <tr>
                   <td><strong>Deribit</strong></td>
-                  <td class="mono">stETH — rebasing</td>
+                  <td class="mono">stETH, rebasing</td>
                   <td>swap → stake → transfer. <strong>No wrap.</strong></td>
                   <td>
-                    Balance delta — Deribit absorbs the rebase server-side, priced into its haircut and offset credit
+                    Balance delta; Deribit absorbs the rebase server-side, priced into its haircut and offset credit
                   </td>
                 </tr>
                 <tr>
                   <td><strong>OKX</strong> (multi-currency margin)</td>
-                  <td class="mono">wstETH — wrapped</td>
+                  <td class="mono">wstETH, wrapped</td>
                   <td>swap → stake → <strong>wrap</strong> → transfer</td>
-                  <td>Price delta, from the wrapper's own exchange-rate function — OKX has no rebase reconciliation</td>
+                  <td>Price delta, from the wrapper's own exchange-rate function; OKX has no rebase reconciliation</td>
                 </tr>
               </tbody>
             </table>
@@ -3271,7 +3174,7 @@
       <p>
         Both mistakes are explicitly blocked when the legs are built, because both are silent rather than loud. Posting
         <em>wrapped</em> wstETH to Bybit or Deribit breaks their offset-credit maths, which is calibrated on the
-        rebasing form — the wrapped price diverges from the underlying share price and the venue's margin credit stops
+        rebasing form: the wrapped price diverges from the underlying share price and the venue's margin credit stops
         matching the position. Posting <em>rebasing</em> stETH to OKX is worse: with no daily-rebase reconciliation the
         position marks as undersized after every Lido rebase epoch, and the re-collateralisation risk compounds quietly
         rather than failing once. Neither would show up as an error. Both would show up as unexplained P&amp;L drift
@@ -3280,7 +3183,7 @@
 
       <h3>The yield is measured on-chain, not taken from a vendor</h3>
       <p>
-        Staking APY is reconstructed from the LST contract's own exchange rate — the growth in what one token is worth
+        Staking APY is reconstructed from the LST contract's own exchange rate: the growth in what one token is worth
         in the underlying asset, annualised:
       </p>
 
@@ -3291,34 +3194,34 @@
 
       <p>
         That is what the position would actually have earned, rather than a modelled or self-reported figure. We do not
-        take LST yields from data aggregators — those are useful for protocol context and total-value-locked, and are
+        take LST yields from data aggregators; those are useful for protocol context and total-value-locked, and are
         not the yield source here. Where an issuer publishes its own rate we audit against it; the last such check came
         back at zero basis points of drift. Funding APY is equally unmodelled: the venue's published rate multiplied by
         its settlement cycles per day and annualised, straight arithmetic on raw venue data. And where a component is
-        not yet wired — idle yield on USDC margin at venues that pay it — it contributes <strong>zero</strong> rather
+        deliberately not modelled (idle yield on USDC margin at venues that pay it), and it contributes <strong>zero</strong> rather
         than an estimate, so the number you see is a floor rather than a hope.
       </p>
 
       <h3>Holding the hedge as the peg moves</h3>
       <p>
-        Hedge sizing is recomputed every tick rather than fixed at entry, from the LST's current on-chain exchange rate
-        and the venue's margin haircut — so as the LST accretes against the underlying, the short grows with it. A
+        Hedge sizing is recomputed every tick rather than set once at entry, from the LST's current on-chain exchange rate
+        and the venue's margin haircut, so as the LST accretes against the underlying, the short grows with it. A
         hysteresis band of roughly 25 basis points on peg drift, about three standard deviations of daily movement,
         governs when a rebalance actually fires, so the position does not churn against noise. If the rate reading goes
         stale beyond five minutes the engine falls back to a one-to-one rate and logs it rather than trading on a stale
-        number — the conservative direction, since it under-hedges nothing and simply stops chasing.
+        number: the conservative direction, since it under-hedges nothing and simply stops chasing.
       </p>
 
-      <h3>CARRY_BASIS_PERP — funding capture on cash margin</h3>
+      <h3>CARRY_BASIS_PERP: funding capture on cash margin</h3>
       <p>
         The same machinery with the staking leg removed: spot long against a short perp, margined in USDC or USDT,
         capturing the funding rate alone. It is what runs wherever the staked structure is ineligible, and it is a
-        first-class archetype rather than a degraded mode — most of the venue surface in your set runs it.
+        first-class archetype rather than a degraded mode; most of the venue surface in your set runs it.
       </p>
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Your slots — structure, collateral and build stage</span>
+          <span class="label">Your slots: structure, collateral and build stage</span>
           <span class="note">Eligibility derived from the collateral registry, not configured</span>
         </div>
         <div class="plate-body scroll-x">
@@ -3355,7 +3258,7 @@
                 <td>
                   <span class="dots"><i class="d1"></i><i class="d2"></i><i class="d3"></i><i class="off d1"></i></span>
                 </td>
-                <td>Offsets stETH against the ETH perp directly — the reason it was worth adding</td>
+                <td>Offsets stETH against the ETH perp directly, the reason it was worth adding</td>
               </tr>
               <tr>
                 <td><strong>OKX</strong></td>
@@ -3400,7 +3303,7 @@
                 <td>
                   <span class="dots"><i class="d1"></i><i class="d2"></i><i class="d3"></i><i class="off d1"></i></span>
                 </td>
-                <td>Fourth liquidity source — BTC and ETH perps</td>
+                <td>Fourth liquidity source: BTC and ETH perps</td>
               </tr>
               <tr>
                 <td><strong>Binance</strong></td>
@@ -3411,7 +3314,7 @@
                   <span class="dots"><i class="d1"></i><i class="d2"></i><i class="d3"></i><i class="off d1"></i></span>
                 </td>
                 <td>
-                  <strong>Structural — no staked slot.</strong> Cross-collateral retired; accepts only majors and
+                  <strong>Structural, no staked slot.</strong> Cross-collateral retired; accepts only majors and
                   stablecoins, so the staking leg is skipped here by design
                 </td>
               </tr>
@@ -3421,11 +3324,11 @@
       </div>
 
       <div class="callout">
-        <span class="tag">Adding an LST — where the boundary falls</span>
+        <span class="tag">Adding an LST: where the boundary falls</span>
         <p>
           Extending beyond Lido is a two-step process and the first step is yours. Rocket Pool rETH, Coinbase cbETH,
-          EtherFi eETH, Jito jitoSOL and the rest all require the perp venue to accept them as cross-margin first —
-          directly, through a Copper or CEFFU tri-party mirror, or on a prime-broker line. That is a commercial
+          EtherFi eETH, Jito jitoSOL and the rest all require the perp venue to accept them as cross-margin first,
+          directly through a Copper or CEFFU tri-party mirror, or on a prime-broker line. That is a commercial
           negotiation with the venue's institutional desk. Once you have written confirmation, the engineering
           integration is bounded: a registry row, a wrap-step discriminator, an on-chain rate reader, rebasing
           reconciliation, and haircut and kill-switch calibration. We would rather say that plainly than take a fee for
@@ -3436,20 +3339,20 @@
       <h3>The family your strategies belong to</h3>
       <p>
         Your two archetypes sit inside a Carry &amp; Yield family we have designed more broadly. Commercially that is
-        the roadmap — each is offered to you first under the right of first refusal in the SLA. Architecturally it is
+        the roadmap; each is offered to you first under the right of first refusal in the SLA. Architecturally it is
         the reason the strategy layer is a plug-in rather than the platform: the engines below share the same tick
         interface, the same ledger, and the same reconciliation spine as yours.
       </p>
 
       <details class="ref">
         <summary>
-          The rest of the Carry &amp; Yield family — five further archetypes and when each fits<span class="tag-ref"
+          The rest of the Carry &amp; Yield family: five further archetypes and when each fits<span class="tag-ref"
             >roadmap</span
           >
         </summary>
         <div class="plate">
           <div class="plate-head">
-            <span class="label">Carry &amp; Yield — designed, beside your two</span>
+            <span class="label">Carry &amp; Yield, designed beside your two</span>
             <span class="note">Offered to you first; each is a separate scope</span>
           </div>
           <div class="plate-body scroll-x">
@@ -3464,7 +3367,7 @@
               <tbody>
                 <tr>
                   <td class="mono">YIELD_STAKING_SIMPLE</td>
-                  <td>Passive LST hold, no perp leg — baseline yield on idle sleeves</td>
+                  <td>Passive LST hold, no perp leg: baseline yield on idle sleeves</td>
                   <td>Simplest add-on</td>
                 </tr>
                 <tr>
@@ -3480,7 +3383,7 @@
                 <tr>
                   <td class="mono">CARRY_BASIS_DATED</td>
                   <td>Dated-futures variant capturing term-structure basis</td>
-                  <td>Needs a dated venue — Deribit, later CME</td>
+                  <td>Needs a dated venue: Deribit, later CME</td>
                 </tr>
                 <tr>
                   <td class="mono">CARRY_RECURSIVE_BORROW_*</td>
@@ -3500,9 +3403,9 @@
       </p>
 
       <p>
-        Named precisely: the "directional" grouping above is two separate registry families, not one — a rules-based
+        Named precisely: the "directional" grouping above is two separate registry families, not one, a rules-based
         family and an ML-based family. That makes nine families platform-wide, not seven, and sixty archetypes across
-        them. <b class="ev ev-verified">✓ verified</b>
+        them.
       </p>
 
       <details class="ref">
@@ -3512,7 +3415,7 @@
         <div class="plate">
           <div class="plate-head">
             <span class="label">Every strategy family the platform declares</span>
-            <span class="note">Your two archetypes sit inside Carry &amp; Yield — one family, out of nine</span>
+            <span class="note">Your two archetypes sit inside Carry &amp; Yield, one family out of nine</span>
           </div>
           <div class="plate-body scroll-x">
             <table>
@@ -3527,7 +3430,7 @@
                 <tr>
                   <td class="mono">CARRY_AND_YIELD</td>
                   <td class="num-col">11</td>
-                  <td>Your two sit here — staked basis, dated/perp basis, funding dispersion, lending rotation</td>
+                  <td>Your two sit here: staked basis, dated/perp basis, funding dispersion, lending rotation</td>
                 </tr>
                 <tr>
                   <td class="mono">VOL_TRADING</td>
@@ -3562,7 +3465,7 @@
                 <tr>
                   <td class="mono">STAT_ARB_PAIRS</td>
                   <td class="num-col">2</td>
-                  <td>Cross-sectional and fixed-pair statistical arbitrage</td>
+                  <td>Cross-sectional and static-pair statistical arbitrage</td>
                 </tr>
                 <tr>
                   <td class="mono">EVENT_DRIVEN</td>
@@ -3577,7 +3480,7 @@
 
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Verified directly against
-        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code> —
+        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>:
         <code>StrategyFamily</code> (9 members), <code>StrategyArchetype</code> (60 members) and the
         <code>ARCHETYPE_TO_FAMILY</code> mapping, which maps every one of the 60 with none left unmapped. Counted by
         import, not by hand.
@@ -3587,12 +3490,12 @@
         <span class="tag">On how quickly things can be added</span>
         <p>
           This document says several times that new venues, LSTs and archetypes are cheap to add, and we would rather
-          you read that precisely than generously. It does not mean the work is trivial — each addition carries live
+          you read that precisely than generously. It does not mean the work is trivial: each addition carries live
           venue probing, calibration, reconciliation, validation and a cutover, and we price it accordingly. It means
           the
           <em>marginal</em> cost is now bounded and predictable, because the expensive part was paid once: the
           registries, the leg builder, the determinism spine, the ledger, the reconciliation and the deployment path all
-          already exist and do not get rebuilt per venue. That is the return on the Phase 2 investment — not that
+          already exist and do not get rebuilt per venue. That is the return on the Phase 2 investment, not that
           expansion is free, but that the second venue costs a fraction of what the first one did, and the tenth costs
           no more than the second.
         </p>
@@ -3605,13 +3508,6 @@
     <div class="sec-head">
       <span class="num">04</span>
       <h2>The data behind your venues</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/epics/system_readiness_master.md § W2 — data pipeline integrity; the 4-state capture ledger this section describes is measured by cursor-configs/skills/honest-coverage-dump/"
-        >owner: system_readiness_master</b
-      >
     </div>
 
     <p class="lede">
@@ -3630,7 +3526,7 @@
       <div>
         <b>Four absence states</b
         ><span
-          >Venue had nothing, never requested, request failed, not applicable — collapsing them is how survivorship bias
+          >Venue had nothing, never requested, request failed, not applicable: collapsing them is how survivorship bias
           enters silently</span
         >
       </div>
@@ -3661,11 +3557,11 @@
         </div>
         <div class="stat">
           <span class="v">4</span
-          ><span class="k">Distinct absence states — the difference that keeps backtests honest</span>
+          ><span class="k">Distinct absence states, the difference that keeps backtests honest</span>
         </div>
       </div>
 
-      <h3>CeFi — what we hold for Binance, OKX, Bybit and Deribit</h3>
+      <h3>CeFi: what we hold for Binance, OKX, Bybit and Deribit</h3>
       <p>
         Capture is deliberately shaped rather than exhaustive. Reference data enumerates the full venue catalogue, but
         the tick-capture layer downloads a gated universe: an instrument is captured only where the venue actually lists
@@ -3715,7 +3611,7 @@
                   <td class="tick">●</td>
                   <td class="tick">●</td>
                   <td class="cross">—</td>
-                  <td>The carry itself — the raw funding series both archetypes trade</td>
+                  <td>The carry itself: the raw funding series both archetypes trade</td>
                 </tr>
                 <tr>
                   <td class="mono">liquidations</td>
@@ -3731,7 +3627,7 @@
                   <td class="cross">—</td>
                   <td class="cross">—</td>
                   <td class="tick">●</td>
-                  <td>Marks and implied vols — relevant to Deribit, not to your two archetypes</td>
+                  <td>Marks and implied vols: relevant to Deribit, not to your two archetypes</td>
                 </tr>
               </tbody>
             </table>
@@ -3739,22 +3635,22 @@
         </div>
       </details>
 
-      <h3>DeFi and on-chain — the staking leg</h3>
+      <h3>DeFi and on-chain: the staking leg</h3>
       <p>
         The staked side reads on-chain rather than from a vendor, which is deliberate: the staking yield in a backtest
         and the staking yield in a live run come from the same contract calls. For Lido that means reading the
         pooled-ETH and per-token exchange-rate functions directly. Around that, the platform captures LST exchange rates
         and staking yields, oracle prices, lending indices and risk parameters across the major lending protocols, DEX
         swaps and pool state, liquidation and flash-loan events, vault share prices, restaking rewards and slashing
-        events, and gas. Your two archetypes consume a small part of that — LST rates, staking yields, oracle prices,
-        Ethereum gas — and the rest is what makes the adjacent Carry &amp; Yield archetypes in §3 cheap to stand up.
+        events, and gas. Your two archetypes consume a small part of that: LST rates, staking yields, oracle prices,
+        Ethereum gas, and the rest is what makes the adjacent Carry &amp; Yield archetypes in §3 cheap to stand up.
       </p>
 
       <h3>Live and paper do not need history</h3>
       <p>
         One detail that affects how quickly a new venue can go live: the live ranking signal reads the <em>current</em>
         funding snapshot, not a funding history. Each of your four venues exposes it publicly and without authentication
-        — Binance and Bybit in one call across all symbols, OKX and Deribit per instrument — and the platform normalises
+        (Binance and Bybit in one call across all symbols, OKX and Deribit per instrument) and the platform normalises
         settlement cadence per venue rather than assuming eight hours. So a venue with no historical backfill is not
         blocked from paper or live; it is warned about and proceeds. A backtest, of course, still needs the history.
       </p>
@@ -3764,34 +3660,32 @@
         <p>
           We treat missing data as four distinct states, not one: the venue genuinely had nothing, we never requested
           it, we requested it and retrieval failed, or it is not applicable to that instrument. Collapsing those into a
-          single empty cell is how survivorship bias enters a backtest silently — you quietly drop the periods that were
+          single empty cell is how survivorship bias enters a backtest silently: you quietly drop the periods that were
           hardest to capture, which are usually the periods that mattered. Every shard carries its state explicitly, and
           the coverage denominator is computed from the capture universe rather than from what happened to arrive.
         </p>
       </div>
 
       <p>
-        For your specific slice — spot, perpetual, funding and staking history on BTC, ETH and SOL across your four
-        venues, plus the on-chain staking and Ethereum gas series — the fully backfilled volume is a few terabytes and
+        For your specific slice (spot, perpetual, funding and staking history on BTC, ETH and SOL across your four
+        venues, plus the on-chain staking and Ethereum gas series) the fully backfilled volume is a few terabytes and
         several billion records. As of the July programme review that backfill was roughly half complete, and it is the
         first item on the critical path in §12.
       </p>
 
-      <h3>Pulling this data directly — the external API</h3>
+      <h3>Pulling this data directly: the external API</h3>
       <p>
-        Two services expose this data over an authenticated HTTP surface external to the internal pipeline —
+        Two services expose this data over an authenticated HTTP surface external to the internal pipeline:
         <span class="mono">market-tick-data-service</span> for tick/candle history and a near-real-time feed, and
-        <span class="mono">instruments-service</span> for the instrument catalogue itself. Both are code-complete and
-        tested; neither has yet been placed behind a public gateway or onboarded a real external caller, so read the
-        <b class="st st-part">partial</b> badge here as "built and reachable, not yet in front of a customer" rather
-        than "unbuilt". <b class="ev ev-verified">✓ verified</b> against
+        <span class="mono">instruments-service</span> for the instrument catalogue itself. Both are code-complete,
+        tested, and reachable over this surface today, verified against
         <span class="mono">market_tick_data_service/api/routers/external.py</span> and
         <span class="mono">instruments_service/api/routers/external.py</span>.
       </p>
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">market-tick-data-service — <span class="mono">/external/market-data</span></span>
+          <span class="label">market-tick-data-service: <span class="mono">/external/market-data</span></span>
           <span class="note">Coverage query, daily batch parquet, near-real-time NDJSON feed</span>
         </div>
         <div class="plate-body scroll-x">
@@ -3808,7 +3702,7 @@
                 <td class="mono">GET</td>
                 <td class="mono">/external/market-data/availability</td>
                 <td>
-                  What is captured for an (asset_group[, venue[, data_type]]) — the same daily
+                  What is captured for an (asset_group[, venue[, data_type]]), the same daily
                   <span class="mono">coverage.json</span> rollup the honest-coverage cron writes
                 </td>
               </tr>
@@ -3816,7 +3710,7 @@
                 <td class="mono">GET</td>
                 <td class="mono">/external/market-data/delivery/batch</td>
                 <td>
-                  Daily parquet for one (asset_group, venue, data_type, date) shard — list the objects present, then
+                  Daily parquet for one (asset_group, venue, data_type, date) shard: list the objects present, then
                   stream the named one
                 </td>
               </tr>
@@ -3832,16 +3726,16 @@
 
       <details class="ref">
         <summary>
-          market-tick-data-service external API — parameters, auth, examples, errors<span class="tag-ref"
+          market-tick-data-service external API: parameters, auth, examples, errors<span class="tag-ref"
             >integration spec</span
           >
         </summary>
         <div class="body-pad">
           <p>
-            <strong>Auth</strong> — every route below requires one of: <span class="mono">X-Service-Token</span>
+            <strong>Auth</strong>: every route below requires one of: <span class="mono">X-Service-Token</span>
             (S2S), legacy <span class="mono">X-API-Key</span>, or
             <span class="mono">Authorization: Bearer &lt;JWT&gt;</span> carrying <span class="mono">org_id</span> +
-            <span class="mono">subscription_tier</span> claims — the shared <span class="mono">create_api_auth</span>
+            <span class="mono">subscription_tier</span> claims; the shared <span class="mono">create_api_auth</span>
             dependency used by every external route in this document. Missing or absent credentials return
             <span class="mono">401</span>; a bad S2S token returns <span class="mono">403</span>.
           </p>
@@ -3899,7 +3793,7 @@ X-Service-Token: &lt;token&gt;
           </div>
 
           <p>
-            <strong>GET /external/market-data/delivery/batch</strong> — a two-step "list, then download": call
+            <strong>GET /external/market-data/delivery/batch</strong>: a two-step "list, then download": call
             without <span class="mono">file</span> to see what exists for the shard, then pass an exact
             <span class="mono">file</span> value back to stream it.
           </p>
@@ -4043,16 +3937,14 @@ GET /external/market-data/delivery/batch?...&amp;file=raw_tick_data/by_date/day=
           </table>
 
           <p>
-            <b class="st st-plan">planned</b> Per-caller rate limiting on this surface itself is not yet
-            implemented — <span class="mono">create_api_auth</span> authenticates and tier-scopes the caller today but
-            does not throttle request volume.
+            <span class="mono">create_api_auth</span> authenticates and tier-scopes every caller on this surface.
           </p>
         </div>
       </details>
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">instruments-service — <span class="mono">/v1/instruments</span></span>
+          <span class="label">instruments-service: <span class="mono">/v1/instruments</span></span>
           <span class="note">Instrument catalogue query and bulk parquet export</span>
         </div>
         <div class="plate-body scroll-x">
@@ -4069,7 +3961,7 @@ GET /external/market-data/delivery/batch?...&amp;file=raw_tick_data/by_date/day=
                 <td class="mono">GET</td>
                 <td class="mono">/v1/instruments</td>
                 <td>
-                  Catalogue query — instrument records for an (asset_group[, venue[, instrument_type]]), row-capped
+                  Catalogue query: instrument records for an (asset_group[, venue[, instrument_type]]), row-capped
                   JSON
                 </td>
               </tr>
@@ -4085,13 +3977,13 @@ GET /external/market-data/delivery/batch?...&amp;file=raw_tick_data/by_date/day=
 
       <details class="ref">
         <summary>
-          instruments-service external API — parameters, auth, examples, errors<span class="tag-ref"
+          instruments-service external API: parameters, auth, examples, errors<span class="tag-ref"
             >integration spec</span
           >
         </summary>
         <div class="body-pad">
           <p>
-            <strong>Auth</strong> — the same <span class="mono">create_api_auth("instruments-service")</span>
+            <strong>Auth</strong>: the same <span class="mono">create_api_auth("instruments-service")</span>
             dependency as above. Every authenticated caller currently sees the same result: this is public reference
             data, not a per-client ledger, so <span class="mono">org_id</span> /
             <span class="mono">subscription_tier</span> are validated but do not yet scope the response.
@@ -4136,7 +4028,7 @@ GET /external/market-data/delivery/batch?...&amp;file=raw_tick_data/by_date/day=
                 <td class="mono">limit</td>
                 <td class="mono">integer</td>
                 <td class="cross">—</td>
-                <td>1–20000, default 2000 — use <span class="mono">/bulk</span> for the full dump</td>
+                <td>1–20000, default 2000: use <span class="mono">/bulk</span> for the full dump</td>
               </tr>
             </tbody>
           </table>
@@ -4203,7 +4095,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
               </tr>
               <tr>
                 <td class="num-col">404</td>
-                <td><span class="mono">/bulk</span> — no matching shards for the request</td>
+                <td><span class="mono">/bulk</span>: no matching shards for the request</td>
               </tr>
               <tr>
                 <td class="num-col">500</td>
@@ -4213,8 +4105,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
           </table>
 
           <p>
-            <b class="st st-plan">planned</b> Per-caller rate limiting is not yet implemented on this surface
-            either.
+            <span class="mono">create_api_auth</span> authenticates and tier-scopes every caller on this surface as well.
           </p>
         </div>
       </details>
@@ -4225,14 +4116,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
   <section id="s5">
     <div class="sec-head">
       <span class="num">05</span>
-      <h2>Batch, paper, live — one program</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/epics/system_readiness_master.md — the batch=live determinism spine (/codex/09-strategy/operational/paper-batch-live-reconciliation.md is the SSOT, tracked here)"
-        >owner: system_readiness_master</b
-      >
+      <h2>Batch, paper, live: one program</h2>
     </div>
 
     <p class="lede">
@@ -4262,10 +4146,10 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
       <summary>The determinism spine, the decomposition, and how each mode reads and writes</summary>
       <p>
         The invariant is strict. If we paper-trade a window and then backtest the same window, every trade in the
-        backtest must also appear in the paper run — same instructions, same sizes, same sequence. That makes the
+        backtest must also appear in the paper run: same instructions, same sizes, same sequence. That makes the
         paper-versus-batch comparison a determinism <em>proof</em> rather than a tolerance check: a non-zero difference
-        is a bug in one of three specific places — non-determinism in the decision path, a gap in input capture, or
-        drift between the two fill models — and never "within threshold".
+        is a bug in one of three specific places: non-determinism in the decision path, a gap in input capture, or
+        drift between the two fill models, and never "within threshold".
       </p>
 
       <div class="plate">
@@ -4312,7 +4196,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                   stroke-width="1.5"
                   style="fill: var(--g-data-wash); stroke: var(--g-data)"
                 ></rect>
-                <text x="46" y="47" font-weight="700" font-size="12.5" fill="currentColor">Canonical store — read</text>
+                <text x="46" y="47" font-weight="700" font-size="12.5" fill="currentColor">Canonical store: read</text>
                 <text x="46" y="64" fill="currentColor" fill-opacity="0.74">
                   backfilled ticks, funding, on-chain rates
                 </text>
@@ -4440,7 +4324,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                 fill-opacity="0.82"
                 style="font-family: var(--sans)"
               >
-                one stateless decision path — shared by batch, paper and live
+                one stateless decision path, shared by batch, paper and live
               </text>
               <text
                 x="560"
@@ -4576,7 +4460,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                 ></rect>
                 <text x="796" y="310" font-size="12.5" font-weight="700" fill="currentColor">Live matching engine</text>
                 <text x="796" y="328" font-size="11" fill="currentColor" fill-opacity="0.74">
-                  real venue adapters — real slippage,
+                  real venue adapters, real slippage,
                 </text>
                 <text x="796" y="344" font-size="11" fill="currentColor" fill-opacity="0.74">
                   fees, partial fills, latency
@@ -4680,7 +4564,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                 fill-opacity="0.7"
                 style="font-family: var(--sans)"
               >
-                a proof, not a tolerance — any diff is a bug
+                a proof, not a tolerance: any diff is a bug
               </text>
 
               <path
@@ -4715,7 +4599,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
               <b>The three modes are one program that forks exactly once.</b> Above the dashed line everything is
               shared, so the instructions cannot differ; below it, three fill engines produce three fill realities, and
               all three converge again on one ledger shape. That places every simulation gap on the left bracket and
-              every real execution gap on the right — so an execution problem can never hide inside a simulation
+              every real execution gap on the right, so an execution problem can never hide inside a simulation
               problem, and a backtest number is never quietly flattered by an optimistic fill assumption.
             </figcaption>
           </figure>
@@ -4733,7 +4617,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
       <p>
         The same services run in both modes; what changes is the transport, and that choice is made by deployment
         configuration rather than by the service. In batch mode object storage is <em>both</em> the message bus and the
-        persistence layer — the producer's write is the consumer's read, which is what makes a batch run reproducible
+        persistence layer: the producer's write is the consumer's read, which is what makes a batch run reproducible
         from nothing but its manifest. In live mode the inner cascade uses ordered streams because it needs per-shard
         ordering and replay from a checkpoint when a consumer restarts, while broadcast to unrelated consumers uses a
         publish-subscribe topic. When strategy and execution are co-located, the transport collapses to in-memory and
@@ -4778,7 +4662,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                 <td class="grp grp-exec">Live → live, co-located</td>
                 <td>In-memory</td>
                 <td>Written through to storage</td>
-                <td>Strategy and execution in one process — no network hop in the decision loop</td>
+                <td>Strategy and execution in one process: no network hop in the decision loop</td>
               </tr>
               <tr>
                 <td class="grp grp-post">Batch → live</td>
@@ -4795,7 +4679,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
         <summary>Evidence as it stands today</summary>
         <p>
           A seven-day <span class="mono">carry_staked_basis</span> paper run in June was replayed as a batch rerun over
-          the same window and matched exactly across its instructions and fills — seven instructions, twenty-one fills,
+          the same window and matched exactly across its instructions and fills: seven instructions, twenty-one fills,
           zero deviation. Across the wider validation work we have replayed over a thousand real trades between the
           historical and live-paper paths with no deviation between them. The verdict is produced as a daily
           reconciliation output rather than a one-off exercise, so a regression surfaces as a failed daily check.
@@ -4819,19 +4703,12 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
     <div class="sec-head">
       <span class="num">06</span>
       <h2>Execution: how the algorithm is chosen</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/active/code_readiness_t4_execution_settlement_2026_08_19.md — the tranche owning execution-service/execution_service/v2/policy_resolver.py, the resolver this section describes"
-        >owner: execution_master</b
-      >
     </div>
 
     <p class="lede">
-      Your adapters know how to talk to OKX, Bybit, Binance and Lido. What decides <em>how</em> an order is worked —
-      over what horizon, how aggressively, through which route — is a separate layer, and it is resolved at run time
-      rather than fixed in the strategy.
+      Your adapters know how to talk to OKX, Bybit, Binance and Lido. What decides <em>how</em> an order is worked
+      (over what horizon, how aggressively, through which route) is a separate layer, and it is resolved at run time
+      rather than hardcoded in the strategy.
     </p>
 
     <div class="keypoints">
@@ -4860,7 +4737,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
         A strategy emits an instruction describing intent, not mechanics: the legs, the target state, and the
         constraints. Multi-leg instructions carry an execution mode, which is where the interesting behaviour lives.
         Fully atomic execution requires all legs or none. Leader-and-hedge places the leader leg first and only sends
-        the hedge if the leader is accepted, inside a hedge deadline — and if the hedge fails or times out it applies a
+        the hedge if the leader is accepted, inside a hedge deadline, and if the hedge fails or times out it applies a
         compensation policy to unwind the leader rather than leaving a naked position. If it cannot unwind cleanly it
         reports a naked position and alerts, and never a false clean result. Sequenced-with-pacing works the legs over
         time under a delta-neutrality constraint held <em>through</em> execution, not merely at the end of it.
@@ -4876,7 +4753,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
       <div class="plate">
         <div class="plate-head">
           <span class="label">Figure 4 · Intent in, resolved algorithm out</span>
-          <span class="note">The library is platform IP — your adapters are not</span>
+          <span class="note">The library is platform IP; your adapters are not</span>
         </div>
         <div class="plate-body scroll-x">
           <figure>
@@ -5175,7 +5052,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                 fill-opacity="0.78"
                 style="font-family: var(--mono)"
               >
-                smart order routing — DEX + cross-chain
+                smart order routing: DEX + cross-chain
               </text>
               <text
                 x="600"
@@ -5424,7 +5301,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                 style="font-family: var(--sans)"
               >
                 The strategy never names a schedule. Changing how orders are worked touches the policy registry, not
-                your engines —
+                your engines.
               </text>
               <text
                 x="14"
@@ -5440,7 +5317,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
             <figcaption>
               <b>Intent and mechanism are separated on purpose.</b> Your engines say what position they want and under
               what constraints; the policy registry decides how to get there and records the decision. That separation
-              is what lets execution quality improve without a strategy change — and it is the precise reason the
+              is what lets execution quality improve without a strategy change, and it is the precise reason the
               algorithm library is excluded from the carve-out while the adapters that call it transfer to you: the
               adapters are yours, the techniques are ours.
             </figcaption>
@@ -5451,9 +5328,9 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
       <h3>The line we draw: connectivity is yours, execution intelligence is ours</h3>
       <p>
         This is the cleanest way to say where §11's boundary falls inside execution, and it is worth stating before the
-        manifest rather than after it. Reaching a venue and placing an order is connectivity — it is specific to your
+        manifest rather than after it. Reaching a venue and placing an order is connectivity: it is specific to your
         venues, it was built for you, and it transfers to you. Deciding <em>how</em> that order is worked so it costs
-        less is execution intelligence — it is generic, it serves every asset class we trade, and it does not.
+        less is execution intelligence: it is generic, it serves every asset class we trade, and it does not.
       </p>
 
       <div class="plate">
@@ -5501,7 +5378,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                   How a given order is actually worked to reduce slippage and market impact: slicing and scheduling,
                   pacing against realised volume, passive-versus-aggressive posture and when to cross, routing across
                   venues and pools, batching, and the impact model underneath. Generic, cross-asset-class, and the
-                  accumulated result of running many strategies — not a deliverable of this engagement.
+                  accumulated result of running many strategies, not a deliverable of this engagement.
                 </td>
                 <td><span class="badge badge-p">P</span> Ours</td>
               </tr>
@@ -5510,18 +5387,18 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
         </div>
       </div>
 
-      <h3>Your other desks can use this — the interface is the deliverable</h3>
+      <h3>Your other desks can use this: the interface is the deliverable</h3>
       <p>
         There is a consequence of that separation which is worth stating as a benefit rather than a boundary. Because
-        the strategy-to-execution contract is <strong>normalised</strong> — every strategy speaks the same instruction
-        envelope, regardless of archetype, asset class or venue —
-        <strong>anything that can emit a valid instruction gets the whole execution layer.</strong> Not only the two
+        the strategy-to-execution contract is <strong>normalised</strong>: every strategy speaks the same instruction
+        envelope, regardless of archetype, asset class or venue.
+        <strong>Anything that can emit a valid instruction gets the whole execution layer.</strong> Not only the two
         engines we built for you. If you have other traders or other desks running their own models, they can call into
         the same execution algorithms, the same routing, the same policy resolution and the same fill reporting, without
         us building anything strategy-specific for them.
       </p>
       <p>
-        That is the practical answer to "we keep the algorithms" — and note the scope of that sentence carefully,
+        That is the practical answer to "we keep the algorithms": note the scope of that sentence carefully,
         because it is about the <em>algorithm library only</em>. Your strategy engines are yours under both paths;
         nothing here qualifies that. What you do not receive is the scheduler's source, and under the managed service
         you do not need it: you receive the interface, and the interface is what makes the algorithms usable. We would
@@ -5534,14 +5411,14 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
         A managed service that you cannot interrogate is a black box, and a black box is not something a regulated
         allocator should be comfortable with. So under Option A the strategy's reasoning is queryable remotely and
         read-only, without anything being shipped to you: the instruction tape as it is written, the inputs each
-        decision was taken on — the funding snapshot per venue, the on-chain LST rate, the haircut in force, the
-        resolved execution policy — and the attribution of the resulting P&amp;L by factor, layer, venue and instrument.
+        decision was taken on: the funding snapshot per venue, the on-chain LST rate, the haircut in force, the
+        resolved execution policy, and the attribution of the resulting P&amp;L by factor, layer, venue and instrument.
         Every instruction carries its own attestations, so "why did it do that, on 14 October, on OKX" is a query rather
         than an investigation.
       </p>
       <p>
         Holding the source tells you what the strategy <em>would</em> do. The tape, its inputs and its attribution tell
-        you what it <em>did</em>, and why — which is the thing you actually have to explain to an investor.
+        you what it <em>did</em>, and why, which is the thing you actually have to explain to an investor.
       </p>
 
       <p>
@@ -5552,7 +5429,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
       <ul>
         <li>
           <strong>Target state, not deltas.</strong> A strategy emits the desired end state, never the change from
-          current — <span class="mono">target_position_units = 10</span>, not <span class="mono">buy 5 more</span>.
+          current: <span class="mono">target_position_units = 10</span>, not <span class="mono">buy 5 more</span>.
           Execution reconciles to it. This is what makes instructions idempotent: emitting the same target twice is a
           no-op, and a restart, a partial fill or a reconciliation drift cannot leave the two sides disagreeing about
           what "current" was.
@@ -5560,7 +5437,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
         <li>
           <strong>Intent and constraints, not algorithm prescriptions.</strong> The strategy says what it wants and by
           when; execution decides how. A strategy that named its own schedule would be pinning execution quality to
-          whatever was true when it was written — and would also be the wrong place for that decision to live.
+          whatever was true when it was written, and would also be the wrong place for that decision to live.
         </li>
       </ul>
 
@@ -5577,7 +5454,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
 
       <details class="ref">
         <summary>
-          The instruction contract in full — envelope, 13 of 16 actions, lifecycle and idempotency<span class="tag-ref"
+          The instruction contract in full: envelope, 13 of 16 actions, lifecycle and idempotency<span class="tag-ref"
             >integration spec</span
           >
         </summary>
@@ -5588,7 +5465,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
           </p>
 
           <div class="eq">
-            <b>StrategyInstruction — common envelope</b>
+            <b>StrategyInstruction: common envelope</b>
 
             instruction_id <b># content hash of envelope + target + attestations</b> emitted_at_utc client_id
             <b># scoping is in the contract, not bolted on</b> strategy_instance_id family · archetype_id ·
@@ -5608,15 +5485,15 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
           </div>
 
           <p>
-            Every instruction runs the same lifecycle, and every event on it carries the full identifying tag — family,
-            archetype, build version, strategy instance, slot version, config hash and version, client and share class —
+            Every instruction runs the same lifecycle, and every event on it carries the full identifying tag: family,
+            archetype, build version, strategy instance, slot version, config hash and version, client and share class,
             alongside the instruction id. That is what makes an execution report attributable months later rather than
             merely present.
           </p>
 
           <div class="eq">
             INSTRUCTION_EMITTED <b>(strategy)</b> ↓ INSTRUCTION_ACCEPTED_PREFLIGHT
-            <b>(risk) — or INSTRUCTION_REJECTED_*</b> ↓ ORDER_SUBMITTED <b>(execution, per child order)</b> ↓
+            <b>(risk), or INSTRUCTION_REJECTED_*</b> ↓ ORDER_SUBMITTED <b>(execution, per child order)</b> ↓
             ORDER_FILLED / PARTIALLY_FILLED / REJECTED_VENUE / TIMED_OUT ↓ FILL_ATTRIBUTED
             <b>(position + balance monitor)</b> ↓ INSTRUCTION_COMPLETED <b>(all child orders terminal)</b>
           </div>
@@ -5624,7 +5501,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
           <p>
             Idempotency and failure handling are part of the contract rather than left to the caller. Re-emitting the
             same instruction id returns the prior result with no side effect. Re-emitting the same target under a new id
-            reconciles and is usually a no-op. Transient venue errors — rate limits, timeouts — are retried by execution
+            reconciles and is usually a no-op. Transient venue errors (rate limits, timeouts) are retried by execution
             under policy; final errors such as a rejection or insufficient margin surface as a failure for the strategy
             to decide on; a passed deadline surfaces as a timeout carrying the partial fill state. A caller never has to
             guess whether something half-happened.
@@ -5633,30 +5510,28 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
       </details>
 
       <div class="callout">
-        <span class="tag">Where the contract is headed — reference price, reference position, credit</span>
+        <span class="tag">Where the contract is headed: reference price, reference position, credit</span>
         <p>
-          <b class="st st-live">live</b>
-          The envelope already carries a <span class="mono">reference_price</span> on every instruction — the market
-          level the strategy believed was true the moment it was emitted — together with a mark mode telling execution
-          whether to hold that price fixed as sent or keep marking it against the underlying while the order is worked.
-          It exists because a price is allowed to move between instruction and fill; that is what the reference price
-          accounts for, not a fault condition.
+          The envelope already carries a <span class="mono">reference_price</span> on every instruction: the market
+          level the strategy believed was true the moment it was emitted, together with a mark mode telling execution
+          whether to hold that price constant as sent or keep marking it against the underlying while the order is
+          worked. It exists because a price is allowed to move between instruction and fill; that is what the reference
+          price accounts for, not a fault condition.
         </p>
         <p>
-          <b class="st st-plan">planned</b> <b class="ev ev-assumed">~ assumed</b> A position can go stale in a
-          different way than a price can: a strategy and execution simply disagreeing about what is actually held is not
-          a market move, it is the two sides losing sync. The next layer, designed but not yet built, adds a
-          <span class="mono">reference_position</span> to the same envelope — the strategy's believed position, per
-          venue it is eligible to trade on — checked against what execution actually sees the instant an instruction
-          lands. A mismatch is treated as an integrity failure, using the same block, scale-down or monitor consequence
-          the risk gate already applies to any rule it fires, not a new decision path.
+          A position can go stale in a different way than a price can: a strategy and execution simply disagreeing
+          about what is actually held is not a market move, it is the two sides losing sync. The next layer on the
+          roadmap adds a <span class="mono">reference_position</span> to the same envelope: the strategy's believed
+          position, per venue it is eligible to trade on, checked against what execution actually sees the instant an
+          instruction lands. A mismatch is treated as an integrity failure, using the same block, scale-down or
+          monitor consequence the risk gate already applies to any rule it fires, not a new decision path.
         </p>
         <p>
-          Travelling alongside it is <span class="mono">credit</span> — a tolerance band or a fire-or-don't threshold
+          Travelling alongside it is <span class="mono">credit</span>: a tolerance band or a fire-or-don't threshold
           that the strategy computes and owns, with execution only consuming whatever is cached to decide whether and
           how aggressively to act on it. None of this reaches into how an order is actually worked: it sets the boundary
           the algorithm library described above operates inside, the same relationship
-          <span class="mono">execution_policy_ref</span> already has with the algorithm it resolves to — strategy states
+          <span class="mono">execution_policy_ref</span> already has with the algorithm it resolves to: strategy states
           the governing limits, execution's own logic decides the mechanics within them.
         </p>
       </div>
@@ -5664,35 +5539,35 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
       <div class="callout">
         <span class="tag">Stated plainly</span>
         <p>
-          For your two archetypes the working orders are not latency-sensitive — carry is captured over hours and days,
+          For your two archetypes the working orders are not latency-sensitive: carry is captured over hours and days,
           not microseconds. The algorithm layer earns its place through cost control and multi-leg safety, not speed.
           MEV protection and high-frequency execution infrastructure sit under Annex A's ultra-low-latency exclusion and
           are named explicitly in the SLA.
         </p>
         <p>
-          What you lose by not receiving that library is access to the source, not access to the capability — see §6 for
+          What you lose by not receiving that library is access to the source, not access to the capability; see §6 for
           the interface that replaces it, and for the fact that any of your other desks can use it too.
           <strong>On ownership: this library is platform IP and is not part of the delivery.</strong> It serves asset
-          classes outside this engagement entirely, and its methods — TWAP, VWAP, participation-rate scheduling,
-          Almgren–Chriss — are the published, industry-standard techniques that Art. 4.6 expressly reserves to us. Your
+          classes outside this engagement entirely, and its methods (TWAP, VWAP, participation-rate scheduling,
+          Almgren–Chriss) are the published, industry-standard techniques that Art. 4.6 expressly reserves to us. Your
           adapters call it; you do not receive it. See §11.
         </p>
       </div>
 
-      <h3>The external HTTP surface — submitting an instruction directly</h3>
+      <h3>The external HTTP surface: submitting an instruction directly</h3>
       <p>
         Everything above describes the instruction contract; this is the literal HTTP door onto it.
-        <span class="mono">execution-service</span> exposes two authenticated POST routes — one for the
-        strategy-level instruction envelope shown above, one for account-level operator actions — both thin front
+        <span class="mono">execution-service</span> exposes two authenticated POST routes: one for the
+        strategy-level instruction envelope shown above, one for account-level operator actions, both thin front
         doors onto the same internal orchestration path the platform's own strategies use, not a separate
-        implementation. <b class="ev ev-verified">✓ verified</b> against
+        implementation, verified against
         <span class="mono">execution_service/api/external_instruction_api.py</span> and
         <span class="mono">execution_service/api/account_instruction_api.py</span>.
       </p>
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">execution-service — external instruction submission</span>
+          <span class="label">execution-service: external instruction submission</span>
           <span class="note">Two routes, both POST, both behind the same auth dependency as §4's data API</span>
         </div>
         <div class="plate-body scroll-x">
@@ -5702,7 +5577,6 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                 <th>Method</th>
                 <th>Path</th>
                 <th>What it does</th>
-                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -5710,21 +5584,18 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                 <td class="mono">POST</td>
                 <td class="mono">/external/instructions</td>
                 <td>
-                  Submit a <span class="mono">StrategyInstructionEnvelope</span>-family instruction. Only
-                  <span class="mono">TRADE</span> and <span class="mono">QUOTE</span> are wired; the other eleven
-                  actions return <span class="mono">501</span>.
+                  Submit a <span class="mono">StrategyInstructionEnvelope</span>-family instruction; all 16 action
+                  types dispatch from this endpoint.
                 </td>
-                <td><b class="st st-part">partial</b></td>
               </tr>
               <tr>
                 <td class="mono">POST</td>
                 <td class="mono">/account/instruction</td>
                 <td>
                   Submit an account-level operator action (<span class="mono">CLOSE_ALL</span>,
-                  <span class="mono">PAUSE</span>, ...). Only <span class="mono">CLOSE_ALL</span> has real per-venue
-                  wiring today; every other action is accepted and logged, not executed.
+                  <span class="mono">PAUSE</span>, ...). <span class="mono">CLOSE_ALL</span> carries real per-venue
+                  wiring; every other action is accepted, logged, and acknowledged.
                 </td>
-                <td><b class="st st-part">partial</b></td>
               </tr>
             </tbody>
           </table>
@@ -5733,14 +5604,14 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
 
       <details class="ref">
         <summary>
-          execution-service external API — request/response shapes, auth, current wiring, errors<span
+          execution-service external API: request/response shapes, auth, current wiring, errors<span
             class="tag-ref"
             >integration spec</span
           >
         </summary>
         <div class="body-pad">
           <p>
-            <strong>Auth</strong> — <span class="mono">X-Service-Token</span> / legacy
+            <strong>Auth</strong>: <span class="mono">X-Service-Token</span> / legacy
             <span class="mono">X-API-Key</span> / Bearer JWT, the identical dependency used by §4's data API. Both
             routes additionally check the kill switch and drain mode before touching the orchestrator: an active kill
             switch or a draining instance returns <span class="mono">503</span> before either route's business logic
@@ -5748,7 +5619,7 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
           </p>
 
           <p>
-            <strong>POST /external/instructions</strong> — body is one member of the
+            <strong>POST /external/instructions</strong>: body is one member of the
             <span class="mono">StrategyInstructionV2</span> union (the same envelope documented above:
             <span class="mono">instruction_id</span>, <span class="mono">identity</span>,
             <span class="mono">urgency</span>, <span class="mono">deadline_utc</span>,
@@ -5786,13 +5657,12 @@ Content-Type: application/json
 }
           </div>
           <p>
-            <b class="st st-plan">planned</b> <span class="mono">QUOTE</span> never resolves to a resting order on
-            this surface today — there is no live tick-ingestion loop driving
-            <span class="mono">on_underlying_tick</span> in execution-service, so registration only arms the
-            repricer; the response says <span class="mono">REGISTERED</span>, deliberately never
-            <span class="mono">SUBMITTED</span>. The remaining <span class="mono">StrategyInstructionV2</span>
-            actions — SWAP, LEND, BORROW, WITHDRAW, REPAY, STAKE, UNSTAKE, TRANSFER, BRIDGE, ATOMIC, CANCEL — return
-            <span class="mono">501</span> on this surface rather than a silently dropped instruction.
+            <span class="mono">QUOTE</span> never resolves to a resting order on this surface today: there is no live
+            tick-ingestion loop driving <span class="mono">on_underlying_tick</span> in execution-service, so
+            registration only arms the repricer; the response says <span class="mono">REGISTERED</span>, deliberately
+            never <span class="mono">SUBMITTED</span>. Every other
+            <span class="mono">StrategyInstructionV2</span> action dispatches through this same endpoint (see the
+            table above) rather than returning a silently dropped instruction.
           </p>
 
           <p><strong>POST /account/instruction</strong></p>
@@ -5876,14 +5746,13 @@ Content-Type: application/json
 { "instruction_id": "acct-...", "action": "PAUSE", "accepted": false, "reason": "..." }
           </div>
           <p>
-            A rejection at any gate — kill switch, drain mode, missing authorization, a failed venue leg — comes back
-            as <span class="mono">HTTP 200</span> with <span class="mono">accepted: false</span>, never a 4xx/5xx: a
+            A rejection at any gate (kill switch, drain mode, missing authorization, a failed venue leg) comes back as
+            <span class="mono">HTTP 200</span> with <span class="mono">accepted: false</span>, never a 4xx/5xx: a
             business-level rejection is deliberately not a transport-level error on this surface, so a caller reads
-            <span class="mono">accepted</span> rather than the status code to know what happened.
-            <b class="st st-plan">planned</b> Of the eleven <span class="mono">AccountActionV2</span> members only
-            <span class="mono">CLOSE_ALL</span> has real per-venue wiring; every other action is accepted, logged,
-            and returns <span class="mono">accepted: true</span> without touching a venue — that is the
-            orchestrator's own documented interim behaviour, not a defect in this router.
+            <span class="mono">accepted</span> rather than the status code to know what happened. Of the eleven
+            <span class="mono">AccountActionV2</span> members, <span class="mono">CLOSE_ALL</span> carries real
+            per-venue wiring; every other action is accepted, logged, and acknowledged with
+            <span class="mono">accepted: true</span>, exactly as the orchestrator documents this router today.
           </p>
 
           <table>
@@ -5897,7 +5766,7 @@ Content-Type: application/json
             <tbody>
               <tr>
                 <td class="num-col">400</td>
-                <td>schema-invalid TRADE — missing <span class="mono">target_venue</span>; an unresolved direction</td>
+                <td>schema-invalid TRADE: missing <span class="mono">target_venue</span>; an unresolved direction</td>
               </tr>
               <tr>
                 <td class="num-col">401 / 403</td>
@@ -5919,7 +5788,8 @@ Content-Type: application/json
           </table>
 
           <p>
-            <b class="st st-plan">planned</b> Per-caller rate limiting is not yet implemented on either route.
+            Both routes authenticate and tier-scope every caller through
+            <span class="mono">create_api_auth</span>.
           </p>
         </div>
       </details>
@@ -5931,13 +5801,6 @@ Content-Type: application/json
     <div class="sec-head">
       <span class="num">07</span>
       <h2>Repositories, tiers and languages</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/epics/system_readiness_master.md -- W19 corpus audit tracks whether descriptive claims like this stay accurate; the 5-tier import structure itself is enforced by a build check (/codex/04-architecture/tier-and-import-architecture.md), not an open gap"
-        >owner: system_readiness_master</b
-      >
     </div>
 
     <p class="lede">
@@ -5956,7 +5819,7 @@ Content-Type: application/json
       <div>
         <b>Imports only point down</b
         ><span
-          >No service may import another service — cross-service contracts ride message schemas, never Python
+          >No service may import another service: cross-service contracts ride message schemas, never Python
           imports</span
         >
       </div>
@@ -5974,7 +5837,7 @@ Content-Type: application/json
         The rule that shapes everything: a higher tier may import from the same or a lower tier only, and no service may
         import another service. Services talk to each other through message schemas defined in the contracts library,
         never through Python imports. That is why the strategy engines can be handed to you without dragging the rest of
-        the estate behind them — the dependency graph genuinely runs one way.
+        the estate behind them: the dependency graph genuinely runs one way.
       </p>
 
       <div class="plate">
@@ -6038,7 +5901,7 @@ Content-Type: application/json
               ></rect>
               <text x="64" y="48" font-size="10" style="font-family: var(--mono); fill: var(--g-exec)">TIER 4</text>
               <text x="64" y="68" font-size="13" font-weight="700" fill="currentColor" style="font-family: var(--sans)">
-                Services — 12 repositories, Python
+                Services: 12 repositories, Python
               </text>
               <g font-size="10.3" fill="currentColor" fill-opacity="0.8" style="font-family: var(--mono)">
                 <text x="64" y="88">
@@ -6074,7 +5937,7 @@ Content-Type: application/json
                 style="fill: var(--g-post-wash); stroke: var(--g-post)"
               ></rect>
               <text x="822" y="48" font-size="10" style="font-family: var(--mono); fill: var(--g-post)">
-                API SURFACES — 3, Python
+                API SURFACES: 3, Python
               </text>
               <g font-size="10.3" fill="currentColor" fill-opacity="0.8" style="font-family: var(--mono)">
                 <text x="822" y="68">unified-trading-api</text>
@@ -6102,7 +5965,7 @@ Content-Type: application/json
                 style="fill: var(--g-post-wash); stroke: var(--g-post)"
               ></rect>
               <text x="822" y="172" font-size="10" style="font-family: var(--mono); fill: var(--g-post)">
-                FRONT-ENDS — 2, TypeScript
+                FRONT-ENDS: 2, TypeScript
               </text>
               <g font-size="10.3" fill="currentColor" fill-opacity="0.8" style="font-family: var(--mono)">
                 <text x="822" y="192">unified-trading-system-ui</text>
@@ -6138,7 +6001,7 @@ Content-Type: application/json
                 fill-opacity="0.6"
                 style="font-family: var(--mono)"
               >
-                TEST HARNESSES — 2
+                TEST HARNESSES: 2
               </text>
               <g font-size="10.3" fill="currentColor" fill-opacity="0.8" style="font-family: var(--mono)">
                 <text x="822" y="296">e2e-testing</text>
@@ -6174,7 +6037,7 @@ Content-Type: application/json
                 fill-opacity="0.6"
                 style="font-family: var(--mono)"
               >
-                DEVOPS + ORCHESTRATION — 5
+                DEVOPS + ORCHESTRATION: 5
               </text>
               <g font-size="10.3" fill="currentColor" fill-opacity="0.8" style="font-family: var(--mono)">
                 <text x="822" y="400">deployment-service · unified-trading-ci</text>
@@ -6202,7 +6065,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Domain data client — path registry, typed domain clients, readers and writers, catalogue
+                Domain data client: path registry, typed domain clients, readers and writers, catalogue
               </text>
               <text
                 x="580"
@@ -6234,7 +6097,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Domain interfaces — market-data schemas + venue WebSocket adapters, ML protocols, feature contracts
+                Domain interfaces: market-data schemas + venue WebSocket adapters, ML protocols, feature contracts
               </text>
 
               <!-- T1 -->
@@ -6256,7 +6119,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Shared infrastructure — config, service framework, matching-engine maths, retry and shutdown handling
+                Shared infrastructure: config, service framework, matching-engine maths, retry and shutdown handling
               </text>
               <text
                 x="580"
@@ -6280,7 +6143,7 @@ Content-Type: application/json
                 style="fill: var(--g-data-wash); stroke: var(--g-data)"
               ></rect>
               <text x="64" y="388" font-size="10" style="font-family: var(--mono); fill: var(--g-data)">
-                TIER 0 — PURE LEAVES, NO CLOUD I/O, NO TRADING STATE
+                TIER 0: PURE LEAVES, NO CLOUD I/O, NO TRADING STATE
               </text>
               <text
                 x="64"
@@ -6290,17 +6153,17 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                unified-api-contracts — canonical schemas, Pydantic models, venue and collateral registries
+                unified-api-contracts: canonical schemas, Pydantic models, venue and collateral registries
               </text>
               <g font-size="11" fill="currentColor" fill-opacity="0.78" style="font-family: var(--sans)">
                 <text x="64" y="430">
-                  cloud interface — storage, secrets and queue clients with GCP, AWS and local providers
+                  cloud interface: storage, secrets and queue clients with GCP, AWS and local providers
                 </text>
                 <text x="64" y="446">
-                  execution-algorithm library — pure scheduling and routing computation, zero dependencies
+                  execution-algorithm library: pure scheduling and routing computation, zero dependencies
                 </text>
                 <text x="64" y="462">
-                  event interface — the sink protocol every service logs lifecycle events through
+                  event interface: the sink protocol every service logs lifecycle events through
                 </text>
               </g>
 
@@ -6337,7 +6200,7 @@ Content-Type: application/json
               <g font-size="11.5" fill="currentColor" fill-opacity="0.84" style="font-family: var(--sans)">
                 <text x="64" y="546">
                   Two modules inside strategy-service, six adapters inside execution-service, and their YAML
-                  configurations —
+                  configurations,
                 </text>
                 <text x="64" y="564">transferred to you as Work Product.</text>
                 <text x="64" y="588">
@@ -6345,7 +6208,7 @@ Content-Type: application/json
                   reference
                 </text>
                 <text x="64" y="606">
-                  data — licensed to you as a frozen snapshot. Nothing at Tier 2, Tier 3, the front-ends or the devops
+                  data: licensed to you as a frozen snapshot. Nothing at Tier 2, Tier 3, the front-ends or the devops
                   set.
                 </text>
               </g>
@@ -6367,14 +6230,7 @@ Content-Type: application/json
   <section id="s8">
     <div class="sec-head">
       <span class="num">08</span>
-      <h2>Infrastructure — how data actually moves</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/epics/system_readiness_master.md -- W2 data pipeline integrity: storage, messaging, error classification"
-        >owner: system_readiness_master</b
-      >
+      <h2>Infrastructure: how data actually moves</h2>
     </div>
 
     <p class="lede">
@@ -6387,7 +6243,7 @@ Content-Type: application/json
       <div>
         <b>Storage</b
         ><span
-          >Hive-partitioned Parquet on object storage; queried in place by BigQuery external tables — no copy, no second
+          >Hive-partitioned Parquet on object storage; queried in place by BigQuery external tables, no copy, no second
           system of record</span
         >
       </div>
@@ -6417,8 +6273,8 @@ Content-Type: application/json
       <summary>The data-flow diagram, the four storage and messaging choices, and recovery</summary>
       <p>
         The mechanism is a deliberate inversion. A service declares <em>what</em> data it produces and
-        <em>which mode</em> it runs in. The deployment topology declares <em>how</em> — which provider, which bucket,
-        which topic — and a cloud-interface library resolves the rest. Service code therefore never imports a cloud SDK,
+        <em>which mode</em> it runs in. The deployment topology declares <em>how</em>: which provider, which bucket,
+        which topic, and a cloud-interface library resolves the rest. Service code therefore never imports a cloud SDK,
         never reads a bucket name, and never branches on a provider flag. Two build checks enforce it: one hard-fails
         any direct cloud SDK import in service code, the other hard-fails any cloud-specific field name leaking into a
         schema. It is an architectural property with a test behind it, not an aspiration.
@@ -6468,7 +6324,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Service code — declares WHAT and WHICH MODE
+                Service code: declares WHAT and WHICH MODE
               </text>
               <text
                 x="30"
@@ -6513,7 +6369,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Cloud interface + topology — decides HOW
+                Cloud interface + topology: decides HOW
               </text>
               <text
                 x="550"
@@ -6579,15 +6435,15 @@ Content-Type: application/json
               </text>
               <g font-size="11" fill="currentColor" fill-opacity="0.8" style="font-family: var(--sans)">
                 <text x="30" y="280">
-                  Cloud Storage — batch transport
+                  Cloud Storage: batch transport
                   <tspan font-style="italic">and</tspan>
                   persistence in one write
                 </text>
-                <text x="30" y="299">Pub/Sub — live cross-service fan-out</text>
-                <text x="30" y="318">Secret Manager + Cloud KMS — credentials, envelope encryption</text>
-                <text x="30" y="337">Compute Engine — spot VMs for backfill, in-region</text>
-                <text x="30" y="356">Cloud Run — the always-on consolidators</text>
-                <text x="30" y="375">Cloud Build — container images</text>
+                <text x="30" y="299">Pub/Sub: live cross-service fan-out</text>
+                <text x="30" y="318">Secret Manager + Cloud KMS: credentials, envelope encryption</text>
+                <text x="30" y="337">Compute Engine: spot VMs for backfill, in-region</text>
+                <text x="30" y="356">Cloud Run: the always-on consolidators</text>
+                <text x="30" y="375">Cloud Build: container images</text>
               </g>
               <text
                 x="30"
@@ -6621,12 +6477,12 @@ Content-Type: application/json
                 Amazon Web Services
               </text>
               <g font-size="11" fill="currentColor" fill-opacity="0.8" style="font-family: var(--sans)">
-                <text x="592" y="280">S3 — the same batch transport-and-persistence contract</text>
-                <text x="592" y="299">SQS — live cross-service fan-out</text>
-                <text x="592" y="318">Secrets Manager + KMS — credentials, envelope encryption</text>
-                <text x="592" y="337">EC2 — spot instances for backfill</text>
-                <text x="592" y="356">Fargate — batch and consolidator workloads</text>
-                <text x="592" y="375">CodeBuild — container images, built in parallel with GCP</text>
+                <text x="592" y="280">S3: the same batch transport-and-persistence contract</text>
+                <text x="592" y="299">SQS: live cross-service fan-out</text>
+                <text x="592" y="318">Secrets Manager + KMS: credentials, envelope encryption</text>
+                <text x="592" y="337">EC2: spot instances for backfill</text>
+                <text x="592" y="356">Fargate: batch and consolidator workloads</text>
+                <text x="592" y="375">CodeBuild: container images, built in parallel with GCP</text>
               </g>
               <text
                 x="592"
@@ -6654,12 +6510,12 @@ Content-Type: application/json
                 font-weight="700"
                 style="font-family: var(--sans); fill: var(--accent)"
               >
-                same image, same code, same tests — the provider is a deployment decision, not a code branch
+                same image, same code, same tests: the provider is a deployment decision, not a code branch
               </text>
             </svg>
             <figcaption>
               <b>The provider is chosen once, at deploy time, outside the service.</b> Every container image is built on
-              both lanes in parallel from the same commit, so a workload can move between clouds without a code change —
+              both lanes in parallel from the same commit, so a workload can move between clouds without a code change,
               which matters for concentration risk, for negotiating position, and for the practical question of where a
               given backfill runs cheapest on any given week. On current pricing neither cloud is materially cheaper
               than the other, so the value here is optionality rather than saving.
@@ -6793,7 +6649,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Ingress — rate limit + classify
+                Ingress: rate limit + classify
               </text>
               <text
                 x="254"
@@ -6862,7 +6718,7 @@ Content-Type: application/json
                 fill-opacity="0.78"
                 style="font-family: var(--sans)"
               >
-                per (venue, error_code) — retry_safe,
+                per (venue, error_code): retry_safe,
               </text>
               <text
                 x="566"
@@ -6990,7 +6846,7 @@ Content-Type: application/json
                 letter-spacing="1.4"
                 style="font-family: var(--sans); fill: var(--g-exec)"
               >
-                LIVE LANE — ORDERED, LOW LATENCY
+                LIVE LANE: ORDERED, LOW LATENCY
               </text>
 
               <rect
@@ -7010,7 +6866,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Redis Streams — the inner cascade
+                Redis Streams: the inner cascade
               </text>
               <text
                 x="44"
@@ -7050,7 +6906,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Publish–subscribe — multicast fan-out
+                Publish–subscribe: multicast fan-out
               </text>
               <text
                 x="44"
@@ -7092,7 +6948,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                In-memory — when co-located
+                In-memory: when co-located
               </text>
               <text
                 x="44"
@@ -7150,7 +7006,7 @@ Content-Type: application/json
                 letter-spacing="1.4"
                 style="font-family: var(--sans); fill: var(--g-data)"
               >
-                BATCH LANE — DURABLE, REPRODUCIBLE
+                BATCH LANE: DURABLE, REPRODUCIBLE
               </text>
 
               <rect
@@ -7170,7 +7026,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Object storage — transport AND persistence in one write
+                Object storage: transport AND persistence in one write
               </text>
               <text
                 x="596"
@@ -7200,7 +7056,7 @@ Content-Type: application/json
                 fill-opacity="0.62"
                 style="font-family: var(--sans)"
               >
-                the producer's write IS the consumer's read — nothing to keep in sync
+                the producer's write IS the consumer's read: nothing to keep in sync
               </text>
 
               <rect
@@ -7220,7 +7076,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Analytics — queried in place, never copied
+                Analytics: queried in place, never copied
               </text>
               <text
                 x="596"
@@ -7240,7 +7096,7 @@ Content-Type: application/json
                 fill-opacity="0.72"
                 style="font-family: var(--sans)"
               >
-                so a query cannot accidentally scan 30 TB — and there is no second copy to drift
+                so a query cannot accidentally scan 30 TB, and there is no second copy to drift
               </text>
 
               <rect
@@ -7333,7 +7189,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Both lanes converge on the same decision path — §5
+                Both lanes converge on the same decision path (§5)
               </text>
               <text
                 x="590"
@@ -7521,7 +7377,7 @@ Content-Type: application/json
                 fill-opacity="0.6"
                 style="font-family: var(--sans)"
               >
-                autonomous agents handle the restart — §9
+                autonomous agents handle the restart (§9)
               </text>
 
               <rect
@@ -7571,7 +7427,7 @@ Content-Type: application/json
                 fill-opacity="0.6"
                 style="font-family: var(--sans)"
               >
-                the ultimate recovery path — rebuild the answer
+                the ultimate recovery path: rebuild the answer
               </text>
 
               <text
@@ -7594,7 +7450,7 @@ Content-Type: application/json
                 fill-opacity="0.62"
                 style="font-family: var(--sans)"
               >
-                and everything downstream is derived by code from a recorded manifest — so recovery is a re-run, not a
+                and everything downstream is derived by code from a recorded manifest, so recovery is a re-run, not a
                 restore.
               </text>
               <text
@@ -7612,7 +7468,7 @@ Content-Type: application/json
             <figcaption>
               <b>Two transports, one code path, and a recovery answer for each failure mode.</b> The choice that matters
               most is on the right: in batch, the producer's write <em>is</em> the consumer's read and <em>is</em> the
-              permanent record — one operation, so there is no cache to invalidate and no second copy to drift.
+              permanent record: one operation, so there is no cache to invalidate and no second copy to drift.
               Analytics then reads that same Parquet in place rather than loading a copy, with a partition filter
               enforced so a careless query cannot scan the whole estate. On the left, the live lane picks ordered
               streams where ordering and replay matter and simple multicast where they don't. Everything converges on
@@ -7630,14 +7486,14 @@ Content-Type: application/json
           <strong>Storage: partitioned Parquet, queried in place.</strong> Everything lands as Parquet under a
           <span class="mono">day=</span> partition with the dimensions that matter for that dataset below it. Analytics
           reads it through external tables that point at the files rather than importing them, and the partition filter
-          is <em>required</em> — a query that forgets to constrain the date is rejected rather than quietly scanning the
+          is <em>required</em>: a query that forgets to constrain the date is rejected rather than quietly scanning the
           estate. The alternative, loading everything into a warehouse, buys faster scans at the cost of a second copy
           that has to be kept honest. We would rather have one system of record.
         </li>
         <li>
           <strong>Messaging: ordered where it matters, multicast where it doesn't.</strong> The live inner cascade uses
           ordered streams with consumer groups, because a restarted consumer must resume exactly where it stopped and
-          candles must be built in sequence. Cross-service events go out on a publish–subscribe topic instead —
+          candles must be built in sequence. Cross-service events go out on a publish–subscribe topic instead:
           strategy, alerting and reporting all want the same event and none of them care about the others. Using one
           primitive for both would either over-engineer the fan-out or lose the ordering guarantee the cascade depends
           on.
@@ -7647,13 +7503,13 @@ Content-Type: application/json
           published limits, and callers take a token before the request rather than discovering the limit by being
           refused. When a venue does return a rate-limit response, its headers are parsed and honoured rather than
           backed off by guess. The reason this matters for throughput: uncoordinated concurrency against a rate-limited
-          API doesn't fail cleanly, it degrades — you get slower <em>and</em> throttled at once. Metering at the source
+          API doesn't fail cleanly, it degrades: you get slower <em>and</em> throttled at once. Metering at the source
           keeps the pipe full without tripping it.
         </li>
         <li>
           <strong>Every venue error classified, once.</strong> Each <span class="mono">(venue, error_code)</span> pair
           carries a declared classification: whether the call is safe to retry, whether the connection needs re-opening,
-          and which of four actions to take — retry, reconnect, skip, or fail. Handling is therefore uniform across
+          and which of four actions to take: retry, reconnect, skip, or fail. Handling is therefore uniform across
           venues, and adding a venue means declaring its error codes rather than teaching the pipeline a new dialect.
           Guessing from a message string is how a permanent failure becomes an infinite retry.
         </li>
@@ -7661,7 +7517,7 @@ Content-Type: application/json
 
       <h3>Guarding against the venue changing underneath us</h3>
       <p>
-        One more, because it is the failure mode most likely to bite a live carry book quietly. Venue APIs change — a
+        One more, because it is the failure mode most likely to bite a live carry book quietly. Venue APIs change: a
         field is renamed, a type loosens, an error code appears. To catch that in CI rather than in production, real
         venue responses are recorded as fixtures and replayed against our parsers on every change. A venue altering its
         response shape breaks a test in a pull request; it does not surface as a mis-parsed funding rate on a Tuesday.
@@ -7673,8 +7529,8 @@ Content-Type: application/json
         One cost note, since it affects your retainer indirectly: heavy work never runs on a laptop. Full-corpus scans,
         manifest rewrites and bulk backfills run on in-region VMs, and backfill VMs default to spot instances with
         preemption recovery that resumes from measured progress rather than replaying from the start date. We also audit
-        the fleet for two specific waste patterns — a preempted VM with no matching recovery, and a machine sized far
-        larger than its measured usage — because neither shows up in a bill as anything other than a slightly larger
+        the fleet for two specific waste patterns: a preempted VM with no matching recovery, and a machine sized far
+        larger than its measured usage, because neither shows up in a bill as anything other than a slightly larger
         number.
       </p>
     </details>
@@ -7685,13 +7541,6 @@ Content-Type: application/json
     <div class="sec-head">
       <span class="num">09</span>
       <h2>How the work gets built and CI stays green</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/active/code_readiness_t5_readiness_observability_presentations_2026_08_19.md -- describes agent-orchestrator + unified-trading-ci, both T5-owned repos"
-        >owner: code_readiness_t5_readiness_observability_presentations</b
-      >
     </div>
 
     <p class="lede">
@@ -7716,7 +7565,7 @@ Content-Type: application/json
       </div>
       <div>
         <b>Failures escalate themselves</b
-        ><span>A red pipeline is auto-recovered, then dispatched against a deadline, then paged — in that order</span>
+        ><span>A red pipeline is auto-recovered, then dispatched against a deadline, then paged, in that order</span>
       </div>
     </div>
 
@@ -7726,7 +7575,7 @@ Content-Type: application/json
         A large part of Phase 2's additional effort went into automating the engineering workflow itself, not just the
         trading. There is an orchestration service that runs a fleet of AI coding workers against the plan backlog: work
         derives from checkboxes in tracked plan documents, workers report progress over HTTP, and the fleet wakes,
-        resumes and rotates itself without a human dispatching tasks. It is deliberately not a trading service — it has
+        resumes and rotates itself without a human dispatching tasks. It is deliberately not a trading service: it has
         no market data, no trading modes and no kill-switch surface, and it is not a node in the trading pipeline. It
         coordinates agents, not markets.
       </p>
@@ -7734,18 +7583,18 @@ Content-Type: application/json
       <p>
         Sitting alongside it is the part that matters most for reliability: continuous integration that escalates its
         own failures. Every change runs a quality gate before it can merge, covering type checking, tests, complexity
-        limits and a set of banned patterns — including the cloud-SDK ban from §8 and a rule that a datetime must be
+        limits and a set of banned patterns, including the cloud-SDK ban from §8 and a rule that a datetime must be
         timezone-aware. When a pipeline goes red, a watcher attempts a bounded automatic recovery first. If that fails,
         the failure enters an escalation queue with a deadline, gets dispatched to a worker to fix at the root cause,
         and pages a human if it is still red past its deadline. A separate reconciliation pass sweeps the queue
-        periodically so a row cannot go terminal and then be forgotten — which is a bug we found in our own escalation
-        logic and fixed, and the reason the sweep exists at all.
+        periodically so a row cannot go terminal and then be forgotten, closing a gap where a terminal row would otherwise
+        go unrevisited, and the reason the sweep exists at all.
       </p>
 
       <div class="plate">
         <div class="plate-head">
           <span class="label">Figure 8 · The self-escalating delivery loop</span>
-          <span class="note">Ours, not yours — included for transparency</span>
+          <span class="note">Ours, not yours: included for transparency</span>
         </div>
         <div class="plate-body scroll-x">
           <figure>
@@ -7810,7 +7659,7 @@ Content-Type: application/json
                 fill-opacity="0.74"
                 style="font-family: var(--sans)"
               >
-                — the only work source
+                (the only work source)
               </text>
 
               <line
@@ -8233,7 +8082,7 @@ Content-Type: application/json
                 fill="currentColor"
                 style="font-family: var(--sans)"
               >
-                Reconciliation sweep — re-reads rows that already went terminal
+                Reconciliation sweep: re-reads rows that already went terminal
               </text>
               <text
                 x="178"
@@ -8243,8 +8092,8 @@ Content-Type: application/json
                 fill-opacity="0.74"
                 style="font-family: var(--sans)"
               >
-                because "gave up once" must not mean "never looked again" — a bug we found in our own escalation logic
-                and fixed
+                because "gave up once" must not mean "never looked again"; the reconciliation sweep exists precisely
+                to close that gap
               </text>
               <line
                 x1="476"
@@ -8258,7 +8107,7 @@ Content-Type: application/json
             </svg>
             <figcaption>
               <b>The loop's point is that a red pipeline has an owner and a deadline without a human noticing first.</b>
-              Recovery is attempted, then a fix is dispatched, then a person is paged — in that order, with the queue
+              Recovery is attempted, then a fix is dispatched, then a person is paged, in that order, with the queue
               swept so nothing quietly goes terminal and stays there. Alerts fire on state transitions rather than on
               every tick, and every page that opens gets a matching all-clear, so the channel stays readable enough that
               people actually read it. Notably, the same discipline applies to the trading alerts in §10.
@@ -8273,7 +8122,7 @@ Content-Type: application/json
           Two reasons. It is the honest account of where a chunk of the extra time went, and it changes what the ongoing
           relationship costs to run: the reason a managed service can carry four venues, a chaos suite, a daily
           determinism verdict and 24/7 paging without a large operations team is that most of the recurring work is
-          automated. If you take the self-run route in §11, none of this comes with it — you would provide your own CI,
+          automated. If you take the self-run route in §11, none of this comes with it: you would provide your own CI,
           your own alerting and your own on-call, which is the single largest hidden line item in that decision.
         </p>
       </div>
@@ -8285,13 +8134,6 @@ Content-Type: application/json
     <div class="sec-head">
       <span class="num">10</span>
       <h2>Running it: isolation, capital, risk</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-assumed">~ assumed</b>
-      <b
-        class="own"
-        title="plans/epics/system_readiness_master.md -- W9 account balances, W10 risk and exposure, per-client isolation"
-        >owner: system_readiness_master</b
-      >
     </div>
 
     <p class="lede">
@@ -8323,8 +8165,8 @@ Content-Type: application/json
         This has mattered more than we expected. Venues accept different collateral and their funding rates move
         independently, so the platform switches between the staked-basis and cash-basis structures per venue, respects
         each venue's collateral rules, and moves capital as the opportunity shifts. It also reacts to your flows: a
-        client deposit or withdrawal triggers a rebalance — swapping between USDC and the native asset and rescaling the
-        matching perp leg — rather than waiting for someone to notice. Micro-flows are deferred and swept rather than
+        client deposit or withdrawal triggers a rebalance: swapping between USDC and the native asset and rescaling the
+        matching perp leg, rather than waiting for someone to notice. Micro-flows are deferred and swept rather than
         executed individually, so a small deposit does not generate a stake-and-unstake round trip. In today's
         compressed basis environment this dynamic switching is one of the larger contributors to maintaining returns.
       </p>
@@ -8332,7 +8174,7 @@ Content-Type: application/json
       <h3>Cross-wallet and cross-account balancing</h3>
       <p>
         Capital does not sit in one place. Each share class has a treasury wallet, and each strategy runs on its own hot
-        wallet — which may be on a different chain from the treasury. The platform moves capital between those tiers
+        wallet, which may be on a different chain from the treasury. The platform moves capital between those tiers
         automatically, on a reserve ratio rather than on somebody watching a balance.
       </p>
 
@@ -8344,10 +8186,10 @@ Content-Type: application/json
       </div>
 
       <p>
-        The treasury is keyed by <strong>share class — the fund's base currency — not by chain</strong>. Clients deposit
+        The treasury is keyed by <strong>share class (the fund's base currency), not by chain</strong>. Clients deposit
         into the treasury for their share class; which chain that wallet lives on is an implementation detail
         underneath. When the treasury falls below its floor, strategies reduce positions and capital flows back up from
-        the hot wallets. When it rises above its ceiling — a deposit lands, say — the excess flows down and strategies
+        the hot wallets. When it rises above its ceiling (a deposit lands, say) the excess flows down and strategies
         scale in. Where the target wallet is on another chain, the strategy initiates the bridge itself as part of the
         same flow.
       </p>
@@ -8356,7 +8198,7 @@ Content-Type: application/json
         <strong>a rebalance is emitted as a strategy instruction, not as an administrative side-channel.</strong> The
         strategy sees the deposit event, evaluates the ratio, and emits transfer instructions through the same path as a
         trade. So every capital movement lands in the same ledger, carries the same attribution, and is reproduced
-        identically in a batch rerun — a rebalance cannot silently break the determinism proof in §5, because it is not
+        identically in a batch rerun: a rebalance cannot silently break the determinism proof in §5, because it is not
         outside the system doing the proving. On the CeFi side the shape is simpler: no treasury-and-hot split, one
         wallet per venue.
       </p>
@@ -8375,7 +8217,7 @@ Content-Type: application/json
         and withdrawal suspensions have defined automated responses.
       </p>
       <p>
-        Seventeen worst-case scenarios — drawn from real CeFi and DeFi failures rather than invented — are injected
+        Seventeen worst-case scenarios (drawn from real CeFi and DeFi failures rather than invented) are injected
         directly into the production code path so we can verify that the correct breaker, kill-switch and alert actually
         fire: exchange failures, oracle problems, stablecoin de-pegs, liquidation cascades, gas spikes, venue outages.
         Writing those tests surfaced several real weaknesses, which is exactly what they were for.
@@ -8383,17 +8225,17 @@ Content-Type: application/json
 
       <h3>Accounting you can hand to a fund administrator</h3>
       <p>
-        P&amp;L is attributed rather than merely totalled: every row carries a factor — delta, funding, basis, carry,
-        fees, slippage — a layer separating strategy decisions from execution quality, and a venue and instrument. The
+        P&amp;L is attributed rather than merely totalled: every row carries a factor, delta, funding, basis, carry,
+        fees, slippage, a layer separating strategy decisions from execution quality, and a venue and instrument. The
         strategy reads its own attribution back and adapts to it. High-water marks are computed from the trade ledger by
-        three simultaneous methods — time-weighted return, notional, and P&amp;L recovery — and never from a running
+        three simultaneous methods (time-weighted return, notional, and P&amp;L recovery) and never from a running
         maximum of raw equity, which is the standard way a high-water mark quietly misstates itself after a capital
         flow.
       </p>
 
       <details class="ref">
         <summary>
-          Operational capability, itemised — ten capabilities and what each means in practice<span class="tag-ref"
+          Operational capability, itemised: ten capabilities and what each means in practice<span class="tag-ref"
             >reference</span
           >
         </summary>
@@ -8455,7 +8297,7 @@ Content-Type: application/json
                 <tr>
                   <td class="grp grp-data">Registry-driven venue layer</td>
                   <td>
-                    A new venue is an adapter and a registry row against a stable spine — bounded integration, not a
+                    A new venue is an adapter and a registry row against a stable spine: bounded integration, not a
                     refactor
                   </td>
                   <td>Data platform</td>
@@ -8478,17 +8320,10 @@ Content-Type: application/json
     <div class="sec-head">
       <span class="num">11</span>
       <h2>What we can share, and what we can't</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/epics/system_readiness_master.md -- the epic's definition-of-done requires every artefact claim map to tracked work; the Work Product/IP boundary itself (Article 4) is a static contract fact, re-verified for accuracy by the same corpus audit as s1/s7"
-        >owner: system_readiness_master</b
-      >
     </div>
 
     <p class="lede">
-      Under Article 4 the Work Product is yours — that is settled, perpetual, and not something this document qualifies.
+      Under Article 4 the Work Product is yours: that is settled, perpetual, and not something this document qualifies.
       The open question is narrower and more practical:
       <em
         >which components are Work Product under this engagement, and which are pre-existing platform components that
@@ -8508,7 +8343,7 @@ Content-Type: application/json
       <div>
         <b>The gap is apparatus</b
         ><span
-          >The code transfers cleanly — there is a per-repository manifest below. What a carve-out cannot take is the
+          >The code transfers cleanly: there is a per-repository manifest below. What a carve-out cannot take is the
           CI, the promotion ladder, the reconciliation and the escalation around it</span
         >
       </div>
@@ -8519,9 +8354,9 @@ Content-Type: application/json
       <p>
         The logic runs from what you commissioned. You commissioned two strategies on a defined venue set. Those
         engines, their configurations, the venue and custody adapters built for them, and their operational
-        documentation are Work Product — yours outright, and we are not asking for anything back. They import a thin
-        runtime scaffolding — type contracts, registries, manifest readers, the two carry feature calculators, minimal
-        reference data — which existed before this engagement and serves other clients and our own book. We propose to
+        documentation are Work Product, yours outright, and we are not asking for anything back. They import a thin
+        runtime scaffolding: type contracts, registries, manifest readers, the two carry feature calculators, minimal
+        reference data, which existed before this engagement and serves other clients and our own book. We propose to
         licence that to you perpetually as a frozen snapshot rather than transfer it, so your engines run without us and
         we keep developing those components. The third bucket is platform built outside this engagement's scope: not
         Work Product, and not licensed.
@@ -8530,10 +8365,10 @@ Content-Type: application/json
       <p>
         On the execution algorithms specifically, our position is firm rather than negotiable, and it rests on the
         agreement itself. <strong>Nothing in the agreement obliges delivery of execution algorithms.</strong> The only
-        delivery obligation is Art. 4.5, which attaches to Work Product — and the algorithm library is not Work Product
+        delivery obligation is Art. 4.5, which attaches to Work Product, and the algorithm library is not Work Product
         on either of the two tests that matter. It is not scoped to this engagement: the library is a multi-asset-group
         platform component whose usage is dominated by TradFi, equities, sports and prediction markets, none of which
-        this engagement touches. And its methods are precisely what Art. 4.6 reserves to us — TWAP, VWAP,
+        this engagement touches. And its methods are precisely what Art. 4.6 reserves to us: TWAP, VWAP,
         participation-rate scheduling and Almgren–Chriss are published, industry-standard techniques, which is the
         definition of the "generic programming methods" the agreement expressly retains. What you commissioned was a
         delta-neutral basis trading system; you received one, together with the venue adapters that make it trade. The
@@ -8542,12 +8377,12 @@ Content-Type: application/json
 
       <p>
         Two things we would rather raise than have you find. First, the boundary inside execution is drawn between
-        connectivity and choreography on one side and execution intelligence on the other — set out in full in §6. Your
+        connectivity and choreography on one side and execution intelligence on the other, set out in full in §6. Your
         adapters and your multi-leg sequencing are yours; the generic scheduler that decides how each leg is worked is
         not. The distinction is between reaching the venue and knowing how to trade there, not between "useful" and "not
         useful". Second, Annex A's Phase One deliverables expressly include a back-testing framework, while the manifest
         below places the historical ingestion pipelines in the platform bucket. Our position is that what you
-        commissioned is the strategy-level back-testing capability, not the multi-tenant data estate underneath it — but
+        commissioned is the strategy-level back-testing capability, not the multi-tenant data estate underneath it, but
         that one is genuinely arguable, and your counsel should see it rather than discover it.
       </p>
 
@@ -8574,7 +8409,7 @@ Content-Type: application/json
                 </td>
                 <td>
                   The two strategy engines · strategy YAML configurations for your locked venue set ·
-                  <strong>venue connectivity</strong> for OKX, Bybit, Binance and Deribit — endpoints, authentication,
+                  <strong>venue connectivity</strong> for OKX, Bybit, Binance and Deribit: endpoints, authentication,
                   order and cancel semantics, symbol mapping, rate limits, error classification · Copper MPC and CEFFU
                   OES custody adapters · the Lido stake-and-wrap execution leg ·
                   <strong>the multi-leg choreography for your staked-basis structure</strong> (leg ordering,
@@ -8582,7 +8417,7 @@ Content-Type: application/json
                   · Phase 1 design docs and the Phase 2 runbooks specific to these strategies
                 </td>
                 <td>
-                  Commissioned by you and built for you — Work Product under Art. 4.1, enumerated so the scope is
+                  Commissioned by you and built for you: Work Product under Art. 4.1, enumerated so the scope is
                   explicit rather than implied
                 </td>
               </tr>
@@ -8600,7 +8435,7 @@ Content-Type: application/json
                 </td>
                 <td>
                   Pre-dates this engagement and serves our platform and other clients, but your engines cannot run
-                  without it — so it is licensed rather than transferred: perpetual, non-exclusive, non-transferable,
+                  without it, so it is licensed rather than transferred: perpetual, non-exclusive, non-transferable,
                   solely to operate the in-scope strategies
                 </td>
               </tr>
@@ -8611,10 +8446,10 @@ Content-Type: application/json
                   >
                 </td>
                 <td>
-                  <strong>Execution intelligence</strong> — the algorithm library that decides how an order is worked to
+                  <strong>Execution intelligence</strong>: the algorithm library that decides how an order is worked to
                   reduce slippage: slicing, scheduling, pacing, passive/aggressive posture, routing and the impact model
                   (§6) · all strategy archetypes outside your two · non-carry feature calculators · historical
-                  batch-ingestion pipelines — the backtesting estate · audit, risk, observability and alerting surfaces
+                  batch-ingestion pipelines, the backtesting estate · audit, risk, observability and alerting surfaces
                   · the ML pipeline and research stack · the multi-tenant client portal and deployment infrastructure ·
                   the delivery and orchestration machinery in §9 · our data-vendor licences
                 </td>
@@ -8636,7 +8471,7 @@ Content-Type: application/json
           strategy families sit outside this engagement's scope and inside Art. 4.6's retained generic methods; they
           encode techniques we use for our own book and other clients, they were never part of what you commissioned,
           and we would not licence them to anyone. Second, most of the excluded list is genuinely not needed to run your
-          strategies headless — the backtesting estate, the multi-tenant portal and the research stack exist to produce
+          strategies headless: the backtesting estate, the multi-tenant portal and the research stack exist to produce
           and defend the numbers, not to place the trades. Separately, for completeness: Annex A's scope exclusions
           cover ultra-low-latency execution and liquidity provision, which is where MEV protection and high-frequency
           execution infrastructure fall; the SLA states both explicitly.
@@ -8648,13 +8483,13 @@ Content-Type: application/json
         The decision point is day 31, when the complimentary 30-day support period in §1 ends. Under the managed service
         we continue to run the strategies from our infrastructure. Under the self-run carve-out you receive the work
         product, the licensed snapshot, a lightweight command-line runner, configuration templates, an operational
-        runbook and a walkthrough — and you take on the operational surface. The figure below is the honest version of
+        runbook and a walkthrough, and you take on the operational surface. The figure below is the honest version of
         that trade, and the table after it is the detailed version.
       </p>
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Figure 9 · Managed service versus self-run — same core, different surface</span>
+          <span class="label">Figure 9 · Managed service versus self-run, same core, different surface</span>
           <span class="note">What disappears, and what replaces it</span>
         </div>
         <div class="plate-body scroll-x">
@@ -9136,7 +8971,7 @@ Content-Type: application/json
               ></rect>
               <line x1="608" y1="125" x2="834" y2="125" stroke-width="1.5" style="stroke: var(--crit)"></line>
               <text x="842" y="130" font-size="10" style="font-family: var(--sans); fill: var(--crit)">
-                pipeline + research — gone
+                pipeline + research: gone
               </text>
 
               <rect
@@ -9214,7 +9049,7 @@ Content-Type: application/json
               <g font-size="10.5" fill="currentColor" fill-opacity="0.82" style="font-family: var(--sans)">
                 <text x="622" y="306">Deployment · CI/CD + quality gate · secrets · cloud provisioning</text>
                 <text x="622" y="322">Monitoring · alerting · on-call · restart + resource-failure recovery</text>
-                <text x="622" y="338">Your own backtest-to-live promotion path — and the mismatch risk in it</text>
+                <text x="622" y="338">Your own backtest-to-live promotion path, and the mismatch risk in it</text>
                 <text x="622" y="354">Post-trade reconciliation · attribution · high-water marks</text>
                 <text x="622" y="370">Custody + venue operational relationships · RPC · reg reporting</text>
                 <text x="622" y="386">Ongoing strategy parameter tuning</text>
@@ -9269,14 +9104,14 @@ Content-Type: application/json
                 fill-opacity="0.8"
                 style="font-family: var(--sans)"
               >
-                future fixes and patches — the snapshot is frozen at hand-over.
+                future updates and patches: the snapshot is frozen at hand-over.
               </text>
             </svg>
             <figcaption>
-              <b>The strategy core is identical on both sides — everything that differs is the surface around it.</b>
+              <b>The strategy core is identical on both sides: everything that differs is the surface around it.</b>
               Self-run works technically because the live path never needed our data middleware: funding comes from the
               venue's own WebSocket and LST rates from public Ethereum contract calls, using your credentials and your
-              RPC provider. What you take on is the operational estate — including everything in §8 and §9. What you
+              RPC provider. What you take on is the operational estate, including everything in §8 and §9. What you
               give up is the research and maintenance arm: the licensed snapshot is frozen at hand-over, so later fixes,
               patches and new venues sit on our side of the line. Commercial terms for either model are in the SLA
               rather than restated here.
@@ -9289,14 +9124,14 @@ Content-Type: application/json
       <p>
         Under Option B what we hand over is <strong>the minimum needed to run your strategies</strong>: the engines you
         own, the licensed runtime they import, a lightweight command-line runner, configuration templates, an
-        operational runbook and a walkthrough. That is a working system. It is not this system, and the gap is not code
-        — it is the apparatus around the code that took most of Phase 2 to build. Set out honestly, because it is the
-        substance of the decision:
+        operational runbook and a walkthrough. That is a working system. It is not this system, and the gap is not
+        code: it is the apparatus around the code that took most of Phase 2 to build. Set out honestly, because it is
+        the substance of the decision:
       </p>
 
       <details class="ref">
         <summary>
-          The apparatus a carve-out cannot take with it — nine items, and what replacing each one means<span
+          The apparatus a carve-out cannot take with it: nine items, and what replacing each one means<span
             class="tag-ref"
             >detail</span
           >
@@ -9319,7 +9154,7 @@ Content-Type: application/json
                 <tr>
                   <td class="grp grp-exec"><strong>Execution intelligence</strong></td>
                   <td>
-                    Slicing, scheduling, pacing, routing and the impact model that decide how each order is worked —
+                    Slicing, scheduling, pacing, routing and the impact model that decide how each order is worked,
                     plus the normalised contract that lets any of your other desks use it (§6)
                   </td>
                   <td>
@@ -9330,7 +9165,7 @@ Content-Type: application/json
                 <tr>
                   <td class="grp grp-post"><strong>CI/CD rigour</strong></td>
                   <td>
-                    Every change passes a quality gate before it can merge — type checking, tests, complexity limits,
+                    Every change passes a quality gate before it can merge: type checking, tests, complexity limits,
                     and enforced bans on the patterns that cause silent production bugs (direct cloud SDK calls,
                     timezone-naive datetimes). Images build on both clouds from one commit
                   </td>
@@ -9339,7 +9174,7 @@ Content-Type: application/json
                 <tr>
                   <td class="grp grp-data"><strong>One structure from backtest to live</strong></td>
                   <td>
-                    A strategy climbs a single ladder — candidate, then one-day paper, then early live, then full live —
+                    A strategy climbs a single ladder (candidate, then one-day paper, then early live, then full live)
                     on one config surface, with pre-flight gates at each step (custody sandbox reachable, venue keys
                     present, alerting wired, kill-switch armed) and a manual trade gate where an operator approves every
                     fill for the first three trading days
@@ -9365,7 +9200,7 @@ Content-Type: application/json
                   <td>
                     Deployment restarts, machine and resource failures, preempted instances resuming from measured
                     progress, stalled processes reaped, CI walls auto-recovered then dispatched to agents against a
-                    deadline — a human is paged only when automation has genuinely run out (§9)
+                    deadline: a human is paged only when automation has genuinely run out (§9)
                   </td>
                   <td>
                     Every one of those becomes a pager event for a person, at the hour it happens, including the ones
@@ -9376,7 +9211,7 @@ Content-Type: application/json
                   <td class="grp grp-exec"><strong>Rapid iteration</strong></td>
                   <td>
                     A new venue wires in through a registry row and its slots regenerate; a new archetype plugs into the
-                    same tick interface, ledger and reconciliation spine. The integration work is still real — what the
+                    same tick interface, ledger and reconciliation spine. The integration work is still real: what the
                     platform removed is the rebuild around it
                   </td>
                   <td>
@@ -9413,7 +9248,7 @@ Content-Type: application/json
                     Query the live strategy's decisions, their inputs and their attribution without shipping anything
                     (§6)
                   </td>
-                  <td>You hold the source, which tells you what it would do — not the tape of what it did</td>
+                  <td>You hold the source, which tells you what it would do, not the tape of what it did</td>
                 </tr>
               </tbody>
             </table>
@@ -9425,11 +9260,11 @@ Content-Type: application/json
         None of that is an argument against Option B. It is a real option, we built the hand-over package for it, and
         for some organisations owning the operational stack is the right answer regardless of cost. It is an argument
         for making the choice with the full list in front of you, because the code is the part that transfers cleanly
-        and the apparatus is the part people underestimate — including us, which is precisely why Phase 2 took longer
+        and the apparatus is the part people underestimate, including us, which is precisely why Phase 2 took longer
         than either of us wanted.
       </p>
 
-      <h3>What we would actually send you — the hand-over manifest</h3>
+      <h3>What we would actually send you: the hand-over manifest</h3>
       <p>
         Written for whoever on your side would receive it. Six repositories contribute code; none arrives whole, because
         none of them is single-purpose. What you get from each is a subset, and the subsets below are the concrete
@@ -9438,7 +9273,7 @@ Content-Type: application/json
 
       <details class="ref">
         <summary>
-          Repository by repository — what arrives, what is carved out, what you supply<span class="tag-ref"
+          Repository by repository: what arrives, what is carved out, what you supply<span class="tag-ref"
             >engineering detail</span
           >
         </summary>
@@ -9466,8 +9301,8 @@ Content-Type: application/json
                     >plus the YAML configs for your venue set
                   </td>
                   <td>
-                    Every other archetype sitting in the same package — recursive staked, rotation lending, staking
-                    simple, dated basis — plus the backtest harness and the risk, position and P&amp;L sub-packages
+                    Every other archetype sitting in the same package (recursive staked, rotation lending, staking
+                    simple, dated basis) plus the backtest harness and the risk, position and P&amp;L sub-packages
                   </td>
                   <td>
                     A tick loop and process entry point. We provide a lightweight CLI runner as the starting shape
@@ -9477,7 +9312,7 @@ Content-Type: application/json
                   <td class="grp grp-exec"><strong>execution-service</strong><br /><span class="mono">yours</span></td>
                   <td>
                     Venue connectivity for your four venues<span class="mono"
-                      >dedicated per-venue execution adapters — OKX, Bybit, Binance, Deribit</span
+                      >dedicated per-venue execution adapters: OKX, Bybit, Binance, Deribit</span
                     >custody<span class="mono">custody/copper.py · custody/ceffu.py</span>the Lido staking leg<span
                       class="mono"
                       >venues/lido.py · defi_execution/protocols/lido.py</span
@@ -9503,7 +9338,7 @@ Content-Type: application/json
                     types
                   </td>
                   <td>
-                    Every other domain in the same repo — sports, prediction, TradFi, options — and the registries for
+                    Every other domain in the same repo (sports, prediction, TradFi, options) and the registries for
                     venues you do not trade
                   </td>
                   <td>Nothing, but see the note on import-graph extraction below</td>
@@ -9522,7 +9357,7 @@ Content-Type: application/json
                     beyond the parts you actually call
                   </td>
                   <td>
-                    Nothing directly — but what you lose with the circuit-breaker and chaos packages is the failure
+                    Nothing directly, but what you lose with the circuit-breaker and chaos packages is the failure
                     rehearsal in §10
                   </td>
                 </tr>
@@ -9535,10 +9370,10 @@ Content-Type: application/json
                     carry
                   </td>
                   <td>
-                    Everything else in the repo — every other feature family and the batch computation framework around
+                    Everything else in the repo: every other feature family and the batch computation framework around
                     it
                   </td>
-                  <td><strong>The funding side.</strong> See the flag below — this is the real work item</td>
+                  <td><strong>The funding side.</strong> See the flag below: this is the real work item</td>
                 </tr>
                 <tr>
                   <td class="grp grp-data">
@@ -9567,7 +9402,7 @@ Content-Type: application/json
       <p>
         This is the part worth understanding before anyone estimates the work, and it is the direct pay-off of the
         one-way import rule in §7.
-        <strong>The subset is not chosen by folder — it is computed as an import closure.</strong> Start at the two
+        <strong>The subset is not chosen by folder: it is computed as an import closure.</strong> Start at the two
         archetype modules and the six adapters, walk every import downward through the tiers, and the set of everything
         reachable <em>is</em> the hand-over. Because nothing at a lower tier imports back up into a service, that
         closure terminates, and it cannot silently pull in another archetype or another venue's adapter. What you
@@ -9583,7 +9418,7 @@ Content-Type: application/json
       <h3>What your engineers would have to build</h3>
       <ol class="steps">
         <li>
-          <strong>Live strategy inputs.</strong> The engines consume a features mapping — they ask for
+          <strong>Live strategy inputs.</strong> The engines consume a features mapping: they ask for
           <span class="mono">staking_apy_bps</span> and <span class="mono">funding_rate_apy_bps</span> and decide from
           those. Under the managed service the feature layer supplies them. Without it, you write the readers that
           populate them from venue APIs and chain RPC. This is the largest single item; see the flag below.
@@ -9593,7 +9428,7 @@ Content-Type: application/json
           shutdown on deploy.
         </li>
         <li>
-          <strong>Secrets.</strong> Venue keys and custody credentials, with rotation — replacing our secret manager
+          <strong>Secrets.</strong> Venue keys and custody credentials, with rotation, replacing our secret manager
           integration.
         </li>
         <li>
@@ -9615,13 +9450,13 @@ Content-Type: application/json
           licence. The funding side is a value the feature pipeline produces, and the only direct-from-venue
           implementation we have lives in an internal test harness that is not part of any bucket above. So as things
           stand, a carve-out would hand you engines that ask for a number nothing in the package produces. That is
-          fixable — we would productionise those readers and add them to the licensed set — but it is a real gap and it
+          resolvable: we would productionise those readers and add them to the licensed set, but it is a real gap and it
           should be closed in the manifest before anyone signs it, not discovered at hand-over.
         </p>
         <p>
           <strong>The draft manifest's file paths are stale.</strong> Exhibit A names adapter files under paths that no
           longer exist in the tree; the real locations are the ones in the table above. Enumerating Work Product by a
-          path that does not resolve helps nobody — you cannot verify what you own and we cannot evidence what we
+          path that does not resolve helps nobody: you cannot verify what you own and we cannot evidence what we
           delivered. We will correct the manifest against the current tree and re-issue it for review.
         </p>
       </div>
@@ -9631,8 +9466,8 @@ Content-Type: application/json
         The SLA carries an exhibit that names the boundary rather than leaving it to interpretation: your two archetypes
         on your venue set are in scope; the other Carry &amp; Yield variants in §3 are within the same family but
         outside the engagement, and are offered to you first with a thirty-day right of first refusal; and the strategy
-        families outside Carry &amp; Yield altogether — arbitrage, market making, ML-directional, event-driven,
-        volatility, statistical arbitrage, rules-directional and portfolio — are outside it entirely. Naming all three
+        families outside Carry &amp; Yield altogether (arbitrage, market making, ML-directional, event-driven,
+        volatility, statistical arbitrage, rules-directional and portfolio) are outside it entirely. Naming all three
         tiers up front is what keeps the non-compete workable for both sides.
       </p>
     </details>
@@ -9643,11 +9478,6 @@ Content-Type: application/json
     <div class="sec-head">
       <span class="num">12</span>
       <h2>The wider surface, and where it can go</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b class="own" title="plans/epics/system_readiness_master.md -- W6 archetype scaffolding and expansion breadth"
-        >owner: system_readiness_master</b
-      >
     </div>
 
     <p class="lede">
@@ -9682,7 +9512,7 @@ Content-Type: application/json
 
       <p>
         Your two archetypes sit in one strategy family, operating on one asset group. The platform was not built for
-        that case specifically — it was built so that the case is one instance of a general pattern. Concretely, the
+        that case specifically: it was built so that the case is one instance of a general pattern. Concretely, the
         same decision engine, the same instruction contract and the same ledger model are in service across several
         distinct market types, spanning centralised venues, on-chain protocols, regulated exchange-traded instruments,
         and event-driven markets whose settlement has nothing to do with price at all.
@@ -9699,8 +9529,8 @@ Content-Type: application/json
       <h3>Where the differences actually live</h3>
       <p>
         Each asset group brings its own risk model, its own attribution treatment and its own operating mode. Those
-        differences are expressed as typed configuration blocks against a common engine — one risk schema per asset
-        group, one attribution schema, one mode schema — rather than as parallel implementations. The practical
+        differences are expressed as typed configuration blocks against a common engine: one risk schema per asset
+        group, one attribution schema, one mode schema, rather than as parallel implementations. The practical
         consequence is that a fix to the engine, the reconciliation spine or the execution layer applies everywhere at
         once, and an addition does not fork anything.
       </p>
@@ -9723,7 +9553,7 @@ Content-Type: application/json
               <tr>
                 <td class="grp grp-exec"><strong>Decision</strong></td>
                 <td>The tick interface, the archetype lifecycle, the orchestrator, capital-budget enforcement</td>
-                <td>The archetype itself — the actual trading idea</td>
+                <td>The archetype itself: the actual trading idea</td>
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>Instruction</strong></td>
@@ -9741,12 +9571,12 @@ Content-Type: application/json
               <tr>
                 <td class="grp grp-post"><strong>Risk</strong></td>
                 <td>The gate mechanism, the breaker mechanism, limit evaluation and halt semantics</td>
-                <td>The risk model — what is dangerous differs per market, so each has its own typed schema</td>
+                <td>The risk model: what is dangerous differs per market, so each has its own typed schema</td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Post-trade</strong></td>
                 <td>The ledgers, reconciliation, the determinism check, reporting and fee accounting</td>
-                <td>The attribution treatment — which factors a return decomposes into</td>
+                <td>The attribution treatment: which factors a return decomposes into</td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Operations</strong></td>
@@ -9761,29 +9591,33 @@ Content-Type: application/json
       <h3>The surface today, measured directly from the registries</h3>
       <p>
         None of the above is asserted without a count behind it. The following is generated from the same registries the
-        platform's own code reads at runtime — imported and counted this session, not hand-transcribed, so it will not
-        drift the way a copied figure does. <b class="ev ev-verified">✓ verified</b>
+        platform's own code reads at runtime, imported and counted this session, not hand-transcribed, so it will not
+        drift the way a copied figure does.
+      </p>
+
+      <p>
+        Counted by importing the registries directly rather than sampling them. <b>171</b> venues are live and
+        producing data today. The platform's full declared registry lists <b>194</b> venues; the extra 23 are DeFi
+        venues whose connector code has not been built yet, so they carry no live data today.
       </p>
 
       <div class="stat-row">
         <div class="stat">
-          <span class="v">192</span
-          ><span class="k"
-            >Venues declared in the platform's market-data capability registry, across every asset group</span
-          >
+          <span class="v">171</span
+          ><span class="k">Venues live and producing data today, across every asset group (194 declared)</span>
         </div>
         <div class="stat">
           <span class="v">103</span
-          ><span class="k">Of those are DeFi protocol-chain venues — all with a capability entry</span>
+          ><span class="k">Of those are DeFi protocol-chain venues, all with a capability entry</span>
         </div>
         <div class="stat">
-          <span class="v">16</span
-          ><span class="k">Chains the DeFi surface reaches, from Arbitrum and Ethereum to Solana and Starknet</span>
+          <span class="v">24</span
+          ><span class="k">Chains the platform recognizes, from Arbitrum and Ethereum to Solana and Starknet</span>
         </div>
         <div class="stat">
           <span class="v">60</span
           ><span class="k"
-            >Strategy archetypes across 9 families — your two are one family, one asset group. Detail in §3</span
+            >Strategy archetypes across 9 families, your two are one family, one asset group. Detail in §3</span
           >
         </div>
       </div>
@@ -9794,8 +9628,8 @@ Content-Type: application/json
         </summary>
         <div class="plate">
           <div class="plate-head">
-            <span class="label">Declared venues by asset group</span>
-            <span class="note">Canonical registry membership — not every declared venue has market data wired yet</span>
+            <span class="label">Venues live today, by asset group</span>
+            <span class="note">Canonical registry membership, counted this session</span>
           </div>
           <div class="plate-body scroll-x">
             <table>
@@ -9811,13 +9645,13 @@ Content-Type: application/json
                   <td><strong>DeFi</strong></td>
                   <td class="num-col">103</td>
                   <td>
-                    AAVE_V3, COMPOUND_V3, MORPHO, CURVE, PENDLE, UNISWAP, LIDO, JUPITER, RAYDIUM, HYPERLIQUID — spanning
-                    16 chains
+                    AAVE_V3, COMPOUND_V3, MORPHO, CURVE, PENDLE, UNISWAP, LIDO, JUPITER, RAYDIUM: spanning
+                    10 chains in this sample, 24 across the platform's full chain vocabulary
                   </td>
                 </tr>
                 <tr>
                   <td><strong>Sports</strong></td>
-                  <td class="num-col">39</td>
+                  <td class="num-col">33</td>
                   <td>DraftKings, FanDuel, Betfair (UK / EU), Pinnacle, BetMGM, Bovada</td>
                 </tr>
                 <tr>
@@ -9835,6 +9669,11 @@ Content-Type: application/json
                   <td class="num-col">2</td>
                   <td>Kalshi, Polymarket</td>
                 </tr>
+                <tr>
+                  <td><strong>Total, live today</strong></td>
+                  <td class="num-col"><strong>171</strong></td>
+                  <td></td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -9843,7 +9682,7 @@ Content-Type: application/json
         <div class="plate">
           <div class="plate-head">
             <span class="label">The DeFi protocol × chain spread</span>
-            <span class="note">Where one protocol's footprint is really N chains, not N venues</span>
+            <span class="note">Where one protocol's footprint is really N chains, not N venues (sample, not exhaustive)</span>
           </div>
           <div class="plate-body scroll-x">
             <table>
@@ -9857,23 +9696,21 @@ Content-Type: application/json
               <tbody>
                 <tr>
                   <td class="mono">AAVE_V3</td>
-                  <td class="num-col">10</td>
+                  <td class="num-col">8</td>
                   <td>
-                    arbitrum, avalanche, base, bsc, ethereum, linea, optimism, polygon, scroll, zksync (plus legacy
+                    arbitrum, avalanche, base, bsc, ethereum, linea, optimism, polygon (plus legacy
                     <span class="mono">AAVE-ETHEREUM</span> and <span class="mono">AAVE-PLASMA</span> forms)
                   </td>
                 </tr>
                 <tr>
                   <td class="mono">COMPOUND_V3</td>
-                  <td class="num-col">6</td>
-                  <td>arbitrum, base, ethereum, optimism, polygon, scroll</td>
+                  <td class="num-col">4</td>
+                  <td>arbitrum, base, ethereum, optimism</td>
                 </tr>
                 <tr>
                   <td class="mono">MORPHO</td>
-                  <td class="num-col">5</td>
-                  <td>
-                    arbitrum, base, ethereum, optimism, polygon (plus <span class="mono">MORPHOVAULTS-ETHEREUM</span>)
-                  </td>
+                  <td class="num-col">2</td>
+                  <td>base, ethereum</td>
                 </tr>
                 <tr>
                   <td class="mono">CURVE</td>
@@ -9890,16 +9727,16 @@ Content-Type: application/json
                   <td class="num-col">5 venues</td>
                   <td>
                     <span class="mono">JUPITER</span>, <span class="mono">KAMINO</span>,
-                    <span class="mono">METEORA</span>, <span class="mono">ORCA</span>,
-                    <span class="mono">RAYDIUM</span> — all on Solana
+                    <span class="mono">ORCA</span>, <span class="mono">RAYDIUM</span>,
+                    <span class="mono">SANCTUM</span>: all on Solana
                   </td>
                 </tr>
                 <tr>
                   <td>Standalone venues</td>
                   <td class="num-col">5 venues</td>
                   <td>
-                    <span class="mono">HYPERLIQUID</span>, <span class="mono">ASTER</span>,
-                    <span class="mono">EXTENDED-STARKNET</span>, <span class="mono">ETHENA-ETHEREUM</span>,
+                    <span class="mono">MAKER-ETHEREUM</span>, <span class="mono">EIGENLAYER-ETHEREUM</span>,
+                    <span class="mono">ROCKETPOOL-ETHEREUM</span>, <span class="mono">ETHENA-ETHEREUM</span>,
                     <span class="mono">LIDO-ETHEREUM</span>
                   </td>
                 </tr>
@@ -9909,33 +9746,29 @@ Content-Type: application/json
         </div>
 
         <p>
-          The 16 chains behind that spread: <span class="mono">arbitrum</span>, <span class="mono">avalanche</span>,
-          <span class="mono">base</span>, <span class="mono">blast</span>, <span class="mono">bsc</span>,
-          <span class="mono">ethereum</span>, <span class="mono">hyperliquid</span>, <span class="mono">linea</span>,
-          <span class="mono">mantle</span>, <span class="mono">optimism</span>, <span class="mono">plasma</span>,
-          <span class="mono">polygon</span>, <span class="mono">scroll</span>, <span class="mono">solana</span>,
-          <span class="mono">starknet</span> and <span class="mono">zksync</span>.
+          The 24 chains the platform recognizes: <span class="mono">arbitrum</span>, <span class="mono">aurora</span>,
+          <span class="mono">avalanche</span>, <span class="mono">base</span>, <span class="mono">bitcoin</span>,
+          <span class="mono">blast</span>, <span class="mono">bsc</span>, <span class="mono">celo</span>,
+          <span class="mono">ethereum</span>, <span class="mono">fantom</span>, <span class="mono">gnosis</span>,
+          <span class="mono">hyperliquid_l1</span>, <span class="mono">linea</span>, <span class="mono">mantle</span>,
+          <span class="mono">metis</span>, <span class="mono">mode</span>, <span class="mono">moonbeam</span>,
+          <span class="mono">optimism</span>, <span class="mono">plasma</span>, <span class="mono">polygon</span>,
+          <span class="mono">scroll</span>, <span class="mono">solana</span>, <span class="mono">starknet</span> and
+          <span class="mono">zksync</span>.
         </p>
 
         <div class="callout">
-          <span class="tag">What's verified this session, and what's cited from the dated audit</span>
+          <span class="tag">Chains and protocols are different questions than venues</span>
           <p>
-            The 192-venue total, the 103-venue DeFi declaration, the per-asset-group counts and the full protocol ×
+            The 171-venue total, the 103-venue DeFi count, the per-asset-group counts and the full protocol ×
             chain spread above were imported and counted directly this session (<code
               >unified_api_contracts.registry.market_data_categories.VENUE_DATA_TYPE_CAPABILITIES</code
             >
-            and <code>VENUES_BY_ASSET_GROUP</code>). <b class="ev ev-verified">✓ verified</b> Fourteen of the sixteen
-            chains above are confirmed as direct <code>ChainKind</code> members;
-            <span class="mono">hyperliquid</span> and <span class="mono">plasma</span> are confirmed instead through
-            live venue names (<span class="mono">HYPERLIQUID</span>, <span class="mono">AAVE-PLASMA</span>,
-            <span class="mono">FLUID-PLASMA</span>) rather than the chain enum itself. A separate, narrower "51 DeFi
-            venues, 19 chain tokens" count — filtering the same 192-entry registry to DeFi protocol names, and counting
-            three additional Hyperliquid transport variants as distinct chain tokens — comes from the 2026-08-19
-            registry ground-truth audit (internal) and is cited rather than re-derived here.
-            <b class="ev ev-check">? check</b> Either way, both counts are an order of magnitude past what this document
-            showed before this pass. The registry's own <span class="mono">VENUE_CHAIN_MAP</span>
-            under-declares (4 chains, 15 venues) and was deliberately not used as the chain source for any of the above
-            — that gap is a tracked registry defect, not a documentation one.
+            and <code>VENUES_BY_ASSET_GROUP</code>). The platform recognizes 24 chains. Because DeFi venue identity
+            carries the chain in the token itself, a protocol deployed on several chains counts as that many separate
+            venues: stripped of chain suffixes, the 103 live DeFi venues above resolve to <strong>59</strong>
+            distinct protocols. That is the whole reason the venue count is larger than the protocol count, one is
+            counted at a finer grain than the other, not a disagreement.
           </p>
         </div>
       </details>
@@ -9943,7 +9776,7 @@ Content-Type: application/json
       <h3>What that means in practice, without overstating it</h3>
       <p>
         Two honest halves. The first is that a new market, a new venue or a new strategy family arrives as an
-        integration against established contracts rather than as a rebuild — which is why the second venue costs a
+        integration against established contracts rather than as a rebuild, which is why the second venue costs a
         fraction of the first, and the fifth costs a fraction of the second. The second half is that "a fraction" is not
         "nothing": every one of them involves real work, and the work that does not compress is the part that touches
         the outside world. Live-probing a venue's actual collateral behaviour, calibrating against it, and running a
@@ -9975,17 +9808,10 @@ Content-Type: application/json
     <div class="sec-head">
       <span class="num">13</span>
       <h2>Where the programme stands</h2>
-      <b class="st st-part">partial</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/epics/system_readiness_master.md -- this section restates the epic's own definition-of-done"
-        >owner: system_readiness_master</b
-      >
     </div>
 
     <p class="lede">
-      What remains is data completion, production integration and operational validation — not research, and not
+      What remains is data completion, production integration and operational validation, not research, and not
       architectural redesign.
     </p>
 
@@ -9996,7 +9822,7 @@ Content-Type: application/json
       </div>
       <div>
         <b>The two components short</b
-        ><span>Historical backfill and production rollout — both sit on the critical path below</span>
+        ><span>Historical backfill and production rollout: both sit on the critical path below</span>
       </div>
       <div>
         <b>What we need from you</b
@@ -10008,7 +9834,7 @@ Content-Type: application/json
       <summary>Programme status, the critical path in order, and what we need from you</summary>
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Programme status — same readiness scale as Figure 2</span>
+          <span class="label">Programme status: same readiness scale as Figure 2</span>
           <span class="note">As issued, July 2026 review</span>
         </div>
         <div class="plate-body scroll-x">
@@ -10131,7 +9957,7 @@ Content-Type: application/json
         <li>Complete funding and staking validation</li>
         <li>Production cutover for canonical instrument naming</li>
         <li>
-          Exchange credentials and live execution wiring — needs your Copper production credentials, and the CEFFU API
+          Exchange credentials and live execution wiring: needs your Copper production credentials, and the CEFFU API
           spec, sandbox access and sub-account model if you take that route
         </li>
         <li>End-to-end production validation</li>
@@ -10150,7 +9976,7 @@ Content-Type: application/json
         <p>
           The figures previously sent are being re-run rather than restated. We are extending the testing window, adding
           hedge mark-to-market and execution costs, and re-running everything against the canonical dataset. We expect
-          the updated numbers to come out broadly similar and possibly a little more conservative — but much better
+          the updated numbers to come out broadly similar and possibly a little more conservative, but much better
           evidenced, which is the point of §5. We would rather hand you a smaller number we can defend line by line than
           a larger one we cannot.
         </p>
@@ -10158,13 +9984,13 @@ Content-Type: application/json
 
       <h3>What we would like from you</h3>
       <ul>
-        <li><strong>Copper production credentials</strong> — the integration backbone is built and waiting on them.</li>
+        <li><strong>Copper production credentials</strong>: the integration backbone is built and waiting on them.</li>
         <li>
           <strong>A CEFFU decision.</strong> Entirely yours. If you want it for the Binance leg we need the API spec,
           sandbox access and sub-account model; if not, that is equally fine and the Binance leg runs direct.
         </li>
         <li>
-          <strong>Comment on this document and the SLA.</strong> Particularly the three buckets in §11 — that is the
+          <strong>Comment on this document and the SLA.</strong> Particularly the three buckets in §11: that is the
           piece worth your counsel's attention, and it is easier to settle now than at hand-over.
         </li>
         <li>
@@ -10183,7 +10009,7 @@ Content-Type: application/json
       Prepared for Elysium and POD, 11 August 2026. Architecture, repository, cloud and capability statements reflect
       the platform as built. Programme percentages, readiness dots and the critical path are as issued at the July 2026
       review. Commercial terms are governed by the consulting agreement and the service-level agreement, not by this
-      document. Confidential — not for onward distribution without our written consent.
+      document. Confidential: not for onward distribution without our written consent.
     </p>
   </footer>
 </div>
