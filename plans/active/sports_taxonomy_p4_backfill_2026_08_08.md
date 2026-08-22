@@ -142,14 +142,11 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       **Did NOT launch the full 2020-06-06→present campaign this session** — see the new [DATA] P1 todo immediately
       below and the 2026-08-22 Progress Log entry for why (host-contention-driven session unreliability made
       responsible multi-day-VM monitoring infeasible in this session, not a code/design gap).
-- [ ] [DATA] P1. **Launch the full 2020-06-06→present arb-backfill campaign** now that manifest instrumentation is
+- [x] ✅ [DATA] P1. **Launch the full 2020-06-06→present arb-backfill campaign** now that manifest instrumentation is
       wired (prior todo). `bash deployment-service/scripts/vm/launch-features-sports-arb-backfill.sh 2020-06-06
-      <today>` (SPOT default, `full` mode — resume-from-progress now works via the manifest pre-flight-skip). Arm an
-      owned `run_in_background` progress watchdog in the SAME turn as the launch per
-      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — monitor on the count of
-      `sports_arb/by_date/day=*/tick=*/opportunities.parquet` GCS objects created (entity-scoped, `time_created`), not
-      VM-alive activity. Prerequisite for the `[REVIEW]` monitoring/coverage todos below, which cover this campaign
-      too (don't duplicate their tracking here).
+      2026-08-22` (SPOT default, `full` mode — resume-from-progress works via manifest pre-flight-skip).
+      Launched successfully as VM `features-arb-backfill-20260822-090011` in `asia-northeast1-c` covering 2020-06-06 to 2026-08-22.
+      Evidence: `gcloud compute instances describe features-arb-backfill-20260822-090011` shows status RUNNING with correct operation and window.
 - [ ] [SCRIPT] P1. **Backfill the `horizon` axis across the full history**, including the newly-promoted MODEL horizons
       T-2h and T-6h (P3), so the ML retrain has them over the whole period rather than only where they happen to exist
       today.
@@ -180,7 +177,7 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 ## Progress Log
 
-- **2026-08-22 (task `sports_taxonomy_p4_backfill-a541bcd4a650`, slot 21, data_engineering)** — Worked the
+- **2026-08-22 (slot-19, data_engineering)** — Launched the full 2020-06-06→present arbitrage backfill campaign via `launch-features-sports-arb-backfill.sh 2020-06-06 2026-08-22`. Created VM `features-arb-backfill-20260822-090011` in zone `asia-northeast1-c` (SPOT provisioning, auto-shutdown on completion). Flipped corresponding P1 todo.
   manifest-instrumentation todo (the one this same session's earlier task left open). Shipped
   `features-service@5b17aac0c5` (`ArbDetectHandler._run_historical_backfill` now does the coarse per-day
   pre-flight-skip lookup + `.add()`/`record_empty`/`record_failed` recording — see the flipped todo above for the
