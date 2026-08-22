@@ -149,11 +149,31 @@ captured shard, schema renders without picking a day.
 ## Todos
 
 - [ ] [INFRA] P1. Stop the deployment-api OOM. STOPGAP DONE 2026-08-21 (~14:0xZ): live service bumped
-      16Gi/4cpu -> 32Gi/8cpu (revision `uts-shared-deployment-api-00688-8jv`, serving 100%; gen2 needs
-      8 CPU above 24Gi), and the repo sizing literal landed as `deployment-service@6ef5ba27c2`
-      (deploy-shared.sh — whose misleading "must match cloudbuild.yaml" comment was corrected: measured
-      2026-08-21, the deployment-api-main-deploy trigger overrides only `_SERVICE_NAME` and promoted
-      revisions persist the service's live resources, so the deploy-shared literal is the sizing SSOT).
+      16Gi/4cpu -> 32Gi/8cpu (revision `uts-shared-deployment-api-00688-8jv`; Cloud Run needs 8 CPU
+      above 24Gi), and deploy-shared.sh's literal landed as `deployment-service@6ef5ba27c2`.
+      CORRECTION 2026-08-22: that pass mis-identified the sizing SSOT — the live 32Gi revision was
+      reverted to 16Gi by the next promotion (00695, four hours later), because the deployment-api
+      REPO's own `cloudbuild.yaml` deploy step (`gcloud run deploy --memory 16Gi --cpu 4`, run by the
+      deployment-api-main-deploy trigger) re-sets resources on EVERY promotion; deployment-service's
+      root cloudbuild.yaml belongs to deployment-dashboard and was a red herring. Live re-applied as
+      revision `00699-cx7`; the real fix (deployment-api cloudbuild.yaml -> 32Gi/8 + the deploy-shared.sh
+      comment retracted to "must match deployment-api's cloudbuild.yaml") is authored but **SHIP PARKED
+      2026-08-22 ~07:40 local**: the laptop sat at load average 300+ (peers' gates) — every
+      deployment-service re-gate timed out its launcher-script tests at 300s (two identical runs), and
+      deployment-api's quickmerge could not pass STAGE 1 because UAC/DS origins moved faster than the
+      isolated-worktree setup. Both edits are NAMED STASHES in the slot-2 checkouts (+ scratchpad
+      copies): deployment-service `slot2-deploy-shared-sizing-comment-fix-2026-08-22` (comment-only) and
+      deployment-api `slot2-deployment-api-32gi-cloudbuild-2026-08-22` (the one that matters); the
+      `qm-iso-evac-*` stash entries beside them are quickmerge's own leftovers of the same edits — drop
+      after landing. RESUME when `uptime` load is sane (<~20): in each repo `git pull --ff-only origin
+      live-defi-rollout` (CHECK `git status --porcelain` is empty FIRST — a pull over a peer's dirty tree
+      autostashes their WIP; it happened to unified-api-contracts' stash@{0} this morning), then
+      `git stash pop stash^{/slot2-deploy-shared}` -> quickmerge deployment-service
+      `--files 'scripts/cloud-run/deploy-shared.sh'`; then `git stash pop stash^{/slot2-deployment-api-32gi}`
+      -> quickmerge deployment-api `--files 'cloudbuild.yaml'` (deployment-service is its path-dep: DS
+      FIRST, and clean). UNTIL the deployment-api change lands, every promotion re-sets the live service
+      to 16Gi/4 — re-apply `gcloud run services update uts-shared-deployment-api --region asia-northeast1
+      --memory=32Gi --cpu=8` if the UI starts erroring again.
       REMAINING (box stays open for it): confirm top per-request RSS offenders via the existing
       `log_rss_delta` instrumentation (read its emission format first) and land the real fix —
       column-projected / row-group-streamed reads for the 8 index-reading modules listed in Part 1 +
