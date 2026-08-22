@@ -1370,6 +1370,37 @@ lands, so a halted slot restarts on a **good working tree on the right branch** 
    interactive editor) → **PROTECT** (never stomp). **Quarantine is never terminal** — a dead maker's WIP is always
    eventually inherited.
 
+**FM9 operator-PAUSED slots — AO does not touch them at all (HARD RULE, codified 2026-08-21).** A slot with
+`status="paused"` is OUT of the fleet by operator action, for one of exactly two reasons, and both mean hands off: (1)
+an interactive session is using that checkout to debug — frequently to debug AO itself; (2) capacity restriction. While
+paused, AO must not commit, push, stash, realign or reset that slot's worktree, and must not kill its session.
+
+Enforced by **one** predicate, `dispatch.slot_is_operator_paused()`, reached two ways: `dispatch.slot_is_spawnable()`
+for the dispatch side, and `worker_liveness_watchdog._worktree_maintenance_slots()` — a shared SQL-filtered query — for
+the three worktree-mutating sweeps (`_sweep_dirty_slots`, `_flag_orphaned_sibling_dirty_repos`,
+`_sweep_unpushed_slots`) plus `_preserve_wip_before_kill` and `server._commit_slot_wip_before_rotation`. Filtered in the
+QUERY, not by a per-row `continue`, so a newly-added sweep cannot forget it;
+`tests/test_paused_slot_worktree_immunity.py` additionally fails on any sweep that re-introduces a bare
+`select(SlotRow)`.
+
+WHY (measured 2026-08-21, `/plans/active/issues/fleet_dispatch_stall_root_cause_2026_08_21.md`): those sweeps gated
+only on _"does this slot have a LIVE tmux session?"_ — and a paused slot never has one, so it was indistinguishable
+from an abandoned dirty slot. Slot 17, paused for an interactive debugging session, had 11 agent-orchestrator files and
+8 unified-trading-pm files committed away to `wip-preserve/orchestrator-slot-17-*` and its checkout realigned to
+origin — twice, mid-session. The dispatch side already honoured `paused`; only worktree maintenance did not.
+
+ACCEPTED TRADE-OFF: genuinely-abandoned WIP in a slot that is then paused stays un-preserved until it is unpaused. That
+is the right call — while paused the slot belongs to the operator, and silently rewriting its git state is worse than
+deferring the housekeeping.
+
+**Recovering WIP that a preserve pass already took** (works for any slot, historical or future — the machinery
+preserves, it does not destroy): the commit is `chore(orphan-wip): inherited WIP from predecessor on slot <N> …`,
+pushed to `wip-preserve/orchestrator-slot-<N>-<short-sha>` (and, for an ahead/diverged slot,
+`wip-preserve/slot-<N>-<repo>-diverged-<ts>`). Find it with
+`git ls-remote origin 'refs/heads/wip-preserve/*slot-<N>*'` or `git reflog`, confirm the payload with
+`git show --stat <sha>`, then restore into the working tree with `git cherry-pick --no-commit <sha>` — it applies
+cleanly onto a moved HEAD. Do NOT `git reset --hard` first.
+
 **Stashes are per-clone (Path-B).** Each slot is a separate clone with its own `.git`, so `git stash list` shows ONLY
 this slot's stashes — no cross-slot leakage (the old "linked worktrees share one `.git` → stash list exposes every
 slot's stashes" hazard is gone). `stash_dirty_repos` still tags `slot-<N>-orphan-<ts>` for auditability.

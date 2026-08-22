@@ -267,6 +267,16 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       not "looks better". If restarts/day has not dropped by roughly the predicted 59%, the
       relevance gate's path set is wrong and needs widening — check what the remaining restarts
       cite in `/var/log/ao-self-pull.log`.
+      HOW TO MEASURE (the ad-hoc scripts this session used lived in a tmpfs scratchpad and were
+      reaped — this is the recipe so nobody re-derives it). All five come from two durable
+      sources; `journalctl -u orchestrator` is NOT one of them, it retains only ~1h here.
+      `sqlite3 "file:agent-orchestrator/data/state/state.db?mode=ro"` then
+      `SELECT event_type, count(*) FROM activity_log WHERE ts > datetime('now','-24 hours')
+      GROUP BY event_type` — spawn-failure rate is `autospawn_failed` vs `autospawn_succeeded`,
+      conversion is `task_dispatched` vs `slot_done`, deaths are `tmux_session_lost`; and
+      `grep -c 'restarting orchestrator' /var/log/ao-self-pull.log` (filtered by date) for
+      restarts/day. `boots_per_done` reads straight off `GET /api/fleet-kpis`. The pre-fix
+      baseline to compare against is the measurement table above.
 - [ ] [BACKEND] P1. **Role/reserve partitioning starves two craft roles to one usable slot
       each.** Deriving each queued task's `assigned_role` from its `craft_role` block list: infra
       110 tasks, data_engineering 108, backend_engineer 106. Against live slot roles, `infra` has
@@ -344,33 +354,85 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       `cefi_content_migration_fleet_44_complete`, `tardis-vm-slot-free-cefi-forward-poll`. None
       appears anywhere in the plan corpus and no code sets any of them. Either document what
       clears each, or `POST /api/prerequisites/{name} {"value": true}` and drop it.
-- [ ] [INFRA] P1. **An interactive session working in an AO-managed slot gets its WIP harvested
+- [x] [INFRA] P1. **An interactive session working in an AO-managed slot gets its WIP harvested
       mid-session.** Hit live while writing this doc: every uncommitted change in slot 17 — 11
       agent-orchestrator files and 8 unified-trading-pm files — was committed away and both
-      checkouts reset to `origin/live-defi-rollout` at 21:04:05Z, because AO's dirty-state
-      preserver found slot 17 dirty with no live `.agent-claim` and classified it as "inherited
-      WIP from predecessor". Nothing was lost — that is the design working: the commits were
-      pushed to `wip-preserve/orchestrator-slot-17-87b29a6d` (AO) and
-      `wip-preserve/orchestrator-slot-17-aeb2d92a88` (PM), and `git cherry-pick --no-commit
-      <sha>` restored both trees with zero conflicts. But it is a live hazard: CLAUDE.md tells
-      operators "an interactive session IS slot N", and an interactive session has no allocation
-      mechanism and therefore no claim, so long-running interactive work in any slot is
-      harvestable on the fleet's ~2-minute cadence. Needs a decision, not a unilateral fix:
-      (a) interactive sessions write a real `.agent-claim` — but a claim also reads as "slot
-      occupied" and would cost real fleet capacity, the opposite of what this doc is fixing;
-      (b) widen the preserver's mtime guard past the current 120s; (c) reserve an interactive
-      slot range excluded from spawn. Whichever is chosen, write the recovery recipe into
-      `/codex/05-infrastructure/per-tab-worktrees.md` — it is fast, safe, and non-obvious.
+      checkouts reset to `origin/live-defi-rollout` at 21:04:05Z. Nothing was lost — that is the
+      design working: the commits were pushed to `wip-preserve/orchestrator-slot-17-87b29a6d`
+      (AO) and `wip-preserve/orchestrator-slot-17-aeb2d92a88` (PM), and `git cherry-pick
+      --no-commit <sha>` restored both trees with zero conflicts.
+      — **DONE 2026-08-21, `agent-orchestrator@3cfd9bcfb8`. The operator answered the decision this
+      todo was holding: slot 17 was ALREADY `paused`, and a paused slot must not be touched by AO
+      at all.** Slots are paused for exactly two reasons — an interactive debugging session, or a
+      capacity restriction — and both mean hands off. That is a cleaner rule than any of the three
+      options sketched here: it needs no `.agent-claim` (so it costs no fleet capacity, unlike
+      option (a)), no mtime heuristic (option (b)), and no reserved slot range (option (c)).
+      ROOT CAUSE, once the premise was checked: the dispatch side already honoured `paused`
+      (`slot_is_spawnable`, `escalation`, `stale_dispatch`, `tmux_pruner`,
+      `worker_liveness._respawn` — 8 call sites), but the three worktree-MUTATING sweeps in
+      `worker_liveness_watchdog` each ran a bare `select(SlotRow)` with no status filter and gated
+      only on *"does this slot have a live tmux session?"* — which a paused slot never has, making
+      it indistinguishable from an abandoned dirty slot.
+      FIX: one predicate `dispatch.slot_is_operator_paused()` (+ `OPERATOR_PAUSED_STATUS`, which
+      `slot_is_spawnable` now also uses so there is a single definition), applied via a shared
+      SQL-filtered `worker_liveness_watchdog._worktree_maintenance_slots()` in all three sweeps
+      (`_sweep_dirty_slots`, `_flag_orphaned_sibling_dirty_repos`, `_sweep_unpushed_slots`), plus
+      guards on `_preserve_wip_before_kill` and `server._commit_slot_wip_before_rotation` (the two
+      paths that stash / reset-after-preserve). Filtered in the QUERY rather than by a per-row
+      `continue` so a fourth sweep cannot silently forget it.
+      Test: `tests/test_paused_slot_worktree_immunity.py` — the predicate truth table, the shared
+      helper, all three sweeps, the pre-kill stash, a regression guard that `slot_is_spawnable`
+      still excludes paused, and a SOURCE-level check that fails the moment any sweep re-introduces
+      a bare `select(SlotRow)`. Each behavioural test also asserts the ordinary slot IS still swept,
+      so this can never degrade into a blanket disable.
+      Recovery recipe written into `/codex/05-infrastructure/per-tab-worktrees.md` § FM9 as this
+      todo asked.
+      ACCEPTED TRADE-OFF, recorded so it is not rediscovered as a bug: genuinely-abandoned WIP in a
+      slot that is THEN paused stays un-preserved until the slot is unpaused.
 - [ ] [INFRA] P2. **The same slot reset also deleted the repo `.venv`**, so the next
       `quality-gates.sh` aborted with "no usable .venv/bin/python" and needed a full `uv sync`
       before it could gate anything. Same class as the already-open
       `/plans/active/issues/vm_disk_guard_wipes_active_slot_venvs_2026_08_20.md` — recording a
       fresh 2026-08-21 occurrence rather than re-diagnosing it.
+- [ ] [INFRA] P2. **Extend the operator-paused exemption to `agent-orchestrator/scripts/vm-disk-guard.sh`.**
+      The paused-slot rule shipped in `agent-orchestrator@3cfd9bcfb8` covers AO's Python
+      worktree sweeps; the disk guard is a separate shell script that reclaims
+      `.tabs/<N>/*/.venv` and decides "idle" with the SAME flawed liveness proxy the sweeps
+      used — "does an `orch-slot-<N>` tmux session exist". A paused slot never has one, so an
+      operator's interactive slot is judged idle and its venv swept mid-session; it wiped slot
+      17's venv twice on 2026-08-21, each time costing a full `uv sync` before
+      `quality-gates.sh` could run at all. The live script (203 lines) HAS been hardened since
+      its own issue doc was written — it now also checks `slot_has_live_process` and
+      `_slot_venv_in_use` (argv/CWD referencing the slot path) — but neither caught a VS Code
+      interactive session, and neither knows about `paused`. Fix: read paused slot ids from
+      `data/state/state.db` and skip them, mirroring `dispatch.slot_is_operator_paused`. Track
+      the GENERAL bug (its idle test matches every slot on this VM, so every venv is swept) in
+      its own doc — this todo is only the paused-slot half.
 - [ ] [DOC] P3. **`ORCHESTRATOR_FLEET_WORKER_CAP=40` is inert.** Every tick logs
       `configured=40 CLAMPED to 25 by slot arithmetic (configured_slots=32 - reserve=7
       [ci=3 + scheduled=4])`. The clamp is by design and already logged loudly, but the live
       `.env.local` still carries a number that has no effect, which is a trap for the next
       operator. Set it to the real ceiling or delete the override.
+
+## Deferred work after 2026-08-21
+
+| Item | State / why deferred | Blocked on |
+| --- | --- | --- |
+| Re-measure the fleet 24h after the fixes (`[INFRA] P1` above) | **Cannot be done yet** — needs elapsed time; the fixes went live 22:20Z and 4-min-old signals are not evidence | wall-clock only |
+| Role/reserve starvation: 1 usable slot for 110 infra + 1 for 108 data_engineering tasks (`[BACKEND] P1`) | **Not done** — the largest remaining throughput lever; reserve selection is by highest slot id and is role-blind | nobody; pick this up next |
+| `vm-disk-guard.sh` paused-slot exemption (`[INFRA] P2`) | **Not done** — small, same rule as the shipped fix, needs its own gate run | nobody |
+| `explain_blocked` lists 14 phantom human slots as "eligible" (`[BACKEND] P2`) | **Not done** — diagnostics honesty, no behaviour change | nobody |
+| 262 `slot_done_rejected_dirty`/24h vs 79 accepted (`[BACKEND] P2`) | **Not done** — needs the dirty-files-provenance split (worker's own output vs foreign litter) before a fix is choosable | nobody |
+| Stray nested repos quarantining slots 5/11/16/23 (`[INFRA] P2`) | **Operator-owned** — the dirs hold uncommitted work; disposition is a human call, do NOT blind-delete | operator |
+| 35 tasks behind 11 `status: draft` upstream plans (`[OPERATOR] P3`) | **Operator-owned** — only a human `draft`→`active` flip can clear these | operator |
+| 6 named prerequisites nothing can ever set (`[OPERATOR] P3`) | **Operator-owned** — needs a ruling on what clears each | operator |
+| Interactive-session-in-an-AO-slot hazard (`[INFRA] P1`) | **DONE** this session — operator ruled paused = hands off; shipped `agent-orchestrator@3cfd9bcfb8` | — |
+
+**Recommended NEXT item: the role/reserve starvation `[BACKEND] P1`.** Everything else on this
+list is either waiting on the clock, operator-owned, or diagnostics. That one is the binding
+constraint on throughput now that the churn loop is broken — 62% of capacity-waiting tasks had
+ZERO idle, non-reserved, role-matching slots at sample time, and reserving by highest slot id
+happened to capture 3 of the 5 infra slots.
 
 ## Progress Log
 
