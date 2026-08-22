@@ -450,32 +450,8 @@ rulings (codex doc) were **ALL RESOLVED 2026-08-21** — see section 15 item 5 (
   (BLOCK/SCALE_DOWN/MONITOR/TEST_ONLY per entry, default BLOCK); needs the UAC PR per risk-rule-taxonomy.md.
 - **Q16**: `position_adjustment_bps_per_unit_risk` is per-entry.
 
-### SUPERSEDED — see "OPERATOR RULING 2026-08-21 — Q12-Q16 answered" above (stale leftover, kept as a record, not a live ask)
-
-12. **Does `references: list[InstrumentReferenceEntry]` live on `StrategyInstructionEnvelope` directly, or does the
-    envelope keep single-instrument convenience fields (today's `reference_price`) for the common N=1 case, with the
-    vector reserved for cases that actually need N>1?** Duplicating the shape in two places is worse than picking
-    one; recommend the vector as the ONE home, with N=1 as the trivial list-of-one case — but `QuoteInstruction`
-    narrowing `reference_price` to required today would need to change too.
-13. **Is the venue axis nested per-instrument (as drafted above), or does the vector need a full
-    `(instrument_id, venue)` cross-product** — can a strategy legitimately hold different believed positions on the
-    SAME instrument across different venues within one instruction's reference state? The existing "hard rule" (one
-    strategy instance executes a given instrument on one venue) suggests nesting is sufficient, but that rule
-    predates the vector shape — worth re-confirming once N>1 instruments are in play.
-14. **Does `credit` vary per-entry, or is one credit policy shared across the whole vector?** Moot for N=1; for the
-    arb-leg N=2 case, do the two legs carry independent thresholds, or one shared band?
-15. **Does the position-mismatch `RiskRuleTrigger` (todo below) fire once per instruction or once per vector
-    entry?** Verified this session: none of the 13 existing `RiskRuleTrigger` subtypes
-    (`/codex/04-architecture/risk-rule-taxonomy.md`) covers a position/reference mismatch — adding one needs a UAC PR
-    regardless of scalar-vs-vector shape, per that doc's own "adding a new trigger requires a UAC PR" rule; the
-    vector shape changes whether the new trigger's required-field shape is per-instruction or per-entry.
-16. **Does `position_adjustment_bps_per_unit_risk` also move per-entry**, now the shape is proven multi-instrument,
-    rather than staying one coefficient for the whole instruction?
-
-Default lean, stated for the record, not as a ruling: the vector is the one home (no envelope-level duplication),
-venue nested per-instrument (not a full cross-product), credit per-entry, the new `RiskRuleTrigger` subtype
-evaluates per-entry, and the adjustment coefficient moves per-entry too — all following the "the vector was already
-right in Layer 2" reasoning above.
+### SUPERSEDED — the full Q12-Q16 question texts + default-lean were tombstoned 2026-08-22 (line-cap); the ruling
+above answers all five; the original wording lives in git history (any pre-2026-08-22 revision of this file).
 
 ## Side-finding: DeFi liquidation monitoring has the same "fast trigger, not slow poll" pattern this issue is about
 
@@ -629,15 +605,32 @@ POST_ONLY as two independently composable fields.
       reusing the existing `RiskRuleConsequence` vocabulary (`BLOCK`/`SCALE_DOWN`/`MONITOR`/`TEST_ONLY`), default
       `BLOCK`. **Note 2026-08-19 (later revision): scoped per-entry of the `references` vector (judgment call 15),
       not per-instruction — verified none of the 13 existing `RiskRuleTrigger` subtypes covers this, so it needs a
-      UAC PR, not a pure consumption of an existing subtype.**
-- [ ] [BACKEND] P2. **Add a `position_mismatch` `RiskRuleTrigger` subtype via a UAC PR** — verified 2026-08-19 that
-      none of the 13 existing typed subtypes (`/codex/04-architecture/risk-rule-taxonomy.md`) covers a
-      reference-position mismatch; the closed union requires a UAC PR to extend, per that doc's own anti-patterns
-      section (`unified_api_contracts/canonical/crosscutting/risk_rule/_triggers.py`).
+      UAC PR, not a pure consumption of an existing subtype.** **Note 2026-08-22: the UAC subtype is SHIPPED
+      (@2178693a63, next todo) but this wiring stays OPEN — gated on the operator-gated `references` vector for its
+      reference-side data AND on the UTL companion todo below (evaluator has no branch yet; fails loud, not silent).**
+- [x] ✅ [BACKEND] P2. **Add a `position_mismatch` `RiskRuleTrigger` subtype via a UAC PR** — SHIPPED
+      unified-api-contracts@2178693a63 (2026-08-22): `PositionMismatchTrigger` in the closed union
+      (`_triggers.py`) + exports (`risk_rule/__init__`, `risk.py`, root `__init__`) + tests; full QG pass. Field
+      note: carries `tolerance_position_units` (default `0` = the docs' exact-match integrity semantics) per
+      sibling-trigger idiom — operator may strike it to bare exact-match.
 - [ ] [DESIGN] P2. **Design the generic per-position adjustment field** (one symmetric bps-per-unit-of-risk
       coefficient, applied against the RAW single-instrument/single-venue position) on the shared envelope,
       generalizing off `QuoteInstruction.skew_on_inventory` rather than inventing new shape. **Note 2026-08-19 (later
       revision): now likely per-vector-entry (judgment call 16), not per-instruction — unresolved.**
+- [ ] [BACKEND] P2. **UTL companion for `PositionMismatchTrigger`** — add an `_eval_position_mismatch` branch to
+      `_dispatch_trigger` (`unified_trading_library/risk/rule_evaluator.py:396-439`) + observed/reference position
+      fields on `RuleEvalContext` (:82-173); until then a rule carrying the shipped subtype raises
+      `UnknownTriggerError` at first evaluation. Sequence after the `references` vector (found 2026-08-22).
+- [ ] [DESIGN] P3. **Confirm empty-`eligible_venues` semantics for the new envelope validator** (@2178693a63
+      implements PERMISSIVE: empty = "not yet declared", constraints allowed) — no SOR consumer reads
+      `eligible_venues` anywhere yet and the venue-eligibility codex doc never states the empty case; re-derive
+      from the real consumer once w22's venue_constraints wiring lands.
+- [ ] [DOC] P2. **Align `strategy-service-deep-dive.html` (~1408-1436) with Q12-Q16** — its
+      `InstrumentReferenceEntry`/`CreditBand` rendering predates the ruling (missing delta/gamma/theta coefficients
+      + per-entry language now in platform walkthrough §08 @a6fe8b1a39). Natural home is the walkthrough
+      remediation plan — parked here 2026-08-22, that plan was peer-locked mid-wave.
+- [ ] [REVIEW] P3. **UTL doc/code drift**: `rule_evaluator.py` docstring cites a "PER_INSTRUMENT scope" that
+      `RiskRuleScope`'s closed set doesn't have (found read-only 2026-08-22).
 - [x] ✅ [AGENT] P2. **EXTRACTED 2026-08-21 → batch21. VERDICT: declared-but-unwired, zero production callers**
       (evidence: `cross_cutting_satellite_ao_dispatch_batch21_2026_08_21.md`).
 - [x] ✅ [BACKEND] P3. **EXTRACTED 2026-08-21 → batch21.** Fix the stale `_SCE_1H` suffix on DeFi strategy_ids** (`carry_staked_basis.yaml` and siblings)
@@ -717,6 +710,13 @@ appears to have zero production callers in this pass. Also found: the config's `
 stale (DeFi is never SAME_CANDLE_EXIT per `hold-policy.md`); the functional `execution_mode: continuous` field is
 correct. Neither the wiring gap nor the naming mismatch was fixed here (out of this pass's owned files); both
 tracked as new todos. Nothing in either correction was built — design/finding only.
+
+**2026-08-22 — trigger + validator SHIPPED; walkthrough §08 corrected; T1 stale clause fixed** (sub-agent-authored,
+main-agent-shipped). unified-api-contracts@2178693a63: `PositionMismatchTrigger` + the first-ever validator on
+`StrategyInstructionEnvelope` (`venue_constraints ⊆ eligible_venues`; safety-measured first — ZERO producers
+construct either field workspace-wide). Still gated, NOT built: `references` vector (T1: fabric-vehicle tension +
+fabric Parts II-V absent), preflight wiring, UTL evaluator companion (new todos above). Docs: platform walkthrough
+§08 declared-vs-planned split @a6fe8b1a39; T1 "still open: five Wave-0 rulings" corrected @1161eea3ec.
 
 ### 6. UNDERLYING is a first-class axis — reference price is per underlying, not per instrument
 
