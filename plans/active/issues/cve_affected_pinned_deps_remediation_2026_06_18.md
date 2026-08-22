@@ -711,7 +711,7 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       PYSEC-2026-196 fix version `26.1.2` instead of the actual reason for the `>=26.2` floor,
       PYSEC-2026-3721/CVE-2026-13346) — `ml-service@56d2a27856`, full `quality-gates.sh` green (sentinel
       matched commit SHA), verified on `origin/live-defi-rollout`.
-- [ ] [SCRIPT] P2. **strategy-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: strategy-service)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-22 (slot-24).** **strategy-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). Source `pyproject.toml` already declared `pip>=26.2` and resolved `pip==26.2`; regenerated the stale `uv.lock` project metadata (`>=26.1.2` → `>=26.2`). Full `quality-gates.sh` passed (6,472 passed, 248 skipped, 3 xfailed, 112 warnings), then quickmerge shipped `strategy-service@2f18b51aa7`, verified on `origin/live-defi-rollout`.
 - [ ] [SCRIPT] P2. **system-integration-tests** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
       system-integration-tests)
 - [x] ✅ [SCRIPT] P2. **DONE — verified already-landed (2026-08-22, slot-10).** **trading-agent-service** — pip
