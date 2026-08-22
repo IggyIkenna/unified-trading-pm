@@ -201,3 +201,48 @@ def test_version_helpers() -> None:
     assert reconcile_mod._is_version_field(("repositories", "utl", "version")) is True
     assert reconcile_mod._is_version_field(("repositories", "utl", "dependencies")) is False
     assert reconcile_mod._is_version_field(("versions",)) is False
+
+
+def _ldr_manifest(ldr_status: str, ldr_sha: str) -> dict[str, object]:
+    return {
+        "title": "workspace",
+        "repositories": {
+            "alerting-service": {
+                "ci_status": "MAIN_GREEN",
+                "ldr_ci_status": ldr_status,
+                "ldr_ci_status_sha": ldr_sha,
+            }
+        },
+    }
+
+
+def test_ldr_ci_status_sha_both_drifted_takes_main_no_conflict() -> None:
+    """Regression (escalation agt-883a53, PR #3723): ``ldr_ci_status_sha`` is written by
+    ldr-ci-monitor.yml on main ONLY (`schedule:` fires from the default branch), so LDR's copy is a
+    stale back-merge snapshot. A both-sides-differ drift must resolve to main, not escalate — the
+    omission blocked the main→LDR back-merge on 7 repos at once."""
+    base = _ldr_manifest("GREEN", "aaaa")
+    ours = _ldr_manifest("GREEN", "bbbb")  # LDR stale snapshot from an earlier back-merge
+    theirs = _ldr_manifest("RED", "cccc")  # main authoritative (fresh monitor run)
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    repos = merged["repositories"]
+    assert isinstance(repos, dict)
+    assert repos["alerting-service"]["ldr_ci_status_sha"] == "cccc"
+    assert repos["alerting-service"]["ldr_ci_status"] == "RED"
+
+
+def test_ldr_ci_status_field_only_on_ldr_side_preserved() -> None:
+    """A CI field present only on the LDR side (main dropped/never had it) keeps the LDR value
+    rather than vanishing — same contract the pre-existing ci_status branch already honours."""
+    base = _ldr_manifest("GREEN", "aaaa")
+    ours = _ldr_manifest("RED", "bbbb")
+    theirs: dict[str, object] = {
+        "title": "workspace",
+        "repositories": {"alerting-service": {"ci_status": "MAIN_GREEN"}},
+    }
+    merged, conflicts = reconcile_mod.reconcile(base, ours, theirs)
+    assert conflicts == []
+    repos = merged["repositories"]
+    assert isinstance(repos, dict)
+    assert repos["alerting-service"]["ldr_ci_status_sha"] == "bbbb"

@@ -73,7 +73,16 @@ _EMPTY_MAP: Mapping[str, object] = {}
 # back-merge these always resolve to main (``theirs``); LDR's copy is
 # non-authoritative (Guard 2(a): all readers read ci_status from main).
 # Per-repo CI-automation fields (under repositories.<name>.<field>):
-_REPO_CI_FIELDS: frozenset[str] = frozenset({"ci_status", "coverage_pct", "ci_failure_reason"})
+# ``ldr_ci_status`` / ``ldr_ci_status_sha`` (added 2026-08-22, escalation agt-883a53) are written
+# ONLY on main: ldr-ci-monitor.yml is a `schedule:`-triggered workflow, and GitHub fires `schedule:`
+# exclusively from the DEFAULT branch — it checks out main, probes each repo LDR ref, and pushes the
+# manifest update to main. The LDR copies are therefore stale snapshots that only ever arrive via this
+# very back-merge, so a both-sides-differ drift is never a real disagreement — it is main being fresher.
+# Omitting them made every such drift a genuine-conflict escalation: the exact "dam" this reconciler
+# exists to prevent (PR #3723 blocked the main-to-LDR back-merge on 7 repos ldr_ci_status_sha).
+_REPO_CI_FIELDS: frozenset[str] = frozenset(
+    {"ci_status", "coverage_pct", "ci_failure_reason", "ldr_ci_status", "ldr_ci_status_sha"}
+)
 # Top-level CI / promotion-state blocks (semver-agent + promoter + ci-status bot):
 _TOPLEVEL_CI_FIELDS: frozenset[str] = frozenset(
     {
