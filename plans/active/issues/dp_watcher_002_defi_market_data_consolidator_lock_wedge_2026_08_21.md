@@ -242,6 +242,23 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
       1's correction above). Worth a one-line callout in `/codex/05-infrastructure/dual-cloud-image-builds.md`
       or `/codex/12-agent-workflow/measurement-claims-discipline.md` so a future worker doesn't repeat the same
       false-negative. Repo: unified-trading-pm (docs-only).
+- [ ] [DATA] P1. **NEW, from the 2026-08-22T16:5xZ session (see Progress Log below) — root-cause why
+      `consolidator_content_write_at` did not survive `ffk98`'s own genuine, confirmed content write (the
+      16:21:51Z advance todo 2 documents).** `_write_consolidated` (`manifest_consolidator.py` ~line 3557-3574)
+      sets `blob.metadata = dict(content_metadata)` immediately before `blob.upload_from_string(payload,
+      if_generation_match=canon_generation)` — this LOOKS correct, but the very next lock holder (`jl5tz`,
+      acquired 16:50:37Z) read the canonical fresh and logged the SAME "has NO consolidator_content_write_at
+      marker" warning, on the canonical `ffk98` had just written. `_get_content_write_mtime` reads
+      `blob.reload()` + `blob.metadata` DIRECTLY (not through the `get_blob_metadata()` wrapper the
+      2026-08-22T16:3xZ entry below fixed), so this is a genuine absence, not a read-path artifact. A live
+      reproduction test (small-vs-50MB payload, same bucket) was in flight at filing — see that entry for the
+      result once known. If confirmed a genuine SDK/write-path gap (e.g. a resumable-upload-size threshold that
+      drops custom metadata), this is the REAL root cause of the whole incident chain (every restamp — the
+      2026-08-21/22 one, and now `ffk98`'s own genuine write — gets silently stripped by the very next real
+      merge), not just an out-of-band external rewriter as every prior entry assumed. Until fixed, every future
+      cycle keeps re-running the expensive full-history "unprovable cutoff" merge indefinitely — survivable only
+      because of the raised `timeout_seconds` headroom (see below), not because the incremental-cutoff mechanism
+      is actually working as designed. Repo: unified-trading-library.
 
 ## Codex SSOTs
 
@@ -514,6 +531,48 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
     override raise (mirroring the exact precedent already used twice for this bucket/cefi in
     `manifest_consolidator_scheduler.tf`), drafted and ready to ship. Doc-only via `safe-doc-push.sh` for this
     entry; the UTL fix ships separately via `quickmerge.sh --agent`.
+- **2026-08-22T16:4x-17:0xZ (autonomous session, direct interactive operator dispatch — continued from the
+  16:3xZ entry above)**: `ffk98` reached its terminal state: `status.completionTime=2026-08-22T16:44:02.565670Z`,
+  Cloud Logging confirms the GENUINE SIGKILL line (`16:43:15.064891Z "Terminating task because it has reached
+  the maximum timeout of 7200 seconds"`), followed by the SAME auto-spawned-retry-finds-orphaned-lock-does-
+  zero-work-exits-0 pattern (`SILENT STALL streak=1394`, `error=locked`) this doc's history already knows —
+  i.e. `ffk98` itself DID hit the 7200s timeout, exactly the "genuine timeout" outcome the task dispatching this
+  session was watching for. Reconciling with the CONCURRENT slot-25 entry immediately below (which landed on
+  origin while this session was independently investigating — found via `git fetch` + `git show
+  origin/live-defi-rollout:...` before editing, not overwritten blind): **both are correct, and neither
+  contradicts the other** — the canonical DID genuinely advance (write succeeded, confirmed independently by
+  this session too via the same `generation 1787388651853992 -> 1787415711357543` / `last_modified 16:21:51Z`
+  reading), AND the execution was STILL SIGKILLed ~21 minutes later during (per slot-25's own "residual note,
+  not a blocker") the post-write cleanup phase — slot-25's flagged "worst case" is exactly what happened. This
+  DID re-orphan the lock (confirmed: `_index/consolidator.lock`'s `last_modified=14:43:33Z` matched `ffk98`'s
+  own `lock_acquired` time when checked at 16:49Z — never refreshed/released), so a manual recovery was still
+  genuinely needed, not optional cleanup.
+  - **Recovery executed this session** (`gcloud scheduler jobs pause` → `gcloud run jobs update
+    --task-timeout=21600s --update-env-vars=CONSOLIDATOR_LOCK_TTL_SECONDS=27000,CONSOLIDATOR_STALL_ALERT_CYCLES=585`
+    → confirmed via UTL `delete_blob` the orphaned lock (`last_modified=14:43:33Z`, matching `ffk98`) → resume
+    scheduler). Live confirmed the new Cloud Run Job spec took effect immediately (any execution from this point
+    uses the new values, not the old 7200s/9000s/195). Terraform codified in the SAME values in
+    `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` (not yet shipped at this entry — QG
+    pending, see below); this is the established live-gcloud-then-codify pattern this file's own history uses
+    (2026-07-14/08-14/08-16 precedents), since a real `tofu apply` is not runnable in this workspace.
+  - **New lock holder `jl5tz` (acquired 16:50:37Z) exposed the deeper finding**: it read the just-written
+    canonical and logged the SAME "has NO consolidator_content_write_at marker" fail-closed warning —
+    confirmed via `_get_content_write_mtime`'s OWN direct `blob.reload()`/`blob.metadata` read (not the buggy
+    `get_blob_metadata()` wrapper below), so this is a real absence: **the marker did not survive `ffk98`'s own
+    genuine content write.** This means the wedge's underlying mechanism (marker loss on write) is NOT actually
+    fixed — only its SYMPTOM (7200s hard timeout) is currently covered by the just-raised headroom. Filed as a
+    new todo (P1, above) rather than left as prose per the hard rule. A live reproduction test (small vs. 50MB
+    payload through the exact `blob.metadata = ...; blob.upload_from_string(...)` pattern
+    `_write_consolidated` uses) was launched this session to isolate whether this is a payload-size-dependent
+    SDK/resumable-upload gap — result to be logged in a follow-up entry.
+  - **`jl5tz` itself**: now running the same `mode=incremental chunks=106 date_range=2018-01-01..2026-08-22`
+    shape (marker still absent → merge-all-15-shards, prune-nothing), under the NEW 21600s timeout — plenty of
+    runway even if it repeats `ffk98`'s ~96min-to-write-then-20min-more-cleanup shape. Monitoring to terminal
+    state. Not re-flipping todo 2 (slot-25's own reasoning — canonical content safety, not container exit code —
+    is sound and still holds), but the doc's "resolved, no live incident" framing needs the correction above:
+    this is closer to "data-safe and headroom-covered" than "genuinely self-healing yet." Doc-only via
+    `safe-doc-push.sh` for this entry; code (get_blob_metadata fix) and infra (Terraform) ship separately, shas
+    to follow in a subsequent entry once their QG runs complete.
 - **2026-08-22T15:5x-16:3xZ (slot 25, data_engineering worker — RESOLUTION)**: dispatched onto this doc's own todo 2
   (AO task `dp_watcher_002_...`, brief text matched the stale `19:16Z` original wording, already long-superseded by
   the prior session's own in-place corrections above — read the full chain before acting, not just the task brief).
