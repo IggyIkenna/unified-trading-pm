@@ -295,12 +295,16 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
       `unified-trading-pm@ffbe04df68`.
 - [ ] [DATA] P1. D2: execute the approved manifest/GCS correction batch item-by-item under each stated gate
       (soft-delete retention ≥604800s cited inline or snapshot-first; fresh dry-run before every --apply). Done-when:
-      each item's verification query returns the expected zero/row count, logged per item. 2/7 docs resolved:
+      each item's verification query returns the expected zero/row count, logged per item. 3/7 docs resolved:
       `prediction_batch4_deferred_residuals_2026_08_16` (POLYMARKET reclass correctly WITHHELD — a permanent
       manifest-`--apply`-reserved-for-human hard-stop D2's generic approval doesn't cross); `sports_mdt_odds_captured_cells_not_found_rate_2026_08_16`
       (both row-removal items found ALREADY resolved by an untraced concurrent writer — re-verified via fresh
-      precondition + verification query, 0 residual rows either way; a `[DIAG]` follow-up filed to find the writer).
-      Remaining 5 docs retrying via `wnroqem2n`.
+      precondition + verification query, 0 residual rows either way; a `[DIAG]` follow-up filed to find the writer);
+      `tradfi_cme_future_typed_blank_instrument_id_2026_08_09` (fresh soft-delete retention 604800s + a
+      content-verified retire script shipped `market-tick-data-service@53e6d971ce`, retired 873,007/880,933 stale
+      `venue=CME`/`instrument_type=FUTURE` rows with a live bundle-grain counterpart, 7,926 no-counterpart rows left
+      untouched + split into a new follow-up issue doc; verify query confirms 7,926 residual exactly, doc archived —
+      `unified-trading-pm@9bb1899fe4`). Remaining 4 docs retrying via `wnroqem2n`.
 - [x] 5. ✅ [INFRA] P1. D3: stash/WIP cleanup per the approved scope — `wiv6q901k` (`unified-trading-pm@470ff79cb7`,
       `@2f046c4db0`, `@e1f61e5168`). .tabs/3 re-audit found drift continuing (152 entries now, vs 42/59/125 at prior
       checks) — documented, not itself a blocker. features-service-clean-check + MTDS slot-3 targets both already had
@@ -377,6 +381,27 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
   shared `market-tick-data-service` checkout with its `quality-gates.sh --no-fix` run still queued behind host-wide
   QG contention (nohup'd — survives past this tick, checked via `ps`/log tail rather than re-running). Left
   deliberately un-flipped per CLAIM≤MEASUREMENT — next tick finishes the ship→tarball→VM-cycle→verify chain.
+- **2026-08-22 (tick 5, sub-agent dispatch on D2 affected_docs[3])** — Executed
+  `tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md`'s sole open `[OPERATOR]` retire todo (3rd of 7 D2 docs
+  resolved, see checkbox above). Fresh precondition re-check (bounded, column-projected read): soft-delete retention
+  604800s (PASS); population 880,933 stale rows — unchanged from the 2026-08-16 measurement (had actually stopped
+  growing, contrary to the doc's "actively growing" framing). Shipped a content-verified retire script
+  (`market-tick-data-service@53e6d971ce`, full `quality-gates.sh` green, 11230 passed) modeled on the
+  `retire_dex_pool_fees_all_captured_rows_2026_08_12.py` worked example (CAS + consolidator-pause hard-abort +
+  pre-write snapshot); paused the tradfi consolidator cron, ran `--apply` against the live 14.48M-row index, retired
+  873,007 rows, verified the 7,926 no-counterpart residual exactly, resumed the cron. Split the residual into a new
+  follow-up issue (`tradfi_cme_future_no_counterpart_residual_2026_08_22.md`, per plan-completion-and-archival §2 —
+  never left as prose) and archived the now-fully-done source doc per the 6-step ritual (cross-repo `archive_exempt`
+  bridge, two-commit split — `unified-trading-pm@9bb1899fe4` flip commit, archival `git mv` commit follows). Caught
+  + fixed 2 real bugs in the new retire script before shipping (pyarrow strict-null `or_`/`and_` propagation silently
+  un-marking a null-`instrument_id` row as non-stale; a test assertion missing `data_type` in its result key masked a
+  real drop). No other slot was concurrently on this specific doc (`locked_by` empty, last commit predated this
+  dispatch); an UNRELATED dirty `unified-api-contracts` WIP from another live session blocked quickmerge's pre-flight
+  audit — resolved via `--skip-preflight` (a documented multi-agent-safety skip, not a QG bypass) rather than
+  touching someone else's uncommitted work. **Side finding**: this exact commit's own edits were twice silently
+  reverted by an untraced shared-host mechanism before landing (the 102-entry autostash/quarantine pile flagged by
+  `safe-doc-push.sh` on this push) — redone and shipped successfully on retry; flagging for the standing
+  multi-agent-collision investigation, not re-diagnosed further here.
 - **2026-08-22 (tick 5)** — Wave 3 (`wiv6q901k`) complete: D3 + D10 fully shipped (checkboxes above); archival pass 2
   processed all 51 candidates correctly but never shipped (2.5h run, repeated contention reverts) — delegated to a
   fresh reconciliation agent (`aa77a3d57eba3ef6c`) with the full per-doc record, explicit warning that this checkout
