@@ -150,3 +150,42 @@ during that window, it would have seen its own work vanished — a genuine near-
       concurrent dirty edits to the same file, one quickmerge run that fails at STAGE 1) no longer
       loses either session's edits from the working tree, verified by a new test/reproduction
       script.
+
+- **2026-08-22 (T2 session, separate incident, same shared checkout, plain — NOT `--isolated` —
+  quickmerge)**: shipping the point-in-time-equivalence work
+  (`instruments_catalogue_definitions_and_field_history_2026_08_17.md`'s replay-proof todo) via
+  `bash scripts/quickmerge.sh "..." --agent --files '<2 files>'` (no `--isolated`) hit a related but
+  DISTINCT trigger of the same root-cause class: STAGE 1.6's dependency-version-gate auto-pull
+  (`unified-api-contracts` pinned-version-behind-staging path) ran its own `git pull` with an
+  autostash, then the autostash POP conflicted against `tests/unit/test_orchestrator_helpers.py` —
+  a pre-existing, foreign, uncommitted WIP file this session never touched (dirty since before this
+  session started; owner unknown, no `.agent-claim` marker present). Result: `git status` showed
+  `UU tests/unit/test_orchestrator_helpers.py` (real git-stash-pop conflict markers — the
+  7-angle-bracket "Updated upstream" / 7-equals / 7-angle-bracket "Stashed changes" sequence — in
+  the working-tree file itself, confirmed via `git ls-files -u` + grep, not inferred), which then
+  hard-blocked quickmerge's own STAGE 0.4
+  not-behind-gate on its NEXT retry: `QUICKMERGE_BLOCKED code=PRECOMMIT_UNMERGED_INDEX ... error:
+  Pulling is not possible because you have unmerged files.` No rebase was in progress
+  (`.git/rebase-merge`/`rebase-apply` both absent) — this was a `stash pop` conflict, not a rebase
+  conflict, so the CLAUDE.md-documented `rebase --abort` recovery recipe does not directly apply.
+  This session did NOT touch/resolve the conflicted file (hard rule: never resolve a dirty file you
+  don't own without knowing which side is correct) and could not complete the ship as a result —
+  reported to the operator as a genuine blocker rather than force-resolved. Confirms the underlying
+  problem is broader than `--isolated`'s evacuation-stash bug specifically: ANY quickmerge path that
+  internally autostashes+pulls+pops on a shared checkout with a concurrent foreign dirty file is at
+  risk, not just the `--isolated` worktree-evacuation path documented above.
+
+- [ ] [SCRIPT] P1. Extend the same-class fix above (or add a parallel one) to STAGE 1.6's
+      dependency-version-gate auto-pull path in `quickmerge.sh` (plain, non-`--isolated` mode) —
+      today its `git pull --autostash` can pop-conflict against a concurrent foreign session's
+      dirty file in the shared checkout, hard-blocking the CALLING session's own unrelated commit
+      with no safe self-service recovery (resolving the conflict requires knowing which side is
+      correct, which only the foreign file's owner does). Candidate fix: detect an unmerged
+      index BEFORE attempting the pull and fail fast with a clear "not your conflict to resolve"
+      message (already partially true via `QUICKMERGE_BLOCKED code=PRECOMMIT_UNMERGED_INDEX`'s
+      recovery text) — or scope the autostash to exclude paths outside the caller's own `--files`
+      list, mirroring the session-scoped-evacuation fix proposed above for `--isolated`. Repo:
+      unified-trading-pm. Done-when: a reproduction (a foreign dirty file with a real conflict
+      against origin, one quickmerge run with an UNRELATED `--files` list) either succeeds without
+      touching the foreign file, or fails with a message that clearly identifies the file as not
+      the caller's own and does not leave the caller session responsible for resolving it.
