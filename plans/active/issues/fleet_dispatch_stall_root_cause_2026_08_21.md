@@ -46,7 +46,16 @@ summary: >-
   `/plans/active/issues/fleet_wide_mid_task_death_root_cause_2026_08_21.md` and needs the
   kill-reason attribution fix listed below. Three further permanent-deadlock bugs found in
   the gate machinery while measuring, all fixed here. Five fixes shipped
-  agent-orchestrator@32822b79d4.
+  agent-orchestrator@32822b79d4. FOLLOW-UP 2026-08-22: the role/reserve-starvation lead was
+  FALSIFIED by re-measurement with AO's own dispatch predicates (0 of 349 capacity-waiting
+  tasks lack an eligible slot; the original figure ignored generic slots, which accept every
+  role), and the real remaining blocker was found on the SUPPLY side — every walk in
+  `worktree_clean_check` treated any git-shaped directory under a slot as one of its repos,
+  so ship-script leftover worktrees and history-rewrite backup clones, whose 190-231
+  uncommittable conflict-marker files the FM9 guard correctly refuses, quarantined whole
+  slots permanently with no self-heal: 239 of 355 autospawn failures (67%) and 104 of 141
+  escalation-dispatch failures (74%) in 24h, across 10 slots. Fixed by a single enumerator
+  plus an operator-paused exemption for `vm-disk-guard.sh`, agent-orchestrator@7f0887d4f9.
 status: open
 resolved_by:
 nature: issue
@@ -77,7 +86,7 @@ related:
     /codex/15-runbooks/safe-service-restart-procedures.md,
   ]
 created: "2026-08-21"
-last_updated: "2026-08-21"
+last_updated: "2026-08-22"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -277,16 +286,16 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       `grep -c 'restarting orchestrator' /var/log/ao-self-pull.log` (filtered by date) for
       restarts/day. `boots_per_done` reads straight off `GET /api/fleet-kpis`. The pre-fix
       baseline to compare against is the measurement table above.
-- [ ] [BACKEND] P1. **Role/reserve partitioning starves two craft roles to one usable slot
-      each.** Deriving each queued task's `assigned_role` from its `craft_role` block list: infra
-      110 tasks, data_engineering 108, backend_engineer 106. Against live slot roles, `infra` has
-      5 slots — one paused, two in `scheduled_reserve`, one in `ci_escalation_reserve` — leaving
-      **1 usable for 110 tasks**; `data_engineering` has 3, of which one IS the review slot and
-      one is scheduled-reserved, leaving **1 for 108**. 62% of the 352 capacity-wait tasks had
-      ZERO genuinely-idle non-reserved eligible slots at sample time. Reserves are selected by
-      highest slot id (`config.ci_escalation_reserved_slot_ids` / `scheduled_task_reserved_slot_ids`),
-      which is role-blind — it happened to capture 3 of 5 infra slots. Make reserve selection
-      role-aware, or refuse to reserve the last slot of any craft role.
+- [x] [BACKEND] P1. **Role/reserve starvation — FALSIFIED by re-measurement, closed 2026-08-22.**
+      The original claim (infra "1 usable slot for 110 tasks"; 62% of capacity-waiting tasks with
+      zero eligible slot) counted only slots whose `slot_role` EQUALS the task's role.
+      `dispatch._blocks_craft_role` also passes every slot whose `slot_role` is UNSET, so the 11
+      generic slots are universal donors and were all missed. Re-measured with AO's own
+      predicates (`first_blocking_filter` over all 349 capacity-waiting tasks, consistent DB
+      snapshot): **tasks with zero eligible slot = 0**, and dropping BOTH reserves frees **0**
+      more. `slots_with_claimable_task` = 21 of 29 spawnable. The reserve is not a throughput
+      constraint; no change needed. Recipe + the two traps (run from the DEPLOYED checkout;
+      snapshot via `sqlite3 .backup`): `/home/ubuntu/.ao-measure-slot17/measure_reserve_starvation.py`.
 - [ ] [BACKEND] P2. **`explain_blocked` reports slots that can never run anything as "eligible".**
       `_explain_blocked_with_ctx` (`dispatch.py`) iterates every `SlotRow` in `ctx.slot_models`,
       so all 14 human presence slots (9001, 9002, 91002-91006, 92005, 92024-92029 — no worktree,
@@ -296,22 +305,31 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       actively misleading the reader: it is why the queue looks like it has capacity waiting for
       it. Iterate dispatchable AO slots only, and say "no idle eligible slot" when that is the
       truth.
-- [ ] [BACKEND] P2. **262 `slot_done_rejected_dirty` in 24h against 79 accepted `slot_done`.**
+- [ ] [BACKEND] P2. **`slot_done_rejected_dirty` — RE-MEASURE FIRST; the 24h count fell to 60
+      against 81 accepted `slot_done_verified` (2026-08-22), from the 262-vs-79 first recorded.**
       Workers complete real work, call `/done`, and are rejected because their tree is dirty — the
       task returns to the queue and the whole dispatch is re-spent. That ratio makes it the single
       largest throughput sink after the churn loop. Determine whether the dirty files are the
       worker's own un-shipped output (a worker-discipline bug) or foreign/generated litter it
       never touched (a gate bug), and fix whichever it is. `restored_generated` is already in the
       event payload and should discriminate the two.
-- [ ] [INFRA] P2. **Stray nested repo directories permanently quarantine their slot.** Four
-      leftover working copies inside slot checkouts — `.tabs/5/.qg-old-4YMi23`,
-      `.tabs/11/pm-fix`, `.tabs/16/oms-wt.oc3YkB`, `.tabs/23/unified-trading-pm-current` — are
-      treated as repos by the dirty-state preserver, which then refuses to spawn over them
-      ("refused: HEAD already 1 commit(s) ahead of origin ... age < 900s guard", and for slot 23
-      genuine conflict markers in two issue docs). Slots 5, 11, 16 and 23 all failed to spawn in
-      the single 20:20:27 tick for this reason. Decide the disposition of each (they contain
-      uncommitted work — do NOT blind-delete), then make the preserver ignore directories that
-      are not in `workspace-manifest.json` so a stray copy cannot take a slot out of the fleet.
+- [x] [INFRA] P2. **Stray git dirs permanently quarantine their slot — FIXED. This, not the
+      reserve, was the dominant live blocker.** All four walks in `worktree_clean_check`
+      hand-rolled `slot_dir.iterdir()` + `(child/".git").exists()`, so ANY git-shaped directory
+      under a slot counted as one of its repos: ship-script leftover worktrees (`pm-fix`,
+      `pm-ship.MpuQMt`, `oms-wt.oc3YkB`, `unified-trading-pm-current`) and
+      `*.stale-pre-history-rewrite-*` backup clones. Each carries 190-231 uncommittable dirty
+      files; the FM9 conflict-marker guard correctly refuses them; `resolve_dirty_state` then
+      quarantines the WHOLE slot — with no self-heal, so permanently. Measured over the 24h to
+      2026-08-22T06:05Z: **239 of 355 autospawn failures (67%) and 104 of 141
+      escalation-dispatch failures (74%)** were `dirty-state quarantined`, spanning 10 slots;
+      slot 11 alone failed 54 times. Fixed with one enumerator, `classify_slot_dirs`, that every
+      walk routes through — a stray lands on `SlotCleanReport.stray_repos` and never enters
+      `dirty_repos`. Nothing is deleted or committed: the strays' files are untouched, they just
+      stop being mistaken for the slot's own WIP, so no preservation capability is lost (these
+      repos were already un-preservable — that is what wedged the slot). Disposition of their
+      CONTENT remains operator-owned. — `agent-orchestrator@7f0887d4f9` +
+      `tests/test_stray_repo_never_quarantines_slot.py` (source-level guard included)
 - [ ] [INFRA] P2. **`ORCHESTRATOR_WORKER_MEMORY_MAX=10G` is set but not applied.** Every spawn
       logs `systemd-run --user unavailable — spawning worker UNCAPPED` (26 occurrences in one
       hour). The host shows cgroup `memory.high` throttling active (counter 613,421) with 6 GB of
@@ -389,50 +407,53 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       todo asked.
       ACCEPTED TRADE-OFF, recorded so it is not rediscovered as a bug: genuinely-abandoned WIP in a
       slot that is THEN paused stays un-preserved until the slot is unpaused.
-- [ ] [INFRA] P2. **The same slot reset also deleted the repo `.venv`**, so the next
-      `quality-gates.sh` aborted with "no usable .venv/bin/python" and needed a full `uv sync`
-      before it could gate anything. Same class as the already-open
-      `/plans/active/issues/vm_disk_guard_wipes_active_slot_venvs_2026_08_20.md` — recording a
-      fresh 2026-08-21 occurrence rather than re-diagnosing it.
-- [ ] [INFRA] P2. **Extend the operator-paused exemption to `agent-orchestrator/scripts/vm-disk-guard.sh`.**
-      The paused-slot rule shipped in `agent-orchestrator@3cfd9bcfb8` covers AO's Python
-      worktree sweeps; the disk guard is a separate shell script that reclaims
-      `.tabs/<N>/*/.venv` and decides "idle" with the SAME flawed liveness proxy the sweeps
-      used — "does an `orch-slot-<N>` tmux session exist". A paused slot never has one, so an
-      operator's interactive slot is judged idle and its venv swept mid-session; it wiped slot
-      17's venv twice on 2026-08-21, each time costing a full `uv sync` before
-      `quality-gates.sh` could run at all. The live script (203 lines) HAS been hardened since
-      its own issue doc was written — it now also checks `slot_has_live_process` and
-      `_slot_venv_in_use` (argv/CWD referencing the slot path) — but neither caught a VS Code
-      interactive session, and neither knows about `paused`. Fix: read paused slot ids from
-      `data/state/state.db` and skip them, mirroring `dispatch.slot_is_operator_paused`. Track
-      the GENERAL bug (its idle test matches every slot on this VM, so every venv is swept) in
-      its own doc — this todo is only the paused-slot half.
+- [x] [INFRA] P2. **The same slot reset also deleted the repo `.venv`** — the gate aborts with
+      "no usable .venv/bin/python" and needs a full `uv sync` first. Recurred twice more on
+      2026-08-22; root cause fixed by the paused-slot exemption above. General case stays in
+      `/plans/active/issues/vm_disk_guard_wipes_active_slot_venvs_2026_08_20.md`.
+- [x] [INFRA] P2. **Operator-paused exemption extended to `scripts/vm-disk-guard.sh` — DONE
+      2026-08-22.** The guard's three keep-signals (`orch-slot-<N>` tmux session,
+      `slot_has_live_process`, `_slot_venv_in_use`) are all INSTANTANEOUS — they answer "is
+      something running right now". A paused interactive slot has no tmux session and issues only
+      short-lived shell commands, so between two of them every signal reads idle. It wiped slot
+      17's venv three times in one session, each costing a full `uv sync` before the gate could
+      run. Added a fourth, DURABLE signal: paused slot ids read from `data/state/state.db`,
+      mirroring `dispatch.slot_is_operator_paused`. Fails OPEN (no sqlite3 / unreadable DB → fall
+      back to the three live signals), deliberately the opposite of `proc_table_readable`'s
+      fail-closed stance — reasoning in the function's own comment. The GENERAL bug stays in its
+      own doc. — `agent-orchestrator@7f0887d4f9`
 - [ ] [DOC] P3. **`ORCHESTRATOR_FLEET_WORKER_CAP=40` is inert.** Every tick logs
       `configured=40 CLAMPED to 25 by slot arithmetic (configured_slots=32 - reserve=7
       [ci=3 + scheduled=4])`. The clamp is by design and already logged loudly, but the live
       `.env.local` still carries a number that has no effect, which is a trap for the next
       operator. Set it to the real ceiling or delete the override.
 
-## Deferred work after 2026-08-21
+## Deferred work after 2026-08-22
 
 | Item | State / why deferred | Blocked on |
 | --- | --- | --- |
 | Re-measure the fleet 24h after the fixes (`[INFRA] P1` above) | **Cannot be done yet** — needs elapsed time; the fixes went live 22:20Z and 4-min-old signals are not evidence | wall-clock only |
-| Role/reserve starvation: 1 usable slot for 110 infra + 1 for 108 data_engineering tasks (`[BACKEND] P1`) | **Not done** — the largest remaining throughput lever; reserve selection is by highest slot id and is role-blind | nobody; pick this up next |
-| `vm-disk-guard.sh` paused-slot exemption (`[INFRA] P2`) | **Not done** — small, same rule as the shipped fix, needs its own gate run | nobody |
+| Role/reserve starvation (`[BACKEND] P1`) | **DONE 2026-08-22 — FALSIFIED.** Re-measured with AO's own predicates: 0 of 349 capacity-waiting tasks have no eligible slot, and dropping both reserves frees 0 more. The 62% figure ignored generic slots, which accept every role. No change needed | — |
+| Stray git dirs permanently quarantining slots (`[INFRA] P2`) | **DONE 2026-08-22** — the dominant live blocker (239/355 autospawn + 104/141 escalation failures in 24h). One enumerator, `classify_slot_dirs` | — |
+| `vm-disk-guard.sh` paused-slot exemption (`[INFRA] P2`) | **DONE 2026-08-22** — a fourth, DURABLE keep-signal; the other three are all instantaneous and read a paused interactive slot as idle | — |
+| `prereqs` blocks 439 of 789 queued tasks (56%) | **Not done** — now the largest single fleet-scope blocker by a wide margin, and the natural next lever. Decomposes into the durable-park defect (already fixed once, re-verify) and the two operator rulings below | partly operator |
 | `explain_blocked` lists 14 phantom human slots as "eligible" (`[BACKEND] P2`) | **Not done** — diagnostics honesty, no behaviour change | nobody |
-| 262 `slot_done_rejected_dirty`/24h vs 79 accepted (`[BACKEND] P2`) | **Not done** — needs the dirty-files-provenance split (worker's own output vs foreign litter) before a fix is choosable | nobody |
-| Stray nested repos quarantining slots 5/11/16/23 (`[INFRA] P2`) | **Operator-owned** — the dirs hold uncommitted work; disposition is a human call, do NOT blind-delete | operator |
+| `slot_done_rejected_dirty` (`[BACKEND] P2`) | **Not done**, but MUCH smaller than recorded: fresh 24h count is **60 rejected vs 81 accepted**, not the 262-vs-79 in the todo above. Re-measure before sizing a fix; the stray-dir fix should shrink it further (backup CLONES were blocking `/done`; linked worktrees already were not) | nobody |
+| Disposition of the stray dirs' CONTENT (`pm-fix`, `pm-ship.MpuQMt`, `oms-wt.oc3YkB`, `unified-trading-pm-current`, `*.stale-pre-history-rewrite-*`) | **Operator-owned** — they hold 190-231 uncommitted files each. They can no longer wedge a slot, so this is no longer urgent; do NOT blind-delete | operator |
 | 35 tasks behind 11 `status: draft` upstream plans (`[OPERATOR] P3`) | **Operator-owned** — only a human `draft`→`active` flip can clear these | operator |
 | 6 named prerequisites nothing can ever set (`[OPERATOR] P3`) | **Operator-owned** — needs a ruling on what clears each | operator |
-| Interactive-session-in-an-AO-slot hazard (`[INFRA] P1`) | **DONE** this session — operator ruled paused = hands off; shipped `agent-orchestrator@3cfd9bcfb8` | — |
+| Interactive-session-in-an-AO-slot hazard (`[INFRA] P1`) | **DONE 2026-08-21** — operator ruled paused = hands off; `agent-orchestrator@3cfd9bcfb8` | — |
 
-**Recommended NEXT item: the role/reserve starvation `[BACKEND] P1`.** Everything else on this
-list is either waiting on the clock, operator-owned, or diagnostics. That one is the binding
-constraint on throughput now that the churn loop is broken — 62% of capacity-waiting tasks had
-ZERO idle, non-reserved, role-matching slots at sample time, and reserving by highest slot id
-happened to capture 3 of the 5 infra slots.
+**Recommended NEXT item: the `prereqs` fleet-scope blocker.** With the reserve falsified and the
+quarantine wedge fixed, this is what is actually holding the queue: 439 of 789 queued tasks fail
+`_prereqs_met`, so no slot can claim them regardless of capacity. Start by splitting that 439 into
+(a) genuine upstream-incomplete, (b) durable-park conditions never cleared, (c) the 6 unsettable
+named prerequisites — only (b) is a code bug, and it has been fixed once already, so verify before
+re-diagnosing. (a) is mostly the 11 draft plans, which is an operator flip.
+
+**Do NOT re-open the reserve or role-matching angle** without first re-reading why it was falsified:
+`craft_role` is CAPABILITY-scoped because AutoSpawn re-roles a slot at spawn, and a slot with an
+unset `slot_role` accepts every role. "Role-matching idle slots" is not the question dispatch asks.
 
 ## Progress Log
 
@@ -488,3 +509,44 @@ to complete the five-metric set. Also, while checking the fleet for this run,
 `gemini-3-7-flash-proj4` was still `healthy`, disabled this run (see that doc's Progress Log/todo
 for detail) — unrelated to this doc's own chain, noted here only because it was found in the same
 pass.
+
+**2026-08-22 (interactive session, slot 17)** — Picked up the `[BACKEND] P1` role/reserve item as
+the planned next step and **falsified it**. Rather than re-deriving the counts by hand I drove
+AO's own predicates (`first_blocking_filter` over the real `_FILTERS` table) against a
+`sqlite3 .backup` snapshot of the live DB and the live `backlog.yaml`. Result: of 349
+capacity-waiting tasks, **zero** have no eligible slot, and dropping both reserves would free
+**zero** more. The original 62% figure came from counting only slots whose `slot_role` EQUALS the
+task's role — but `_blocks_craft_role` passes any slot whose `slot_role` is unset, so the 11
+generic slots are universal donors and were all missed. Lesson worth keeping: `craft_role` is
+CAPABILITY-scoped precisely because AutoSpawn re-roles a slot at spawn, so "role-matching slots"
+is not the question dispatch asks. The reserve needs no change.
+
+That freed the search to find what IS blocking, and the answer was not on the demand side at all.
+`autospawn_failed` over 24h: **239 of 355 (67%) `dirty-state quarantined`**, plus 104 of 141
+escalation-dispatch failures — spanning 10 slots, slot 11 alone 54 times, and still firing at
+06:05Z. Cause: all four walks in `worktree_clean_check` hand-rolled `slot_dir.iterdir()`, so any
+git-shaped directory under a slot counted as one of its repos. The offenders are ship-script
+leftover linked worktrees and `*.stale-pre-history-rewrite-*` backup clones carrying 190-231
+uncommittable dirty files; the FM9 conflict-marker guard refuses them (correctly), and the whole
+slot is then quarantined forever with no self-heal. Notably `check_slot_clean`'s own docstring
+already said a linked worktree flat under a slot dir "is always a stray", and the `/done` gate
+already filtered on it — only the dirty-PRESERVE path never did. Fixed with one enumerator
+(`classify_slot_dirs`) plus a source-level test that no fifth walk can re-hand-roll `iterdir`.
+Verified the classification against all 10 affected slot dirs read-only before changing anything:
+26/26 canonical repos matched their origin, 6/6 strays flagged, zero false positives.
+
+Two rule-design notes, both changed after first writing them the other way. (1) "Origin unreadable"
+does NOT mean stray — absence of evidence is not evidence, and the safe answer is the pre-existing
+behaviour (treat it as the slot's repo). Both stray rules are positive-evidence only. (2) The
+origin name is read from `.git/config` as a FILE, not via `git remote get-url`: this runs per
+directory per slot per sweep tick, and a subprocess each would add ~1000 forks per sweep.
+
+Measurement traps hit this session, recorded so they are not re-paid: (a) `task_done` is not an
+event type — the real one is `slot_done_verified`, and querying the wrong name produced a
+spectacular-looking "0 tasks completed in 24h" that was pure artifact (true figure: 81/24h,
+cross-checked against `tasks.done_at`). Always enumerate the event vocabulary first. (b) A
+backgrounded `... ; tail -3 log` reports **tail's** exit code, so the harness said "completed exit
+code 0" for a gate run that had actually ABORTED — the durable `QG_EXIT_CODE=$?` marker in the log
+is the only trustworthy signal. (c) The tmux server was found dead with zero live workers, which
+looks like the headline cause but is downstream: every spawn attempt was failing at the
+dirty-state gate before ever reaching tmux, so no session was ever created to keep it alive.

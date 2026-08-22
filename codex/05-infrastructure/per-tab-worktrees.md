@@ -1401,6 +1401,30 @@ pushed to `wip-preserve/orchestrator-slot-<N>-<short-sha>` (and, for an ahead/di
 `git show --stat <sha>`, then restore into the working tree with `git cherry-pick --no-commit <sha>` — it applies
 cleanly onto a moved HEAD. Do NOT `git reset --hard` first.
 
+**FM10 a stray git dir under a slot is never one of that slot's repos (HARD RULE, codified 2026-08-22).** A slot's repo
+directory is the checkout of the repo it is NAMED for. Two positive stray signals, both evidence-based: (1) `.git` is a
+FILE — a linked worktree; no sanctioned isolation tool (quickmerge `--isolated`, `safe-doc-push.sh`,
+`ship-from-worktree.sh`) ever places one flat under a slot dir, they all root under `${TMPDIR:-/tmp}`, so one found
+there is always a stray; (2) the directory name differs from a READABLE `origin` repo name — catches renamed/set-aside
+CLONES, e.g. `e2e-testing.stale-pre-history-rewrite-<ts>`. An UNREADABLE origin is **not** a stray signal: absence of
+evidence fails safe to "treat it as the slot's own repo", preserving prior behaviour.
+
+Enforced at **one** enumerator, `worktree_clean_check.classify_slot_dirs()` (reached via `iter_slot_repo_dirs()`),
+which `check_slot_clean`, `_ahead_push` and `_branch_state` all route through. Strays land on
+`SlotCleanReport.stray_repos`, never `dirty_repos`, so they cannot make a slot look dirty or gate `is_clean`. Nothing is
+deleted or committed — a stray's files are untouched. `_stash_audit` is the ONE deliberate exception (it only REPORTS
+stashes, never quarantines or gates a spawn, and a linked worktree's shared stash list is in scope there on purpose);
+`tests/test_stray_repo_never_quarantines_slot.py` fails on any OTHER module that hand-rolls `slot_dir.iterdir()`.
+
+WHY (measured 2026-08-22, same issue doc): all four walks hand-rolled the enumeration, so ship-script leftovers
+(`pm-fix`, `pm-ship.MpuQMt`, `oms-wt.oc3YkB`, `unified-trading-pm-current`) and history-rewrite backup clones counted as
+slot repos. Each carries 190-231 uncommittable dirty files, the FM9-era conflict-marker guard refuses them **correctly**
+— there is no safe mechanical fix for unresolved merge-conflict markers — and `resolve_dirty_state` then quarantines the
+WHOLE slot. With no self-heal that is permanent: **239 of 355 autospawn failures (67%) and 104 of 141
+escalation-dispatch failures (74%) in 24h**, across 10 slots, slot 11 alone 54 times. Note the guard was never the bug;
+the bug was letting a directory that is not the slot's speak for the slot. Disposition of a stray's CONTENT stays a
+human call — never blind-delete one.
+
 **Stashes are per-clone (Path-B).** Each slot is a separate clone with its own `.git`, so `git stash list` shows ONLY
 this slot's stashes — no cross-slot leakage (the old "linked worktrees share one `.git` → stash list exposes every
 slot's stashes" hazard is gone). `stash_dirty_repos` still tags `slot-<N>-orphan-<ts>` for auditability.
