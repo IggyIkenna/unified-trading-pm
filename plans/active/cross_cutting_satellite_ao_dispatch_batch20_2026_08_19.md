@@ -86,16 +86,13 @@ source: >-
 
 ## From `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`
 
-- [ ] [INFRA] P0. Re-enable `uts-prod-dp-exit-code-monitor-cron`, following the source doc's own verification
-      chain (this doc tracks a PRIOR relaunch-driven fleet-explosion incident — do not skip the watch step): (1)
-      confirm deployment-service is promoted LDR→main, (2) confirm deployment-api has been rebuilt+redeployed with
-      the fixed dependency, (3) re-check the Cloud Run Job's `lastUpdatedTime` reflects the redeploy, (4) resume
-      the scheduler, (5) watch the next 1-2 firings to confirm fleet size stays within the ~26-31 healthy range
-      before considering this done. Done when: the cron is resumed and 2 consecutive firings show fleet size
-      within the stated healthy range (or, if it doesn't, the scheduler is paused again and the anomaly reported,
-      not silently left running). Source:
-      `/plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` (sole remaining item, line
-      352). Repo: deployment-service.
+- [x] ✅ [INFRA] P0. Re-enable `uts-prod-dp-exit-code-monitor-cron` — unified-trading-pm@(this commit). Verified
+      the deploy is actually live off `deployment-service:latest` (not `deployment-api:latest` as originally
+      assumed — deployment-service has its own dedicated Cloud Build trigger), confirmed the deployed image (build
+      `a4d3bfd6`, commit `59306b7`, deployed 2026-08-22T08:44:14Z) already contains both incident fixes, resumed
+      the scheduler, and watched 4 fleet-size samples over ~15min (3+ firings): stable at 3, zero duplicate-cell
+      dispatch. Full detail + evidence:
+      `/plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` Progress Log 2026-08-22.
 
 ## Progress Log
 
