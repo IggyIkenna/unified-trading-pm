@@ -81,6 +81,16 @@ drift_direction: advance-code
       (`tests/data/mtds_batch_live_coverage_baseline.json`, `tests/data/strategy_position_read_mode_baseline.json`);
       7/7 targeted tests + `quality-gates.sh --no-fix` green. Source: `market_data_categories.py:2644` (dict),
       `:387` (buckets, now `:537` post-2026-08-21 dedup). Shipped: unified-api-contracts@b7f52beceb.
+      **Follow-on 2026-08-22**: the literal "bucket the 23 venues into `VENUES_BY_ASSET_GROUP["defi"]`" title
+      action itself landed separately, structurally rather than via phase-flip -- `VENUES_BY_ASSET_GROUP["defi"]`
+      widened to full canonical membership (103 live + 23 declared-pipeline = 126), with the prior
+      IS-producible-only value preserved byte-identical under a new `DEFI_LIVE_VENUES` symbol so every
+      honest-coverage/MVP-scope/adapter-completeness consumer re-pointed at it keeps its exact prior behavior
+      (no `DEFI_VENUE_PHASE` flips -- the "0 of 20 flipped" verdict above is unchanged and still the accurate
+      producibility claim). 21 of the 23 newly-bucketed venues get `NO_ADAPTER_YET` sentinels in
+      `venue_adapter_keys.py` (2 already had real adapter keys); new regression test
+      `tests/unit/test_venue_capability_asset_group_parity.py` locks declared == bucketed parity forever.
+      Shipped: unified-api-contracts@326f9a6bfa.
 - [x] [BACKEND] P1. Converge the three DeFi venue sets to one coherent story: dedup `ALL_DEFI_VENUES`
       (`defi_venues.py:32` — 174 entries, 35 exact duplicates, 139 unique) and prune-or-capability the 18
       identities with no capability row (incl. the deliberately-cefi-reclassified CLOBs — annotate as
