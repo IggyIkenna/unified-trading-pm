@@ -849,8 +849,8 @@
           >Instruction types routed to real execution: TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
           UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC/BRIDGE/LP_MINT/LP_BURN route through live execution wiring
           (lending and credit via AAVE V3; BRIDGE via the Socket v2 route aggregator spanning Across, Stargate,
-          CCTP and Hop; LP_MINT/LP_BURN via Uniswap V3 position management, with additional venues activated on
-          demand); QUOTE registers the instrument for continuous quoting (its tick-driven loop submits and
+          CCTP and Hop; LP_MINT/LP_BURN via Uniswap V3 concentrated-liquidity position management and Uniswap V2
+          pair liquidity, with additional venues activated on demand); QUOTE registers the instrument for continuous quoting (its tick-driven loop submits and
           updates the live order as the underlying moves); CONTROL (KILL_SWITCH/FLATTEN_POSITION) dispatches too
           (2026-08-21), see §04</span
         >
@@ -2146,11 +2146,11 @@
         <code>SocketBridgeConnector</code> (Socket v2 bridge-route aggregator across Across/Stargate/CCTP/Hop), a
         successful source-chain broadcast reports <code>PENDING</code>, never a fabricated instant success, since
         destination-chain settlement is not confirmed synchronously; <code>LP_MINT</code>/<code>LP_BURN</code>
-        through <code>LpMintHandler</code>/<code>LpBurnHandler</code> calling
-        <code>UniswapConnector.mint_position()</code>/<code>.burn_position()</code>: real Uniswap V3
-        NonfungiblePositionManager mint/decrease-liquidity+collect calls. All five DeFi-execution action types above
-        plus BRIDGE/LP_MINT/LP_BURN are LIVE-WIRED for one venue/protocol each so far (AAVE V3, Lido, Uniswap V3,
-        Socket) and fall back to their existing ALPHA_ZERO benchmark-price simulation outside LIVE/MANUAL
+        through <code>LpMintHandler</code>/<code>LpBurnHandler</code> calling the
+        <code>UniswapConnector</code>: real Uniswap V3 NonfungiblePositionManager mint/decrease-liquidity+collect
+        calls, and real Uniswap V2 Router02 <code>addLiquidity</code>/<code>removeLiquidity</code> against the
+        fungible pair token. All five DeFi-execution action types above plus BRIDGE/LP_MINT/LP_BURN are LIVE-WIRED
+        for a named venue/protocol set so far (AAVE V3, Lido, Uniswap, Socket) and fall back to their existing ALPHA_ZERO benchmark-price simulation outside LIVE/MANUAL
         operational mode. <code>QUOTE</code> is the fifteenth: it registers delta-proxy repricing synchronously
         (<code>_register_quote_instruction()</code>, <code>external_instruction_api.py:133-171</code>) and reaches
         the venue asynchronously through its own tick-driven loop rather than inline in its own response; see the
@@ -2200,7 +2200,9 @@
           <tr>
             <td><code>SWAP</code></td>
             <td><code>SwapInstruction</code></td>
-            <td>Routed to live DeFi execution (Uniswap V3/V2); falls back to simulation outside LIVE/MANUAL mode</td>
+            <td>
+              Routed to live DeFi execution (Uniswap V3/V2/V4); falls back to simulation outside LIVE/MANUAL mode
+            </td>
           </tr>
           <tr>
             <td><code>LEND</code></td>
@@ -2283,16 +2285,16 @@
             <td><code>LP_MINT</code></td>
             <td><code>LpMintInstruction</code></td>
             <td>
-              Routed to live DeFi execution (Uniswap V3 NPM mint only); falls back to simulation outside
-              LIVE/MANUAL mode
+              Routed to live DeFi execution (Uniswap V3 NPM mint, Uniswap V2 Router02
+              <code>addLiquidity</code>); falls back to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
           <tr>
             <td><code>LP_BURN</code></td>
             <td><code>LpBurnInstruction</code></td>
             <td>
-              Routed to live DeFi execution (Uniswap V3 NPM decrease-liquidity + collect only); falls back to
-              simulation outside LIVE/MANUAL mode
+              Routed to live DeFi execution (Uniswap V3 NPM decrease-liquidity + collect, Uniswap V2 Router02
+              <code>removeLiquidity</code>); falls back to simulation outside LIVE/MANUAL mode
             </td>
           </tr>
           <tr>
@@ -2318,8 +2320,8 @@
       <p>
         <code>LP_MINT</code>/<code>LP_BURN</code> above are not a special integration path: they are strategy
         instructions on the same envelope as everything else on this page. Concentrated-liquidity position
-        management on Uniswap V3 is live across five EVM chains (Ethereum, Arbitrum, Base, Optimism, Polygon)
-        alongside an already-broad DeFi execution roster (AAVE V3 lending, Lido staking, and connectors spanning
+        management on Uniswap V3 is live across five EVM chains (Ethereum, Arbitrum, Base, Optimism, Polygon),
+        and Uniswap V2 pair liquidity on Ethereum, alongside an already-broad DeFi execution roster (AAVE V3 lending, Lido staking, and connectors spanning
         yield, restaking and Solana DEXs). More protocols and pools are added on demand: a client either
         parametrizes an LP/yield instruction against our existing execution, or we custom-build the specific
         integration. Full list:

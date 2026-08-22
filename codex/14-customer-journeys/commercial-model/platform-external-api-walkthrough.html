@@ -1352,13 +1352,17 @@
     <div class="callout">
       <span class="tag">Landed today, not roadmap</span>
       <p>
-        Uniswap V3 concentrated-liquidity position management, minting and burning LP positions, is wired through
+        Uniswap concentrated-liquidity position management, minting and burning LP positions, is wired through
         real execution (<code>LP_MINT</code>/<code>LP_BURN</code> → <code>LpMintHandler</code>/
-        <code>LpBurnHandler</code> → <code>UniswapConnector.mint_position()</code>/<code>.burn_position()</code>),
-        alongside the pre-existing Uniswap V3 swap path (exact-input, exact-output, and multi-hop routes), live
-        across five EVM chains today: Ethereum, Arbitrum, Base, Optimism and Polygon. That is the same connector
-        registered in the coverage tree as <code>UNISWAP_V3-ETHEREUM</code> / <code>-ARBITRUM</code> /
-        <code>-BASE</code> / <code>-OPTIMISM</code> / <code>-POLYGON</code> (<a href="#s27">§27</a>).
+        <code>LpBurnHandler</code> → <code>UniswapConnector</code>), alongside the Uniswap swap path
+        (exact-input, exact-output, and multi-hop routes). Uniswap V3 carries both, live across five EVM chains
+        today: Ethereum, Arbitrum, Base, Optimism and Polygon, the same connector registered in the coverage
+        tree as <code>UNISWAP_V3-ETHEREUM</code> / <code>-ARBITRUM</code> / <code>-BASE</code> /
+        <code>-OPTIMISM</code> / <code>-POLYGON</code> (<a href="#s27">§27</a>). Uniswap V2
+        (<code>UNISWAP_V2-ETHEREUM</code>) runs its own Router02 path: swaps plus
+        <code>addLiquidity</code>/<code>removeLiquidity</code> against a fungible pair-token balance, with no
+        tick range, no fee tier and no position NFT. Uniswap V4 (<code>UNISWAP_V4-ETHEREUM</code>) swaps through
+        the singleton PoolManager, routed via the Universal Router with Permit2 allowances.
       </p>
     </div>
     <p>
@@ -1791,8 +1795,8 @@
           changes, memoized so an unchanged tick is a no-op. <b>TRANSFER</b>, <b>BRIDGE</b>, <b>CANCEL</b> (both
           scopes) and <b>ATOMIC</b> route through the same production wiring the internal surface uses.
           <b>SWAP / LEND / BORROW / REPAY / WITHDRAW / STAKE / UNSTAKE / LP_MINT / LP_BURN</b> route through the
-          real DeFi live-execution wiring, live-wired today for a named subset of venues (Uniswap V3/V2, AAVE V3,
-          Lido), a venue this dispatch seam does not yet map, or missing Secret Manager credentials, degrades to an
+          real DeFi live-execution wiring, live-wired today for a named subset of venues (Uniswap V3/V2/V4,
+          AAVE V3, Lido), a venue this dispatch seam does not yet map, or missing Secret Manager credentials, degrades to an
           honest <code>FAILED</code> result, never a fabricated success. Strategy-service itself has a real
           counterparty-facing surface, the signal-leasing API (<a href="#s26">§26</a>), built and wired, activated
           per counterparty at onboarding; its other endpoints are admin-token-gated internal tooling (registry
@@ -17933,9 +17937,10 @@ Content-Type: application/json
         </div>
       </div>
       <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Venue coverage for the nine DeFi-routed actions above: <code>Uniswap V3/V2</code> (<code>SWAP</code>),
+        Venue coverage for the nine DeFi-routed actions above: <code>Uniswap V3/V2/V4</code>
+        (<code>SWAP</code>),
         <code>AAVE V3</code> (<code>LEND</code>/<code>WITHDRAW</code>/<code>BORROW</code>/<code>REPAY</code>),
-        <code>Lido</code> (<code>STAKE</code>/<code>UNSTAKE</code>), and <code>Uniswap V3</code>
+        <code>Lido</code> (<code>STAKE</code>/<code>UNSTAKE</code>), and <code>Uniswap V3/V2</code>
         (<code>LP_MINT</code>/<code>LP_BURN</code>) are live-wired today. In BACKTEST/PAPER operational mode, or
         when Secret Manager DeFi wallet/RPC credentials are unavailable, these handlers fall back to their existing
         pure-simulation behaviour, unchanged. A live-wired venue outside that named set honestly FAILS rather than
