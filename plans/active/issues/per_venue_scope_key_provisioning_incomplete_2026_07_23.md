@@ -28,6 +28,7 @@ related:
     /plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,
   ]
 created: 2026-07-23
+last_updated: 2026-08-21
 author: unknown
 parent_epic: execution_master
 assigned_vm: NA
@@ -149,16 +150,17 @@ All three are real design/priority calls, not something determinable from code o
 - [x] [AGENT] P2. **Wire Bybit's trade-scope credential lookup with safe fallback** — execution-service
       `_load_venue_trade_credentials` now prefers `bybit-trade-api-key`/`-secret`, falls back to the unscoped pair; 3
       new unit tests.
-- [ ] [HUMAN] P1. **Create `bybit-trade-api-key-secret` in GCP** (the paired `bybit-trade-api-key` now exists,
-      confirmed 2026-08-21 — see checklist above; only the `-secret` half remains) per the checklist above — the
-      one remaining step to actually complete Bybit's scope split. **RULED 2026-07-28** (applying the operator's
-      general theme — recurring cost here is $0, this is a security-hardening control reducing a compromised-key's
-      blast radius, and the theme favors full completion of exactly this kind of item — DIRECTION APPROVED, proceed).
-      The decision to do this is no longer open; only the credential-creation ACTION remains, and only the operator's
-      own Bybit exchange login can perform it (no cloud identity or automation can create a new exchange-side API key)
-      — that is why the tag stays `[HUMAN]` rather than moving to an AO execution tag. **[plan-reconcile 2026-08-19:
-      reordered so the action leads physical line 1 — task_template.md §3 line-1-completeness; the prior ordering put
-      the entire actionable instruction on physical line 3, invisible to any first-line-only reader/parser.]**
+- [ ] [HUMAN] P1. **RULED 2026-08-21 (D19, OPERATOR-RULED): `bybit-trade-api-key-secret` still absent as of
+      2026-08-21/22 — blocked on the operator's own Bybit exchange login** (no cloud identity or automation can
+      create a new exchange-side API key). Create `bybit-trade-api-key-secret` in GCP (the paired
+      `bybit-trade-api-key` now exists, confirmed 2026-08-21 — see checklist above; only the `-secret` half
+      remains) per the checklist above — the one remaining step to actually complete Bybit's scope split. **RULED
+      2026-07-28** (applying the operator's general theme — recurring cost here is $0, this is a
+      security-hardening control reducing a compromised-key's blast radius, and the theme favors full completion of
+      exactly this kind of item — DIRECTION APPROVED, proceed). The decision to do this is no longer open; only the
+      credential-creation ACTION remains. **[plan-reconcile 2026-08-19: reordered so the action leads physical
+      line 1 — task_template.md §3 line-1-completeness; the prior ordering put the entire actionable instruction on
+      physical line 3, invisible to any first-line-only reader/parser.]**
 - [x] [SCRIPT] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
       `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 8. Original text: **MTDS's own key-reload preflight
       (`unified_trading_library.startup_validation.validate_api_keys_for_venues`, called via
@@ -198,10 +200,10 @@ All three are real design/priority calls, not something determinable from code o
       exchange login), the `[BACKEND] P2` OKX/Hyperliquid scope-separation todo (operator-approved to build but still
       gated on an unresolved per-venue design call), and the `[HUMAN] P3` Upbit/Kraken/Bitfinex/Bitget-provisioning todo
       (open priority call) — none touched by this Aster shipment.
-- [ ] [HUMAN] P3. **Decide whether to provision Upbit/Kraken/Bitfinex/Bitget credentials**, given none of the 4
-      currently have any live trading volume. **NOT part of the 2026-08-08 "build both" ruling** — that answer named
-      only OKX/Hyperliquid scope-separation and the Aster adapter; this credential-provisioning question stays an open
-      priority call (also needs the operator's own exchange logins, same class as the Bybit item above).
+- [ ] [HUMAN] P3. **DEFERRED-BY-DESIGN — RULED 2026-08-21 (D110, ADOPTED-REC): DECLINE** — no demand signal;
+      provisioning Upbit/Kraken/Bitfinex/Bitget credentials ahead of need has ongoing credential-hygiene cost. None
+      of the 4 currently have any live trading volume. **NOT part of the 2026-08-08 "build both" ruling** — that
+      answer named only OKX/Hyperliquid scope-separation and the Aster adapter.
 
 ## Codex SSOTs
 
@@ -289,3 +291,5 @@ All three are real design/priority calls, not something determinable from code o
   doc's "Bybit — provisioning checklist" section already documented, now confirmed against live GSM state rather
   than just read from the code. No code change needed; this was a verification pass (D12/D19 operator-ruling
   dispatch), not a new fix.
+- **2026-08-21 — ruling D19 (Bybit trade-scoped key)**: OPERATOR-RULED 2026-08-21 — partially present: bybit-trade-api-key exists, bybit-trade-api-key-secret does NOT. EXECUTABLE half: confirm the code's scoped-name fallback works with bybit-api-secret (confirmed live, see entry above); the missing secret stays a credential-ask (operator's Bybit login). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-21 — ruling D110 (Dormant CEX venue credentials)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): Decline — no demand signal; provisioning ahead of need has ongoing credential-hygiene cost. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

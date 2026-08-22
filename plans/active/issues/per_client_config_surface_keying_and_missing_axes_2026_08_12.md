@@ -35,7 +35,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-12
-last_updated: 2026-08-12
+last_updated: 2026-08-21
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -161,13 +161,18 @@ rather than a new invention.
       Migration tool shipped (`client_config_migration.py` + CLI wrapper); **not independently confirmed that the two
       legacy files (`carry_staked_basis`, `arbitrage_price_dispersion`) were actually migrated in production** — verify
       before treating this as fully closed (`/plan-reconcile agent_operating_framework_master` 2026-08-19).
-- [ ] [OPERATOR] P0. **Confirm which of leverage / venue selection / coin universe become per-client axes**, since each
-      is a UAC schema change plus a consumer, and each has an architectural interaction: **leverage** must reconcile
-      with `max_position_usd` (two overlapping notional controls invite contradiction — decide whether leverage is
-      derived or independent); **venue selection** is the client-scoped case of
-      [venue-eligibility RULING 3](/codex/09-strategy/architecture-v2/axes/venue-eligibility.md), so it should reuse
-      that three-way split rather than inventing a second mechanism; **coin universe** interacts with the ADV-ranked
-      dynamic universe — decide whether a client can narrow the resolved set, or only veto names from it.
+- [ ] [BACKEND] P0. **RULED 2026-08-21 (D109, ADOPTED-REC): all three axes become per-client** — leverage, venue
+      selection, and coin universe (the original operator ask established demand for all three). Implement each per
+      the architectural interactions already scoped here: **leverage** must reconcile with `max_position_usd` (two
+      overlapping notional controls invite contradiction — treat leverage as the primary control, `max_position_usd`
+      as a derived/secondary cap unless a conflict forces re-deriving one from the other); **venue selection** is
+      the client-scoped case of
+      [venue-eligibility RULING 3](/codex/09-strategy/architecture-v2/axes/venue-eligibility.md) — reuse that
+      three-way split rather than inventing a second mechanism; **coin universe** interacts with the ADV-ranked
+      dynamic universe — a client can only VETO names from the resolved set, not narrow/replace it independently
+      (errs toward the existing dynamic-universe machinery staying authoritative). Done when: the
+      `(client_id, slot_label)` governing schema (see the P0 schema-draft todo above) carries all three fields with
+      consumers wired.
 - [x] ✅ [AGENT] P1. **Fix the `client_context.py` docstring** — it cites `max_leverage`, which exists nowhere, and
       `min_balance` for what is really `min_balance_per_venue` on the entry rather than inside `risk_limits`. Name the
       real fields, and point at `ClientsYaml` as the schema SSOT. — **DONE**, reconciled from
@@ -354,11 +359,13 @@ same tick. That is the difference between an implementation that works and one t
       test that changes a param mid-window and asserts `paper(W) == batch-rerun(W)` still holds —
       strategy-service@c55b586c9c74d654ffacff24c04288595585b7cf (`orchestrator.py` `queue_param_change()`/B5,
       `test_orchestrator_param_change_determinism.py::TestMidWindowParamChangeReconciliation`).
-- [ ] [OPERATOR] P1. **Confirm the tighten-vs-loosen asymmetry for risk limits.** Recommendation: **tightening** (lower
-      leverage, lower caps) applies immediately as a protective action; **loosening** waits for a clean boundary or
-      needs explicit authorisation. This mirrors the existing direction-and-scope-aware kill-switch philosophy
-      ([autonomous-recovery-matrix](/codex/04-architecture/autonomous-recovery-matrix.md)) rather than inventing a
-      second policy. Worth an explicit ruling because "hot reload" usually implies symmetry, and here symmetry is wrong.
+- [ ] [BACKEND] P1. **RULED 2026-08-21 (D109, ADOPTED-REC): asymmetric reload confirmed** — tightening (lower
+      leverage, lower caps) applies immediately as a protective action; loosening waits for a clean tick boundary
+      (or needs explicit authorisation), mirroring the existing direction-and-scope-aware kill-switch philosophy
+      ([autonomous-recovery-matrix](/codex/04-architecture/autonomous-recovery-matrix.md)). Implement the
+      asymmetric-apply path in the dynamic-param-change machinery (`register_param_change_callback()` /
+      `queue_param_change()`) so a tighten and a loosen follow different apply timing. Done when: a test asserts a
+      tighten applies at the next tick and a loosen only applies at a clean window boundary.
 - [x] [AGENT] P1. ✅ **PARTIALLY RESOLVED, RE-VERIFIED 2026-08-16 — the naming collision is fixed; the real
       duplication is a path-convention divergence, not a name clash.** `engine/core/strategy_config_loader.py`'s
       function was renamed `load_strategy_config_gcs()` on 2026-08-13 specifically to resolve this todo's literal
@@ -440,3 +447,4 @@ same tick. That is the difference between an implementation that works and one t
   Re-affirms: genuine cross-service design/build work (a governing `(client_id, slot_label)` config schema, an
   execution-algo selection-criteria UAC contract crossing the strategy/execution seam, determinism-critical
   event-log integration) plus 2 explicit `[OPERATOR]`-tagged unresolved decisions. No change to the verdict.
+- **2026-08-21 — ruling D109 (Per-client config axes)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): All three axes (the original operator ask established demand) with asymmetric reload — matches the recovery-matrix philosophy and errs safe. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
