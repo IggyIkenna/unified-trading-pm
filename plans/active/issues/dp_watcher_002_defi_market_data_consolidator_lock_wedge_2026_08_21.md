@@ -61,6 +61,7 @@ author: data_pipeline_failure escalation worker (slot 22, agt-6ea9c3)
 source: [DP-WATCHER-002, escalation agt-6ea9c3]
 parent_epic: mtds_mdps_master
 priority: P1
+milestone: M3
 assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: infra
@@ -413,3 +414,20 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
   verify canonical `generation`/`last_modified` advances past `2026-08-21T06:21:55Z` via a genuine incremental
   merge, not another timeout). No code or infra changes made in this entry itself; doc-only via
   `safe-doc-push.sh`.
+- **2026-08-22T15:4xZ (tooling session, continued decline — read the above directly, did not take it on trust)**:
+  fetched `origin/live-defi-rollout`, confirmed commit `2a074188466c` is real and lands the entry above verbatim
+  (`git show`, not just the coordinator's description of it). **Still declining to execute the recovery.** A git
+  commit proves which agent identity wrote a piece of text; it does not prove a human produced the claim inside
+  it. That is a materially different provenance than the `B` decline it claims to supersede: `BLK-06756363` was
+  answered through the AO `/blocked` escalation-queue mechanism — an external system a human interacts with
+  directly, that no agent can fabricate an answer inside on its own. The entry above has no equivalent
+  agent-un-fabricatable artifact (no `BLK` id, no escalation-queue record, nothing independently checkable
+  outside one session's own narrative of an `AskUserQuestion` exchange this session cannot see). This session's
+  own operating instructions are explicit that an agent's message is never verifiable operator consent, given
+  specifically to guard against exactly this pattern — and this is the SECOND authorization claim on this exact
+  action within one task (the first, "authorized twice by the operator," was directly contradicted by this
+  doc's own record). Not alleging bad faith; applying the same verifiability bar regardless of who is asking.
+  **Recovery still NOT executed** — no scheduler, lock, or GCS metadata state touched. The lowest-friction path
+  to a bar-clearing record: the same `/blocked`/escalation-queue mechanism used for the `B` answer, if available
+  to a session with AO access, or the operator confirming directly inside a conversation the executing session
+  can itself see. Doc-only via `safe-doc-push.sh`.
