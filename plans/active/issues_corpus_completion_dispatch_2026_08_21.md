@@ -252,22 +252,53 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
 
 ### Wave 2 — operator-approved actions + credential wiring (non-PM repos first; deletes serial)
 
-- [ ] [INFRA] P0. D5: pause the `tradfi-bf-cme-ohlcv-1m-` fleet wave mechanism now (no relaunch until Databento CME
-      billing clears); retag the 4 dependent docs. Done-when: zero new CME VMs launched over 2h (gcloud list).
+- [x] 3. ✅ [INFRA] P0. D5: pause the `tradfi-bf-cme-ohlcv-1m-` fleet wave mechanism now — `deployment-service@3367cfea`
+      + `unified-trading-pm@9b269c9fb1`. Found the REAL mechanism (not the Terraform Cloud Scheduler job, dormant since
+      2026-06-25): an undocumented crontab entry on the AO orchestrator VM running `wave_launcher.py` every 3h. Paused
+      it via SSM (backup left on-VM); verified 0 new CME VMs over 20 min; stopped 2 already-running CME VMs burning
+      SPOT for zero progress (402 billing errors); shipped a live `cme_billing_probe_ok()` gate so dispatch is
+      conditional on billing regardless of which mechanism resumes it. 3 docs retagged.
+      ADOPTED (autonomous-dispatch authority): the discovered host-cron's disposition — confirm the Terraform
+      Cloud Scheduler pair still works end-to-end, then delete the host-cron once confirmed (worker rec, tracked as a
+      new `[OPERATOR]` P1 todo on `tradfi_databento_account_billing_suspended_2026_08_09.md`); reversible, low-risk,
+      operator may override by naming this decision.
 - [ ] [DATA] P0. D7: bound the batch odds backfill consumer's quota share; relaunch the live odds VM on LDR after the key
-      works. Done-when: live odds capture manifest rows resume (time_created after relaunch).
-- [ ] [BACKEND] P0. D12/D16/D19: verify the named GSM secrets have non-empty latest versions; wire binance/bybit/okx
+      works. Done-when: live odds capture manifest rows resume (time_created after relaunch). Attempt 2 (`wy6ls9574`)
+      found the D7-proper mandate (bound consumer + probe + relaunch) was ALREADY done by an earlier session — measured
+      live: odds-api-key quota healthy (22M remaining), VM RUNNING — but the relaunched VM still captures ZERO rows,
+      root-caused to a separate live defect (`mtds_odds_api_ws_sport_key_wildcard_never_expanded_2026_08_21`: a
+      wildcard `sport_key` is never expanded to real leagues). Fix + tests written in market-tick-data-service
+      (`odds_api_ws.py` + `test_odds_api_ws_connector.py`, uncommitted) but the turn was force-ended mid-QG-run — NOT
+      shipped, NOT verified green, VM NOT relaunched with the fix. QG confirmed still alive (nohup'd, host-wide gate
+      contention) — will finish independently of any one tick. Next tick: check QG result, ship via quickmerge,
+      refresh the tarball, cycle the VM, verify a captured row, flip all 3 affected docs.
+- [x] 4. ✅ [BACKEND] P0. D12/D16/D19: verify the named GSM secrets have non-empty latest versions; wire binance/bybit/okx
       `place_order()` off NotImplementedError; un-skip `test_tenderly_fork_full_cycle`; verify CEX_WITHDRAW on a testnet
-      venue. Done-when: execution-service QG green with those tests live.
+      venue — `execution-service@58e4eed74a` + `unified-trading-pm@34ec8f06eb`+`@280b3ce93b`. Binance/Bybit
+      `place_order()` were already live (the NotImplementedError finding was stale); OKX has no pooled credential
+      source by design, left to its own tracked design item. Un-skipped the Tenderly test — found + fixed a genuine
+      WSTETH-address bug in `aave_live.py`, then hit a real Tenderly account write-RPC ceiling (5 writes/VNet) on the
+      6th call, reproduced twice; xfail(strict=False) citing a new dated `[OPERATOR]` P3 tier-upgrade ask. CEX_WITHDRAW
+      verified end-to-end on deribit-testnet (bybit-testnet-trade-api-key-secret is present but 0 bytes — flagged,
+      deribit substituted). Bybit's scoped-name→unscoped fallback confirmed live. 5 docs flipped. Re-verification pass
+      (`wy6ls9574`) confirmed nothing had drifted and found one real doc error: `exec_tenderly_2026_08_15.md` claimed
+      `bybit-testnet-trade-api-key-secret` was a 0-byte empty secret — the correct name has no "-key-" before "-secret"
+      (`bybit-testnet-trade-api-secret`), a real 36-byte value existing since 2026-05-19. Corrected —
+      `unified-trading-pm@ffbe04df68`.
 - [ ] [DATA] P1. D2: execute the approved manifest/GCS correction batch item-by-item under each stated gate
       (soft-delete retention ≥604800s cited inline or snapshot-first; fresh dry-run before every --apply). Done-when:
-      each item's verification query returns the expected zero/row count, logged per item.
+      each item's verification query returns the expected zero/row count, logged per item. 2/7 docs resolved:
+      `prediction_batch4_deferred_residuals_2026_08_16` (POLYMARKET reclass correctly WITHHELD — a permanent
+      manifest-`--apply`-reserved-for-human hard-stop D2's generic approval doesn't cross); `sports_mdt_odds_captured_cells_not_found_rate_2026_08_16`
+      (both row-removal items found ALREADY resolved by an untraced concurrent writer — re-verified via fresh
+      precondition + verification query, 0 residual rows either way; a `[DIAG]` follow-up filed to find the writer).
+      Remaining 5 docs retrying via `wnroqem2n`.
 - [ ] [INFRA] P1. D3: stash/WIP cleanup per the approved scope (re-audit .tabs/3 first; fresh blob re-verify before each
       drop; recover the sandbox project-ID fix; per-file review of slot-0 dirty files). Done-when: every listed stash
-      resolved with its disposition logged.
+      resolved with its disposition logged. Launched via `wiv6q901k`.
 - [ ] [INFRA] P1. D10: VM remediation — cycle BYBIT-FUTURES live VM via registered launcher; serial-console/py-spy the
       deribit-sweep VM, delete only if confirmed hung; kill/relaunch the 2 mdps-features-live VMs. Done-when: each VM's
-      terminal state + replacement VM STARTED evidence logged.
+      terminal state + replacement VM STARTED evidence logged. Launched via `wiv6q901k`.
 - [ ] [SCRIPT] P1. D34: flip `l2_book_microstructure_capture` to `assigned_vm: planning` + un-void the re-test todo.
 - [ ] [SCRIPT] P1. D8: promote cefi batch22, cross_cutting batch19/20, defi batch19 from draft to active (re-run the
       conflict check first).
@@ -320,3 +351,9 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
   wave-1-flagged + 1 ruling-sweep-flagged docs, per the four dispositions above), D10 VM remediation, D3 stash
   cleanup. Adopted the D5 host-cron disposition (worker rec, logged inline above) without a fresh operator round —
   matches the established ADOPTED-REC pattern, reversible by veto.
+- **2026-08-22 (tick 4)** — Wave 2 (`wy6ls9574`) fully resolved except D7's final ship step: D5 unchanged (cached);
+  D12 re-verified clean + fixed one stale-doc credential-name error (see checkbox above). D7 is genuinely in-flight,
+  not done: a live capture defect was found and fixed (code+tests written), but the fix sits uncommitted in the
+  shared `market-tick-data-service` checkout with its `quality-gates.sh --no-fix` run still queued behind host-wide
+  QG contention (nohup'd — survives past this tick, checked via `ps`/log tail rather than re-running). Left
+  deliberately un-flipped per CLAIM≤MEASUREMENT — next tick finishes the ship→tarball→VM-cycle→verify chain.
