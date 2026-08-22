@@ -184,6 +184,24 @@ The intent behind the exclusions is that POD can run it today and layer their ow
       session editing the same file has its hunks swept into the same entry, and that a mid-run STAGE 1 failure
       never restores it. This todo covers only the codex line; the fix belongs to that issue.
 
+- [ ] [BACKEND] P1. **`DEFI_VENUES` in `live_execution_venues.py` is stale and silently narrows the manual path.**
+      It holds `{"UNISWAP_V3", "AAVE", "AAVE_V3-ETHEREUM", "LIDO-ETHEREUM"}` and its only consumer is
+      `execution_service/operations/manual/__init__.py`, the manual operations branch. The instruction handlers
+      carry far wider sets: swap covers Uniswap V2/V3/V4, Curve and Balancer; lend covers AAVE V3, Compound V3,
+      EulerV2, Fluid and Morpho; stake covers Lido and EtherFi. So a manual operation against any protocol outside
+      those four falls through the DeFi branch while the same venue routes fine through an instruction. Either widen
+      the frozenset from the handlers' own sets or derive it from them so it cannot drift again. Provenance: found
+      2026-08-22 when this constant was mistaken for the execution gate and caused a client document to understate
+      execution coverage as three protocol families when it is ten.
+- [ ] [BACKEND] P1. **High-water mark is computed on raw total equity, contradicting the workspace rule that it
+      never is.** `engine/core/components/pnl_monitor.py` tracks a high-water mark on raw total equity seeded at
+      initial capital. The governing rule is that HWM is never raw equity and must be TWR, notional or
+      PnL-recovery based, per `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`. Decide which
+      side is wrong: if the codex rule stands, the monitor needs the flow-adjusted mark; if raw equity is
+      deliberate for this monitor's purpose, the codex needs to say so and name the distinction. Do not leave the
+      two contradicting each other. Provenance: surfaced 2026-08-22 during the strategy-service document merge,
+      which corrected the document to describe two distinct marks rather than one.
+
 ## Progress log
 
 **2026-08-22, second entry.** The ground-truth pass confirmed every headline breadth figure (171 live, 194 declared,
