@@ -56,6 +56,13 @@ summary: >-
   slots permanently with no self-heal: 239 of 355 autospawn failures (67%) and 104 of 141
   escalation-dispatch failures (74%) in 24h, across 10 slots. Fixed by a single enumerator
   plus an operator-paused exemption for `vm-disk-guard.sh`, agent-orchestrator@7f0887d4f9.
+  SCOPE, measured post-deploy: that enumerator accounts for 174 of the 375 quarantine failures;
+  the other 201 name CANONICAL repos carrying failed-`git stash pop` residue, and because a slot
+  quarantines only when EVERY dirty repo fails, the fix unwedges no slot by itself. The live
+  blocker is now a PERMANENT, unalertable conflict-marker quarantine (FM9 refuses the commit
+  correctly, but nothing ever escalates or self-heals) — awaiting an operator ruling between
+  preserving marker-bearing content on the `wip-preserve/` ref vs resolving to upstream. See the
+  `[BACKEND] P0` todo.
 status: open
 resolved_by:
 nature: issue
@@ -313,8 +320,9 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       worker's own un-shipped output (a worker-discipline bug) or foreign/generated litter it
       never touched (a gate bug), and fix whichever it is. `restored_generated` is already in the
       event payload and should discriminate the two.
-- [x] [INFRA] P2. **Stray git dirs permanently quarantine their slot — FIXED. This, not the
-      reserve, was the dominant live blocker.** All four walks in `worktree_clean_check`
+- [x] [INFRA] P2. **Stray git dirs permanently quarantine their slot — FIXED (about HALF the
+      quarantine volume; see the SCOPE CORRECTION at the end of this item).** All four walks in
+      `worktree_clean_check`
       hand-rolled `slot_dir.iterdir()` + `(child/".git").exists()`, so ANY git-shaped directory
       under a slot counted as one of its repos: ship-script leftover worktrees (`pm-fix`,
       `pm-ship.MpuQMt`, `oms-wt.oc3YkB`, `unified-trading-pm-current`) and
@@ -330,6 +338,41 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       repos were already un-preservable — that is what wedged the slot). Disposition of their
       CONTENT remains operator-owned. — `agent-orchestrator@7f0887d4f9` +
       `tests/test_stray_repo_never_quarantines_slot.py` (source-level guard included)
+      **SCOPE CORRECTION, measured post-deploy 2026-08-22T06:35Z — do not read this item as
+      "the stall is fixed".** Splitting the 375 quarantine failures by the repo actually named
+      in `First error:`: **174 named a STRAY** (`oms-wt.oc3YkB` 49, `unified-trading-pm-current`
+      32, `pm-ship.MpuQMt` 30, `pm-fix` 29, `.qg-old-4YMi23` 14, `.ship-pm` 10,
+      `features-service-clean-check` 9, `unified-trading-pm-fail` 1) and **201 named a CANONICAL
+      repo** (`unified-trading-pm` 158, `execution-service` 26, `features-service` 17). Since a
+      slot quarantines only when EVERY dirty repo fails, and each affected slot has a canonical
+      repo with markers too, this fix removes half the cause but **unwedges no slot on its own**
+      — confirmed live: quarantines continued post-deploy, now naming only canonical repos.
+
+- [ ] [BACKEND] P0. **Conflict-marker quarantine is a PERMANENT, unalertable wedge — this is
+      what is actually holding the fleet.** A canonical repo in a slot checkout with unresolved
+      markers can never be preserved (FM9 refuses, correctly), so `resolve_dirty_state` returns
+      `quarantined` on every tick forever, with no self-heal, no escalation, and no alert. 201
+      failures in 24h across slots 5/6/8/9/11/22/23/25.
+      **The markers are NOT human 3-way merges.** Every one reads
+      `<<< Updated upstream` / `>>> Stashed changes` — failed `git stash pop` residue from the
+      ship-script autostash chain (the same chain safe-doc-push flagged at "19 autostash
+      entries — extreme"). All four files sampled 2026-08-22 have `Updated upstream` as the
+      strictly correct side: slot 6's plan doc has the real evidence sha upstream vs a stale
+      `@audit-only` string stashed; slot 9's issue doc has MORE completed todos upstream; slot
+      22's `workspace-manifest.json` has strictly HIGHER versions upstream (0.114.0 vs 0.112.0);
+      slot 25's `kraken_rest_adapter.py` sides are **semantically identical** — one-line vs
+      black-wrapped `frozenset`, pure formatter churn.
+      Two candidate fixes, both needing an operator ruling before implementation because both
+      touch un-shipped content in slots this session does not own: (a) let the preserve path
+      commit marker-bearing content to the `wip-preserve/` ref specifically — that ref exists to
+      quarantine exactly this, so nothing is lost and the slot unwedges, inverting today's
+      "nothing preserved AND slot wedged"; (b) resolve to `Updated upstream` and drop the stale
+      stash side. (a) is non-destructive and is the recommendation. Do NOT implement either
+      without the ruling — the FM9 guard was added after markers were committed and shipped, and
+      that reasoning still holds for the slot's own branch.
+      Regardless of which is chosen, a repeatedly-unresolvable quarantine must raise ONE
+      actionable, state-transition-deduped alert naming the files — a wedge nothing reports is
+      how this survived unnoticed.
 - [ ] [INFRA] P2. **`ORCHESTRATOR_WORKER_MEMORY_MAX=10G` is set but not applied.** Every spawn
       logs `systemd-run --user unavailable — spawning worker UNCAPPED` (26 occurrences in one
       hour). The host shows cgroup `memory.high` throttling active (counter 613,421) with 6 GB of
@@ -434,7 +477,8 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
 | --- | --- | --- |
 | Re-measure the fleet 24h after the fixes (`[INFRA] P1` above) | **Cannot be done yet** — needs elapsed time; the fixes went live 22:20Z and 4-min-old signals are not evidence | wall-clock only |
 | Role/reserve starvation (`[BACKEND] P1`) | **DONE 2026-08-22 — FALSIFIED.** Re-measured with AO's own predicates: 0 of 349 capacity-waiting tasks have no eligible slot, and dropping both reserves frees 0 more. The 62% figure ignored generic slots, which accept every role. No change needed | — |
-| Stray git dirs permanently quarantining slots (`[INFRA] P2`) | **DONE 2026-08-22** — the dominant live blocker (239/355 autospawn + 104/141 escalation failures in 24h). One enumerator, `classify_slot_dirs` | — |
+| Stray git dirs permanently quarantining slots (`[INFRA] P2`) | **DONE 2026-08-22** — one enumerator, `classify_slot_dirs`. Accounts for 174 of 375 quarantine failures; unwedges no slot alone (see scope correction) | — |
+| Conflict-marker quarantine is a permanent, unalertable wedge (`[BACKEND] P0`) | **Not done — BLOCKED-OPERATOR-DECISION.** The live blocker: 201 of 375 quarantine failures, slots 5/6/8/9/11/22/23/25. Evidence gathered, two fixes scoped, recommendation is (a) preserve onto the `wip-preserve/` ref. Needs a ruling because both options touch un-shipped content in slots this session does not own | operator ruling |
 | `vm-disk-guard.sh` paused-slot exemption (`[INFRA] P2`) | **DONE 2026-08-22** — a fourth, DURABLE keep-signal; the other three are all instantaneous and read a paused interactive slot as idle | — |
 | `prereqs` blocks 439 of 789 queued tasks (56%) | **Not done** — now the largest single fleet-scope blocker by a wide margin, and the natural next lever. Decomposes into the durable-park defect (already fixed once, re-verify) and the two operator rulings below | partly operator |
 | `explain_blocked` lists 14 phantom human slots as "eligible" (`[BACKEND] P2`) | **Not done** — diagnostics honesty, no behaviour change | nobody |
@@ -444,8 +488,12 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
 | 6 named prerequisites nothing can ever set (`[OPERATOR] P3`) | **Operator-owned** — needs a ruling on what clears each | operator |
 | Interactive-session-in-an-AO-slot hazard (`[INFRA] P1`) | **DONE 2026-08-21** — operator ruled paused = hands off; `agent-orchestrator@3cfd9bcfb8` | — |
 
-**Recommended NEXT item: the `prereqs` fleet-scope blocker.** With the reserve falsified and the
-quarantine wedge fixed, this is what is actually holding the queue: 439 of 789 queued tasks fail
+**Recommended NEXT item: the `[BACKEND] P0` conflict-marker wedge — it needs an operator ruling
+first, so ASK before anything else.** It is the live blocker (201 of 375 quarantine failures,
+8 slots) and the evidence is already gathered; only the ruling is missing.
+
+**Then the `prereqs` fleet-scope blocker.** With the reserve falsified and the stray half of the
+quarantine wedge fixed, this is the next constraint on the queue: 439 of 789 queued tasks fail
 `_prereqs_met`, so no slot can claim them regardless of capacity. Start by splitting that 439 into
 (a) genuine upstream-incomplete, (b) durable-park conditions never cleared, (c) the 6 unsettable
 named prerequisites — only (b) is a code bug, and it has been fixed once already, so verify before
