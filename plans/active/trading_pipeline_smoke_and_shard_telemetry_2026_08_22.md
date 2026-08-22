@@ -184,6 +184,27 @@ context_scope:
   cell-scoped manifest reads and read-once caches are proven in telemetry; a shard that still needs > 64 GB
   (`*-highmem-8`) is a defect to file, never a bigger machine.
 
+- **D13 — Deterministic config-shard id (ruled 2026-08-22).** `<human components>__cfg<v>__<semver>__<hash8>` —
+  strategy `<client_id>__<slot_label>…`, ML `<model_family>__<period>__<universe>…`, execution adds `<region>`; the
+  service checks the manifest for that id and SKIPS unless `--force`, which dumps regardless as `run_attempt+1`.
+  Force / freshness-check / skip-if-fresh exist for ALL services. Supersedes the v7 "new job_id per re-run" rule; job
+  ids are shared across strategy / ML / execution. Child: `trading_pipeline_config_shard_identity_and_latency_profile`.
+- **D14 — Bare manifest reads are banned from day one.** Migrate EVERY bare `read_availability_index` site to
+  cell / cell-group reads first, then the QG check hard-fails any bare read (baseline 0 — no ratchet).
+- **D15 — Worker unit** = (service × asset_group × data_type × instrument_type), × model_family for ML / strategy /
+  execution where many configs are optimised — ~120-200 warm VMs, not 1-2k. dp-heartbeat / exit-code / Cloud Run
+  monitors and alert routing must acknowledge a vertically-scaled multi-shard VM (progress = checkpoint growth).
+- **D16 — Consolidators.** PROD consolidators' liveness is asserted pre-run (a lagging cycle does not block); `-test-`
+  buckets get NO scheduled consolidator — the controller triggers the prod-identical job `--once` per test bucket
+  after the run (optionally between layers): zero config drift, no wasted runs at a ~monthly per-shard cadence. A central metadata-only staleness sentinel per (service, AG) publishes consolidated-age vs newest per-VM shard; worker pre-flight consumes that verdict (never recomputes) and fails loud into the DP alerts; a deadman pages when a consolidator stops running.
+- **D17 — Latency.** Exchange→local delta where the source carries it (Tardis), 200 ms total fallback, always
+  widenable; `LatencyProfile` (per-region / per-venue offsets + multiplier) on the config shard, hash in `RunManifest`;
+  execution region is a config axis; sent/received derived at runtime, never stored on batch rows.
+- **D18 — ShardPlan owner** = deployment-service control plane + UAC contract + UTL resolver; shapes and workers
+  inferred from telemetry, launchers stop hard-coding; shard-loop = spawn-context processes (intra-shard subprocesses always permitted, audited + QG-hardened to stream/flush when memory-intensive), readers stream where a
+  shard exceeds the ladder. Instrument spec deltas → `instruments_master` child; IS gets its own layer-0 honest
+  coverage and the rollup shows IS and MTDS separately.
+
 ## 2. Target architecture — the optimised setup
 
 - **Read path**: per-cell index → read set → hive-pruned projected scan (engine per D2) → single-engine compute → write +
@@ -327,10 +348,11 @@ target (T6 decision).
       `/plans/active/bigquery_feature_ml_compute_engine_option_2026_06_08.md`; this todo only wires
       `--read-engine bigquery` to it. Done-when: one BTC 6 y matrix assembled via BQ with telemetry.
 
-- [ ] [INFRA] P0. **Bare-read ratchet** — promote `read_availability_index_safe`'s warning to a QG check
-      (`check_manifest_bare_reads.py`, shrinking baseline seeded from the §0 counts) so no NEW `read_availability_index(`
-      call ships without `filters=`; migrate the IS / MTDS / features bare sites to `filters=` on their startup shard
-      set. Done-when: baseline 0 for MDPS / features / ML and strictly shrinking elsewhere.
+- [ ] [BACKEND] P0. **Migrate every bare manifest read to cell reads, then hard-ban** (D14) — rewrite all
+      `read_availability_index(` / `_safe(` sites without `filters=` (IS 30, MTDS 29, MDPS 1, features 10, strategy 1
+      per §0) to `read_cell_index()` / `prefetch_cells(shard_set)` on their startup shard set; THEN ship
+      `check_manifest_bare_reads.py` as a hard QG failure with baseline 0 — no ratchet, no new-only carve-out.
+      Done-when: grep count of bare sites = 0 in every repo and the check is wired into each `quality-gates.sh`.
 - [ ] [BACKEND] P0. **Cell-partitioned index BYTES** — `manifest_consolidator.py` additionally writes the canonical index
       hive-partitioned by (asset_group, venue, data_type) with date-sorted row groups; `read_cell_index()` /
       `prefetch_cells(shard_set)` download only those partitions. Done-when: telemetry shows a features VM's manifest
@@ -410,22 +432,19 @@ target (T6 decision).
       `/codex/04-architecture/ml-experiment-lifecycle.md` § deployment placement, including the GPU threshold derived
       from the sizing run. Done-when: § merged.
 
-### T8 — All-shard smoke matrix MTDS → ML (forked child plan)
+### T8 — Forked child plans (finding R; digest only — each child's file is its dispatch surface)
 
-> Forked per task_template finding R (its own ordering, its own VM fleet, its own alert loop):
-> [`trading_pipeline_all_shard_smoke_matrix_2026_08_22.md`](/plans/active/trading_pipeline_all_shard_smoke_matrix_2026_08_22.md)
-> (`depends_on` this plan's T1/T2). Digest only — the child's file is the dispatch surface:
-
-- **[DATA] P0.** Enumerate every shard per service (IS/MTDS cells from coverage.json via `shard_universe.py`, the MDPS
-  candle atom, the features feature-group atom, the ML model atom) → the matrix doc with the real count (operator
-  estimate 600+).
-- **[INFRA] P0.** Warm-worker runner — `pipeline_e2e_check --shard-list` executed ON one worker VM per (service × AG),
-  N workers per AG sized by measured peak RSS; boot paid per worker, not per shard.
-- **[INFRA] P0.** Baked data-pipeline VM image (deps preinstalled) so boot is ~1 min, not 5-10.
-- **[DATA] P0.** Per shard: skip leg manifest-only (timed), force leg into an empty `-test-` cell (full e2e), telemetry
-  row per leg, 64 GB hard stop.
-- **[REVIEW] P0.** `/data-pipeline-alerts-reconcile` + `/vm-preemption-billing-waste-audit` interleaved by the
-  controller every N shards; any DP-\* alert pauses the matrix until root-caused.
+- [`trading_pipeline_all_shard_smoke_matrix_2026_08_22.md`](/plans/active/trading_pipeline_all_shard_smoke_matrix_2026_08_22.md)
+  (`system_readiness_master`) — all-shard matrix on warm workers (D11 / D15 / D16), alerts interleave, 64 GB ceiling.
+- [`trading_pipeline_config_shard_identity_and_latency_profile_2026_08_22.md`](/plans/active/trading_pipeline_config_shard_identity_and_latency_profile_2026_08_22.md)
+  (`batch_live_symmetry_master`) — D13 ids, force/freshness/skip everywhere, `DecisionTimeline` + `LatencyProfile`
+  (D17), code-semver + config-version stamping (manifest v10).
+- [`shard_plan_and_resource_driven_shapes_2026_08_22.md`](/plans/active/shard_plan_and_resource_driven_shapes_2026_08_22.md)
+  (`infrastructure_master`) — D18 `ShardPlan`, launcher de-hardcoding, multiprocess shard loop, streaming readers,
+  monitors for multi-shard VMs.
+- [`instrument_spec_versions_and_is_layer0_coverage_2026_08_22.md`](/plans/active/instrument_spec_versions_and_is_layer0_coverage_2026_08_22.md)
+  (`instruments_master`) — `InstrumentSpecVersion` with effective dates, execution reads specs by date, IS layer-0
+  honest coverage with separate IS / MTDS rollups.
 
 ### T7 — Ratification, codex audit, closure
 
@@ -478,3 +497,5 @@ target (T6 decision).
   T7. Operator asks captured: one day per shard for ALL shards (existing shard → skip timing + perf; empty cell → full
   e2e), startup abstracted away, memory management before resizing with a 64 GB hard stop, VMs only, alerts-reconcile
   running while shards process.
+- **2026-08-22 (interactive Q&A, slot 6, operator)**: Two rounds of rulings recorded as D13-D18; bare-read todo
+  rewritten to migrate-all-then-ban; T8 became the child-plan index (four children, each under its owning epic).
