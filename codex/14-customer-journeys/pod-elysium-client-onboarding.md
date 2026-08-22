@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: POD / Elysium DeFi-allocator client — onboarding model
-summary:
-  "Onboarding model for POD (DeFi allocator, sub-entity of Elysium AIFM Ireland; BVI fund) — entity stack, the
+summary: "Onboarding model for POD (DeFi allocator, sub-entity of Elysium AIFM Ireland; BVI fund) — entity stack, the
   POD-vs-UTS custody/venue ownership split, and the pre-cutover Trust-Wallet test-wallet credential model vs the June-1
   Copper/CEFFU cutover (Fireblocks OUT OF SCOPE)."
 status: current
@@ -15,8 +14,10 @@ tags: [defi, cefi, onboarding, custody, wallets, credentials, client]
 related:
   [
     /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/transfer-architecture.md,
     /codex/15-runbooks/custody-onboarding-checklist.md,
     /codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
+    /plans/active/w23_pod_collateral_delegation_transfer_rail_2026_08_22.md,
   ]
 created: 2026-05-12
 authoritative_for: [POD/Elysium DeFi-allocator client onboarding model]
@@ -201,6 +202,13 @@ Sui / Aptos / TON — not in May-23 cutover scope. When in scope: same pattern a
 ## § 6 — Cross-references
 
 - [`custody-providers.md`](/codex/04-architecture/custody-providers.md) — architectural SSOT.
+- [`transfer-architecture.md`](/codex/04-architecture/transfer-architecture.md) § "Custodian-mediated collateral
+  delegation (`CUSTODIAN_COLLATERAL_DELEGATION`, 2026-08-22)" — POD is building an API where we instruct a
+  cross-venue collateral move and POD internally resolves the custodian address + exchange account (no signing, no
+  wallet addresses on our side); this is the transfer rail that carries POD's instructions, wired as a generic
+  `BusTransferType` member (not POD-specific) through the existing `TransferAdapter`/`TransferHandler` path. Build
+  tracked in
+  [`/plans/active/w23_pod_collateral_delegation_transfer_rail_2026_08_22.md`](/plans/active/w23_pod_collateral_delegation_transfer_rail_2026_08_22.md).
 - [`custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md) — operator runbook.
 - [`fireblocks-integration-spec.md`](/codex/05-infrastructure/fireblocks-integration-spec.md) — future-spec only per POD
   scope.

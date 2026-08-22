@@ -135,6 +135,16 @@ assigned_role: backend_engineer
   the CONFIRMED and FAILED paths). Section E item 2 is very likely already satisfied by this file — verify against
   the file at that path (not re-create it at the nonexistent nested path) before doing further work there.
 
+- 2026-08-22 — Section C item 2 (cross-link) shipped: `pod-elysium-client-onboarding.md` now names
+  `transfer-architecture.md`'s "Custodian-mediated collateral delegation" section + this plan in its frontmatter
+  `related:` list and § 6 Cross-references, so a reader of POD's onboarding doc discovers the rail. **Note for
+  whoever picks up Section C item 1 next**: `transfer-architecture.md` already carries the full "Custodian-mediated
+  collateral delegation (`CUSTODIAN_COLLATERAL_DELEGATION`, 2026-08-22)" section (status banner, rail/adapter/
+  registry/balance-pre-check summary, and the "Proposed external API — pending POD's confirmation" table) — item 1's
+  content looks already committed even though its checkbox is still unflipped. Did not verify item 1's remaining
+  Done-bar clause (cross-link from `custody-providers.md` §10 References) — out of scope for this todo; check that
+  before flipping item 1.
+
 ---
 
 ## Section A — UAC schema (unified-api-contracts)
@@ -257,8 +267,11 @@ assigned_role: backend_engineer
       names should map close to 1:1 onto `TransferIntent`/`TransferResult` (`instruction_id`↔`idempotency_key`,
       `from_venue`/`to_venue`↔`source_venue`/`dest_venue`, `asset`, `amount`) so the eventual `LivePodCollateralAdapter`
       needs near-zero translation. Done: the section exists, cross-linked from `custody-providers.md` §10 References.
-- [ ] [REVIEW] P2. **Cross-link `pod-elysium-client-onboarding.md`** to this plan and the new transfer-architecture.md
+- [x] ✅ [REVIEW] P2. **Cross-link `pod-elysium-client-onboarding.md`** to this plan and the new transfer-architecture.md
       section, so a reader following POD's client-onboarding doc discovers the collateral-delegation rail exists.
+      — unified-trading-pm. Shipped: added `/codex/04-architecture/transfer-architecture.md` and this plan to
+      `pod-elysium-client-onboarding.md`'s frontmatter `related:` list, plus a new § 6 Cross-references bullet
+      pointing at `transfer-architecture.md`'s "Custodian-mediated collateral delegation" section and this plan.
 
 ## Section D — Balance pre-check + health
 
