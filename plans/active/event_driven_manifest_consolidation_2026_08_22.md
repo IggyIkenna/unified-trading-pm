@@ -114,3 +114,11 @@ context_scope:
 - **2026-08-22 (operator Q&A, slot 6)**: Created from ruling D19 (trigger = max(15-min UTC boundary, per-VM write),
   fleet-wide floor, trigger-aware staleness, benchmark-gated long-lived Cloud Run service vs job, DEFI/CEFI ~2× row
   model unless ≥90 % tagged).
+- **2026-08-22 (operator Q&A — billing + read-path detail for the benchmark todo)**: the worst-case benchmark compares
+  read paths DuckDB native `gs://` httpfs vs a Cloud Storage FUSE mount (FUSE is NEVER a spill target — spill is
+  tmpfs/RAM or a Filestore NFS volume only; FUSE writes are whole-object replacement, fine for the consolidated
+  parquet), and three Cloud Run billing modes — scale-to-zero request-based ($0 idle, cold start + cold caches),
+  min-instances-1 request-based (idle-rate memory + discounted CPU, warm process), instance-based always-on (only if
+  merges were near-continuous, which D19 prevents). Autoscaling: per-bucket Pub/Sub push with concurrency=1 gives one
+  instance per in-flight bucket merge, `max-instances` capped; in-region GCS↔Cloud Run egress is free, only op counts
+  bill.
