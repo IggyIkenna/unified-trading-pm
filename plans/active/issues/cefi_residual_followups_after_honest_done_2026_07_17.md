@@ -404,7 +404,7 @@ pairs stay honest-unresolved (reported, never guessed).
       cross-match), a wire-filename fixture asserting **non-empty** rows + canonical join key end-to-end, and the
       `map=None` fallback. Shipped via the **dirty-deps carve-out direct push** (UAC + PM carried foreign WIP; UAC dep
       `825878f7` verified an ancestor of origin).
-- [ ] [BACKEND] P1. **features raw feature groups cannot consume the REAL raw_tick schema (found 2026-07-17 during FIX
+- [x] ✅ [BACKEND] P1. **features raw feature groups cannot consume the REAL raw_tick schema (found 2026-07-17 during FIX
       D-features; NOT caused by this program, and NOT fixed by `features-service@efd3e038`).** The 5 raw groups
       (`book_depth_bands`, `liquidity_walls`, `liquidation_clusters`, `composite_sr`, `flow_interaction`) declare
       `required_columns = [timestamp, instrument_key, bids, asks, mid_price]` / `[…, side, quote_volume]`, and
@@ -418,6 +418,43 @@ pairs stay honest-unresolved (reported, never guessed).
       `(bid_px_00+ask_px_00)/2`? nest the L5 columns into `bids`/`asks` list-of-[px,sz]? `quote_volume = price*amount`?
       Each is a feature-definition change (formula-hash / `/codex/02-data/feature-formula-versioning.md`), not a loader
       tweak. **Blast radius**: these 5 groups produce nothing today regardless of this program. (repo: features-service)
+
+      > **Correction (2026-08-22, this pickup).** The 2025-06-15 measurement above is STALE/INCOMPLETE, not just old: it
+      > only captured the on-chain lane's flat shape. The real on-disk cefi corpus has **TWO coexisting real
+      > `book_snapshot_5` shapes**, confirmed against the currently-enforced (`validate=True` since 2026-07-27) UAC
+      > `SchemaContract` (`unified_api_contracts/internal/schemas/contracts.py`) and the on-chain adapter
+      > (`market-tick-data-service/adapters/hyperliquid_s3.py:_parse_l2_book_line`): (1) the **Tardis lane** writes
+      > bracket-notation per-level columns (`bids[0].price`, `bids[0].amount`, … `bids[4]`), not the flat `bid_px_NN`
+      > form this item's original claim named; (2) the **on-chain lane** (HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/
+      > EXTENDED-STARKNET via `OnchainPerpBatchHandler`) writes the flat `bid_px_00..04`/`bid_sz_00..04` form the
+      > original claim measured — that measurement was real but partial, sampling only one of the two producers. For
+      > **trades**, the claim also undersold it: the UAC contract shows `side` IS already a real column (native
+      > `"buy"`/`"sell"` values) — no shaping needed there; only `quote_volume` is genuinely absent and must be derived
+      > (`price * amount`, renamed `size` at write time).
+      >
+      > **Shipped `features-service@e67d5b45ea`** (2 files, 392 insertions):
+      > `cross_instrument/engine/raw_data_loader.py` gained shape-detection helpers (`_cefi_book_level_cols`,
+      > `_cefi_side_pairs`, `_cefi_mid_price`, `_shape_cefi_book_columns`) and two normalizers —
+      > `_normalize_cefi_book_schema` (probes for the bracket vs. flat shape, produces `bids`/`asks` as
+      > `List[List[Float64]]` of `[price, size]` pairs per row, derives `mid_price = (best_bid+best_ask)/2`) and
+      > `_normalize_cefi_trades_schema` (derives `quote_volume = price*amount`, no `side` shaping) — wired into
+      > `load_book_snapshots()`/`load_trade_ticks()` for `asset_group == "cefi"`. Mirrors the established
+      > `_normalize_prediction_book_schema` precedent (`a14db662`) rather than inventing a new pattern. **Not a
+      > feature-formula-versioning change**: `/codex/02-data/feature-formula-versioning.md` is scoped to `delta_one`
+      > only — `cross_instrument` has no `FeatureSpec`/`formula_version` infra, and these 5 groups have never produced
+      > real data before (no existing corpus to version against). **Not a production-enablement change**: none of the 5
+      > groups are in any asset_group's `DEFAULT_FEATURE_GROUPS` — this fix removes the structural blocker only, per the
+      > "wiring" precedent set by `a14db662`.
+      > **Evidence**: new regression tests feed the REAL shapes straight into the actual calculators (not mocks) —
+      > `test_real_cefi_book_shape_feeds_book_depth_calculator_without_raising`,
+      > `test_real_cefi_book_shape_feeds_liquidation_cluster_calculator_without_raising`,
+      > `test_real_cefi_trades_shape_feeds_flow_interaction_calculator_without_raising` — plus unit coverage for every
+      > new helper, in `tests/cross_instrument/unit/test_raw_data_loader.py`. Full `bash scripts/quality-gates.sh` GREEN
+      > on the committed SHA (exit 0, **18555 passed**, 210 skipped, 321s, `.qg_last_passed_sha` == HEAD
+      > (`e67d5b45ea1b36cf9a8442bc6aa852aa8e51f1c7`)). Shipped via quickmerge, post-push ancestry independently
+      > re-verified (`git merge-base --is-ancestor e67d5b45ea1b36cf9a8442bc6aa852aa8e51f1c7 origin/live-defi-rollout`).
+      > **Blast radius unchanged from the original note**: this unblocks the P2 day-scan-unbounded todo directly below
+      > (explicitly sequenced after this one) — it does not itself bound the read or enable any group in production.
 - [ ] [BACKEND] P2. **features raw cefi day-scan is unbounded (found 2026-07-17, `features-service@efd3e038`).** With
       the prefix fixed the loader now downloads EVERY matching parquet for a day and concatenates in memory; one
       HYPERLIQUID `book_snapshot_5` shard alone is 8.4 MB / 156,677 rows, so a whole cefi day across all venues is a
@@ -793,3 +830,15 @@ pairs stay honest-unresolved (reported, never guessed).
 **2026-08-21 — ruling D46 (586 marker-less CeFi rows)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
 AUTONOMOUS_AGENT_RULES rule 2): Rewrite now — pattern already proven multiple times; marginal cost is low. Source:
 /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+
+- **2026-08-22 (slot-11) — Closed the features raw-groups schema-shape gap (Phase 0b item, line ~407).** Shipped
+  `features-service@e67d5b45ea` (full detail in that checkbox's own Correction block above): confirmed the real
+  on-disk schema against the current UAC `SchemaContract` (not the stale 2025-06-15 sample, which only covered the
+  on-chain lane's flat shape) — found TWO coexisting real `book_snapshot_5` shapes (Tardis bracket-notation vs.
+  on-chain flat `bid_px_NN`) and that trades already carry `side` natively (only `quote_volume` needed deriving).
+  Added shape-detecting normalizers to `raw_data_loader.py`, mirroring the `_normalize_prediction_book_schema`
+  precedent. Full QG green (18555 passed, `.qg_last_passed_sha` == HEAD), 3 new regression tests feed the real
+  shapes straight into the actual calculators. This closes one of the 5 open items every na-eligibility-audit since
+  2026-08-04 has been citing — 4 remain (586 marker-less rows OPERATOR-gated; the now-unblocked P2
+  day-scan-unbounded todo right below this one; the corpus-wide Parquet CONTENT backfill; its Progress-Log-discipline
+  sibling).
