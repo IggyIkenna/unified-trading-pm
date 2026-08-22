@@ -228,19 +228,36 @@ could not track real consumption.
       agent-orchestrator.
 
 - [ ] [BACKEND] P2. **`ao-self-pull.sh` restarts ONLY `orchestrator` — the two sibling uvicorn
-      services keep running stale code forever.** Measured 2026-08-22 (slot 15): the script's only
-      restart target is `systemctl restart orchestrator`, while `codex-bridge.service` (:8769) and
-      `deepseek-native-proxy.service` (:8767) run from the SAME checkout and are never restarted.
-      `RESTART_RELEVANT_PATHS=(server/ config/ pyproject.toml uv.lock)` already matches edits to
-      `server/codex_bridge_server.py`, `server/codex_rate_limit_poller.py` and
+      services keep running stale code indefinitely.** Measured 2026-08-22 (slot 15): the script's
+      only restart target is `systemctl restart orchestrator`, while `codex-bridge.service` (:8769)
+      and `deepseek-native-proxy.service` (:8767) run from the SAME checkout and are never
+      restarted. `RESTART_RELEVANT_PATHS=(server/ config/ pyproject.toml uv.lock)` already matches
+      edits to `server/codex_bridge_server.py`, `server/codex_rate_limit_poller.py` and
       `server/deepseek_native_proxy_server.py` — the relevance gate fires, but the wrong process is
-      bounced. Consequence: any change to those three modules (including the codex poller's new
-      30-min cadence and `rate_limited_until` write, shipped above) is invisible until someone
-      restarts the bridge by hand, and nothing reports the drift. Note the ordering constraint the
-      script already documents for `orchestrator` — restarts are deliberately rate-limited because
-      the fleet ships its own commits to LDR (52 self-restarts on 2026-08-21) — so the fix must be
-      relevance-scoped per service (bounce codex-bridge only when a codex module changed), not a
-      blanket "restart all three on any `server/` change". Repo: agent-orchestrator.
+      bounced.
+      **Measured proof, not inference:** at 06:59 UTC the root checkout was already FF'd to
+      `b52c306750` (so `orchestrator`, and therefore the Refresh-button arm, was live), while the
+      bridge process had been running since **2026-08-21 07:48:51** — ~23 h of stale code, having
+      consumed 18 h 01 m CPU. Nothing reported the drift. Restarting it by hand made the poller arm
+      live immediately: `codex-luna` went from `5h=None wk=37 claim=None` (old poller: headline
+      bucket only, no binding window) to `5h=0 wk=37 claim=weekly` within the poller's 30 s settle.
+      **NOT a privilege problem** — passwordless `sudo` is available to the fleet user; a bare
+      `systemctl restart codex-bridge` fails with "Interactive authentication required" only
+      because `ao-self-pull.sh` runs as ROOT from cron (it uses `sudo -u "${SLOT_USER}"` to drop
+      DOWN for git), so `sudo systemctl restart codex-bridge` works fine. The fix is purely that
+      the script never targets the other two units.
+      Constraint on the fix: the script deliberately rate-limits restarts because the fleet ships
+      its own commits to LDR (52 self-restarts on 2026-08-21), so this must be relevance-scoped per
+      service — bounce codex-bridge only when a codex module changed — not a blanket "restart all
+      three on any `server/` change". Repo: agent-orchestrator.
+
+- [ ] [BACKEND] P3. **codex-bridge peaked at 14.3 GB RSS + 1.1 GB swap over one ~23 h run.**
+      Reported by systemd on the 2026-08-22 restart above (`Consumed 18h 1min 44.820s CPU time,
+      14.3G memory peak, 1.1G memory swap peak`). Noticed incidentally, not investigated — but that
+      is a large footprint for an Anthropic↔Codex translation facade, and it grew unbounded across
+      a run precisely because nothing ever restarts the process (see the todo above), so a slow
+      leak would never be truncated. Worth one look before assuming it is normal. Repo:
+      agent-orchestrator.
 
 - [ ] [DOCS] P3. **The restart runbook has no `codex-bridge` / `deepseek-native-proxy` entry at
       all.** `/codex/15-runbooks/safe-service-restart-procedures.md` returns zero matches for either
