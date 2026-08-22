@@ -78,11 +78,12 @@ source: >-
       SEV0 condition in a test/staging check and the kill-switch bus receives it. Source:
       `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md` item 1 (line ~190). Repo:
       alerting-service.
-- [ ] [TEST] P0. Add an anti-inertness CI guard for the live path, mirroring the existing batch-path guard (same
+- [x] ✅ [TEST] P0. Add an anti-inertness CI guard for the live path, mirroring the existing batch-path guard (same
       doc, already-closed precedent). Done when: the new guard is present in CI and fails when the live path's
       actuator is deliberately disabled in a test commit. Source:
       `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md` item 2 (line 199-201). Repo:
-      unified-trading-pm (CI config) + alerting-service (the guarded code path).
+      unified-trading-pm (CI config) + alerting-service (the guarded code path). — `alerting-service@80a7c52aa5`
+      (2026-08-22, slot-8). See Progress Log for what already existed vs what this closed.
 
 ## From `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`
 
@@ -119,3 +120,28 @@ source: >-
   explicitly-scoped-narrower producer-liveness-detection slice ("the other 22 todos... remain open — this was a
   deliberately scoped slice, not a claim on the rest of the plan"). No conflicts found. Flipped `status: draft` →
   `active` above. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-22 (slot-8, backend_engineer/data_engineering)**: Item 3 (anti-inertness CI guard for the live path)
+  — found `alerting-service/tests/unit/test_dependency_health_not_inert.py` already existed (shipped 2026-08-14
+  by slot-4, predates this plan), carrying two `xfail(strict=True)` guards covering the PRODUCER side only
+  (`DependencyHealthProber` constructed in production; the prober emits `DEPENDENCY_DEGRADED`). Neither covers
+  the issue doc's actual ask for this todo — "assert the dependency-health policy has a non-test consumer that
+  changes behaviour (not just logs/pages)". Confirmed by reading `dependency_health_event_handler.py`:
+  `handle_dependency_health_payload` routes every alert through `route_event_with_explicit_channels` (paging
+  only), never `route_event` (the only path that calls `publish_kill_switch_event`), and no
+  `DEPENDENCY_DEGRADED*` rule_id is registered in UAC's `LIVE_ALERT_RULES` either — so even a fully-wired
+  CRITICAL dependency alert cannot reach the kill switch today. Added a third `xfail(strict=True)` guard
+  (`test_a_critical_dependency_alert_reaches_an_actuator_not_only_a_channel`), scoped to
+  `dependency_health_event_handler.py`'s own source specifically rather than a whole-tree search — those
+  actuator functions are already called elsewhere in alerting-service for other alert families, so a tree-wide
+  check would have passed today for the wrong reason (the exact false-negative shape the file's own emit-guard
+  docstring already warns about). Updated the module docstring and renamed `test_both_guards_are_strict` →
+  `test_all_guards_are_strict` to cover all three. QG green (ran twice — the first pass ran pre-commit by
+  mistake, so re-ran post-commit to key the sentinel to the actual shipped SHA); STEP 5.107 (untracked
+  xfail/skip markers) passed, confirming the new marker correctly cites the tracked issue slug; test run showed
+  `1075 passed, 3 xfailed`, all three for the expected reasons. Shipped `alerting-service@80a7c52aa5`,
+  independently ancestor-verified on `origin/live-defi-rollout` (not just quickmerge's own "Landed" message).
+  Item 2 (CODE, the actual actuator wiring — probe_fn injection, service registration, kill-switch wiring) is
+  unaffected by this and remains open for its own separate work; this guard's xfail markers are exactly what
+  will force that future change to also update this file. No literal CI-config file needed touching in
+  unified-trading-pm — this test is picked up automatically by alerting-service's existing `quality-gates.sh`
+  pytest run like every other test in the suite.
