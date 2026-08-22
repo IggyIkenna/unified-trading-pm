@@ -212,13 +212,26 @@ could not track real consumption.
       Three docstrings asserting the now-disproved "no proactive quota API exists for Codex" /
       "only this process can read it" corrected in the same change.
 
-- [ ] [BACKEND] P2. **Gemini arm of the uniform refresh.** Gemini's real signal is RPM/RPD/TPM
-      per GCP project (`gemini_headroom.compute_gemini_capacity_snapshot`), NOT a 5-hour/weekly
-      pct pair — `AccountView` already carries the 5 gemini_* capacity fields for exactly this.
-      So the refresh arm should recompute + return that snapshot rather than forcing Gemini into a
-      Claude-shaped window, which is the same category error
-      `model_provider_badge_mismatch_2026_08_21` already fixed once in the dashboard's generic
-      `AccountRow`. Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P2. **Gemini arm of the uniform refresh** — `agent-orchestrator@da46d06188`.
+      Shipped as `gemini_rate_limit_poller` (30-min) + `_refresh_gemini_usage` (button) +
+      `gemini_headroom.gemini_rate_block`. **This is an OBSERVABILITY fix, not a dispatch fix** —
+      unlike GLM, dispatch was correctly gated the whole time, because
+      `_account_meets_dispatch_headroom` consults Gemini's own RPM/RPD check. What was broken is
+      that the block lived ONLY inside that gate: measured 2026-08-22, **six of ten accounts were
+      at or over their daily ceiling while all ten displayed `account_status: healthy` with
+      `rate_limited_until: None`** (3-7-flash proj1 22/20 · proj2/3/4/5 20/20 · 3-5-flash-lite
+      proj2 500/500). `gemini_rate_block` derives the recovery instant from the SAME rows and
+      windows the gate reads, so it publishes the existing decision and imposes no new
+      restriction — verified against a read-only snapshot of the live DB before any code shipped.
+      Followed the todo's shape advice (RPM/RPD, never a Claude-shaped 5h/weekly pair) and its
+      no-rotation corollary: this reports a LOCAL gate, so rotating slots on a button click would
+      kill live mid-session work the vendor never refused.
+      Evidence: gate green (5491 passed/5 skipped, basedpyright 0 errors); 23 new tests across
+      `test_gemini_rate_block.py`, `test_gemini_rate_limit_poller.py`,
+      `test_refresh_account_usage_gemini_provider.py`. `test_server_lifespan` caught a real
+      wiring gap mid-flight — the poller was registered to START but not to be SUPERVISED or
+      STOPPED, so it would have died silently at the first supervisor restart; all three
+      registries are now wired.
 
 - [ ] [BACKEND] P3. Audit the remaining providers for the same estimate-vs-measurement confusion
       now that the pattern is known: confirm each poller's numbers are a genuine vendor read, and
@@ -276,6 +289,53 @@ could not track real consumption.
       that is a separate argument from the one that was actually written down). Repo:
       agent-orchestrator.
 
+- [ ] [OPERATOR] P2. **BLOCKED-CREDENTIALS — grant the fleet SA read access to the five Gemini
+      GCP projects, so Gemini's numbers become a vendor MEASUREMENT instead of a self-count.**
+      Probed 2026-08-22 from the planning VM as
+      `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`, all three vocabularies:
+      `gcloud services list` and `gcloud alpha quotas info list` both return PERMISSION_DENIED
+      (`cloudquotas.quotas.get` denied) on `gen-lang-client-0008266149`, and a successful
+      `GET generativelanguage.googleapis.com/v1beta/models` returns HTTP 200 carrying **no**
+      quota/ratelimit/retry-after header. So — unlike GLM, where "no signal exists" was a
+      wrong-vocabulary absence-proof — Google's signal genuinely EXISTS (Cloud Monitoring's
+      `serviceruntime.googleapis.com/quota/*` series, Cloud Quotas for the ceilings) and is
+      credential-blocked. Per `/codex/02-data/external-data-always-available-rule.md` that is a
+      credential ask, not a descope, and the adapter scaffold is already built and shipped.
+      **Needs**: `roles/monitoring.viewer` (and ideally `roles/cloudquotas.viewer`) for that SA on
+      `gen-lang-client-0008266149`, `elated-nectar-440116-e9`, `poetic-bongo-456907-e4`,
+      `371216509644`, `spring-mix-426915-t9`. This is NOT self-serviceable under the usual
+      IAM-self-service rule: those are AI-Studio-created projects outside the fleet's own project,
+      so only someone with admin on them can grant it. Two payoffs: the count stops being blind to
+      non-fleet traffic, and `GEMINI_RATE_CEILINGS` stops being hardcoded operator-supplied numbers
+      from 2026-08-14. Repo: agent-orchestrator (once granted).
+
+- [ ] [BACKEND] P3. **The Gemini RPD gate is racy — check-then-act with no lock.** Measured
+      2026-08-22: `gemini-3-7-flash-proj1` sat at **22 selections against a ceiling of 20**, all 22
+      inside one ~52-minute burst on 2026-08-21 (08:34-09:26), well under the 5 RPM ceiling. So the
+      overshoot is on RPD: `gemini_account_has_rate_headroom` admits while `count < rpd`, and N
+      concurrent spawns can each read 19 and all proceed. 10% overshoot on a ceiling of 20. Not
+      urgent (the vendor 429s rather than billing), but it means the gate cannot be described as a
+      hard ceiling. Repo: agent-orchestrator.
+
+- [ ] [BACKEND] P3. **`GEMINI_RATE_GATE_SKIPPED_EVENT` is declared but nothing ever emits it.**
+      `server/gemini_headroom.py` defines the constant; a repo-wide grep finds that definition and
+      no writer at all, and the activity log has zero rows of that type. It reads as observability
+      coverage that does not exist — anyone asking "is the gate ever being skipped?" would find the
+      constant and wrongly conclude the question is already instrumented. Either emit it at the
+      real skip path (the unregistered-`variant` fail-open branch is the obvious candidate) or
+      delete it. Repo: agent-orchestrator.
+
+- [ ] [BACKEND] P3. **Confirm whether Gemini free-tier RPD is a rolling 24h window or a calendar
+      day.** `gemini_headroom` models it as ROLLING 24h (`_RPD_WINDOW = timedelta(days=1)`), which
+      is what `gemini_rate_block` now publishes as `rate_limited_until`. Google documents free-tier
+      RPD as a per-CALENDAR-DAY quota. If the calendar-day reading is right, AO holds an account
+      blocked after Google has already reset it — wrong in the SAFE direction (under-dispatch, not
+      a 429 storm), but it silently costs capacity: on 2026-08-22 six accounts were held with
+      recovery instants spread from 08:34 to 14:14 that a midnight-PT reset would have cleared at
+      once. **Do not "fix" this by guessing a reset hour** — the whole point of this issue is not
+      substituting a plausible number for a measured one. Confirm against a real reading (the
+      credential ask above would settle it directly). Repo: agent-orchestrator.
+
 ## Coverage of the "no exceptions" directive — measured, not estimated
 
 Counted from the live `data/config/accounts.json` on the planning VM, 2026-08-22 (24 accounts):
@@ -283,10 +343,10 @@ Counted from the live `data/config/accounts.json` on the planning VM, 2026-08-22
 | provider  | accounts | 30-min poll             | Refresh button                  |
 | --------- | -------: | ----------------------- | ------------------------------- |
 | anthropic |        8 | ✅ `usage_poller`       | ✅ pty `/usage`                 |
-| gemini    |       10 | ❌                      | ❌                              |
+| gemini    |       10 | ✅ `gemini_rate_limit_poller` | ✅ `_refresh_gemini_usage` |
 | glm       |        2 | ✅ `glm_quota_poller`   | ✅ `_refresh_glm_usage`         |
 | deepseek  |        2 | ✅ balance/usage poller | ⚠️ SEPARATE button, not the one |
-| codex     |        1 | ✅ `codex_quota`        | ✅ `_refresh_codex_usage`       |
+| codex     |        1 | ✅ `codex_quota` (live) | ✅ `_refresh_codex_usage`       |
 | ollama    |        1 | n/a — self-hosted       | ❌ not modelled as "no quota"   |
 
 `gemini` is 10 of 24 accounts and the largest remaining gap, so it is the recommended next item.
@@ -340,19 +400,39 @@ button beside it" — so folding it into the one button is in scope, not already
   `codex-bridge`/`deepseek-native-proxy` run stale code after every LDR pull — filed as its own
   P2 todo, since it means poller changes to those modules do not take effect on their own.
 
+- **2026-08-22 (slot 15, `/autonomous`) — shipped `agent-orchestrator@da46d06188` (Gemini arm).**
+  Gemini turned out NOT to be the "wire up the existing snapshot" job the todo assumed, in two
+  directions. Better than feared: dispatch was never broken — `_account_meets_dispatch_headroom`
+  has always consulted Gemini's RPM/RPD check, so unlike GLM nothing was being dispatched into a
+  dead account. Worse than feared: that check was the ONLY place the block existed, so six of ten
+  accounts sat at/over their daily ceiling while all ten displayed healthy. And the numbers behind
+  it are a LOCAL self-count, not a vendor read — structurally the same shape as the GLM estimate
+  this issue is named for, which is why the credential ask above is filed rather than the fact
+  being glossed. I deliberately did not repeat the GLM error in reverse: rather than assume "no
+  signal exists", I probed Cloud Quotas, Service Usage and the inference headers, and the honest
+  finding is that the signal EXISTS and is permission-denied. Three smaller defects fell out of the
+  measurement (racy RPD gate at 22/20, a never-emitted observability event, rolling-vs-calendar RPD
+  semantics), all filed above rather than fixed inline. Process note: `test_server_lifespan` caught
+  a genuine wiring gap I had introduced — the new poller was registered to START but not to be
+  SUPERVISED or STOPPED, so it would have died silently at the first supervisor restart. That test
+  earned its keep; nothing else in the suite would have noticed.
+
 ## Deferred work after 2026-08-22
 
-Recommended NEXT item: **the Gemini arm of the uniform refresh** — 10 of the 24 live accounts are
-`gemini`, by far the largest remaining "no exceptions" gap. It needs a shape decision first
-(RPM/RPD/TPM per GCP project, NOT a Claude-shaped 5h/weekly pair), which is why it was not taken
-ahead of Codex. DeepSeek follows: its vendor read exists but hangs off a SEPARATE button, which is
-literally the split the directive named.
+Recommended NEXT item: **DeepSeek on the ONE refresh button** — its vendor read already exists and
+works, it is just wired to a SEPARATE button, which is literally the split the directive named
+("Anthropic only, plus a separate DeepSeek button beside it"). Small and well-understood. Then
+`ollama`, which only needs modelling as "no vendor quota" rather than silently None. After those
+two, the "no exceptions" directive is fully satisfied for all 24 accounts.
 
 | item | state / why deferred | blocked on |
 | --- | --- | --- |
-| Gemini arm of uniform refresh | **Not done** — 10/24 accounts, the largest gap. Needs the RPM/RPD/TPM shape, not a Claude-shaped 5h/weekly pair | nobody — pick it up |
 | DeepSeek on the ONE refresh button | **Not done** — vendor read exists and works, but only behind its own separate button; the directive explicitly names that split | nobody — pick it up |
 | `ollama`/`gemma-self-hosted` modelled as "no vendor quota" | **Not done** — currently silently None, indistinguishable from "not yet probed" | nobody — pick it up |
+| Gemini numbers are a self-count, not a vendor measurement | **Operator-owned** — needs `monitoring.viewer` for the fleet SA on five AI-Studio GCP projects; not self-serviceable, they sit outside the fleet's own project | operator (IAM on those projects) |
+| Gemini RPD gate is racy (22/20 measured) | **Not done** — check-then-act with no lock; concurrent spawns can each see 19 and proceed | nobody — pick it up |
+| `GEMINI_RATE_GATE_SKIPPED_EVENT` declared but never emitted | **Not done** — emit it at the real skip path or delete it; today it reads as coverage that does not exist | nobody — pick it up |
+| Gemini RPD: rolling 24h vs calendar day | **Not done** — AO models rolling; Google documents calendar-day. Wrong in the safe direction, but costs capacity. Needs a real reading, NOT a guessed reset hour | the credential ask above would settle it |
 | `ao-self-pull.sh` restarts only `orchestrator`; `codex-bridge` + `deepseek-native-proxy` run stale code | **Not done** — measured 2026-08-22. Fix must be relevance-scoped per service, not a blanket restart-all (the script rate-limits restarts for a real reason: 52 fleet self-restarts on 2026-08-21) | nobody — pick it up |
 | Restart runbook has no `codex-bridge` / `deepseek-native-proxy` entry | **Not done** — zero grep matches; depends on the row above deciding how they get restarted | the row above |
 | Re-decide `free_provider_priority` now codex has a real headroom signal | **Not done** — the written rationale for codex-last is void; the ordering itself may still be right for other reasons | nobody, but it is a judgment call |
