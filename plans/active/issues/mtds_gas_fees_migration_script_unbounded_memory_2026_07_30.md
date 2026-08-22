@@ -38,7 +38,7 @@ related:
   ]
 created: "2026-07-30"
 author: unknown
-last_updated: "2026-08-17"
+last_updated: "2026-08-21"
 # was: defi_master (epic-assignment audit 2026-08-19) -- root cause + both open todos
 parent_epic: manifest_master
   # live entirely in shared ManifestWriter (UTL) default behavior; doc's own text: "not unique to the gas_fees
@@ -211,6 +211,16 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
       incident today would reproduce identically. What's left is no longer an investigation, it's a sizing/rollout
       decision (what per-worker cap, and whether to arm it now) — genuinely operator-gated (changes a live
       production safety config for the whole fleet), so this stays `KEEP-NA` rather than closing.
+      **RESOLVED 2026-08-21 (D100 ruling, issues_corpus_completion_dispatch_2026_08_21.md ledger): Arm
+      conservatively — two runaway scripts starved the whole fleet within ~36h under the shared cap alone.** The
+      sizing/rollout decision is now decided; a new executable todo carries the arming action below.
+
+- [ ] [BACKEND] P2. Arm `ORCHESTRATOR_WORKER_MEMORY_MAX` (`agent-orchestrator/server/config.py`) at a conservative
+      per-worker value — per D100 ruling (2026-08-21): two runaway scripts starved the whole fleet within ~36h under
+      the shared cap alone. Size it as a fraction of the current ~26GiB shared `orchestrator.service` `MemoryMax` (so
+      no single worker's runaway subprocess can exhaust host memory), deploy it live, and verify with a real
+      over-limit test subprocess that it gets capped by its own `systemd-run --user --scope` rather than starving
+      the fleet. Repo: agent-orchestrator.
 
 ## Codex SSOTs
 
@@ -272,3 +282,6 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   genuinely operator-gated, not worker-determinable alone. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; both remaining open items stay genuine design forks (ManifestWriter safety-check warn-vs-refuse choice; per-slot RSS ceiling arm/cap sizing — a live production-safety config decision, operator-gated per the 2026-08-19 live-verification). Doc stays `assigned_vm: NA`.
+- **2026-08-21 — ruling D100 (Per-worker memory ceiling)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Arm conservatively — two runaway scripts starved the whole fleet within ~36h under
+  the shared cap alone. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

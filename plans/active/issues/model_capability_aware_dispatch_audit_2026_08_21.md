@@ -292,13 +292,12 @@ write (it never returns exit 2), so there is no real tradeoff left to weigh.
       existing `pretooluse-slot-collision-guard.py` confirmed to have zero coverage for this case.
       Evidence: unified-trading-pm@7589ba943c (dirty-deps carve-out direct push). Repo:
       unified-trading-pm.
-- [ ] [OPERATOR] P3. **Found during Part 5's investigation.** Decide whether `agent-orchestrator`
+- [ ] [OPERATOR] P3. DEFERRED-BY-DESIGN — per D99 ruling (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md
+      ledger): Keep warn-only — the warn guard covers the measured incident class; fleet-wide behavior change needs
+      more signal. **Found during Part 5's investigation.** Original ask: decide whether `agent-orchestrator`
       specifically (the one repo with a measured, severe live-service consequence — see this
       session's own live-checkout-write incident, Progress Log) should ALSO get a hard-block
-      variant for the shared-index-mutation class of Bash command (mirroring
-      `pretooluse-slot-collision-guard.py`'s own narrow-scope-plus-escape-hatch pattern), on top of
-      the warn-only Edit/Write guard already shipped. Not decided here — a hard block changes
-      behavior fleet-wide the instant it ships, real sign-off warranted. Repo: unified-trading-pm.
+      variant for the shared-index-mutation class of Bash command. Repo: unified-trading-pm.
 - [ ] [SCRIPT] P3. **Found during Part 5's investigation, unrelated to this doc's own scope.**
       `pretooluse-slot-collision-guard.py` (a fully-built PreToolUse guard for the peer-collision
       problem, complete with its own bats test suite) is not registered anywhere in
@@ -332,6 +331,10 @@ write (it never returns exit 2), so there is no real tradeoff left to weigh.
       agent-orchestrator.
 
 ## Progress Log
+
+- **2026-08-21 — ruling D99 (Bash shared-index hard-block)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Keep warn-only — the warn guard covers the measured incident class; fleet-wide
+  behavior change needs more signal. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 
 - **2026-08-21 (interactive session)**: filed following operator's direct request to re-verify
   Part 1 and audit/fix Part 2. Part 1 verified and closed same session. Part 2's two investigations

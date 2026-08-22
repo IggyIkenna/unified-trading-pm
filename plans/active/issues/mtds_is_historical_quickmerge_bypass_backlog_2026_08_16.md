@@ -10,6 +10,7 @@ scope: [engineer, admin]
 tags: [ci-cd, quickmerge, provenance, ci_reconciler]
 created: 2026-08-16
 last_reviewed: 2026-08-16
+last_updated: 2026-08-21
 summary: "MTDS + instruments-service each carry 8 bypass commits (dated 2026-07-13, ~1 month old at filing) that reached live-defi-rollout without a Quickmerge trailer -- not currently blocking anything live, but spans 4 distinct commit identities so per /ci-reconcile's size/authorship gate this needs an operator decision (bulk-bless vs re-ship-each vs show-and-wait), not an auto-fix."
 related: []
 execution_scope: orchestrator-agent
@@ -62,18 +63,26 @@ live promotion the same way `unified-trading-pm`'s `e560378a2d` did earlier in t
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide bulk-bless-after-review vs. re-ship-each-individually vs. show-and-wait for the 8
-      `market-tick-data-service` bypass commits (`981201c4`, `3841e908`, `d5ea580a`, `b4550b41`, `6f0efb52`,
-      `f3ab7655`, `55f9e961`, `5e367479`, all 2026-07-13) — per `/ci-reconcile` §4, this is a judgment call, not a
-      mechanical fix.
-- [ ] [OPERATOR] P2. Same decision for the 8 `instruments-service` bypass commits (`42e5ebe1`, `109bb0d0`, `6821224b`,
-      `cea1380f`, `2a22658c`, `ba431b0f`, `25293d89`, `fa51fe38`, all 2026-07-13).
-- [ ] [SCRIPT] P3. Once the operator picks a path, either reprovenance each commit via
-      `scripts/cicd/reprovenance_bypass.sh <sha> --push` (bless path) or re-ship equivalent content via
-      `quickmerge.sh --agent --files` (re-ship path) for whichever commits are approved.
+- [ ] [CI] P2. Bulk-bless the 8 `market-tick-data-service` quickmerge-bypass commits (`981201c4`, `3841e908`,
+      `d5ea580a`, `b4550b41`, `6f0efb52`, `f3ab7655`, `55f9e961`, `5e367479`, all 2026-07-13) via
+      `scripts/cicd/reprovenance_bypass.sh <sha> --push` for each — per D14 ruling (2026-08-21,
+      issues_corpus_completion_dispatch_2026_08_21.md ledger): Bulk-bless after review — the commits were clean and
+      all repos' gates are green; this removes latent promotion risk at lowest cost. Done-when:
+      `check_strict_quickmerge.py --range origin/main..origin/live-defi-rollout --block` reports 0 remaining bypass
+      commits for `market-tick-data-service`.
+- [ ] [CI] P2. Bulk-bless the 8 `instruments-service` quickmerge-bypass commits (`42e5ebe1`, `109bb0d0`, `6821224b`,
+      `cea1380f`, `2a22658c`, `ba431b0f`, `25293d89`, `fa51fe38`, all 2026-07-13) the same way, per the same D14
+      ruling. Done-when: the same check reports 0 remaining bypass commits for `instruments-service`.
+- **[SCRIPT] P3. CANCELLED — SUPERSEDED 2026-08-21 (D14 ruling, per issues_corpus_completion_dispatch_2026_08_21.md
+  ledger): folded into the two bulk-bless todos above, which now state the execution action directly instead of
+  waiting on a separate operator path-pick.**
 
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-16** [body-hash:34c3d23d3f97c424]: KEEP-NA, valid — Doc created today (2026-08-16) by a /ci-reconcile sweep — no staleness window exists. All 3 open todos are genuinely operator-gated judgment work, not deterministic/bounded work.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **2026-08-21 — ruling D14 (Historical quickmerge-bypass commits)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Bulk-bless after review — the 3 already-reviewed commits were clean and
+  all repos' gates are green; this removes latent promotion risk at lowest cost. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

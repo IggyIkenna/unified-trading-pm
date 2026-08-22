@@ -15,6 +15,7 @@ related: [mev_engines_opportunity_detection_signals_unproduced_2026_08_18]
 parent_epic: defi_master
 priority: P1
 created: 2026-08-19
+last_updated: "2026-08-21"
 author: slot-10 (review)
 assigned_vm: planning
 resolved_by: ""
@@ -88,9 +89,11 @@ architecture choice, not a bounded todo. Recommend routing through `matching_eng
       **live bundle-submission boundary** (Phase 5C "every live order goes through bundle-sim"), not
       `matching_engine.py` (paper-fill single-AMM-swap path) nor per-engine signal-generation sites.
       Repo: execution-service, strategy-service.
-- [ ] [OPERATOR] P1. Wire `gate_or_advise()` at the live bundle-submission boundary — deferred post-cutover: blocked
-      on building that path first (`aave_flash_bundle.py` absent; `FLASHBOTS_BUNDLE_RELAY` stubbed per operator
-      2026-05-10). Repo: execution-service, strategy-service.
+- [ ] [OPERATOR] P1. DEFERRED-BY-DESIGN — per D98 ruling (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md
+      ledger): Continue deferring — the operator made this exact call 2 days prior; no new information. Wire
+      `gate_or_advise()` at the live bundle-submission boundary once that path is built (blocked on building it
+      first: `aave_flash_bundle.py` absent; `FLASHBOTS_BUNDLE_RELAY` stubbed per operator 2026-05-10). Repo:
+      execution-service, strategy-service.
 
 ## Progress Log
 
@@ -122,3 +125,6 @@ architecture choice, not a bounded todo. Recommend routing through `matching_eng
   already corrected above.
 
 - **context-scout 2026-08-20**: populated context_scope (6 entries).
+- **2026-08-21 — ruling D98 (MEV bundle boundary timing)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Continue deferring — the operator made this exact call 2 days prior; no new
+  information. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
