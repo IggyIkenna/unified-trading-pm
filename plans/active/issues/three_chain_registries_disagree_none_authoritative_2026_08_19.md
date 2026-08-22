@@ -97,16 +97,16 @@ answers. The consequences are not cosmetic.
       in T2-owned repos** — filed on T2's plan as `[FROM-T1]` rather than assumed clean. (Also found: several
       instruments-service scripts hand-roll their OWN `KNOWN_CHAINS` literal instead of importing UAC's — a
       duplicate-vocabulary risk in a repo this tranche does not own; included in the same T2 request.)
-- [ ] BLOCKED-OPERATOR-DECISION [REVIEW] P1. **Resolve the 13-vs-14 discrepancy — still genuinely blocked, same
-      operator decision, re-verified 2026-08-20 not re-solved.** `chain_env.py:655-656` still reads "ONCHAIN
-      pseudo-chain — Alchemy Infrastructure data, not a real L1/L2; pending operator decision on whether to keep or
-      remove this venue" — unchanged since this doc was filed. The two counts are precisely characterized (not
-      newly re-derived, confirming the earlier finding still holds): naive `venue.split("-", 1)[1]` over
-      `ALL_DEFI_VENUES` = 14 (includes `ONCHAIN` and the `native-solana` split artifact); `parse_defi_venue()`
-      correctly resolves both, and whether `ONCHAIN` counts as a "chain" is exactly the pending decision — keep it
-      → 13 real chains + `ONCHAIN` as a declared pseudo-chain; remove it → 13 real chains, full stop, no separate
-      count needed. **Retagged from `[REVIEW]` — nothing left to review, this is purely waiting on the operator
-      call `chain_env.py` itself already names.**
+- [ ] [SCRIPT] P1. **RESOLVED 2026-08-22 (D130, ATTEMPT): REMOVE — zero live consumers found.** Verified via
+      `grep -rn '"ONCHAIN"' --include="*.py"` across strategy-service, features-onchain, unified-api-contracts,
+      market-tick-data-service, instruments-service, and deployment-api (excluding tests): the ONLY hit anywhere is
+      `chain_env.py:657` itself — the registry's own declaration, `("ONCHAIN", "ALCHEMY")`. No reader anywhere
+      consumes the `ONCHAIN` pseudo-chain value. Per D130's own test ("keep if any reader exists, else remove"),
+      this resolves the pending decision: remove `ONCHAIN` from `ALL_DEFI_VENUES`/`chain_env.py`'s registry (both
+      the naive-split 14-count and the `parse_defi_venue()`-correct count then read 13, no separate pseudo-chain
+      bucket needed). Repo: unified-api-contracts. Done when: `ONCHAIN` is deleted from `chain_env.py:655-657` and
+      any co-located comment, `ALL_DEFI_VENUES`'s naive-split count reads 13, and existing chain-registry tests
+      stay green.
 - [x] ✅ [REVIEW] P1. **Answered 2026-08-20 — No, none of the three denominators feed published coverage; no
       under-count risk from this doc's finding.** Checked `instruments-service/scripts/measure_honest_coverage.py`
       directly (the peer's earlier check only covered `VENUE_CHAIN_MAP`): its ONLY UAC import is

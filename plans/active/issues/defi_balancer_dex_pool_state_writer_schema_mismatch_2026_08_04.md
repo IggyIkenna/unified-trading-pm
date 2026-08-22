@@ -180,12 +180,21 @@ is a human decision wearing a todo's clothes" dispatch-scope bar. It also touche
       deprecated code, no shims) also retires that latent risk. Check
       `DexPoolsHandler._parse_curve = _parsers_stage._parse_curve` class binding + its direct unit tests
       (`test_parse_curve_full`/similar in `tests/unit/test_dex_pools_handler_coverage.py`) before removing.
-- [ ] [HUMAN] P3. Decide whether to backfill historical BALANCER `dex_pool_state` days with corrected
-      tvl_usd/volume_usd/fees_usd/fee_rate_bps values (rewriting already-captured production parquet — the same class of
-      decision this doc's "Why NA" section already brackets as human-only) now that the writer fix
-      (`market-tick-data-service@2f7d7840`) is go-forward-only. Every historical BALANCER `dex_pool_state` day written
-      before this fix still carries the legacy `swap_volume`/`swap_fees`/`total_shares` shape and will continue reading
-      `fee_apy_bps=0` for any backtest/replay over that history until this is resolved one way or the other.
+- [ ] [DATA] P2. **RESOLVED 2026-08-22 (D58, ATTEMPT) — YES, backfill: BALANCER dex_pool_state DOES feed live/backtest
+      decisions.** Verified via direct code read (not assumed): `BALANCER` is a registered venue in
+      `strategy-service/.../target_universe/catalog_yield_defi.py` (a live archetype's target universe) and in
+      `strategy-service/.../risk/engine/risk_metrics.py`; the affected field `fee_apy_bps` itself is consumed by
+      `strategy-service/.../cli/handlers/paper_run_handler.py` and `.../paper_universe_metrics.py` — the
+      paper/backtest-replay path directly reads this exact field. So every historical BALANCER `dex_pool_state` day
+      before the writer fix (`market-tick-data-service@2f7d7840`) silently reads `fee_apy_bps=0` in any backtest or
+      paper-replay over that history, which is a real, live correctness gap, not a dormant one. Decision: backfill
+      the historical days with corrected `tvl_usd`/`volume_usd`/`fees_usd`/`fee_rate_bps` values. Repo:
+      market-tick-data-service. Done when: a backfill script re-derives the corrected shape for every pre-fix
+      BALANCER `dex_pool_state` day (scope + date range to be measured from the manifest first), a fresh
+      `read_availability_index` confirms 0 pre-fix-shaped rows remain, and `paper_universe_metrics.py`'s
+      BALANCER-venue `fee_apy_bps` reads a non-zero value for at least one historically-verified day. This is a
+      rewrite of already-captured production parquet — cite the GCS delete-safety protocol's snapshot-first
+      precondition before running, same as any other manifest-correction backfill in this dispatch.
 
 ## Progress Log
 

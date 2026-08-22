@@ -114,14 +114,21 @@ reaps its own child processes.
 
 ## Todos
 
-- [ ] [INFRA] P2. ATTEMPT-THEN-ASK (per D102, 2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md ledger):
-      attempt the host/journal-level root-cause investigation via SSM on the shared host with existing access —
-      confirm or rule out a genuine kernel OOM-kill (`dmesg | grep -i oom` / `journalctl -k | grep -i "killed
-      process"` around the death timestamps logged in this doc's evidence table) vs. a harness-side background-task
-      timeout/reaper unrelated to host memory; if a genuine wall (no root/`adm`-group access reachable via SSM
-      either), escalate with >=2 options (e.g. request a scoped SSM document granting read-only dmesg/journalctl
-      access, or accept the mechanism stays unconfirmed and rely on the cross-repo intermittent-kill evidence already
-      gathered). Source: this doc.
+- [ ] [INFRA] P2. **ATTEMPTED 2026-08-22, genuine wall hit (per D102, ATTEMPT-THEN-ASK)**: this ruling's own premise
+      (SSM + `dmesg`/`journalctl` on the shared host) does not apply — verified via `uname -a` that "the shared
+      host" here is the operators' shared macOS laptop (`Darwin ... arm64`), not a Linux EC2 instance reachable via
+      AWS SSM. `dmesg`/`journalctl` are Linux-only and do not exist in this form on macOS; the native `dmesg`
+      equivalent requires `sudo` (`Unable to obtain kernel buffer: Operation not permitted` — confirmed, matches
+      this doc's own "unavailable to this unprivileged session" framing) and `log show` (the macOS unified-logging
+      equivalent) did not return a conclusive result within this pass's time budget (large 6h log volume). **Escalating
+      with 2 concrete options**: **A [WORKER REC]** — request the operator (who has local admin/sudo on the shared
+      Mac) run `sudo dmesg | grep -i "memory\|kill"` and `log show --last 6h --predicate '(eventMessage contains
+      "jetsam") or (eventMessage contains "Killed process")'` directly and paste the output back — a 2-minute ask
+      that resolves the mechanism question definitively; **B** — accept the mechanism stays unconfirmed and rely on
+      the cross-repo intermittent-kill evidence already gathered in this doc (the setsid/nohup/disown test reaching
+      the pytest TESTS stage before dying, without RAM/load correlation) to guide future retries, without root-level
+      confirmation. Original text preserved: attempt the host/journal-level root-cause investigation via SSM on the
+      shared host with existing access.
 - [ ] [INFRA] P3. If the root cause turns out to be harness/session-level (not host RAM), file the correction against
       `plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` (it stays substantially
       correct for most of ITS OWN evidence per its own 2026-08-14 cross-check addendum, but this doc's evidence suggests

@@ -126,6 +126,24 @@ context_scope:
   non-deterministically pick from. Neither is a same-turn fix for a `data_engineering`-scoped worker — (A) needs a
   design decision on cross-repo map-sourcing, (B) is gated on the separately-tracked, human-gated final delete. No code
   changed this session (investigation only).
+- **2026-08-22 (D112, ATTEMPT)**: read this todo's full record + `sports_league_id_namespace_migration_2026_07_20.md`
+  directly. The record does NOT resolve which path to take — checked whether Path B's precondition (the raw
+  `batch_odds_api` old-object delete) has landed since 2026-07-25: it has not (that doc's last dated STATUS entry
+  is still 2026-07-25, "Still genuinely outstanding" for the delete). So this is a genuine, still-live design
+  choice between (A) build a cross-repo canonicalization-map-sourcing mechanism in
+  `market-data-processing-service` (new engineering, needs a design call: vendor a copy of
+  `sportkey_canon_final.json`/`classification.json` vs. read from a shared GCS artifact vs. something else) or (B)
+  wait for the already-authorized raw-object delete to land, then re-run Step 7 cleanly with no design work.
+  **Escalating with 2 concrete options** (not resolved by this pass): **Option B [WORKER REC]** — wait for the
+  batch_odds_api old-object delete (already operator-authorized in principle, gated only on its own dry-run +
+  VM-drain preconditions) to land, then re-run Step 7 as originally scoped; lowest engineering cost, no new
+  cross-repo mechanism, but stays blocked until that delete's own gate clears. **Option A** — commission the
+  cross-repo canonicalization-map-sourcing design now (a real `[CODE]`-scoped follow-on plan), unblocking
+  Track-H sooner if the old-object delete is not imminent, at the cost of building and maintaining a second
+  cross-repo dependency on the same canonicalization data. Recommendation leans B because it reuses existing,
+  already-authorized work rather than adding new permanent cross-repo coupling — but the actual timeline for the
+  old-object delete landing is unknown from this doc alone, which is the real operator input needed to pick
+  between the two.
 
 - [x] ✅ [CODE] P1. **Build + execute the `batch_footystats` copy+swap pass** (footystats legacy-bundle shape, 16,970
       objects per the 2026-07-20 sizing) — canonicalise its `league_id`, mirroring the already-shipped, adversarially-

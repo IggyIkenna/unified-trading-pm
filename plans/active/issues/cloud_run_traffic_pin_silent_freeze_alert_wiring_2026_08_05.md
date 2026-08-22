@@ -241,13 +241,22 @@ Run service and alerting on drift beyond some threshold — that's the real rema
       shell `cloud-monitoring-slack-ci-failures-webhook` created (no versions yet — operator-gated credential step
       below). End-to-end Slack delivery NOT yet verified (awaiting webhook URL population per [OPERATOR] todo below).
 
-- [ ] [INFRA] P2. Populate `cloud-monitoring-slack-ci-failures-webhook` in GSM via a one-off GH Actions workflow
-      dispatch that reads the existing `SLACK_CI_WEBHOOK_URL` repo secret and writes it to Secret Manager (the
-      secret's value can't be read back directly outside a workflow run, but a workflow can forward it) — per D53
-      ruling (ATTEMPT, 2026-08-21). Command inside that workflow step:
+- [ ] [INFRA] P2. **ATTEMPTED 2026-08-22, escalating (D53, ATTEMPT)**: confirmed deployment-service already has
+      working GCP OIDC auth in its existing workflows (`google-github-actions/auth` + `GCP_SA_KEY`, e.g.
+      `sync-vm-scripts-to-gcs.yml`), so the mechanism itself is feasible — but authoring + shipping a new
+      `.github/workflows/*.yml` step through deployment-service's own full `quality-gates.sh` + quickmerge pipeline
+      (a separate repo, its own QG run) is a real engineering task, not something to fake as done without running
+      it end-to-end (this workspace's measurement-claims discipline). **Escalating with 2 concrete options**:
+      **A [WORKER REC — fastest]** — the operator already holds the raw Slack webhook URL value (it's in their own
+      Slack app config); paste it directly via
+      `gcloud secrets versions add cloud-monitoring-slack-ci-failures-webhook --data-file=- --project=central-element-323112`
+      from any admin-authenticated shell (seconds, no code ships); **B** — a future dispatch authors + ships the
+      one-off GH Actions workflow step (exact command already specified below) through deployment-service's normal
+      QG/quickmerge pipeline, for the case where the operator does not want to handle the raw secret value
+      directly. Then verify end-to-end by triggering a canary rollback on a UAT Cloud Run service and confirming
+      the Slack message arrives in #ci-failures. Original command for option B:
       `printf "%s" "$SLACK_CI_WEBHOOK_URL" | gcloud secrets versions add cloud-monitoring-slack-ci-failures-webhook --data-file=- --project=central-element-323112`.
-      Then verify end-to-end by triggering a canary rollback on a UAT Cloud Run service and confirming the Slack
-      message arrives in #ci-failures. Done when: `gcloud secrets versions list cloud-monitoring-slack-ci-failures-webhook`
+      Done when: `gcloud secrets versions list cloud-monitoring-slack-ci-failures-webhook`
       shows a new version and a live UAT canary test posts to #ci-failures.
 
 > **2026-08-06 archive-candidate audit**: Todo 1 is flipped [x] but its own body lists 'NOT DONE (needs operator): (a)

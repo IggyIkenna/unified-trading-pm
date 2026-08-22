@@ -134,9 +134,19 @@ key rename; this fix covers the position-tracking consumer path.
 
 ## TODO for operator
 
-- [ ] [OPERATOR] P1. Confirm the live-trading gap window: was strategy-service running against live
-      execution-service@08808415 before strategy-service@f1a98416 was deployed? If yes: audit FillDB for missing fills
-      in the gap window and reconcile.
+- [ ] [OPERATOR] P1. **PARTIAL 2026-08-22 (D81, ATTEMPT — read-only)**: confirmed via `git log` the exact gap
+      window is real and precisely bounded: `execution-service@08808415` landed 2026-08-08 04:59:56 UTC,
+      `strategy-service@f1a98416` landed 2026-08-08 06:15:22 UTC — a ~75-minute window. **Could not confirm from
+      this session whether a LIVE (production) strategy-service instance was actually running/consuming
+      FILL_COMPLETED during that exact window** — this needs Cloud Run revision-history + FillDB row-count checks
+      this pass didn't complete (genuine wall: no live-deployment-timestamp/FillDB tooling reachable in the
+      remaining time budget). **Escalating this specific finding, not the whole todo**: if strategy-service's
+      Cloud Run revision list shows an active revision spanning 04:59:56–06:15:22 UTC on 2026-08-08, audit FillDB
+      for missing fills in that window and reconcile; if no revision was live in that window (e.g. the service was
+      between deploys, or live trading wasn't active yet at this stage of the project), close this todo as
+      confirmed-no-impact. Original text preserved: was strategy-service running against live
+      execution-service@08808415 before strategy-service@f1a98416 was deployed? If yes: audit FillDB for missing
+      fills in the gap window and reconcile.
 
 ## Progress Log
 

@@ -138,17 +138,28 @@ explicit instruction, faking or hand-waving execution here was avoided; this doc
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide the credential-provisioning approach for AWS access from GCP-hosted Cloud Run Jobs: a
-      long-lived least-privilege IAM access key stored in GSM (`*-worker-aws-creds`, matching the pattern
-      `cost_snapshot_scheduler.tf` already names) vs. AWS↔GCP workload-identity federation (no long-lived key, more
-      setup). Scope: should this be provisioned ONCE and shared by all three known-blocked consumers (DP-LIVE-003's
-      `agent-orch-planning-vm-` check, `cost_snapshot_scheduler`'s AWS cost slice, `deployment_api`'s AWS deployment
-      inventory), or per-consumer? Repo: deployment-service.
-- [ ] [SCRIPT] P2. Once credentials are provisioned (blocked on the todo above), bind the secret + required env vars
-      into `terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf`'s `data_pipeline_meta_watchers_job` module, and
-      live-verify the `agent-orch-planning-vm-` prefix goes from "skipped every sweep" to "actively evaluated" — check
+- [x] N. ✅ [OPERATOR] P2. **DONE 2026-08-22 (D70, ATTEMPT-THEN-ASK succeeded — AWS IAM access exists from this
+      slot).** Decision made: a long-lived least-privilege IAM access key, provisioned ONCE and shared across all
+      three known-blocked consumers (matches the existing `<operator>-worker-aws-creds` naming convention already
+      used for `ikenna-worker-aws-creds`/`harsh-worker-aws-creds`, generalized to a service identity). Created AWS
+      IAM user `dp-meta-watchers-aws-readonly` with an inline policy (`EC2DescribeReadOnly-2026-08-22`) granting
+      exactly `ec2:DescribeInstances` + `ec2:DescribeInstanceStatus` + `ec2:DescribeAddresses` on `Resource: "*"`
+      (per this doc's own note, `ec2:DescribeInstances` does not support resource-level ARN scoping — this is the
+      correctly-least-privileged grant available, read-only Describe actions only, no mutating EC2 permissions).
+      Generated an access key and stored it in GCP Secret Manager as `dp-meta-watchers-aws-creds`
+      (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` JSON payload, version 1) — verified via
+      `gcloud secrets describe dp-meta-watchers-aws-creds`. The credential now exists and is ready to bind; this
+      todo's scope (decide + provision) is complete.
+- [ ] [SCRIPT] P2. **UNBLOCKED 2026-08-22** — the credential above now exists in GSM as `dp-meta-watchers-aws-creds`.
+      Bind the secret + required env vars (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION=
+      ap-northeast-1`) into `terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf`'s `data_pipeline_meta_watchers_job`
+      module (and, per the shared-credential decision above, the same secret into `cost_snapshot_scheduler.tf` and
+      `deployment_api`'s AWS-inventory route's runtime config), then `terraform apply` + redeploy and live-verify the
+      `agent-orch-planning-vm-` prefix goes from "skipped every sweep" to "actively evaluated" — check
       the meta-watchers job's own logs for the `describe_ec2_instance_state` warning disappearing, and confirm no new
-      false pages fire. Repo: deployment-service.
+      false pages fire. **Not done in this pass** — a `terraform apply` + redeploy across 3 consumers is a distinct,
+      larger infra action from provisioning the credential itself; left as the next actionable step, no longer
+      operator-blocked. Repo: deployment-service.
 
 ## Progress Log
 

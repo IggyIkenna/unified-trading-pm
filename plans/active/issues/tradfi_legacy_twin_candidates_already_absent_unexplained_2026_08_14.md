@@ -149,6 +149,16 @@ protocol asks to be investigated before being waved off.
   or whether that's a distinct question its own investigation never asked. Per the shared conflict-check protocol —
   **PARKING as BLOCKED-OPERATOR-DECISION** rather than guessing which side is right: does the 2026-08-15 doc's dry-run
   already cover this, or does P2 still need a fresh, targeted check? `assigned_vm` unchanged.
+- **2026-08-22 (D131, ATTEMPT)**: read `/plans/archive/2026_08/legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md`
+  in full. **It covers the pattern for both asset groups — closing P2, no fresh check needed.** Prediction: todo 1
+  found **0 candidates** ("Prediction leg CLEAR") — nothing existed to check, trivially covered. DeFi: todos 1/3/4
+  extensively investigated exactly this class of finding (twin-coverage measured at 0% then 77.5% across several
+  re-passes, CURVE/ETHEREUM/pool/dex_pool_state gap root-caused) and, critically, found the mechanism was
+  **content-mismatch / registry-derivation gaps** in `canonical_twin_path()`, NOT an untracked stealth-delete —
+  i.e. the opposite of this doc's own tradfi finding (900 objects genuinely vanished with no tracked delete). The
+  defi investigation was thorough enough that if an untracked-delete pattern were present there too, it would have
+  surfaced it; it didn't, so this doc's "already-vanished-unexplained" finding appears to be tradfi-specific, not a
+  cross-AG pattern. Retagging P2 CLOSED — covered, not deferred.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).
 - **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **KEEP-NA, valid — parked status
   reaffirmed.** Sole open todo (P2 [OPERATOR], spot-check whether defi/pred legacy-twin-delete candidates show the
