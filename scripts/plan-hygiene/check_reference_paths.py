@@ -83,6 +83,22 @@ BARE_CODEX_RE = re.compile(r"(?<![\w/.-])(?:\.\./)*codex/[0-9]{2}-[a-z-]+/[A-Za-
 GOOD_REF_RE = re.compile(r"/(?:plans|codex)/[A-Za-z0-9_./-]+\.md")
 BARE_MD_RE = re.compile(r"(?<![\w/.-])([A-Za-z0-9_-]+\.md)")
 
+# A fenced code block (```...```): a bare `codex/NN-name/....md` path inside one is a
+# literal CLI argument in a shell example, not a cross-doc reference -- D47 ruling
+# (2026-08-21, autonomous-dispatch authority) exempts it from the FORMAT scan. See
+# check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md's "Sharp
+# edge worth keeping either way" section and cross-reference-path-convention.md.
+FENCE_RE = re.compile(r"```[^\n]*\n.*?\n```", re.DOTALL)
+
+
+def _fenced_code_spans(text: str) -> list[tuple[int, int]]:
+    """[(start, end), ...] character offsets of every fenced code block in `text`."""
+    return [m.span() for m in FENCE_RE.finditer(text)]
+
+
+def _in_any_span(pos: int, spans: list[tuple[int, int]]) -> bool:
+    return any(start <= pos < end for start, end in spans)
+
 
 @dataclass(frozen=True)
 class Baseline:
@@ -162,7 +178,10 @@ def _scan_text(text: str, relpath: str, exists_fn) -> tuple[list[str], list[str]
     fmt: list[str] = []
     exist: list[str] = []
 
+    fenced_spans = _fenced_code_spans(text)
     for m in BARE_CODEX_RE.finditer(text):
+        if _in_any_span(m.start(), fenced_spans):
+            continue
         fmt.append(f"{relpath}: bare/relative codex ref '{m.group(0)}' — should be /codex/...")
 
     related_text = extract_related_text(text)

@@ -79,6 +79,32 @@ def test_violation_in_real_file_prints_evidence_even_under_quiet(capsys, tmp_pat
     assert "FORMAT" in out
 
 
+def test_bare_codex_ref_inside_fenced_code_block_is_not_a_format_violation() -> None:
+    """D47 ruling (2026-08-21): a bare `codex/...` path inside a fenced shell example
+    is a literal CLI argument, not a cross-doc reference -- must not be flagged."""
+    text = (
+        "Run it like this:\n\n"
+        "```bash\n"
+        "python3 scripts/check_codex_refs.sh codex/06-coding-standards/quality-gates.md\n"
+        "```\n"
+    )
+
+    fmt, _exist = checker._scan_text(text, "dummy.md", lambda _t: True)
+
+    assert fmt == []
+
+
+def test_bare_codex_ref_outside_fenced_code_block_still_flagged() -> None:
+    """The exemption is scoped to fenced blocks only -- prose right next to one must
+    still be caught (no regression from the fenced-block carve-out)."""
+    text = "See codex/06-coding-standards/quality-gates.md for details.\n\n```bash\necho hello\n```\n"
+
+    fmt, _exist = checker._scan_text(text, "dummy.md", lambda _t: True)
+
+    assert len(fmt) == 1
+    assert "codex/06-coding-standards/quality-gates.md" in fmt[0]
+
+
 def test_corpus_wide_quiet_still_prints_evidence_on_failure(capsys, monkeypatch) -> None:
     """Defect 2 (corpus-wide path): the baseline-mode scan must also print the
     offending reference on FAILURE under --quiet, not just the bare summary count."""

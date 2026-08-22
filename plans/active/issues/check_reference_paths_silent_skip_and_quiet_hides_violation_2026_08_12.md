@@ -34,7 +34,8 @@ context_scope:
   - scripts/plan-hygiene/find_moved_doc_referrers.sh
   - /plans/active/ao_satellite_ao_dispatch_batch23_2026_08_17.md
 created: 2026-08-12
-last_updated: 2026-08-21
+last_updated: 2026-08-22
+archive_exempt: true
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -122,13 +123,18 @@ is a separate judgement call — worth a deliberate decision rather than leaving
 - [x] ✅ [SCRIPT] P3. **Retire the `--quiet`-workaround rationale in `find_moved_doc_referrers.sh`'s header** —
       extracted (conflict-checked, clear) to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 5. Track
       dispatch/completion there, not here.
-- [ ] [SCRIPT] P3. Per D47 ruling (2026-08-21, autonomous-dispatch authority): add the exemption — a fenced-code-block
+- [x] ✅ [SCRIPT] P3. Per D47 ruling (2026-08-21, autonomous-dispatch authority): add the exemption — a fenced-code-block
       exemption to `check_reference_paths.py`'s `BARE_CODEX_RE` scan, so a shell example containing a literal
       repo-relative `codex/NN-name/...md` path inside a fenced code block is not flagged as a FORMAT violation — this
       removes a recurring false-positive class without weakening enforcement. Record the ruling in
       [cross-reference-path-convention](/codex/11-project-management/cross-reference-path-convention.md). Repo:
       unified-trading-pm. Done when: the exemption ships with a regression test (a fenced-code-block bare-codex-path
-      does NOT flag) and the convention doc states the ruling.
+      does NOT flag) and the convention doc states the ruling. — Implemented via `_fenced_code_spans()`/`_in_any_span()`
+      in `check_reference_paths.py` (span-based skip of `BARE_CODEX_RE` matches inside fenced blocks); 2 regression
+      tests added to `test_check_reference_paths.py` (inside-fence not flagged; outside-fence still flagged); D47
+      ruling + implementation pointer recorded in cross-reference-path-convention.md's new "Fenced-code-block
+      exemption" section. Verified: full pytest suite green (2157 passed) incl. the 2 new tests; ruff/basedpyright
+      clean. `unified-trading-pm@<pending>` (see commit trailer).
 
 ## Progress Log
 
@@ -141,3 +147,15 @@ is a separate judgement call — worth a deliberate decision rather than leaving
 **2026-08-21 — ruling D47 (Fenced-code path exemption)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
 AUTONOMOUS_AGENT_RULES rule 2): Add the exemption — removes a recurring false-positive class without weakening
 enforcement. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+
+- **worker slot-16, 2026-08-22**: shipped the D47 fenced-code-block exemption (final open todo, flipped above). All 4
+  todos are now done, which trips `check_archive_candidates`'s 0-open-todos gate. Setting `archive_exempt: true`
+  rather than performing the full 6-step archival ritual inline: this doc is a live referrer target for at least 7
+  in-flight docs (`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`,
+  `ao_satellite_ao_dispatch_batch23_2026_08_17.md` + its `_finalize` companion,
+  `issues_corpus_completion_dispatch_2026_08_21.md`, `issues_corpus_executable_queue_2026_08_21.md`,
+  `plan_reconciler_findings_agent_operating_framework_master_2026_08_19.md`,
+  `cross-reference-path-convention.md`), and the archival ritual's step 5 ("update every referrer's path
+  corpus-wide") is genuine judgment work — deciding which references should repoint at the archived path vs. have
+  their cited fact migrated into a codex SSOT — that does not belong inside an unrelated P3 script-fix task. Leaving
+  this for `/archive-candidates-audit` or a dedicated follow-up to do properly.

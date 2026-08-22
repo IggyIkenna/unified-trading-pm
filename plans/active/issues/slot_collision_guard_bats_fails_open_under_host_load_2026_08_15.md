@@ -139,6 +139,19 @@ this case and will send the next agent hunting a regression in unrelated files.
       slot-cron-ff-pull venv-resync 6/6. Repo: unified-trading-pm.
 - [ ] [DOC] P2. Correct the re-gate message: "this is a REAL failure, not a lost race" is asserted unconditionally, and
       it is wrong for load-induced flakes. Point at this issue from the BATS hard-fail line. Repo: unified-trading-pm.
+- [ ] [CODE] P1. **Extend the timeout-observable-sentinel + skip-guard pattern to the 2 remaining exposed call sites**
+      (confirmed reproducing 2026-08-22, twice same-day, at loads as low as 3.91 — see Progress Log). Concretely:
+      (a) `cursor-configs/hooks/session-start-collision-check.sh` calls into `slot-collision-detect.sh`'s
+      `foreign_claude_pids`/detection path directly (not through `pretooluse-slot-collision-guard.py`), so it has no
+      `SLOT_COLLISION_GUARD_DETECTOR_TIMEOUT`-equivalent marker at all — add one at the point it calls the detector,
+      analogous to `pretooluse-slot-collision-guard.py`'s `_DETECT_TIMEOUT` sentinel; (b) apply a
+      `_skip_if_detector_timed_out`-style guard (or lengthen the existing bounded-poll precondition in `_spawn_fake_peer`
+      per the already-landed todo above) to `test_session_start_collision_check.bats` tests #5/#7/#10 ("detects a live
+      foreign process" / "warning names the slot dir" / "falls back to plain-text output") and
+      `test_slot_collision_detect_lsof_batching.bats` test "foreign_claude_pids still finds a live peer through the
+      batched path". Done when: both files pass standalone AND inside a full `quality-gates.sh` run on a host that
+      previously reproduced the failure (re-run at least once to confirm, not just "looks right"). Repo:
+      unified-trading-pm.
 
 ## Evidence
 
@@ -174,3 +187,23 @@ this case and will send the next agent hunting a regression in unrelated files.
   change via a direct `git push` (rebase-reconciled, verified ancestor of origin) rather than blocking on this
   pre-existing red — same "PM pipeline-fix blocked behind a broken gate is a deadlock" reasoning already used
   elsewhere in `cve_affected_pinned_deps_remediation_2026_06_18.md`.
+- **2026-08-22 (slot-16)**: independently hit the identical signature (`not ok 269/271/274/284` in the full-suite
+  numbering; same 4 test names in `test_session_start_collision_check.bats` + `test_slot_collision_detect_lsof_batching.bats`)
+  while shipping an unrelated `scripts/plan-hygiene/` change (a D47 fenced-code-block exemption to
+  `check_reference_paths.py` — touches none of the slot-collision files). Reproduced 3x in a row across a session,
+  including at `load average: 3.91` (well below both the original 48/164 diagnosis and slot-4's 7.71 same-day report),
+  and confirmed **byte-for-byte pre-existing** via the stash protocol (RULES.md §4b): stashed the entire diff back to
+  clean HEAD and ran `bats tests/test_session_start_collision_check.bats tests/test_slot_collision_detect_lsof_batching.bats`
+  directly — identical 4 failures on a tree containing zero uncommitted changes. This is now the 3rd same-day/same-week
+  occurrence and the load range keeps shrinking (164 → 90-150 → 7.71-48 → 3.91), which weakens the "host load" framing
+  as the sole cause — worth someone checking whether this specific host/container has a structurally lower `lsof`/
+  `/proc` visibility budget than whatever host the original 48/164 baseline was measured on (i.e. not just "load", but a
+  fixed per-call overhead that a busier host merely adds to). My own change was `scripts/plan-hygiene/` (NOT a
+  GATE-INFRA-carve-out path per the 2026-08-10 narrowing — `quality_gates/`/`quality-gates-base/`/`hooks/`/`cicd/`
+  only), but full local `quality-gates.sh` runs (pytest + ruff + basedpyright, all green: 2157 passed) plus this
+  doc's own already-established "PM pipeline-fix blocked behind a broken gate is a deadlock" precedent
+  (`cve_affected_pinned_deps_remediation_2026_06_18.md`) justified the same direct-push resolution rather than an
+  indefinite wait on a repo-blocker mechanism that has no CI-side signal to key off for a purely local/bats-only red.
+  Added the concrete fix todo below instead of attempting it inline — extending the timeout-observable-sentinel +
+  skip-guard pattern into 2 more files/detector call sites is real, riskful-if-rushed work on safety-relevant
+  slot-collision code, not a ≤30-min adjacent fix.

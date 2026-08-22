@@ -85,6 +85,19 @@ planned-but-never-shipped codex content, refs to plans since renamed/archived un
 cleanup tracking: `/plans/archive/issues/reference_path_convention_2026_07_23.md`. Ratchet DOWN as entries get fixed
 (`--update-baseline` after fixing a batch) — never hand-raise a count.
 
+## Fenced-code-block exemption (D47 ruling, 2026-08-21)
+
+A bare `codex/NN-name/....md` path written inside a fenced code block (a shell example showing a CLI invocation) is a
+literal command argument, not a cross-doc reference — a leading slash would make the command itself wrong. Before this
+ruling, `check_reference_paths.py`'s `BARE_CODEX_RE` scan flagged these as FORMAT violations regardless, forcing authors
+to hand-craft a glob that couldn't match the pattern (e.g. `codex/14-*/...`) as a workaround. **D47 (2026-08-21,
+autonomous-dispatch authority): exempt bare codex paths inside fenced code blocks from the FORMAT scan** — this removes
+a recurring false-positive class without weakening enforcement, since a prose reference immediately outside a fenced
+block is still caught. Implemented in `check_reference_paths.py` (`_fenced_code_spans()` / `_scan_text()`); regression
+tests in `scripts/plan-hygiene/test_check_reference_paths.py`. Full background:
+`/plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md`'s "Sharp edge worth
+keeping either way" section.
+
 ## What `/plan-reconcile` covers that this mechanical check can't
 
 The hygiene check is deterministic: does this path exist, is it in the right format. It cannot decide:
