@@ -328,9 +328,18 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 - [x] [INFRA] P2. ✅ unified-trading-pm@f36ac5877 (`QG_GOVERNOR_WAIT_SECONDS` accumulated in acquire, subtracted from
       `DUR` in base-service.sh/base-library.sh; issue todo 2) — MAX_DURATION fix — stamp work-start AFTER admission so
       governor queue time can't fail a green run (issue doc todo #2).
-- [ ] [INFRA] P2. Slack alerting via the reusable `notify-slack.yml`/carrier (dedup + cooldown) — three triggers:
+- [x] ✅ [INFRA] P2. Slack alerting via the reusable `notify-slack.yml`/carrier (dedup + cooldown) — three triggers:
       per-run RSS over its `1.2×` cap; daily observed-peak > 20 % above baseline; host RAM > 80 % abort.
-      Actionable-only, state-transition deduped (per the AO/CI alerting rules).
+      Actionable-only, state-transition deduped (per the AO/CI alerting rules). — ✅ **DONE, in two separate shipments
+      (reconciled here 2026-08-22, cross-referencing this doc's own Phase 0 item above).** Triggers 1+2 (host RAM > 80%
+      abort; per-run RSS over its 1.2× cap) shipped via `ci_satellite_ao_dispatch_batch13_2026_08_13.md` todo 20
+      (2026-08-14, slot 11, infra) — a direct Slack-webhook `_qg_governor_slack_alert()` added to `qg-host-governor.sh`
+      (not a literal call into the `notify-slack.yml` reusable workflow, which is `workflow_call`-only and unreachable
+      from a bare bash script running off-GHA — the same host-side pattern `cron_liveness_watchdog.py`'s `post_slack()`
+      already uses). Trigger 3 (daily observed-peak > 20% above baseline) shipped separately — see this doc's own
+      Phase 0 "Baseline freshness loop" todo above (DONE 2026-08-16, `ci_satellite_ao_dispatch_batch15_2026_08_16.md`
+      item 1, slot 21): `qg_baseline_merge.py`'s anomaly guard reuses the SAME `_qg_governor_slack_alert()` mechanism.
+      All 3 triggers confirmed wired, across the two shipments.
 - [x] [INFRA] P3. ✅ PM@6402f6cd8 (`_qg_governor_status` reservation-mode branch: MODE / MemTotal+Avail / RAM
       budget+reserved+free / cpu_slots+running / live reservations; tested both modes) — `--status` shows QG_RAM_BUDGET
       / reserved / CPU_SLOTS / waiters / per-repo reservations + an admitted-vs-queued decision log for tuning.
@@ -376,14 +385,20 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       GB and admitted runs' RSS ramps AFTER the admission-time valve check. Consider (a) prioritizing the runtime
       abort-monitor (directly addresses the post-admission ramp — matters most on small hosts) and/or (b) a lower
       `QG_MEM_SAFETY_FRAC` / effective concurrency on ≤ 32 GB hosts. No change needed while no OOM occurs.
-- [ ] [INFRA] P3. `PYRIGHT_TIMEOUT` default (120s in `base-service.sh`'s `run_timeout "${PYRIGHT_TIMEOUT:-120}"`) is too
+- [x] ✅ [INFRA] P3. `PYRIGHT_TIMEOUT` default (120s in `base-service.sh`'s `run_timeout "${PYRIGHT_TIMEOUT:-120}"`) is too
       low for a repo the size of features-service (hundreds of files) even under only moderate host load — observed
       2026-07-24 on a ~30 GB/8-core shared host under multi-slot contention: TYPE CHECK killed at exit=143 (`Killed`)
       with the default, passed cleanly once `PYRIGHT_TIMEOUT=600` was set. Several slots already work around this ad-hoc
       (`PYRIGHT_TIMEOUT=300`/`480`/`600` set per-invocation) with no shared fix or documented guidance. Raise the
       default (scaled by repo size / measured baseline, same spirit as the RAM/CPU admission work above) or at minimum
       document the override in `/codex/06-coding-standards/quality-gates.md` so slots stop rediscovering it
-      independently.
+      independently. — ✅ **DONE 2026-08-14 (`ci_satellite_ao_dispatch_batch13_2026_08_13.md` todo 21, slot 10, infra;
+      reconciled here 2026-08-22).** Took the "at minimum document" alternative, not the default-raise: new
+      `### PYRIGHT_TIMEOUT` subsection in `/codex/06-coding-standards/quality-gates.md` records the existing ad-hoc
+      per-repo override pattern (`PYRIGHT_TIMEOUT=300/480/600/1200`, citing deployment-api's own baked-in 1200s
+      default) plus the `MAX_DURATION` headroom caveat — the shared default stays 120s deliberately, since raising it
+      fleet-wide risks pushing wall time past some repos' own `MAX_DURATION` meta-gate (the exact interaction the
+      sibling 2026-08-09 finding below hit on market-tick-data-service).
 - [ ] [INFRA] P3. NEW FINDING (2026-08-09, slot 22): corroborates the `PYRIGHT_TIMEOUT` finding above — hit the SAME
       class of drift on market-tick-data-service's `MAX_DURATION` meta-gate (separate from `PYRIGHT_TIMEOUT`): with
       `PYRIGHT_TIMEOUT=600` set (needed to avoid the exit=143 kill above), 2 consecutive runs measured 830s (0s governor
@@ -432,7 +447,7 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       already-open escalation, not deferred as its own new ticket. There was never an open ticket-system record waiting
       on the ledger fix; the prior "needs operator API access to close it" framing was itself the error, not a genuine
       gap.
-- [ ] [INFRA] P3. NEW FINDING (2026-08-09, relayed via a review-agent resource-contention investigation): the
+- [x] ✅ [INFRA] P3. NEW FINDING (2026-08-09, relayed via a review-agent resource-contention investigation): the
       HEAVY-PHASE `K` governor's own core count is inflated on a hyperthreaded host — `_qg_governor_default_k()`
       (`scripts/quality-gates-base/qg-host-governor.sh:81-89`) computes `cores` via
       `lscpu -p=core 2>/dev/null | grep -vc '^#'`, which counts one line per LOGICAL cpu (`lscpu -p=core` emits a row
@@ -445,8 +460,14 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       (`_qg_total_default_cap`, line 106-111) and is unaffected. The two functions independently re-implement the same
       "count physical cores" logic with diverging correctness — likely fix: have `_qg_governor_default_k()` call
       `_qg_physical_cores()` instead of its own inline `lscpu` invocation (DRY + inherits the existing dedup). Not fixed
-      here — flagging only, per the reporting agent's own request.
-- [ ] [INFRA] P2. NEW FINDING (2026-08-10, slot-1, measured on a real blocked ship): **the `<600s` completion gate
+      here — flagging only, per the reporting agent's own request. — ✅ **DONE 2026-08-14
+      (`ci_satellite_ao_dispatch_batch13_2026_08_13.md` todo 22, slot 20, infra; reconciled here 2026-08-22).**
+      Evidence: `unified-trading-pm@918eee37ab`. `_qg_governor_default_k()` now delegates to `_qg_physical_cores()`
+      instead of its own inline `lscpu` invocation, exactly the likely fix identified above. New regression test in
+      `test-qg-host-capacity.sh` (a fake 32-physical/64-logical-core `lscpu -p=core` asserts `_qg_physical_cores`
+      returns 32 and `_qg_governor_default_k` returns `floor(32/4)=8`, not the old-buggy `floor(64/4)=16`); all 13
+      assertions pass, full `quality-gates.sh` clean.
+- [x] ✅ [INFRA] P2. NEW FINDING (2026-08-10, slot-1, measured on a real blocked ship): **the `<600s` completion gate
       counts the governor's own queue-wait, so the governor queues you and then the gate fails you for having been
       queued.** A PM quickmerge was rejected with
       `❌ Quality gates must complete in <600s (took 724s work + 814s governor queue-wait = 1538s wall)` — the run's own
@@ -459,7 +480,12 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       "drift" as well. **Done when**: the completion gate (and the resource-drift baseline comparison) measure work time
       excluding governor queue-wait, with the wait still reported separately for visibility. Cross-ref: the same session
       saw bats parallelization (`unified-trading-pm@974dfc2de9`, 663s→115s) bring the WORK side back under budget, which
-      is why the retry passed — that fix masks this one rather than resolving it.
+      is why the retry passed — that fix masks this one rather than resolving it. — ✅ **DONE 2026-08-14
+      (`ci_satellite_ao_dispatch_batch13_2026_08_13.md` todo 23, slot 20, infra; reconciled here 2026-08-22).** Evidence:
+      `unified-trading-pm@85c8ce933c`. The 2× resource-drift baseline WARN in `scripts/quality-gates-base/base-service.sh`
+      now compares `DUR_BILLABLE` (governor queue-wait already excluded, per the sibling MAX_DURATION fix earlier in this
+      plan) against the committed baseline, instead of raw wall `DUR` — closing exactly the double-count this finding
+      describes. Wall time + queue-wait both stay in the WARN message for visibility. Warn-only, no test regression.
 
 ## Progress Log
 

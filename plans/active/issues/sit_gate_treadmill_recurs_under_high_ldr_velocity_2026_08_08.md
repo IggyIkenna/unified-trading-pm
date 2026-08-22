@@ -56,7 +56,7 @@ source:
     direct invocation, not from the Slack alert text",
   ]
 resolved_by:
-archive_exempt: true # STALE as of 2026-08-18 (na-eligibility-audit) -- was accurate 2026-08-16 (plan_reconciler Phase -1, 0 open todos then) but a NEW [SCRIPT] P3 todo landed 2026-08-17 (swallowed-error logging gap in ldr_to_main_fleet_promote.sh:638) -- doc is genuinely NOT zero-open-todo right now, this field is currently moot rather than load-bearing. Leaving in place rather than removing: harmless either way, and the doc may return to 0-open once that todo is picked up.
+archive_exempt: true # LOAD-BEARING again as of 2026-08-22 (batch13-finalize reconciliation) -- the 2026-08-18 "STALE/moot" note above is itself now stale: the [SCRIPT] P3 swallowed-error-logging todo it cited as the reason this doc was NOT zero-open landed 2026-08-21 (ci_reconciler, unified-trading-pm@b76af747a2), and every other todo in the ## Todos section already read [x] -- so this doc is back to genuinely 0 open todos in that section. NOT archiving despite that: this is a LIVE, still-actively-updated incident-tracking record (12+ dated cicd-escalation entries through 2026-08-22, most recent same-day) for a recurring, operator-accepted-architecture race condition (see the 2026-07-20 resolution this doc extends) -- new occurrences will keep landing here. This flag is the thing correctly preventing an inappropriate archive right now, not a moot leftover.
 locked_by:
 locked_since:
 context_scope:

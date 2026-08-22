@@ -239,6 +239,23 @@ All on `[self-hosted, glue]`, so **no GitHub bill** — but ~873 runs/week occup
 | `fix-approval-timeout`           | `0 */2`  | 91      | `Found 0 open breaking-fix-pending issues` (6/6)   |
 | `supersede-stale-dep-update-prs` | `23 */2` | 91      | `Superseded: 0 \| obsolete-closed: 0` (6/6)        |
 
+**PARTIAL fix 2026-08-14** (`ci_satellite_ao_dispatch_batch13_2026_08_13.md`, slot 10, infra; reconciled here 2026-08-22)
+— read all 4 non-`reconcile-release-tags` workflows above end-to-end before touching any (`reconcile-release-tags` is
+already resolved separately, per F2). **Cadence reduced** (2 of 4, genuine headroom found): `freeze-deferred-build-replay`
+hourly→every 2h (its own stale-deferral guard tolerates 6h before paging, and GH itself only delivers ~37% of scheduled
+runs under load, so "hourly" already ran more like every 2-3h in practice); `supersede-stale-dep-update-prs` every
+2h→every 6h (its own header calls this role "low-urgency cleanup"; `promotion_lag_monitor.py` separately alerts on any
+dep-update PR stuck past its own SLA). **Audited, left unchanged** (confirmed NOT fixable via cadence/disable without
+harm — a blind "disable all 4" would have broken real monitoring): `sit-debounce-trigger` is dual-purpose — the same
+cron also runs `check-stale-lock` (SIT-lock starvation detection + auto-remediation), so the "skipped 40/40" evidence
+above is the debounce logic working AS DESIGNED, not a defect; `fix-approval-timeout`'s "0 open" sample is inherent to
+breaking-fix escalations being rare, not a cadence defect. **`digest-drift-sweep`'s open-ended non-convergence
+(below) was explicitly OUT of this fix's scope** and remains a separate, real-$ open item — see the `related:`
+frontmatter's `digest_drift_sweep_silent_noop_github_token_scope_2026_07_16` history and D3's "primary cascade" note
+elsewhere in this doc. This table's own row counts/evidence strings are unchanged by the fix (only the 2 workflows'
+`cron:` cadence changed, not their no-op behavior when they DO run) — left as-is rather than rewritten, since the table
+documents the pre-fix baseline that motivated the change.
+
 Also **DEGRADED**: `digest-drift-sweep` never converges ("Dispatched 16 / Already fresh 0" on 3/3 runs; the target
 digest changes every tick) and fans out to `ubuntu-latest` downstream — this one **does** cost money.
 `workspace-quickmerge-validation` logs `❌ Dependency alignment FAILED` yet concludes `success`.
