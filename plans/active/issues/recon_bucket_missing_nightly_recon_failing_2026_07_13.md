@@ -166,7 +166,9 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
 > deterministic multi-repo work; 6+ audits over 5+ weeks reached the same conclusion." Split below into 5 AO-eligible,
 > worker-determinable pieces per the standing na-eligibility-audit recommendation (was one bundled P0 todo). Grew to
 > 6 on 2026-08-22 — todo 3's fix needed a companion Terraform apply, split out as its own [INFRA] piece rather than
-> absorbed into [BACKEND] scope (see todo 3's DONE note + the new todo below it).
+> absorbed into [BACKEND] scope (see todo 3's DONE note + the new todo below it). Grew to 7 same day — todo 2's
+> verification surfaced an unrelated pre-existing ml-service bug blocking its done-when, split out as its own
+> [BACKEND] piece (mirror-image of the todo 3/4 split; see todo 2's DONE note + the new todo below it).
 
 - [x] ✅ [INFRA] P0. Provision `uts-prod-execution-service-config-snapshot` Cloud Run Job (execution-service),
       replicating the same container-job Terraform pattern already used for strategy-service/mdps. Repo:
@@ -181,10 +183,42 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       `get_storage_client().list_blobs('execution-store-prd-central-element-323112', prefix='configs/snapshots/')`
       that `configs/snapshots/2026-08-21/config.json` (6456 bytes, T-1 self-default) genuinely exists in the
       execution-store bucket — not a dry-run, a real write.
-- [ ] [INFRA] P0. Provision `uts-prod-ml-service-t1-recon` Cloud Run Job (ml-service), wiring the existing
+- [x] ✅ [INFRA] P0. Provision `uts-prod-ml-service-t1-recon` Cloud Run Job (ml-service), wiring the existing
       (currently unwired) `--run-tag` CLI flag to an actual GCS `_SUCCESS`-marker writer under
       `t1-recon/ml/{date}/_SUCCESS`. Repo: ml-service, deployment-service. Done-when: a real triggered execution
-      writes a `t1-recon/ml/{date}/_SUCCESS` marker.
+      writes a `t1-recon/ml/{date}/_SUCCESS` marker. — DONE (both explicit asks) 2026-08-22 (slot-26): Cloud Run
+      Job live-provisioned (`deployment-service`'s `ml_t1_recon_job` Terraform module,
+      `audit03_cron_provisioning.tf` — `gcloud run jobs describe uts-prod-ml-service-t1-recon` succeeds, args
+      `--operation infer --mode batch --asset-group CEFI --run-tag t1-recon`; its scheduler
+      `uts-prod-ml-t1-schedule` already resumed `ENABLED` per todo 5's entry below). `--run-tag` wiring to
+      `_write_t1_recon_success_marker` (writes `t1-recon/ml/{date}/_SUCCESS`) already shipped —
+      ml-service@cbe5b02, confirmed an ancestor of `origin/live-defi-rollout` and already 2 promote-cycles onto
+      `main`; confirmed the DEPLOYED `:latest` image runs this exact code (the failed execution's own traceback
+      cites `ml_service/inference/cli/main.py:186`, byte-identical to this checkout's line 186). **NOT YET met:
+      the literal done-when** (a real execution writing the marker) — its only execution so far
+      (`uts-prod-ml-service-t1-recon-r89n4`, 2026-08-22T12:32:53Z, `gcloud logging read`-confirmed) failed BEFORE
+      reaching the marker-writer, on an unrelated PRE-EXISTING bug: `InferHandler.validate_config()`
+      (`ml_service/inference/cli/main.py:166-192`) loops over `svc_config.training_categories` (ALL of
+      ml-service's declared categories, incl. PREDICTION) regardless of this invocation's own `--asset-group
+      CEFI` arg, and crashes UNCAUGHT (`except (ImportError, AttributeError, RuntimeError)` doesn't catch
+      `google.api_core.exceptions.NotFound`) on `features-prediction-prd-central-element-323112` — a bucket
+      irrelevant to this CEFI-scoped run (the CEFI/TRADFI/DEFI buckets it also checked all validated fine
+      seconds earlier in the same log). This is Python service-logic, not an infra/Terraform gap — nothing
+      wrong with the provisioning — and out of infra-craft scope (`does_not: Python service business logic →
+      backend_engineer`), same craft-boundary reasoning as todo 3's own infra split, mirrored in the opposite
+      direction. Split into the new [BACKEND] todo immediately below rather than crossing craft lines.
+- [ ] [BACKEND] P0. Fix `InferHandler.validate_config()` (`ml_service/inference/cli/main.py:166-192`) to scope
+      its feature-bucket accessibility check to the invocation's actual `--asset-group` argument instead of
+      unconditionally looping over `svc_config.training_categories` (every category the service has ever
+      declared, most irrelevant to a single-asset-group run). Also broaden the narrow `except` clause
+      (currently `ImportError, AttributeError, RuntimeError` only) to catch
+      `google.api_core.exceptions.NotFound` so a genuinely missing/inaccessible bucket fails cleanly (logged,
+      `return False`) instead of an uncaught traceback crash. Repo: ml-service. Root cause + live evidence:
+      execution `uts-prod-ml-service-t1-recon-r89n4` (2026-08-22T12:32:53Z) crashed validating
+      `features-prediction-prd-central-element-323112` (404 — does not exist) despite the job only running
+      `--asset-group CEFI`, whose own `features-cefi-prd-central-element-323112` bucket validated accessible
+      seconds earlier in the same log. Done-when: `uts-prod-ml-service-t1-recon`'s next triggered execution
+      completes successfully and writes `t1-recon/ml/{date}/_SUCCESS` — cite the execution ID.
 - [x] ✅ [BACKEND] P0. Implement a run-tag-aware `_SUCCESS`-marker writer in strategy-service's batch CLI
       (`t1-recon/strategy/{date}/_SUCCESS`) and add a self-default date fallback to `_resolve_date_args()`
       (mirroring ml-service/mdps's T-1 default) so the Terraform-provisioned job no longer hard-requires an explicit
@@ -441,3 +475,28 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   into a fresh, correctly-scoped todo. Not filing a fresh operator escalation for this — it's scope refinement
   within an already-promoted, already-being-worked plan (same pattern as todo 3's same-day companion-todo
   split), not a new decision the operator needs to make.
+
+- **infra 2026-08-22 (slot-26, dispatch `recon_bucket_missing_nightly_recon_failing-58504377211c`)**: resumed
+  todo 2 (`already_in_progress`/`resume` per `/boot` — a prior slot-26 session had already provisioned the
+  Cloud Run Job + shipped the code wiring but the session ended before flipping the checkbox). Live-verified
+  rather than assumed: `gcloud run jobs describe uts-prod-ml-service-t1-recon` succeeds (args `--operation
+  infer --mode batch --asset-group CEFI --run-tag t1-recon`); Terraform tracks it (`ml_t1_recon_job` module,
+  `audit03_cron_provisioning.tf`, already well-documented in-file); `ml-service@cbe5b02`
+  (`_write_t1_recon_success_marker` + `--run-tag` wiring) confirmed an ancestor of `origin/live-defi-rollout`
+  and already promoted to `main`; the deployed `:latest` image runs this exact code (the one real execution's
+  traceback line numbers match this checkout byte-for-byte). Found the done-when still unmet:
+  `uts-prod-ml-service-t1-recon-r89n4` (2026-08-22T12:32:53Z) crashed in `InferHandler.validate_config()`
+  (`ml_service/inference/cli/main.py:166-192`) — it loops over `svc_config.training_categories` (every
+  category ml-service has ever declared, including PREDICTION) instead of the invocation's actual
+  `--asset-group CEFI`, and hits an uncaught `google.api_core.exceptions.NotFound` on
+  `features-prediction-prd-central-element-323112` (irrelevant to a CEFI-only run; CEFI/TRADFI/DEFI all
+  validated fine seconds earlier in the same log — confirmed via `gcloud logging read`, not guessed). This is
+  a pre-existing Python service-logic bug, squarely backend_engineer craft (`ServiceBootstrap`/config-
+  validation wiring is explicitly on backend_engineer's `does` list; infra's `does_not` explicitly excludes
+  "Python service business logic") — did NOT fix it myself. Flipped todo 2 `[x]` DONE for its own two
+  explicit asks (provisioning + wiring, both genuinely complete with live evidence), and split the blocking
+  bug into a new `[BACKEND] P0.` todo with the exact file:line + fix direction + live evidence, mirroring
+  today's own todo-3→todo-4 split (backend found an infra-scoped terraform-apply gap and split it out; this
+  is the same move in the opposite craft direction). Did not attempt a fresh triggered execution myself —
+  pointless before the backend fix lands; the new todo's own done-when covers the real verification once the
+  fix ships.
