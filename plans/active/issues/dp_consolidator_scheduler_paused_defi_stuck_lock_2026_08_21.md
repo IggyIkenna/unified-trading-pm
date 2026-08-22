@@ -165,12 +165,26 @@ fixed here, scope too broad for a one-shot escalation):
       (`gcloud scheduler jobs resume`). Verified `state=ENABLED`. Confirmed safe against the in-flight
       `p6hrc` merge (scheduler pause/resume only gates future triggers, not an already-running execution; a fresh
       lock still blocks any newly-triggered run from racing it). (repo: NA)
-- [ ] [SCRIPT] P3. Identify which recent defi-bucket writer (canonical-migration VM / N5r-N6r venue-itype-canon swap
-      apply / `defi_track01_per_instrument_and_canon_id`) rewrote `_index/availability_index.parquet` without
-      carrying forward the `consolidator_content_write_at` custom metadata marker, and retrofit that writer to
-      preserve it — closes the "out-of-band rewrite" warning at the source instead of leaving every future defi
-      consolidation cycle to fall back to an expensive full non-pruned merge. (repo: market-tick-data-service or the
-      confirmed writer)
+- [x] ✅ [SCRIPT] P3. **Identified + retrofitted — market-tick-data-service@d1cc2c4b7b.** Confirmed candidate:
+      `market_tick_data_service/scripts/defi_manifest_venue_itype_canon_swap.py` (N5r/N6r) is the only currently-live
+      script matching this todo's candidate list that rewrites `_index/availability_index.parquet` directly — REMOVE
+      via a raw `client.conditional_upload_bytes()` CAS write, ADD via `ManifestWriter(per_vm_shards=False)`. Traced
+      both write paths: neither `conditional_upload_bytes` (gcp.py) nor `ManifestWriter.write()`'s underlying
+      `client.upload_bytes()` call (`_writer_io.py`) passes a `metadata=` kwarg, so either write strips the canonical
+      blob's existing custom GCS metadata (incl. `consolidator_content_write_at`) unconditionally — reproduces the
+      exact "out-of-band rewrite?" symptom. **Caveat (measured, not assumed)**: this swap's own `defi_manifest_venue_
+      itype_canon_swap_execution_2026_08_10.md` todo (e) apply was still `[ ]` unexecuted against prod as of its last
+      Progress Log entry (2026-08-17) — I could NOT confirm this swap is what fired the 2026-08-21T18:57:39Z marker
+      loss specifically (no audit-log trace attempted this session); `defi_track01_per_instrument_and_canon_id` and
+      `canonical-migration-defi-rebuild-*` VMs named in this todo's original candidate list were grepped and found to
+      have no live script/launcher matching those names any more (likely archived after their migration completed).
+      Fixed preemptively regardless: added `read_preserved_metadata()`/`restamp_preserved_metadata()` (best-effort,
+      native-GCS `blob.patch()` metadata-only restamp, mirrors `manifest_consolidator.py`'s own Tier-2 touch pattern)
+      wired into `apply()`'s snapshot→REMOVE→ADD sequence, so the swap now carries the pre-write
+      `consolidator_content_write_at`/`consolidator_run_at` markers forward whenever it does eventually run against
+      prod. 8 new unit tests (`read_preserved_metadata`/`restamp_preserved_metadata`: key-filtering, no-native-client
+      no-op, merge+patch, empty-preserved no-op, patch-failure-never-raises), full `quality-gates.sh` green, SHA
+      ancestry-verified on `live-defi-rollout`. (repo: market-tick-data-service)
 - [ ] [SCRIPT] P3. Consider having the consolidator-liveness watchdog (`unified_trading_library.monitors.
       consolidator_liveness`) also read live scheduler state directly (mirroring `consolidator_scheduler_watcher.py`'s
       own `scheduler_state_reader`) rather than relying solely on heartbeat-staleness + lock-in-flight proxies, so an
