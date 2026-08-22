@@ -6,7 +6,8 @@ summary: >-
   Determination: NO — no version field exists on the schema or its SchemaContract wrapper, the per-asset-group
   contracts synthesised from it are never consulted by any writer/reader, and no golden/hash test would catch a
   silent column change. This doc carries the 4-part fix as tracked, AO-dispatchable todos.
-status: open
+status: resolved # 2026-08-22 -- all 4 parts [x], last part (schema-contract gate wiring) landed
+  # instruments-service@a1fa51a0b9 + @a74de357f0
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -44,11 +45,17 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: T2 session 2026-08-22 -- part 4 wired + shipped (instruments-service@a1fa51a0b9, @a74de357f0)
 depends_on: []
 author: data_engineering (slot 9)
 source: [/plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md item 3]
 ---
+
+> **📦 ARCHIVED 2026-08-22** — all 4 parts of the fix [x]; part 4 (schema-contract gate wiring at
+> `promote_catalogue`) landed as `instruments-service@a1fa51a0b9` (gate code, byproduct of a sibling agent's
+> monthly-rollup commit sharing the same function) + `@a74de357f0` (regression test + dedup-guard test fix).
+> Kept as a historical record of the reconciliation decision (writer-authoritative,
+> `INSTRUMENTS_CATALOGUE_SCHEMA_VERSION`) and the dtype-normalization gap found while wiring the gate.
 
 # B23 determination — instruments schema is not locked/versioned; 4-part fix
 
@@ -112,18 +119,35 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
       `INSTRUMENTS_CATALOGUE_SCHEMA_VERSION`, keyed on `instrument_id`; new `test_instrument_catalogue_contract.py`
       asserts a writer-shaped frame validates with zero violations. QG green (301s), quickmerge landed +
       ancestry-verified on LDR.
-- [ ] [DATA] P2. **UNBLOCKED 2026-08-21 (T1) — the part-0 reconciliation above shipped (unified-api-contracts@910d35da, 2026-08-20); this todo's own text was stale ("BLOCKED") past that point.** Repo is instruments-service (T2), not T1-owned -- UAC's own side of this doc is now fully done (every other todo above is [x]); flagging as ready-to-pick-up rather than implementing here, since it is out of T1's repo scope. Wire the per-asset-group `SchemaContract`s to the instruments-service write path — today
-      `CEFI_INSTRUMENT_CATALOGUE` / `DEFI_INSTRUMENT_CATALOGUE` / `TRADFI_INSTRUMENT_CATALOGUE` /
-      `PREDICTION_INSTRUMENT_CATALOGUE` / `SPORTS_INSTRUMENT_CATALOGUE` are registered into `CONTRACT_REGISTRY` but
-      never consulted by any writer or reader (grep-confirmed zero references outside their own definition file).
-      Call `validate_dataframe(df, CONTRACT_REGISTRY[(asset_group, "instrument_catalogue", "instrument_catalogue")])`
-      (or equivalent) at instruments-service's catalogue-write choke point (`engine/orchestrator/sink.py` /
-      `process_write.py`) — the same choke point that already runs `_assert_not_cross_domain_contamination`. Depends
-      on the third todo (contract needs its version field first). Repo: instruments-service. Done-when: a catalogue
-      write with a column outside the locked+versioned contract is rejected at write time, with a regression test.
+- [x] ✅ [DATA] P2. Wire the per-asset-group `SchemaContract`s to the instruments-service write path.
+      **2026-08-22 (T2)**: re-verified the reconciliation independently before wiring — column names/order
+      matched the writer's `CATALOG_COLUMNS` exactly (41/41) and `INSTRUMENTS_CATALOGUE_SCHEMA_VERSION` was
+      genuinely populated, confirming T1's claim. Found one residual gap T1's own test suite missed: an
+      entirely-row-absent column reindexes to `float64`/NaN (not `object`/`None`), which `validate_dataframe`
+      flagged as `wrong_dtype` even though the column is legitimately all-null — broke 2 real end-to-end
+      `run_rollup` tests. Fixed with a `_coerce_string_dtype_for_contract` normalizer. Wired
+      `validate_dataframe(df, CONTRACT_REGISTRY[(asset_group, "instrument_catalogue", "instrument_catalogue")])`
+      at `build_instrument_catalogue.py::promote_catalogue` (the correct choke point — NOT
+      `sink.py::_assert_not_cross_domain_contamination`, which guards a different write path, the per-date
+      `InstrumentRecord` sink, not the rolled-up catalogue promotion this todo targets), mirroring
+      `CATALOGUE_SHRINK_BLOCKED` (CRITICAL `log_event` + `exit 1`, never a raise). Added
+      `tests/unit/scripts/test_catalogue_schema_contract_gate.py` (valid frame promotes cleanly; missing required
+      column rejected; renamed `instrument_key` id column rejected; unregistered asset_group degrades to a
+      warning instead of crashing) and fixed 3 pre-existing `test_promote_catalogue_dedup_aware_guard.py` tests
+      whose hand-rolled partial-column fixtures no longer satisfied the new gate. Full instruments-service test
+      suite green (5476 passed, 0 failed) against the actually-landed code. Landed as two commits — a concurrent
+      sibling agent's `instruments_catalogue_definitions_and_field_history_2026_08_17.md` writer work shares this
+      exact function, so the gate code landed first as a byproduct of their commit
+      (`instruments-service@a1fa51a0b9`), then this task's own regression coverage followed as a tightly-scoped
+      fast-follow (`instruments-service@a74de357f0`) — both ancestor+content-verified on
+      `origin/live-defi-rollout`.
 
 ## Progress Log
 
+- **2026-08-22 (T2)**: part 4 (the last open todo) shipped — see the flipped checkbox above for full detail. All
+  4 parts of the fix are now [x]. Not archived in this same edit (out of this session's scope) — flagging for a
+  follow-up archival pass per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (0 open
+  todos, unlocked).
 - **2026-08-20 (slot 15, part 0)**: reconciled the instrument-catalogue contract with the writer. Decision: the
   writer (`build_instrument_catalogue.py::promote_catalogue`, 41-col `CATALOG_COLUMNS`) is authoritative — the
   `instrument_catalogue` SchemaContract was synthesised from the 85-col per-date `INSTRUMENTS_PARQUET_SCHEMA`, not

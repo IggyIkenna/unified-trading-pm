@@ -595,38 +595,41 @@ todos only to confirm they are data-movement, then leave it.
       `unified-api-contracts/unified_api_contracts/internal/reference/instrument.py` — outside this tranche's 3
       repos. Filed to T1 (`/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`
       Inbound requests).
-- [ ] [BACKEND] P0. **BLOCKED-UPSTREAM (T1/UAC)** — Lock and version the instruments schema — add
+- [x] ✅ [BACKEND] P0. Lock and version the instruments schema — add
       `INSTRUMENTS_SCHEMA_VERSION`, a `schema_version` field on `SchemaContract`, make writers/readers actually
       consult the per-AG contracts, and add a golden/hash test so a silent column change cannot ship. Evidence:
-      `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`.
-      **Reason 2026-08-20 — the locked contract has NEVER matched the catalogue writer, so wiring it up as
-      specified would have blocked production promotion for all five asset groups.** **Operator ruled
-      2026-08-21: neither wholesale-ratify the writer nor hard-enforce the old spec — ENUMERATE the concrete
+      `/plans/archive/issues/instruments_schema_not_locked_versioned_2026_08_18.md`.
+      **2026-08-20 — the locked contract had NEVER matched the catalogue writer** (writer emits 41 columns,
+      contract declared 85; 4/6 required columns never emitted; `instrument_key` vs `instrument_id` mismatch) —
+      wiring the gate as originally specified would have blocked production promotion for all five asset groups,
+      so it was reverted rather than shipped broken. **Operator ruled 2026-08-21: ENUMERATE the concrete
       writer-vs-contract differences and FIX them (converge both sides), then lock + version the converged
-      schema.** Parts 1-3 of that issue's
-      4-part fix are UAC (T1's repo); part 4 is mine. I built part 4 — `validate_dataframe(df, CONTRACT_REGISTRY[...])`
-      at `build_instrument_catalogue.py::promote_catalogue`, which already takes `asset_group`, blocking the way its
-      neighbour `CATALOGUE_SHRINK_BLOCKED` does (CRITICAL event + exit 1, never a raise) — then MEASURED it before
-      shipping and **reverted it**. The measurement:
-
-      - The writer's `CATALOG_COLUMNS` emits **41** columns; the contract declares **85**.
-      - **4 of the 6 `required=True` columns are never emitted, for ALL FIVE asset groups**:
-        `instrument_key`, `symbol`, `available_from_datetime`, `timestamp`.
-      - The writer's canonical identifier is **`instrument_id`** (`build_instrument_catalogue.py:279` — "`instrument_id`
-        is written as the canonical column"); the contract requires `instrument_key`. Likewise the writer emits
-        `available_from`/`available_to` where the contract wants `available_from_datetime`/`available_to_datetime`.
-      - Wiring the gate turned 3 existing `promote_catalogue` tests red with 80 violations on a cefi frame — not
-        because the fixtures are thin, but because the contract describes a different shape than the writer produces.
-
-      So the contract is not a lock that drifted; it never fit. That also explains why "registered in
-      `CONTRACT_REGISTRY` but consulted by nothing" survived unnoticed — the first consumer would have failed
-      immediately. Part 4 is genuinely blocked on reconciling the contract with the writer, which lives in UAC.
-      Filed to T1. The revert is verified: `git status` clean and the 12 `promote_catalogue` tests green again.
+      schema.** UAC reconciled the contract to the writer's real 41-column shape
+      (`unified-api-contracts@910d35da`, keyed on `instrument_id`, `INSTRUMENTS_CATALOGUE_SCHEMA_VERSION`).
+      **2026-08-22 (T2) — part 4 wired for real**: re-verified the reconciliation independently (column names +
+      order matched exactly, 41/41) and found ONE residual gap T1's own test suite missed — `pd.DataFrame(rows,
+      columns=list(CATALOG_COLUMNS))` types an entirely-row-absent column (e.g. sports-only fields on a cefi
+      frame) as `float64`/NaN, not `object`/`None`, which `validate_dataframe` rejected as `wrong_dtype` even
+      though the column is legitimately all-null and nullable — this broke 2 genuine end-to-end `run_rollup`
+      tests, not just synthetic fixtures. Fixed with a `_coerce_string_dtype_for_contract` normalizer inside
+      `promote_catalogue`, wired `validate_dataframe(df, CONTRACT_REGISTRY[...])` mirroring the
+      `CATALOGUE_SHRINK_BLOCKED` pattern (CRITICAL `log_event` + `exit 1`, never a raise), and added a dedicated
+      regression test proving the gate rejects a missing-required-column frame and a renamed-id frame while
+      passing a valid one. Full instruments-service test suite green both before and after landing (5476 passed,
+      0 failed). Landed as two commits (a concurrent sibling agent's own `instruments_catalogue_definitions...`
+      writer work shared this exact function, so the gate code landed first as a byproduct of their commit, then
+      this task's own test coverage followed as a tightly-scoped fast-follow once verified against the real
+      landed code):
+      Evidence: `instruments-service@a1fa51a0b9` (gate code, byproduct of the sibling agent's monthly-rollup
+      commit — verified on origin), `instruments-service@a74de357f0` (this task's regression test file +
+      dedup-guard test fix — ancestor+content-verified on origin/live-defi-rollout).
 - [ ] [BACKEND] P0. Build the instruments catalogue definitions aggregation and field-change history — monthly-grain
       aggregation, mutable-field declaration, field-change log, point-in-time-equivalence proof. Evidence:
       `/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`.
-      **2026-08-22 — operator ratified: current-state + narrow change log** (over monthly-snapshots-only or
-      full-row-versioning). Mutable-field DECLARATION filed to T1 (UAC). T2's writer dispatched to an agent.
+      **2026-08-22 — operator ratified: current-state + narrow change log.** Mutable-field DECLARATION filed to
+      T1 (UAC), not landed. **Writer SHIPPED: `instruments-service@a1fa51a0b9`** (ancestor+content-verified,
+      interim `MUTABLE_CATALOGUE_FIELDS={"contract_size"}` pending the UAC constant, 15/15 tests passing).
+      **Still open**: equivalence proof, storage measurement, query-gate — deferred, not attempted.
 - [ ] [BACKEND] P0. Land the venue smoke-test bar and the venue E2E wiring. Evidence:
       `/plans/active/venue_smoke_test_bar_2026_08_16.md`, `/plans/active/venue_e2e_wiring_2026_08_16.md`.
       **NOTE 2026-08-20 (T2, `/autonomous`) — do not duplicate, check status first next session.** Pulled origin

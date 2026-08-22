@@ -21,7 +21,7 @@ tags: [quickmerge, isolated-worktree, concurrency, shared-checkout, data-loss-ne
 related:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
-    /plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md,
+    /plans/archive/issues/instruments_schema_not_locked_versioned_2026_08_18.md,
   ]
 context_scope:
   [unified-trading-pm/scripts/quickmerge.sh]

@@ -32,7 +32,7 @@ codex_ssots:
   - /codex/02-data/four-surface-reconciliation-procedure.md
 related_plans:
   - ../active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
-  - ../active/issues/instruments_schema_not_locked_versioned_2026_08_18.md
+  - ../archive/issues/instruments_schema_not_locked_versioned_2026_08_18.md
   - ../active/issues/yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13.md
 last_updated: 2026-08-18
 locked_by:
@@ -130,7 +130,7 @@ resolved + archived the same day — see Current state above). Workers pick up i
 
 ## P1 — important; post-current-gate
 
-### [`instruments_schema_not_locked_versioned_2026_08_18`](../active/issues/instruments_schema_not_locked_versioned_2026_08_18.md)
+### [`instruments_schema_not_locked_versioned_2026_08_18`](../archive/issues/instruments_schema_not_locked_versioned_2026_08_18.md)
 **status**: open · **estimate**: 0.8 cal AI-days (class: infra)
 **title**: B23 determination — the 51/85-column instruments schema is not locked or versioned; 4-part fix
 

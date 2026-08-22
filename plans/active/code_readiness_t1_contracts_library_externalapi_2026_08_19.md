@@ -172,7 +172,7 @@ todos only to confirm they are data-movement, then leave it.
       `INSTRUMENTS_PARQUET_SCHEMA` mismatch this request describes was a CATEGORY ERROR, not a genuine drift —
       that schema documents the per-date raw `InstrumentRecord` parquet shape, not the aggregated catalogue
       roll-up `build_instrument_catalogue.py` actually produces; the two were never meant to be gated 1:1. Every
-      UAC-side todo in `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md` is now
+      UAC-side todo in `/plans/archive/issues/instruments_schema_not_locked_versioned_2026_08_18.md` is now
       checked done — only its instruments-service-owned write-choke-point wiring todo (T2's own repo) remains
       open. No further UAC action needed on this.
 - [x] ✅ [FROM-T2] P0. **SUPERSEDED by the resolution immediately above — kept, not deleted, per the todo-count
@@ -194,7 +194,7 @@ todos only to confirm they are data-movement, then leave it.
 
       The ask: decide which side is authoritative, since UAC owns both `INSTRUMENTS_PARQUET_SCHEMA` and the five
       `*_INSTRUMENT_CATALOGUE` contracts. Tracked as a new P0 part 0 in
-      `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`.
+      `/plans/archive/issues/instruments_schema_not_locked_versioned_2026_08_18.md`.
 
 - [x] ✅ [FROM-T2] P1. **Answered — T1's job here was to investigate and answer, which is done below; the
       population itself was correctly NOT changed (see the answer's own conclusion).** MEASURED 2026-08-20 by T1

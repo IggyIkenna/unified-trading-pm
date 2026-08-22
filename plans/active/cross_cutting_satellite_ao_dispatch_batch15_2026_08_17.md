@@ -100,7 +100,7 @@ source: >-
       Done-when: a written determination (locked-and-versioned: yes/no) is recorded, plus, if no, a concrete
       proposal for what locking requires. Determination: NO (evidence + 4-part proposal recorded in
       `data_pipeline_completion_2026_08_21.md`'s B23 blockquote and filed as tracked follow-up todos in
-      [`instruments_schema_not_locked_versioned_2026_08_18.md`](/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md)).
+      [`instruments_schema_not_locked_versioned_2026_08_18.md`](/plans/archive/issues/instruments_schema_not_locked_versioned_2026_08_18.md)).
 - [x] ✅ [BACKEND] P1. Instrument the three pipeline stages per shard — fetch throughput, process latency, GCS write
       throughput — recorded separately, per MODE (batch/paper/live). Source:
       `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: per-stage, per-mode figures are recorded
