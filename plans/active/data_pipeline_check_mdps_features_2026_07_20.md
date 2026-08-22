@@ -47,6 +47,7 @@ tags:
   ]
 related:
   [
+    /plans/active/trading_pipeline_smoke_and_shard_telemetry_2026_08_22.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     ../epics/security_and_cross_cutting_master.md,
     ../../cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,

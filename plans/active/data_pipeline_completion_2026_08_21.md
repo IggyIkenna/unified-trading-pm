@@ -25,6 +25,7 @@ scope: [admin, engineer]
 tags: [data-pipeline, readiness-gates, honest-coverage, canonical, billing-waste, observability, deliverable]
 related:
   [
+    /plans/active/trading_pipeline_smoke_and_shard_telemetry_2026_08_22.md,
     /plans/epics/system_readiness_master.md,
     /plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md,
     /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
