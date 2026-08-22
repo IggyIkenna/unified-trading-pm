@@ -118,3 +118,15 @@ coverage are both owned by `strategy_master` going forward. Remaining open todo 
 artefact-to-epic coverage map) stays open — that map is itself still an unbuilt todo on
 [state_fabric_artefacts_2026_08_20.md](/plans/active/state_fabric_artefacts_2026_08_20.md) as of this check, so
 there is nothing to record into yet.
+
+**2026-08-22 — worker re-check (slot 9), todo 3 confirmed still gated.** Independently re-verified beyond the note
+above (which was made in passing while resolving todo 2, not a targeted check of this todo): grepped the full
+`unified-trading-pm` corpus for the map artifact under every name variant (`artefact-to-epic`, `artefact_epic_map`,
+`owns_artefact`, `artefact_sections`, `feeds_artefact`, and the `artifact`-spelling equivalents) and checked
+`strategy_master.md` — the confirmed successor epic for both orphaned sections — directly for an
+`artefact_sections`-style field. Zero hits anywhere in the corpus beyond this issue doc,
+`state_fabric_artefacts_2026_08_20.md`, and the two dispatch-tracking docs that merely reference this todo;
+`strategy_master.md` carries no such field. The gating BACKEND P1 todo ("Declare which epic owns which artefact
+section") on [state_fabric_artefacts](/plans/active/state_fabric_artefacts_2026_08_20.md) is still `- [ ]`
+unchecked as of this check — the map does not exist. Todo left open (flipping it would misrepresent a nonexistent
+map as populated); this dispatch skipped with `reason_code: GATED` rather than forced to a false completion.
