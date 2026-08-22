@@ -90,6 +90,18 @@ STASH_WARN_COUNT="${STASH_WARN_COUNT:-15}"
 STASH_WARN_AGE_DAYS="${STASH_WARN_AGE_DAYS:-14}"
 STASH_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/stash-pile-detect.sh"
 
+# Bare-root (slot 0) dirty/untracked-files watchdog
+# (plans/active/issues/bare_root_repo_agent_writes_unenforced_2026_08_21.md). A bare
+# ${WORKSPACE_PATH}/<repo>/ checkout (slot 0) is NEVER a slot's assigned worktree
+# (per-tab-worktrees.md) -- any write landing there is misplaced by construction, yet
+# classify_repo()'s DIRTY verdict for slot 0 was passive telemetry only (post_snapshot
+# to the dashboard, no page) until this watchdog. Same dedup-per-episode PATTERN as the
+# starvation/stash-pile watchdogs above (marker set on first ping, cleared the moment
+# the repo goes clean) -- no separate detector script needed, since classify_repo()
+# already computes the exact signal (state/dirty_files/dirty_sample). Toggle off with
+# ROOT_DIRTY_WATCHDOG=0.
+ROOT_DIRTY_WATCHDOG="${ROOT_DIRTY_WATCHDOG:-1}"
+
 # Token-near-expiry early warning
 # (git_status_reporter_stale_public_url_token_expiry_2026_07_24.md option (a) —
 # the reporter already resolves the bearer token to build the Authorization
@@ -787,6 +799,39 @@ check_stash_pile_for_slot() {
     done
 }
 
+# Bare-root (slot 0) dirty/untracked alert. For each classify_repo() row the slot-0
+# loop below already computed, page once per (repo, dirty) episode -- the SAME
+# check_starvation_for_slot/check_stash_pile_for_slot dedup-per-episode pattern,
+# reused here via the same post_starve_ping helper + STARVE_STATE_DIR marker
+# convention, keyed with a `.root-dirty-warn` suffix so it can never collide with
+# either watchdog's own `.starved`/`.stash-warn` markers for the same repo name.
+# $1=repo_name $2=classify_repo's TSV row for that repo (state is field 3, dirty_files
+# field 4, dirty_sample field 11 -- see classify_repo()'s own field-order comment).
+check_dirty_root_repo() {
+    local repo_name="$1" row="$2"
+    [[ "${ROOT_DIRTY_WATCHDOG}" -eq 1 ]] || return 0
+    local -a f
+    IFS=$'\t' read -ra f <<< "${row}"
+    local state="${f[2]:-}" dirty_files="${f[3]:-0}" dirty_sample_raw="${f[10]:-}"
+    local token
+    token=$(resolve_token_for_slot "0") || return 0
+    mkdir -p "${STARVE_STATE_DIR}" 2>/dev/null || true
+    local marker="${STARVE_STATE_DIR}/slot-0__${repo_name}.root-dirty-warn"
+    if [[ "${state}" == "dirty" ]]; then
+        if [[ ! -f "${marker}" ]]; then
+            local sample_readable="${dirty_sample_raw//|/, }"
+            local payload="BARE ROOT REPO DIRTY -- ${WORKSPACE_PATH}/${repo_name}/ (slot 0) has ${dirty_files} uncommitted/untracked file(s): ${sample_readable:-<no sample captured>}. A bare root checkout is NEVER a slot's assigned worktree (per-tab-worktrees.md) -- this write landed in the wrong place. Move/commit it into the correct .tabs/<N>/${repo_name}/ slot, or discard if it's a stray artifact. See plans/active/issues/bare_root_repo_agent_writes_unenforced_2026_08_21.md."
+            if post_starve_ping "0" "${repo_name}" "${payload}" "${token}" "root-dirty-warn"; then
+                : > "${marker}" 2>/dev/null || true
+            fi
+        else
+            log_quiet "[root-dirty-dup] slot 0/${repo_name} — already signalled this episode"
+        fi
+    else
+        [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+    fi
+}
+
 # Decode the `exp` (Unix epoch, UTC) claim from a JWT's second (payload) segment.
 # Prints the epoch on success; prints nothing and returns non-zero on any malformed/
 # undecodable input — callers MUST treat that as "can't tell, skip" rather than
@@ -963,7 +1008,9 @@ if slot_in_filter "0"; then
         [[ -d "${repo_dir}" ]] || continue
         [[ "$(basename "${repo_dir}")" == ".tabs" ]] && continue
         [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
-        rows_tsv+="$(classify_repo "${repo_dir}")"$'\n'
+        row="$(classify_repo "${repo_dir}")"
+        rows_tsv+="${row}"$'\n'
+        [[ -n "${row}" ]] && check_dirty_root_repo "$(basename "${repo_dir}")" "${row}"
     done
     if [[ -n "${rows_tsv//[$'\n\t ']/}" ]]; then
         post_snapshot "0" "${rows_tsv}"
