@@ -4,7 +4,7 @@ title: TradFi venue smoke nested launcher credential issue — historical driver
 summary: >-
   Historical driver-run issue: nested backfill launches failed before VM creation because the active gcloud service account
   had no valid credentials. A direct real batch run later bypassed the nested launcher and produced measured per-row evidence.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data, execution]
@@ -23,13 +23,19 @@ source:
   - /plans/active/tradfi_venue_smoke_batch1_2026_08_20.md
   - "Real driver VM pipeline-e2e-check-mtds-20260820-201322-1bf21a; prior terminal report data_pipeline_e2e_check_mtds_2026_08_19_tradfi.md"
   - "Real driver VM pipeline-e2e-check-mtds-20260820-220116-d774f1; terminal report gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-19/data_pipeline_e2e_check_mtds_2026_08_19_tradfi.md"
-resolved_by:
+resolved_by: slot-11-2026-08-22
 locked_by:
 context_scope:
   - /codex/02-data/tradfi-databento-sourcing-ssot.md
   - /codex/02-data/availability-manifest-and-data-status.md
   - /plans/active/venue_smoke_test_bar_2026_08_16.md
 ---
+
+> **🟢 RESOLVED 2026-08-22 (slot 11).** All 4 recommended-decision todos are done. The launcher credential fix,
+> the 8-row MTDS re-run, the staging catalogue repair, and the NASDAQ/NYSE ohlcv_1h absent-capture verdict are all
+> shipped with evidence below. The broader TradFi smoke contract's remaining red cells (90 cells, 14 passed) are
+> tracked by this doc's `related` plans (`tradfi_venue_smoke_batch1_2026_08_20.md`, `venue_smoke_test_bar_2026_08_16.md`),
+> not by this narrowly-scoped launcher-credential issue doc — archiving here does not close those.
 
 # TradFi venue smoke nested launcher credential issue — historical driver run
 
@@ -52,7 +58,7 @@ The smoke contract cannot prove capture, canonical path, manifest atom, or genui
 - [x] ✅ [INFRA] P0. Fix `deployment-service/scripts/vm/lib/launcher_common.sh` service-account selection so nested launches use the VM metadata/tier identity with valid credentials rather than the stale `unified-trading-sa` active-account default; add a regression check that a driver VM can create one test-run backfill VM (repo: deployment-service) — deployment-service@39dc8ddf+959c92bb4a; `bash tests/test_launcher_common_identity.sh` PASS with the real driver invoking a mocked `gcloud compute instances create` and asserting `uts-test-sa`; `bash scripts/quality-gates.sh --no-fix` PASS.
 - [x] ✅ [BACKEND] P0. Re-run the eight-row MTDS force/skip/canonical contract after the launcher credential fix and require a terminal report with per-row capture, canonical, manifest, and capture-status evidence (repo: market-tick-data-service) — market-tick-data-service@eb11b37e7295 + Evidence: driver VM `pipeline-e2e-check-mtds-20260820-220116-d774f1`, `EXIT_STATUS=1`, report finished `2026-08-21T00:47:34.506325+00:00`; 90 cells total, 14 passed, 49 failed, 27 skipped. Primary rows are rendered in the terminal report; smoke contract remains red.
 - [x] ✅ [BACKEND] P0. Provision or repair the staging TradFi instrument catalogue with `venue` and `instrument_type` columns before rerunning failed MTDS chunks — current read-only probes found `instruments-store-tradfi-stg-central-element-323112` absent, while the existing validated test-tier catalogue has 920943 rows and both required columns; repaired the MTDS catalogue-reader resolver so `IS_TEST_RUN` explicitly selects the existing `-test-` instruments-store tier instead of the nonexistent `-stg-` bucket — market-tick-data-service@666467d0ee8f63f339afe8bae45a97c5d07b1de0 + Evidence: `bash scripts/quality-gates.sh --no-fix` PASS (`11109 passed, 28 skipped, 1 xpassed`, 82.02% coverage); regression `test_register_all_catalog_readers_uses_test_tier_for_e2e_runs`.
-- [ ] [BACKEND] P1. Resolve and record the absent-capture verdicts for NASDAQ/ohlcv_1h and NYSE/ohlcv_1h, including whether the source resolver should retain them in the smoke denominator (repo: unified-api-contracts).
+- [x] ✅ [BACKEND] P1. Resolve and record the absent-capture verdicts for NASDAQ/ohlcv_1h and NYSE/ohlcv_1h, including whether the source resolver should retain them in the smoke denominator (repo: unified-api-contracts) — unified-api-contracts@962e0f607e. Verdict: NOT discontinued — the 0-captured-rows measurement (2026-08-16, `GRANULARITY_DISAGREEMENTS` in `venue_granularity.py`) predates the Yahoo intraday adapter's own 2026-08-12 addition plus two later capture-path fixes (market-tick-data-service@b89f288c06 source-gate, @666467d0ee8f staging-catalogue reader). Confirmed `SOURCE_PRIORITY[("tradfi","ohlcv_1h")] = ["yahoo"]` only (never databento) so `generate_venue_smoke_test_work_list.py` already correctly RETAINS both cells in the batch smoke-test denominator — they were never part of the Databento exemption set. Registry population stays excluded pending a fresh manifest re-measurement (no tier claim without real captured rows); recommends re-running the MTDS force leg for these two cells against the now-fixed capture path.
 
 ## Progress Log
 
@@ -62,3 +68,5 @@ The smoke contract cannot prove capture, canonical path, manifest atom, or genui
 **2026-08-21 — slot 18 terminal evidence.** The dedicated full TradFi driver completed with `EXIT_STATUS=1` after running from `2026-08-20T22:10:52.293085Z` through `2026-08-21T00:47:34.506325Z`. The terminal report is `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-19/data_pipeline_e2e_check_mtds_2026_08_19_tradfi.md` (JSON sibling has the same result): 90 cells, 14 passed, 49 failed, 27 skipped. Primary-row evidence: ICE/ohlcv_24h force+canonical passed (1 captured parquet; manifest `captured`), skip failed despite 1 captured parquet because no skip signal/signature stability; CBOE/ohlcv_24h force and skip failed with 5 parquet objects but manifest `no_matching_row` (skip proof ambiguous), canonical failed with no matching consolidated row; KRX/ohlcv_24h force+skip failed with 3 parquet objects and manifest `no_matching_row`, canonical passed with 1 consolidated row; FX/ohlcv_24h force+canonical passed with 11 captured objects, skip failed on missing skip signal/signature stability; FRED/yield_curve force+canonical passed with 18 captured objects, skip failed on missing skip signal/signature stability; FRED/ohlcv_1d force+canonical passed with 2 captured objects, skip failed on missing skip signal/signature stability; NASDAQ/ohlcv_1h and NYSE/ohlcv_1h were all three legs skipped as `no_captured_data_for_cell`. The report also confirms the broader observed-cell failures and the staging catalogue blocker above.
 
 **2026-08-21 — slot 3 catalogue repair correction.** A fresh read-only probe found the previously recorded `-stg-` bucket absent, so the earlier provisioning/copy claim is stale and has been corrected above. The actual repair is in MTDS catalogue-reader registration: when `IS_TEST_RUN` is true, it resolves `instruments-store` with `deployment_env="test"`, matching the existing test-tier routing used by MTDS writes. The code and regression test landed as `market-tick-data-service@666467d0ee8f63f339afe8bae45a97c5d07b1de0`; the full quality gate passed. The failed smoke chunks still require a rerun against the corrected test-tier reader.
+
+**2026-08-22 — slot 11 closes item 4 + archives.** Resolved the NASDAQ/NYSE ohlcv_1h absent-capture verdict: not discontinued, just measured before the adapter (2026-08-12) and its two capture-path fixes landed — `unified-api-contracts@962e0f607e` records the verdict in `venue_granularity.py`'s `GRANULARITY_DISAGREEMENTS` and confirms both cells stay in the batch smoke-test denominator (Yahoo-only source, never Databento-exempt). All 4 recommended-decision todos are now done and unlocked, so this doc archives per the plan-completion HARD RULE — the remaining broader TradFi smoke-contract red cells stay tracked by the `related` plans, not by this issue.
