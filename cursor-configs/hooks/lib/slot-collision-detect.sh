@@ -134,7 +134,21 @@ foreign_claude_pids() {
   command -v pgrep >/dev/null 2>&1 || return 0
   ancestors="$(_ancestor_pids)"
   slot_real="$(readlink -f "${slot_dir}" 2>/dev/null || echo "${slot_dir}")"
-  for pid in $(pgrep -f claude 2>/dev/null || true); do
+  # `command -p` (POSIX default PATH, bypasses any PATH-prepended wrapper) rather than a
+  # bare `pgrep` call: every AO-spawned worker pane has scripts/hooks/pkill-guard-bin/
+  # prepended to PATH (tmux_spawn.py; see per-tab-worktrees.md's pkill/pgrep cross-slot-
+  # kill guard), which REFUSES any bare name-only pattern -- including THIS call, since a
+  # slot-agnostic "claude" search across every peer slot has no per-slot discriminator by
+  # design (that's the whole point of a cross-slot collision scan). On a guarded pane the
+  # bare form silently returns zero candidates every time, independent of host load --
+  # confirmed by direct reproduction 2026-08-22 (misdiagnosed for a week as the load-driven
+  # lsof-timeout flakiness this file's own header describes; that mechanism is real for the
+  # PYTHON guard's lsof calls, but this bash-side pgrep call was unconditionally refused
+  # regardless of load). This scan is read-only detection, never a kill, so the guard's own
+  # documented bypass ("command pgrep ...", printed in its refusal message) is the correct,
+  # safe fix -- not a workaround around the guard's actual purpose.
+  # See plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md.
+  for pid in $(command -p pgrep -f claude 2>/dev/null || true); do
     case "${ancestors}" in *" ${pid} "*) continue ;; esac
     candidates+=("${pid}")
   done
