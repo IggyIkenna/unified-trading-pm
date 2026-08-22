@@ -39,12 +39,57 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 ## Todos
 
 - [x] ✅ [BACKEND] P0. Execute the canonical batch smoke contract for every current Sports row above the 2020-06-06 data floor; Gate: rows, canonical paths, manifest atoms, and genuine capture statuses are measured per unit. — **RED, not a false pass** (execution attempt complete, matching the DeFi/CeFi/Prediction sibling-batch pattern). VM `pipeline-e2e-check-mtds-20260821-154512-a0ace0`; report + evidence in the Progress Log below.
-- [ ] [BACKEND] P1. Record one testnet verdict for every Sports venue, including matching-engine simulation where appropriate; Gate: every distinct venue has a written verdict.
+- [x] ✅ [BACKEND] P1. Record one testnet verdict for every Sports venue, including matching-engine simulation where appropriate; Gate: every distinct venue has a written verdict. — Evidence: all 33 declared `VENUES_BY_ASSET_GROUP["sports"]` venues (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:538-657`) have a written, code-grounded verdict: 0 have a real venue-hosted testnet/sandbox/demo endpoint reachable from this workspace; all 33 fall back to matching-engine simulation (2 via a Betfair-specific paper matcher that mirrors real exchange order-book structure, 31 via the generic `PaperBettingAdapter`). Full table in the 2026-08-22 (slot 13) Progress Log entry below.
 - [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; file an operator credential request when a credential gap is confirmed. Gate: no missing credential is treated as a wiring absence.
 - [ ] [BACKEND] P1. Track every failed or absent Sports row with its source and data type; Gate: expected-unattempted is never presented as captured.
 - [x] ✅ [BACKEND] P0. Verify the Sports data floor and source-scoped Databento/canonical checks with a negative control; Gate: pre-floor or no-data probes fail rather than pass. — `unified-api-contracts@25bcebdd` + runtime evidence below.
 
 ## Progress Log
+
+**2026-08-22 (slot 13, backend_engineer) — testnet verdict per Sports venue.** `VENUES_BY_ASSET_GROUP["sports"]`
+(`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:538-657`, correctly bounded
+against the next dict key `"prediction"` at line 658 — an unbounded grep of this file leaks POLYMARKET/KALSHI
+lines that belong to the *next* dict entry, not sports) declares exactly 33 venues. `KALSHI`/`POLYMARKET` are
+confirmed NOT members of this list (per the registry's own inline ruling: "KALSHI belongs to prediction, not
+sports" — already covered by `prediction_venue_smoke_batch1_2026_08_20.md`'s own closed testnet-verdict todo,
+not re-derived here to avoid a duplicate-classification drift risk).
+
+Cross-referenced `SPORTS_EXECUTION_ADAPTER_VENUES`
+(`unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:474-482`) — the only venues with a
+real execution-service adapter file are `BETFAIR_EX_UK`, `BETFAIR_EX_EU`, `MATCHBOOK` (`KALSHI`/`POLYMARKET` are
+also listed there but are out of Sports scope per above). Every other declared Sports venue has
+`is_venue_executable() == False` (confirmed by the registry's own comment: "none of those has a real
+execution-service adapter file, confirmed by direct directory listing") — they are data-axis-only, reached
+solely through the `ODDS_API` aggregator as a pricing feed (`execution_service/sports_execution/adapters/
+aggregator/odds_api.py`'s own docstring confirms it is not even wired into any live `_LIVE_VENUE_CONFIGS` entry
+today).
+
+Grepped every sports execution adapter file (`betfair.py`, `matchbook.py`, and the aggregator/paper adapters) for
+`testnet|sandbox|demo|practice` — **zero venue-hosted testnet/sandbox/demo endpoint exists in code for any of the
+33 Sports venues** (the one `DEMO_BASE` hit in the tree, `kalshi.py`'s `KALSHI_DEMO_BASE`, belongs to the
+out-of-scope KALSHI venue). No `_SANDBOX`/`_DEMO`/`_TESTNET`-suffixed credential env var exists for any sports
+bookmaker either (grepped the credential-naming convention). This matches `betfair.py`'s own sibling file
+`betfair_paper_matcher.py`'s explicit finding: Betfair's real exchange requires a Developer application-key
+approval (a non-instant external process) plus a funded account, neither obtainable from this workspace — so even
+the two venues with a real execution adapter (`BETFAIR_EX_UK`/`BETFAIR_EX_EU`) have no reachable live OR sandbox
+path; the dedicated `betfair_paper_matcher.py` (matches against a realistic, structurally-real Betfair
+order-book snapshot) is the only end-to-end-tested path for those two. `MATCHBOOK`'s adapter targets
+`https://api.matchbook.com` directly with no distinct sandbox host in code.
+
+**Verdict — three groups, all 33 venues classified, 0 real testnets found:**
+
+| Group | Venues | Verdict |
+| --- | --- | --- |
+| A — real execution adapter, Betfair-specific paper matcher (mirrors real order-book structure) | `BETFAIR_EX_UK`, `BETFAIR_EX_EU` | No reachable testnet or live feed (credential-blocked); simulated via `betfair_paper_matcher.py` |
+| B — real execution adapter, production-only API, no sandbox in code | `MATCHBOOK` | No testnet found; falls back to `PaperBettingAdapter` (generic matching-engine simulation) for pipeline testing |
+| C — data-axis only (no execution adapter; `is_venue_executable()==False`); reached via `ODDS_API` pricing feed only | `PINNACLE`, `BETFAIR_SB_UK`, `DRAFTKINGS`, `FANDUEL`, `LADBROKES`, `BET888SPORT`, `SMARKETS`, `BETONLINEAG`, `BETRIVERS`, `BETSSON`, `BETVICTOR`, `BOVADA`, `CASUMO`, `CORAL`, `LIVESCOREBET`, `PADDYPOWER`, `SKYBET`, `UNIBET`, `UNIBET_EU`, `UNIBET_UK`, `VIRGINBET`, `WILLIAMHILL`, `3ET`, `BROKER5`, `CROWN`, `SBO`, `SHARPBET`, `VX`, `BETDEX`, `IBC` (30 venues) | No venue-specific testnet or execution path at all; simulated via the generic `PaperBettingAdapter` |
+
+2 + 1 + 30 = 33, the full declared set — no venue omitted. This closes only the testnet-verdict todo; the
+credential-provisioning todo (todo 3 below) is a distinct gate ("no missing credential is treated as a wiring
+absence") and is not re-derived from this table — since 0 of these 33 venues have any real testnet endpoint at
+all (not merely an unprovisioned one), todo 3's "confirm a credential gap" framing does not apply to Sports the
+way it did to CeFi's 7-of-24 simulation-required venues; that distinction is left for whoever picks up todo 3 to
+state explicitly rather than assumed here.
 
 **2026-08-20 — forked from W5.** Sports keeps the data-floor rule in its context scope and follows W4's five-todo
 AG batch shape.
