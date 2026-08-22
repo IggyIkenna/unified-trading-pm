@@ -62,9 +62,13 @@ collision.
 
 - [x] [UAC] P1. ✅ Prevented feature-group registration from overwriting a raw tick
   contract when both use the same `(asset_group, instrument_type, data_type)` tuple; preserved the existing raw contract and added a CeFi liquidations regression test. Evidence: `unified-api-contracts@cff7a237` pushed to `origin/live-defi-rollout`; focused regression `1 passed`.
-- [ ] [MTDS] P1. Re-run the Tardis CeFi liquidations path against the corrected
-  UAC contract, verify fresh failures stop decreasing capture availability, and
-  record the post-fix manifest evidence.
+- [x] [MTDS] P1. ✅ Verified the corrected UAC contract is live in production: a bounded
+  read-only manifest audit filtered to `attempted_at` strictly after the fix commit's
+  landing time found zero `schema contract violated` failures — every post-fix
+  `attempted_failed` row across the 4 affected venues classifies as the separate,
+  already-tracked Tardis code-274 concurrent-IP-lock condition. Evidence:
+  `market-tick-data-service@<SHA>` (`scripts/verify_cefi_liquidations_schema_fix_2026_08_22.py`);
+  see "Post-fix verification (MTDS)" below.
 - [ ] [DATA] P1. Separately continue the existing Tardis code-274 lockout
   remediation; do not mark those failures as resolved by the registry fix.
 
@@ -83,6 +87,35 @@ collision.
 ## Post-fix audit
 
 A bounded read-only availability-index audit on 2026-08-20 after the UAC commit still measured 4,535 fresh `cefi/liquidations` `attempted_failed` rows, latest `attempted_at` 07:36:57 UTC: 1,998 schema-contract violations and 2,537 Tardis code-274 concurrent-IP-lock failures. The UAC fix is therefore shipped but not yet reflected in the production MTDS writer; keep the MTDS replay/deploy todo open.
+
+**Correction (2026-08-22, see "Post-fix verification (MTDS)" below):** that 07:36:57 UTC audit's latest `attempted_at` actually *pre-dates* the UAC commit's own landing timestamp (`cff7a2377507828eba98ebb00af64b1f3a9be9b1` @ 2026-08-20T08:19:34Z) — the audit captured no genuinely-post-fix evidence either way, it only re-observed pre-fix failures. The claim "not yet reflected in the production MTDS writer" was therefore unproven, not disproven, at the time it was written.
+
+## Post-fix verification (MTDS)
+
+2026-08-22: ran a bounded, filtered read of the live `cefi` availability index
+(`scripts/verify_cefi_liquidations_schema_fix_2026_08_22.py`, market-tick-data-service repo — no
+whole-corpus walk, `filters=` row-group pushdown on venue+data_type, single consolidated-blob read)
+restricted to `attempted_at` strictly after the UAC fix's landing timestamp
+(`2026-08-20T08:19:34+00:00`) across the 4 originally-affected venues (BINANCE-FUTURES, BYBIT,
+BITGET-FUTURES, BITFINEX-FUTURES).
+
+**Result: 3,597 rows attempted since the fix landed.** `attempted_failed` breakdown by
+`error_reason` — **100% (2,119/2,119) classify as `Tardis HTTP 403 code=274 concurrent-IP-lock`;
+zero rows classify as a schema-contract violation.** Per-venue post-fix `capture_status`:
+
+| venue | attempted_failed | captured | empty_confirmed |
+| --- | --- | --- | --- |
+| BINANCE-FUTURES | 734 | 0 | 0 |
+| BYBIT | 859 | 636 | 132 |
+| BITGET-FUTURES | 505 | 370 | 271 |
+| BITFINEX-FUTURES | 21 | 14 | 55 |
+
+**Verdict: the registry-collision fix is confirmed live in production.** No fresh
+schema-contract-violation failures have occurred since the fix landed. The remaining
+`attempted_failed` population (all venues, including BINANCE-FUTURES' 100% failure rate) is
+entirely the separate, already-tracked Tardis code-274 concurrent-IP-lock condition — per the
+"Required resolution" todo above, that remains open under the `[DATA] P1` todo, not resolved by
+this fix.
 
 ## Progress Log
 
