@@ -63,6 +63,7 @@ created: 2026-07-15
 author: unknown
 parent_epic: security_and_cross_cutting_master
 priority: P1
+milestone: M3
 source:
   [
     "operator-dispatched sub-agent task, discovered while triaging the
@@ -318,13 +319,11 @@ already handles honestly).
       2020-01 could, which is exactly what [DEPLOY] P1 (redeploy the fixed image) prevents. The dedicated cleanup shard
       is LEFT in place (harmless, 627 rows; re-provides the correct classification on any future `--force` full
       rebuild). Repo: market-tick-data-service.
-- [ ] [DESIGN] P3. IS-DeFi-catalogue-completion-signal retry-sweep — **RE-SCOPED by the 2026-07-15 re-investigation:
-      this is NOT what the 627 recurring rows needed** (they are pre-genesis; no completion signal will ever fire for
-      pre-2020-01-20 dates — the classification fix `420221b4` is the correct + complete remedy for that class). P3
-      remains a valid nice-to-have ONLY for the genuine catalogue-behind class (a POST-genesis date whose per-date
-      snapshot the backfill hasn't reached yet) — which, after `420221b4`, is now the ONLY thing the gate still labels
-      `attempted_failed`. Lower priority; not a fix to something that mostly exists. Repo: market-tick-data-service /
-      deployment-service (whichever owns the IS catalogue backfill scheduling).
+- [ ] [DESIGN] P3. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D1): approved as churn, not a live task — repeated audits
+      agree the IS-DeFi-catalogue-completion-signal retry-sweep is a lower-priority nice-to-have (only relevant to the
+      genuine catalogue-behind class, not the pre-genesis rows `420221b4` already fixed) with no concrete done-when and
+      unresolved ownership; no further action. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+      ledger.
 
 ## Progress Log
 
@@ -548,3 +547,7 @@ mode-threading residual and `[DESIGN] P3` completion-signal items remain genuine
   (2026-07-30/08-04/08-07) reached KEEP-NA on this same basis. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; sole open item (`[DESIGN] P3`, IS-catalogue-completion-signal retry-sweep) remains an explicit lower-priority nice-to-have with no concrete done-when and unresolved ownership, unchanged since 2026-08-09. Doc stays `assigned_vm: NA`.
+- **2026-08-22 — ruling D1 (Stale meta-doc disposition)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve all — repeated audits agree these are churn, not live tasks; the two
+  keep-open items and the one split are the only exceptions. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

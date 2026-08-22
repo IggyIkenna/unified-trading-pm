@@ -21,6 +21,7 @@ assigned_vm: NA
 execution_scope: local-only
 tags: [venue-coverage, reconciliation, position-adapters, disclosure]
 priority: P0
+milestone: M3
 source: operator-request-2026-08-14
 parent_epic: security_and_cross_cutting_master
 related:
@@ -519,10 +520,10 @@ Kamino/Jupiter conflated the two.
       done-when explicitly ruled out. Once this doc's body states an explicit new total that accounts for Kamino,
       update the title/summary figures to match it — still no re-counting here, wait for the body's own restated
       total.
-- [ ] [OPERATOR] P2. **Disclosure decision on out-of-mandate adapters.** `betfair`, `ibkr` and `polymarket` are working
-      credentialed integrations for sports betting, retail brokerage and prediction markets — nothing to do with a DeFi
-      mandate. They are inert unless a venue is configured, so shipping them costs nothing operationally. Purely a
-      question of what we disclose. Record the decision in the Elysium plan § E.
+- [ ] [INFRA] P2. **Disclosure decision on out-of-mandate adapters — DECIDED.** Per D27 ruling (2026-08-22):
+      OPERATOR-RULED 2026-08-21 — APPROVED: build the "lite" carve-out repo now, withhold the venue-integration
+      reference, ship the inert `betfair`/`ibkr`/`polymarket` adapters as-is. They are inert unless a venue is
+      configured, so shipping them costs nothing operationally. Record the decision in the Elysium plan § E.
 - [x] ✅ [AGENT] P2. **SHIPPED 2026-08-21 — `execution-service@bd21bb55b3`** (same commit also ships the Betfair
       paper-mode matcher below). Adapter reconciliation +
       paper-mode matching proof for `polymarket`, closing the gap this doc's out-of-mandate line implied ("working
@@ -981,3 +982,6 @@ the quickmerge on a later pass once this settles.
   live money-moving Solana path the prior session explicitly judged too risky to hand-roll without the real SDK/
   instruction spec; the `[OPERATOR]` disclosure decision on out-of-mandate adapters (betfair/ibkr/polymarket) is
   explicitly a business-disclosure call, not engineering work. No change since the last pass.
+- **2026-08-22 — ruling D27 (Elysium disclosure and carve-out scope)**: OPERATOR-RULED 2026-08-21 — APPROVED: build
+  the "lite" carve-out repo now, withhold the venue-integration reference, ship the inert betfair/ibkr/polymarket
+  adapters as-is. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

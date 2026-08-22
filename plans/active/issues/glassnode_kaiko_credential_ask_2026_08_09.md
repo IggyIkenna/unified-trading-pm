@@ -33,6 +33,7 @@ parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2
+milestone: M3
 estimate_class: research
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.24
@@ -110,8 +111,9 @@ each depending on plan). Once provisioned:
 
 - [ ] [CODE] P2. Promote `GlassnodeAdapter` from `PLANNED_VENUES` into `VENUE_REGISTRY` + `get_adapter()` dispatch, and
       wire it into a collect handler (which downstream feature consumer needs on-chain analytics is a separate design
-      decision — do not guess a handler; ask if unclear). `BLOCKED-CREDENTIALS` — awaiting `glassnode-api-key`. Repo:
-      market-tick-data-service.
+      decision — do not guess a handler; ask if unclear). `BLOCKED-CREDENTIALS` — RULED 2026-08-22 (D17):
+      OPERATOR-RULED 2026-08-21 — DECLINED for now ("none of these yet"): no Glassnode purchase; adapter stays
+      dormant. Re-ask only on a named product need. Repo: market-tick-data-service.
 - [x] ✅ [CODE] P2. DECOMMISSIONED -- Kaiko banned fleet-wide 2026-08-10, KaikoAdapter/PLANNED_VENUES entry/UAC SourceCapability all deleted, zero references remain (na-eligibility-audit 2026-08-17 stale-checkbox correction). Promote `KaikoAdapter` (`market_tick_data_service/market_interface/adapters/onchain/kaiko.py`, added
       2026-08-09) from `PLANNED_VENUES` into `VENUE_REGISTRY` + `get_adapter()` dispatch, and wire it into a collect
       handler (same caveat as above — target handler is a design decision, not a guess). `BLOCKED-CREDENTIALS` —
@@ -147,3 +149,7 @@ Manager, Glassnode is NOT a removed vendor, and per `/codex/02-data/external-dat
 the free path is a credential ask rather than a descope. Tracked for the operator on
 `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.
 - **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; sole remaining item (promote GlassnodeAdapter into VENUE_REGISTRY/get_adapter()) is genuinely CREDENTIAL_BLOCKED per the external-data-always-available HARD RULE — `glassnode-api-key` still unprovisioned. Doc stays `assigned_vm: NA`.
+- **2026-08-22 — ruling D17 (Glassnode API key)**: OPERATOR-RULED 2026-08-21 — DECLINED for now ("none of these
+  yet"): no Glassnode purchase; adapter stays dormant, todo stays `BLOCKED-CREDENTIALS` with this dated ruling
+  (re-ask only on a named product need). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger.

@@ -84,6 +84,7 @@ parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2
+milestone: M3
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.3
@@ -204,10 +205,10 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
       re-investigating an already-fine repo. — **deployment-service@fb55e8ac35**: fixed incidentally by the P2 refactor
       above — the re-verify now tracks a `still_stale` set built per-repo from actual re-verify results, so the final
       error names only the repos that genuinely failed re-verify, not the original full `stale_repos` set.
-- [ ] [OPERATOR] P3. Consider whether `lc_resolve_tarball_sha`/the tarball-publish pipeline should gate a cross-repo
-      symbol reference (a UTL commit landing a new `PipelineMode.<X>` reference) on the corresponding UAC commit already
-      being tarball-published, closing the failure CLASS this incident hit (not just this one VM) — out of scope for a
-      one-shot relaunch worker to design; flagging per the two prior MORPHO-adjacent incidents
+- [ ] [OPERATOR] P3. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D11): defer the cross-repo tarball-publish gate (whether
+      `lc_resolve_tarball_sha`/the pipeline should gate a UTL commit landing a new `PipelineMode.<X>` reference on the
+      corresponding UAC commit already being tarball-published) — it is a riskier shared-pipeline change deserving its
+      own design pass, not approved this ruling; flagging per the two prior MORPHO-adjacent incidents
       (`mdps_vm_stale_uac_contract_propagation_2026_07_20.md`, `defi_morpho_lending_indices_never_wired_2026_07_12.md`)
       suggesting this is a recurring MORPHO-rollout-specific pain point, not a one-off (note: that doc has since been
       archived — `/plans/archive/issues/mdps_vm_stale_uac_contract_propagation_2026_07_20.md` — while
@@ -276,3 +277,7 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
   freshly-re-read HEAD, per the root-cause narrative above). Not confident enough in this session's own logs to
   substantiate a residual-bug claim, so not filing one — flagging only as a data point for whoever next hits this,
   should the retry-then-succeed pattern ever fail to self-resolve.
+- **2026-08-22 — ruling D11 (Tarball pipeline hardening)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve refresh + narrow auto-dirty, defer the gate — the first two close measured
+  recurring page classes cheaply; the gate is a riskier shared-pipeline change deserving its own design pass. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

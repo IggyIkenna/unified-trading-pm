@@ -60,6 +60,7 @@ context_scope:
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P1
+milestone: M3
 source: [DP-LIVE-004]
 resolved_by:
 execution_scope: orchestrator-agent
@@ -200,9 +201,11 @@ Ask the operator for the credential decision (see the /blocked ask on this escal
   actually asks for (a reusable guard any future live-producer launch runs before booting) — left open as that
   narrower, still-real ask, not extracted this pass (no concretely scoped implementation target named yet, unlike
   todo 1 above).
-- [ ] [OPERATOR] P0 — top-up `odds-api-key` quota / pause `mtds-backfill-odds-*`, and
-  relaunch `mtds-live-sports-odds-api-odds-20260816-145019` on current LDR. Provenance:
-  the /blocked ask for escalation `agt-f712d7`.
+- [ ] [INFRA] P0 — Relaunch `mtds-live-sports-odds-api-odds-20260816-145019` on current LDR once the
+  `odds-api-key` quota is topped up/rotated, and bound the batch backfill consumer (see the `[CODE] P1` todo above)
+  so it cannot re-starve live. Per D7 ruling (2026-08-22): OPERATOR-RULED 2026-08-21 — APPROVED: operator tops
+  up/rotates the the-odds-api key; agent bounds the batch backfill consumer so it cannot starve live, then relaunches
+  the live odds VM on current LDR once the key works. Provenance: the /blocked ask for escalation `agt-f712d7`.
 
 ## Progress Log
 
@@ -215,3 +218,7 @@ Ask the operator for the credential decision (see the /blocked ask on this escal
   into `sports_satellite_ao_dispatch_batch17_2026_08_21.md`. The SCRIPT todo's cited incident-specific gap is already
   closed by later work (annotated above); the narrower standing-guard ask stays open, not extracted (no scoped
   implementation target yet).
+- **2026-08-22 — ruling D7 (the-odds-api key exhaustion)**: OPERATOR-RULED 2026-08-21 — APPROVED: operator tops
+  up/rotates the the-odds-api key; agent bounds the batch backfill consumer so it cannot starve live, then relaunches
+  the live odds VM on current LDR once the key works. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger.

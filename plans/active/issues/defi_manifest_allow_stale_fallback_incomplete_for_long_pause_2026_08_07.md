@@ -38,6 +38,7 @@ parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
+milestone: M3
 estimate_class: infra
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.8
@@ -132,9 +133,12 @@ Two independently-shippable angles:
 
 - [x] ✅ [INFRA] P1. Fix the launcher flag's misleading comment — done same session/commit as this doc,
       `deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh`.
-- [ ] [DESIGN] P2. Decide the right detection/warning mechanism for `_read_slow_path`'s stale-fallback path to avoid
-      this false-completion signature for other callers workspace-wide (not just this one launcher) — see "Recommended
-      fix" angle 2 above. Needs a design call on the threshold/signal, not a bounded mechanical fix.
+- [ ] [INFRA] P2. Implement a row-count-mismatch detection/warning mechanism for `_read_slow_path`'s stale-fallback
+      path — compare the recovered per-VM-shard row count against the last consolidation's row count recorded in the
+      stale consolidated blob, and refuse (or emit a CRITICAL-level warning past) the fallback on a large mismatch, to
+      avoid this false-completion signature for other callers workspace-wide (not just this one launcher). Per D62
+      ruling (2026-08-22): row-count mismatch is a concrete, self-diagnosing signal that already caught the real
+      2026-08-07 incident (260 vs ~27,549 shards) — build this instead of re-litigating the threshold/signal design.
 - [ ] [DATA] P1. **PARTIAL progress via `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`
       (2026-08-15) — precondition verified (consolidator caught up), relaunch attempted twice, both blocked by VM infra
       failures (zombie-reaped attempt, then OOM under an oversubscribed `--workers 24` — root-caused + fixed,
@@ -174,3 +178,7 @@ Two independently-shippable angles:
   `defi_satellite_ao_dispatch_batch14_2026_08_16.md` (see this run's marker on that doc). Not independently
   extracted — would duplicate an already-dispatched claim.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries)
+- **2026-08-22 — ruling D62 (Stale-fallback completeness check)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Row-count mismatch — a concrete self-diagnosing signal that caught the
+  real 2026-08-07 incident (260 vs ~27,549). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger.

@@ -136,6 +136,12 @@ follow-up in `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`.
 
 ## Progress Log
 
+- **2026-08-22 — ruling D10 (Stale/wedged VM remediation)**: OPERATOR-RULED 2026-08-21 — APPROVED all three VM
+  remediations (cycle BYBIT-FUTURES live VM via its registered launcher; inspect the deribit-sweep VM then delete only
+  if confirmed hung; kill/relaunch the 2 stale mdps-features-live VMs, bounded backfill VMs finish with a corrective
+  re-pass). This doc's own scope (BYBIT-FUTURES cycle) was already done pre-ruling (see the `[INFRA]`/`[DATA]` todos
+  above, both `[x]`) — no retag needed here; the deribit-sweep and mdps-features-live remediations this ruling also
+  covers live on their own sibling docs. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 - **dedup pass 2026-08-21**: found a 5th independent filing of this exact incident,
   `/plans/active/issues/dp_live_004_bybit_stale_vm_tarball_2026_08_21.md` (same VM →
   `mtds-live-cefi-consolidated-20260821-200626` replacement, same root cause), not caught by the 2026-08-21

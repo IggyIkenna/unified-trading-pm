@@ -31,6 +31,7 @@ resolved_by:
 locked_by:
 locked_since:
 priority: P1
+milestone: M3
 depends_on: []
 execution_scope: local-only
 drift_direction: advance-code
@@ -184,3 +185,9 @@ is a hybrid that evolved after both sections were written.
 ## Progress Log
 
 - **context-scout 2026-08-19**: populated context_scope (6 entries).
+- **2026-08-22 — ruling D6 (Docs-reconcile findings sign-off)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Approve all — each item carries a per-doc recommendation; the two BIG
+  findings need named owners now, the rest is bounded cleanup. Note: this doc's 6 findings are framed as prose
+  Options (A/B/C), not `- [ ]` todos, so no single checkbox marker exists to retag per-item; each finding's own
+  `[REC]`-marked option is hereby approved as the disposition. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
