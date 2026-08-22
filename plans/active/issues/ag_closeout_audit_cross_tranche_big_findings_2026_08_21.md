@@ -124,11 +124,17 @@ finding the 6th instance one doc at a time.
 
 ## Mechanism-reliability findings re-confirmed by 5+ independent audit passes (crosses this skill's own carried-finding threshold)
 
-10. **AO's own Slack alerting webhook — broken 3+ weeks, 8+ audit rounds, zero paging capability this entire time.**
-    `plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`. `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`
-    genuinely un-locatable across 2026-08-02 through 2026-08-21 (8+ rounds); a live 2026-08-19 attempt confirmed both
-    documented secret names resolve to nothing in the expected GCP project. `ao-self-pull.sh` wedge/drift alerts have
-    had zero paging capability this entire window.
+10. ~~**AO's own Slack alerting webhook — broken 3+ weeks, 8+ audit rounds, zero paging capability this entire time.**~~
+    **RESOLVED 2026-08-21** (same-day, interactive session slot 17 — landed BEFORE this doc's own creation timestamp;
+    the source doc is now `plans/archive/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`, not
+    `plans/active/...` — it was archived 2026-08-21 with all todos evidence-backed). The real bug was narrower than
+    "secret missing": `ao-self-pull.sh:223` reads the webhook from `${AO_DIR}/.env.local` specifically (a different
+    source than the systemd `Environment=` the main server reads), and `.env.local` never had the line — only this
+    one consumer was broken. Fixed by appending `AGENT_ORCHESTRATOR_SLACK_WEBHOOK=<value>` to
+    `agent-orchestrator/.env.local` on the root checkout; verified live (test POST → HTTP 200, landed in
+    `#agent-orchestrator-alerts`). Re-confirmed independently by this task (2026-08-22, slot 4): `.env.local` line
+    27 and `systemctl show orchestrator -p Environment` both carry the correct webhook URL. No further action
+    needed.
 11. **`safe-doc-push.sh` (the mandated workspace doc-shipping tool) — 8+ independently observed content-loss/corruption
     incidents, several hit live during THIS audit run.** Silently drops renamed content, resurrects stale content from
     unrelated stash entries over already-correct data, loses unrelated dirty files across quarantine cycles. Multiple
@@ -188,8 +194,12 @@ finding the 6th instance one doc at a time.
 - [ ] [OPERATOR] P0. Decide disposition for items 1-6 (execution-service/defi live-capital-safety gaps) — at minimum
       confirm whether these are already scheduled for a dedicated engineering pass outside the AO-dispatch system.
       Source: this doc.
-- [ ] [INFRA] P1. Locate or re-provision `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` (item 10) — a 3-week silent
-      paging-capability gap on the orchestrator's own alerting. Source: this doc.
+- [x] ✅ [INFRA] P1. Locate or re-provision `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` (item 10) — STALE at task
+      dispatch time: already resolved 2026-08-21 (interactive session, slot 17) before this todo was picked up.
+      Verified live 2026-08-22 (slot 4) — `agent-orchestrator/.env.local` line 27 and the live systemd
+      `Environment=` both carry the correct webhook URL; source doc archived with all todos evidence-backed
+      (`plans/archive/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`). No code change
+      needed — unified-trading-pm@(this commit). Source: this doc.
 - [ ] [INFRA] P2. Schedule a dedicated review of `safe-doc-push.sh`'s stash/quarantine reconcile logic (item 11) —
       8+ independent incidents against the workspace's mandated shipping tool. Source: this doc.
 - [ ] [DOCS] P3. Per D1 ruling (ADOPTED-REC 2026-08-21, autonomous-dispatch authority: "approve all — repeated
@@ -214,3 +224,10 @@ finding the 6th instance one doc at a time.
   operator pays the Databento CME invoice; agent pauses the tradfi-bf-cme-ohlcv-1m fleet wave mechanism NOW
   (autonomous, zero-cost), relaunch only after billing clears. Source:
   /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-22 (infra worker, slot 4)**: Item 10's dispatched todo (`[INFRA] P1`) was already stale at pickup —
+  the source doc it cited (`ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`) had been fixed AND
+  archived same-day (2026-08-21, interactive session slot 17), before this cross-tranche doc's own creation.
+  Verified live: `agent-orchestrator/.env.local` and the running `orchestrator.service`'s systemd `Environment=`
+  both carry the correct `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` URL — no residual gap. Corrected item 10's body text
+  (was describing an open 3-week gap; now notes RESOLVED + points at the archived doc) and flipped the todo
+  checkbox. No code change required.
