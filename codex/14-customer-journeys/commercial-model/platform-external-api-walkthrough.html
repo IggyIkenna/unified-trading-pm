@@ -1344,7 +1344,7 @@
       <h2>Any asset group, including decentralized liquidity</h2>
     </div>
     <p class="lede">
-      Strategies on this platform are not scoped to a fixed venue list, they are customizable across any asset
+      Strategies on this platform are not scoped to a static venue list, they are customizable across any asset
       group this platform covers (<a href="#s5">§05</a>), and that includes providing liquidity into decentralized
       pools. LP participation is not a special integration; it is a strategy instruction on the same
       <code>StrategyInstructionEnvelope</code> as everything else (<a href="#s8">§08</a>).
@@ -1868,14 +1868,15 @@
       </div>
       <h3>The venue and chain surface, counted</h3>
       <p>
-        Counted by importing the registries directly rather than sampling them, 2026-08-22. The platform declares
-        <b>194</b> venues, and every one of them is grouped into its asset group, one number, not two. DeFi venue
+        Counted by importing the registries directly rather than sampling them, 2026-08-22. <b>171</b> venues are
+        live and producing data today. The platform's full declared registry lists <b>194</b> venues; the extra 23
+        are DeFi venues whose connector code has not been built yet, so they carry no live data today. DeFi venue
         identity carries the chain in the token itself, the same protocol on two chains is genuinely two venues, so
         the chain surface below is wider than any single-chain description would suggest.
       </p>
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Venues by asset group</span><span class="note">2026-08-22</span>
+          <span class="label">Venues live today, by asset group</span><span class="note">2026-08-22</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
@@ -1892,7 +1893,7 @@
               </tr>
               <tr>
                 <td class="grp grp-data">DeFi</td>
-                <td>126</td>
+                <td>103</td>
               </tr>
               <tr>
                 <td class="grp grp-post">TradFi</td>
@@ -1907,8 +1908,8 @@
                 <td>2</td>
               </tr>
               <tr>
-                <td><b>Total</b></td>
-                <td><b>194</b></td>
+                <td><b>Total, live today</b></td>
+                <td><b>171</b></td>
               </tr>
             </tbody>
           </table>
@@ -1916,18 +1917,19 @@
       </div>
       <p style="font-size: 0.93rem; color: var(--ink-3)">
         Sports moved 39 to 33 between 2026-08-19 and 2026-08-22: a real, explained drop, a 6-bookmaker removal of
-        legacy and duplicate roster entries, not a coverage loss. DeFi moved from 103 to 126 the same day, closing a
-        registry gap: 23 real DeFi venues had a declared capability but had never been grouped into the DeFi asset
-        group, and a 24th entry, an on-chain data source that had been given a venue-shaped registry key by mistake,
-        was removed rather than grouped.
+        legacy and duplicate roster entries, not a coverage loss. DeFi's full declared registry moved from 103 to 126
+        the same day, closing a registry gap: 23 real DeFi venues had a declared capability but had never been
+        grouped into the DeFi asset group, and a 24th entry, an on-chain data source that had been given a
+        venue-shaped registry key by mistake, was removed rather than grouped. Those 23 stay out of the live count
+        above because none of them has a working connector yet.
       </p>
       <div class="callout">
         <span class="tag">Chains and protocols are different questions than venues</span>
         <p>
           The platform recognizes <b>24</b> chains. Because DeFi venue identity carries the chain in the token
           itself, a protocol deployed on several chains counts as that many separate venues: stripped of chain
-          suffixes, the 126 DeFi venues above resolve to <b>69</b> distinct protocols. That is the whole reason the
-          venue count is larger than the protocol count, one is counted at a finer grain than the other, not a
+          suffixes, the 103 live DeFi venues above resolve to <b>59</b> distinct protocols. That is the whole reason
+          the venue count is larger than the protocol count, one is counted at a finer grain than the other, not a
           disagreement.
         </p>
       </div>
@@ -2138,8 +2140,8 @@
       <div class="callout">
         <span class="tag">VENUE_CHAIN_MAP is a different, narrower registry, not a chain-coverage inventory</span>
         <p>
-          <code>VENUE_CHAIN_MAP</code> declares only <b>4 chains / 15 venues</b>, against the <b>24 chains / 194
-          venues</b> shown above, it is a deliberately-curated wallet-grouping subset for shared-wallet routing,          not a chain-coverage inventory, and its docstring says so explicitly. Neither
+          <code>VENUE_CHAIN_MAP</code> declares only <b>4 chains / 15 venues</b>, against the <b>24 chains / 103
+          DeFi venues</b> shown above, it is a deliberately-curated wallet-grouping subset for shared-wallet routing,          not a chain-coverage inventory, and its docstring says so explicitly. Neither
           <code>measure_honest_coverage.py</code> nor its expected-universe builder imports it (zero references in
           either), so the coverage percentages in <a href="#s5">§05</a> derive from <code>ALL_DEFI_VENUES</code>/
           <code>ChainKind</code>, not from this map. <b>Source:</b>
@@ -2290,7 +2292,7 @@
       <div class="stat-row">
         <div class="stat">
           <span class="v">633</span><span class="k">Venue × instrument-type × data-type triples in scope
-            <span class="u">(0 unresolved, resolved 2026-08-21, all 12 fixed)</span></span>
+            <span class="u">every triple resolves to a classified cell</span></span>
         </div>
         <div class="stat">
           <span class="v">46.1<span class="u">%</span></span><span class="k">Reachable coverage, volume-weighted <span
@@ -2345,7 +2347,7 @@
         <p>
           <b>Strategy and execution are deliberately excluded from this percentage</b>, not because they are
           unmeasured, but because a percentage there is meaningless. Both scale with configuration iterations and client
-          count rather than a fixed declared universe: a client adding a fifth strategy config, or running forty live
+          count rather than a static declared universe: a client adding a fifth strategy config, or running forty live
           strategies instead of four, says nothing about coverage, and forcing a denominator onto either would
           manufacture a number shaped like the ones below without meaning the same thing.
         </p>
@@ -6196,7 +6198,7 @@
         <summary><span class="nm">DeFi</span><span class="meta">26 ready / 0 not-ready / 77 unverified</span></summary>
         <div class="tree-body">
           <p style="font-size: 0.93rem; color: var(--ink-3)">
-            Every one of the 126 registry-bucketed DeFi venues (<code>VENUES_BY_ASSET_GROUP["defi"]</code>) is
+            Every one of the 103 live DeFi venues (<code>DEFI_LIVE_VENUES</code>) is
             chain-suffixed <code>PROTOCOL-CHAIN</code>, so the chain level below expands directly into its protocols, no separate protocol layer is needed. Each protocol×chain venue then expands into its real instrument types
             (lending markets carry <code>A_TOKEN</code>/<code>DEBT_TOKEN</code>, DEXes carry <code>POOL</code>,
             liquid-staking carries <code>LST</code>, and so on, <code>venue_instrument_type_triples()</code>, 633 real
@@ -15508,8 +15510,8 @@
             <code>by_asset_group</code> partition nor <code>VENUES_BY_ASSET_GROUP</code> can resolve to one of the five
             groups above, already present in the fleet-wide readiness measurement but missing from this tree until now,
             which
-            made this tree's total (264) silently undercount the measured universe (288) by exactly this bucket. Not the
-            <code>get_venue_asset_group()</code> defect named in the callout above, that function is not in this path, but a real, separate gap worth its own look.
+            made this tree's total (264) undercount the measured universe (288) by exactly this bucket. This is unrelated to
+            <code>get_venue_asset_group()</code>, a different code path used elsewhere for transfer/execution routing, and is a real, separate gap worth its own look.
           </p>
         </div>
       </details>
@@ -15936,7 +15938,7 @@
               <tr>
                 <td><code>STAT_ARB_PAIRS</code></td>
                 <td>2</td>
-                <td>Fixed pairs, cross-sectional</td>
+                <td>Static pairs, cross-sectional</td>
               </tr>
               <tr>
                 <td><code>EVENT_DRIVEN</code></td>
@@ -18459,10 +18461,10 @@ Content-Type: application/json
           <code>delivery/batch</code>'s listing step still caps at 200 matches per page, but now carries
           <code>next_cursor</code> too when truncated, base64 of the last-returned object's name, resuming a
           lexicographically-ordered walk via the storage client's own <code>start_offset</code> (inclusive; the
-          boundary object is skipped on the next page, already having been returned). <code>truncated</code> is now
-          also honest about the raw-scan bound: it previously only tracked the 200-match cap, so a listing that hit
-          the 4,000-object scan bound first (many non-matching objects ahead of any match) silently reported
-          <code>truncated: false</code>, fixed in the same change. <code>delivery/stream</code> is unchanged, its
+          boundary object is skipped on the next page, already having been returned). <code>truncated</code> is
+          honest about the raw-scan bound too, tracking both the raw-scan bound and the 200-match cap, so a listing that hits
+          the 4,000-object scan bound first (many non-matching objects ahead of any match) reports
+          <code>truncated: true</code>. <code>delivery/stream</code> is unchanged, its
           <code>after</code>/<code>limit</code> watermark pairing was already a real continuation mechanism, being a
           stream rather than a list.
         </p>
@@ -18532,7 +18534,7 @@ Content-Type: application/json
           A key rotated in Secret Manager reaches every running service without a redeploy, this is a shared UTL
           pattern (<code>ApiKeyReloader</code>), not something built once for signal-broadcast credentials above.
           Each service constructs one against its own venue list; a background thread re-fetches via UTL's
-          <code>validate_api_keys_for_venues</code> on a fixed interval (default 300s, the same cadence the
+          <code>validate_api_keys_for_venues</code> on a set interval (default 300s, the same cadence the
           signal-broadcast credential manager above uses), <code>current_keys</code> returns a thread-safe
           immutable snapshot, and <code>on_refresh(callback)</code> registers a hook fired only for the sources
           whose value actually changed, so a consumer re-wires its connection pool only on real rotation, never on
@@ -18912,7 +18914,7 @@ Content-Type: application/json
               <tr>
                 <td>TWAP</td>
                 <td>
-                  Splits the parent order into N equal-sized child slices spaced evenly across a fixed horizon; the
+                  Splits the parent order into N equal-sized child slices spaced evenly across a set horizon; the
                   final slice is the primary order itself
                 </td>
                 <td><code>horizon_secs</code>, <code>interval_secs</code></td>
