@@ -168,11 +168,19 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
 > 6 on 2026-08-22 — todo 3's fix needed a companion Terraform apply, split out as its own [INFRA] piece rather than
 > absorbed into [BACKEND] scope (see todo 3's DONE note + the new todo below it).
 
-- [ ] [INFRA] P0. Provision `uts-prod-execution-service-config-snapshot` Cloud Run Job (execution-service),
+- [x] ✅ [INFRA] P0. Provision `uts-prod-execution-service-config-snapshot` Cloud Run Job (execution-service),
       replicating the same container-job Terraform pattern already used for strategy-service/mdps. Repo:
       execution-service, deployment-service (terraform). Done-when: `gcloud run jobs describe
       uts-prod-execution-service-config-snapshot` succeeds and a real triggered execution writes
-      `configs/snapshots/{date}/config.json` to the execution-store bucket.
+      `configs/snapshots/{date}/config.json` to the execution-store bucket. — DONE 2026-08-22 (slot-4): already
+      code-complete + provisioned by prior work (execution-service@0f5d5ee4 `config_snapshot` CLI operation,
+      deployment-service@ced2d536 `execution_config_snapshot_job` Terraform module) but the checkbox was never
+      flipped. Verified live: `gcloud run jobs describe uts-prod-execution-service-config-snapshot` succeeds;
+      execution `uts-prod-execution-service-config-snapshot-kj6ht` (started 2026-08-22T11:48:33Z, completed
+      11:49:27Z, "Execution completed successfully in 54.52s") is real and 1/1 complete; confirmed via UTL
+      `get_storage_client().list_blobs('execution-store-prd-central-element-323112', prefix='configs/snapshots/')`
+      that `configs/snapshots/2026-08-21/config.json` (6456 bytes, T-1 self-default) genuinely exists in the
+      execution-store bucket — not a dry-run, a real write.
 - [ ] [INFRA] P0. Provision `uts-prod-ml-service-t1-recon` Cloud Run Job (ml-service), wiring the existing
       (currently unwired) `--run-tag` CLI flag to an actual GCS `_SUCCESS`-marker writer under
       `t1-recon/ml/{date}/_SUCCESS`. Repo: ml-service, deployment-service. Done-when: a real triggered execution
@@ -334,3 +342,18 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   `does_not` explicitly excludes infra provisioning/cloud), and this touches shared prod Terraform state — split
   it into a new [INFRA] todo instead of silently leaving the done-when unmet. Net: code-complete + shipped;
   runtime-verified pending the new todo's apply + a real scheduled-run observation.
+
+- **infra 2026-08-22 (slot-4, dispatch `recon_bucket_missing_nightly_recon_failing-991b683c78d9`)**: flipped todo
+  1 — the `uts-prod-execution-service-config-snapshot` Cloud Run Job. Investigation found this was already
+  code-complete AND live-provisioned by prior work (execution-service@0f5d5ee4 added the `config_snapshot` CLI
+  operation; deployment-service@ced2d536 added the `execution_config_snapshot_job` Terraform module — both
+  already ancestors of `origin/live-defi-rollout`, confirmed via `git log`) but the todo checkbox was never
+  flipped after that work landed. Did NOT write new code — instead ran the done-when verification live: `gcloud
+  run jobs describe uts-prod-execution-service-config-snapshot` succeeds; triggered a fresh execution
+  (`uts-prod-execution-service-config-snapshot-kj6ht`, started 2026-08-22T11:48:33Z, completed 11:49:27Z, "Execution
+  completed successfully in 54.52s", 1/1 complete — a genuinely NEW run, not a stale prior one, per `gcloud run
+  jobs executions list --sort-by="~metadata.creationTimestamp"`); confirmed via UTL's `get_storage_client()
+  .list_blobs('execution-store-prd-central-element-323112', prefix='configs/snapshots/')` (never a subprocess
+  `gcloud storage`/`gsutil` call, per the GCS-object-ops HARD RULE) that `configs/snapshots/2026-08-21/config.json`
+  (6456 bytes, T-1 self-default date) genuinely exists — real write, not a dry-run. No code changes needed; this
+  was a stale-checkbox flip with fresh runtime verification, not new provisioning work.
