@@ -156,8 +156,12 @@ captured shard, schema renders without picking a day.
       REPO's own `cloudbuild.yaml` deploy step (`gcloud run deploy --memory 16Gi --cpu 4`, run by the
       deployment-api-main-deploy trigger) re-sets resources on EVERY promotion; deployment-service's
       root cloudbuild.yaml belongs to deployment-dashboard and was a red herring. Live re-applied as
-      revision `00699-cx7`; the real fix (deployment-api cloudbuild.yaml -> 32Gi/8 + the deploy-shared.sh
-      comment retracted to "must match deployment-api's cloudbuild.yaml") is authored but **SHIP PARKED
+      revision `00699-cx7`; the real fix LANDED 2026-08-22 ~11:4x local as
+      `deployment-api@7ed11bd12b` (cloudbuild.yaml deploy step -> 32Gi/8; verified on origin) +
+      `deployment-service@ea7243f093` (deploy-shared.sh comment retracted to "must match
+      deployment-api's cloudbuild.yaml") — every promotion now deploys 32Gi, the revert window is
+      CLOSED. Landed via a load-gated auto-ship watcher after the parked window below. (Historical
+      parked-state record, kept for the lessons:) the ship had been **SHIP PARKED
       2026-08-22 ~07:40 local**: the laptop sat at load average 300+ (peers' gates) — every
       deployment-service re-gate timed out its launcher-script tests at 300s (two identical runs), and
       deployment-api's quickmerge could not pass STAGE 1 because UAC/DS origins moved faster than the
