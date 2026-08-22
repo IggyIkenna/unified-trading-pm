@@ -1113,8 +1113,10 @@
         institutional onboarding and KYB, CEFFU institutional KYB, the Binance institutional account with its bilateral
         OES mirror at CEFFU, and per-venue institutional onboarding at each perp venue you allocate to. We build and
         operate the trading code, the infrastructure it runs on, the pre-cutover test estate, and the per-wallet
-        provisioning configuration. Fireblocks is out of scope; the stack is Copper plus CEFFU, and CEFFU remains
-        entirely your decision for the Binance leg.
+        provisioning configuration. Signing runs on Copper MPC, with wallet credentials held in Cloud KMS envelope
+        encryption underneath it; Fireblocks is out of scope entirely. CEFFU's direct OES surface (balance and
+        settlement queries for the Binance mirror, beyond what Copper's signing already covers) is entirely your
+        decision, and turning it on needs their API spec, named in full in §13.
       </p>
 
       <div class="callout">
@@ -1122,10 +1124,10 @@
         <p>
           <strong>Verified against source.</strong> One internal code artefact (<code>SigningSurface</code> in
           <code>unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>) lists
-          <code>FIREBLOCKS_MPC</code> and has no distinct Ceffu member. That is not a contradiction of the roster above:
-          Ceffu's signing routes through Copper (<code>CEFFU_ROUTES_VIA_COPPER_NOTE</code>), and the Fireblocks entry
-          carries <code>SigningSurfaceStatus.OUT_OF_SCOPE</code>, retained for future flexibility. The
-          working stack is Copper plus CEFFU, as stated above.
+          <code>FIREBLOCKS_MPC</code> and has no distinct Ceffu member. That is not a contradiction of the roster
+          above: Ceffu's signing routes through Copper, and the Fireblocks entry carries
+          <code>SigningSurfaceStatus.OUT_OF_SCOPE</code>. Copper and Cloud KMS are the two integrations doing real
+          signing work today.
         </p>
       </div>
 
@@ -3930,6 +3932,10 @@ GET /external/market-data/delivery/batch?...&amp;file=raw_tick_data/by_date/day=
                 <td>unknown asset_group / topology, or an unparseable <span class="mono">after</span> timestamp</td>
               </tr>
               <tr>
+                <td class="num-col">429</td>
+                <td>the caller's per-tier token bucket is empty; retry after the seconds named in <span class="mono">Retry-After</span></td>
+              </tr>
+              <tr>
                 <td class="num-col">500 / 503</td>
                 <td>malformed coverage payload; storage bucket or project not configured</td>
               </tr>
@@ -3937,7 +3943,11 @@ GET /external/market-data/delivery/batch?...&amp;file=raw_tick_data/by_date/day=
           </table>
 
           <p>
-            <span class="mono">create_api_auth</span> authenticates and tier-scopes every caller on this surface.
+            <span class="mono">create_api_auth</span> authenticates and tier-scopes every caller on this surface, and
+            a per-tier token bucket throttles request volume ahead of that: enterprise 50 requests/second (burst
+            100), data-pro 20 (burst 40), data-basic 5 (burst 10), free 1 (burst 5). An exhausted bucket returns
+            <span class="mono">429</span> with a <span class="mono">Retry-After</span> header naming the wait; an
+            internal caller bypasses the limit entirely.
           </p>
         </div>
       </details>
@@ -3984,9 +3994,11 @@ GET /external/market-data/delivery/batch?...&amp;file=raw_tick_data/by_date/day=
         <div class="body-pad">
           <p>
             <strong>Auth</strong>: the same <span class="mono">create_api_auth("instruments-service")</span>
-            dependency as above. Every authenticated caller currently sees the same result: this is public reference
-            data, not a per-client ledger, so <span class="mono">org_id</span> /
-            <span class="mono">subscription_tier</span> are validated but do not yet scope the response.
+            dependency as above, plus a real entitlement seam keyed on <span class="mono">subscription_tier</span>:
+            a request for an asset_group outside a caller's entitled scope returns <span class="mono">403</span>. The
+            reference catalogue ships open across every tier today, since reference data is the product's front door;
+            narrowing a tier to a subset of asset groups is a configuration change against the entitlement table, not
+            new engineering.
           </p>
 
           <p><strong>GET /v1/instruments</strong></p>
@@ -4098,6 +4110,10 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
                 <td><span class="mono">/bulk</span>: no matching shards for the request</td>
               </tr>
               <tr>
+                <td class="num-col">429</td>
+                <td>the caller's per-tier token bucket is empty; retry after the seconds named in <span class="mono">Retry-After</span></td>
+              </tr>
+              <tr>
                 <td class="num-col">500</td>
                 <td>internal error reading the catalogue</td>
               </tr>
@@ -4105,7 +4121,8 @@ Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parqu
           </table>
 
           <p>
-            <span class="mono">create_api_auth</span> authenticates and tier-scopes every caller on this surface as well.
+            <span class="mono">create_api_auth</span> authenticates and tier-scopes every caller on this surface as
+            well, behind the same per-tier token bucket described above.
           </p>
         </div>
       </details>
@@ -5657,12 +5674,13 @@ Content-Type: application/json
 }
           </div>
           <p>
-            <span class="mono">QUOTE</span> never resolves to a resting order on this surface today: there is no live
-            tick-ingestion loop driving <span class="mono">on_underlying_tick</span> in execution-service, so
-            registration only arms the repricer; the response says <span class="mono">REGISTERED</span>, deliberately
-            never <span class="mono">SUBMITTED</span>. Every other
-            <span class="mono">StrategyInstructionV2</span> action dispatches through this same endpoint (see the
-            table above) rather than returning a silently dropped instruction.
+            Registration arms the repricer synchronously, which is why the response says
+            <span class="mono">REGISTERED</span> rather than <span class="mono">SUBMITTED</span>: no order exists at
+            that instant. The resulting two-sided quote reaches the venue as a matched pair of bid and ask limit
+            orders the next time an underlying tick changes the desired order state; a tick that leaves the quantized
+            bid, ask and size unchanged is a no-op by design, so the venue never sees churn it did not need. Every
+            other <span class="mono">StrategyInstructionV2</span> action dispatches through this same endpoint (see
+            the table above).
           </p>
 
           <p><strong>POST /account/instruction</strong></p>
@@ -5774,7 +5792,7 @@ Content-Type: application/json
               </tr>
               <tr>
                 <td class="num-col">501</td>
-                <td>an unwired <span class="mono">StrategyInstructionV2</span> action on <span class="mono">/external/instructions</span></td>
+                <td>defensive fallback only; every current <span class="mono">StrategyInstructionV2</span> member routes to real execution, so a caller never reaches this path with a valid action</td>
               </tr>
               <tr>
                 <td class="num-col">503</td>
@@ -9601,7 +9619,10 @@ Content-Type: application/json
       <p>
         Counted by importing the registries directly rather than sampling them. <b>171</b> venues are live and
         producing data today. The platform's full declared registry lists <b>194</b> venues; the extra 23 are DeFi
-        venues whose connector code has not been built yet, so they carry no live data today.
+        venues whose connector code has not been built yet, so they carry no live data today. For CeFi, TradFi,
+        Sports and Prediction (68 of the 171), declared and live are the same thing: there is no separate build-out
+        phase for those venues once they are in the registry. DeFi is the one asset group where that distinction
+        does real work, since a declared protocol-chain pair still needs its own connector before it produces data.
       </p>
 
       <div class="stat-row">
@@ -9648,7 +9669,7 @@ Content-Type: application/json
                   <td><strong>DeFi</strong></td>
                   <td class="num-col">103</td>
                   <td>
-                    AAVE_V3, COMPOUND_V3, MORPHO, CURVE, PENDLE, UNISWAP, LIDO, JUPITER, RAYDIUM: spanning
+                    AAVE_V3, COMPOUND_V3, MORPHO, CURVE, PENDLE, UNISWAP_V3, LIDO, JUPITER, RAYDIUM: spanning
                     10 chains in this sample, 24 across the platform's full chain vocabulary
                   </td>
                 </tr>
@@ -9761,17 +9782,21 @@ Content-Type: application/json
         </p>
 
         <div class="callout">
-          <span class="tag">Chains and protocols are different questions than venues</span>
+          <span class="tag">Chains and protocols are different questions than venues, and data coverage is a different question than execution</span>
           <p>
             The 171-venue total, the 103-venue DeFi count, the per-asset-group counts and the full protocol ×
             chain spread above were imported and counted directly this session (<code
               >unified_api_contracts.registry.market_data_categories.VENUE_DATA_TYPE_CAPABILITIES</code
             >
-            and <code>VENUES_BY_ASSET_GROUP</code>). The platform recognizes 24 chains. Because DeFi venue identity
-            carries the chain in the token itself, a protocol deployed on several chains counts as that many separate
+            and <code>VENUES_BY_ASSET_GROUP</code>). The platform recognizes 24 chains as a vocabulary; 10 of them
+            currently carry a live DeFi venue, 2 more a declared one still awaiting a connector, and the remaining 12
+            name chains the platform can address but has no DeFi venue on yet. Because DeFi venue identity carries
+            the chain in the token itself, a protocol deployed on several chains counts as that many separate
             venues: stripped of chain suffixes, the 103 live DeFi venues above resolve to <strong>59</strong>
-            distinct protocols. That is the whole reason the venue count is larger than the protocol count, one is
-            counted at a finer grain than the other, not a disagreement.
+            distinct data-source protocols, the reason the venue count is larger than the protocol count. Those 59
+            are the DeFi market-data coverage; they are a different count from execution. Three protocol families
+            carry real per-venue execution wiring for your two archetypes and the wider DeFi surface today: Uniswap,
+            AAVE V3 and Lido, with AAVE V3 and Lido Ethereum-only in that wiring.
           </p>
         </div>
       </details>
