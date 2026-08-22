@@ -165,7 +165,8 @@ captured shard, schema renders without picking a day.
       2026-08-22 ~07:40 local**: the laptop sat at load average 300+ (peers' gates) — every
       deployment-service re-gate timed out its launcher-script tests at 300s (two identical runs), and
       deployment-api's quickmerge could not pass STAGE 1 because UAC/DS origins moved faster than the
-      isolated-worktree setup. Both edits are NAMED STASHES in the slot-2 checkouts (+ scratchpad
+      isolated-worktree setup. Both edits were parked as NAMED STASHES in the slot-2 checkouts (since
+      CONSUMED by the landing above — the stashes and their scratchpad
       copies): deployment-service `slot2-deploy-shared-sizing-comment-fix-2026-08-22` (comment-only) and
       deployment-api `slot2-deployment-api-32gi-cloudbuild-2026-08-22` (the one that matters); the
       `qm-iso-evac-*` stash entries beside them are quickmerge's own leftovers of the same edits — drop
@@ -177,7 +178,13 @@ captured shard, schema renders without picking a day.
       -> quickmerge deployment-api `--files 'cloudbuild.yaml'` (deployment-service is its path-dep: DS
       FIRST, and clean). UNTIL the deployment-api change lands, every promotion re-sets the live service
       to 16Gi/4 — re-apply `gcloud run services update uts-shared-deployment-api --region asia-northeast1
-      --memory=32Gi --cpu=8` if the UI starts erroring again.
+      --memory=32Gi --cpu=8` if the UI starts erroring again. Ship-mechanics lesson recorded
+      2026-08-22 (cost ~4 wasted quickmerge launches before it was learned): a `run_in_background`
+      harness command inherits the SESSION cwd at launch — but a foreground command that TIMES OUT
+      and gets moved to background RESETS the session cwd to the slot root — so every
+      background/ship command must bake an absolute `cd` into its first token; cheap guards
+      (`git status --porcelain | grep -q <file> || stop`) turned each cwd mishap into a fast no-op
+      instead of a wrong-repo quickmerge.
       REMAINING (box stays open for it): confirm top per-request RSS offenders via the existing
       `log_rss_delta` instrumentation (read its emission format first) and land the real fix —
       column-projected / row-group-streamed reads for the 8 index-reading modules listed in Part 1 +
