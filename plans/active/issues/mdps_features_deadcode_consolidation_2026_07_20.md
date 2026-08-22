@@ -27,7 +27,7 @@ tags: [dead-code, orphan, vm-launcher, registry, self-heal, monitoring, consolid
 related: [/plans/active/data_pipeline_check_mdps_features_2026_07_20.md, /codex/05-infrastructure/vm-launcher-runbook.md]
 created: 2026-07-20
 author: unknown
-last_updated: 2026-07-20
+last_updated: 2026-08-21
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
@@ -152,10 +152,14 @@ launcher deletions. Other: free-text.
       **DONE (ao-dispatch batch2 2026-08-03)** — closed via
       `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:113: `e2e-testing@e117593` (file already relocated
       from features-service@7717fbee; fixed at new location), 4 citations replaced, `quality-gates.sh` green.
-- [ ] [SCRIPT] P3. 8. S3-b — sports dual entrypoint (`python -m features_service.sports` with `--tables`/sfi-progressive
-      vs `--feature-family sports`) — operator/design adjudication (fold submodule behind the family flag OR bless the
-      submodule). Do NOT silently delete (breaks live sports backfills). Also the misleading "DEPRECATION NOTE" on the
-      live `launch-features-sports-*` launchers.
+- [ ] [SCRIPT] P3. 8. S3-b — per D97 ruling (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md ledger): Fold
+      — consistency with every other family; the current state actively misleads live-launcher work. Fold
+      `python -m features_service.sports`'s `--tables`/sfi-progressive submodule behind the `--feature-family sports`
+      flag (do not silently delete the submodule — breaks live sports backfills unless the fold is wired first), and
+      correct/remove the misleading "DEPRECATION NOTE" on the live `launch-features-sports-*` launchers. Done-when:
+      `python -m features_service.sports` invocation routes uniformly through `--feature-family sports`, matching
+      every other feature family, and the stale DEPRECATION NOTE no longer misleads. Repo: features-service,
+      deployment-service.
 
 ## Data-orphan findings (from the same audit — tracked in the parent plan, not here)
 
@@ -226,3 +230,6 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; sole open item (S3-b, sports
   dual-entrypoint fold-vs-bless) remains an unresolved operator/design adjudication, no new ruling found.
+- **2026-08-21 — ruling D97 (Sports feature entrypoint)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Fold — consistency with every other family; the current state actively misleads
+  live-launcher work. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

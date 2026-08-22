@@ -30,7 +30,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/external/tardis/schemas.py,
   ]
 created: 2026-08-20
-last_updated: "2026-08-20"
+last_updated: "2026-08-21"
 parent_epic: system_readiness_master
 assigned_vm: NA
 locked_by:
@@ -110,7 +110,10 @@ models, unrelated to this defect.
 - [ ] [BACKEND] P0. **Split the field on the live tick model** — carry `exchange_timestamp` and `local_timestamp`
       separately, matching the contract `internal/events.py:17` already mandates and the Tardis schema already models.
       Neither may be defaulted from the other; an adapter that cannot supply exchange time must say so, not silently
-      supply arrival time under that name.
+      supply arrival time under that name. Per D96 ruling (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md
+      ledger): explicit declaration is the confirmed policy — this applies per-PATH, not just per-file, so each of the
+      2 "mixed" connectors found in the 2026-08-21 audit (`curve_defi_ws.py`, `dex_swap_uniswap_v3_ws.py`) must have
+      its non-exchange-time-capable path say so explicitly rather than silently falling through to arrival time.
 - [ ] [BACKEND] P0. **Add local monotonic receive order** to the live tick model. Wall-clock arrival is not sufficient
       for ordering — two ticks in the same millisecond need a total order, and a stepped clock must not reorder them.
 - [ ] [BACKEND] P0. **Add a region tag** to the tick or its envelope. Required by the per-region replay ruling.
@@ -244,3 +247,7 @@ use while an ambiguous one does not fail at all.
   then Phase 4 (alias removal) was reverted in production 5 days later (market-tick-data-service@dcd3b7c401,
   2026-08-10) after breaking VIX/CBOE `ohlcv_1m` backfills; the archived plan pair's "complete" claim is stale.
   Pure investigation, no code changed.
+- **2026-08-21 — ruling D96 (Timestamp split declaration policy)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Explicit declaration — P0 replay-integrity issue; a silent default
+  repeats the invisible-ambiguity failure this doc exists to close. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

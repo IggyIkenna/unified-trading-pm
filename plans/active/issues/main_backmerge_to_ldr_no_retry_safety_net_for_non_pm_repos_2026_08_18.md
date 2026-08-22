@@ -36,7 +36,7 @@ context_scope:
     unified-trading-ci/.github/workflows/main-backmerge-to-ldr.yml,
   ]
 created: 2026-08-18
-last_updated: 2026-08-18
+last_updated: 2026-08-21
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
@@ -103,10 +103,11 @@ symptom for one repo/one tick — it does not close any todo below.
       lag — assert additionally that the most recent `main-backmerge-to-ldr` run per repo did not end `failure`, and
       route it through the existing `notify-slack.yml` carrier with a state-transition `dedup_key`. Provenance:
       escalation agt-cebebf, 2026-08-18.
-- [ ] [CI] P3. Evaluate whether `actions/create-github-app-token` (and the other third-party actions these reusable
-      workflows pull per run) should be resolved from a warm local cache on the self-hosted `glue` runners, so a
-      codeload 429 cannot fail a run before any job logic executes. Scope this as an investigation — the answer may be
-      "accept the transient and rely on the P1 retry net". Provenance: escalation agt-cebebf, 2026-08-18.
+- [ ] [CI] P3. DEFERRED-BY-DESIGN — per D92 ruling (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md
+      ledger): Accept — the retry net already closes the incident class; caching adds maintenance for a rare mode.
+      Original ask: evaluate whether `actions/create-github-app-token` (and the other third-party actions these
+      reusable workflows pull per run) should be resolved from a warm local cache on the self-hosted `glue` runners.
+      Provenance: escalation agt-cebebf, 2026-08-18.
 
 ## Progress Log
 
@@ -127,6 +128,9 @@ checked clean before auto-merge was armed, per `ldr_to_main_fleet_promote.sh`'s 
   explicitly framed in-doc as "Scope this as an investigation — the answer may be 'accept the transient and rely
   on the P1 retry net'" — an open-ended investigation with an uncertain answer, not a bounded task. Cross-cutting
   tranche, batch 2 of 3.
+- **2026-08-21 — ruling D92 (Runner action warm-cache)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Accept — the retry net already closes the incident class; caching adds maintenance
+  for a rare mode. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 
 ## Triage recipe for the next instance of this class
 

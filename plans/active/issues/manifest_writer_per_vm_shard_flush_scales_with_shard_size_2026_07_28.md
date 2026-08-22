@@ -17,6 +17,7 @@ scope: [engineer]
 tags: [manifest-writer, performance, backfill, scalability, per-vm-shard]
 related: [defi_dex_pool_symbol_fix_backfill_purge_2026_07_25]
 created: 2026-07-28
+last_updated: 2026-08-21
 author: unknown
 parent_epic: security_and_cross_cutting_master
 priority: P2
@@ -118,17 +119,12 @@ its own review):
       matching deltas, merges/dedups, uploads one consolidated file, deletes the deltas. Needs a SIGKILL-mid-delta
       integration test authored first, plus its own review pass (real code change to a hot, durability-critical,
       fleet-wide-shared write path) — not a same-tick implementation. (repo: unified-trading-library)
-- [ ] [BACKEND] P3. **(reworded 2026-08-19, `/plan-reconcile security_and_cross_cutting_master` Phase 1 — line-1
-      completeness fix; content unchanged, action moved to line 1, dated annotation moved after)** As a cheaper
-      interim alternative to the P2 delta-shard todo above, investigate making the per-VM flush debounce
-      entries-threshold dominant over the interval-threshold once the existing shard exceeds some size (e.g. skip
-      the 5s time-based trigger and require a real entry-count batch once the shard is large), so large shards get
-      bigger, less-frequent batches instead of constant small ones. Note this trades durability under SIGKILL for
-      throughput — needs an explicit call on whether that tradeoff is acceptable, not a default flip.
-      **round5-cross-cutting-audit 2026-08-08 note**: durability-vs-throughput defaults to preserving durability per
-      CLAUDE.md's "data pipeline correctness is the heartbeat" HARD RULE + the P2 todo above already requiring the
-      SIGKILL-durability guarantee; pursue P2 first, leave this tradeoff unimplemented absent an explicit ask.
-      (repo: unified-trading-library)
+- [ ] [BACKEND] P3. DEFERRED-BY-DESIGN — per D95 ruling (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md
+      ledger): Reject — redundant once delta-shards ship; preserving durability is the workspace default. Original
+      ask (as a cheaper interim alternative to the P2 delta-shard todo above): investigate making the per-VM flush
+      debounce entries-threshold dominant over the interval-threshold once the existing shard exceeds some size, so
+      large shards get bigger, less-frequent batches instead of constant small ones — this traded durability under
+      SIGKILL for throughput, now rejected. (repo: unified-trading-library)
 - [ ] [SCRIPT] P3. Once either fix above ships, verify against a synthetic large per-VM shard (~1M+ rows) that flush
       latency no longer scales linearly with existing shard size, and add a regression test guarding it. (repo:
       unified-trading-library)
@@ -208,3 +204,6 @@ its own review):
   with evidence (the 2026-08-20 entry above already did the investigation and produced a full proposed design).
   Added a new todo for the actual implementation, which stays `assigned_vm: NA` — needs its own review pass +
   test-authored-first cycle. Doc's own `assigned_vm: NA` unchanged. Cross-cutting tranche, batch 2 of 3.
+- **2026-08-21 — ruling D95 (Flush durability tradeoff)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Reject — redundant once delta-shards ship; preserving durability is the workspace
+  default. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

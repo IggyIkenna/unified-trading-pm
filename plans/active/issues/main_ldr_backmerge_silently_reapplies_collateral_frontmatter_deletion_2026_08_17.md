@@ -30,7 +30,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-17"
+last_updated: "2026-08-21"
 parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -122,10 +122,12 @@ tree OID when the merge is clean, so exit code alone proves nothing about conten
 - [ ] [DOCS] P2. **Teach `agents/conflict_resolver.md` the clean-merge blind spot** — the role currently reviews only
       git-reported conflicts. Add the pre-commit `merge-tree` diff as a mandatory step of its step-2d/step-4, with the
       exit-0-proves-nothing caveat spelled out. Provenance: this doc.
-- [ ] [DOCS] P3. **Decide whether `author:` should be REQUIRED rather than elective on generator-emitted issue docs** —
-      `scripts/docs/docspec.py` declares it `Req.E`, which is why three separate resolutions could each drop it without
-      a single gate complaining. A generator-emitted doc arguably must keep its provenance. Operator/schema-owner call.
-      Provenance: this doc.
+- [ ] [DOCS] P3. **Make `author:` REQUIRED (not elective) on generator-emitted issue docs** — per D93 ruling
+      (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md ledger): provenance should never be silently
+      droppable; the guard alone doesn't stop deliberate drops. Change `scripts/docs/docspec.py`'s `author:`
+      declaration from `Req.E` to a required tier for `doc_type: issue`, and confirm the doc-format gate rejects a
+      new issue doc missing it. Done-when: a synthetic issue doc missing `author:` fails the gate; every existing doc
+      already carrying it continues to pass. Provenance: this doc.
 
 ## Progress log
 
@@ -135,3 +137,7 @@ tree OID when the merge is clean, so exit code alone proves nothing about conten
   are the actual fix.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-21 — ruling D93 (author: required on generated docs)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Make required — provenance should never be silently droppable; the
+  guard alone doesn't stop deliberate drops. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger.

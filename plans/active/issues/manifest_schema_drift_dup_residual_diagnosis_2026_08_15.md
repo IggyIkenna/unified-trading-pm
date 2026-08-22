@@ -8,6 +8,7 @@ summary: >-
   rebuilds, not a writer-side code fix.
 assigned_vm: NA
 created: "2026-08-15"
+last_updated: "2026-08-21"
 author: slot-11 (infra)
 source: [plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md]
 status: open
@@ -77,15 +78,20 @@ incremental-merge enhancement is an operator/design call, not a worker-determina
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide whether to schedule periodic `consolidate(bucket, force=True)` full-rebuild sweeps (or an
-      equivalent one-off `dedupe_manifest_schema_drift.py --dry-run` verification run) across the CeFi/other per-AG
-      manifest buckets to durably clear byte-identical legacy-duplicate manifest rows the routine incremental `*/1`
-      consolidator cron structurally never re-examines once settled (measured 2026-08-15: BINANCE-FUTURES ~4.15% dup
-      shard-keys at the true dedup key, all byte-identical twins predating the 2026-07-12/07-15 dedup-logic maturation).
-      Repo: unified-trading-library (consolidator) + deployment-service (scheduler, if approved).
+- [ ] [OPERATOR] P2. DEFERRED-BY-DESIGN — per D94 ruling (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md
+      ledger): No action — touching the incident-scarred 3625-line consolidator carries more risk than the
+      duplication's cost. Original ask: decide whether to schedule periodic `consolidate(bucket, force=True)`
+      full-rebuild sweeps across the CeFi/other per-AG manifest buckets to durably clear byte-identical legacy-
+      duplicate manifest rows the routine incremental `*/1` consolidator cron structurally never re-examines once
+      settled (measured 2026-08-15: BINANCE-FUTURES ~4.15% dup shard-keys at the true dedup key). Repo:
+      unified-trading-library (consolidator) + deployment-service (scheduler).
 
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:34db568726207d9c]: KEEP-NA, valid -- Sole open todo is explicitly [OPERATOR]-tagged and the doc's own 'Recommended decision' section states in plain text that the choice between a scheduled periodic full-rebuild sweep vs. a narrower incremental-merge enhancement 'is an operator/design call, not a worker-determinable outcome, per CLAUDE.md's AO-eligible = outcome determinable by the worker alone rule' — citing the exact governing rule against itself. The doc explicitly declined to attempt a code change to the 3625-line, heavily production-incident-scarred manifest_consolidator.py.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries) — repointed the schema-drift dedupe script entry to its actual location (deployment-service/scripts/migrations/instruments-service/, not instruments-service/scripts/).
+- **2026-08-21 — ruling D94 (Byte-identical manifest duplicates)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): No action — touching the incident-scarred 3625-line consolidator
+  carries more risk than the duplication's cost. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger.
