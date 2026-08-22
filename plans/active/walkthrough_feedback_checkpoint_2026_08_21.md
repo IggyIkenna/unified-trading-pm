@@ -133,8 +133,12 @@ Integration Guide → https://claude.ai/code/artifact/866511c2-02d6-40a4-aa40-24
       configs, algo-selection specifics) need per-service verification passes to reach zero-pending — the voice
       lane verified only today's landed fixes (its report, 2026-08-21).
 - [ ] [AGENT] P0. Republish both artifacts (same file paths) after the in-flight lanes land; relay landed shas.
-- [ ] [AGENT] P0. **Uniswap V2/V4 execution wiring — PARKED in execution-service working tree, blocked on
-      unified-api-contracts registry lane, 2026-08-22.** Operator directive: the market-data coverage registry
+- [x] ✅ [AGENT] P0. **RESOLVED 2026-08-22 — Uniswap V2/V4 execution wiring landed execution-service@ca9eda1bf**
+      (ancestor-verified on origin/live-defi-rollout; full `quality-gates.sh` run inside the isolated quickmerge
+      worktree passed clean in 410s, sentinel `d01e61d4171332fb1e6825a9ec8084d0c8796b5f` — 5th gate attempt overall,
+      the first 4 each surfaced one real category of finding in these files which was fixed and locally
+      re-verified before this run, see below). Was parked earlier today blocked on the unified-api-contracts
+      registry lane (operator note: released once unified-api-contracts@326f9a6bfa landed clean). Operator directive: the market-data coverage registry
       already lists Uniswap V2 and V4 but neither had execution wiring — the existing connector
       (`protocols/uniswap.py`) only ever implemented V3 (SwapRouter02 swap + NPM mint/burn). Built full V2 + V4
       execution wiring at the SAME dispatch seam V3 uses (`defi_live_dispatch.py` SWAP,
@@ -184,7 +188,18 @@ Integration Guide → https://claude.ai/code/artifact/866511c2-02d6-40a4-aa40-24
       chain UAC registers `UNISWAP_V4-*` on) verified via direct block-explorer address-page hits. All 6
       hardcoded addresses across both files carry `# DERIVED 2026-08-22 from <chain> <source>` citations (V2
       Router02 + V4 PoolManager/UniversalRouter/PositionManager/Permit2), the null-hooks sentinel carries
-      `# QG-allow: defi-citation`. **Retry command once unified-api-contracts is clean** (run from
+      `# QG-allow: defi-citation`. **Completeness verdict for client docs**: V2 shipped COMPLETE (swap + addLiquidity +
+      removeLiquidity, all self-contained, Ethereum-only — the only chain UAC registers a V2 venue
+      on). V4 SWAP and LP_BURN shipped COMPLETE and self-contained. V4 LP_MINT's execution
+      machinery (PositionManager MINT_POSITION calldata, Permit2 allowances, Actions encoding) is
+      also complete, but it requires the caller to supply `sqrt_price_current` (the pool's live
+      price) — nothing in this codebase fetches a live V4 pool price yet for ANY Uniswap version,
+      so this is a genuine, documented external dependency, not a stub or a guess: an unwired
+      caller gets an honest FAILED result naming exactly what is missing, never a fabricated
+      liquidity number. Do not market V4 LP provisioning as push-button until that price feed
+      is wired (follow-up, not filed as a separate todo yet).
+      **Retry command below is now HISTORICAL (already executed successfully) -- kept for
+      provenance, not for reuse** (run from
       `execution-service/`, exact same command already attempted 2026-08-22 09:05 UTC — do not add
       `--dep-branch`, that is human-only):
       `bash scripts/quickmerge.sh "feat: Uniswap V2 and V4 execution wiring alongside the existing V3 path" --agent --isolated --files 'execution_service/defi_execution/lp_concentrated_dispatch.py execution_service/defi_execution/protocols/base.py execution_service/defi_execution/protocols/uniswap.py execution_service/engine/handlers/defi_live_dispatch.py execution_service/engine/handlers/lp_burn_handler.py execution_service/engine/handlers/lp_mint_handler.py execution_service/engine/handlers/swap_handler.py tests/unit/defi_execution/test_lp_concentrated_dispatch.py tests/unit/test_defi_live_dispatch.py execution_service/defi_execution/protocols/uniswap_errors.py execution_service/defi_execution/protocols/uniswap_v2.py execution_service/defi_execution/protocols/uniswap_v4.py tests/defi_execution/unit/test_uniswap_v2_live_execution.py tests/defi_execution/unit/test_uniswap_v4_live_execution.py'`.
