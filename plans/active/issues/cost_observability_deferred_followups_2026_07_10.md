@@ -24,7 +24,7 @@ related:
   ]
 created: "2026-07-10"
 author: unknown
-last_updated: "2026-07-10"
+last_updated: "2026-08-21"
 parent_epic: deployment_and_user_management_master
 priority: P2
 source:
@@ -63,11 +63,13 @@ context_scope:
 
 ## Ruled 2026-08-07 (operator, via consolidated NA-blocker-digest audit)
 
-- [ ] [BACKEND] P2. **RULED — YES, do the business-context enrichment follow-on work.** Stamp `asset_group` on every
-      launcher + run a backfill; AWS also needs cost-allocation tags activated. Was gated on the operator evaluating the
-      By-label view first (2026-07-10) — ruling: proceed. Original context: today's `asset_group` coverage is ~0.16%
-      ($34), so the axis reads mostly "(unlabeled)"; this closes that gap and restores/generalises what the retired
-      narrow spend-by-strategy page showed.
+- [ ] [BACKEND] P2. Stamp `asset_group` on the 45/149 directly-migratable raw-create VM launchers already
+      identified in `infra_satellite_ao_dispatch_batch17_2026_08_16.md`, run a backfill for those, and activate AWS
+      cost-allocation tags for the corresponding spend — per D55 ruling (ADOPTED-REC 2026-08-21, "Ship partial —
+      ~30% visibility beats 0.16%; remaining tiers are independent work"). The other 104 launchers (3-tier,
+      design-gated) stay tracked as independent follow-on work in the owning infra plan, not blocking this todo.
+      Done when: measured `asset_group` coverage exceeds the current ~0.16% ($34) baseline and the By-label view
+      reflects the migrated launchers.
 - [x] ✅ **RULED — CLOSED as July-2026-onward, final.** AWS CUR historical backfill was originally framed as "just more
       data + one Glue crawler re-run" — **that premise is wrong, corrected 2026-08-07**: the deployed report
       (`aws cur describe-report-definitions` → `uts-cost-usage`) is the LEGACY CUR API, which cannot backfill at all;
@@ -170,3 +172,7 @@ context_scope:
   tiers still gated on unresolved operator design decisions. Corroborates, does not contradict, the 2026-08-08/09
   findings already in this doc.
 - **context-scout 2026-08-17**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+- **2026-08-21 — ruling D55 (Partial VM cost labeling)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Ship partial — ~30% visibility beats 0.16%; remaining tiers are independent
+  work. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
