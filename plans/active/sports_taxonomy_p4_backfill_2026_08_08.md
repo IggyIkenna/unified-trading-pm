@@ -218,8 +218,18 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       to watch — the finding is that the prior "done" claims certified activity, not target-artifact progress.
       Filed the concrete re-launch + code-fix todos, not left as prose:
       `/plans/active/issues/sports_p4_backfill_progress_metric_audit_2026_08_22.md`.
-- [ ] [REVIEW] P1. **Run `/vm-preemption-billing-waste-audit` over the campaign** — check for SPOT preemption without
-      recovery, and for structurally non-retriable `attempted_failed` shards being re-attempted on every wave.
+- [x] ✅ [REVIEW] P1. **Ran `/vm-preemption-billing-waste-audit` over the campaign — 2026-08-22 (slot-16, review).**
+      Preemption scan (`gcloud compute operations list --filter=operationType=compute.instances.preempted`)
+      confirmed the `mdps-sports-bucket-20260821-060513` preemption the prior REVIEW todo found is genuine (GCP
+      system event, `2026-08-21T07:51:04Z`) — and found a corrective relaunch already in flight as of this audit,
+      correctly resuming from the measured checkpoint (`2023-05-15`) rather than replaying from `START_DATE`.
+      **New finding**: the arb-backfill's 1,323 `attempted_failed` days (banned `ManifestWriter.add()` bug) are NOT
+      skipped by `_arb_preflight_skip()` — every future wave re-attempts and re-fails them identically until the
+      code fix lands; filed a `[DATA] P1` "don't relaunch before the fix" todo. Alerting check (DP-FETCH-009,
+      `abs>=500`) inconclusive — no hit found in the last 100 `#data-pipeline-alerts` messages, but the scan may not
+      have cycled since the campaign ran today; filed a `[SCRIPT] P2` re-check follow-up. No code fix needed from
+      this audit itself (read-only per the skill's own contract). Full findings + evidence:
+      `/plans/active/issues/sports_p4_backfill_progress_metric_audit_2026_08_22.md` § "Addendum".
 - [ ] [REVIEW] P0. **Terminal honest-coverage verdict.** After the campaign, every derived type reaches the floor with
       only `captured` / `empty_confirmed` — no `attempted_failed`, no `expected_unattempted` left unreconciled. This is
       the convergence bar `/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md` sets for

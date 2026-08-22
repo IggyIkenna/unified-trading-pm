@@ -123,3 +123,54 @@ beyond the earlier 13-day bounded validation window, and the MDPS bucket/movemen
   relaunch, `2023-05-15 → 2023-06-30 force`; 19 distinct dates + 20 `LOSS_GUARD_PASS` confirmed within 5 min).
 - `gs://deployment-scripts-central-element-323112/vm-logs/mdps-sports-bucket-20260822-150914/run.log` (fresh
   relaunch, `2025-01-01 → 2026-08-06 force`; 23 distinct dates + 34 `LOSS_GUARD_PASS` confirmed within 5 min).
+
+## Addendum — `/vm-preemption-billing-waste-audit` pass (2026-08-22, slot-16, review)
+
+Ran the standing preemption/billing-waste audit (plan REVIEW P1 todo, line 221) over this same campaign. Confirms this
+doc's findings and adds two items this doc didn't cover:
+
+1. **Preemption confirmed genuine.** `gcloud compute operations list
+   --filter="operationType=compute.instances.preempted"` confirms `mdps-sports-bucket-20260821-060513` was genuinely
+   GCP-preempted at `2026-08-21T07:51:04Z` (not a crash/OOM/other kill) — the finding #2 gap above is a real
+   spot-preemption-without-auto-recovery, matching the `spot-vms-for-backfill.md` contract's failure mode exactly.
+   The relaunch (slot-23, `[DATA] P0` entry above) landed concurrently with this audit and already confirms the
+   checkpoint-resume mechanism worked correctly (tail-resumed from `2023-05-15`, not a `START_DATE`/`2022-01-01`
+   replay) — no further re-verification needed from this pass. The only real gap is the absent automated watcher
+   finding #2 above already names (nothing currently running to detect/relaunch a preemption on its own).
+   (Two other sports-tagged preemptions turned up in the same lookback — `sports-manifest-rescan-20260817-144852` and
+   `mtds-backfill-sports-pipelinecheck-20260820-204800-e83df5` — neither is part of this campaign's two named VM
+   prefixes and neither was investigated further; noted, not evidenced either way.)
+
+2. **NEW finding — the arb-backfill's 1,323 `attempted_failed` days will re-fail identically on every future wave
+   until the code fix lands, because the preflight-skip never treats them as already-attempted.**
+   `features-service/features_service/sports/cli/handlers/arb_detect_handler.py`'s `_arb_preflight_skip()` (~line 72)
+   only skips a day whose manifest row is already `captured`/`empty_confirmed` — it does **not** skip
+   `attempted_failed` rows, and `_run_historical_backfill`'s exception handler (line ~168-172) does call
+   `writer.record_failed(...)` on every one of the 1,323 banned-`.add()` days, so they ARE recorded
+   `attempted_failed` in the manifest. Net effect: this is not a venue/data classification the existing
+   `classify_venue_error()` retriable/non-retriable taxonomy covers at all — it's a 4th class, an **application bug
+   with a 100%-deterministic failure signature**, but it behaves exactly like the codex contract's "structurally
+   non-retriable shard re-attempted every wave" pattern: any relaunch of this campaign BEFORE the `.add()` →
+   `record_captured_from_counts()` fix (already tracked as the `[DATA] P0` todo above) lands will burn ~1,323
+   shard-days of compute for a guaranteed identical re-failure, with no `--force` needed to trigger the re-attempt.
+   - [ ] [DATA] P1. **Do not relaunch `launch-features-sports-arb-backfill.sh` (or any wave that revisits this date
+         range) until the `arb_detect_handler.py` `.add()`→`record_captured_from_counts()` fix (see the `[DATA] P0`
+         todo above) has landed and been verified** — a premature relaunch will re-attempt and re-fail the same
+         ~1,323 shard-days for zero benefit (repo: features-service, deployment-service).
+
+3. **Alerting check (Step 3, inconclusive) — DP-FETCH-009 (`check_high_attempted_failed`, `abs>=500` threshold)
+   should have fired for this cell** (1,323 far exceeds the 500 floor), but a check of the `#data-pipeline-alerts`
+   Slack channel (last 100 messages, spanning back to 2026-08-18) found no `DP-FETCH-009`/`DP_RUN_MOSTLY_EMPTY`
+   mention for `arbitrage_opportunity`/sports. `check_high_attempted_failed` is a scheduled/cron-based post-run
+   manifest scan (not real-time), and the campaign that produced these rows only ran 2026-08-22 (today) — so this
+   may simply mean the scan hasn't run its next cycle yet rather than a genuine coverage gap. Not confirmed either
+   way within this audit's scope.
+   - [ ] [SCRIPT] P2. Re-check the `#data-pipeline-alerts` channel (or the Cloud Run job's own run history) after
+         `check_high_attempted_failed`'s next scheduled cycle for a `DP-FETCH-009` hit on
+         `(asset_group=sports, data_type=arbitrage_opportunity)`. If it still hasn't fired despite the cell being
+         well over the `abs>=500` threshold, file that as a genuine alerting-coverage gap per
+         `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md` § "Verify the alert actually
+         fires" (repo: deployment-service).
+
+Evidence: `gcloud compute operations list --project=central-element-323112 --filter="operationType=compute.instances.preempted AND targetLink~mdps-sports"` (single preemption hit, `mdps-sports-bucket-20260821-060513`, `2026-08-21T07:51:04Z`);
+`gcloud compute instances describe mdps-sports-bucket-20260822-{150734,150914} --format="value(metadata.items)"` (relaunch args showing checkpoint-resume, not replay); `features-service/features_service/sports/cli/handlers/arb_detect_handler.py:72-180` (`_arb_preflight_skip` / `_run_historical_backfill` read); `scripts/dev/slack-read-channel.py --channel data-pipeline-alerts --limit 100` (no DP-FETCH-009/arbitrage hit).
