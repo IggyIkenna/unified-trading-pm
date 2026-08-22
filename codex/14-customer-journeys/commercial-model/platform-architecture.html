@@ -9794,11 +9794,14 @@ Content-Type: application/json
             the chain in the token itself, a protocol deployed on several chains counts as that many separate
             venues: stripped of chain suffixes, the 103 live DeFi venues above resolve to <strong>59</strong>
             distinct data-source protocols, the reason the venue count is larger than the protocol count. Those 59
-            are the DeFi market-data coverage; they are a different count from execution. Ten protocol families carry
-            real per-venue execution wiring today, reached through the instruction handlers: Uniswap, Curve and
-            Balancer for swaps; Uniswap for concentrated and pair liquidity; Lido and EtherFi for staking; and AAVE
-            V3, Compound V3, EulerV2, Fluid and Morpho for lending. Between them they span Ethereum, Arbitrum, Base,
-            Optimism, Polygon, BSC, Avalanche and Linea, with AAVE V3 the widest at eight chains.
+            are the DeFi market-data coverage; they are a different count from execution, and the two should never be
+            read as one number. Three counts sit behind this surface. Fifty-nine protocols are covered as data
+            sources. Ten protocol families are reachable in backtest and research simulation: Uniswap, Curve and
+            Balancer for swaps, Uniswap for liquidity provision, Lido and EtherFi for staking, and AAVE V3, Compound
+            V3, EulerV2, Fluid and Morpho for lending. Three are wired end to end for live on-chain instruction
+            dispatch: Uniswap swap across V2, V3 and V4, AAVE V3 supply, withdraw, borrow and repay, and Lido stake
+            and unstake. A venue outside that third set returns an explicit failure naming the gap rather than a
+            simulated result, which is what keeps a backtest number from ever being mistaken for a live one.
           </p>
         </div>
       </details>
