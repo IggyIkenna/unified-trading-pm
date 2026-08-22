@@ -711,9 +711,18 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       PYSEC-2026-196 fix version `26.1.2` instead of the actual reason for the `>=26.2` floor,
       PYSEC-2026-3721/CVE-2026-13346) — `ml-service@56d2a27856`, full `quality-gates.sh` green (sentinel
       matched commit SHA), verified on `origin/live-defi-rollout`.
-- [x] ✅ [SCRIPT] P2. **DONE 2026-08-22 (slot-24).** **strategy-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). Source `pyproject.toml` already declared `pip>=26.2` and resolved `pip==26.2`; regenerated the stale `uv.lock` project metadata (`>=26.1.2` → `>=26.2`). Full `quality-gates.sh` passed (6,472 passed, 248 skipped, 3 xfailed, 112 warnings), then quickmerge shipped `strategy-service@2f18b51aa7`, verified on `origin/live-defi-rollout`.
-- [ ] [SCRIPT] P2. **system-integration-tests** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
-      system-integration-tests)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-22 (slot-24, + a preceding comment-only fix from slot-4).** **strategy-service**
+      — pip CVE-2026-13346 bump per recipe above (was 26.1.2). `pyproject.toml` already declared `pip>=26.2`
+      (`strategy-service@228b1580`); slot-4 fixed the stale PYSEC-2026-196/26.1.2 inline comment
+      (`strategy-service@f30e4470`); slot-24 then regenerated the stale `uv.lock` project metadata (`>=26.1.2` →
+      `>=26.2`) — full `quality-gates.sh` passed (6,472 passed, 248 skipped, 3 xfailed, 112 warnings), shipped
+      `strategy-service@2f18b51aa7`. All three commits verified sequential on `origin/live-defi-rollout`.
+- [x] ✅ [SCRIPT] P2. **DONE — verified already-landed (2026-08-22, slot-4).** **system-integration-tests** — pip
+      CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: system-integration-tests) —
+      `system-integration-tests@4512dfd` ("fix(deps): bump pip floor to 26.2 (PYSEC-2026-3721/CVE-2026-13346) +
+      surgical uv.lock pip->26.2.1"), verified HEAD ancestor-or-equal of `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor`; `pyproject.toml` declares `"pip>=26.2"`, `uv.lock` resolves `pip==26.2.1`,
+      working tree clean, comment already correctly cited PYSEC-2026-3721/CVE-2026-13346. No code change needed.
 - [x] ✅ [SCRIPT] P2. **DONE — verified already-landed (2026-08-22, slot-10).** **trading-agent-service** — pip
       CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: trading-agent-service) — `pyproject.toml` already
       declared `"pip>=26.2"` and `uv.lock` already resolved `pip==26.2` (landed directly, no separate bump commit
@@ -721,11 +730,18 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       comment to PYSEC-2026-3721/CVE-2026-13346 (same pattern as ml-service's todo above), full `quality-gates.sh`
       green, shipped `trading-agent-service@12d9ad361c`, verified HEAD ancestor-or-equal of `origin/live-defi-rollout`
       via `git merge-base --is-ancestor`.
-- [ ] [SCRIPT] P2. **(then) canonical + drop ignore.** Once every repo above is verified at `pip>=26.2`: edit
-      `workspace-constraints.toml`'s `pip` entry to `pip>=26.2`, regenerate `canonical-dependency-manifest.json` via
-      `generate_canonical_dependency_manifest.py`, re-run `check-dependency-alignment.py --json` fleet-wide to confirm
-      `"aligned": true`, then drop the `--ignore-vuln PYSEC-2026-3721 --ignore-vuln CVE-2026-13346` entry from
-      `QG_PIP_AUDIT_COMMON_IGNORES` in `qg-common.sh`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-22 (slot-4).** **(then) canonical + drop ignore.** All 15 repos in the fleet
+      sweep above now verified at `pip>=26.2` (the last two, strategy-service + system-integration-tests, flipped
+      above this same session). `workspace-constraints.toml`'s `pip` entry was already `pip>=26.2` (landed earlier,
+      `ed51483291`) — confirmed, no edit needed. Regenerated `canonical-dependency-manifest.json` +
+      `CANONICAL_DEPENDENCY_MANIFEST.svg` via `generate_canonical_dependency_manifest.py` — zero diff (already
+      current). Regenerated `derived-dependency-manifest.json` via `generate-derived-manifest.py` (parses every
+      fleet repo's on-disk `pyproject.toml` under this slot) then re-ran `check-dependency-alignment.py --json`:
+      **zero pip mismatches** — the only remaining reported issue is deployment-api's pre-existing, unrelated
+      `internal_in_manifest_not_pyproject`/deployment-service gap (explicitly out-of-scope per this doc's own note on
+      that repo's todo above). Dropped `--ignore-vuln PYSEC-2026-3721 --ignore-vuln CVE-2026-13346` from
+      `QG_PIP_AUDIT_COMMON_IGNORES` in `scripts/quality-gates-base/qg-common.sh` (now `""`), with a dated
+      RESOLVED comment replacing the TEMPORARY one. (repo: unified-trading-pm)
 
 ## Composes with
 
@@ -786,3 +802,14 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
   fixed a misleading inline comment on that same pyproject.toml line (it still cited the OLD PYSEC-2026-196 fix
   version `26.1.2` as the rationale for a `>=26.2` floor, rather than the actual current reason,
   PYSEC-2026-3721/CVE-2026-13346) — shipped as `ml-service@56d2a27856`, full `quality-gates.sh` green.
+- **2026-08-22 (slot 4)**: closed out the pip PYSEC-2026-3721/CVE-2026-13346 fleet sweep. Verified the last two open
+  repos (strategy-service, system-integration-tests) both already had `pip>=26.2` landed on `origin/live-defi-rollout`
+  (direct `uv.lock`/`pyproject.toml` reads + `git merge-base --is-ancestor`) — fixed strategy-service's stale
+  PYSEC-2026-196/26.1.2 inline comment in the same pass (`strategy-service@f30e4470`). Then ran the "(then) canonical
+  + drop ignore" todo: `workspace-constraints.toml`'s `pip` entry was already `pip>=26.2`;
+  `generate_canonical_dependency_manifest.py` produced zero diff; regenerated `derived-dependency-manifest.json`
+  (parses every fleet repo's actual on-disk `pyproject.toml`) and `check-dependency-alignment.py --json` now reports
+  zero pip mismatches fleet-wide (the sole remaining issue, deployment-api's `internal_in_manifest_not_pyproject`, is
+  pre-existing/unrelated, per this doc's own note). Dropped `QG_PIP_AUDIT_COMMON_IGNORES` back to `""` in
+  `scripts/quality-gates-base/qg-common.sh`. This doc's only remaining open item is the inherently-unbounded
+  "one-by-one for the rest" audit todo (intentionally left open per its own PARKED reasoning above).
