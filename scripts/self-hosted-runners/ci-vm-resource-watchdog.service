@@ -2,7 +2,7 @@
 # hourly resource-history window shows a genuine box-down risk (real OOM-kill, or sustained
 # near-saturation swap/load+iowait) — never on a tolerated temporary burst.
 #
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent   Delete-when: NA
 #
 # Driven by ci-vm-resource-watchdog.timer. Reads resource-history-sampler's own on-disk JSONL

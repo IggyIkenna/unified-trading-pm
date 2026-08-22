@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # check-slot-commit-identity.sh — per-host audit (and --fix) of slot·host commit identity.

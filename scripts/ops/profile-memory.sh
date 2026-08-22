@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # profile-memory.sh — Memory profiling for a running service or a short benchmark run

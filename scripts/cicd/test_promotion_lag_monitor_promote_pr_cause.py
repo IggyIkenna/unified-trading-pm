@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Unit tests for `_promote_pr_cause()` / `_sit_fleet_status()` in promotion_lag_monitor.

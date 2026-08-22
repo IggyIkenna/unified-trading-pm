@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # 2026-04-22 — QuestionnaireResponse UAC <-> UI parity (G1.10 §Deviations trigger).

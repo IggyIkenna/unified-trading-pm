@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # Add datadodo and CosmicTrader as collaborators (read or write) to ALL repos in workspace-manifest.json.

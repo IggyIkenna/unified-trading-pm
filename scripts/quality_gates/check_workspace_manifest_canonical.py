@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """check_workspace_manifest_canonical — reject a non-canonical workspace-manifest.json.

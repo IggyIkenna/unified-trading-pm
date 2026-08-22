@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Detect drift between per-repo quality-gates.sh / .pre-commit-config.yaml and SSOT templates.

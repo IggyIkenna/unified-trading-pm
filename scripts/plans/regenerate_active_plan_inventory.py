@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Regenerate the auto-tracked active plan inventory in master_to_live_defi_2026_05_23.md.

@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """QG snapshot staleness checker (B-018 Phase 4.A monitoring, 2026-05-15).

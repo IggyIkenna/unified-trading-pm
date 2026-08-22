@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Dependency-order local QG sweep — the pre-promotion staging oracle.
@@ -101,6 +101,7 @@ def main() -> int:
         # within a tier repos are independent → run ≤concurrency at a time; a tier must be
         # green before the next (dependents build on it).
         with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as ex:
+
             def _qg_one(r: str) -> tuple[str, bool, str]:
                 return _run_qg(ws / r)
 
@@ -110,16 +111,22 @@ def main() -> int:
                 if not ok:
                     overall_ok = False
         if not overall_ok:
-            print(f"\n⚠️  dep-tier {li} has a RED repo — dependents in later tiers build on it; "
-                  "fix this tier before trusting downstream greens.")
+            print(
+                f"\n⚠️  dep-tier {li} has a RED repo — dependents in later tiers build on it; "
+                "fix this tier before trusting downstream greens."
+            )
             break
 
     green = sum(1 for ok, _ in results.values() if ok)
     print(f"\n=== sweep: {green}/{len(results)} repos green ===")
     print(
         "staging-confidence: "
-        + ("HIGH (local LDR-checkout QG green in dep order ⇒ expect staging-v2 green; "
-           "residual gap = assembled-SIT cross-repo layer)" if overall_ok else "LOW — fix red repos first")
+        + (
+            "HIGH (local LDR-checkout QG green in dep order ⇒ expect staging-v2 green; "
+            "residual gap = assembled-SIT cross-repo layer)"
+            if overall_ok
+            else "LOW — fix red repos first"
+        )
     )
     return 0 if overall_ok else 1
 

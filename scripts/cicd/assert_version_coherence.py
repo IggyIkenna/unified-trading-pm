@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Version-coherence gate — assert each repo's source ``version`` agrees with the manifest.

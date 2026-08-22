@@ -1,5 +1,5 @@
 #!/usr/bin/env python3.13
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # SCHEMA_PROVENANCE_EXEMPT — PM-internal tooling models, not domain schemas
@@ -620,8 +620,7 @@ def main() -> int:
 
     if not codex_path.exists():
         print(
-            f"WARNING: codex not found at {codex_path}. "
-            "Declared-state verification will fall back to plan file.",
+            f"WARNING: codex not found at {codex_path}. Declared-state verification will fall back to plan file.",
             file=sys.stderr,
         )
 

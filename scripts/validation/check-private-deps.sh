@@ -1,5 +1,5 @@
 #!/bin/bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 set -e

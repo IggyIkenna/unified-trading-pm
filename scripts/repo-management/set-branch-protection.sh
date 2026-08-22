@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent tombstone/redirect notice — this script hard-refuses to run
 # Delete-when: NA (keep as a permanent redirect pointer to the ruleset model)
 # set-branch-protection.sh

@@ -28,7 +28,7 @@ See scripts/cicd/setup_manifest_merge_drivers.sh for the canonical wiring used b
 SSOT: plans/active/cicd_consolidated_remaining_2026_06_24.md (manifest-merge-driver).
 """
 
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 from __future__ import annotations

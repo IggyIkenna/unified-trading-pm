@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """precompact-watcher.py — personal, single-session analog of agent-orchestrator's

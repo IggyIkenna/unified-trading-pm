@@ -2,7 +2,7 @@
 # (glue-runner-crash-loop-watchdog.sh + siblings) from the refreshed slot mirror into their
 # live /usr/local/sbin/ execution path.
 #
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent   Delete-when: NA
 #
 # Driven by github-glue-deploy-sync.timer. Wants+After github-glue-slot-refresh.service so

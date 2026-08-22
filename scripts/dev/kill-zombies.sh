@@ -1,5 +1,5 @@
 #!/bin/bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # Kill zombie basedpyright and agent-CLI processes — moved from plans/tasks/claude-code/ 2026-07-27

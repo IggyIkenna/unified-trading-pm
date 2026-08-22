@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: uac_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Capability manifest reader helpers for the prospectus generator.

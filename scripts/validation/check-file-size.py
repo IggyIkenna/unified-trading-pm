@@ -1,5 +1,5 @@
 #!/usr/bin/env python3.13
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Pre-commit hook: check Python file size (900 lines max per codex standard)."""

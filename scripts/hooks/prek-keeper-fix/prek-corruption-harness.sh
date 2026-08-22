@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: prek ships the keeper rollback-baseline fix upstream AND every host runs
 #              a version >= that release (then this becomes the proof we can stop patching)

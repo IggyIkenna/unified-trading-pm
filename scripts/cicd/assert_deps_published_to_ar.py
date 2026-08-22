@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Gap 9a — assert a repo's internal dependencies are PUBLISHED to Artifact Registry.
@@ -144,9 +144,16 @@ def _ar_versions(package: str) -> list[tuple[int, int, int]] | None:
     """Published versions of `package` in AR as version tuples; None on any error (→ fail-open)."""
     proc = subprocess.run(
         [
-            "gcloud", "artifacts", "versions", "list",
-            f"--repository={AR_REPOSITORY}", f"--location={AR_REGION}", f"--project={AR_PROJECT}",
-            f"--package={package}", "--format=value(name)", "--limit=1000",
+            "gcloud",
+            "artifacts",
+            "versions",
+            "list",
+            f"--repository={AR_REPOSITORY}",
+            f"--location={AR_REGION}",
+            f"--project={AR_PROJECT}",
+            f"--package={package}",
+            "--format=value(name)",
+            "--limit=1000",
         ],
         capture_output=True,
         text=True,
@@ -191,11 +198,13 @@ def check(repo: str, ref: str, pyproject_path: str | None, manifest_path: Path) 
         ok = any(v >= floor and (ceil is None or v < ceil) for v in versions)
         if not ok:
             latest = max(versions) if versions else None
-            unpublished.append({
-                "dep": dep,
-                "floor": ".".join(map(str, floor)),
-                "latest_in_ar": ".".join(map(str, latest)) if latest else None,
-            })
+            unpublished.append(
+                {
+                    "dep": dep,
+                    "floor": ".".join(map(str, floor)),
+                    "latest_in_ar": ".".join(map(str, latest)) if latest else None,
+                }
+            )
     return {"satisfied": not unpublished, "unpublished": unpublished, "checked": checked, "fail_open_reason": None}
 
 

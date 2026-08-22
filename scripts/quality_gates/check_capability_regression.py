@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Capability-regression gate (Wave-2 #5) — FAIL on a lost capability without a plan ack.

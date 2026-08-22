@@ -1,5 +1,5 @@
 #!/usr/bin/env python3.13
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Validate deployment checklists have phase_9_deployable_enhancements (items 38-41).

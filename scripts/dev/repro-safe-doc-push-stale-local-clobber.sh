@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA (re-run to verify a fix to `_sdp_reconcile_caller_duplicates` closes this gap;
 #   keep until /plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md's

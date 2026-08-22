@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: uac_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Per-edge operational-maturity (readiness) annotation pass (Wave-2 #2).

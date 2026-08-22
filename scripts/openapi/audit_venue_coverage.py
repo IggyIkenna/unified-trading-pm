@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: uac_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Venue coverage audit (F39) — per-venue verdict against adapter inventory.

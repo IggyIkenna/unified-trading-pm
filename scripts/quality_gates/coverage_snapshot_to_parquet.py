@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """coverage_snapshot_to_parquet.py — per-repo coverage → GCS daily writer.

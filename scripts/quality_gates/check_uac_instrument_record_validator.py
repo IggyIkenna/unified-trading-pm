@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """STEP 5.83 — UAC InstrumentRecord hard-schema enforcement validator.

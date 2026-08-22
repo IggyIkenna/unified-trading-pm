@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Compute the SINCE-LAST-PROMOTE range for the strict-quickmerge provenance gate.

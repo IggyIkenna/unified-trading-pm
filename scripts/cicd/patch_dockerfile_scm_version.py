@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: temporary
 # Delete-when: fleet-wide git-tag dynamic-versioning rollout stable + service templates carry the fix
 """Surgically fix the SECOND manifestation of the WS-L/D13 git-tag-versioning regression: the

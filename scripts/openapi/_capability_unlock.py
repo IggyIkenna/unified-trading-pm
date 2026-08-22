@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: uac_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Counterfactual "minimal unlock set" engine (Wave-2 #1).

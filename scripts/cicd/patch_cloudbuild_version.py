@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: temporary
 # Delete-when: fleet-wide git-tag rollout complete
 """Surgically patch a cloudbuild.yaml's version-extraction from the pyproject grep to git-describe

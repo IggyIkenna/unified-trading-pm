@@ -1,6 +1,6 @@
 # qg-baseline-daily-promote.timer — daily QG resource-baseline freshness promotion.
 #
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent   Delete-when: NA
 #
 # Cadence: once daily, at an off-the-hour minute (03:11 UTC) to avoid colliding with other

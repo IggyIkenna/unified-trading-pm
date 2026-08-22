@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # verify_watchdog_e2e.sh — Post-rollout E2E verification for WorkerLivenessWatchdog.

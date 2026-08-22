@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: temporary
 # Delete-when: fleet-wide git-tag dynamic-versioning rollout stable + templates carry fetch-tags
 """Surgically insert a `fetch-tags` step into a repo's cloudbuild.yaml so the wheel-build step's

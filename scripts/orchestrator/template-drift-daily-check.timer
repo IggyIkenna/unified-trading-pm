@@ -1,6 +1,6 @@
 # template-drift-daily-check.timer — daily workflow-template drift verdict refresh.
 #
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent   Delete-when: NA
 #
 # Cadence: once daily, at an off-the-hour minute (03:23 UTC) to avoid colliding with other timers'

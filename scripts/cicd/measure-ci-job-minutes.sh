@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: RECURRING — this answer has a DATE on it; re-run, never cite an old number.
 # Delete-when: the CI-VM sizing/cost question in
 #   /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md

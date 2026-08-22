@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # CANONICAL semver-agent.yml rollout — the ONE tool, the ONE SSOT (2026-06-07).

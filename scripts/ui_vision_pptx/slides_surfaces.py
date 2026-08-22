@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Slides 05-07 — Trading Command Center, Strategy Analytics, Markets + Ops."""

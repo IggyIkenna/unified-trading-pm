@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # enable_autospawn.sh — SSM script to enable ORCHESTRATOR_AUTOSPAWN_ENABLED on one VM.

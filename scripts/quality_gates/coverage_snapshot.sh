@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # QG coverage-snapshot writer (Phase 8.E of deployment_and_qg_strategy_implementation_2026_05_13).

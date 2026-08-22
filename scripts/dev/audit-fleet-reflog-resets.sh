@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: campaign
 # Delete-when: plans/active/issues/slot11_silent_branch_reset_data_loss_2026_07_13.md closed (INFRA todos 1/2/4 fixed + verified in prod)
 #

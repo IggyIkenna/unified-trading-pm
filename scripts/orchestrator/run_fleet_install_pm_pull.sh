@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # run_fleet_install_pm_pull.sh — Roll out pm-pull.timer to the 9 remaining epic VMs.

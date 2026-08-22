@@ -2,7 +2,7 @@
 # would risk genuinely bringing the box down (operator directive, 2026-08-08: "temp spikes
 # are ok... unless it would literally bring down the box").
 #
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent   Delete-when: NA
 #
 # 60-min cadence matches the operator's own ask -- deliberately coarser than the 5-min

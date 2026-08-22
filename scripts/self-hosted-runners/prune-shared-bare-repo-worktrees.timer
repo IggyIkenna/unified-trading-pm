@@ -2,7 +2,7 @@
 # dep-clone cache (Part 4/8's explicit "git worktree prune on a timer" requirement:
 # plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md).
 #
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent   Delete-when: shared bare-repo dep-clone fast path retired
 #
 # Cadence rationale: the fast path's own opportunistic prune (before every fetch) is the primary

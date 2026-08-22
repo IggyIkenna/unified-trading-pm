@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Dep-content sync gate — every editable dep must be clean and == its LDR ref.
@@ -75,9 +75,7 @@ def transitive_editable_deps(repo: Path) -> dict[str, Path]:
 
 
 def _git(dep: Path, *args: str) -> str:
-    return subprocess.run(
-        ["git", "-C", str(dep), *args], capture_output=True, text=True
-    ).stdout.strip()
+    return subprocess.run(["git", "-C", str(dep), *args], capture_output=True, text=True).stdout.strip()
 
 
 def classify(dep: Path, ldr_ref: str) -> tuple[str, str]:
@@ -91,18 +89,12 @@ def classify(dep: Path, ldr_ref: str) -> tuple[str, str]:
         ["git", "-C", str(dep), "fetch", "origin", ldr_ref.split("/", 1)[-1], "--quiet"],
         capture_output=True,
     )
-    head_anc = subprocess.run(
-        ["git", "-C", str(dep), "merge-base", "--is-ancestor", head, ldr_ref]
-    ).returncode == 0
-    ldr_anc = subprocess.run(
-        ["git", "-C", str(dep), "merge-base", "--is-ancestor", ldr_ref, head]
-    ).returncode == 0
+    head_anc = subprocess.run(["git", "-C", str(dep), "merge-base", "--is-ancestor", head, ldr_ref]).returncode == 0
+    ldr_anc = subprocess.run(["git", "-C", str(dep), "merge-base", "--is-ancestor", ldr_ref, head]).returncode == 0
     if head_anc and ldr_anc:
         return "PASS", "clean + == LDR"
     if not head_anc:
-        return "BLOCK", (
-            "ahead-of-LDR-unpushed — local QG tests dep content staging will never see; push to LDR first"
-        )
+        return "BLOCK", ("ahead-of-LDR-unpushed — local QG tests dep content staging will never see; push to LDR first")
     return "WARN", "behind its LDR ref (stale base) — pull origin LDR"
 
 

@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Unit tests for the ETag conditional-request layer in promotion_lag_monitor.

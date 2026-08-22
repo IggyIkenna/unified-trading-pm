@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA (re-run to verify a fix to autostash_guard_bound_backlog /
 #   autostash_guard_quarantine_stale_pop closes this gap; keep until

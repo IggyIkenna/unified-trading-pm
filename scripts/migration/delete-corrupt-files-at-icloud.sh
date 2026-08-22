@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # Delete corrupt files at iCloud per ICLOUD_CORRUPT_FILES_MIGRATION_REPORT.md

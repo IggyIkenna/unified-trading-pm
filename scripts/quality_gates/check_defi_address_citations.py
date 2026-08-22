@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """QG STEP 5.97 — DeFi contract-address citation ratchet.
@@ -72,9 +72,7 @@ import yaml
 #: Matches an Ethereum-style contract address: ``0x`` followed by exactly 40
 #: hexadecimal characters (upper or lower).  Word-boundary anchored so we
 #: don't match partial strings like ``0x1234567890abcdef1234567890abcdef12345678XX``.
-ADDR_RE: Final[re.Pattern[str]] = re.compile(
-    r"\b0x[0-9a-fA-F]{40}\b"
-)
+ADDR_RE: Final[re.Pattern[str]] = re.compile(r"\b0x[0-9a-fA-F]{40}\b")
 
 #: Exemption marker.  A line carrying this token (after ``# QG-allow:``) is
 #: skipped — the address is explicitly audited and grandfathered.
@@ -346,9 +344,7 @@ def _resolve_scopes(workspace_root: Path, scope: str | None) -> list[tuple[str, 
 
 
 def main(argv: Iterable[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="DeFi contract-address citation ratchet (QG STEP 5.97)."
-    )
+    parser = argparse.ArgumentParser(description="DeFi contract-address citation ratchet (QG STEP 5.97).")
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument("--scope", default=None, help="Single repo dir name (per-repo QG mode).")
     parser.add_argument(
@@ -404,7 +400,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     if failures:
         print(
             "\n→ Add `# DERIVED <YYYY-MM-DD> from <chain> <source>` on the same line as the address "
-            "(e.g. `\"0x...\"  # DERIVED 2026-05-08 from ethereum etherscan tx 0xabc...`), "
+            '(e.g. `"0x..."  # DERIVED 2026-05-08 from ethereum etherscan tx 0xabc...`), '
             "OR add `# QG-allow: defi-citation — <reason>` if this is a pool/pair address "
             "auto-deployed by a factory (not a protocol-level SSOT constant). "
             "SSOT: defi_onchain_derivable_values_and_date_drift_2026_06_20.md Phase 5. "

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Workspace combination fingerprint — SHA-256 of all ldr_main repos' LDR tree SHAs.

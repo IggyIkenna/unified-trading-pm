@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # load-gh-token.sh — export a WORKFLOW-CAPABLE GH_TOKEN for gh + git in EVERY context.

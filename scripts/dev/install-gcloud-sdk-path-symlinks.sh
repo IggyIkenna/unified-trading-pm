@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # install-gcloud-sdk-path-symlinks.sh — make the real (non-snap) gcloud SDK binaries

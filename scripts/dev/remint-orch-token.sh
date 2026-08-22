@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: the reporter stops needing a bearer token off-VM (see the durable-fix
 #              todo in /plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md)

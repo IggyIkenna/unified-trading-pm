@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Strict YAML parse of plan/epic frontmatter — the machine-readability gate.
@@ -27,12 +27,7 @@ SKIP_NAMES = {"INDEX.md", "task_template.md", "README.md"}
 
 
 def should_skip(name: str) -> bool:
-    return (
-        name in SKIP_NAMES
-        or name.startswith("_")
-        or name.endswith(".HANDOVER.md")
-        or "SUPERSEDED" in name
-    )
+    return name in SKIP_NAMES or name.startswith("_") or name.endswith(".HANDOVER.md") or "SUPERSEDED" in name
 
 
 def check(path: Path) -> str | None:

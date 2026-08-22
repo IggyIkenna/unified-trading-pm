@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: temporary — delete once pipeline_e2e_check.py itself gains native
 #   multi-cell-per-invocation report accumulation (the skill's own "under
 #   /autonomous, append to the same day's report" design intent).

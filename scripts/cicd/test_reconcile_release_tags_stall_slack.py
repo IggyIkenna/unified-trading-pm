@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Unit tests for reconcile_release_tags.py's STALL Slack-routing + self-audit (2026-08-02).

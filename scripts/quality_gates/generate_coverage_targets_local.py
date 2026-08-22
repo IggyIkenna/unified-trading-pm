@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """generate_coverage_targets_local.py — bootstrap per-repo coverage_targets_local.yaml.

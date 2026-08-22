@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # install-audit-reflog-guard.sh — install the reflog-reset safety guard on THIS host, cross-platform.

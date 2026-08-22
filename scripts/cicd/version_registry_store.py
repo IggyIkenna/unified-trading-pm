@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Version-registry side store — Firestore, the release version↔SHA per repo (Phase-2 writer + CAS).

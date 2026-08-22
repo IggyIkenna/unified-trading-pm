@@ -1,6 +1,6 @@
 # github-glue-deploy-sync.timer — sync host-deployed sbin scripts every 10 minutes.
 #
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent   Delete-when: NA
 #
 # Same cadence as github-glue-slot-refresh.timer (10 min) since this depends on that mirror

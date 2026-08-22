@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # setup-cursor-rules-symlink.sh — Point .cursor/rules/ at unified-trading-pm/.cursor/rules/

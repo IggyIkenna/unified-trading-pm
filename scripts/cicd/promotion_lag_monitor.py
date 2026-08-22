@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Promotion-lag monitor — a PURE BRANCH-PAIR lag monitor (LDR↔staging↔main out of sync > N min).

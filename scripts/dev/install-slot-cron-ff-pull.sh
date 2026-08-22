@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # install-slot-cron-ff-pull.sh — register the 5-min FF-pull cron + symmetry-verify cron for an operator.

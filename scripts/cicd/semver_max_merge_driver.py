@@ -15,7 +15,7 @@ Wire-up (runner-local, NOT committed into any repo):
 SSOT: plans/active/issues/cicd_consolidated_remaining_2026_06_24.md (cure B).
 """
 
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 from __future__ import annotations

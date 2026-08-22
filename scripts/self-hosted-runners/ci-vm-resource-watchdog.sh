@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ci-vm-resource-watchdog.sh
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 #

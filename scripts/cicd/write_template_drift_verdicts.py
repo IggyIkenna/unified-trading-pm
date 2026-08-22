@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Driver: detect_template_drift.py --json -> verdict_store CAS writes (one Firestore doc per

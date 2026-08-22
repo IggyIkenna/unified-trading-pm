@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """gap-2.6.C — Verify env-tiered buckets are provisioned per cloud-providers.yaml SSOT.

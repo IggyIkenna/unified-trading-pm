@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """SIT-gate stuck detector — pages when a repo has posted `SIT GATE BLOCK <repo>` on N+

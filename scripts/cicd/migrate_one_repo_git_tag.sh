@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: temporary
 # Delete-when: fleet-wide git-tag rollout complete
 #

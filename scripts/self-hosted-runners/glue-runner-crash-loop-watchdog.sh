@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # glue-runner-crash-loop-watchdog.sh
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 #

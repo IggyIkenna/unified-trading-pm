@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA (re-run this to verify the flock/checksum fix from
 #   plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md

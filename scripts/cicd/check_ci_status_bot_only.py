@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Guard 1 — single-writer enforcement for manifest ``ci_status``.

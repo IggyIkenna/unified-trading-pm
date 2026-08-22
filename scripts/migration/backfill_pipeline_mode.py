@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: oneoff
 # Delete-when: after prod-run + orphan-sweep=0
 """One-shot backfill: fill pipeline_mode column on existing manifest rows.

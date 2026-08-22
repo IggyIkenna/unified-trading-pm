@@ -1,4 +1,4 @@
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 """Unit tests for STEP 5.74 — check_mdps_bar_boundary_compliance.py.

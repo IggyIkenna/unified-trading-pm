@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # migrate-slots-to-pathb.sh — convert existing tab-branch slot worktrees → Path-B reference-clones.

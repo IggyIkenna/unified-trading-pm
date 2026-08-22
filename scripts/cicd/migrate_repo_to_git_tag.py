@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: temporary
 # Delete-when: fleet-wide git-tag rollout complete (every version-tracked repo is version_source=git-tag)
 """Migrate ONE repo's ``pyproject.toml`` from a committed ``version =`` line to dynamic
@@ -73,9 +73,7 @@ def _declared_version(text: str) -> str | None:
 
 
 def _is_already_dynamic(text: str) -> bool:
-    has_dynamic = any(
-        re.match(r'^\s*dynamic\s*=\s*\[[^\]]*"version"', line) for line in text.splitlines()
-    )
+    has_dynamic = any(re.match(r'^\s*dynamic\s*=\s*\[[^\]]*"version"', line) for line in text.splitlines())
     has_hatch_vcs_table = "[tool.hatch.version]" in text and re.search(
         r'\[tool\.hatch\.version\][^\[]*source\s*=\s*"vcs"', text, re.DOTALL
     )
@@ -91,8 +89,7 @@ def _audit(repo_dir: str, declared: str | None) -> tuple[bool, str]:
     nearest = _git(repo_dir, "describe", "--tags", "--abbrev=0", "--match", "v*")
     if not nearest:
         return False, (
-            "no reachable v* tag from HEAD — dynamic versioning would resolve 0.0.0/dev;"
-            " mint a baseline tag first"
+            "no reachable v* tag from HEAD — dynamic versioning would resolve 0.0.0/dev; mint a baseline tag first"
         )
     nv = _semver_tuple(nearest)
     if declared is not None:
@@ -152,12 +149,14 @@ def _transform(text: str) -> str:
     if "hatch-vcs" not in text2:
         # inline:  requires = ["hatchling"]  /  requires = ["hatchling", ...]
         text2, n = re.subn(
-            r'(requires\s*=\s*\[)([^\]]*?)(\])',
-            lambda m: m.group(1)
-            + m.group(2)
-            + ('' if m.group(2).rstrip().endswith(",") or not m.group(2).strip() else ", ")
-            + '"hatch-vcs"'
-            + m.group(3),
+            r"(requires\s*=\s*\[)([^\]]*?)(\])",
+            lambda m: (
+                m.group(1)
+                + m.group(2)
+                + ("" if m.group(2).rstrip().endswith(",") or not m.group(2).strip() else ", ")
+                + '"hatch-vcs"'
+                + m.group(3)
+            ),
             text2,
             count=1,
             flags=re.DOTALL,
@@ -165,7 +164,7 @@ def _transform(text: str) -> str:
         if n == 0:
             # multiline:  requires = [\n  "hatchling",\n]  → add a line before the closing ].
             text2 = re.sub(
-                r'(requires\s*=\s*\[\n)((?:[^\]]*\n)*?)(\s*\])',
+                r"(requires\s*=\s*\[\n)((?:[^\]]*\n)*?)(\s*\])",
                 lambda m: m.group(1) + m.group(2) + '    "hatch-vcs",\n' + m.group(3),
                 text2,
                 count=1,

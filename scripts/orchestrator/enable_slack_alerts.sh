@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: security_and_cross_cutting_master
 # Lifecycle: permanent
 # Delete-when: NA
 # enable_slack_alerts.sh — SSM script to enable AGENT_ORCHESTRATOR_SLACK_WEBHOOK for one

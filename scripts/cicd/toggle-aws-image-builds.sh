@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent
 # Delete-when: NA
 # Toggle AWS image builds fleet-wide — the single switch for the AWS build path.
@@ -25,7 +25,7 @@
 # production path; default = off.
 # SSOT: plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md § Phase 2 +
 #       codex/05-infrastructure/dual-cloud-image-builds.md
-# Epic: infrastructure_master
+# Epic: ci_master
 # Lifecycle: permanent (operational toggle)
 
 set -euo pipefail
