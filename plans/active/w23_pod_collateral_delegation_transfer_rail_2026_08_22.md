@@ -111,6 +111,19 @@ assigned_role: backend_engineer
   routing) should call `self._get_collateral_delegation_execute(instruction)` — already built — the same way
   `_execute_bridge_transfer` calls `self._get_bridge_execute(instruction)`.
 
+- 2026-08-22 — Section E item 1 flipped, no new code shipped: dispatched to pick up "unit tests for the new
+  `BusTransferType` member + rail mapping," found the tests already landed as a side effect of Section A item 1's
+  own commit (unified-api-contracts@d1b724b5) — that todo's evidence note already described the test-file changes,
+  this todo's checkbox just wasn't flipped when it happened. Verified rather than trusted the earlier claim: read
+  both `tests/unit/test_transfer_events.py` and `tests/internal/unit/test_client_lifecycle_events.py` directly,
+  confirmed both assert the new member's rail (`TransferRail.OTHER`) and closed-set membership; grepped the other 3
+  files referencing `BusTransferType` in `tests/` and confirmed none carry a stale completeness assertion needing
+  an update; self-ran a full `quality-gates.sh` in this worktree (own sentinel, not reused) — `ALL QUALITY GATES
+  PASSED`, exit 0. **Scope note for whoever picks up Section E items 2-3 next**: those ARE real new-code todos
+  (`MockPodCollateralAdapter`'s state machine + `TransferConfirmationPoller` test; `_execute_custodian_delegation_
+  transfer` dispatch + `CompositeTransferAdapter.pod_adapter` wiring test) — both depend on Section B items 2-5
+  (still `- [ ]` as of this entry), so they can't land until those adapters/methods exist.
+
 ---
 
 ## Section A — UAC schema (unified-api-contracts)
@@ -243,9 +256,24 @@ assigned_role: backend_engineer
 
 ## Section E — Tests + verification
 
-- [ ] [BACKEND] P0. **Unit tests for the new `BusTransferType` member + rail mapping** — extend whatever test file
+- [x] ✅ [BACKEND] P0. **Unit tests for the new `BusTransferType` member + rail mapping** — extend whatever test file
       already covers `BUS_TRANSFER_TYPE_RAIL` completeness (grep for existing `BusTransferType` test coverage before
       writing a new file). Done: green under `unified-api-contracts`'s `quality-gates.sh`.
+      — unified-api-contracts@d1b724b5 (already shipped as part of Section A item 1's commit; this todo's checkbox
+      was simply left unflipped). Verified, not assumed: grepped all 5 files referencing `BusTransferType` in
+      `tests/`, read the two that assert completeness —
+      `tests/unit/test_transfer_events.py` (`TestTransferRail.test_every_member_has_a_rail` iterates every member
+      incl. the new one against `BUS_TRANSFER_TYPE_RAIL`; `test_bus_transfer_type_has_fourteen_members` asserts the
+      14-member count; `test_other_rail_members_do_not_fit_the_cefi_on_chain_binary` explicitly asserts
+      `bus_transfer_type_rail(CUSTODIAN_COLLATERAL_DELEGATION) == TransferRail.OTHER`) and
+      `tests/internal/unit/test_client_lifecycle_events.py` (`test_bus_transfer_type_closed_set` includes the new
+      member in its expected set; `test_transfer_intent_all_types_accepted` round-trips `TransferIntent` for every
+      member incl. the new one) — both already cover the new member + rail mapping in full; the other 3 referencing
+      files (`test_defi_transfers_and_gas_fees.py`, `test_transfer_types.py`,
+      `test_margin_traceability_surface.py`) only use unrelated pre-existing members as fixtures, no stale
+      completeness assertions there. Self-ran full `quality-gates.sh` in this worktree (not just trusting Section A
+      item 1's evidence note) at current HEAD=d1b724b5: `✅ ALL QUALITY GATES PASSED (439s)`, exit 0, sentinel
+      written=d1b724b5dc32670b1855aa8cd136e58f67ad680d (matches HEAD).
 - [ ] [BACKEND] P0. **Unit tests for `MockPodCollateralAdapter`'s state machine + `TransferConfirmationPoller` against
       it** (multi-poll PENDING→CONFIRMED, PENDING→FAILED, `force_outcome` override) — new file
       `execution-service/tests/unit/test_mock_pod_adapter.py` (flat under `tests/unit/`, mirroring
