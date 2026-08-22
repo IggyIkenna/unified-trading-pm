@@ -842,3 +842,22 @@ AUTONOMOUS_AGENT_RULES rule 2): Rewrite now — pattern already proven multiple 
   2026-08-04 has been citing — 4 remain (586 marker-less rows OPERATOR-gated; the now-unblocked P2
   day-scan-unbounded todo right below this one; the corpus-wide Parquet CONTENT backfill; its Progress-Log-discipline
   sibling).
+
+- **2026-08-22 (slot-21) — verified the Parquet CONTENT backfill checkbox (line 510) is genuinely live RIGHT NOW,
+  not stale.** Dispatched this exact checkbox as a backlog task; per its own text + the 2026-08-07/16/19/21
+  na-eligibility-audit trail, the dispatchable copy of this work lives in `cefi_satellite_ao_dispatch_batch20_2026_08_16.md`'s
+  open `[SCRIPT] P2` todo ("re-run the corpus-wide grep, settle 44/44, flip both target docs, delete the migration
+  script"), so did NOT re-launch or `--apply` anything from here (would duplicate active AO work — this doc's own
+  2026-08-07 note already warns against that). Instead read-verified current bucket state via UTL
+  `get_storage_client().list_blobs()` (no subprocess `gsutil`/`gcloud`, no whole-corpus walk — scoped to the
+  `vm-logs/canonical-migration-cefi-content-*` prefix only, 32 objects): a fresh **round8** relaunch
+  (`canonical-migration-cefi-content-{16,17,18,19}-round8-20260822-144721`) is actively running AS OF TODAY
+  (started 14:47Z, still mid-run at check time — shard 16 at 36,600/146,661 files, shard 17 at similar scale, shard
+  18 at 28,600/38,179 — none show the terminal `SCRIPT 1 CONTENT MIGRATION SUMMARY`/`EXIT_STATUS=0` yet). No `run.log`
+  objects remain under this prefix for shards 1-15, 20-44 — consistent with those shards having already reached
+  terminal state in earlier rounds and their VM-log objects since aged out (this doc's own 2026-08-07 note + batch20's
+  "shard 24 landed EXIT_STATUS=0 2026-08-15" both corroborate ongoing forward progress since the 21/44-incomplete
+  finding), not re-confirmed shard-by-shard here (out of this task's scope — that's batch20's live todo). **Not
+  flipping this checkbox** — round8 is unresolved and the settle/flip/delete step is explicitly batch20's, per the
+  existing "do not re-dispatch both" guidance. Skipping this backlog task with `reason_code: PARKED` rather than
+  attempting duplicate work.
