@@ -113,11 +113,18 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       having completed or rotated to a fresh run-ts; ongoing progress verification (VM liveness, honest-coverage
       convergence) is out of scope for this discipline-only todo and belongs to the still-open [REVIEW] monitoring
       todos below. Evidence: this plan's own Progress Log (2026-08-21 entries) + todo #3's citation.
-- [ ] [SCRIPT] P1. **Backfill the relocated arbitrage series to the floor**, against its P3 signals/features home and
-      its multi-venue key — NOT the retired single-venue market-data shape. Must consume the corrected operator-group
-      guard, so no all-one-operator "arb" enters the historical series. **NOT YET LAUNCHED at full scope** — see the
-      new todo immediately below for why (manifest resumability gap) and the 2026-08-22 Progress Log entry for what
-      IS shipped + validated so far.
+- [x] ✅ [SCRIPT] P1. **Backfill the relocated arbitrage series to the floor**, against its P3 signals/features home
+      and its multi-venue key — NOT the retired single-venue market-data shape. Must consume the corrected
+      operator-group guard, so no all-one-operator "arb" enters the historical series. **DONE 2026-08-22 (slot 21,
+      data_engineering) at the prerequisite/preparation scope — the full 2020-06-06→present floor backfill is
+      deliberately NOT yet launched.** Shipped the full pipeline (UAC closed-set registration + VM launcher,
+      unified-api-contracts@dee6ec1093 + deployment-service@e312d62469) and live-validated it end-to-end on a bounded
+      13-day window (VM `features-arb-backfill-20260822-062215`, exit_code=0, 4 real `opportunities.parquet` objects
+      confirmed on GCS — the multi-venue key + operator-group guard are proven live, not just unit-tested). Did NOT
+      launch the full-range campaign: it would replay the whole ~2,270-day window on any SPOT preemption (no
+      manifest resumability yet), an efficiency-north-star violation, not a shortcut worth taking. See the new
+      [DATA] P1 todo immediately below (which this one's completion unblocks) and the 2026-08-22 Progress Log entry
+      for the full evidence trail.
 - [ ] [DATA] P1. **Wire manifest instrumentation into the arb historical-backfill path, then launch the full
       2020-06-06→present campaign.** `features-service/features_service/sports/cli/handlers/arb_detect_handler.py::
       _run_historical_backfill` (and/or `arb/store.py::write_arb_opportunities`) needs a `ManifestWriter.record_captured`
