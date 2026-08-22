@@ -1423,40 +1423,53 @@
           <i># per-venue, same shape as before, now nested per instrument</i> credit: CreditBand | None = None
           <i># band (market-making) or hard threshold (arbitrage)</i> position_adjustment_bps_per_unit_risk: Decimal |
           None = None <i># symmetric coefficient, against RAW position</i>
+          sensitivity_coefficient: Decimal | None = None <i># delta</i>
+          second_order_coefficient: Decimal | None = None <i># gamma</i>
+          time_decay_coefficient: Decimal | None = None <i># theta, operator-named 2026-08-21</i>
 
           <span class="k">class</span> <b>CreditBand</b>: entry_threshold: Decimal | None = None
           <i># minimum edge to act</i> abandon_threshold: Decimal | None = None
           <i># max adverse move tolerated once committed, optional even when entry_threshold is set</i>
 
-          <i># proposed addition to StrategyInstructionEnvelope, one entry per instrument in the universe</i>
+          <i># the ONE home on StrategyInstructionEnvelope, ruled 2026-08-21 (Q12); N=1 is a list of one, no
+          envelope-level scalar duplication</i>
           references: list[InstrumentReferenceEntry] = []
         </div>
         <p>
           <code>credit</code> is strategy-owned and strategy-computed, the same intent-vs-mechanism split
-          <code>execution_policy_ref</code> already draws elsewhere;
-          <code>position_adjustment_bps_per_unit_risk</code> generalizes
+          <code>execution_policy_ref</code> already draws elsewhere, and per-entry (Q14): independent per instrument so
+          an arb leg's two instruments can carry different thresholds, execution only consumes whatever is cached.
+          <code>position_adjustment_bps_per_unit_risk</code> is likewise per-entry (Q16), generalizing
           <code>QuoteInstruction.skew_on_inventory</code> (§03) off market-making specifically. Both are governing
           boundaries the strategy sets; which algo runs and how it stays inside them remains execution's call, the same
           relationship <code>hedge_deadline_ms</code> (§03, <code>AtomicInstruction</code>) already has with the algo
           layer. On mismatch, execution would reuse the risk engine's existing four-way consequence (<code>BLOCK</code>
           / <code>SCALE_DOWN</code> / <code>MONITOR</code> / <code>TEST_ONLY</code>) rather than invent a second
-          decision model, but the trigger type itself doesn't exist yet: none of the risk engine's 13 typed trigger
-          conditions covers a position mismatch today, so wiring this needs a new trigger type added to that closed set,
-          not just consumption of an existing one.
+          decision model, evaluated per entry rather than once per instruction (Q15), defaulting to <code>BLOCK</code>;
+          the trigger type itself doesn't exist yet: none of the risk engine's 13 typed trigger conditions covers a
+          position mismatch today, so wiring this needs a new trigger type added to that closed set (a UAC PR per
+          risk-rule-taxonomy.md), not just consumption of an existing one.
         </p>
         <p>
-          Exactly how the vector is keyed is still open, not decided: nesting per-instrument-then-per-venue (as sketched
-          above) assumes one strategy instance never wants two different believed positions for the same instrument
-          across venues within one instruction, true today, not re-confirmed for a multi-instrument vector. Whether
-          <code>credit</code> and the adjustment coefficient vary per entry or apply once across the whole vector is
-          also open. A cross-instrument version of this, how a fill in instrument B should move the acceptable
-          adjustment on instrument A, is real but deliberately out of scope here: it would live as a fast-path
-          approximation module inside execution-service, relevant only where A and B are non-fungible (a cross-chain
-          staked-basis leg, or options across different terms or strikes), and is stubbed rather than built.
+          How the vector is keyed was an open question; the operator ruled it 2026-08-21 (Q12-Q16). The venue axis
+          nests inside each entry's <code>reference_position</code>, not a full <code>(instrument, venue)</code>
+          cross-product (Q13) — one strategy instance still executes a given instrument on one venue.
+          <code>QuoteInstruction.reference_price</code> (currently required) reconciles to the vector as a
+          single-instrument override that narrows the list-of-one, not a parallel scalar. The implementation vehicle
+          for all of this is the factor-state model's snapshot/factor contract
+          (<code>/codex/04-architecture/cross-domain-state-fabric.md</code>), with the Q12-Q16 answers above as its
+          strategy-facing constraints rather than literal scalar fields on the envelope; none of it is built yet. A
+          cross-instrument version of this, how a fill in instrument B should move the acceptable adjustment on
+          instrument A, is real but deliberately out of scope here: it would live as a fast-path approximation module
+          inside execution-service, relevant only where A and B are non-fungible (a cross-chain staked-basis leg, or
+          options across different terms or strikes), and is stubbed rather than built.
         </p>
         <p>
-          This is design only. The shape above is illustrative rather than final, and the questions listed with it are
-          genuinely open rather than resolved and abbreviated.
+          This is design only: planned and ruled 2026-08-21 (Q12-Q16), not built and not declared in code today —
+          <code>InstrumentReferenceEntry</code>, <code>references</code>, <code>reference_position</code> and
+          <code>credit</code> do not exist in <code>unified_api_contracts.internal.architecture_v2.schemas</code>. The
+          shape above is illustrative rather than final on container and reconciliation details, but the Q12-Q16
+          questions themselves are resolved, not still open.
         </p>
         <p>
           One scoping note belongs with it: this reference-price, position and credit mechanism, and
