@@ -86,7 +86,9 @@ drift_direction: advance-code
 
 ## Evidence base (live census 2026-08-21, slot-3 session)
 
-- Defi `_index`: 161,763,515 defi rows. Census CSVs: session scratchpad `venue_census.csv` etc. (see Progress Log).
+- Defi `_index`: 161,763,515 defi rows. Census artifacts (the
+  verbatim distinct-values BEFORE payload `defi_distinct_values_result.json`, per-venue purge counts, retirement + rekey verdicts) are committed under
+  `/plans/audit/results/defi_distinct_values_census_2026_08_21/`.
 - **Class A — 22 EVM glued phantom venues** (`UNISWAP_V3-{ETHEREUM,ARBITRUM,BASE,OPTIMISM,POLYGON}`,
   `BALANCER-{6 chains}`, `CURVE-{AVALANCHE,ETHEREUM}`, `SUSHISWAP_V3-{BASE,AVALANCHE,ETHEREUM}`, `SUSHISWAP-ARBITRUM`,
   `CAMELOT_V3-ARBITRUM`, `PANCAKESWAP_V3-{BASE,ETHEREUM,BSC}`, `AERODROME_V3-BASE`): all `data_type=dex_pool_swaps`,
@@ -127,9 +129,31 @@ drift_direction: advance-code
       IMMEDIATELY before each delete inside the same tool run (delete-safety §phantom path; prefix_tpls must cover the
       glued shape). Use the existing IS/MTDS reconcile tooling — never a hand-rolled index rewrite. Evidence: per-venue
       before/after row counts. (repos: instruments-service, market-tick-data-service)
-- [ ] [DATA] P0. 4. **Re-retire `dex_pools` legacy rows (454,014)** with the shipped retirement tool; record count;
-      gate on todo 2 landing first so it cannot re-regrow. (repo: market-tick-data-service)
-- [ ] [DATA] P0. 5. **Migrate Class-B Solana glued objects to canonical.** Bounded (hundreds of objects): UTL
+- [x] [DATA] P0. 4. ✅ **Re-retire `dex_pools` legacy rows** — retirement tool re-run to a terminal measured verdict
+      2026-08-21 ~20:33 London (task4_retire_apply2.log): **retired=0 — the corpus was ALREADY fully retired** (the
+      2026-08-16 re-retirement held; the census's 454,014 counted rows of any status, not captured rows). Exactly 29
+      captured rows remain, ALL twinless ORCA/RAYDIUM address-keyed Solana pools dated 2025-01-17 (full list in the
+      log) — these keep `dex_pools` alive in the distinct-values panel; follow-up todo 16. Scan-guard
+      (todo 2, mtds@36e4c830) now prevents regrowth.
+- [ ] [DATA] P1. 16. **Migrate the 29 twinless `dex_pools` rows to `dex_pool_state`.** The 29 ORCA/RAYDIUM
+      address-keyed pool rows (2025-01-17, no canonical twin — the only remaining captured `dex_pools` rows) are
+      pool-STATE content: copy their objects to the `data_type=dex_pool_state` canonical path (no new data_type),
+      re-key the 29 manifest rows, delete legacy objects after content-equality + retention qualification. Until then
+      `dex_pools` stays visible in the panel. (repo: market-tick-data-service)
+- [x] [DATA] P0. 5. ✅ **Migrate Class-B Solana glued objects to canonical** — objects: 213 copied to the canonical
+      `venue={BARE}/chain=SOLANA/` path + single-glue filename, pass-2 re-verified (213 present+verified, 0 mismatched,
+      0 failed; plan CSV 293 entries). Manifest re-key APPLIED 2026-08-22 01:33 London
+      (`rekey_solana_glued_venue_defi_rows_2026_08_21.py --apply`): 1,575 rows — KAMINO-SOLANA 80, MARGINFI-SOLANA 84,
+      SOLEND-SOLANA 81, SOLBLAZE-SOLANA 1,330 (SOLBLAZE re-keyed rather than purged — its rows fold onto bare SOLBLAZE);
+      server-side snapshot + CAS write, new generation 1787358781949362; consolidator re-enabled. Legacy glued OBJECT
+      deletes deliberately NOT yet done → todo 17. Original scope text:
+- [ ] [DATA] P1. 17. **Delete the legacy glued Solana objects** (the 213 `venue={PROTOCOL}-SOLANA/...` source objects
+      now superseded by verified canonical twins): re-verify `gcs_bucket_soft_delete_retention_seconds() >= 604800` on
+      `market-data-tick-defi-prd-*`, re-verify each twin (size+crc32c) immediately before delete, then
+      `gcs_delete_object` each legacy URI from the copy plan; a twin mismatch = skip + report, never delete. Authorized
+      by the banner ruling (/plans/active/defi_distinct_values_canonical_cleanup_2026_08_21.md § Operator rulings).
+      (repo: market-tick-data-service)
+- [ ] [DATA] P0. 5-original. **Migrate Class-B Solana glued objects to canonical.** Bounded (hundreds of objects): UTL
       `gcs_copy_object` to `venue={BARE}/chain=SOLANA/...` + canonical filename, re-key the manifest rows, then delete
       legacy objects (reversibility-qualified: verify `gcs_bucket_soft_delete_retention_seconds() >= 604800` first;
       content-equality proof per copied object). SOLBLAZE-SOLANA rows: verify backing objects under the vocabulary the
@@ -176,8 +200,48 @@ drift_direction: advance-code
       Solana double-glue gotcha), update/flip the owned checkboxes in the related issue docs, fix any doc that misled
       during this work. (repo: unified-trading-pm)
 
+## Deferred work after 2026-08-22 (pre-compact checkpoint, ~01:40 London)
+
+| item | state / why deferred | blocked-on |
+| --- | --- | --- |
+| Todo 8 canon-swap apply (`--drain-gate` → snapshot → `--apply-prod --confirm-prod-write` on the VM) | **Cannot be done yet** — needs the projection to finish; VM `defi-manifest-projection-20260821-195038` had written 39/~81 parts at 01:35 and was NOT in the instance list → likely SPOT-preempted; verify `vm-logs/<vm>/EXIT_STATUS` + part count first; relaunch from deployment-service (launcher fix IS on origin now) if preempted | projection completion |
+| Todo 6 purge-half (existing blanket perp_funding/derivative_ticker rows on non-perp venues) | **Not done** — forward seeding stopped (uac@4b06013aea + is@0020df5f); historical rows still in the index; needs a one-off in the purge script's pattern (Kleene mask, server-side snapshot, pause bracket, CAS) scoped to the 71-protocol population the IS report enumerated; run SERIAL with other index rewrites | nothing |
+| Todo 9 rollup regen + panel verification | **Not done** — run `measure_honest_coverage.py` (or its nightly job) AFTER the index rewrites settle, then re-derive `/data-status/distinct-values/defi` via the production functions (`dump_defi_distinct.py` pattern in the census artifacts) and record before/after distinct counts (before: 108 venues / 32 data_types / 16 instrument_types / 23 chains) | todos 6-half, 8 |
+| Todo 16 (29 twinless dex_pools → dex_pool_state), todo 17 (213 legacy glued object deletes), todo 10 (blank itype), 11, 12 (`retire_rate_indices_legacy_captured_rows_2026_08_12.py` already exists), 14, 15 | **Not done** — bounded, tooling mostly exists | nothing (serialize index writes) |
+| Todo 13 boundary disposition (HYPERLIQUID/ASTER/EXTENDED/LIGHTER + `*-FUTURES` carry-basis in DeFi distinct values) | **Operator-owned** | operator |
+| MTDS one-off scripts commit (purge + rekey, lessons embedded) | quickmerge `--isolated` launched at checkpoint — verify `ONEOFFS_QM_EXIT` + `git show origin:scripts/one_offs/...` | in flight |
+
+**Recommended NEXT**: verify the projection VM (preempted? → relaunch), then run the todo-6 purge-half while the
+projection runs (independent: purge = index write, projection = GCS scan + read-only plan), then todo 8 apply after
+drain, then todo 9. Serialize EVERY index rewrite (CAS makes a race a wasted hour, not corruption).
+
 ## Progress Log
 
+- **2026-08-22 ~01:40 London (pre-compact checkpoint — lessons, not just state)** — (1) **Uplink is the bottleneck**
+  for local index rewrites: each attempt moves ~7.5GB down + 7.5GB up; 3 attempts died on 600s read-timeouts /
+  connection resets during peak host load; the final successful purge upload took ~1h. Server-side `copy_blob`
+  snapshots (zero egress) are now in both one-offs. Any further rewrite of this size should run on an in-region VM.
+  (2) **Kleene logic is load-bearing** in pyarrow masks over this index: `chain` is NULL (not `""`) on legacy rows;
+  non-Kleene `or_`/`and_` propagate null → 0 matches → the script's count guard hard-aborts (good) but the rows stay.
+  (3) **ahead=0 + zero-diff ≠ landed — twice this session** (IS seeder fix, deployment-service launcher): a failed
+  quickmerge SWEEPS the change into `stash@{N}` and restores origin content; verify by `git show origin:<file> | grep
+  <symbol>`, never by diff-vs-local. (4) **Chained-bash cwd drift**: three wasted runs came from prod-script paths
+  resolved against the wrong repo after a `cd` earlier in the same chain — use absolute paths for every prod invocation.
+  (5) The consolidator cron gets re-ENABLED by something external (it was ENABLED again ~1h after my pause without my
+  resume) — always re-pause immediately before an index write, never assume an earlier pause holds. (6) The dex_pools
+  corpus was already retired; the distinct-values panel is driven by the rollup's per-value retirement-drop, so a
+  value disappears only when 0 captured rows remain — 29 twinless rows keep `dex_pools` visible (todo 16).
+  (7) State: todos 1-5 ✅; 6 half ✅; 7 VM launched with verified progress (39 parts) but instance gone at checkpoint
+  (SPOT preemption suspected, UNVERIFIED); PM local shows ahead=2 from a CO-OCCUPANT session's local-only commits
+  (not mine — their issue doc names it) — my doc pushes land via isolated worktree regardless.
+- **2026-08-21 ~21:0x London (todo 7 CORRECTION + recovery)** — ⛔ the earlier claim "deployment-service launcher fix
+  landed on origin" was WRONG: the exit-128 quickmerge attempt had SWEPT the fix into `stash@{0}` and restored the OLD
+  launcher; my "HEAD on origin + zero diff" check then verified equality against the OLD content (ahead=0 trap,
+  second occurrence this session — same class as the IS sweep). Proof: VM `defi-manifest-projection-20260821-191035`
+  (launched 19:10, self-deleted) died rc=2 on the exact old-path bug (`can't open .../workspace/mtds/scripts/
+  rebuild_defi_manifest.py`), 0 projection objects. Recovered the fix from `stash@{0}` (6 module-style refs
+  verified), reshipping `--isolated` + relaunching. LESSON journaled: after ANY quickmerge, verify the SYMBOL exists
+  in `git show origin:<file>` — never diff-vs-local alone.
 - **2026-08-21 ~17:2x London (todo 6 root-fix FULLY SHIPPED both layers)** — instruments-service@0020df5f
   (`capability-gated expected-universe seeding for perp data_types`, landed on LDR, content-verified on origin: the
   `_defi_perp_capable_protocols()` gate is present) + unified-api-contracts@4b06013aea (earlier). NOTE the recovery

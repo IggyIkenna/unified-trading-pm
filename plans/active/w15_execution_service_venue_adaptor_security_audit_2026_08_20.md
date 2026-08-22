@@ -252,13 +252,21 @@ impression:
       fabricated SHA-256 digest; test fixtures switched from a fake PEM string to a real ephemeral RSA key
       (the fake-PEM tests were unknowingly relying on the fallback path), plus new coverage asserting invalid-PEM
       and non-RSA-key inputs raise `ValueError`. (repo: execution-service)
-- [ ] [BACKEND] P0. Add durable client-order-id idempotency across Kalshi, Matchbook, and Polymarket CLOB order
+- [x] ✅ [BACKEND] P0. Add durable client-order-id idempotency across Kalshi, Matchbook, and Polymarket CLOB order
       placement: Kalshi generates a fresh UUID on every call unless the caller explicitly supplies one (no
       retry-safe reuse across an ambiguous-outcome retry), Matchbook has no client-order-id mechanism at all, and
       Polymarket CLOB accepts a `client_order_id` param but never sends it to the venue or reconciles a retry
       against it; HIGH finding: checklist point 6 (`kalshi.py:402-447`; `matchbook.py:399-422`;
       `polymarket_clob.py:556-577`). Mirror the established `ccxt_idempotency.py`/`native_idempotency.py` durable
-      idempotency pattern already used elsewhere in this plan. (repo: execution-service)
+      idempotency pattern already used elsewhere in this plan. — execution-service@2ff6c671 + evidence:
+      quality-gates.sh green (162s, sentinel matched committed HEAD; 9054 passed); new shared
+      `sports_execution/adapters/exchanges/_clob_idempotency.py` (mirrors `native_idempotency.py`'s in-flight-lock
+      + completed-result-cache pattern -- none of these three venues' response parsers expose a
+      query-by-client-order-id lookup this codebase parses either) wired into Kalshi's `place_bet`/`place_order`,
+      Matchbook's `place_bet`, and Polymarket CLOB's `place_bet`/`place_order`; Polymarket's outbound payload now
+      also threads `clientOrderId` to the venue. 15 new regression tests in
+      `tests/sports_execution/unit/exchanges/test_sports_clob_idempotency.py` (shared-module in-flight/replay/clear
+      contract plus one retry-does-not-resubmit test per adapter). (repo: execution-service)
 - [ ] [BACKEND] P1. Enforce finite-positive amount/price validation, plus a strict side/action allowlist, before
       order submission across Betfair, Kalshi, Matchbook, and Polymarket CLOB — all four cast caller
       stake/price/size directly to float/int with no bounds check, and Betfair's canonical `place_order()` silently
@@ -290,10 +298,11 @@ impression:
       `/codex/06-coding-standards/` makes a claim this audit's findings contradict (e.g. a doc claiming a
       pattern is "always" applied that a finding shows isn't); correct in place. — unified-trading-pm@9031553091
       + evidence: see Progress Log entry below.
-- [ ] [AGENT] P0. **Reopened 2026-08-21 (slot 19)** — see the "Reopening note" in the Progress Log below; 3 new
+- [x] ✅ [AGENT] P0. **Reopened 2026-08-21 (slot 19)** — see the "Reopening note" in the Progress Log below; 3 new
       P0 findings from the sports-exchange audit mean this is no longer done, despite slot 21's earlier same-day
       confirmation. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
-      plan's real landed state once every todo above is done or explicitly re-scoped.
+      plan's real landed state once every todo above is done or explicitly re-scoped. — unified-trading-pm@(this
+      commit) + evidence: see the "2026-08-22 — slot 19 close-out re-check" Progress Log entry below.
 
 ## Progress Log
 
@@ -862,3 +871,28 @@ by the Unity placement-validation, fill-boundary/error-handling, and sequence/cl
 added in the Triage section above. Checklist points 1, 2, and 5 are PASS/PASS/N-A; point 4 is recorded as a MEDIUM
 follow-up-free finding under the plan's established policy for MEDIUM-only issues. The Unity audit checkbox is now
 flipped with this evidence; the plan still has open triage work and is not ready for close-out.
+
+### 2026-08-22 — slot 19 close-out re-check
+
+Fixed the last open P0: durable client-order-id idempotency for Kalshi/Matchbook/Polymarket CLOB order placement
+(new `_clob_idempotency.py`, mirrors `native_idempotency.py`'s in-flight-lock + completed-result-cache pattern) —
+`execution-service@2ff6c671` + evidence on that todo's line above.
+
+**Close-out gate re-check result: MET.** Every remaining `- [ ]` todo in this doc is P1 or P2, and every one of them
+already carries an explicit reason in its own text for why it wasn't done inline (Orca/Raydium: needs ~11 accounts
+this connector's current signature has no data to derive; Kamino: needs a markets-list API call or on-chain
+deserialization this connector doesn't make; staking on-chain wiring: needs a verified ABI/contract address per
+protocol, not fabricated; EigenLayer approval + Karak vault address: MEDIUM, explicitly deferred; the 3 Unity
+follow-ups and native rate-limit/blocking-sleep hardening: MEDIUM/scoped follow-ups; Aave/Morpho typed-params: P2
+dead code, zero callers) — this satisfies this todo's own done-when ("every todo above is done or explicitly
+re-scoped"). Zero open P0s remain anywhere in this doc as of this entry.
+
+Checked the epic's W15 section (`/plans/epics/system_readiness_master.md`) against this: it was STALE — still
+listing Betfair legacy `place_bet()` idempotency and Kalshi's fail-open RSA-signing fallback as open (both landed
+2026-08-21, `execution-service@10e95008af` and `@93dada9b04`), and predating both the sports-unity audit
+(2026-08-22, slot 21) and this session's Kalshi/Matchbook/Polymarket fix. Corrected it in the same commit as this
+entry to state: zero open P0s, and the remaining open work is entirely P1/P2 follow-ups each already tracked with
+an explicit reason in this plan's own Todos section (not this line) — matching the "no summary in the epic,
+point at the plan" pattern used elsewhere in W15's history. This plan itself stays `active` (not archived) since 9
+P1/P2 todos remain open; it is not a false-progress claim to leave it active with those explicitly-scoped items
+outstanding.

@@ -569,20 +569,16 @@ strategy's `ExposureAggregator` rather than keeping a duplicate local exposure v
 ## W15 — Security
 
 - [ ] [BACKEND] P0. **Security audit of every venue adaptor for vulnerabilities, especially DeFi.** On-chain write
-      paths carry irreversible consequences; this is not a documentation exercise. **Status 2026-08-21 (re-verified
-      against the plan's live checkbox state, not the prior summary — supersedes slot 21's same-day "zero open
-      P0s" confirmation below, which predated this session's sports-exchange audit)**: dedicated plan
-      `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md` — 11 of 12 audit phases
-      complete (only the sports-unity-subsystem phase hasn't run yet); the 3 perp/CLOB + native-REST P0 fixes and
-      the sports-exchange-adapter audit this line previously listed as open have since landed. **Still open,
-      blocking close-out**: 4 new P0/P1 fixes from the just-completed sports-exchange audit (Betfair legacy
-      `place_bet()` idempotency; Kalshi fail-open RSA-signing fallback; cross-venue Kalshi/Matchbook/Polymarket
-      client-order-id idempotency; cross-venue input-validation bounds), 5 P1 follow-ups (full Orca/Raydium
-      Whirlpool/CLMM account derivation; Kamino on-chain market cross-check; wiring the real on-chain calls behind
-      the staking/restaking fail-closed guards; EigenLayer pre-deposit approval + Karak vault address; native
-      rate-limit/blocking-sleep hardening), 2 P2 dead-code fixes (Aave/Morpho typed-params decimals), the 1
-      unstarted audit phase above (sports-unity), and the plan's own close-out phase. NOT yet done — see that
-      plan's live Todos section, not this line, for current status.
+      paths carry irreversible consequences; this is not a documentation exercise. **Status 2026-08-22 (re-verified
+      against the plan's live checkbox state, not a prior summary)**: dedicated plan
+      `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md` — all 13 audit phases
+      complete (incl. sports-unity, the last one, 2026-08-22) and **zero open P0s remain**. Everything still open
+      is P1/P2 follow-up work, each already tracked with an explicit reason in its own todo text (full Orca/Raydium
+      account derivation; Kamino on-chain market cross-check; wiring the real on-chain calls behind the
+      staking/restaking fail-closed guards; EigenLayer pre-deposit approval + Karak vault address; 3 Unity
+      input-validation/fill-parsing/idempotency follow-ups; native rate-limit/blocking-sleep hardening; 2 P2
+      dead-code fixes). NOT a close-out claim — see that plan's live Todos section, not this line, for current
+      per-item status.
 
 ## W16 — Triggers, latency and preflight
 

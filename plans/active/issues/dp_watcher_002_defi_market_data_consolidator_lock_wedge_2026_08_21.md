@@ -194,6 +194,15 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
       without first determining the correct restamp timestamp from Cloud Logging, per that doc's own explicit
       data-loss warning. Repo: unified-trading-library / market-tick-data-service (execution only, no new code
       expected).
+      **CORRECTION (2026-08-22T05:2xZ, slot 31, agt-2ad90c) — "IN PROGRESS" / "still running as of this edit" was
+      a misread and this todo's own hedged framing understated it: `p6hrc` did NOT succeed. Live-traced its full
+      log: `phase=duckdb_merge_start` at `18:59:37Z`, then `2026-08-21T20:57:18.002728Z ERROR "Terminating task
+      because it has reached the maximum timeout of 7200 seconds"` — SIGKILLed mid-merge, never reached
+      `_write_consolidated`. The Cloud Run *execution* still reported `Completed=True`/"successfully in 2h1m0s"
+      because that status reflects the JOB-level exit code of the RETRY task Cloud Run auto-spawned after the
+      kill (a fresh process at `20:57:51Z` that found the orphaned lock still fresh, logged `SILENT STALL`, and
+      exited 0 having done zero work) — not that the merge completed. See the corrected timeline below; this is
+      now confirmed an ONGOING wedge, not a one-off pending SIGKILL.**
 - [ ] [DATA] P2. Cross-link this doc's confirmed mechanism into
       `mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`'s open
       "hypothesis 2" — done in the same edit as this filing (see that doc's Progress Log).
@@ -260,3 +269,49 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
   recovery's own data-loss warning. This session did not babysit the remaining ~1h22m to the timeout boundary
   (one-shot escalation contract; the cefi doc's own precedent is "do not babysit hourly"). No code shipped this
   session — doc-only, via `safe-doc-push.sh` (commit `f2c25abb51`, verified on origin).
+- **2026-08-22T05:1x-05:2xZ (data_pipeline_failure escalation worker, slot 31, agt-2ad90c)**: dispatched off a
+  THIRD fire of the same DP-WATCHER-002 alert (`age_min≈272`). Found this open doc via the pre-task grep, read
+  the full handoff, and **disproved the prior session's "p6hrc succeeded" conclusion** — see the correction
+  inserted into todo 2 above. Full live re-diagnosis this session:
+  - `gcloud run jobs executions list` (current, `region=asia-northeast1`): the job fires every ~1 min as
+    scheduled (cron itself is healthy — this is NOT a literal "cron did not fire", it's DP-WATCHER-002's
+    canonical-staleness detection tripping on a wedged merge, same shape the doc title already names) but every
+    cycle logs `skipping cycle ... fresh lock present` + `CRITICAL SILENT STALL ... streak=N` (N=763-764 at
+    05:10-05:11Z) + `success=True shards=0 ... error=locked`.
+  - The CURRENT lock holder, execution `xtn66` (started `05:09:39Z`): `clearing stale lock ... age=9060.0s >
+    TTL=9000.0s`, re-acquired, hit the same `WARNING ... has NO consolidator_content_write_at marker ... cutoff
+    UNPROVABLE`, and at `05:11:36Z` started the same `phase=duckdb_merge_start mode=incremental chunks=106
+    date_range=2018-01-01..2026-08-22` full-history merge that has doomed every prior cycle.
+  - **24h Cloud Logging sweep (`textPayload:"wrote consolidated index" OR "Terminating task" OR "clearing stale
+    lock" OR "phase=lock_acquired"`, 2026-08-20T06:00Z→2026-08-21T23:30Z) gives the FULL, unambiguous timeline**:
+    genuine successful `wrote consolidated index` cycles ran roughly hourly from `2026-08-20T06:17Z` through
+    **`2026-08-21T06:21:55Z` (canon_rows=161,809,819 — the LAST genuine merge)**. The very next cycle
+    (`phase=lock_acquired` `06:22:40Z`, `phase=shards_listed` `06:22:40.583662Z`, `shards=2`) is the FIRST to
+    never complete — it ran into the 7200s timeout and was killed at `08:22:15Z`. Every cycle since has repeated
+    the identical acquire→run 7200s→SIGKILL→orphan→9000s-TTL-wait→clear-stale-lock→re-acquire→repeat loop,
+    confirmed via 7 more `Terminating task` timestamps through `2026-08-21T23:27:26Z` plus this session's own
+    live observation of the `xtn66` cycle — **a continuous, unbroken wedge since 2026-08-21T06:22:40Z, now
+    ~23h and counting**, burning a full 7200s Cloud Run task on every ~2.6h cycle for zero forward progress.
+  - **Root-cause note on the marker loss itself** (new information, not established by the cefi doc): the gap
+    between the last genuine write (`06:21:55Z`) and the next cycle's lock acquisition (`06:22:40Z`) is only
+    ~45s — too tight to comfortably attribute to an external "out-of-band rewrite" tool (the cefi incident's
+    working theory) coincidentally landing in that exact window. Did NOT dig further into the GCS client upload
+    path (`_write_consolidated`, `unified_trading_library/manifest_consolidator.py:3465-3598`) to confirm
+    whether the CAS `upload_from_string(..., if_generation_match=...)` call can silently drop a
+    just-set `blob.metadata` under some condition — flagging as an open code-level question for whoever picks up
+    the fix, since if that's the real mechanism it will keep re-triggering after every future restamp too.
+  - **Recommended recovery — same shape as the proven cefi fix, exact parameters determined this session**:
+    pause the `manifest-consolidator-defi` Cloud Scheduler job → confirm the current lock holder is genuinely
+    dead (not `xtn66` mid-merge — cancel/wait it out first) → clear the orphaned `_index/consolidator.lock` →
+    metadata-only restamp `_index/availability_index.parquet`: `consolidator_content_write_at =
+    2026-08-21T05:11:44Z` (the last genuine cycle's `phase=shards_listed` time — NOT `06:22:40Z`, which is the
+    FIRST BAD cycle's listing time and would silently drop everything that cycle should have merged),
+    `consolidator_run_at = now()`, content bytes untouched → resume the scheduler → verify the next cycle merges
+    incrementally (small shard count, fits well inside 7200s) and the canonical `generation`/`last_modified`
+    advances past `2026-08-21T06:21:55Z`.
+  - **Did not execute this recovery myself this session** — per role contract (`does_not: guess at an ambiguous
+    fix`) and the cefi precedent (`manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md` required an
+    explicit operator "A" answer via `/blocked` before its own metadata-only restamp, given the doc's own
+    data-loss warning that a wrong timestamp prunes unmerged shards). Posted a bounded `/blocked` question with
+    this exact recommendation to the main agent; see its answer (or the 2-min timeout) noted below or in a
+    follow-up entry. **No code shipped this session** — doc-only, via `safe-doc-push.sh`.
