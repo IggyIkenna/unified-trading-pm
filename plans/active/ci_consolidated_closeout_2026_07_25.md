@@ -140,7 +140,10 @@ cost-reduction program: options analysis → redirect index → operator-gated f
 [issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md](/plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md)
 (two self-hosted glue-runner systemd units left inactive, stalling UAC LDR→main promotion + cascading a Tier-A CI
 outage across 11 dependent repos; retagged `[ci]` 2026-08-16 from a `[cross-cutting]` mistag, same parked-findings run,
-finding 6).
+finding 6) ·
+[fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md](/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md)
+(converts the remaining ~9 fully-duplicated fleet workflow template files into `unified-trading-ci` reusable
+`workflow_call` workflows, repoints every caller repo at a thin stub, deletes the redundant per-repo copies).
 
 **Close-out criterion**: every named workflow bug fixed + verified green on a real run (digest-sweep dispatches,
 cassette-drift-check calls a real script, token scope fixed); the GHA cost-reduction program's operator-gated followups

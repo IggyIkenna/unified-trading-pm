@@ -106,6 +106,11 @@ active AO-dispatch plan — see this run's parked-findings doc for detail, not d
   agent-orchestrator dispatch/`auto_park` internals; see that run's sports-tranche parked-findings doc, Finding 1).
   Its own sole Follow-up item is already `[x]` shipped (`agent-orchestrator@153c0a0f3f`) — only the archival ritual
   remains, out of scope for the AO tranche's own audit which runs separately.
+- [`solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md`](/plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md) —
+  retagged into `[ao]` 2026-08-21 (was `[defi]`, a mistag — content is a fleet-wide agent-orchestrator tmux
+  crash-loop/dispatch bug, not defi-data-specific).
+- [`defi_compute_gcp_migration_009_repeat_wedge_parked_2026_08_08.md`](/plans/active/issues/defi_compute_gcp_migration_009_repeat_wedge_parked_2026_08_08.md) —
+  same repeat-wedge/dispatch class, retagged into `[ao]` 2026-08-21.
 
 Also linked here for the same reason — resolved and archived this run, but its own former linkage path
 (`ao_open_issues_consolidated_close_out_2026_07_17.md`, itself since archived) no longer resolves reliably from a
