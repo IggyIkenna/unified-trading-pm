@@ -22,7 +22,7 @@ related:
 parent_epic: observability_master
 source:
   - DP-FETCH-009 escalation agt-9d9a98 (2026-08-20)
-assigned_vm: planning # FIXED 2026-08-21 (ag-closeout-audit cefi Phase 3): was stale legacy `vm-cross-cutting` (pre-2026-06-27 multi-VM value) — regen_backlog_from_plan.py's single-VM ingestion only matches `assigned_vm==vm_id` ("planning") or absent, so this doc's open todo was never actually reaching the AO backlog despite `execution_scope: orchestrator-agent`.
+assigned_vm: planning
 created: 2026-08-20
 priority: P1
 resolved_by:
@@ -75,6 +75,18 @@ empty/captured rows; retain existing historical failures for separate reclassifi
       schema-contract diagnosis is done, do not re-derive it.
 
 ## Progress Log
+
+- **/plan-reconcile ao 2026-08-22**: stripped the inline `# FIXED 2026-08-21 ...` comment from the
+  `assigned_vm:` frontmatter line. The 2026-08-21 un-orphaning above set `assigned_vm: planning` but left its
+  rationale as a trailing YAML comment on the SAME line — and `regen_backlog_from_plan.py`'s
+  `_parse_frontmatter_assigned_vm` (`_ASSIGNED_VM_RE = ^assigned_vm\s*:\s*(.+)$`, then `.strip()`) does NOT
+  `.split("#")[0]` the way its sibling `status`/`execution_scope`/`sequential`/`effort` parsers do, so the
+  value read back as `'planning # FIXED 2026-08-21 ...'` and `_plan_target_vms` returned a VM set the live
+  `planning` VM never matches. Net effect: this doc's open todos were STILL not reaching the AO backlog —
+  the 2026-08-21 fix silently did not take. Proven by running the real function against this file (returned
+  the comment-laden string, `== "planning"` False), not inferred. Rationale preserved in the entry above;
+  the code-side hardening is separately tracked as `ao_satellite_ao_dispatch_batch4_2026_08_21.md` todo
+  `[BACKEND] P3`.
 
 - **ag-closeout-audit 2026-08-21 (cefi tranche, Phase 3 sweep)**: found this doc mis-classified "orphaned" by the
   Phase 1 pass — re-verified it was actually never AO-reachable at all: `assigned_vm: vm-cross-cutting` is a stale

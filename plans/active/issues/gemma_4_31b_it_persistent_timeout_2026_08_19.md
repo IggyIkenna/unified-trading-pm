@@ -102,19 +102,36 @@ not already done. That key is not reproduced here.
    `health_status: "degraded"` set on the real `nvidia-gemma-4-31b-it` account for the banner to actually show in
    production — a manual operator/dispatch step, same category as the original `POST /api/accounts/{id}/disable`
    pause, not something this pilot session did or should do from a slot checkout.
-1. **Get the playground's real wire request**: DevTools → **Network** tab (not Console) → filter Fetch/XHR → send
-   a playground message → find the `chat/completions` (or similar) request → right-click → Copy → **Copy as
-   cURL**. Diff it against attempt 3's payload above — likely differences to check: a different `api_base`/route
-   entirely, additional headers (a session/trace id NVIDIA's gateway might require), or a genuinely different
-   `stream`/`chat_template_kwargs` shape than what NVIDIA's own docs example (attempt 3) used.
-2. If the diffed request reveals a fixable gap, apply it to `config/litellm/grok_gemini_proxy.yaml`'s
-   `gemma-4-31b-it` `litellm_params` and re-test attempts 1-2's tool-use round trip for real.
-2. If no meaningful diff is found, this may be a genuine NVIDIA-side outage/degradation specific to this model's
-   public API route (distinct from the playground's route) — worth a direct NVIDIA support/forum check, or simply
-   re-testing again after some real elapsed time (days, not another same-session retry — 5 attempts across ~20
-   minutes already exhausted the cheap-retry space without new signal).
-3. Do not keep blind-retrying with real requests without new information (evidence table above already covers
-   streaming/non-streaming × 2 keys × proxy/direct — a 6th identical attempt adds nothing).
+- [ ] [OPERATOR] P2. Set `health_status: "degraded"` on the real `nvidia-gemma-4-31b-it` account in the LIVE VM's
+      `data/config/accounts.json` (gitignored, operator-managed — distinct from the shipped `accounts.mock.json` e2e
+      fixture). Without it the `NvidiaCapacityPanel.tsx` degraded banner shipped in item 0
+      (`agent-orchestrator@3b610af0b0`) never actually renders in production. Same category as the original
+      `POST /api/accounts/{id}/disable` pause — a host-local operator step, not a repo commit. Done-when:
+      `GET /api/accounts` returns `health_status: "degraded"` for that account and the banner is visible in the live
+      dashboard. Repo: agent-orchestrator (host config, no sha).
+
+- [ ] [INFRA] P1. Capture the NVIDIA playground's real wire request for `google/gemma-4-31b-it` and diff it against
+      attempt 3's payload in the evidence table above: DevTools → **Network** (not Console) → filter Fetch/XHR → send
+      a playground message → find the `chat/completions` request → right-click → Copy → **Copy as cURL**. Likely
+      differences to check: a different `api_base`/route entirely, extra headers (a session/trace id NVIDIA's gateway
+      may require), or a different `stream`/`chat_template_kwargs` shape than NVIDIA's own docs example used.
+      Done-when: the captured cURL is pasted into this doc's evidence table and each differing field is named.
+      Repo: agent-orchestrator.
+
+- [ ] [INFRA] P2. If the item above reveals a fixable gap, apply it to `config/litellm/grok_gemini_proxy.yaml`'s
+      `gemma-4-31b-it` `litellm_params` and re-run attempts 1-2's tool-use round trip for real. Done-when: a real
+      (non-mocked) tool-use round trip returns a non-zero-byte response, logged in the evidence table.
+      Repo: agent-orchestrator.
+
+- [ ] [OPERATOR] P3. If no meaningful diff is found, treat this as a probable NVIDIA-side outage/degradation specific
+      to this model's public API route (distinct from the playground's route): raise a direct NVIDIA support/forum
+      check, or re-test after real elapsed time (days, not another same-session retry). Done-when: either a support
+      thread is filed and linked here, or a fresh dated attempt is added to the evidence table.
+      Repo: agent-orchestrator.
+
+> **Guard (was numbered step 3, kept as a rule, not a todo)**: do NOT keep blind-retrying with real requests without
+> new information — the evidence table above already covers streaming/non-streaming x 2 keys x proxy/direct, and a
+> 6th identical attempt adds nothing.
 
 ## Progress Log
 

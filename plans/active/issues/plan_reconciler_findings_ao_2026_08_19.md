@@ -258,3 +258,14 @@ None — all 54 non-grace docs in the `ao` tranche's working set were read in fu
 - **ag-closeout-audit 2026-08-21 (ao tranche hygiene fix)**: cleared a stale `locked_by: plan_reconciler (agt-be3ce1)`
   lock, ~2 days old at time of check. Verified dead via `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh`
   — `agt-be3ce1` does not appear anywhere in live AO status output, confirming the dispatch is no longer running.
+
+- **/plan-reconcile ao 2026-08-22 (Phase -1 reconciliation of this doc)**: all 3 remaining open todos
+  re-verified against fresh state — **all 3 are still genuinely open**, none retired. (1) `ui-testing-layers.md`
+  still returns 0 hits for `PlanRegenLoop`/`plan_regen`. (2) `per-tab-worktrees.md` still has no mention of the
+  2026-08-17 incident or `check_cron_branch_override_parity.py` — note for future runs that a naive
+  `grep -c 'cron.branch.override'` returns 2 FALSE hits there (both are pre-existing references to the
+  `cron-branch-overrides.txt` data file); `git log -S 'check_cron_branch_override_parity'` on that file is empty.
+  (3) The `plan_hygiene_master.md` roster gap has GROWN, not shrunk: 6 roster entries vs 43 docs declaring
+  `parent_epic: plan_hygiene_master` (~37 missing, was ~17). Escalated as R1 in
+  `plan_reconciler_findings_ao_2026_08_22.md` with a recommendation to use the existing
+  `populate_epic_bodies_2026_05_21.py` rather than continue hand-patching.
