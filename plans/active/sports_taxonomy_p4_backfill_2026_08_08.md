@@ -58,7 +58,11 @@ locked_since:
 
 # Sports taxonomy P4 — derived-layer backfill
 
-> **🟢 CAMPAIGN IN PROGRESS 2026-08-21:** VM `mdps-sports-bucket-20260821-055605` is actively processing the consolidated pipeline (bucket + movement + snapshot) over the full 2020-06-06 → 2026-08-06 range at ~50 days/hour; ~35 hours remaining from 2021-11-16. The per-date loss guard correctly skips 2026-08-06 (upstream capture starvation, diagnosed in todo #2).
+> **🟡 CAMPAIGN STALLED 2026-08-22 (see issue doc):** no VM for either the MDPS bucket/movement/snapshot campaign or
+> the arb-backfill campaign is currently running. MDPS coverage has two real gaps (`2022-01-01→2023-06-30` died
+> mid-run with no recovery relaunch; `2025-01-01→2026-08-06` never launched); the arb-backfill campaign wrote zero
+> real rows fleet-wide due to a banned `ManifestWriter.add()` call. Details + fix/relaunch todos:
+> `/plans/active/issues/sports_p4_backfill_progress_metric_audit_2026_08_22.md`.
 
 > Gated on P2's migration (`gate_on_depends: true`). Operator ruling 2026-08-08: backfill is a FOLLOW-UP plan gated on
 > contracts, not in-scope-now — so the campaign runs once, against final contracts.
@@ -198,10 +202,22 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       `capture_status=="captured"` via pyarrow BEFORE materialising any Python row objects — ran clean under a 6G
       `run-bounded-analysis.sh` cap after the fix. Evidence: `instruments-service@4219aaa45a`
       (`scripts/dispose_c3_prelaunch_sports_corpus_2026_08_22.py`).
-- [ ] [REVIEW] P0. **Monitor on a PROGRESS metric, not activity.** Backfill progress is the count of TARGET artifacts
-      created, entity-scoped, on `time_created` (never `updated`) — an entity-agnostic check can pass for hours while
-      the target entity writes ZERO rows, masked by other entities writing. Arm an owned `run_in_background` heartbeat
-      watchdog (<=30 min) in the SAME turn as the launch; a dispatched sub-agent is not a reliable wake.
+- [x] ✅ [REVIEW] P0. **Monitor on a PROGRESS metric, not activity — 2026-08-22 (slot-25, review).** Audited both
+      campaigns' `run.log`/`EXIT_STATUS` via UTL `get_storage_client()` (never `gsutil`) instead of trusting
+      `exit_code=0` alone. Found real gaps hidden behind activity signals: (1) the full arb-backfill VM
+      `features-arb-backfill-20260822-090011` reported `exit_code=0` but wrote **ZERO** real `arbitrage_opportunity`
+      rows across all 2,269 dates (`opportunities=0 written_days=0 failed_days=1323`) — every date hit a
+      `ManifestWriter.add() with bundled data_type='arbitrage_opportunity' is banned` `ValueError`
+      (`arb_detect_handler.py:99` uses the banned `.add()` path instead of `record_captured_from_counts()`), caught
+      per-date so the wrapper never surfaced it as a failure. (2) the MDPS consolidated bucket/movement/snapshot
+      campaign only actually covers `2020-06-06→2021-12-31` + `2023-07-01→2024-12-31` — `2022-01-01→2023-06-30` died
+      mid-run (VM `mdps-sports-bucket-20260821-060513`, `EXIT_STATUS=RUNNING` >24h stale, last log line 2023-05-15,
+      no live instance) with no recovery relaunch, and `2025-01-01→2026-08-06` was never launched at all. No VM for
+      either campaign is in the live fleet (`gcloud compute instances list` empty for both prefixes) — this plan's
+      own `🟢 CAMPAIGN IN PROGRESS` banner is stale. No watchdog was armed because there is nothing currently running
+      to watch — the finding is that the prior "done" claims certified activity, not target-artifact progress.
+      Filed the concrete re-launch + code-fix todos, not left as prose:
+      `/plans/active/issues/sports_p4_backfill_progress_metric_audit_2026_08_22.md`.
 - [ ] [REVIEW] P1. **Run `/vm-preemption-billing-waste-audit` over the campaign** — check for SPOT preemption without
       recovery, and for structurally non-retriable `attempted_failed` shards being re-attempted on every wave.
 - [ ] [REVIEW] P0. **Terminal honest-coverage verdict.** After the campaign, every derived type reaches the floor with
