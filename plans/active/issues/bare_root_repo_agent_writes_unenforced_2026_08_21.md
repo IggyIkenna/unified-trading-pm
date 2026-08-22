@@ -32,6 +32,8 @@ context_scope:
     unified-trading-pm/scripts/dev/slot-git-status-report.sh,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
@@ -91,11 +93,12 @@ The monitoring gap itself is unfixed: `slot-git-status-report.sh`'s slot-0 branc
 
 ## Recommended fix
 
-- [ ] [BACKEND] P1. Wire the same alert path the numbered-slot loop already has
+- [x] ✅ [BACKEND] P1. Wire the same alert path the numbered-slot loop already has
       (`check_starvation_for_slot`/`check_stash_pile_for_slot`'s dedup-per-episode pattern) into the slot-0 branch
       of `unified-trading-pm/scripts/dev/slot-git-status-report.sh` (around the `if slot_in_filter "0"` block) — a
       DIRTY or untracked-files verdict on a bare root repo should page the same way FF-pull-starvation or stash-pile
-      regrowth already does. Extend `classify_repo`'s slot-0 call site, not the numbered-slot one.
+      regrowth already does. Extend `classify_repo`'s slot-0 call site, not the numbered-slot one. —
+      `unified-trading-pm@<SHA_CODE>` (see Progress Log entry below for the exact SHA)
 - [ ] [AGENT] P2. Once the alert lands, re-verify CLAUDE.md's slot-0 line (already corrected this session to
       "reported not enforced every 5 min") reads as accurate again — flip back to describing real enforcement only
       after the alert path is live and proven (at least one real DIRTY-slot-0 page observed).
