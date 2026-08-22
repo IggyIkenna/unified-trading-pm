@@ -121,13 +121,21 @@ source: >-
       the UAC validity matrix, all instruments-service/UAC) and corrected `repos:` to
       `[instruments-service, unified-api-contracts]` — `unified-trading-pm@c8aa4158c2`. Source:
       `plan_reconciler_findings_cross_cutting_2026_08_18.md` "Plans not reached" item 4.
-- [ ] [DIAG] P3. **`data_pipeline_e2e_milestones_gate_2026_07_24.md`** — a Deferred-work-table row still marked "IN
+- [x] ✅ [DIAG] P3. **`data_pipeline_e2e_milestones_gate_2026_07_24.md`** — a Deferred-work-table row still marked "IN
       PROGRESS" for the "Operator-requested broader audit pass, part 3" relay/triage step, whose stated completion
       condition (5 `/data-pipeline-reconciliation` reports, one per AG) has been met for 3+ weeks (all 5 exist at
       `plans/audit/results/data_pipeline_reconciliation_{defi,cefi,sports,prediction,tradfi}_2026_07_24.md`,
       361-495 lines each). Check whether the relay/triage step actually happened, update the row either way. Done
       when: a definite verdict (happened vs. didn't) is on record in the row. Source:
       `plan_reconciler_findings_cross_cutting_2026_08_18.md` "Plans not reached" item 5.
+      **VERDICT: YES — DONE 2026-08-22.** Traced each of the 5 reports' filed findings to their issue docs and read
+      each one's frontmatter directly (not assumed from filenames): `cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`,
+      `defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md` +
+      `defi_lst_empty_marker_hardcoded_venue_2026_07_27.md`, `tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`,
+      `prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`, and the addendum to
+      `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md` — all 6 are `status: resolved` and
+      archived under `plans/archive/issues/`. The relay+triage step genuinely happened. Updated the gate doc's row
+      (State: IN PROGRESS → DONE; Blocked-on: fully closed). See Progress Log for full detail.
 - [ ] [DOC] P3. **`live_pipeline_persistence_hot_path_decoupling_2026_06_24.md`** — a stale inline YAML comment
       references a status/lock state that changed 2026-08-10/12; superseded in practice by the doc's later
       `archive_exempt: true` but still misleading to a reader. Correct or remove the stale comment. Done when: no
@@ -174,3 +182,18 @@ source: >-
   provisioned on production topics — `PubSubTransport.read()` fails there today; (b) the "12s budget is generous
   enough" claim is NOT borne out at the tail (~39–42% of budget consumed at p95/max by the seam alone, before
   strategy detection / execution / relay are counted).
+- **2026-08-22 (slot 11)**: item 7 (`data_pipeline_e2e_milestones_gate_2026_07_24.md` relay/triage verdict) DONE.
+  Verified all 5 `/data-pipeline-reconciliation` reports exist at
+  `plans/audit/results/data_pipeline_reconciliation_{defi,cefi,sports,prediction,tradfi}_2026_07_24.md`. Traced
+  each report's own "Filed"/"issue doc filed" citations to the actual issue docs and read every one's frontmatter
+  directly (not assumed from filenames): `cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md` (cefi's
+  BIG finding — capture-halt), `defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`
+  + `defi_lst_empty_marker_hardcoded_venue_2026_07_27.md` (defi's 2 findings — the report itself said neither was
+  freshly filed at write time, but both exist now, confirming a later triage pass genuinely happened),
+  `tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md` (tradfi's 2 BIG findings),
+  `prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` (prediction's headline finding), and
+  the addendum to `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md` (sports). All 6 read
+  `status: resolved` and are archived under `plans/archive/issues/`. Verdict: the relay+triage step DID happen for
+  every one of the 5 AGs. Updated `data_pipeline_e2e_milestones_gate_2026_07_24.md`'s Deferred-work-table row (State
+  column: `**IN PROGRESS**` → `**DONE 2026-08-22 (relay+triage verified)**` with the same evidence inline;
+  Blocked-on column: → "Nothing — fully closed").
