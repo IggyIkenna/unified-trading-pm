@@ -33,12 +33,11 @@ related:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /plans/active/issues/na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30.md,
     /plans/active/issues/na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md,
-    /plans/active/issues/na_eligibility_audit_defi_blocks_2026_08_18.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 parent_epic: plan_hygiene_master
 created: 2026-08-18
-last_updated: 2026-08-19 # was 2026-08-18 -- stale vs the 2026-08-19 na-eligibility-audit + RECLASSIFY-split entries (the doc's true tail); corrected (plan_reconciler ao)
+last_updated: 2026-08-21 # was 2026-08-19 -- corrected applying ruling D28 (issues_corpus_completion_dispatch_2026_08_21)
 author: claude-code (na_eligibility_auditor, slot 18, DISPATCH_ID=agt-72629d, tranche=defi)
 assigned_vm: NA
 execution_scope: local-only
@@ -155,10 +154,11 @@ safe outcome was a timing accident, not a property of the current design.
       `Write`) for any file that might already exist from a concurrent run, so a genuine collision fails loudly
       (like the leverage-archetypes doc did) instead of silently overwriting. The second option is cheap and
       defends against MORE than just this specific race (any stale-Read scenario), independent of the first. Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 2 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
-- [ ] [OPERATOR] P3. **Decide whether this warrants a `SKILL.md` update** — e.g., "when creating a NEW same-day
-      artifact doc (a blocks-index doc, a satellite batch), prefer `Edit` with a narrow anchor + `replace_all: false`
-      over a blind `Write`, even for a path Phase 0 didn't report as already existing" — since Phase 0's inventory
-      snapshot is itself a point-in-time read that a concurrent dispatch can invalidate.
+- [ ] [DOCS] P3. **APPROVED 2026-08-21 (ruling D28)** — update `cursor-configs/skills/na-eligibility-audit/SKILL.md`'s
+      "Scheduled cadence"/Phase-3 section: when creating a NEW same-day artifact doc (a blocks-index doc, a satellite
+      batch), prefer `Edit` with a narrow anchor + `replace_all: false` over a blind `Write`, even for a path Phase 0
+      didn't report as already existing — since Phase 0's inventory snapshot is itself a point-in-time read that a
+      concurrent dispatch can invalidate. Done when: SKILL.md states this convention.
 
 ## Progress Log
 
@@ -185,3 +185,5 @@ safe outcome was a timing accident, not a property of the current design.
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:f6a1c78847a68470]: RECLASSIFY (per-todo split) — todo 2 (harden the same-tranche concurrent-dispatch case) extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 2. Doc stays NA for todo 3 ([OPERATOR] SKILL.md-update decision).
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — sole open item (`[OPERATOR] P3`, decide whether this warrants a SKILL.md update) is an explicit operator-authority preference call over documentation wording, not a bounded/deterministic worker outcome.
+- **2026-08-21 — ruling D28 (na-eligibility skill follow-ups)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): Approve both — the doc edit is cheap defense against the stale-Read class; the re-audit cost is bounded and already accepted. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-22 (dispatch chunk-8, dangling-ref fix)**: this doc's `related:` list cited the archive-path copy of the blocks doc named earlier in this same Progress Log; that path exists on disk (content-verified, commit `d0cc419300` landed it as an archive-path add the same day) but is currently UNTRACKED in this shared checkout (a pending rename from a concurrent session never committed) — the corpus reference-path checker correctly cannot resolve an untracked path against HEAD. Removed the dangling `related:` entry rather than touch another session's uncommitted foreign WIP; the Progress Log prose above already tells this story with the real commit SHA, so no information is lost by dropping the frontmatter pointer.
