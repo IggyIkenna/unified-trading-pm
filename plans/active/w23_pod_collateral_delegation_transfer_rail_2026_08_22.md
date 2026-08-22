@@ -164,7 +164,7 @@ assigned_role: backend_engineer
       closed-set `expected` values updated. Full `quality-gates.sh` green
       (sentinel=d1b724b5dc32670b1855aa8cd136e58f67ad680d); quickmerge-landed + post-push ancestry independently
       re-verified on `origin/live-defi-rollout`.
-- [ ] [BACKEND] P1. **Register POD in the UAC capability registry** (`unified_api_contracts/registry/capability.py`'s
+- [x] ✅ [BACKEND] P1. **Register POD in the UAC capability registry** (`unified_api_contracts/registry/capability.py`'s
       `SourceCapability`/`register_capability` pattern, same shape used for CeFi/DeFi sources) — declare `"pod"` as a
       source with `operation_details` for a `collateral_delegation` operation: `signing_scheme="none"` (POD signs
       nothing on our side), env support (`sandbox`/`prod` — sandbox URL TBD per POD spec), and which venue-pairs POD
@@ -173,6 +173,17 @@ assigned_role: backend_engineer
       from here, not a hardcoded list in execution-service. Done: `resolve_capability("pod")` returns a real
       `SourceCapability`; a unit test asserts `BINANCE`→`OKX` is declared, an unlisted pair raises
       `UnsupportedOperationError`.
+      — unified-api-contracts@221f803b: added `SourceCapability.venue_pair_support` (generic
+      `dict[str, list[str]]` field, not POD-specific) + `validate_venue_pair_support()` to
+      `registry/capability.py`; new `registry/capability_declarations/_custody.py` registers `"pod"` with
+      `operation_details["collateral_delegation"]` (`signing_scheme="none"`, `sandbox`/`prod` envs) and
+      `venue_pair_support={"binance": ["okx"], "okx": ["binance"]}`; wired into `CUSTODY_CAPABILITIES` →
+      `CAPABILITY_DECLARATIONS`. Also carries an honest `ws_protocol` (`no_websocket_surface` — POD is REST
+      instruct-and-poll) to satisfy the registry census gate, and explicit `chain=None, kind=None` per STEP 5.85.
+      New `tests/unit/test_pod_custody_capability.py` (6 tests: resolves, no-signing, BINANCE↔OKX declared,
+      unlisted pair raises `UnsupportedOperationError`). Full `quality-gates.sh` green
+      (sentinel=b429c9a785708cc32e67f6572c40d4b90c31b4e2); quickmerge-landed + post-push ancestry independently
+      re-verified on `origin/live-defi-rollout`.
 - [ ] [BACKEND] P2. **Extend `FundTransferContext` or add a sibling POD-fund mapping** —
       `unified_api_contracts/internal/domain/fund_administration/transfer_context.py`'s `FundTransferContext.fund_id`
       is OUR internal IM-Pooled-fund id, a different id-space from POD's own `fund_id` (POD's WhatsApp example: "fund
