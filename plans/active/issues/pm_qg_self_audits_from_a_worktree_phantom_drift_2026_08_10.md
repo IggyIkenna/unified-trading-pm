@@ -27,7 +27,7 @@ assigned_role: infra
 drift_direction: none
 source: Hit live while gating the tool-call-batching hook from an isolated worktree, 2026-08-10.
 depends_on: []
-last_updated: 2026-08-10
+last_updated: 2026-08-22
 locked_by:
 locked_since:
 resolved_by:
@@ -108,6 +108,47 @@ the full gate.
       checkout; worktrees support prek/ship scripts only." **Done when**: running the gate from a bare worktree prints
       that one line and exits, with no misleading downstream failures.
 
+## Recurrence 2026-08-22 — third foreign-directory vector: orphaned `qg-pr-tree.*` QG worktrees
+
+Hit live while gating a `main`→LDR back-merge resolution in slot 31 (escalation `agt-883a53`, PM PR #3723). PM's full
+gate went RED on `test_check_repo_docs_ssot.py::test_live_corpus_has_zero_new_drift` with **13 phantom drift docs**, all
+prefixed `qg-pr-tree.aF9RAi/` — an orphaned QG PR-tree worktree of PM sitting as a SIBLING of `unified-trading-pm`
+inside the slot root (`.tabs/31/`).
+
+The 2026-08-10 identity guard (`repo_dir.resolve() == PM.resolve()`) does NOT catch this: the orphan is a *separate
+path*, not PM's own path, so identity-matching legitimately misses it. `_SCRATCH_CLONE_RE`
+(`-agentwork-|(^|-)scratch-clone|\.stale-`) does not match `qg-pr-tree.aF9RAi` either. Per this doc's own precedent
+note, a foreign directory is exactly the case where name-matching IS the right fix.
+
+Measured state of the orphan: mtime 2026-08-20 20:56 UTC (**~42h stale**), **not** a registered `git worktree`, and no
+`quality-gates`/`pytest` process alive on the host — a leftover from a crashed/killed run two days earlier, not live
+state. Nothing under PM's `scripts/` creates or reaps it (`grep -rn 'qg-pr-tree' scripts/` → 0 hits), so the creator is
+outside this repo and **unidentified** — that gap is the second todo below.
+
+Unblocked non-destructively by renaming the orphan to `.stale-qg-pr-tree.aF9RAi`, which the EXISTING `\.stale-` arm of
+`_SCRATCH_CLONE_RE` already skips; the checker then reported `430 repo docs scanned, zero NEW codex-SSOT drift`. The
+directory was preserved, not deleted.
+
+**The ratchet-poisoning trap fired again**: the checker's printed remedy is
+`check_repo_docs_ssot.py --update-baseline`, which here would have written 13 phantom `qg-pr-tree.aF9RAi/...` paths into
+the shared baseline permanently. Same trap the 2026-08-10 entry names — it is the *default* suggested action, so it will
+keep catching people until the guard covers this vector.
+
+**Verification trap (cost real time this session)**: `bash scripts/quality-gates.sh --no-fix > log 2>&1; echo "EXIT=$?"`
+reports the exit of the LAST pipeline element, not the gate. The wrapper reported exit 0 while the gate had genuinely
+failed with `QG_EXIT=1`. Read the gate's own exit from the log, never a piped `$?` — this is CLAUDE.md's "a PIPE
+fabricates exit 0" rule hitting in practice.
+
+- [ ] [INFRA] P2. **Add `qg-pr-tree` to `_SCRATCH_CLONE_RE` in `scripts/quality_gates/check_repo_docs_ssot.py`** so an
+      orphaned QG PR-tree worktree cannot fail an unrelated agent's gate with phantom drift. Precedented: the same
+      regex already carries `-agentwork-` (2026-07-30) and `.stale-` (2026-08-05) arms for exactly this class of
+      foreign directory. **Done when**: a directory named `qg-pr-tree.<suffix>` next to the real repos is skipped by
+      the walk, with a unit test asserting it (mirroring the existing scratch-clone tests).
+- [ ] [INFRA] P3. **Identify what creates `qg-pr-tree.*` and give it a reaper.** Not created by anything in PM's
+      `scripts/` (0 grep hits), so it comes from the shared gate infra (`quality-gates-base`/`unified-trading-ci`).
+      A crashed run currently leaves the tree behind forever — 42h in the measured case. **Done when**: the creator is
+      named in this doc and either cleans up on exit-trap, or a startup sweep removes `qg-pr-tree.*` older than N hours.
+
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
@@ -123,3 +164,6 @@ the full gate.
   judgment call was already made and documented above, just never landed.
 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- **conflict_resolver 2026-08-22** (escalation `agt-883a53`, PM PR #3723): recorded the third
+  foreign-directory vector above (orphaned `qg-pr-tree.*`); unblocked live by renaming the orphan aside, checker back to
+  `zero NEW codex-SSOT drift`. Two todos added; the P2 regex arm is the actual fix and is not yet applied.
