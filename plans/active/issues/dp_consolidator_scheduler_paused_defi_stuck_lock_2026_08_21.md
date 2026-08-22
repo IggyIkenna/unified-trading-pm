@@ -25,6 +25,7 @@ summary: >-
   30-42s skip-cycles observed 19:00-19:11 while the earlier stale lock predecessor was held). Resumed the cron directly
   (no maintenance window needed — nothing legitimately depends on the pause).
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -185,9 +186,9 @@ fixed here, scope too broad for a one-shot escalation):
       prod. 8 new unit tests (`read_preserved_metadata`/`restamp_preserved_metadata`: key-filtering, no-native-client
       no-op, merge+patch, empty-preserved no-op, patch-failure-never-raises), full `quality-gates.sh` green, SHA
       ancestry-verified on `live-defi-rollout`. (repo: market-tick-data-service)
-- [ ] [SCRIPT] P3. Consider having the consolidator-liveness watchdog (`unified_trading_library.monitors.
-      consolidator_liveness`) also read live scheduler state directly (mirroring `consolidator_scheduler_watcher.py`'s
-      own `scheduler_state_reader`) rather than relying solely on heartbeat-staleness + lock-in-flight proxies, so an
-      accidentally-paused cron with a genuinely-long-running last execution doesn't stay invisible to auto-resume for
-      the full in-flight horizon (9000s for defi). Needs a design call on how the two detectors' scopes should
-      compose — not a reactive patch. (repo: unified-trading-library)
+- [x] ✅ [SCRIPT] P3. The consolidator-liveness watchdog now reads the live scheduler state when a stale heartbeat
+      coincides with an in-flight merge, so an accidentally-paused cron is reported DOWN instead of remaining
+      invisible for the full in-flight horizon (9000s for defi). Existing lock-based protection remains for ENABLED or
+      unknown scheduler state. Shipped `unified-trading-library@9956271a9`; added regression coverage for the
+      stale-heartbeat + fresh-lock + PAUSED-cron case. Evidence: `bash scripts/quality-gates.sh` — 7,256 tests passed,
+      basedpyright 0 errors/0 warnings, all quality gates passed. (repo: unified-trading-library)
