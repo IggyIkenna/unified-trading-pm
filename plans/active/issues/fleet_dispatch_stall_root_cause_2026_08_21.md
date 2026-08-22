@@ -642,9 +642,16 @@ spectacular-looking "0 tasks completed in 24h" that was pure artifact (true figu
 cross-checked against `tasks.done_at`). Always enumerate the event vocabulary first. (b) A
 backgrounded `... ; tail -3 log` reports **tail's** exit code, so the harness said "completed exit
 code 0" for a gate run that had actually ABORTED — the durable `QG_EXIT_CODE=$?` marker in the log
-is the only trustworthy signal. (c) The tmux server was found dead with zero live workers, which
-looks like the headline cause but is downstream: every spawn attempt was failing at the
-dirty-state gate before ever reaching tmux, so no session was ever created to keep it alive.
+is the only trustworthy signal. (c) I reported "the tmux server is dead, zero live workers" — that was
+itself a MEASUREMENT ERROR, corrected here rather than left standing. `orchestrator.service`
+sets `TMUX_TMPDIR` to a dedicated socket (see `tmux_spawn.py`'s `_TMUX_DEFAULT_SOCKET` and the
+comment above it, added by ao_tmux_session_loss_mid_task_root_cause_2026_08_10). A bare
+`tmux ls` inspects the ambient `/tmp/tmux-<uid>/default` socket, which AO never uses, so it
+reports "no server running" on a perfectly healthy fleet — permanently, not transiently. The
+real liveness signals are the `claude` worker processes (35 live at 07:46Z) and the slot rows
+themselves (21 `working`). **Never use a bare `tmux ls` to judge AO fleet liveness on this
+host.** The dispatch stall was real and is measured above; the "no workers at all" framing was
+not.
 
 Post-deploy, I measured the fix rather than assuming it and had to correct my own write-up
 within the hour: splitting the 375 quarantine failures by the repo actually named showed only
