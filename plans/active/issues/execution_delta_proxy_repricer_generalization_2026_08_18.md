@@ -625,10 +625,11 @@ POST_ONLY as two independently composable fields.
       implements PERMISSIVE: empty = "not yet declared", constraints allowed) — no SOR consumer reads
       `eligible_venues` anywhere yet and the venue-eligibility codex doc never states the empty case; re-derive
       from the real consumer once w22's venue_constraints wiring lands.
-- [ ] [DOC] P2. **Align `strategy-service-deep-dive.html` (~1408-1436) with Q12-Q16** — its
-      `InstrumentReferenceEntry`/`CreditBand` rendering predates the ruling (missing delta/gamma/theta coefficients
-      + per-entry language now in platform walkthrough §08 @a6fe8b1a39). Natural home is the walkthrough
-      remediation plan — parked here 2026-08-22, that plan was peer-locked mid-wave.
+- [x] ✅ [DOC] P2. **Align `strategy-service-deep-dive.html` with Q12-Q16** — DONE unified-trading-pm@8d21ca2364
+      (2026-08-22): delta/gamma/theta coefficients added to the entry, per-entry Q12-16 language + N=1
+      `QuoteInstruction` narrowing + factor-state vehicle note; stale "still open" keying paragraph rewritten;
+      `time_decay_coefficient` verified present at origin. (Was parked here while the remediation plan was
+      peer-locked; migration there no longer needed — done.)
 - [ ] [REVIEW] P3. **UTL doc/code drift**: `rule_evaluator.py` docstring cites a "PER_INSTRUMENT scope" that
       `RiskRuleScope`'s closed set doesn't have (found read-only 2026-08-22).
 - [x] ✅ [AGENT] P2. **EXTRACTED 2026-08-21 → batch21. VERDICT: declared-but-unwired, zero production callers**
