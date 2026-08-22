@@ -66,9 +66,11 @@ would be destroyed with no real content-equivalence proof.
       duplicate-verification task (sort/compare on a stable row key, not just a coarse proxy like size or row count).
       Repo: market-tick-data-service. Bounded/deterministic, conflict-checked clean; dispatches through the batch, not
       this doc (stays NA for todo 2 below).
-- [ ] [OPERATOR] P2. Once hardened, re-run the dry-run for a fresh count (the corpus may have drifted slightly since
-      2026-08-12), then decide whether to launch `full` mode — this remains a real prod-bucket delete, gated per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`.
+- [ ] [SCRIPT] P2. Re-run the dry-run for a fresh count (the corpus may have drifted slightly since 2026-08-12), then
+      launch `full` mode — a real prod-bucket delete, gated per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Per D2 ruling (2026-08-22): approved under each
+      item's stated precondition (retention check / fresh dry-run / snapshot-first) — execute serially, one item per
+      verified step, citing the gate result inline.
 
 ## Progress Log
 
@@ -87,3 +89,7 @@ would be destroyed with no real content-equivalence proof.
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open item (todo 2, the `full`-mode
   prod-bucket-delete launch decision) is an explicit, self-cited real delete gated per
   `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — human-only. `assigned_vm` unchanged.
+- **2026-08-22 — ruling D2 (Manifest/GCS correction batch)**: OPERATOR-RULED 2026-08-21 — APPROVED ALL under each
+  item's stated precondition (retention check / fresh dry-run / snapshot-first). Execute serially, one item per
+  verified step, citing the gate result inline. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger.

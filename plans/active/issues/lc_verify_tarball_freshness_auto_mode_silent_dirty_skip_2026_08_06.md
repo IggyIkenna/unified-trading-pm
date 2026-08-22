@@ -146,10 +146,10 @@ stash/rebuild/restore dance by hand every time, as this session did twice.
       case (stale tarball + dirty unrelated tracked files in the repo + `auto` mode → must NOT return success). —
       deployment-service@450b212. QG green; regression test `test_auto_mode_stale_after_dirty_skip_returns_nonzero`
       passes.
-- [ ] [DIAG] P3. Consider whether `create-code-tarballs.sh --include <repo>` should auto-apply `--allow-dirty-tarball`
-      scoped to only the explicitly-`--include`d repo(s) when called FROM `lc_verify_tarball_freshness`'s auto-republish
-      path specifically (not as a general default — a human running the script directly should still get the safety
-      prompt).
+- [ ] [INFRA] P3. Auto-apply `--allow-dirty-tarball` in `create-code-tarballs.sh --include <repo>`, scoped to only the
+      explicitly-`--include`d repo(s), when called FROM `lc_verify_tarball_freshness`'s auto-republish path
+      specifically (not as a general default — a human running the script directly should still get the safety
+      prompt). Per D11 ruling (2026-08-22): approved — closes a recurring page class cheaply.
 
 ## Progress Log
 
@@ -186,3 +186,7 @@ stash/rebuild/restore dance by hand every time, as this session did twice.
   `infra_satellite_ao_dispatch_batch8_2026_08_07.md` (now archived).
 - **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries).
+- **2026-08-22 — ruling D11 (Tarball pipeline hardening)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve refresh + narrow auto-dirty, defer the gate — the first two close measured
+  recurring page classes cheaply; the gate is a riskier shared-pipeline change deserving its own design pass. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

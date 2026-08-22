@@ -112,7 +112,7 @@ on one active issue doc). This doc captures what's NOT auto-fixable this run.
       archival, violating the already-ruled convention — corrected via `git mv` to flat `plans/archive/issues/`,
       referrers fixed in `plan_reconciler_findings_cross_cutting_2026_08_19.md` and
       `worker_slot_account_exhaustion_no_rotation_2026_08_19.md`.
-- [ ] [DOCS] P3. **2 new genuinely-dead body-links, not covered by the sibling 2026-08-02 tracking doc** (verified via
+- [ ] [DOCS] P3. Per D6 ruling (2026-08-22): approved as bounded cleanup. **2 new genuinely-dead body-links, not covered by the sibling 2026-08-02 tracking doc** (verified via
       `find` across the whole repo, not just grep-0 -- resolution algorithm per `check_doc_body_links.py::_resolve()`):
   - `/codex/14-customer-journeys/shared-core/strategy-version-governance.md` cites
     a `post-mortem-template.md` file under a `codex/12-incidents` directory -- that directory doesn't exist at all (only
@@ -155,3 +155,4 @@ to chase down the exact call site in this sweep, noting so it doesn't re-mislead
 - **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — re-affirms 2026-08-17 verdict. All 3 remaining open items are genuine operator-gated/judgment calls (2 explicit [OPERATOR] scope decisions, 1 half-bounded dead-link item bundling a judgment sub-link); the doc's one genuinely bounded item was already extracted to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` and correctly stays closed here.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — 2 open items remain, both genuine operator-gated scope/proportionality calls (whether to backfill ~1,115 archived-doc summaries; whether the 2 remaining dead body-links in archived history are worth fixing vs. accepted debt). The archival-path self-consistency item was separately found already resolved 2026-08-21 (see the item's own note) and stays closed. Unchanged in substance since 2026-08-18.
+- **2026-08-22 — ruling D6 (Docs-reconcile findings sign-off)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): Approve all — each item carries a per-doc recommendation; the two BIG findings need named owners now, the rest is bounded cleanup. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

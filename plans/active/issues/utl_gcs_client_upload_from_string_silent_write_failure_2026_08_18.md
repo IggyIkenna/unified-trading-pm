@@ -523,14 +523,11 @@ already prioritized toward these 6 docs now).
 ## sweep — converted from prose so these 2 genuinely-open items are visible to checkbox-based tooling; neither is
 ## answered by this conversion)
 
-- [ ] [OPERATOR] P1. Decide AO-vs-human dispatch scope for the 16 confirmed Category-1 remediation files
-      (instruments-service 15 files/20 call sites + strategy-service 1 file/2 call sites — see the classification
-      table above) before authoring a remediation plan. Options: **A) AO-dispatched batch** — bounded, mechanical
-      per-file `upload_bytes`/`download_bytes` conversion with a live-verify step per file, same shape as this
-      doc's own Category-2 remediation which shipped cleanly across 6 repos **[WORKER REC — this doc's own Category-2
-      precedent already proved the mechanical-fix-plus-live-verify pattern works fleet-wide]**. **B) human-authored
-      plan** — the original coordinating session's own note flagged these as "one-off/historical scripts in an
-      unfamiliar repo per-file context, not a blind batch-replace," which leans toward closer human review per file.
+- [ ] [SCRIPT] P1. Remediate the 16 confirmed Category-1 files (instruments-service 15 files/20 call sites +
+      strategy-service 1 file/2 call sites — see the classification table above) via the same mechanical
+      `upload_bytes`/`download_bytes` conversion + live-verify-per-file pattern already proven for this doc's own
+      Category-2 remediation. Per D138 ruling (2026-08-22): approved — AO batch; the mechanical-fix-plus-live-verify
+      pattern already worked across 6 repos with zero data loss found. Repo: instruments-service, strategy-service.
 - [x] ✅ [REVIEW] P2. **Confirmed and fixed all 8, 2026-08-20 — `unified-trading-library@9f6a8f964c`.** Read
       `domain_configs.py` directly rather than assuming: all 8 named classes (`InstrumentDomainConfig`/
       `ClientDomainConfig`/`VenueDomainConfig`/`TickerUniverseConfig`/`RiskDomainConfig`/`AlertRuleDomainConfig`/
@@ -658,3 +655,7 @@ already prioritized toward these 6 docs now).
   `AlertRuleDomainConfig`/`RateLimitDomainConfig`/`FeatureFlagDomainConfig`) carry the same latent
   crash-on-real-`.env` risk, unfixed — flagged for a follow-up decision, not scoped as a todo here.
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries)
+- **2026-08-22 — ruling D138 (Category-1 GCS-call fixes routing)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): AO batch — the same mechanical-fix-plus-live-verify pattern already
+  worked across 6 repos with zero data loss found. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
