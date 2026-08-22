@@ -482,7 +482,16 @@ To revoke a specific token (e.g. compromised VM, decommissioned machine):
 - Tokens last **~1 year** from generation
 - Set a calendar reminder for 30 days before expiry per account
 - Renewal: re-run `claude setup-token` on a machine with browser → copy new token → push to both creds buckets;
-  `CredsEnvPoller` on every VM picks up the new env file within 5 min
+  `CredsEnvPoller` on every VM picks up the new env file within 5 min. **Was silently disabled fleet-wide until
+  2026-08-19** (`orchestrator.service`'s systemd unit never set `ORCHESTRATOR_CREDS_S3_BUCKET`/`_GCS_BUCKET`, so
+  `_provider_and_uri()` returned `None` and the poller thread never started — the ORIGINAL 8 accounts only ever got
+  their env files from `bootstrap_vm.sh`'s one-time boot fetch). Fixed live 2026-08-19 by setting
+  `ORCHESTRATOR_CREDS_S3_BUCKET=uts-orchestrator-creds-427895769566` on the central orchestrator VM
+  (`i-0c9b283b31d6b5ca7`) + restart; **confirmed 2026-08-22** the var is live in the actual running process's
+  `/proc/<pid>/environ` (not just the config file) and the code path (`server/creds_env_poller.py::start()`)
+  structurally starts the poller thread whenever that var is set — not yet independently observed catching a live
+  token rotation end-to-end (no rotation has occurred since the fix to observe). Full incident:
+  `plans/archive/issues/ao_creds_env_poller_disabled_no_live_token_rotation_2026_08_18.md`.
 - The orchestrator dashboard's `SetupTokenBadge` shows `expires <date>` for each account; yellow at 30-day-out, red at
   7-day-out (per Phase 4c). The historic `OAuthBadge` (which read 8h-refresh `.credentials.json` expiry) was removed in
   Phase 4b-cleanup 2026-05-28 — setup-token expiry is the only auth-clock now.

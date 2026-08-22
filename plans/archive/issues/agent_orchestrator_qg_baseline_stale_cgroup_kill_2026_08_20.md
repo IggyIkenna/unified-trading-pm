@@ -19,7 +19,7 @@ summary: >-
   recovery per the governor script's own comment at qg-host-governor.sh:662) to bump the committed baseline to the
   current real peak — a >20% jump was expected and required `--force` since the anomaly guard (qg_host_adaptive_resource_governor_2026_07_14.md
   Trigger 3) does not auto-promote a >=20% RSS increase.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -49,6 +49,14 @@ context_scope:
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
   ]
 ---
+
+> **📦 ARCHIVED 2026-08-22** — all 3 todos closed (issues-corpus executable-queue dispatch): RSS-doubling
+> root-caused as genuine test-suite growth (265→302 test files, +37, 2026-08-17→08-20); the 2 diagnosability/sweep
+> follow-ups' extraction-flip (missed 2026-08-21) corrected, citing `infra_satellite_ao_dispatch_batch2_2026_08_21.md`
+> todos 14-15 as their live tracking home. 0 open todos, no lock. **Read the CORRECTION section below before
+> re-deriving the memory-cap theory for a future silent near-completion QG death** — the actual root cause of the
+> *shipping* blocker this doc chased was `orphan_reap`, not the memory baseline; see
+> `plans/active/issues/agent_orchestrator_quickmerge_orphan_reap_kills_interactive_background_2026_08_20.md`.
 
 # agent-orchestrator quickmerge silently OOM-killed by stale QG memory baseline
 
@@ -100,12 +108,18 @@ CI-firefighter actively diagnosing a live blocking wall), not a silent bump.
 
 ## Open questions / follow-up
 
-- [ ] [SCRIPT] P2. **Why did agent-orchestrator's real pytest RSS roughly double since the 2026-08-17 baseline
-      measurement?** — is this a genuine test-suite memory regression (new fixtures, a leak, more parametrized cases)
-      worth its own investigation, or was the 2026-08-17 measurement itself an anomalously LOW single-run sample (the
-      baseline script takes one measurement, not a distribution)? If genuine growth, consider whether a specific new
-      test module is the culprit before accepting the new ~2GB baseline as steady-state.
-- [ ] [SCRIPT] P2. **Make a cgroup-MemoryMax kill loudly diagnosable from the QG/quickmerge log itself** — today the
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-22 (issues-corpus executable-queue dispatch).** Confirmed genuine test-suite
+      growth, not an anomalously-low prior sample: `git ls-tree` at the two measurement commits shows agent-orchestrator's
+      `tests/` grew from 265 to 302 `test_*.py` files (+37, +14%) between 2026-08-17 and 2026-08-20, with several
+      large-insertion commits in that exact window touching `tests/` (one `280 files changed, 4000 insertions`, one
+      `25 files changed, 6432 insertions`, plus multiple 800-1100-line single-file additions) — consistent with a
+      genuine RSS-driver (more collected tests + fixtures under `--cov=server`), not a measurement fluke. The committed
+      baseline (`unified-trading-pm@5a4d1ed13e`, 1014MB→4096MB local peak) is accepted as steady-state; no further
+      re-baseline commits for agent-orchestrator have landed since, corroborating stability. Evidence:
+      unified-trading-pm@5a4d1ed13e (baseline commit) + direct `git ls-tree`/`git log --stat` measurement this session.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-21 (ag-closeout-audit, infra tranche Phase 3) — checkbox flip was missed when
+      extracted.** Extracted into `plans/active/infra_satellite_ao_dispatch_batch2_2026_08_21.md` todo 14 (its own
+      work not yet done — that's tracked there, not here). Was: **Make a cgroup-MemoryMax kill loudly diagnosable from the QG/quickmerge log itself** — today the
       only way to tell "died from the memory cap" apart from "died from generic host contention" or "died from a real
       test failure" is manually correlating `ps` RSS growth against the committed baseline mid-run, which is exactly
       the investigation this issue doc had to do from scratch. `_qg_governor_detect_oom_kill` (referenced at
@@ -113,7 +127,9 @@ CI-firefighter actively diagnosing a live blocking wall), not a silent bump.
       surfaces a clear message in quickmerge's own stdout/log (not just a code comment) for every repo, not just the
       basedpyright case the existing comment describes.
       **➡️ EXTRACTED 2026-08-21 (ag-closeout-audit, infra tranche Phase 3) → `plans/active/infra_satellite_ao_dispatch_batch2_2026_08_21.md` todo 14.**
-- [ ] [SCRIPT] P3. **Check whether other repos on this shared host have a similarly stale (>20% under-measured)
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-21 (ag-closeout-audit, infra tranche Phase 3) — checkbox flip was missed when
+      extracted.** Extracted into `plans/active/infra_satellite_ao_dispatch_batch2_2026_08_21.md` todo 15 (its own
+      work not yet done — that's tracked there, not here). Was: **Check whether other repos on this shared host have a similarly stale (>20% under-measured)
       baseline** that would silently fail the same way on their next quickmerge — `scripts/dev/qg_resource_baseline.json`
       is the full committed set; a bulk `--force` re-measure sweep (or at least a report of current vs.
       committed-baseline deltas without forcing) would catch this class before it blocks someone else's push.

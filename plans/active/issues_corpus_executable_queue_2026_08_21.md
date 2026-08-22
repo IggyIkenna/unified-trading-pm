@@ -58,8 +58,15 @@ drift_direction: advance-code
       `tradfi_satellite_ao_dispatch_batch19_2026_08_19.md` repointed. Evidence: unified-trading-pm (commit to
       follow).
 - [ ] [CODE] P1. `agent_orchestrator_cloud_run_dockerfile_broken_copy_agents_dir_2026_08_19.md` (effort S): Grep .github/workflows/ and cloudbuild.yaml for what invokes this Dockerfile and check recent run history to determine if it's genuinely dormant or a live silent CI fa... (+2 more units) — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
-- [ ] [CODE] P1. `agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md` (effort S): Investigate why agent-orchestrator's real pytest RSS roughly doubled since the 2026-08-17 baseline measurement (genuine regression vs. anomalously-low prior sample) (+2 more units) — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
-- [ ] [CODE] P1. `ao_creds_env_poller_disabled_no_live_token_rotation_2026_08_18.md` (effort S): Capture a live 'CredsEnvPoller started' log line (or observe a real token rotation land in ~/.claude-accounts/) via read-only SSM against the orchestrator VM to close ... (+1 more units) — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
+- [x] ✅ [CODE] P1. `agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md` — done 2026-08-22: RSS-doubling
+      root-caused (genuine test-suite growth, 265→302 test files); the 2 diagnosability/sweep extractions' checkbox
+      flips (missed 2026-08-21) corrected. Doc archived to `plans/archive/issues/`. Evidence: unified-trading-pm
+      (commit to follow).
+- [x] ✅ [CODE] P1. `ao_creds_env_poller_disabled_no_live_token_rotation_2026_08_18.md` — done 2026-08-22: confirmed
+      live via read-only SSM (`i-0c9b283b31d6b5ca7`) that `ORCHESTRATOR_CREDS_S3_BUCKET` is present in the running
+      process's actual `/proc/<pid>/environ` + code-path proof the poller thread starts; codex SSOT updated to
+      reflect verified state. Doc archived to `plans/archive/issues/`. Evidence: unified-trading-pm (commit to
+      follow).
 - [ ] [CODE] P1. `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18_finalize_2026_08_19.md` (effort S): Run the standard 6-step archival ritual on ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md (git mv to plans/archive/issues/, fix every... — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
 - [ ] [CODE] P1. `ao_human_claim_reserved_slot_bypass_2026_08_16.md` (effort S): Check the live review slot's current state via GET /api/state; if the underlying task hasn't self-resolved, kill the wedged session and let ensure_review_agents respaw... — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
 - [ ] [CODE] P1. `ao_scheduled_jobs_health_audit_findings_2026_08_20.md` (effort S): Fold an external-PR-backlog check into escalation-queue-reconciler (or a small dedicated check): query GitHub for open PRs matching known scheduled-job branch patterns... — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.

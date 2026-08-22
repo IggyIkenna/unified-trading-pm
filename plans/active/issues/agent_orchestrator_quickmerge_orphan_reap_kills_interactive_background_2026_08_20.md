@@ -49,7 +49,7 @@ context_scope:
     agent-orchestrator/server/orphan_reap.py,
     agent-orchestrator/server/tmux_spawn.py,
     agent-orchestrator/scripts/quickmerge.sh,
-    /plans/active/issues/agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md,
+    /plans/archive/issues/agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md,
     unified-trading-pm/agents/cicd.md,
   ]
 ---

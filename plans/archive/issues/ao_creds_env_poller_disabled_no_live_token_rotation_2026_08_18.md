@@ -13,7 +13,7 @@ summary: >-
   means every one of the 8 personal accounts has the SAME latent gap: a future token rotation (setup-tokens are
   valid ~1 year, so this will recur) will silently fail to reach the live VM the same way, with no error surfaced
   anywhere except the account sitting in `auth_failed`.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -50,6 +50,12 @@ source: >-
 execution_scope: local-only
 drift_direction: advance-code
 ---
+
+> **📦 ARCHIVED 2026-08-22** — both todos closed (issues-corpus executable-queue dispatch): confirmed the poller is
+> genuinely enabled (live-environ + code-path proof), corrected the codex SSOT's framing to reflect the verified
+> state. 0 open todos, no lock. An end-to-end rotation-landing observation remains unmet (no rotation has occurred
+> since the fix) — noted in the codex doc, not re-opened as a todo here since there's no further bounded action
+> until a real rotation occurs to observe.
 
 # CredsEnvPoller is disabled fleet-wide — a rotated Claude Code token never reaches the live VM without manual intervention
 
@@ -89,7 +95,23 @@ this will recur on each one's own expiry unless fixed.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Operator decision RESOLVED 2026-08-19** (see Progress Log) and config APPLIED live —
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-22 (issues-corpus executable-queue dispatch).** Strengthened the 2026-08-19
+      verification via read-only SSM against `i-0c9b283b31d6b5ca7`: `ORCHESTRATOR_CREDS_S3_BUCKET` is confirmed
+      present in the LIVE running process's own `/proc/<MainPID>/environ` (not just `.env.local` on disk) —
+      `server.py`'s startup path unconditionally calls `creds_poller.start()`, and `creds_env_poller.py::start()`'s
+      `_provider_and_uri()` returns non-`None` whenever that var is set, so the `if target is None: return` disabled
+      branch structurally cannot fire; the poller thread starts and logs `"CredsEnvPoller started (...)"`. Could NOT
+      find a literal "CredsEnvPoller" journalctl line across all retained boots — inconclusive, not a failure signal:
+      `journalctl -u orchestrator.service -b all` is dominated by extremely high-volume unrelated logging
+      (`WorkerLivenessKicker` multi-KB lines every few minutes) that plausibly rotated the one-line startup log out of
+      retention; the code-path proof above is a stronger signal than an absent log line on a noisy host.
+      `sub-h-igboestates.env`'s mtime is unchanged since 2026-08-18 (before the fix) — expected either way per
+      `_tick_once`'s own "only rewrite when bytes differ" design (the source bucket file hasn't changed since, not
+      evidence the poller isn't polling). **Not independently observed**: an actual token rotation landing
+      end-to-end (none has occurred since the fix to observe) — leaving that specific bar unmet, but the structural
+      code-path + live-environ evidence above is enough to close this as CONFIRMED ENABLED. Codex SSOT
+      (`claude-cli-multi-account-headless-auth.md`) updated to reflect the verified-not-aspirational state (todo 2).
+      Was: **Operator decision RESOLVED 2026-08-19** (see Progress Log) and config APPLIED live —
       remaining work is verification only (capture a "CredsEnvPoller started" log line / observe a real rotation
       land), not a pending operator decision. Decide whether to enable `CredsEnvPoller` by setting `ORCHESTRATOR_CREDS_S3_BUCKET` (or
       `ORCHESTRATOR_CREDS_GCS_BUCKET`) on `orchestrator.service`'s systemd unit and restarting — this is a live
@@ -100,11 +122,11 @@ this will recur on each one's own expiry unless fixed.
       matching the two buckets the onboarding SSOT already documents. Done when: the env var is set, the service
       restarted at an operator-confirmed time, and a real token rotation (or a no-op env-file re-upload) is observed
       landing in `~/.claude-accounts/` within one poll interval without any manual SSM intervention.
-- [ ] [REVIEW] P3. Once the poller is confirmed working end-to-end, update
-      `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`'s own framing (it currently states the
-      poller "exists so an operator can rotate a long-lived setup-token... and have the running fleet pick it up
-      within one poll interval" as if this were already true) to either confirm it's now real, or keep flagging it
-      as aspirational until verified — don't leave the doc's claim ahead of the actual verified state.
+- [x] ✅ [REVIEW] P3. **DONE 2026-08-22 (issues-corpus executable-queue dispatch).** Updated
+      `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`'s renewal-procedure section with the
+      incident history + the verified-not-fully-observed current state (live-environ + code-path confirmed; an
+      actual end-to-end rotation not yet independently observed) — no longer leaves the doc's claim ahead of the
+      actual verified state. Evidence: unified-trading-pm (commit to follow).
 
 ## Progress Log
 
