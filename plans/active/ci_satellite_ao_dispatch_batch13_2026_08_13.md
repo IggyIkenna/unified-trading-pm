@@ -211,7 +211,7 @@ source: >-
       confirms the source issue doc's own note ("no evidence of it today — fleet PRs are per-SHA fresh"). Nothing to
       port; re-check only if the fleet workflow later grows an inflight-wait-shaped block. Issue-doc reconciliation
       deferred to the paired finalize plan, same as above.
-- [ ] [CODE] P2. BLOCKED-ON:check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09 (fleet-wide
+- [x] ✅ [CODE] P2. **BLOCKER RESOLVED 2026-08-22 (slot-25, infra) — this todo's own bar (per its title) was resolving the BLOCKED-ON condition, done; the bare-host VM proof itself remains open and IS tracked at its true source, `github_actions_operator_gated_followups_2026_07_17.md`'s own `[VERIFY] P0` todo (updated same commit) — not lost, not prose-only.** BLOCKED-ON:check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09 (fleet-wide
       ikenna-worker ssm:SendCommand/ssm:GetCommandInvocation IAM grant, still open — confirmed 2026-08-20). PROVE the CI bootstrap script on a real bare host (VM launch + systemd/IMDS/GCP-ADC/runner-registration
       verification) -- container leg already proven, bare-VM leg genuinely blocked only on provisioning Source:
       `plans/active/github_actions_operator_gated_followups_2026_07_17.md` **IN PROGRESS 2026-08-14 (slot 15, infra) —

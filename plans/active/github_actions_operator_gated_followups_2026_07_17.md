@@ -184,6 +184,15 @@ drift_direction: advance-code
       slice, refresh timer) is UNTESTED end-to-end** · actual runner registration against GitHub. **Do NOT tick this off
       the container pass**; it closes only when a real bare VM runs it. The upcoming planning-VM deploy proves the
       systemd/registration legs; the bare-VM leg stays open until we genuinely rebuild a host.
+      **UPDATE 2026-08-22 (slot-25, infra, via `ci_satellite_ao_dispatch_batch13_2026_08_13.md`)**: the bare-VM
+      leg's own blocker (`ssm:SendCommand` `AccessDenied` for `ikenna-worker` — no SSH key on a private-IP-only
+      throwaway host, per slot-15's 2026-08-14 attempt) is now fully resolved at the root — see
+      `plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md`'s 2026-08-22
+      entry. A stray static-key file was shadowing the VM's own `uts-orchestrator-epic-role` instance profile;
+      fixed, `ssm:SendCommand`/`ssm:GetCommandInvocation` verified live. **No remaining blocker** — the next
+      pickup can launch a fresh throwaway EC2 instance and proceed straight through slot-15's documented steps 2-5
+      (SSM bootstrap, systemd/`setup-glue-runners.sh` verification, GH-runner registration via the `GH_PAT`
+      secretsmanager path, teardown) with zero SSM setup friction.
 
 - [x] ✅ [VERIFY] P0. **Use `scripts/cicd/measure-billed-notify-cost.sh`** (promoted out of a scratchpad 2026-07-16 — it
       is what produced this plan's notify-slack numbers, and the measurement took THREE attempts to get right: skipped
