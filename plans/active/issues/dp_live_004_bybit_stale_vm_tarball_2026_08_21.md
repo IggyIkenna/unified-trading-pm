@@ -163,6 +163,25 @@ external action and is not performed by this escalation without that decision.
 
 ## Progress Log
 
+- **2026-08-22 (task `dp_live_004_bybit_stale_vm_tarball-953844d905c9`, slot 7, data_engineering)**: Picked up the
+  same open `[DATA] P1` decommission todo already worked by slots 13/21 today. Fresh-verified rather than trusted:
+  `gcloud compute instances list` shows THREE `mtds-live-cefi-consolidated-*` VMs now `RUNNING` in parallel —
+  `...-20260817-025031` (original, since 2026-08-16T19:50:40-07:00), `...-20260821-200626` (2nd, since
+  2026-08-21T13:07:39-07:00), and `...-20260822-092840` (3rd, launched by the D10 remediation pass logged
+  immediately below, since 2026-08-22T01:43:57-07:00). `GET /api/escalations/active` shows escalation `agt-aecdd5`
+  (`market-tick-data-service`, `data_pipeline_failure`) currently `dispatched` to **slot 21** (dispatched
+  2026-08-22T12:00:27Z, unresolved) — i.e. this exact incident is ALREADY being actively worked by another slot
+  right now. `GET /api/state`'s `blocked_queue` has no open Bybit/`BLK-9e8ffbb2`-shaped entry (the earlier
+  blocked-question is resolved/closed, consistent with the D10 remediation pass having acted on it). Per the D10
+  remediation entry below, the precondition for this todo ("a real captured row confirmed for all four
+  BYBIT-FUTURES data types") is still NOT met — the newest root cause (Bybit gateway explicitly REJECTING specific
+  topic/symbol combinations, not a silent ack drop) requires a code fix to `bybit_ws.py`/
+  `bybit_futures_book_ticker_ws.py`'s subscribe-topic/category construction that has not yet shipped. Did not
+  re-run the SSH/manifest inspection a further time (slot 21's live escalation is doing exactly that right now;
+  duplicating it risks colliding SSH sessions on the same VMs for no new information). Not decommissioning either
+  prior VM — the controlled-cutover condition remains unmet on all three VMs. Releasing this task back to the
+  queue (`reason_code: GATED`) rather than looping on work already actively in flight under `agt-aecdd5`; no
+  code/infra/manifest changes made this pass.
 - **2026-08-22 (D10 remediation, `dispositions.json` `issues_corpus_completion_2026_08_21` — "cycle the singleton
   BYBIT-FUTURES live-capture VM through its registered launcher, controlled cutover")**: Executed the fresh relaunch
   this doc's own open todos + standing `BLK-9e8ffbb2` blocked-question already called for. Confirmed pre-state
