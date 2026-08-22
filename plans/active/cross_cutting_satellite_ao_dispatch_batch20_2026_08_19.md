@@ -72,12 +72,37 @@ source: >-
 
 ## From `live_path_has_no_stale_producer_revocation_2026_08_14.md`
 
-- [ ] [CODE] P1. Wire `dependency_health_policy` to a real actuator for the LIVE path (the batch path already has
+- [x] ✅ [CODE] P1. Wire `dependency_health_policy` to a real actuator for the LIVE path (the batch path already has
       one — this mirrors it): inject a `probe_fn`, register it for execution-service and strategy-service, and
       wire a SEV0 finding through to the kill-switch bus. Done when: the actuator fires on a deliberately-induced
       SEV0 condition in a test/staging check and the kill-switch bus receives it. Source:
       `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md` item 1 (line ~190). Repo:
-      alerting-service.
+      alerting-service. — `unified-api-contracts@b429c9a7`, `alerting-service@e7e7840d6f`,
+      `deployment-service@b1b42ad646` (2026-08-22, slot-13). Added `DependencyHealthPolicy.kill_switch_scope`
+      (opt-in, `None` default — zero behavior change for the other ~25 external/cloud-infra policies); registered
+      `execution_service_health` (scope=GLOBAL) + `strategy_service_health` (scope=STRATEGY,
+      `hard_escalation_seconds=900` matching the operator-ruled producer-silence SLA) in
+      `deployment-service/configs/dependency_health_policies.yaml`; wired `_maybe_arm_kill_switch` into
+      `dependency_health_event_handler.py` (fires `get_kill_switch_bus().fire()` only for
+      `DEPENDENCY_DEGRADED_CRITICAL` + a policy that opts in — every other dependency's paging path is
+      byte-identical to before); added `dependency_health_runner.py` (a real HTTP `probe_fn`, fail-open when no
+      URL configured, mirroring `provider_health_probe.py`'s pattern) and wired it into `main.py`'s live-mode
+      background tasks — the FIRST production `DependencyHealthProber` construction in the fleet. Removed the
+      xfail markers from 2 of the 3 anti-inertness guards this satisfies
+      (`test_the_prober_runs_in_production`, `test_a_critical_dependency_alert_reaches_an_actuator_not_only_a_channel`)
+      — the third (`test_the_prober_emits_the_event_its_consumer_waits_for`) is outside this item's scope and
+      stays xfail. New tests directly prove the "Done when" bar end-to-end: a deliberately-induced SEV0 (probe
+      failing past both the consecutive-failure threshold and `hard_escalation_seconds`) drives the REAL prober +
+      handler + rule ladder and asserts the kill-switch bus receives `fire(scope, None, ...)` — see
+      `tests/unit/test_dependency_health_runner.py::TestDeliberatelyInducedSev0ReachesKillSwitch`. Also fixed an
+      unrelated pre-existing QG-red condition hit mid-ship (2 new-baseline broad-except sites in
+      `stablecoin_issuer_pause_subscriber.py`, confirmed pre-existing via a byte-identical clean-tree re-check) by
+      adding cited `# noqa: broad-except` annotations — bundled into the same alerting-service ship since it was
+      blocking every commit to the repo, not just this one. Full design rationale (why GLOBAL for
+      execution-service, why STRATEGY with `scope_key=None` for strategy-service, why the 2 internal policies are
+      hand-authored in `dependency_health_runner.py` rather than loaded from deployment-service's YAML at
+      runtime) is in the code comments at each decision point — see `dependency_health_runner.py`'s module
+      docstring and the YAML's own inline comments on the 2 new entries.
 - [x] ✅ [TEST] P0. Add an anti-inertness CI guard for the live path, mirroring the existing batch-path guard (same
       doc, already-closed precedent). Done when: the new guard is present in CI and fails when the live path's
       actuator is deliberately disabled in a test commit. Source:
