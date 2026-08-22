@@ -118,9 +118,9 @@ context_scope:
 
 ### Phase 2 — build per-transport version pinning
 
-- [ ] [AGENT] P1. **Add the decided version marker to every native (non-ccxt) REST adapter.** Confirm which
+- [x] [AGENT] P1. **Add the decided version marker to every native (non-ccxt) REST adapter.** Confirm which
       adapters (from Phase 1's inventory) genuinely lack one before adding — some URLs may already embed a version
-      segment that just needs to be asserted rather than newly introduced.
+      segment that just needs to be asserted rather than newly introduced. — Evidence: execution-service@5f3168f8c8; explicit API-version constants added and asserted for Kraken, Bitfinex, and Bitget native REST adapters.
 - [ ] [AGENT] P1. **Confirm and, if needed, tighten the ccxt-wrapped venues' version story** per Phase 1's
       decision — either document why the existing pyproject range is sufficient, or add the per-venue check
       decided in Phase 1.
