@@ -139,17 +139,18 @@ context_scope:
       advisory/vacuous), only the tick pair count moved; a fresh live sample run is folded into the design todo below
       once real per-data_type contracts exist to validate against. Source:
       `plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`
-- [ ] [DESIGN] P3. **Define real per-data_type UAC contracts for defi/sports data_types** — corrected scope, 2026-08-15:
-      this is NOT limited to the "remaining" non-yield/non-odds data_types (dex_pools/swaps/bridge/gas_fees for defi;
-      non-odds sports types) as originally scoped. The implementation todo above found the flat `_DEFI_REQUIRED`/
-      `_SPORTS_REQUIRED` UAC seed_validator contracts don't match live production column names even for the "obviously
-      yield/odds-shaped" candidates (`staking_yields`/`lst_rates` write `symbol`/`token`+no bare `apy` in one case,
-      `apy`+no `protocol`/`asset` in the other; the `odds` writer uses `event_id` with no `match_id`/
-      `odds_home`/`odds_away` at all). Needed: real per-data_type UAC `seed_validator` entries (or a rename of the
-      seed_validator's role — it may be intentionally seed-only and never meant to gate live prod schema; that framing
-      question itself needs an operator/design call) matching each data_type's ACTUAL live writer schema, not the
-      seed-data mirror. Genuine design work, not bounded implementation; stays `assigned_vm: NA` until scoped. (repos:
-      unified-api-contracts, e2e-testing)
+- [ ] [BACKEND] P3. **RULING D125 (2026-08-21, ADOPTED-REC) — Author: a load-bearing MTDS gate depends on these;
+      leaving 2 of 4 families vacuous defeats the audit's purpose.** Corrected scope, 2026-08-15: NOT limited to the
+      "remaining" non-yield/non-odds data_types (dex_pools/swaps/bridge/gas_fees for defi; non-odds sports types) as
+      originally scoped — the flat `_DEFI_REQUIRED`/`_SPORTS_REQUIRED` UAC seed_validator contracts don't match live
+      production column names even for the "obviously yield/odds-shaped" candidates (`staking_yields`/`lst_rates`
+      write `symbol`/`token`+no bare `apy` in one case, `apy`+no `protocol`/`asset` in the other; the `odds` writer
+      uses `event_id` with no `match_id`/`odds_home`/`odds_away` at all). Author real per-data_type UAC
+      `seed_validator` entries matching each data_type's ACTUAL live writer schema (not the seed-data mirror),
+      extending the tick-family pattern already wired 2026-08-15, then wire `required_row_columns_for()`/
+      `_NAN_SCAN_COLUMNS` in `validate_shards_4pillar.py` to enforce them. Done when: per-data_type contracts exist
+      matching live writer schemas, wired into the pillar-2/3 checks, and validated against a live sample with 0
+      false-fails. (repos: unified-api-contracts, e2e-testing)
 
 ## Why this wasn't fixed inline
 
@@ -204,3 +205,7 @@ should be filed as its own todo against that decision's outcome.
   through 2026-08-17 (5 prior passes). Sole open item is still an explicit, unresolved design/schema-contract
   question (real per-data_type UAC contracts, or a reframing of `seed_validator`'s intended role) — bounded
   implementation only becomes possible once that call is made. No change since the last pass.
+- **2026-08-21 — ruling D125 (seed_validator contract scope)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Author — a load-bearing MTDS gate depends on these; leaving 2 of 4
+  families vacuous defeats the audit's purpose. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger.

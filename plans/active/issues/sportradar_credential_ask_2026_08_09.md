@@ -104,15 +104,12 @@ sports coverage actually needs — soccer is the adapter's default and likely th
 (schedule/results vs. odds specifically) is actually wanted before subscribing, since odds may be redundant with the
 already-credentialed Odds-API/footystats path). Once provisioned:
 
-- [ ] [OPERATOR] P2. Decide + confirm Sportradar's intended role given Odds-API/footystats already cover odds — is
-      Sportradar wanted for schedule/results only (a genuinely new capability) or as an odds cross-check (redundant with
-      existing sources)? This is a scope decision, not a mechanical implementation step.
-- [ ] [CODE] P2. Once scope is confirmed + `sportradar-api-key` lands: register `SportradarAdapter` in
-      `factory.VENUE_REGISTRY` (or `PLANNED_VENUES` if not yet wired into a handler),
-      `market_interface/sports/registry.py::_ADAPTER_PATHS`, `adapters/sports/__init__.py::__all__`, and
-      `market_interface/__init__.py`'s import list — the 4 registration points the module's own docstring names as
-      currently missing. `BLOCKED-CREDENTIALS` — awaiting `sportradar-api-key` AND the scope decision above. Repo:
-      market-tick-data-service.
+- [ ] [OPERATOR] P2. DEFERRED-BY-DESIGN — operator declined a Sportradar purchase for now (ruling D18, 2026-08-21,
+      per `/plans/active/issues_corpus_completion_dispatch_2026_08_21.md` ledger); no scope decision is pending since
+      no purchase is happening. SportradarAdapter stays dormant.
+- [ ] [CODE] P2. DEFERRED-BY-DESIGN — operator declined a Sportradar purchase for now (ruling D18, 2026-08-21);
+      registration work stays parked pending a future reversal of D18. `BLOCKED-CREDENTIALS` is no longer an active
+      ask — `sportradar-api-key` will not be provisioned at this time. Repo: market-tick-data-service.
 
 ## Progress Log
 
@@ -135,3 +132,6 @@ already-credentialed Odds-API/footystats path). Once provisioned:
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reconfirmed (6th round), unchanged: OPERATOR scope decision
   (Sportradar's role vs Odds-API/footystats overlap) + CREDENTIAL_BLOCKED ($499/mo vendor key, no GSM secret).
+- **2026-08-21 — ruling D18 (Sportradar scope and purchase)**: OPERATOR-RULED 2026-08-21 — DECLINED for now: no
+  Sportradar purchase; SportradarAdapter stays dormant (BLOCKED-CREDENTIALS, dated). Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

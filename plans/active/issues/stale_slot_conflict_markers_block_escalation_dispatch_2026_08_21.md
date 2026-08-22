@@ -170,10 +170,13 @@ specifically onto one of those slots) needs to:
 
 ## Todo
 
-- [ ] [OPERATOR] P1. Inspect + resolve the conflict-marker files on slots 5, 11, 23's `unified-trading-pm` clones
-      (`/codex/14-customer-journeys/commercial-model/platform-api-reference.html` on all three;
-      `/codex/04-architecture/client-funds-isolation.md` additionally on slot 11); confirm each slot returns to a
-      clean, idle, spawnable state.
+- [ ] [INFRA] P1. **RULING D128 (2026-08-21, ADOPTED-REC) — Dispatch now: escalations at 53/27/14 attempts are
+      starved purely for these slots.** Inspect + resolve the conflict-marker files on slots 5, 11, 23's
+      `unified-trading-pm` clones (`/codex/14-customer-journeys/commercial-model/platform-api-reference.html` on all
+      three; `/codex/04-architecture/client-funds-isolation.md` additionally on slot 11) — read both sides of each
+      conflict and merge/choose correct content, not a blind `--ours`/`--theirs`. Done when: each slot returns to a
+      clean, idle, spawnable state, confirmed via a fresh `GET /api/escalations/active` showing the 3 named
+      escalations no longer failing `dirty-state quarantined`.
 - [ ] [DOCS] P2. Re-run a fuller cross-slot conflict-marker sweep (VM-hosted or narrower-scoped to avoid the 60s
       inline bound hit here) to confirm whether slots beyond 5/11/23, or repos beyond unified-trading-pm, are also
       affected — `agt-8faaf5`'s "3 dirty repo(s)" error implies at least 2 more unidentified dirty repos on its
@@ -198,3 +201,6 @@ capacity/hygiene problem sitting upstream of it.
   targeted grep; confirmed all three idle (dead claims, not live WIP) via the live `slots` table. Live Step-3 ask to
   main (`BLK-c8ae4592`) timed out after the full 2-minute bounded wait with no response. No fix attempted (out of
   scope for slot 29; requires editorial judgment on conflict resolution, not a mechanical fix).
+- **2026-08-21 — ruling D128 (Conflict-marker slot cleanup)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Dispatch now — escalations at 53/27/14 attempts are starved purely for these
+  slots. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

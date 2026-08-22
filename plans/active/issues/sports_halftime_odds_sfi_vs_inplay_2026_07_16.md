@@ -194,11 +194,14 @@ in the RE-TRIAGE section below. Full original investigation, evidence, and shipp
       now structurally unmeetable at 95% and measures the wrong thing. Re-base it per-horizon on the columns each
       horizon can honestly know (`FEATURE_HORIZONS[h]` / the `min_horizon` registry) rather than on a flat cell-count.
       **Deliberately NOT tuned in this leg** — lowering a number to make a gate green is the anti-pattern.
-- [ ] [DATA] P1. **Reconcile the market-data-sports manifest for the 2,436 deleted T-0 shards.** They still read as
-      `captured` in the availability index; they should be `empty_confirmed` (honest absence). NOT done here: the
-      operator scoped this session's manifest work to the FEATURES surface only, and the market-data-sports consolidator
-      is owned by the in-flight bucket cutover (its unmerged shard `_index/per_vm/cutover-move-20260716.parquet` must
-      not be merged by anyone else).
+- [ ] [DATA] P1. **APPROVED (ruling D2, 2026-08-21)** — execute the manifest reconciliation for the 2,436 deleted
+      T-0 shards under D2's stated precondition (retention check / fresh dry-run / snapshot-first per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`): they still read as `captured` in the
+      availability index; flip them to `empty_confirmed` (honest absence). Note the cutover-merge blocker this todo
+      previously cited (`_index/per_vm/cutover-move-20260716.parquet`) was already confirmed merged 2026-07-17 (see
+      the na-eligibility-audit entries below) — re-verify current merge status live before executing, then proceed
+      serially, citing the gate result inline. Done when: a fresh manifest read shows 0 of the 2,436 shards
+      remaining `captured` without a backing object.
 - [x] ✅ [ML] P2. **Retrain the CLV models after the ODDS_FEATURES recompute.** The 3 quarantined artifacts stay in
       place as the reference for what the leak produced. Do not promote or cite them. — **STALE-CHECK CLOSE
       2026-08-09**: this retrain was already completed and GCS-verified on 2026-08-03, tracked under a sibling doc's
@@ -324,3 +327,7 @@ already-fixed-but-unflipped** — every one is genuinely still open.
   `delete_cf8_phantom_timeframe_sibling_confirmed_2026_08_15.py` pattern, or (B) rule this stays human-owned given the
   surface's regression history — not resolved by this pass either way, carried into this run's Phase 5 report.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries), unchanged.
+- **2026-08-21 — ruling D2 (Manifest/GCS correction batch)**: OPERATOR-RULED 2026-08-21 — APPROVED ALL under each
+  item's stated precondition (retention check / fresh dry-run / snapshot-first). Execute serially, one item per
+  verified step, citing the gate result inline. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

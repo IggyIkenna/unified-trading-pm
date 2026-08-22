@@ -163,3 +163,7 @@ an in-flight dispatch.
   "lean frontmatter" is not one of this skill's code-free exemptions (dispatch-batch coordinator / finalize gate /
   design-proposal / meta-audit-of-docs), so the prior 0-entry verdict was an under-scout, not a correct minimal
   result.
+- **2026-08-21 — ruling D127 (odds data_type casing)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Harden consumers — the ecosystem already treats dual casing as solved; rewriting
+  betfair_adapter is unreviewed scope expansion. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger.

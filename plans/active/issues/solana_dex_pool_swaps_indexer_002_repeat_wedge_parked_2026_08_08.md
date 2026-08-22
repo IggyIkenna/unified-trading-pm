@@ -94,11 +94,13 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
       kill root cause, check specifically whether `solana_dex_pool_swaps_indexer-002` has a workload characteristic
       (prompt size, tool-call pattern, repo state, worktree size) that makes it disproportionately likely to trigger
       that root cause vs. other tasks. Repo: agent-orchestrator.
-- [ ] [BACKEND] P2. Independent of the root cause above: consider whether `skip-current-task` should auto-escalate to a
-      durable `park` after N repeat skips of the SAME task across DIFFERENT slots within a short window (mirrors the
+- [ ] [BACKEND] P2. **RULING D126 (2026-08-21, ADOPTED-REC) — Build: real wasted spawn overhead; a conservative
+      threshold closes the gap without human vigilance.** Implement `skip-current-task` auto-escalating to a durable
+      `park` after N repeat skips of the SAME task across DIFFERENT slots within a short window (mirrors the
       existing auto-park threshold logic in `auto_park.py` for BLOCKED/PARKED/GATED declines, per
-      `ao_dispatch_cooldown_and_park_2026_07_20`) rather than relying on a human/main-agent to notice the pattern and
-      call `/api/backlog/{task_id}/park` manually as was done here. Repo: agent-orchestrator.
+      `ao_dispatch_cooldown_and_park_2026_07_20`), with a conservative N/window default, instead of relying on a
+      human/main-agent to notice the pattern and call `/api/backlog/{task_id}/park` manually. Done when: implemented
+      + unit-tested in `agent-orchestrator`, with the chosen threshold documented inline. Repo: agent-orchestrator.
 - [x] ✅ [OPERATOR] P2. **MOOT 2026-08-09 (operator, interactive session)** — no unpark decision needed. The underlying
       indexer task already shipped: the ~18:15Z pre-park race (Progress Log below) landed
       `market-tick-data-service@3619f9e2` (ORCA Whirlpool fetch+decoder, 24 tests, QG green), and
@@ -163,3 +165,6 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; the 2 remaining open items (auto-escalate skip-to-park design call; a verification item gated on that) stay genuine judgment/design work per the 2026-08-17 verdict. Doc stays `assigned_vm: NA`.
+- **2026-08-21 — ruling D126 (Repeat-skip auto-park)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Build — real wasted spawn overhead; a conservative threshold closes the gap
+  without human vigilance. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

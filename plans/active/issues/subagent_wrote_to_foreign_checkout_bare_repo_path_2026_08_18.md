@@ -85,9 +85,12 @@ found slot 6 clean and concluded the agent did nothing.
       `<repo>/` path is ANOTHER operator's live checkout; `realpath` your target before the first write.") —
       unified-trading-pm@34ebb7e5f. Verified live 2026-08-19: clause is present verbatim in the file; file measures
       9893 bytes, under its 10 KB QG-enforced cap.
-- [ ] [SCRIPT] P2. **Consider a mechanical guard**: a sub-agent whose task names a `.tabs/<N>/` path should fail
-      loudly on a write outside that subtree. Prompt discipline alone did not hold here — the prompt was correct and
-      unambiguous, and the agent still resolved elsewhere. Weigh against the cost of wrapping every sub-agent write.
+- [ ] [SCRIPT] P2. **RULING D129 (2026-08-21, ADOPTED-REC) — Build: the failure is invisible-by-default and could
+      silently corrupt a peer's work.** Build a mechanical guard: a sub-agent whose task names a `.tabs/<N>/` path
+      fails loudly on a write outside that subtree. Prompt discipline alone did not hold here — the prompt was
+      correct and unambiguous, and the agent still resolved elsewhere. Done when: the guard is implemented, wired
+      into the sub-agent write/dispatch path, and covered by a regression test proving a write outside the named
+      subtree fails loudly.
 - [x] N. ✅ [REVIEW] P2. **Check whether other recent sub-agent work landed in the bare checkout** rather than a slot.
       This was caught by chance; the same failure in a session that did not read the agent's path would look like a
       no-op. A sweep of the bare clone's dirty files against recent sub-agent tasks would size the problem. —
@@ -106,3 +109,6 @@ working tree.
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — sole open item (`[SCRIPT] P2`,
   consider a mechanical guard wrapping every sub-agent write) remains an explicit judgment/cost-tradeoff call with
   no determinable outcome, re-affirming the 2026-08-19 verdict.
+- **2026-08-21 — ruling D129 (Sub-agent write-scope guard)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Build — the failure is invisible-by-default and could silently corrupt a peer's
+  work. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

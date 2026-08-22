@@ -248,11 +248,13 @@ P1 SAFETY todo above already confirmed the existing delete script structurally c
       2026-05-05T22:07), which is exactly why this doc calls them "out-of-window" in the first place. The script
       cannot touch either cluster by construction; no code change needed, no live query required to confirm this.
       (repo: market-tick-data-service)
-- [ ] [OPERATOR] P2. Decide remediation policy for the 2026-07-13 cluster's "blank from birth" gap (real timeframe
-      never captured by the old v8-index rebuild): is this "safe to leave" (same posture as the earlier P2
-      `data_type=odds` conclusion), or does it warrant a real backfill recovering true timeframe from underlying
-      source data where still available? Affects whether this is closed as understood-and-accepted or becomes new
-      remediation work. (repo: market-tick-data-service)
+- [ ] [DATA] P2. **APPROVED (ruling D2, 2026-08-21)** — execute remediation for the 2026-07-13 cluster's "blank from
+      birth" gap (real timeframe never captured by the old v8-index rebuild) under D2's stated precondition
+      (retention check / fresh dry-run / snapshot-first per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`):
+      attempt to backfill true timeframe from underlying source data where still available; if not recoverable,
+      close as understood-and-accepted (same posture as the earlier P2 `data_type=odds` conclusion). Execute
+      serially, citing the gate result inline. Done when: either a verified backfill lands recovering real
+      timeframe, or the gap is confirmed unrecoverable and accepted. (repo: market-tick-data-service)
 - [x] [DOC] P3. Fix the stale `market_tick_data_service/live/websocket_streaming_handler.py` path reference in
       `sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md` (if present) to the confirmed real location
       `market_tick_data_service/cli/handlers/websocket_streaming_handler.py`. **DONE 2026-08-16 (moot)**: grepped the
@@ -312,3 +314,7 @@ todos, 6 are now done; the sole remaining item is the `[OPERATOR] P2` remediatio
 - **na-eligibility-audit 2026-08-17** [body-hash:5aa4787c63fca68d] (dispatch agt-6574d2, fourth same-day pass, sports tranche): reconfirmed independently — same verdict, KEEP-NA valid, sole item still the [OPERATOR] P2 remediation-policy decision. Root cause of the repeated same-day re-audit (a `_latest_verdict_marker` tie-break bug) fixed this run (`generate_na_doc_tranche_inventory.py`) — should stop recurring.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-21 — ruling D2 (Manifest/GCS correction batch)**: OPERATOR-RULED 2026-08-21 — APPROVED ALL under each
+  item's stated precondition (retention check / fresh dry-run / snapshot-first). Execute serially, one item per
+  verified step, citing the gate result inline. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
