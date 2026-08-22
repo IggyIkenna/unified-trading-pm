@@ -65,16 +65,53 @@ empty/captured rows; retain existing historical failures for separate reclassifi
 
 ## Todos
 
-- [ ] [DIAGNOSE] P1. **NARROWED 2026-08-20 (/plan-reconcile F-CEFI-4)** — the venue/error breakdown was already
+- [x] [DIAGNOSE] P1. ✅ **NARROWED 2026-08-20 (/plan-reconcile F-CEFI-4)** — the venue/error breakdown was already
       obtained by a sibling doc filed the same day against the SAME escalation (`agt-9d9a98`):
       `/plans/active/issues/dp_fetch_009_cefi_liquidations_raw_contract_overwritten_2026_08_20.md`. It found 1,632
       schema-contract violations (Binance-Futures 720, Bybit 509, Bitget-Futures 395, Bitfinex-Futures 8) and shipped
       a fix at `unified-api-contracts@cff7a237`. Separately, 810 Tardis HTTP 403 code=274 concurrent-IP-lock failures
       are a distinct population that sibling doc explicitly does NOT cover ("do not mark those failures as resolved
       by the registry fix"). **This todo's remaining true scope is only the Tardis code-274 lockout slice** — the
-      schema-contract diagnosis is done, do not re-derive it.
+      schema-contract diagnosis is done, do not re-derive it. **Diagnosed 2026-08-22 (slot-8
+      data_pipeline_failure): no code fix needed here — the producer for these rows is the already-shipped,
+      fully-enforced Tardis concurrency mechanism, not a new bug.** See the Progress Log entry below for the
+      evidence trail.
 
 ## Progress Log
+
+- **data_pipeline_failure slot-8 2026-08-22 — Tardis code-274 slice diagnosed, no new fix warranted.** Traced
+  the remaining 810 (and, per the sibling doc's same-day post-fix audit, 2,537) `Tardis HTTP 403 code=274
+  concurrent-IP-lock` cefi/liquidations rows to their producer rather than assuming a code gap:
+  - The full remediation for this exact failure class already shipped and is production-verified:
+    `TardisConcurrencyLease` (`market-tick-data-service/market_interface/clients/tardis_concurrency_lease.py`,
+    GCS CAS-based TTL lease, DEFAULT-OFF/fail-open/SPOT-safe) plus the hard **1-concurrent-Tardis-VM cap**
+    (`deployment-service/scripts/vm/tardis-concurrency-guard.sh`, fail-closed, VM-creation-time slot reservation,
+    self-declaring `VM_TARDIS_CONSUMER` metadata) plus the 403-code-274 manifest-tagging hygiene fix
+    (`tardis_base_client.py`'s `TardisHTTPError`) — full history in the archived
+    `plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md`.
+  - Confirmed the guard is wired into every CeFi/TradFi Tardis-consuming launcher
+    (`launch-cefi-sharded-backfill.sh{,-aws}`, `launch-mtds-backfill-vm.sh`, `launch-targeted-options-chain-
+    backfill.sh`, `launch-tier3-cefi-backfill.sh`, the daily-cron/forward-poll launchers, etc. — 14 launcher
+    scripts source `tardis-concurrency-guard.sh`), and that it is fail-closed (an unenumerable fleet REFUSES the
+    launch rather than reading as "0 running").
+  - Live-checked the running GCP fleet (`gcloud compute instances list --filter='status=RUNNING OR
+    status=PROVISIONING OR status=STAGING'`, 2026-08-22): **zero** VMs matching the guard's Tardis name-pattern
+    (`^(cefi|tradfi)-.*-(heavy|light)-|^cefi-queue-|^mtds-backfill-cefi-`) are running — no active cap violation.
+    The only running `cefi-*` VMs are HYPERLIQUID/ASTER (both explicitly cap-exempt — non-Tardis sources) and the
+    always-on `cefi-fwd-daily-cron` / `cefi-perp-funding-daily-cron` / `mtds-live-cefi-consolidated` live-mode
+    VMs, none of which use the keyed `datasets.tardis.dev` batch endpoint.
+  - Ruled out `instruments-service`'s own Tardis adapter as a second, ungoverned contender: it calls the FREE
+    `https://api.tardis.dev/v1` metadata endpoint (`instruments_service/reference_data/adapters/cefi/tardis/
+    adapter.py:_TARDIS_BASE`), never the keyed `datasets.tardis.dev` bulk-CSV endpoint the lock applies to — this
+    matches the guard's own documented exemption rationale.
+  - **Conclusion**: the code-274 rows are honest, correctly-tagged, retryable `attempted_failed` cells produced by
+    the pre-cap/pre-lease historical backlog and by the mechanism's own acknowledged residual risk (transient
+    contention on a shared single-IP key that predates full fleet migration onto guarded launchers), not evidence
+    of a currently-active concurrency bug in this repo's code. No new producer fix exists to ship — the correct
+    resolution path is the existing daily honest-absence re-probe naturally retrying these cells now that the
+    fleet is capped, not a new code change. Did not write a redundant lease/guard duplicate. Flipping this todo
+    closed on that basis; if a fresh live-fleet audit later shows a currently-running cap violation, re-open with
+    that evidence.
 
 - **/plan-reconcile ao 2026-08-22**: stripped the inline `# FIXED 2026-08-21 ...` comment from the
   `assigned_vm:` frontmatter line. The 2026-08-21 un-orphaning above set `assigned_vm: planning` but left its
