@@ -120,13 +120,24 @@ Two independent investigation lenses (transcript-reading + host/infra-correlatio
   a restart SIGTERMs only the uvicorn main PID, and `tmux_spawn.py` decouples worker sessions via `setsid`. The
   measured correlation (5/123 residual rows near a restart) was statistically consistent with chance
   (~3.6 expected), not causation.
-- **Residual sibling classification gap found, not yet fixed**: an account-wide Claude session-limit hit
-  freezes every slot bound to that account near-simultaneously. AO's own `_handle_account_blocked_pane` is
-  deliberately alert-only (a 2026-08-14 incident is the reason it never force-kills), so the frozen slots
-  instead each independently breach the GENERIC heartbeat-staleness threshold and get a legitimate watchdog
-  force-kill — but because they froze together, these land within seconds of each other, and none of the
-  events this specific watchdog path emits are in `_INTENTIONAL_TEARDOWN_SIGNAL_EVENTS`, so every one
-  misclassifies as unexplained. Affects `sub-d-odum1default`/`sub-f-odum2default` per the sample. See Todo.
+- **Residual sibling classification gap — FIXED 2026-08-22, `agent-orchestrator@f7c90d1b4c`.** Re-checked
+  live 2026-08-22 (slot 12, `ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`'s Claude
+  death-ratio todo) on a full day of traffic: every Claude sub-account showed a materially higher
+  fail/success ratio than every other provider, and 2 genuine near-simultaneous same-account/
+  different-slot death pairs confirmed the account-wide-freeze signature described here. Traced to the
+  root: `_handle_usage_cap`/`_resume_or_fresh_respawn` both kill the OLD session via a raw
+  `tmux_spawn.kill_session(..., reason="usage_cap_resume"/"heartbeat_silent_resume")` BEFORE attempting a
+  `--resume` respawn — NEITHER call logged anything unless the FOLLOWING resume-spawn raised
+  (`heartbeat_resume_respawn_failed` only covers that one failure branch). A resume that SUCCEEDS — the
+  normal, working case, not the account-wide-freeze case specifically, though it explains that case too —
+  left the classifier nothing to find, so a genuinely working resume misclassified as `unexplained` and
+  wrongly penalized the account's health tracking (same mechanism as bug 4b). **Fix**: both call sites now
+  log `usage_cap_resume_initiated`/`heartbeat_silent_resume_initiated` the moment the kill is confirmed,
+  independent of the resume-spawn's outcome; both added to `_INTENTIONAL_TEARDOWN_SIGNAL_EVENTS`. Tests:
+  `tests/test_tmux_pruner_death_class_signals.py`'s existing parametrized suite auto-covered both new
+  events (zero test-file changes needed — it parametrizes directly off the tuple), plus 2 new assertions
+  in `tests/test_self_healing_hardening.py`/`tests/test_account_failover_resume.py` proving each site logs
+  its new event on the success path. Full `quality-gates.sh` green (5519 passed, 0 failed).
 
 ### 3. Two more classification-gap event types (fixed, `agent-orchestrator@0704ed0a47`)
 
@@ -205,6 +216,12 @@ duplicated.
 - [x] ✅ [BACKEND] P1. Add companion `log_activity()` calls for `orphan_session_reclaim` and
       `idle_lingering_session_reclaim` in `worker_liveness_watchdog.py`, wire both into the classifier tuple,
       new regression tests. Shipped `agent-orchestrator@0704ed0a47`.
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-22** — the "residual sibling classification gap" from Finding #2 above
+      was never converted into its own tracked todo (a HARD RULE gap in itself, corrected here). Fixed:
+      `usage_cap_resume`/`heartbeat_silent_resume` now log
+      `usage_cap_resume_initiated`/`heartbeat_silent_resume_initiated` on kill, wired into
+      `_INTENTIONAL_TEARDOWN_SIGNAL_EVENTS`. See Finding #2's updated text above for the full
+      re-verification + root cause. Shipped `agent-orchestrator@f7c90d1b4c`.
 - [x] ✅ [INFRA] P1. Fix `orchestrator.service`'s PATH to include `/usr/sbin:/sbin` so `ausearch` can actually
       run. Shipped in the same commit as above.
 - [x] ✅ [INFO] P2. Gemini proxy model-name mismatch — confirmed already fixed independently

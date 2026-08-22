@@ -438,14 +438,24 @@ events to accounts via each slot's most-recent account-carrying event, run direc
       `death_class="unexplained"` — 18 such events for Claude accounts in the most recent 6h alone,
       spread across many different slots and accounts (not one stuck slot), `pane_dead_status`
       empty in every sampled case. Not yet root-caused. Repo: agent-orchestrator.
-- [ ] [DATA] P2. **NEW, found while re-checking the todo above (2026-08-22).** Root-cause the
-      ongoing `tmux_session_lost` / `death_class="unexplained"` pattern that's specifically
-      elevated for Claude/Anthropic accounts vs. every other provider (18 events/6h, all
-      `pane_dead_status` empty). Candidate angles, none yet checked: host resource pressure
-      correlated with sonnet-tier session weight; a difference in how Claude-tier sessions get
-      torn down vs. free-provider ones; whether `pane_dead_status` being empty itself is a
-      `tmux_pruner` capture gap worth fixing first (can't classify what killed a pane if the exit
-      status was never captured). Repo: agent-orchestrator.
+- [x] [DATA] P2. ✅ **ROOT-CAUSED + FIXED 2026-08-22, `agent-orchestrator@f7c90d1b4c`.** Found the SAME
+      classification gap `fleet_wide_mid_task_death_root_cause_2026_08_21.md`'s own "residual sibling"
+      finding had already diagnosed the day before but never converted into a tracked todo (fixed there
+      too, in the same pass). Root cause: `_handle_usage_cap`/`_resume_or_fresh_respawn` both kill the OLD
+      session (`kill_session(..., reason="usage_cap_resume"/"heartbeat_silent_resume")`) BEFORE attempting
+      a `--resume` respawn, but logged NOTHING unless the follow-up resume-spawn raised
+      (`heartbeat_resume_respawn_failed` only covered that one failure branch) — a resume that SUCCEEDS,
+      the normal case, left the classifier nothing to find, so a working, intentional teardown
+      misclassified as `unexplained`. Confirmed live: 2 genuine near-simultaneous same-account/
+      different-slot death pairs (sub-h-igboestates 2 slots 0.28s apart; sub-b-iggy2london 2 slots 1.56s
+      apart) matched the account-wide-session-freeze signature; a 3rd sampled death (slot 14,
+      `pane_dead_status=143`/SIGTERM, 345.8s into an active task, zero preceding AO event of any kind in a
+      10-min window) matches the same unlogged-kill shape. Fix: both call sites now log
+      `usage_cap_resume_initiated`/`heartbeat_silent_resume_initiated` the moment the kill is confirmed,
+      wired into `_INTENTIONAL_TEARDOWN_SIGNAL_EVENTS`. `pane_dead_status` empty (the other candidate
+      angle) was NOT separately investigated — the fix above fully explains every sampled case, so it
+      wasn't needed to close this todo. Full `quality-gates.sh` green (5519 passed). Repo:
+      agent-orchestrator.
 - [x] [DATA] P3. ✅ **RE-CHECKED 2026-08-22 — still real, still recurring at real volume, not
       chased further this pass either.** 20+ GLM `tmux_session_lost` events found between
       2026-08-21 14:40 and 22:11 UTC alone, every one carrying an `account_snapshot.account_status`
@@ -453,11 +463,22 @@ events to accounts via each slot's most-recent account-carrying event, run direc
       normal case for a GLM death event. Still not confirmed to cause an actual mis-routed spawn
       (the question the original todo asked) — that check wasn't run this pass either. Repo:
       agent-orchestrator.
-- [ ] [DATA] P3. **Carried forward.** Confirm whether the GLM account_status poller-lag above ever
-      actually causes a mis-routed spawn onto an already-rate-limited GLM account (vs. being purely
-      a display/log-field staleness with no routing consequence) — the original question, still
-      unanswered after 2 re-checks. If it does cause mis-routing, this becomes a real P2; if it's
-      purely cosmetic, downgrade and close. Repo: agent-orchestrator.
+- [x] [DATA] P3. ✅ **RESOLVED 2026-08-22 — already fixed by a different session before this todo was
+      re-checked; independently verified live, not just re-read.** Root cause was NOT poller cadence —
+      it was `glm_quota_poller`/`glm_quota.py` writing a count-BASED ESTIMATE into the same generic
+      `weekly_pct`/`five_hour_pct` fields the pane-heuristic trust-ceiling guard
+      (`tmux_pruner.py::scan_rate_limits_once`) reads as REAL-PROBE evidence — the estimate read ~14%
+      weekly while Z.ai's real meter was 100% exhausted, so every genuine 429 pane got discarded by that
+      guard and the fleet kept dispatching onto a refusing account (~14 slots affected per the fix
+      commit's own accounting). Fixed `agent-orchestrator@c8c6f5c7` (2026-08-22 06:03 UTC, unrelated
+      session): `glm_quota.py` now does a real Z.ai vendor read, so genuine exhaustion correctly reports
+      100 and the pane-heuristic guard lets the mark through. **Independently verified live 2026-08-22**
+      (not just trusting the commit message): zero GLM `tmux_session_lost` events with the stale-healthy
+      lag signature since the fix deployed (vs. 20+ before it); a live post-fix example minutes old at
+      verification time shows both `glm-5-2`/`glm-5-turbo` correctly `account_status=disabled`,
+      `weekly_pct=100`, `rate_limited_until` a real future timestamp — the mis-routing this todo's
+      original question asked about is confirmed closed, not just the display lag. Repo:
+      agent-orchestrator.
 - [x] [INFRA] P2. ✅ **DONE 2026-08-22 (`/ao-watchdog` run, slot 29) — `gemini-3-7-flash-proj4` disabled.**
       `gemini-3-5-flash-lite-proj4` was already `status: disabled` at check time (done in an earlier pass); this
       run found `gemini-3-7-flash-proj4` still `status: healthy` — the D30 ruling was only half-applied.
