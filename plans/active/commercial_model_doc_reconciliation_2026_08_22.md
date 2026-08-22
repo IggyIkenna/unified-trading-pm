@@ -171,8 +171,20 @@ The intent behind the exclusions is that POD can run it today and layer their ow
       become BTC, ETH and SOL basis and its staked variant. Do not position reconciliation, wallet transfers or fund
       accounting as things this reader needs from us, because their fund structure already owns that layer.
 - [ ] [AGENT] P1. **Second conflict pass over the merged deep dive** once it lands, against the same SSOT.
-- [ ] [DOC] P1. **Publish five artifacts** and cross-link them reciprocally: walkthrough and api-reference refresh at
-      their existing URLs, plus new links for carve-out, deep dive and architecture. Record every URL here.
+- [x] ✅ [DOC] P1. **Five artifacts published with reciprocal cross-links**, cross-links landed
+      unified-trading-pm@406fc0732f, verified four inbound links per document on origin. The two pre-existing
+      URLs were updated in place rather than reminted. Stale cross-links to two dead artifact URLs from the
+      earlier account change were found still embedded in the walkthrough and api-reference mastheads and
+      replaced, so the published pair had been shipping broken links until now.
+
+      | Document | URL |
+      | --- | --- |
+      | Integration guide (walkthrough, SSOT) | https://claude.ai/code/artifact/866511c2-02d6-40a4-aa40-24bea45fd617 |
+      | API reference | https://claude.ai/code/artifact/ee9cdcb6-4bd1-48a4-8887-af2c45de7711 |
+      | Platform architecture | https://claude.ai/code/artifact/80bb4ff8-46f4-4cd8-9bb2-659c4f88bd6e |
+      | Carve-out engineering | https://claude.ai/code/artifact/fd853df4-05f9-421f-a638-82ea493cc109 |
+      | Strategy service deep dive | https://claude.ai/code/artifact/bc8bcb81-8a19-4228-8ea8-342e7243c0f1 |
+
 - [ ] [DOC] P2. **Document the isolated-ship stash signature in codex.** `quickmerge --isolated` and `safe-doc-push`
       evacuate the named files into a `qm-iso-evac-<pid>-<timestamp>` stash for the duration of a run, so a file
       legitimately looks reverted mid-ship. The marker string appears only in `scripts/quickmerge.sh` and nowhere in
@@ -205,6 +217,18 @@ The intent behind the exclusions is that POD can run it today and layer their ow
       which corrected the document to describe two distinct marks rather than one.
 
 ## Progress log
+**2026-08-22, third entry.** A pre-publication scan caught internal content that a client-facing document must not
+carry, and the sweep that followed found substantially more than the scan did: nine repo-and-sha citations rather
+than eight, two internal document filenames with no path prefix that an anchored grep could not see, 248 status
+marker chips, eight instances of a banned readiness phrase rather than one, fifty source line-number citations, and
+three internal repository paths pointing at the sibling document. All removed at unified-trading-pm@7dfa4f90a0 and
+94f89fffba. The lesson for the next pre-publication scan is that an anchored path grep gives a false all-clear: the
+unanchored form must be checked too, and internal filenames can appear with no path at all.
+
+Genuine external dependencies were reworded rather than deleted, since the fact is worth stating and only the
+banned vocabulary had to go: venue-side perpetuals rights, sports historical rows under review, and a custody
+integration that depends on the vendor publishing its specification.
+
 
 **2026-08-22, second entry.** The ground-truth pass confirmed every headline breadth figure (171 live, 194 declared,
 24 chains, 59 protocols, 16 instruction types) and found one flatly wrong number, 59 archetypes where the registry
