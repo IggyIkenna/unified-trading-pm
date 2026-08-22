@@ -192,7 +192,7 @@ itself (why so many new league_id rows exist).
       todo's own stated success criteria; only the provenance trail is missing. **No `--apply` was run in this
       session**: the population is already clean, so re-running against it would be a no-op at best and risks
       racing a possible in-flight sibling writer (exactly the hazard `gcs-and-manifest-delete-safety-protocol.md`
-      §5's consolidator-pause-check exists to prevent). Evidence: `market-tick-data-service@6d0c2f7f74`
+      §5's consolidator-pause-check exists to prevent). Evidence: `market-tick-data-service@a9b1d055c9`
       (`scripts/fresh_precondition_check_d2_odds_2026_08_22.py`, read-only, safe to re-run); full counts in the
       Progress Log entry below.
 **Update 2026-08-16 (todo 1 resolution)**: the link to the league_id-growth todo assumed above did NOT hold — see the
@@ -349,7 +349,7 @@ below (stop the writer, relabel the existing population, investigate the coincid
       **Not executed by this session** — same audit-trail-gap caveat as the sibling todo above applies: no matching
       commit or `pre_odds_horizon_bucket_row_removal_*` snapshot was found in this repo's history to attribute the
       actual CAS write + force-consolidate to; most likely a parallel D2/D7 worker's corrective pass on this same
-      shared bucket today. See the new follow-up todo below. Evidence: `market-tick-data-service@6d0c2f7f74`
+      shared bucket today. See the new follow-up todo below. Evidence: `market-tick-data-service@a9b1d055c9`
       (`scripts/fresh_precondition_check_d2_odds_2026_08_22.py`); full counts in the Progress Log entry below.
 - [ ] [DIAG][OPERATOR] P2. Identify WHO/WHAT executed the odds_horizon_bucket + stale-duplicate row removals whose
       post-state this doc's 2026-08-22 fresh precondition check independently verified (population collapsed
@@ -537,9 +537,8 @@ hazard the manifest-write-coordination-gate in `/codex/02-data/gcs-and-manifest-
 exists to prevent). Flipped both `[DATA][OPERATOR] P1` todos to done (VERIFIED-ALREADY-ACHIEVED, citing the fresh
 measured evidence per each todo's own stated verification query), flipped the `[DIAG] P2` fix-verify todo to done,
 and filed a new `[DIAG][OPERATOR] P2` follow-up to identify the actual executing mechanism (not blocking — the
-outcome is independently verified correct; only the provenance trail is missing). Script committed:
-`market-tick-data-service@6d0c2f7f74` (placeholder — see commit note below if quickmerge had not yet landed at the
-time this entry was written).
+outcome is independently verified correct; only the provenance trail is missing). Script committed + landed on
+`live-defi-rollout`: `market-tick-data-service@a9b1d055c9` (post-push ancestry verified).
 
 **2026-08-21 (D7 operator ruling execution)** — closed the [OPERATOR][CODE] P1 key-rotation todo. Probed the live
 `odds-api-key` (GSM + `GET /v4/sports`): `x-requests-remaining=22,489,366` (was 15M/15M exhausted) — operator's
