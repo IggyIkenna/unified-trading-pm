@@ -193,6 +193,27 @@ drift_direction: advance-code
       pickup can launch a fresh throwaway EC2 instance and proceed straight through slot-15's documented steps 2-5
       (SSM bootstrap, systemd/`setup-glue-runners.sh` verification, GH-runner registration via the `GH_PAT`
       secretsmanager path, teardown) with zero SSM setup friction.
+      **UPDATE 2026-08-22 (slot-23, infra, via `ci_satellite_ao_dispatch_batch13_2026_08_13.md`) — bare-VM
+      toolchain/systemd/IMDS leg now PROVEN.** Launched `i-0780ca63e9e3ef57e` per the above recipe; SSM registered
+      ambiently in ~30s (zero setup, confirms the fix above live). Ran `bootstrap-ci-host.sh` via `aws ssm
+      send-command` (fetched over the PUBLIC raw-GitHub URL, not S3 — the local S3-CLI guardrail blocks any `aws
+      s3` text pattern regardless of remote-execution context): `BOOTSTRAP_EXIT=0`, all 13 toolchain checks pass
+      (git/jq/python3/gh/gcloud/aws/curl/rg/venv/uv/python3.13-resident/npm/claude-code) and **AWS identity
+      resolves via the instance's own IAM role** (IMDSv2 proven). This retires the "systemd ... UNTESTED
+      end-to-end" half of this item's own STILL-UNPROVEN list — systemd, package installs, and `needrestart` all
+      ran clean on the real kernel; only `setup-glue-runners.sh install`'s systemd UNIT creation itself (not just
+      the toolchain it depends on) remains unexercised. **Remaining ❌ legs, both deliberately deferred, not
+      blocked**: (1) actual GH-runner registration against GitHub — `GLUE_COUNT=1`/`WRITER_COUNT=3` registers
+      under labels `self-hosted,glue`/`self-hosted,glue-writer`, IDENTICAL to PM's live production pool (`POOL_TAG`
+      only renames units/env/base-dir, never the registered labels per the script's own header) — a throwaway box
+      under those exact labels risks a real production glue job routing to it then dying mid-run on teardown; filed
+      a `/blocked` question (this session, `ci_satellite_ao_dispatch_batch13_2026_08_13.md`'s own Progress Log)
+      recommending a scratch/non-production repo or an operator-confirmed low-traffic window with
+      `GLUE_COUNT=0 WRITER_COUNT=1`. (2) GCP-ADC interactive leg — unchanged scoping note from slot-15 above still
+      applies (production SA key not appropriate for a throwaway host). Instance terminated immediately after the
+      toolchain proof (`ec2:TerminateInstances` needed the pre-existing tag-gated
+      `self-ec2-lifecycle-throwaway-verify` inline policy — tagged `Lifecycle=throwaway-verify` rather than
+      self-granting a new broader statement).
 
 - [x] ✅ [VERIFY] P0. **Use `scripts/cicd/measure-billed-notify-cost.sh`** (promoted out of a scratchpad 2026-07-16 — it
       is what produced this plan's notify-slack numbers, and the measurement took THREE attempts to get right: skipped

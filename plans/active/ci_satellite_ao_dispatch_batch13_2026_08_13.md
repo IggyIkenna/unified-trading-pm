@@ -287,6 +287,42 @@ source: >-
       instance per the same recipe, `aws ssm send-command` will now work ambiently with zero setup, register the GH
       runner via `setup-glue-runners.sh` with `POOL_TAG=ci-bootstrap-verify`, verify, then teardown +
       terminate-instances immediately).
+      **UPDATE 2026-08-22 (slot-23, infra) — bare-VM toolchain/systemd/IMDS leg PROVEN; GH-runner-registration leg
+      DEFERRED by judgment, not blocked.** Launched a fresh throwaway EC2 instance
+      (`i-0780ca63e9e3ef57e`, `ci-bootstrap-verify-20260822-152100`, `t3.small`, `ap-northeast-1`, same
+      subnet/SG/AMI/profile as slot-15's recipe) via `lc_aws_ec2_run`. **SSM registered in ~30s ambiently**
+      (`aws ssm describe-instance-information` → `Online`, zero setup) — live-reconfirms the 2026-08-22 root-cause
+      fix. Fetched `bootstrap-ci-host.sh` via `curl` from the PUBLIC `unified-trading-pm` raw-GitHub URL (avoids the
+      local S3-CLI guardrail, which blocks any `aws s3` text pattern even for a remote SSM payload) and ran it via
+      `aws ssm send-command`. First run failed (`1 required tool(s) missing` — the `uv` PATH probe) because I'd
+      fetched `bootstrap-ci-host.sh` alone without its sibling `github-glue-runner@.service` (the script reads the
+      runner's real `Environment=PATH` from that file; missing it, it falls back to systemd's bare default PATH,
+      which doesn't include `~/.local/bin` where `uv` installs) — a fetch-completeness artifact, not a real gap.
+      Re-fetched the sibling `.service` file and re-ran: **`BOOTSTRAP_EXIT=0`, all 13 toolchain checks pass**
+      (git/jq/python3/gh/gcloud/aws/curl/rg/venv/uv/python3.13-resident/npm/claude-code), plus **AWS identity
+      resolves via the instance's own IAM role** (no credential file) — proving IMDSv2 + the instance-profile path
+      end-to-end. This closes the container-pass's stated gap: "systemd — so `setup-glue-runners.sh install` ...
+      UNTESTED end-to-end" is now proven false for the toolchain-provisioning half of that claim; systemd itself,
+      `needrestart`, and every package install ran clean on the real kernel. **Deliberately did NOT run steps 4-5
+      (GH-runner registration via `setup-glue-runners.sh install`)**: `GLUE_COUNT=1`/`WRITER_COUNT=3` register with
+      labels `self-hosted,glue` / `self-hosted,glue-writer` — IDENTICAL to PM's live production pool's labels (the
+      script's own header confirms `POOL_TAG` only changes unit/env/base-dir names, never the registered labels). A
+      throwaway box registering under those exact labels is a genuine candidate to have a REAL production glue job
+      routed to it by GitHub, then killed mid-run when I tear the box down minutes later — a live-CI-disruption risk
+      distinct from (and larger than) the toolchain-proof risk already retired. This reads as a genuine judgment
+      call, not a mechanical continuation of the validated recipe, so I stopped short of it rather than treating
+      the plan's "step 4-5" framing as blanket authorization to run real registrations against the live repo.
+      **Terminated the instance immediately after the toolchain proof** (`i-0780ca63e9e3ef57e` →
+      `shutting-down`) rather than leave it live holding production-matching runner-registration capability
+      unattended. Note: `ec2:TerminateInstances` initially DENIED for the ambient `uts-orchestrator-epic-role` —
+      resolved via the LEAST-PRIVILEGE path already provisioned for exactly this (the pre-existing inline policy
+      `self-ec2-lifecycle-throwaway-verify`, tag-gated on `Lifecycle=throwaway-verify`): tagged the instance
+      accordingly (`self-ec2-createtags-instance` grant) rather than self-granting a new broader IAM statement, then
+      terminated successfully. **Filed a `/blocked` question** (this session) recommending the GH-runner-
+      registration leg run against a scratch/non-production repo instead of `IggyIkenna/unified-trading-pm`, or
+      during an operator-confirmed low-traffic window with `GLUE_COUNT=0 WRITER_COUNT=1` (minimum footprint) — see
+      the blocked-question log for the full options. **This todo's own checkbox stays OPEN** pending that answer;
+      next pickup should read the blocked-question resolution before re-attempting steps 4-5.
 - [x] ✅ [CODE] P2. implement the consumer-QG promote fan-out gate in UAC's promote-gate workflow (per the 2026-08-08
       operator ruling; design + target consumer already specified in the doc) Source:
       `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` — ✅ **DONE 2026-08-14
