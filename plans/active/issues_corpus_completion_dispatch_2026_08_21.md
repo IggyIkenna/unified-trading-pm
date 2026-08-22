@@ -301,12 +301,24 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
       (both row-removal items found ALREADY resolved by an untraced concurrent writer — re-verified via fresh
       precondition + verification query, 0 residual rows either way; a `[DIAG]` follow-up filed to find the writer).
       Remaining 5 docs retrying via `wnroqem2n`.
-- [ ] [INFRA] P1. D3: stash/WIP cleanup per the approved scope (re-audit .tabs/3 first; fresh blob re-verify before each
-      drop; recover the sandbox project-ID fix; per-file review of slot-0 dirty files). Done-when: every listed stash
-      resolved with its disposition logged. Launched via `wiv6q901k`.
-- [ ] [INFRA] P1. D10: VM remediation — cycle BYBIT-FUTURES live VM via registered launcher; serial-console/py-spy the
-      deribit-sweep VM, delete only if confirmed hung; kill/relaunch the 2 mdps-features-live VMs. Done-when: each VM's
-      terminal state + replacement VM STARTED evidence logged. Launched via `wiv6q901k`.
+- [x] 5. ✅ [INFRA] P1. D3: stash/WIP cleanup per the approved scope — `wiv6q901k` (`unified-trading-pm@470ff79cb7`,
+      `@2f046c4db0`, `@e1f61e5168`). .tabs/3 re-audit found drift continuing (152 entries now, vs 42/59/125 at prior
+      checks) — documented, not itself a blocker. features-service-clean-check + MTDS slot-3 targets both already had
+      0 stash entries (nothing to drop); slot-25 doesn't exist on this host (AO-VM slot, unreachable from a laptop
+      session — flagged, not resolved). Sandbox project-ID fix: investigated and closed as moot (the named scripts no
+      longer carry the literal; today's QG already enforces the equivalent check fleet-wide) — sandbox-test-user is
+      safe to retire. Slot-0 dirty files per-file diff-reviewed, none touched (outside this session's write scope —
+      left as an evidence-backed recommendation). Recovered its own mid-run contention casualty (an orphaned autostash
+      merge commit) without data loss. Never ran `git stash drop` anywhere (hard-blocked by tooling regardless).
+- [x] 6. ✅ [INFRA] P1. D10: VM remediation — `wiv6q901k` (`unified-trading-pm@1c7bc8d73c`). BYBIT-FUTURES: cycled onto
+      the LDR fix via the registered launcher; still 0 captured rows after ~15min — found a NEW live defect, Bybit's
+      gateway actively REJECTING specific topic/symbol subscribe acks (`handler not found`), not silently dropping
+      them as previously suspected; old VMs deliberately left running since the real fix-verification gate isn't met
+      yet. Deribit-sweep VM: confirmed NOT hung (already self-deleted 2026-08-16 after a clean `DEPLOYMENT_COMPLETED`
+      exit) — nothing to delete; archived the stale issue doc. The 2 long-lived mdps-features-live VMs: confirmed
+      genuinely stuck (404 retry loop), killed + relaunched via the registered launcher with the current fix baked in.
+      The ~11 bounded backfill VMs: left alone per the ruling — 9/10 had already self-deleted on completion, only 1
+      still running, untouched.
 - [ ] [SCRIPT] P1. D34: flip `l2_book_microstructure_capture` to `assigned_vm: planning` + un-void the re-test todo.
 - [ ] [SCRIPT] P1. D8: promote cefi batch22, cross_cutting batch19/20, defi batch19 from draft to active (re-run the
       conflict check first).
@@ -365,3 +377,15 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
   shared `market-tick-data-service` checkout with its `quality-gates.sh --no-fix` run still queued behind host-wide
   QG contention (nohup'd — survives past this tick, checked via `ps`/log tail rather than re-running). Left
   deliberately un-flipped per CLAIM≤MEASUREMENT — next tick finishes the ship→tarball→VM-cycle→verify chain.
+- **2026-08-22 (tick 5)** — Wave 3 (`wiv6q901k`) complete: D3 + D10 fully shipped (checkboxes above); archival pass 2
+  processed all 51 candidates correctly but never shipped (2.5h run, repeated contention reverts) — delegated to a
+  fresh reconciliation agent (`aa77a3d57eba3ef6c`) with the full per-doc record, explicit warning that this checkout
+  currently carries substantial unrelated peer WIP (confirmed via `git status`), and a hard "never `git add -A`"
+  instruction. Also this tick: activated `sports_satellite_ao_dispatch_batch14_2026_08_16` (`d71c9211f5`) — a fully
+  conflict-checked draft gating 11 downstream AO tasks, found via a live re-check of the AO dashboard's blocked-task
+  count at the operator's request (confirmed the number is NOT stale — a fresh recompute via the same function the
+  dispatcher itself uses landed on exactly 440, matching the dashboard). Flipped 26 ruling-sweep spinoff docs
+  `assigned_vm: NA`→`planning` per the operator's direct instruction — repeatedly reverted by the same contention
+  class before landing; re-verify before trusting it shipped. Launched a background agent (build-in-progress) for
+  the POLYMARKET manifest reclassification dry-run tool in `deployment-service/scripts/migrations/`, dry-run only,
+  `--apply` withheld pending explicit operator approval.
