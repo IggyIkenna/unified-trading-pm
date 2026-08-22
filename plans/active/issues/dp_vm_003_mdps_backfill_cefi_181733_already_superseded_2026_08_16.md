@@ -60,7 +60,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/active/issues/dp_vm_001_mdps_backfill_cefi_tarball_race_relaunched_2026_08_15.md,
     /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
-    /plans/active/issues/dp_vm_003_canonical_migration_cefi_deribit_sweep_wedged_relaunched_fresh_name_2026_08_16.md,
+    /plans/archive/issues/dp_vm_003_canonical_migration_cefi_deribit_sweep_wedged_relaunched_fresh_name_2026_08_16.md,
   ]
 context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/scripts/recovery/relaunch_stalled_vm.py, deployment-service/scripts/vm/launch-mdps-backfill-vm.sh]
 created: "2026-08-16"

@@ -458,21 +458,30 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       multiple asset_groups) and belongs on a dedicated VM per `/codex/05-infrastructure/vm-launcher-runbook.md`,
       not an interactive slot session. A precise (non-sampled) corpus-wide count per asset_group should be the
       plan's own first step, not assumed from any todo's sample-based projection.
-- [ ] [OPERATOR] P1. Decide disposition for `mdps-*` VMs that were already RUNNING (and therefore already pinned to
-      stale pre-fix code) at the time this session refreshed the MDPS tarball (`2026-08-17T10:56:11Z`) — see the
-      resolved Cloud-Build-staleness DIAG todo above + Progress Log for the specific VM list found this session
-      (`mdps-defi-2025-20260817-000343`, `mdps-backfill-cefi-20260816-162418`,
-      `mdps-backfill-cefi-pcskip-20260817-104034-3b4e68`, `mdps-cefi-2019` through `mdps-cefi-2026` (7 VMs), and two
-      apparently LONG_LIVED `mdps-features-live-{cefi,defi}-20260807-*` VMs running since 2026-08-06). **Re-enumerate
-      the CURRENT live fleet first** — this list is a point-in-time snapshot and will be stale by the time this todo
-      is picked up (some may have already self-deleted on completion per `EPHEMERAL_BATCH` lifecycle). For each
-      still-running: kill+relaunch now (loses in-flight progress — e.g. `mdps-defi-2025` was ~11h into a
-      multi-hour full-year backfill at read time — but guarantees no further non-canonical writes) vs. let it
-      finish and schedule a corrective re-pass over exactly the shards it touched after
-      `2026-08-16T23:31:54Z` (the fix commit's landing time) — a cost/schedule tradeoff needing operator judgment,
-      not a mechanical DIAG. The LONG_LIVED `mdps-features-live-*` pair is the more urgent half (no natural
-      self-termination to bound the exposure window). (repo: deployment-service for the kill/relaunch action;
-      market-data-processing-service if a corrective re-pass script is needed)
+- [x] ✅ [OPERATOR] P1. **RESOLVED 2026-08-22 (D10 remediation, `dispositions.json` `issues_corpus_completion_2026_08_21`)
+      — operator disposition: kill+relaunch the 2 LONG_LIVED `mdps-features-live-*` VMs now; let bounded backfill
+      VMs finish naturally with a corrective re-pass noted.** Re-enumerated the CURRENT live fleet first, per this
+      todo's own instruction — of the ~11 VMs this session's original snapshot named, 9 (`mdps-backfill-cefi-
+      20260816-162418`, `mdps-backfill-cefi-pcskip-20260817-104034-3b4e68`, `mdps-cefi-2019` through `mdps-cefi-2026`)
+      had ALREADY self-deleted on completion (EPHEMERAL_BATCH lifecycle) by 2026-08-22 — consistent with "let bounded
+      VMs finish naturally," no action needed on those. Only `mdps-defi-2025-20260817-000343` (the full-year defi
+      backfill) is still `RUNNING` today — left untouched per the ruling (bounded, will self-terminate); its shards
+      written before the fix landed still need the corrective re-pass this doc's gated `[SCRIPT]` re-retirement todo
+      already covers. **Executed the urgent half**: confirmed both `mdps-features-live-cefi-20260807-031648` and
+      `mdps-features-live-defi-20260807-032721` still `RUNNING` (heartbeats fresh, ~90s old — genuinely alive, not
+      already-dead) and, per their own live `run.log` tails, BOTH were stuck in a tight `subscribe_once(...) failed
+      — skipping this round: 404 Resource not found` retry loop (a separate, pre-existing Pub/Sub-resource gap, not
+      writing productive candles at all at kill time) — deleted both
+      (`gcloud compute instances delete`, no VM-delete-guardrail hit — the `canonical-migration-` 3-signal carve-out
+      does not apply to this prefix) and relaunched fresh via the REGISTERED launcher
+      (`launch-mdps-features-live.sh --asset-group {cefi,defi} --env prod`, confirmed via
+      `launcher_registry.py` `VM_PREFIX_TO_BUCKET`/launcher map, not hand-rolled): `mdps-features-live-cefi-
+      20260822-093742` and `mdps-features-live-defi-20260822-093954`, both verified `RUNNING` with all 5 tarballs
+      fresh (`market-data-processing-service-code@71643c9ee58c` — carries the 2026-08-16 casing fix,
+      `mtds-code@7facfa4383a5`, `unified-api-contracts-code@3ce57ed461fa`, `unified-trading-library-code@
+      dfe34c4755d5`, `deployment-service-code@60b3218290e3`). No fire-and-forget: both confirmed STARTED
+      (`gcloud compute instances list` RUNNING + launcher's own post-create confirmation block) and left running for
+      continued monitoring, not just launch-and-walk-away. (repo: deployment-service)
 
 ## Progress Log
 

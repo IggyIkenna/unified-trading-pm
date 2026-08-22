@@ -163,6 +163,33 @@ external action and is not performed by this escalation without that decision.
 
 ## Progress Log
 
+- **2026-08-22 (D10 remediation, `dispositions.json` `issues_corpus_completion_2026_08_21` — "cycle the singleton
+  BYBIT-FUTURES live-capture VM through its registered launcher, controlled cutover")**: Executed the fresh relaunch
+  this doc's own open todos + standing `BLK-9e8ffbb2` blocked-question already called for. Confirmed pre-state
+  matched the record (both prior VMs `RUNNING`, `efd0e788` undeployed to either). Launched
+  `mtds-live-cefi-consolidated-20260822-092840` via the registered `launch-mtds-live-cefi-consolidated.sh`
+  (`FORCE=true` — required, a same-prefix VM was RUNNING; the launcher's own tarball-freshness gate auto-republished
+  stale `unified-api-contracts`/`deployment-service` tarballs from local HEAD, then re-verified all 5 fresh,
+  including `mtds-code@7facfa4383a5`, before creating the VM). Verified STARTED (`RUNNING`, external IP assigned).
+  SSH-confirmed `efd0e788` (the ack-logging fix) IS now live on this VM (`_log_subscribe_ack` present and firing).
+  **Captured-row verification: STILL NEGATIVE, but with a materially more precise root cause than before.** Per-VM
+  manifest read (`_index/per_vm/<vm>.parquet`, filtered `venue=BYBIT-FUTURES`) after ~15 min live: only
+  `derivative_ticker: empty_confirmed 817` — `trades`, `book_snapshot_5`, `depth_of_book_10` show ZERO rows of any
+  status. The ack-logging fix now makes the failure VISIBLE (the new signal this session found): live
+  `bybit_ws.py`/`bybit_futures_book_ticker_ws.py` logs show explicit `WARNING ... Bybit subscribe ack REJECTED:
+  op=subscribe ret_msg=error:handler not found,topic:orderbook.50.BTCUSD-25SEP26` (and identically for
+  `publicTrade.BTCUSD-25SEP26`, plus `...DOGEUSD`/`...LINKUSD`/`...SOLUSD` topics) on repeated subscribe attempts —
+  Bybit's own gateway REJECTS these specific topic/symbol combinations outright, not a silent drop. The rejected
+  symbols share a shape distinct from passing ones (bare `BTCUSD-25SEP26`/`DOGEUSD`/`LINKUSD`/`SOLUSD`, no explicit
+  linear/`USDT` marker) — consistent with an INVERSE-contract or dated-expiry topic/category mismatch in the
+  connector's subscribe-topic construction (Bybit v5 WS separates `linear`/`inverse` category endpoints and
+  topic-symbol conventions), NOT the previously-suspected silent-drop (that hypothesis is now reasonably ruled out —
+  acks ARE observed, and they are explicit rejections). **Not yet root-caused to a specific code line this
+  session** — flagging as the next diagnostic step. **Old 2 VMs (`...-025031` pre-fix, `...-200626`
+  fix-without-ack-visibility) LEFT RUNNING/undeleted** — the controlled-cutover condition (a real captured
+  BYBIT-FUTURES row on the replacement) is still not met, now on a THIRD parallel VM; no decommission performed.
+  Next step for whoever continues: root-cause the Bybit topic/category construction for the rejected symbol class
+  in `bybit_ws.py`/`bybit_futures_book_ticker_ws.py`'s subscribe-message builder.
 - **2026-08-22 (task `dp_live_004_bybit_stale_vm_tarball-953844d905c9`, slot 13, data_engineering)**: Re-dispatched
   the same task id already logged by slot 21 immediately below (released back to queue, unchanged). Fresh-verified
   rather than trusted: `gcloud compute instances list` shows both VMs still `RUNNING` (old since

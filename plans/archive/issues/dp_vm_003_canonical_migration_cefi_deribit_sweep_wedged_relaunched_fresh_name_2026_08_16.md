@@ -35,7 +35,7 @@ summary: >-
   dry-run is a small, targeted scope, unlike the large corpus-walk categories the carve-out's precedent incident
   concerned), it is pure billing waste alongside the new relaunch. If it recovers on its own, the duplicate dry-run
   work is harmless. Either way, a human should confirm and delete it if genuinely dead.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -66,12 +66,17 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: >-
+  2026-08-22 (D10 remediation) — both VMs independently reached DEPLOYMENT_COMPLETED exit_code=0 and self-deleted
+  on 2026-08-16; confirmed via direct GCS run.log reads, no delete action needed or performed.
 source: >-
   Escalation agt-a67305 (wall_type=data_pipeline_failure, dispatched to slot 15, 2026-08-16) — client_payload carried
   vm_name=canonical-migration-cefi-deribit-sweep-20260816-003410, asset_group=cefi, no separate audit CSV attached
   ("Filed issue: (none — alert carries the details)").
 ---
+
+> **🗄️ ARCHIVED 2026-08-22** — sole todo resolved: both VMs (old + fresh-name relaunch) independently completed
+> cleanly and self-deleted on 2026-08-16; no delete action was needed. See `resolved_by` + Progress Log for evidence.
 
 # DP-VM-003 — canonical-migration-cefi-deribit-sweep wedged, relaunched under a fresh name, old VM left for operator
 
@@ -91,12 +96,17 @@ source: >-
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Decide the fate of the old wedged VM** `canonical-migration-cefi-deribit-sweep-20260816-003410`
-      (still `RUNNING` as of filing; not autonomously deletable per the `canonical-migration-` carve-out in
-      `data_engineering.md` STEP 0.55). Inspect directly (serial console / `py-spy dump` if reachable) to confirm
-      genuine wedge vs. legitimate long-running call, then delete if dead — or leave it to self-recover / a later
-      `/vm-preemption-billing-waste-audit` sweep if inconclusive. Converted from this doc's prose "Recommended
-      decision" section per the workspace's "every follow-up is a `- [ ]` todo, never prose" hard rule.
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-22 (D10 remediation session) — the old VM was NEVER hung; nothing to
+      delete.** Direct GCS `run.log` read (UTL `get_storage_client().download_bytes`, no subprocess `gsutil`) for
+      BOTH `canonical-migration-cefi-deribit-sweep-20260816-003410` (the old VM this todo asked about) and
+      `-010754` (the same-day fresh-name relaunch) shows each independently reached
+      `DEPLOYMENT_COMPLETED ... (exit_code=0)` at 2026-08-16T01:49:22Z / 01:19:19Z respectively, printed its
+      `--dry-run` result (799 rows would be deleted), then self-deleted via its own
+      `VM_SHUTDOWN_ON_COMPLETION=true` trap — confirmed by `gcloud compute instances list --filter="name~deribit"`
+      returning **zero** rows today (neither VM exists any more; both terminated cleanly on their own, not by any
+      operator/agent delete). The frozen-heartbeat/frozen-run.log symptom that triggered this escalation was exactly
+      the documented "long GCS download, sidecar SIGPIPE" false-wedge pattern this doc's own carve-out citation
+      warned about — confirmed here as a false positive, not a genuine hang. No delete was needed or performed.
 
 ## Recommended decision
 
@@ -116,3 +126,9 @@ source: >-
 - **na-eligibility-audit 2026-08-16** [body-hash:1f4088066aced979]: KEEP-NA, valid — Freshly-filed (2026-08-16, same day as this audit) single-todo issue doc, read in full (124 lines). Its one open todo asks the operator to decide whether to delete an old wedged canonical-migration VM.
 **context-scout 2026-08-17**: populated/refreshed context_scope (7 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (7 entries)
+- **2026-08-22 (D10 remediation, dispositions.json `issues_corpus_completion_2026_08_21`)**: Operator-approved D10
+  ("inspect the deribit-sweep VM then delete only if confirmed hung") executed. Both the old VM and its same-day
+  fresh-name relaunch had already reached `DEPLOYMENT_COMPLETED exit_code=0` and self-deleted on 2026-08-16 — neither
+  exists in `gcloud compute instances list` today. No delete performed (nothing to delete); confirmed via direct
+  GCS `run.log` reads. Doc's sole todo resolved as a false-positive-wedge finding, not a genuine hang. Flipping
+  `status: resolved` — ready for archival on the next hygiene sweep.
