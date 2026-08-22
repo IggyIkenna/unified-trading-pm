@@ -115,7 +115,28 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       todos below. Evidence: this plan's own Progress Log (2026-08-21 entries) + todo #3's citation.
 - [ ] [SCRIPT] P1. **Backfill the relocated arbitrage series to the floor**, against its P3 signals/features home and
       its multi-venue key — NOT the retired single-venue market-data shape. Must consume the corrected operator-group
-      guard, so no all-one-operator "arb" enters the historical series.
+      guard, so no all-one-operator "arb" enters the historical series. **NOT YET LAUNCHED at full scope** — see the
+      new todo immediately below for why (manifest resumability gap) and the 2026-08-22 Progress Log entry for what
+      IS shipped + validated so far.
+- [ ] [DATA] P1. **Wire manifest instrumentation into the arb historical-backfill path, then launch the full
+      2020-06-06→present campaign.** `features-service/features_service/sports/cli/handlers/arb_detect_handler.py::
+      _run_historical_backfill` (and/or `arb/store.py::write_arb_opportunities`) needs a `ManifestWriter.record_captured`
+      (nonzero-opportunity day) / `record_empty` (honest-absence day) call + a coarse per-day pre-flight-skip lookup,
+      mirroring `market-data-processing-service/scripts/reprocess_sports_odds.py`'s `_coarse_row_key`/
+      `_bucket_preflight_skip` pattern — give the coarse row a `venue` sentinel distinct from any existing sports
+      coarse row (2026-08-20 collision lesson in that same file: an omitted `row_key` column is a WILDCARD in
+      `ManifestWriter.lookup()`, not "must be empty"). `record_captured`'s real signature needs `df`/`asset_group`/
+      `instrument_type` — the right `instrument_type` stamp for a cross-venue derived event needs a short design
+      decision, not a guess (that's why this wasn't done inline — see the 2026-08-22 Progress Log entry). The UAC
+      closed-set prerequisite (`BATCH_FEATURES_SPORTS_ARB` PipelineMode + matching SOURCE_PRIORITY/
+      SOURCE_MODE_CAPABILITY/AVAILABILITY_AT_SEMANTICS/COMPUTED_SOURCES entries) already landed —
+      unified-api-contracts@dee6ec1093. The VM launcher already exists —
+      `deployment-service/scripts/vm/launch-features-sports-arb-backfill.sh` (registered in both
+      `LAUNCHER_FOR_VM_PREFIX` and `VM_PREFIX_TO_BUCKET`, `features-arb-backfill-` prefix) — and is
+      live-validated (2026-08-22 Progress Log entry) but currently has NO resume-from-progress: launching it for the
+      full ~2,270-day range before this todo lands would replay the whole window on any SPOT preemption, violating
+      `/codex/05-infrastructure/spot-vms-for-backfill.md`'s HARD RULE. Once wired, launch (SPOT default, `full` mode)
+      2020-06-06 → present and flip the todo above.
 - [ ] [SCRIPT] P1. **Backfill the `horizon` axis across the full history**, including the newly-promoted MODEL horizons
       T-2h and T-6h (P3), so the ML retrain has them over the whole period rather than only where they happen to exist
       today.
@@ -146,6 +167,34 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 ## Progress Log
 
+- **2026-08-22 (task `sports_taxonomy_p4_backfill-2d0bea24572a`, slot 21, data_engineering)** — Worked todo #5
+  (arbitrage backfill). Shipped the two real prerequisites: (1) `unified-api-contracts@dee6ec1093` — registered
+  `BATCH_FEATURES_SPORTS_ARB` + the `features_sports_arb` computed-service source across the closed-set registries
+  (`SOURCE_PRIORITY`, `SOURCE_MODE_CAPABILITY`, `EMISSION_LATENCY_MS_BY_SOURCE`, `AVAILABILITY_AT_SEMANTICS`,
+  `COMPUTED_SOURCES`, plus each registry's own test-side golden-copy mirror) so `arbitrage_opportunity` can be
+  manifest-instrumented; caught + fixed 4 additional closed-set test failures beyond the initial round-trip assert
+  (reachability exclusion, availability semantic, ratified-capability-matrix mirror, computed-source-set membership)
+  via full `quality-gates.sh` (not just the one test that first failed). (2)
+  `deployment-service@e312d62469` — new `launch-features-sports-arb-backfill.sh` VM launcher (SPOT-default,
+  singleton-locked, tarball-freshness-gated, SPOT-preemption relaunch support), registered in both
+  `LAUNCHER_FOR_VM_PREFIX` and `VM_PREFIX_TO_BUCKET` (`features-arb-backfill-` → features-sports bucket,
+  EPHEMERAL_BATCH) — full `quality-gates.sh` green on both repos.
+  **Live-validated, not full-scope launched**: `arb_detect_handler.py::_run_historical_backfill` has no manifest
+  pre-flight-skip / resumability yet (real API investigation showed `ManifestWriter.record_captured` needs
+  `df`/`asset_group`/`instrument_type` — the right `instrument_type` for a cross-venue derived event needs a short
+  design decision I did not want to guess at, a correctness call over an efficiency one), so launching the full
+  ~2,270-day 2020-06-06→present range now would replay the whole window on any SPOT preemption
+  (`spot-vms-for-backfill.md` HARD RULE violation). Instead launched a BOUNDED 13-day validation window
+  (`bash launch-features-sports-arb-backfill.sh 2026-07-25 2026-08-06`, VM `features-arb-backfill-20260822-062215`)
+  to prove the pipeline end-to-end before committing to the full campaign: exit_code=0, self-deleted cleanly
+  (`VM_SHUTDOWN_ON_COMPLETION=true`), log shows `days=13 opportunities=12 written_days=4` — most of the window
+  honest-absence-skipped because the sibling `mdps-sports-bucket-*` campaign (todo #3) hadn't yet reached those
+  dates' bucketed odds (`Upstream bucketed odds missing` for 2026-08-02..08-05), not a bug in this detector.
+  Verified the 4 written days landed REAL, non-empty GCS objects (not trusting the log alone):
+  `sports_arb/by_date/day={2026-07-25,2026-07-26,2026-07-31,2026-08-01}/tick=.../opportunities.parquet`, 5.1-5.6KB
+  each. Filed the remaining scope (manifest wiring + the full-range launch it unblocks) as its own `- [ ]` todo
+  immediately above rather than leaving this todo's checkbox flipped on partial work. No code/infra changes beyond
+  what's cited above; no VM left running (self-deleted).
 - **2026-08-21 (slot-16)** — Flipped todo #4 (standalone-launch discipline guard). Verified no standalone
   `odds_movement`/`odds_snapshot` backfill was ever launched — both remain wired into the consolidated
   `mdps-sports-bucket-*` campaign (todo #3) alongside `odds_horizon_bucket`. A live
