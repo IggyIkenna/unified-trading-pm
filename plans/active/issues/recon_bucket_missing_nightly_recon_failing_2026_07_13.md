@@ -357,3 +357,27 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   `gcloud storage`/`gsutil` call, per the GCS-object-ops HARD RULE) that `configs/snapshots/2026-08-21/config.json`
   (6456 bytes, T-1 self-default date) genuinely exists — real write, not a dry-run. No code changes needed; this
   was a stale-checkbox flip with fresh runtime verification, not new provisioning work.
+
+- **review 2026-08-22 (slot-26, dispatch `recon_bucket_missing_nightly_recon_failing-9e078e7438d0`)**: my own
+  todo (verify a real green 06:00Z run) is not actionable — live-checked, not read from stale checkboxes.
+  Snapshot at ~2026-08-22T12:35Z: today's scheduled 06:00Z execution
+  (`uts-prod-batch-live-reconciliation-service-hdzmp`) FAILED identically to every prior day, Stage 0 missing
+  all 3 upstream artifacts for date=2026-08-21 (ran before todo 1's fix landed). Todo 2
+  (`uts-prod-ml-service-t1-recon`): Cloud Run Job now provisioned but its only execution
+  (`uts-prod-ml-service-t1-recon-r89n4`, 12:32:53Z) FAILED, still open, backlog task `...58504377211c`
+  `dispatched`. Todo 4 (terraform apply): new finding, the live Cloud Run Job spec for
+  `uts-prod-strategy-service-t1-recon` already shows `args: [--operation backtest --mode batch --run-tag
+  t1-recon]` (`gcloud run jobs describe`), i.e. the terraform apply has already happened, ahead of this doc's
+  checkbox/Progress-Log record, but no successful run has exercised it yet: today's scheduled 04:00Z execution
+  (`uts-prod-strategy-service-t1-recon-rkwjg`) still FAILED (pre-dates the apply), next real test is tomorrow's
+  04:00Z fire. Backlog task `...3eaa768ba433` still `dispatched`, leaving the flip to that worker. Todo 5
+  (unpause schedulers): unchanged/unstarted, `gcloud scheduler jobs list` confirms all 6 checked
+  (`uts-prod-features-{calendar,delta-one,volatility,cross-instrument,multi-timeframe,commodity}-t1-schedule`)
+  still `PAUSED`, and no sports/onchain t1-recon-pattern scheduler exists at all; backlog task
+  `...cea3981aa3dc` still `queued`, nobody started it. Conclusion: even optimistically (todo 2 fixed
+  imminently), the earliest a genuinely green scheduled 06:00Z run can occur is tomorrow 2026-08-23 (checking
+  date=2026-08-22), contingent on todo 2 succeeding and tomorrow's strategy-service 04:00Z run succeeding first,
+  not something this session can produce or verify. Not flipping todos 2/4/5 (not my task, both actively
+  `dispatched` to other slots; premature to flip 4 without a real run). Skipping my own todo with
+  `reason_code: GATED` (a monitoring-window/wait-for-date situation, not a genuine ambiguity) rather than
+  `/blocked`, will re-dispatch to the next eligible worker once the clock + remaining prereqs allow it.
