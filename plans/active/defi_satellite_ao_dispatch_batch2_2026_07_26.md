@@ -342,7 +342,20 @@ context_scope:
       missing — done by an unidentified prior process (the GCS-object side was also already fully migrated) before
       this session started. No new write was needed. `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`
       flipped to resolved. Full evidence: `issues/defi_cefi_kalshi_perp_manifest_chain_convention_contradiction_2026_08_21.md`
-      § Resolution.
+      § Resolution. **CORRECTION, same day (2026-08-21)**: `f7cdd18b21`'s `_CHAINLESS_VENUES` carve-out
+      over-generalized to `{"KALSHI-PERP", "POLYMARKET-PERP"}` — wrong; Polymarket settles on Polygon (a real
+      chain), unlike KALSHI-PERP. A same-day operator ruling (traceable source:
+      `issues/defi_cefi_hyperliquid_perp_funding_manifest_chain_contradiction_2026_08_21.md`'s "Operator ruling
+      2026-08-21" section — "fix all three: Polymarket, Hyperliquid, Aster") reversed this: `_CHAINLESS_VENUES` is
+      now `frozenset({"KALSHI-PERP"})` only, POLYMARKET-PERP gets `chain="POLYGON"`, and a related HYPERLIQUID/ASTER
+      `onchain_perp_batch_handler.py` finding was fixed too. Shipped `market-tick-data-service@10da166e15`. Small
+      perp_funding backfill (HYPERLIQUID 3,013 + POLYMARKET-PERP 3,273 rows) applied + post-write verified
+      2026-08-22 (`market-data-tick-cefi-prd-central-element-323112` generation 1787404515850034, row count
+      unchanged at 30,801,085, zero remaining `chain=""` for either venue). See
+      `issues/defi_cefi_hyperliquid_perp_funding_manifest_chain_contradiction_2026_08_21.md` and
+      `issues/mtds_aster_dead_chain_default_and_unverified_instrument_catalogue_field_2026_08_21.md` for full
+      status — the large HYPERLIQUID `onchain_perp_batch` (~1,457,141 rows) and ASTER (2,571,675 rows) backfills
+      are flagged for VM dispatch, not yet executed.
 - [x] ✅ [SCRIPT] P1. **DONE 2026-07-26 (slot-5) — mtds@ff1b5d51e6c43d7fa3aa52b924a32a01a5438fb4.** All 3 pieces shipped
       in ONE commit: (a) the 3 knobs added to `service_config.py`; (b) `_run_solana_protocol_loop` +
       `dex_pools_handler._run_process` fan out via `ParallelPerSymbolRunner` (`manifest_writer=None`), sequential

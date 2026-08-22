@@ -195,3 +195,14 @@ MUCH larger backfill than the perp_funding one above:
   The larger `onchain_perp_batch` HYPERLIQUID backfill (~1,457,141 rows) is NOT executed — tracked as the new
   `- [ ]` todo above for VM dispatch, per this workspace's heavy-I/O rule. Doc stays `status: open` until that
   backfill lands.
+- **2026-08-22**: Small perp_funding backfill (this doc's own scope) APPLIED AND VERIFIED via
+  `scripts/restamp_polymarket_hyperliquid_perp_funding_chain_2026_08_21.py --apply`. First attempt (2026-08-21)
+  failed mid-upload on a genuine network dropout (DNS resolution failure, `NameResolutionError` after a 600s
+  resumable-upload timeout) — verified the manifest object's generation was unchanged afterward (CAS semantics:
+  an incomplete resumable upload never finalizes the object, so no partial/corrupt write occurred) before retrying.
+  Retry succeeded: WRITE SUCCEEDED, new generation=1787404515850034, post-write row count 30,801,085 (unchanged
+  from pre-write), zero remaining `chain=""` for HYPERLIQUID/POLYMARKET-PERP perp_funding, confirmed-restamped
+  counts `{'HYPERLIQUID': 3013, 'POLYMARKET-PERP': 3273}` matched exactly. Pre-apply snapshot backup:
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/backups/availability_index.pre_polymarket_hyperliquid_perp_funding_chain_restamp_20260822T131313Z.parquet`.
+  This doc's own perp_funding-scope work is now fully done; doc stays `status: open` only because the larger
+  `onchain_perp_batch` HYPERLIQUID backfill (VM-dispatch todo above) is still outstanding.
