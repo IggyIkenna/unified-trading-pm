@@ -23,7 +23,7 @@ related:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
   ]
 created: 2026-08-08
-last_updated: 2026-08-21
+last_updated: 2026-08-22
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -147,9 +147,30 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       2026-08-22` (SPOT default, `full` mode — resume-from-progress works via manifest pre-flight-skip).
       Launched successfully as VM `features-arb-backfill-20260822-090011` in `asia-northeast1-c` covering 2020-06-06 to 2026-08-22.
       Evidence: `gcloud compute instances describe features-arb-backfill-20260822-090011` shows status RUNNING with correct operation and window.
-- [ ] [SCRIPT] P1. **Backfill the `horizon` axis across the full history**, including the newly-promoted MODEL horizons
-      T-2h and T-6h (P3), so the ML retrain has them over the whole period rather than only where they happen to exist
-      today.
+- [x] ✅ [SCRIPT] P1. **Launched 2026-08-22 (slot-19, data_engineering)** — Backfilling the `horizon` axis (the
+      features-service `odds_features` table, one row per fixture per MODEL horizon) across the full history via VM
+      `fts-backfill-20260822-131018` (`launch-features-sports-backfill-vm.sh --redo-all --tables odds_features
+      2020-06-06 2026-08-22`, SPOT, singleton-locked `fts-backfill-` prefix). No code change was needed — MODEL_HORIZONS
+      already carries `["T-24h", "T-6h", "T-2h", "T-1h", "T-10m", "HT"]` (added 2026-08-09 per the operator ruling recorded in
+      /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md) and the CLI's existing `--force`/`--redo-all` plumbing already overrides the manifest's prior-captured skip
+      per date (`_should_skip_attempted(..., force=force)`), so this is a surgical `--tables odds_features` re-derive,
+      not a full sports-pipeline redo. Upstream `odds_horizon_bucket` (MDPS layer, todo #3) had already finished its
+      own full-history backfill before this launched (its `mdps-sports-bucket-*` VM was no longer in the live fleet at
+      launch time), so this pass reads real bucketed data across the whole window rather than racing an incomplete
+      upstream. Live-verified via the VM's GCS-teed `run.log`
+      (`gs://deployment-scripts-central-element-323112/vm-logs/fts-backfill-20260822-131018/run.log`, read via UTL
+      `get_storage_client()` — never a subprocess `gsutil`): by ~25 min in, the VM had progressed 2020-06-06 →
+      2020-08-01 (~57 days), with `Total odds features: 75 rows (15 fixtures x 5 horizons)` lines confirming per-date
+      computation across T-24h/T-6h/T-2h/T-1h/T-10m (HT correctly honest-absence, no in-play capture yet),
+      `LOSS_GUARD_PASS odds_features for 2020-07-31` confirming the per-date loss guard, one date's shard correctly
+      `WRITE_GATE_REJECTED → empty_confirmed(EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` (honest-absence, not a
+      silent placeholder), and `ManifestWriter: per-VM shard updated` entries confirming genuine manifest-tracked
+      writes. At the observed ~2.3 days/min single-VM throughput the full ~2,270-day window is a multi-hour campaign,
+      not something this session can watch to terminal completion — continued progress-metric monitoring to the
+      2020-06-06 floor is owned by the already-declared [REVIEW] todos below (#7-#9), not duplicated here. The
+      launcher's own printed "Logs: gcloud compute ssh ... tail -f /home/ikennaigboaka/logs/features-backfill.log"
+      hint is STALE (the actual mechanism is the GCS-tee `run.log` above, not a local file at that path) — worth a
+      follow-up doc fix but out of scope for this todo.
 - [ ] [DATA] P1. **Dispose of the 10,345-object pre-launch C3 corpus per the standing floor ruling** — delete, do not
       backfill, and do NOT extend the coverage windows. Runs agent-autonomously via delete-safety §3a: a FRESH, same-run
       `gcs_bucket_soft_delete_retention_seconds()` >= 604800 check before any object delete; if the check fails, stop
@@ -177,6 +198,14 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 ## Progress Log
 
+- **2026-08-22 (slot-19, data_engineering, task `sports_taxonomy_p4_backfill-df1ffc213ffe`)** — Flipped the `horizon`
+  axis backfill todo. Launched `fts-backfill-20260822-131018`
+  (`launch-features-sports-backfill-vm.sh --redo-all --tables odds_features 2020-06-06 2026-08-22`) to re-derive the
+  features-service `odds_features` table across the full history now that `MODEL_HORIZONS` carries T-6h/T-2h
+  (2026-08-09). No code change needed. Live-verified via `run.log` (read through UTL `get_storage_client()`, never
+  `gsutil`): real date progression, all non-HT horizons producing rows, loss guard passing, one honest
+  `empty_confirmed` NaN-threshold rejection, manifest shards updating. See the flipped todo above for full evidence.
+  Continued-to-floor monitoring is the existing [REVIEW] todos' job, not re-done here.
 - **2026-08-22 (slot-19, data_engineering)** — Launched the full 2020-06-06→present arbitrage backfill campaign via `launch-features-sports-arb-backfill.sh 2020-06-06 2026-08-22`. Created VM `features-arb-backfill-20260822-090011` in zone `asia-northeast1-c` (SPOT provisioning, auto-shutdown on completion). Flipped corresponding P1 todo.
   manifest-instrumentation todo (the one this same session's earlier task left open). Shipped
   `features-service@5b17aac0c5` (`ArbDetectHandler._run_historical_backfill` now does the coarse per-day
