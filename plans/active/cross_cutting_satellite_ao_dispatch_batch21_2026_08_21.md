@@ -206,7 +206,7 @@ source: >-
 
 ## From `main_backmerge_backmerge_cycle_reverts_caller_stub_comment_fix_2026_08_20.md`
 
-- [ ] [CI] P2. **Re-ship the caller-stub comment fix to the 3 repos blocked on pre-existing QG reds**
+- [x] ✅ [CI] P2. **Re-ship the caller-stub comment fix to the 3 repos blocked on pre-existing QG reds**
       (features-service RB-5e5dbb39, unified-trading-library RB-09ca4f33, execution-service RB-70f96454) once each
       repo's QG is green: fresh-pull, re-apply the `.github/workflows/main-backmerge-to-ldr.yml` caller-stub
       comment fix (the same fix already landed on the other 22 repos, cited in the sibling doc
@@ -215,6 +215,12 @@ source: >-
       than force a ship. Done when: all 3 repos carry the corrected comment on `origin/live-defi-rollout`, or each
       remaining block is reported with its current blocker. Source:
       `main_backmerge_backmerge_cycle_reverts_caller_stub_comment_fix_2026_08_20.md` todo 2.
+      **2026-08-22 (slot-10)**: no re-ship needed — verified all 3 repos already carry the corrected comment
+      ("Drift-tick schedule REMOVED 2026-06-27...") on `origin/live-defi-rollout` (fresh `git fetch` +
+      `git show origin/live-defi-rollout:.github/workflows/main-backmerge-to-ldr.yml`, byte-match against the
+      already-fixed reference repo `market-tick-data-service`), and no open `qg_red` repo-blocker remains for any
+      of the three (`GET /api/repo-blockers` — none of RB-5e5dbb39/RB-09ca4f33/RB-70f96454 open). Someone else's
+      later commit already carried the fix through; no code change made this session.
 
 ## Progress Log
 
