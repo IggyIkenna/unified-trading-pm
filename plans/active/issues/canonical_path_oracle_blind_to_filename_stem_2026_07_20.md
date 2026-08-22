@@ -18,7 +18,7 @@ summary: >-
   divergence this exposed is tracked as its own finding.
 status: open
 nature: issue
-asset_group: [cefi, tradfi, meta]
+asset_group: [cefi, meta] # was [cefi, tradfi, meta] — zero tradfi objects measured anywhere in the doc, its own §6 caller-audit table marks the tradfi row's impact explicitly "NONE" (retag per ag_closeout_audit_tradfi_parked_2026_08_19.md's Orthogonality finding)
 stage: [data]
 repos: [unified-api-contracts, market-tick-data-service, unified-trading-pm]
 scope: [engineer]

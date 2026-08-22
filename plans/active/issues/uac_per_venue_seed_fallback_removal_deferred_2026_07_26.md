@@ -18,7 +18,7 @@ summary: >-
   trigger instead of a dangling plan pointer.
 status: open
 nature: notes
-asset_group: [cefi, defi, tradfi, prediction]
+asset_group: [cross-cutting] # was [cefi, defi, tradfi, prediction] — single shared UAC-registry mechanism decision, matches the doc's own 2026-08-19 epic reassignment (cefi_master -> uac_master) (retag per ag_closeout_audit_tradfi_parked_2026_08_19.md's Orthogonality finding)
 stage: [data, meta]
 repos: [unified-api-contracts, market-tick-data-service, deployment-api, instruments-service]
 scope: [engineer, admin]
@@ -28,6 +28,7 @@ related:
     /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
   # 2026-08-19 (na-eligibility-audit): dropped 2 archived-plan citations to satisfy the archive-safety-ratchet gate
   # — both remain preserved in the `source:` field below, which cites each by name.

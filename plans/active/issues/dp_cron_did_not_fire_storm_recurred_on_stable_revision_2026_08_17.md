@@ -32,7 +32,7 @@ summary: >-
   Cloud-Logging trace depth the prior 2 docs each spent a full dispatch on).
 status: open
 nature: issue
-asset_group: [cefi, tradfi]
+asset_group: [cefi, tradfi, cross-cutting] # was [cefi, tradfi] — fleet-wide alerting_service dedup-layer defect (parent_epic: security_and_cross_cutting_master), matches its most-similar sibling dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md's [cefi, tradfi, cross-cutting] tagging (reconciled per ag_closeout_audit_tradfi_parked_2026_08_19.md's classification-inconsistency finding)
 stage: [live]
 repos: [alerting-service, deployment-service]
 scope: [engineer, admin]
@@ -57,6 +57,7 @@ created: 2026-08-17
 author: data_pipeline_alerts_reconciler (slot 28, one-shot dispatch agt-e28b69)
 parent_epic: security_and_cross_cutting_master
 priority: P1
+milestone: M3
 assigned_vm: NA
 execution_scope: local-only
 estimate_class: infra

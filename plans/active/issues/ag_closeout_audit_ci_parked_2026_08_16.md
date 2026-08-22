@@ -39,6 +39,7 @@ created: 2026-08-16
 parent_epic: ci_master
 assigned_vm: NA
 priority: P3
+milestone: POST
 last_updated: 2026-08-21
 source: >-
   ag_closeout_auditor scheduled run 2026-08-16 (tranche=ci, slot 21, DISPATCH_ID=agt-114e5f).
@@ -222,21 +223,13 @@ chat-ephemeral, home" rule regardless.
       resolve the judgment call interactively. na-eligibility-audit recommended this exact fix on 2026-08-08/09; never
       executed. Done when: either a new properly-scoped doc exists with a checkable done-when, or the investigation is
       resolved directly with cited evidence.
-- [ ] [DOC] P3. **Retag `ff_pull_fleet_drift_rca_2026_08_11.md`** from `asset_group: [infrastructure, ci]` to
-      `[infrastructure]` (drop `ci`) — confirmed mistag, zero genuine CI-pipeline-mechanics content. NOT this tranche's
-      to execute directly (concurrent-sharded-worker safety rule — an `infra`-tranche run may be mid-classification on
-      the same file); flagged for `infra`'s own next run, a `/na-eligibility-audit`, or a corpus-hygiene sweep. Done
-      when: tag is single-value `[infrastructure]`, `check_ag_closeout_linkage.py` re-run clean.
-- [ ] [DOC] P2. **Resolve the 6-day-stuck `[ci, ao]` dual-tag on
-      `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md`** — the 2026-08-10 `ci` report
-      called it `ao`-owned via `parent_epic` alone; this run's content-based read (plus 2 sibling docs under the same
-      epic tagged `[infrastructure]` alone) points at `[infrastructure]` instead. Neither `ci` nor `ao` has written a
-      fix in 6+ days because each correctly declines to guess a tag that isn't theirs — this needs someone to actually
-      decide rather than a 3rd tranche re-parking it again. Recommend routing through a corpus-hygiene sweep (same
-      mechanism the 2026-08-10 report's own 4-doc `ci`/`infra` mistag eventually used:
-      `meta_plan_corpus_hygiene_ao_dispatch_batchN`) rather than waiting on `ci`/`ao`/`infra` to each individually
-      notice it again. Done when: tag reflects one specific tranche (or a deliberate `cross-cutting` call), re-verified
-      via `check_ag_closeout_linkage.py`.
+- [x] ✅ [DOC] P3. **DONE 2026-08-22 (issues-corpus executable-queue dispatch).** Verified `ff_pull_fleet_drift_rca_2026_08_11.md`
+      already carries `asset_group: [infrastructure]` alone (retagged via `unified-trading-pm@c3d0f659c4`,
+      "ag-closeout-audit Phase 2 — 6 verified mechanical hygiene fixes", 2026-08-21) — the mistag this todo flagged
+      was already fixed by a prior pass. No further action needed.
+- [x] ✅ [DOC] P2. **DONE 2026-08-22 (issues-corpus executable-queue dispatch).** Verified `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md`
+      already carries `asset_group: [ao]` alone (retagged via `unified-trading-pm@c3d0f659c4`, same commit as above)
+      — the 6-day-stuck dual-tag this todo flagged was already resolved by that pass. No further action needed.
 - [x] ✅ [DOCS] P3. **Extract `ci_alert_failure_resolution_linkage_2026_08_16.md`'s todo 1** (extend `streak_start_sha`
       failure-resolution linkage to `ldr-to-main-promote.yml`'s drain-bot "closed as superseded" INFO messages) into
       the next `ci_satellite_ao_dispatch_batchN` once `batch15`'s 23 remaining todos have meaningfully drained —
@@ -285,3 +278,9 @@ questions; the concurrent-sharded-worker retag items) remain genuinely operator-
 execute per their own explicit text. The 2 `[DOC]` cross-tranche retags stay correctly un-executed by this tranche
 (concurrent-sharded-worker safety rule — `infra` tranche owns one, a corpus-hygiene sweep owns the other). No
 `assigned_vm` change.
+- **2026-08-22 (issues-corpus executable-queue dispatch)**: verified both `[DOC]` retag todos were already resolved
+  by `unified-trading-pm@c3d0f659c4` (2026-08-21, "ag-closeout-audit Phase 2") — `ff_pull_fleet_drift_rca_2026_08_11.md`
+  is `[infrastructure]` alone, `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md` is `[ao]`
+  alone. Both flipped `[x]` with the confirming commit citation. Doc's only remaining open todo is the
+  `[OPERATOR] P3 BLOCKED-OPERATOR-DECISION` item (workflow_template_drift design ruling) — genuinely operator-gated,
+  left open; doc not archived (1 open todo remains).

@@ -19,6 +19,7 @@ parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
+milestone: M2
 estimate_class: infra
 estimate_baseline_ai_days: 15
 estimate_calibrated_ai_days: 12
@@ -48,8 +49,14 @@ drift_direction: advance-code
 
 ## Queue (S 136 · M 141 · L 54 · XL 21)
 
-- [ ] [CODE] P1. `ag_closeout_audit_ci_parked_2026_08_16.md` (effort S [MIXED — gated part ruled in the dispatch ledger]): Retag ff_pull_fleet_drift_rca_2026_08_11.md from asset_group: [infrastructure, ci] to [infrastructure] alone (confirmed mistag, zero genuine CI-pipeline content) (+1 more units) — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
-- [ ] [CODE] P1. `ag_closeout_audit_tradfi_parked_2026_08_19.md` (effort S): Retag the 4 genuine-drift docs (tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits, uac_data_type_validity_combinator_fragmentation, uac_per_venue_seed_fa... (+1 more units) — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
+- [x] ✅ [CODE] P1. `ag_closeout_audit_ci_parked_2026_08_16.md` — done 2026-08-22: both `[DOC]` retag todos flipped
+      (already-done, confirmed via `unified-trading-pm@c3d0f659c4`); doc's sole remaining item is a
+      `[OPERATOR] P3 BLOCKED-OPERATOR-DECISION` (dated ruling D32 already recorded 2026-08-21) — carries a dated
+      ruling per this queue's done-when, doc not archived (1 open todo, correctly operator-gated).
+- [x] ✅ [CODE] P1. `ag_closeout_audit_tradfi_parked_2026_08_19.md` — done 2026-08-22: all 3 todos closed (4-doc
+      retag + DP_CRON classification settle); doc archived to `plans/archive/issues/`, referrer
+      `tradfi_satellite_ao_dispatch_batch19_2026_08_19.md` repointed. Evidence: unified-trading-pm (commit to
+      follow).
 - [ ] [CODE] P1. `agent_orchestrator_cloud_run_dockerfile_broken_copy_agents_dir_2026_08_19.md` (effort S): Grep .github/workflows/ and cloudbuild.yaml for what invokes this Dockerfile and check recent run history to determine if it's genuinely dormant or a live silent CI fa... (+2 more units) — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
 - [ ] [CODE] P1. `agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md` (effort S): Investigate why agent-orchestrator's real pytest RSS roughly doubled since the 2026-08-17 baseline measurement (genuine regression vs. anomalously-low prior sample) (+2 more units) — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.
 - [ ] [CODE] P1. `ao_creds_env_poller_disabled_no_live_token_rotation_2026_08_18.md` (effort S): Capture a live 'CredsEnvPoller started' log line (or observe a real token rotation land in ~/.claude-accounts/) via read-only SSM against the orchestrator VM to close ... (+1 more units) — done-when: the doc's open todos are flipped with evidence and the doc archives or carries a dated ruling.

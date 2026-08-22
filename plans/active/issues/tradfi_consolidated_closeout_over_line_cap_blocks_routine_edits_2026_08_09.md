@@ -20,7 +20,7 @@ summary: >-
   (still shows the old, now-confirmed-wrong "66% attempted_failed... not yet launched" text) until this is resolved.
 status: open
 nature: issue
-asset_group: [tradfi] # was [tradfi, cross-cutting] — tradfi-only (tradfi_master parent_epic, no other AGs in body), orthogonality fix 2026-08-10 ag-closeout-audit
+asset_group: [cross-cutting] # was [tradfi] (itself was [tradfi, cross-cutting] pre-2026-08-10) — parent_epic reassigned plan_hygiene_master 2026-08-19 (generic check_line_caps.sh carve-out gap, not tradfi-specific); asset_group never followed the epic move until now (retag per ag_closeout_audit_tradfi_parked_2026_08_19.md's Orthogonality finding)
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
@@ -35,6 +35,7 @@ related:
 created: "2026-08-09"
 author: slot-22
 priority: P3
+milestone: POST
 # was: tradfi_master (epic-assignment audit 2026-08-19) -- core finding is a
 parent_epic: plan_hygiene_master
   # generic check_line_caps.sh carve-out gap (a net-zero-length content substitution can never satisfy the
@@ -83,18 +84,13 @@ context_scope:
       **DONE 2026-08-15 (slot-7, backend_engineer)** — landed via
           `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s corresponding todo. `unified-trading-pm@<pending>`.
 
-- [ ] [OPERATOR] P3. **CORRECTED 2026-08-12 (/plan-reconcile): de-ambiguated "consider whether X should Y" — this is a
-      real gate-design decision, not a worker-determinable task.** Original ask: whether `check_line_caps.sh`'s
-      scoped-mode carve-out should accept a net-zero-LENGTH content substitution (not just `DELETED=0`), per the
-      root-cause analysis already done in `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — a
-      shared fix would unblock both that doc's link-archival case and this doc's table-row-update case without requiring
-      every over-cap closeout plan to be split first. **Why this needs an operator call, not a mechanical
-      implementation**: loosening a QG-enforced HARD-cap gate's carve-out is a real risk/tradeoff decision (a
-      net-zero-length diff can still smuggle a large, unrelated content swap past the cap check) — the SSOT's own "never
-      raise the cap" posture on adjacent size gates argues for caution here too. **Done when**: the operator either
-      approves the net-zero-length carve-out (then implement + regression-test it against both cited cases) or rules the
-      split-first workaround stays the standing pattern (then close this todo as CANCELLED, not implement anything).
-      Repo: unified-trading-pm, `scripts/plan-hygiene/check_line_caps.sh`.
+- [ ] [SCRIPT] P3. Implement + regression-test `check_line_caps.sh`'s scoped-mode carve-out to accept a
+      net-zero-LENGTH content substitution (not just `DELETED=0`), per the root-cause analysis already done in
+      `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — unblocks both that doc's
+      link-archival case and this doc's table-row-update case without requiring every over-cap closeout plan to be
+      split first. Per D9 ruling (2026-08-22): approved — the narrow carve-out closes a recurring false-positive
+      class without letting content growth past the cap. Repo: unified-trading-pm,
+      `scripts/plan-hygiene/check_line_caps.sh`.
 
 ## Progress Log
 
@@ -112,3 +108,7 @@ context_scope:
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- **2026-08-22 — ruling D9 (Over-cap plan handling policy)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Split both docs now; also approve the narrow carve-out — it closes a recurring
+  false-positive class without letting content growth past the cap. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

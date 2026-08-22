@@ -38,7 +38,7 @@ related:
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
-    /plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_19.md,
+    /plans/archive/issues/ag_closeout_audit_tradfi_parked_2026_08_19.md,
   ]
 created: 2026-08-19
 last_updated: 2026-08-19
@@ -46,6 +46,7 @@ parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
+milestone: POST
 estimate_class: infra
 estimate_baseline_ai_days: 2.6
 estimate_calibrated_ai_days: 2.08

@@ -11,7 +11,7 @@ summary: >-
   real tag drift worth a dedicated retag. 3 docs verdicted `archivable_now` (0 genuine remaining work,
   cross-verified against independent sources). One live inconsistency was found between two Phase-1 agents'
   classification of sibling DP_CRON docs.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
@@ -35,6 +35,7 @@ parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P3
+milestone: POST
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
@@ -57,6 +58,10 @@ source: >-
   (`ag_closeout_audit_tradfi_parked_2026_08_10.md`, `_r2`) checked first per the skill's "reconcile prior dated
   parked docs FIRST" rule — both fully resolved/archived, nothing carried forward.
 ---
+
+> **📦 ARCHIVED 2026-08-22** — all 3 todos closed (issues-corpus executable-queue dispatch): 4 genuine-drift docs
+> retagged, the DP_CRON storm-doc classification settled. 0 open todos, no lock. Kept as a historical audit-run
+> record.
 
 # ag-closeout-audit tradfi — parked findings 2026-08-19
 
@@ -131,13 +136,20 @@ rather than tradfi silently keeping only the inconsistent one.
 
 ## Todos
 
-- [ ] [DOCS] P3. **Retag the 4 genuine-drift docs** listed above to their recommended `asset_group` values (each
-      recommendation is fully evidenced in this doc's Orthogonality section — no fresh investigation needed, just
-      the write + a `check_ag_closeout_linkage.py` re-run). Given ownership is split across tranches/epics, either
-      the operator assigns each to its owning tranche's next audit pass, or a single corpus-hygiene pass does all 4
-      at once (mirroring `asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`'s precedent). Done when: all 4
-      docs' `asset_group` reflects the recommended value and `check_ag_closeout_linkage.py` runs clean for every
-      tranche touched.
+- [x] ✅ [DOCS] P3. **DONE 2026-08-22 (issues-corpus executable-queue dispatch).** Retagged all 4 genuine-drift docs to
+      their recommended `asset_group` values: `tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md`
+      `[tradfi]`→`[cross-cutting]` (matches its 2026-08-19 `parent_epic: plan_hygiene_master` reassignment);
+      `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` `[cefi, defi, tradfi]`→`[defi]`;
+      `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md` `[cefi, defi, tradfi, prediction]`→`[cross-cutting]`
+      (+ added a `related:` link to `cross_cutting_consolidated_closeout_2026_07_25.md` to satisfy the closeout-linkage
+      graph); `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` `[cefi, tradfi, meta]`→`[cefi, meta]`.
+      `check_ag_closeout_linkage.py` re-run: 6 orphans (unchanged from pre-edit baseline drift — all 6 are pre-existing
+      docs this run did not touch: `defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16(.md/_finalize.md)`,
+      `kalshi_demo_testnet_credential_request_2026_08_22.md`, `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`,
+      `quickmerge_isolated_stash_evacuation_entangles_concurrent_session_edits_2026_08_22.md`,
+      `sports_fixtures_object_wrong_schema_instrument_catalog_contamination_2026_08_09.md` — flagged as a separate
+      pre-existing corpus-hygiene gap, not caused by or fixed in this run). Evidence: unified-trading-pm (commit to
+      follow this edit).
 - [x] ✅ [DOCS] P3. **PARTIALLY DONE 2026-08-21 (na-eligibility-audit, tradfi tranche) — CORRECTED, this list had 1
       wrong entry.** `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md`
       ARCHIVED this pass (both checkboxes closed citing the confirmed billing root-cause, standard 6-step ritual run,
@@ -148,11 +160,18 @@ rather than tradfi silently keeping only the inconsistent one.
       radius — 23 files, several active — is disproportionate). That doc's own standing ruling was independently
       re-confirmed 2026-08-21, not re-litigated. `tradfi_vix_full_history_backfill_2026_08_10.md` is OUTSIDE this
       run's 30-doc scope — not independently re-verified this pass, left for the next pass touching it.
-- [ ] [DOCS] P3. **Reconcile the DP_CRON storm-doc classification inconsistency** described above —
-      `dp_cron_did_not_fire_storm_recurred_on_stable_revision_2026_08_17.md` vs. its 2 already-cross-cutting-tagged
-      siblings. Done when: the doc's `asset_group` is settled one way or the other and, if it moves to
-      cross-cutting, its one clean remaining item (the 10-deploys/18h churn-cause check) is picked up by that
-      tranche's own batch process instead of staying stranded.
+- [x] ✅ [DOCS] P3. **DONE 2026-08-22 (issues-corpus executable-queue dispatch).** Settled
+      `dp_cron_did_not_fire_storm_recurred_on_stable_revision_2026_08_17.md`'s classification: retagged
+      `[cefi, tradfi]`→`[cefi, tradfi, cross-cutting]`, matching its most textually-similar sibling
+      `dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md` (`[cefi, tradfi, cross-cutting]`,
+      same `parent_epic: security_and_cross_cutting_master`, same fleet-wide alerting_service dedup-layer defect
+      class). Note: the doc's 3 open `[SCRIPT]` items (root-cause the TTL-violation regression, re-sample compliance,
+      deploy-churn check) are genuine open-ended live-system investigation work, independently re-confirmed KEEP-NA
+      by 2 prior na-eligibility-audit passes (2026-08-17, 2026-08-18) and owned by the `data_pipeline_alerts_reconciler`
+      scheduled sweep, not a batch-process pickup target — this todo's own done-when only required settling the tag +
+      routing the deploy-churn item, which the tag fix now makes correctly discoverable by cross-cutting/ci tranche
+      audits; no separate extraction needed since the item stays on its owning doc pending root-cause. Evidence:
+      unified-trading-pm (commit to follow this edit).
 
 ## Progress Log
 
@@ -170,3 +189,11 @@ rather than tradfi silently keeping only the inconsistent one.
   standing ruling. Executed the one item this run could independently verify and act on (the `g01_6a_6l_2020`
   archival, both checkboxes closed + referrers swept). Todos 1 (cross-tranche retag) and 3 (DP_CRON classification
   reconciliation) remain genuinely gated on ownership outside this tranche. `assigned_vm` unchanged.
+- **2026-08-22 (issues-corpus executable-queue dispatch)**: executed both remaining todos directly (no longer a
+  concurrent-sharded-worker context — single serial dispatch, safe to execute cross-tranche retags). Todo 1: retagged
+  all 4 genuine-drift docs. Todo 3: settled the DP_CRON storm-doc classification. `check_ag_closeout_linkage.py`
+  re-run clean relative to pre-edit state (6 pre-existing orphans unchanged, 0 new). All 3 todos now closed — 0 open
+  todos, no lock. Archiving per the 6-step ritual: no new durable codex-worthy contract (pure corpus-hygiene
+  bookkeeping, already captured in the retagged docs' own frontmatter + SKILL.md's existing method description);
+  referrer `plans/active/tradfi_satellite_ao_dispatch_batch19_2026_08_19.md`'s `related:` entry repointed to this
+  doc's new archive path in the same commit.
