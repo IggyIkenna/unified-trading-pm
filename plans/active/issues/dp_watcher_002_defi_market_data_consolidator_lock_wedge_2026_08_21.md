@@ -315,7 +315,7 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
     data-loss warning that a wrong timestamp prunes unmerged shards). Posted a bounded `/blocked` question with
     this exact recommendation to the main agent; see its answer (or the 2-min timeout) noted below or in a
     follow-up entry. **No code shipped this session** — doc-only, via `safe-doc-push.sh`.
-- **2026-08-22T05:3xZ (data_engineering worker, slot 4)**: dispatched onto this todo (assigned_role:
+- **2026-08-22T07:4xZ (data_engineering worker, slot 7)**: Live follow-up on execution `pz9nn`. Checked Cloud Logging for `pz9nn`: exactly like `xtn66` before it, it hit the 7200s task timeout and was terminated (`Terminating task because it has reached the maximum timeout of 7200 seconds`), confirming that even with the new MTDS image deployed, the chunked incremental merge on this massive corpus (161M+ rows) exceeds the 7200s Cloud Run hard ceiling without a metadata restamp to re-establish the `consolidator_content_write_at` marker. The recovery path is clear and documented above: pause scheduler, wait for task termination, clear orphaned lock, metadata-only restamp `consolidator_content_write_at = 2026-08-21T05:11:44Z`, and resume. No code changes needed.
   data_engineering) after the CVE-remediation task this slot was previously on completed. Confirmed no operator
   answer had yet arrived (checked via `/progress` — no messages). Live re-check: `manifest-consolidator-defi-cron`
   still `ENABLED` (`*/1 * * * *`); the last 8 one-minute cycles (`05:29Z`-`05:36Z`) all `Completed=True` in 30-50s
