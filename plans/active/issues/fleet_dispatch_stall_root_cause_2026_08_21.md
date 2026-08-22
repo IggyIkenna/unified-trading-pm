@@ -58,11 +58,15 @@ summary: >-
   plus an operator-paused exemption for `vm-disk-guard.sh`, agent-orchestrator@7f0887d4f9.
   SCOPE, measured post-deploy: that enumerator accounts for 174 of the 375 quarantine failures;
   the other 201 name CANONICAL repos carrying failed-`git stash pop` residue, and because a slot
-  quarantines only when EVERY dirty repo fails, the fix unwedges no slot by itself. The live
-  blocker is now a PERMANENT, unalertable conflict-marker quarantine (FM9 refuses the commit
-  correctly, but nothing ever escalates or self-heals) — awaiting an operator ruling between
-  preserving marker-bearing content on the `wip-preserve/` ref vs resolving to upstream. See the
-  `[BACKEND] P0` todo.
+  quarantines only when EVERY dirty repo fails, it unwedged no slot by itself. Operator ruled on
+  the remainder: PARK marker-bearing WIP on the `wip-preserve/` ref rather than resolving it, so
+  FM9 now commits it there (with a warning block naming the paths) and realigns the slot clean —
+  provably unable to reach the shared branch, since an orphan-wip commit can never match the
+  `.qg_last_passed_sha` tree sentinel that gates a push to `origin/<base>`
+  (agent-orchestrator@fb903131a3). That MOVED the wedge rather than lifting it — the sweep left
+  each slot ahead-and-behind, i.e. FM5 `diverged` — fixed the same session by realigning whenever
+  leaving HEAD ahead would not be a supported state (agent-orchestrator@a439ec74bd). Live after
+  both: dirty-state quarantines 0, slots inheriting normally.
 status: open
 resolved_by:
 nature: issue
@@ -382,6 +386,32 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       `_orphan_commit_message` (28 → passing); the cap was NOT raised.
       — `agent-orchestrator@fb903131a3` + `tests/test_conflict_marker_preserved_to_wip_preserve.py`
       (6 tests; suite 5445 → 5451, 0 failed)
+
+- [x] [BACKEND] P0. **The FM9 relaxation MOVED the wedge — fixed 2026-08-22, same session.**
+      Caught on the live fleet within 3 minutes of deploying `agent-orchestrator@fb903131a3`.
+      Dirty-state quarantines did go to zero (4 resolutions, all `inherited`, slots 6/9/22/25,
+      markers preserved with the warning block, origin carrying none) — but slots 6/9/22
+      immediately began failing **`branch-state quarantine (FM5/FM7), auto-heal failed`**.
+      CAUSE: the periodic sweep (`replacing_session=None`) deliberately skips the realign after
+      preserving — a 2026-08-17 change reasoning that "HEAD ahead of origin, clean tree, one
+      visible `chore(orphan-wip)` commit is already a normal, supported state elsewhere in this
+      module". That holds ONLY while the slot is not ALSO behind, and the module it points at
+      says so in its own docstring: `push_or_preserve_ahead_commits` handles a repo "ahead of
+      `origin/<base>` (**and not also behind** — a diverged repo is FM5's problem)". These slots
+      were ahead=1 while 67-301 BEHIND — exactly the FM5 shape, which nothing auto-heals. Before
+      the relaxation they never got there, being stopped earlier at the dirty gate.
+      FIX: skip the realign only when it leaves a genuinely supported state (not behind);
+      unknown behind-count falls to realign, the recoverable direction — safe because this path
+      is only reached after the commit is VERIFIED on its `wip-preserve/` ref. The fetch moved
+      ahead of the decision, since a stale tracking ref cannot answer "how far behind".
+      Behind-count read with an inline `git rev-list`, matching this file's own Part B
+      ahead-guard idiom, rather than reaching into `_branch_state._count_behind_ahead` and
+      suppressing `reportPrivateUsage` — basedpyright caught that on the first gate run.
+      **Method note worth keeping**: "the failure I targeted went to zero" was NOT the same
+      claim as "the slots now spawn". Only checking what the OTHER failure modes did afterwards
+      surfaced it. Verify the outcome, not the metric you aimed at.
+      — `agent-orchestrator@a439ec74bd` (+2 tests: diverged must realign, ahead-but-not-behind
+      must still be left alone; suite 5470, 0 failed)
 
 - [ ] [BACKEND] P3. **Decide whether an unresolvable-quarantine alert is still worth building.**
       The original premise no longer holds: post-fix the slot's tree is realigned CLEAN, so the
