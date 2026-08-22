@@ -69,7 +69,7 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.52.19",
     "deployment-api": "0.96.10",
-    "deployment-service": "0.157.3",
+    "deployment-service": "0.157.4",
     "deployment-ui": "0.1.0",
     "execution-service": "0.116.1",
     "features-service": "0.94.15",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "60b3218290e333b06b502aa0da1fc408555042f4"
+      "ldr_ci_status_sha": "65ad0d0a23803bf83171df1d3453272a766d12a2"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "44aa09e878423b9c4f8c7829cba5c08b2173acc9"
+      "ldr_ci_status_sha": "f1169809fa2aceb348cb88197ed98913ca18112b"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -544,7 +544,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "589171f362b7ce59a3d1b8bc5cb3d12d6724f503"
+      "ldr_ci_status_sha": "d9dcf2a92fddd53857fbf8f2aef09bfcdadbc5d7"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -608,7 +608,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "014f63612021fd87baf0327c409b675aad34df85"
+      "ldr_ci_status_sha": "a58b329e1cdb54e28c913712e426f80135039069"
     },
     "greeks-service": {
       "promotion_model": "ldr_main",
@@ -670,7 +670,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "c37678c4555712cbacb48050b9dde0c5b1eecc9d"
+      "ldr_ci_status_sha": "68ff19ca472de4b71fcba5e786fde8d53896b945"
     },
     "ibkr-gateway-infra": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "9d298e1e0416ba5e67eebb60a82ef81ee8734be3"
+      "ldr_ci_status_sha": "2ec4f8a77b9468e334666bb984bc169c0ffea4d3"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "3ce57ed461fa87a5977b53aa0cd25f69b28f75c2"
+      "ldr_ci_status_sha": "dee6ec10938820a3b833cd08f1e825938c273e15"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1327,14 +1327,14 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "0ae157dea0a65d0625fe6f711f1b1a5b8d764b16"
+      "ldr_ci_status_sha": "ffbe04df6886ef11eb93e467846ab3013a8844d6"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1562,7 +1562,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "a0d683b5677612fea5208512195aa9817dbda068"
+      "ldr_ci_status_sha": "c8c6f5c7f09c9d1c01d1056af3099bbbd3fe727c"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
