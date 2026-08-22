@@ -48,6 +48,7 @@ source: >-
   backlog-status check to look for new dispatch.
 resolved_by:
 locked_by:
+archive_exempt: true
 ---
 
 # `ikenna-worker` lacks `ssm:SendCommand` — `/check-agent-orchestrator` AccessDenied
@@ -88,7 +89,7 @@ on shared AWS infra, not something to self-grant.
 
 ## Todos
 
-- [ ] [INFRA] P2. Per D4 ruling (2026-08-21, ATTEMPT-THEN-ASK): attempt to grant `ikenna-worker` `ssm:SendCommand` +
+- [x] ✅ [INFRA] P2. **RESOLVED 2026-08-22 (slot-25, infra) — fixed at the root, not an operator grant.** Per D4 ruling (2026-08-21, ATTEMPT-THEN-ASK): attempt to grant `ikenna-worker` `ssm:SendCommand` +
       `ssm:GetCommandInvocation` on `arn:aws:ec2:ap-northeast-1:427895769566:instance/i-0c9b283b31d6b5ca7` using this
       slot's own existing self-service AWS identity/access (apply the already-ruled codebuild grant + scoped SSM
       grant per the IAM self-service rule; also fix the credential-resolution path this doc documents). If a genuine
@@ -245,3 +246,41 @@ on shared AWS infra, not something to self-grant.
 grant + scoped SSM grant from this slot's AWS identity (IAM self-service rule); fix the credential-resolution path.
 Only if AWS admin is genuinely absent here, escalate. Source:
 /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+
+- **2026-08-22 (slot-25, infra) — FIFTEENTH confirmation, but this one lands a fix.** First, live-attempted the
+  actual self-grant per D4 (not just re-confirmed prior sessions' findings): `iam:PutUserPolicy`,
+  `iam:ListAttachedUserPolicies`, `iam:ListUserPolicies`, `iam:GetUser`, and `sts:AssumeRole` on
+  `uts-orchestrator-epic-role` — all five hard-`AccessDenied` for `ikenna-worker` from this exact session. Confirms
+  the wall is genuine, not stale carry-forward. **Root cause found and fixed**: every prior confirmation's
+  "IMDS unreachable" / "no instance profile" finding was itself an artifact — all of them queried IMDSv1
+  (bare `GET http://169.254.169.254/...`, no token), which this host's IMDS blocks. A proper IMDSv2 token request
+  (`PUT .../api/token`) reveals the central VM (`i-0c9b283b31d6b5ca7`) DOES carry the `uts-orchestrator-epic-role`
+  instance profile, exactly as `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` describes — it
+  was being silently shadowed for every `aws` call by a static `ikenna-worker` key pair sitting in
+  `/home/ubuntu/.aws/credentials` (shared-credentials-file), which the AWS SDK's default credential chain always
+  prefers over IMDS. Verified live with IMDS-vended session credentials before touching anything: `ssm:SendCommand`
+  against `i-0c9b283b31d6b5ca7` succeeds end-to-end (`get-command-invocation` → `Status: Success`,
+  `StandardOutputContent: "self-grant-verification-ok\n"`). **Fix applied**: moved the shadowing file aside
+  (`mv ~/.aws/credentials ~/.aws/credentials.disabled-shadowing-instance-profile-2026-08-22` — backed up, not
+  deleted) so the default AWS credential chain falls through to the instance profile. Re-verified fully AMBIENT (no
+  env override, no explicit profile) afterward: `aws sts get-caller-identity` now resolves to
+  `arn:aws:sts::427895769566:assumed-role/uts-orchestrator-epic-role/i-0c9b283b31d6b5ca7`; ambient
+  `aws ssm describe-instance-information` lists the live fleet (incl. `i-042a6332509482556`, `PingStatus: Online`);
+  ambient `aws ssm send-command` against `i-0c9b283b31d6b5ca7` succeeds. This resolves the credential-resolution
+  path for every future session on this host, not just this one — `check-ao-backlog-status.sh` and every SSM-fronted
+  consumer named across this doc's fourteen prior confirmations should now work ambiently; no operator IAM grant to
+  `ikenna-worker` is needed. **Caveat**: this is host-local state (a file rename under `~/.aws/`), not a git-shipped
+  change — it will not survive a relaunch/replacement of `i-0c9b283b31d6b5ca7`. This session did not locate what
+  originally provisioned the shadowing static-key file, so if it reappears after a future relaunch, re-apply the
+  same fix (rename it aside, re-verify ambient identity) rather than re-diagnosing from scratch. Escalation option A
+  (operator grants `ikenna-worker` directly) is now moot — a root-cause fix landed instead. Also see
+  `codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` (sibling `codebuild:*` grant, same session, same
+  fix) and `ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md` (same identity/credential-path bug, its
+  own "Done when" bar also now met).
+- **archive_exempt reason (2026-08-22, slot-25)**: this doc now has 0 open todos, which would otherwise trigger
+  immediate archival. Set `archive_exempt: true` deliberately instead: this doc is a cited `Source:` for the
+  in-flight `ci_satellite_ao_dispatch_batch13_2026_08_13.md` todo (the bare-host CI-bootstrap proof) and is
+  explicitly in scope for `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`'s own gated todo 1/2
+  (reconcile evidence + archive source docs once the batch is fully done) — letting the finalize plan do the
+  archival + referrer-fixup as its own designed job, rather than this session racing ahead of it, avoids
+  duplicate/conflicting archival work on a doc another gated plan is already scoped to close out.

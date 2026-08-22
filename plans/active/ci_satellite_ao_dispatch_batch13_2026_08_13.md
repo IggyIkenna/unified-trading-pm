@@ -262,6 +262,31 @@ source: >-
       the operator-gated SSM IAM grant above, confirmed fleet-wide, not a task-boundary artifact) — the next pickup
       should check that issue doc's status FIRST; once granted, re-launch per the recipe above and proceed through steps
       4-5 directly (no SSM re-diagnosis needed).
+      **UPDATE 2026-08-22 (slot-25, infra) — BLOCKER RESOLVED AT THE ROOT (not the bare-host proof itself — that
+      remains for a fresh dispatch, see below).** Per D4 ruling (2026-08-21, ATTEMPT-THEN-ASK), live-attempted a
+      direct self-grant to `ikenna-worker` (`iam:PutUserPolicy`/`iam:ListAttachedUserPolicies`/
+      `iam:ListUserPolicies`/`iam:GetUser`/`sts:AssumeRole` on `uts-orchestrator-epic-role`) — all hard-denied,
+      confirming the wall is genuine from this exact session, not stale carry-forward. Then found the actual root
+      cause: every prior "no instance profile" finding (this doc's own slot-15 entry included) used IMDSv1
+      (unauthenticated `GET`), which this host blocks — IMDSv2 (token-based) proves the central VM
+      (`i-0c9b283b31d6b5ca7`) DOES carry the `uts-orchestrator-epic-role` instance profile as designed; it was
+      being silently shadowed for every `aws` CLI call by a static `ikenna-worker` key file sitting in
+      `~/.aws/credentials`. Disabled that shadowing file (backed up to
+      `~/.aws/credentials.disabled-shadowing-instance-profile-2026-08-22`, not deleted — host-local state, does not
+      survive a VM relaunch). Live-verified AMBIENT (no env override) afterward: `aws sts get-caller-identity` →
+      `uts-orchestrator-epic-role`; `aws ssm describe-instance-information` lists the fleet; `aws ssm send-command`
+      against `i-0c9b283b31d6b5ca7` succeeds end-to-end (`Status: Success`). Full write-up + the sibling codebuild
+      grant: `check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md`,
+      `ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md`,
+      `codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` (all three flipped `[x]` this session — the
+      finalize plan's own reconciliation pass can treat those as already-done, not pending extraction). **This
+      todo's own checkbox stays OPEN**: the underlying ask (PROVE the CI bootstrap script end-to-end on a real bare
+      host) is genuinely not re-attempted this session — this was a 1h-estimated todo and the blocker investigation
+      + fix already exceeded that scope on its own. What changes for the next pickup: **no SSM grant/credential
+      concern remains at all** — proceed directly to steps 4-5 of slot-15's plan above (launch a fresh throwaway EC2
+      instance per the same recipe, `aws ssm send-command` will now work ambiently with zero setup, register the GH
+      runner via `setup-glue-runners.sh` with `POOL_TAG=ci-bootstrap-verify`, verify, then teardown +
+      terminate-instances immediately).
 - [x] ✅ [CODE] P2. implement the consumer-QG promote fan-out gate in UAC's promote-gate workflow (per the 2026-08-08
       operator ruling; design + target consumer already specified in the doc) Source:
       `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` — ✅ **DONE 2026-08-14

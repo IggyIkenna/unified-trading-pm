@@ -44,6 +44,7 @@ source: ci-reconcile skill, scheduled hourly ci_reconciler dispatch agt-17f258 (
 assigned_vm: NA
 resolved_by:
 locked_by:
+archive_exempt: true
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
@@ -102,7 +103,7 @@ needed" assumption and fix this for every future hourly run, not just this one).
 
 ## Todos
 
-- [ ] [INFRA] P2. Attempt to apply the already-ruled scoped `ssm:SendCommand` grant (+ codebuild grant) to this
+- [x] ✅ [INFRA] P2. **RESOLVED 2026-08-22 (slot-25, infra).** Attempt to apply the already-ruled scoped `ssm:SendCommand` grant (+ codebuild grant) to this
       slot's own AWS identity for `i-0c9b283b31d6b5ca7`/the glue-runner host, and fix why `ci_reconciler`
       dispatches resolve to `ikenna-worker`'s static keys instead of the orchestrator VM's own
       `uts-orchestrator-epic-role` instance-profile credentials — with existing access (IAM self-service rule,
@@ -148,3 +149,22 @@ needed" assumption and fix this for every future hourly run, not just this one).
   codebuild grant + scoped SSM grant from this slot's AWS identity (IAM self-service rule); fix the
   credential-resolution path. Only if AWS admin is genuinely absent here, escalate. Source:
   /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+
+- **2026-08-22 (slot-25, infra) — RESOLVED, root cause found and fixed.** Full investigation + fix landed in
+  `check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md`'s 2026-08-22 Progress Log entry (same
+  underlying identity, same fix — not duplicating the write-up here). Summary for this doc's own "Done when" bar:
+  the ambient credential-resolution bug is fixed (a shadowing static `ikenna-worker` key file in
+  `~/.aws/credentials` was overriding the VM's own `uts-orchestrator-epic-role` instance profile — moved aside,
+  backed up, not deleted). Ambient (no env override) `aws sts get-caller-identity` now resolves to
+  `arn:aws:sts::427895769566:assumed-role/uts-orchestrator-epic-role/i-0c9b283b31d6b5ca7` — the exact identity this
+  todo's own "Done when" names. `aws ssm describe-instance-information` (ambient) lists the fleet including the
+  glue-runner host `i-042a6332509482556` as `Online`; `aws ssm send-command` against the central VM
+  `i-0c9b283b31d6b5ca7` verified end-to-end (`Status: Success`) — this session did not separately fire a
+  send-command at the glue-runner host itself (no live need this pass), but it is the identical identity/path, now
+  proven reachable. Same host-local-state caveat as the sibling doc: does not survive a VM relaunch of
+  `i-0c9b283b31d6b5ca7`; re-check for credential-file reappearance after any future relaunch.
+- **archive_exempt reason (2026-08-22, slot-25)**: this doc now has 0 open todos. Set `archive_exempt: true`
+  rather than archiving immediately, for the same reason as the sibling
+  `check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md` doc: it's cross-linked to
+  `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`'s already-gated archival/reconciliation job, so this
+  session leaves the actual `git mv` + referrer-fixup to that designated pass.

@@ -35,6 +35,7 @@ assigned_role: infra
 drift_direction: advance-process
 depends_on: []
 locked_by:
+archive_exempt: true
 locked_since:
 resolved_by:
 source: >-
@@ -133,7 +134,7 @@ access from this worktree).
       write path in `cloud-build-router.yml` / `cloud-build-router-aws.yml` so these fields get populated on a
       successful build, or remove the dead write-intent code and stop presenting the manifest as a provenance source
       anywhere in the codebase. Repo: unified-trading-pm.
-- [ ] [INFRA] P3. Attempt to apply the already-ruled (2026-08-09) read-only `codebuild:ListProjects`/
+- [x] ✅ [INFRA] P3. **RESOLVED 2026-08-22 (slot-25, infra).** Attempt to apply the already-ruled (2026-08-09) read-only `codebuild:ListProjects`/
       `codebuild:BatchGetBuilds` grant to `ikenna-worker`'s AWS IAM identity from this slot's own AWS identity
       (IAM self-service rule, per D4 ruling 2026-08-21) — with existing access; if a genuine wall (no AWS admin
       path from this identity), escalate with options (a) apply the grant via the operator's own AWS console/CLI
@@ -174,3 +175,22 @@ access from this worktree).
   codebuild grant + scoped SSM grant from this slot's AWS identity (IAM self-service rule); fix the
   credential-resolution path. Only if AWS admin is genuinely absent here, escalate. Source:
   /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+
+- **2026-08-22 (slot-25, infra) — RESOLVED, option (b) is what actually happened.** Root-caused the credential
+  path (full write-up in `check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md`'s 2026-08-22
+  entry, same session): the shadowing static `ikenna-worker` key file in `~/.aws/credentials` was overriding this
+  VM's own `uts-orchestrator-epic-role` instance profile (confirmed live via IMDSv2 with a token — every prior
+  session's "no instance profile" finding used the blocked IMDSv1 path). Disabled the shadowing file (backed up,
+  not deleted), which restored ambient instance-profile resolution. Applied the codebuild grant to
+  `uts-orchestrator-epic-role` itself via its own `self-manage-own-policies` inline policy (`iam:PutRolePolicy`,
+  legitimately self-service per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, new
+  inline policy `allow-codebuild-readonly`: `codebuild:ListProjects`/`codebuild:BatchGetBuilds`, `Resource: "*"`).
+  Live-verified this doc's own done-when bar, ambiently (no env override): `aws codebuild list-projects --region
+  ap-northeast-1` returns the real project list (features-service, batch-live-reconciliation-service,
+  deployment-ui, unified-trading-library, alerting-service, greeks-service, strategy-service,
+  market-tick-data-service, ...). No operator console/CLI action needed — option (b) closed this at the root
+  rather than option (a). Same host-local-state caveat: does not survive a relaunch of `i-0c9b283b31d6b5ca7`.
+- **archive_exempt reason (2026-08-22, slot-25)**: this doc now has 0 open todos. Set `archive_exempt: true`
+  rather than archiving immediately, same reasoning as the sibling SSM-gap docs: cross-linked to
+  `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`'s already-gated archival/reconciliation job, which
+  this session leaves to do the actual `git mv` + referrer-fixup.
