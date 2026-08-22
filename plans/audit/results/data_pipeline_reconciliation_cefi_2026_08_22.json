@@ -1,0 +1,55 @@
+{
+  "report": "data_pipeline_reconciliation_cefi_2026_08_22",
+  "asset_group": "cefi",
+  "run_date": "2026-08-22",
+  "auditor": "cefi_reconciliation_auditor",
+  "slot": 28,
+  "dispatch_id": "agt-6b2e6d",
+  "scope": "tier1_phase0_honest_coverage",
+  "read_only": true,
+  "status": "partial",
+  "severity": "P1",
+  "buckets": {
+    "gcp_market_data": "market-data-tick-cefi-prd-central-element-323112",
+    "gcp_instruments": "instruments-store-cefi-prd-central-element-323112",
+    "aws_market_data": "market-data-tick-cefi-prd-427895769566",
+    "aws_instruments": "instruments-store-cefi-prd-427895769566"
+  },
+  "market_data_index": {
+    "generation": "1787404515850034",
+    "last_modified": "2026-08-22T13:15:15.864Z",
+    "size_bytes": 471050320,
+    "lock_present": false,
+    "stall_state": {"streak": 0, "baseline_shards": 110524},
+    "latest_run": {
+      "last_run_at": "2026-08-22T14:01:48.379497Z",
+      "success": false,
+      "shards_scanned": 109403,
+      "shards_changed": 0,
+      "error_reason": "marker_missing_oversized_merge: 109402 shards > 50000 — cron full merge infeasible"
+    }
+  },
+  "instruments_index": {
+    "generation": "1787407241635843",
+    "last_modified": "2026-08-22T14:00:41.646Z",
+    "size_bytes": 2996906
+  },
+  "honest_coverage": {
+    "rollup_date": "2026-08-22",
+    "generated_at": "2026-08-22T01:01:20Z",
+    "captured": 10538345,
+    "attempted_failed": 855304,
+    "expected_unattempted": 10839811,
+    "empty_confirmed": 6602176,
+    "total": 28835636,
+    "coverage_pct": 47.4,
+    "all_shards_coverage_pct": 36.55,
+    "denominator_complete": false,
+    "instrument_gates_download": true,
+    "formula_verified": "10538345 / (10538345 + 855304 + 10839811) = 47.40%",
+    "interpretation": "lower_bound"
+  },
+  "census": {"status": "not_measured", "reason": "UTL runtime unavailable: missing python-dotenv"},
+  "coverage_gaps": ["instruments-store phantom/reprobe artifacts absent", "current axis census unavailable"],
+  "out_of_scope": ["machine_oracle", "tier2_vm", "orphan_scan", "deletes", "gcs_descent", "service_code", "deployment"]
+}
