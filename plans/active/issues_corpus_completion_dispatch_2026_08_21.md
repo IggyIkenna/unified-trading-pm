@@ -279,7 +279,10 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
 - [ ] [SCRIPT] P1. Apply every ledger disposition (ruled + adopted) to its affected docs: write the dated ruling
       line, replace each stale operator-gate marker with the reflecting disposition marker per task_template §3, and
       convert the now-executable units into todos. Done-when: grep of the 180 gated docs shows no stale operator-gate
-      marker lacking a 2026-08-21 ruling line.
+      marker lacking a 2026-08-21 ruling line. 44/179 docs done (chunks 0-2, `46ab72dbde`…`935aae14cb`), 1 flagged for
+      archive (`ao_round5_apply_session_operator_qa_index_2026_08_08`); ~35 now-executable units spun into
+      `issues_corpus_executable_queue_2026_08_21.md`. Chunks 3-11 (135 docs) hit the session-limit reset — retrying
+      via `wnroqem2n`.
 - [ ] [INFRA] P2. ATTEMPT set: D4, D53, D70, D102, D81, D112, D131, D58, D130 — each resolved with its own evidence line
       in the Progress Log or escalated with concrete options.
 
@@ -309,3 +312,11 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
   re-emitting the placeholder) + `locked_by_live_defi_rollout_archival_referrer_cleanup_2026_08_21.md` (7 prose
   referrers). Wave 2 (`wf_67607ae2-059`: D5/D7/D12) and wave 2b (`wf_76e252f8-2e7`: ruling application over 179
   docs + D2 corrections) running. Progress metric: issues open deduped 1,146 → 1,129.
+- **2026-08-22 (tick 3)** — Both wave-2/2b workflows hit the account session-limit mid-run (reset 2:20am London,
+  external constraint, not a logic failure): D5 and D12 completed fully before the limit (see Wave 2 checkboxes above);
+  D7 and 9 of 12 ruling chunks + 5 of 7 D2 docs got zero work (agent returned null). After the operator confirmed the
+  reset, resumed both workflows from cache (`wy6ls9574`, `wnroqem2n`) — completed work replays instantly, only the
+  failed pieces re-run. Launched wave 3 in parallel (`wiv6q901k`): archival pass 2 (the 38 pass-1 skips + 9
+  wave-1-flagged + 1 ruling-sweep-flagged docs, per the four dispositions above), D10 VM remediation, D3 stash
+  cleanup. Adopted the D5 host-cron disposition (worker rec, logged inline above) without a fresh operator round —
+  matches the established ADOPTED-REC pattern, reversible by veto.
