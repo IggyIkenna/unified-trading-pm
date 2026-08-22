@@ -77,11 +77,29 @@ beyond the earlier 13-day bounded validation window, and the MDPS bucket/movemen
       `.add()` for the bundled `arbitrage_opportunity` data_type (see `wave2_polymarket_record_captured_from_counts_2026_05_09`
       for the reference pattern), then re-launch the full 2020-06-06→present campaign via
       `launch-features-sports-arb-backfill.sh` (repo: features-service, deployment-service).
-- [ ] [DATA] P0. Relaunch the MDPS consolidated bucket/movement/snapshot backfill for the two unresolved windows —
-      `2022-01-01 → 2023-06-30` (resume from measured progress, i.e. re-run from `2023-05-15` onward or the whole
-      chunk if the writer's manifest pre-flight-skip makes a full re-run cheap) and `2025-01-01 → 2026-08-06`
-      (never launched) — via `scripts/reprocess_sports_odds.py --start-date <X> --end-date <Y> --workers 16 --force`
-      per the existing launcher pattern (repo: market-data-processing-service, deployment-service).
+- [x] ✅ [DATA] P0. **Relaunched 2026-08-22 (slot-23, data_engineering)** — both unresolved MDPS
+      bucket/movement/snapshot windows, via the existing `launch-mdps-sports-bucket-vm.sh` pattern (the same 4-way
+      sharding this campaign was originally run with), `force` mode on both (matches the two already-completed
+      sibling shards — the launcher's own header documents `force` as the only mode that re-attempts a day whose
+      COARSE per-day manifest key is already captured but is still missing fine-grained (league_id, timeframe)
+      shards):
+      - `2022-01-01 → 2023-06-30` tail resume — re-ran `2023-05-15 → 2023-06-30` only (the range the interrupted VM's
+        log stopped mid-processing), not the whole chunk: the earlier days were already force-processed in one
+        continuous run before the SPOT preemption, so re-forcing them would be pure waste, not a correctness gain.
+        VM `mdps-sports-bucket-20260822-150734`.
+      - `2025-01-01 → 2026-08-06` (never launched) — full range. VM `mdps-sports-bucket-20260822-150914`.
+      **Verified via the TARGET ARTIFACT, not activity/exit_code — the exact gap this issue doc exists to close.**
+      Confirmed no pre-existing `mdps-sports-bucket-*`/`features-arb-backfill-*` VM was already running before
+      launch (`gcloud compute instances list` empty for both prefixes — no collision risk). ~5 min after launch,
+      read both VMs' `run.log` via UTL `download_from_storage()` (never `gsutil`/`gcloud storage` — blocked by the
+      workspace's own guardrail hook) and parsed for the exact failure signature the arb campaign hit (a per-date
+      exception silently swallowed while exit_code stays 0): VM1 — 19 distinct dates processed (latest 19/47,
+      2023-06-02), 20 `LOSS_GUARD_PASS` writes, 0 tracebacks, 0 `attempted_failed`, 0 `LOSS_GUARD_BLOCKED`. VM2 — 23
+      distinct dates processed (latest 23/583, 2025-01-23), 34 `LOSS_GUARD_PASS` writes, 0 tracebacks, 0
+      `attempted_failed`, 0 `LOSS_GUARD_BLOCKED`. Both are genuinely writing real bucket/movement/snapshot shards,
+      not silently failing like the sibling arb campaign did. Did NOT wait for full campaign completion (VM2's
+      ~583-day range is a multi-hour run) — continued-to-floor monitoring is the separate still-open [REVIEW] P0/P1
+      todos' job (terminal honest-coverage verdict; preemption/billing-waste audit), not duplicated here.
 - [x] ✅ [SCRIPT] P2. **Already done — same commit that filed this issue doc.** The stale `🟢 CAMPAIGN IN
       PROGRESS 2026-08-21` banner in `sports_taxonomy_p4_backfill_2026_08_08.md` was replaced (not just removed)
       with an accurate `🟡 CAMPAIGN STALLED 2026-08-22` banner citing this issue doc, at the same time the REVIEW
@@ -101,3 +119,7 @@ beyond the earlier 13-day bounded validation window, and the MDPS bucket/movemen
   (`Range:` summary lines confirming the two completed chunks).
 - `gcloud compute instances list --project=central-element-323112 --filter="name~mdps-sports-bucket OR
   name~features-arb-backfill"` → empty (neither campaign has a live VM).
+- `gs://deployment-scripts-central-element-323112/vm-logs/mdps-sports-bucket-20260822-150734/run.log` (tail-resume
+  relaunch, `2023-05-15 → 2023-06-30 force`; 19 distinct dates + 20 `LOSS_GUARD_PASS` confirmed within 5 min).
+- `gs://deployment-scripts-central-element-323112/vm-logs/mdps-sports-bucket-20260822-150914/run.log` (fresh
+  relaunch, `2025-01-01 → 2026-08-06 force`; 23 distinct dates + 34 `LOSS_GUARD_PASS` confirmed within 5 min).
