@@ -39,6 +39,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: "2026-07-23"
+last_updated: "2026-08-21"
 author: unknown
 parent_epic: agent_operating_framework_master
 priority: P1
@@ -238,19 +239,20 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       it isn't due until 2026-07-25 02:04 UTC. Plan↔codex-content-alignment boundary is documented in this doc's § "The
       four lines of defense" item 4 (`/docs-reconcile` = codex-internal structural health; `/plan-reconcile` = whether a
       plan's claims about codex are still true) — no further clarification needed.
-- [ ] [DOC] P1. **Resolve the line-1-completeness vs `proseWrap` conflict — the two rules are mutually unsatisfiable
-      past 120 chars.** `task_template.md` §3 requires a todo's FIRST PHYSICAL LINE to carry the complete instruction
-      (because `regen_backlog_from_plan.py::_parse_open_todos` derives the dispatched `brief` from that line alone), but
+- [ ] [DOC] P1. **RULED 2026-08-21 (D111, ADOPTED-REC): option (a) — make the parser read continuation lines into
+      the brief.** Fixes the actual root cause (the parser only reading physical line 1) rather than working around
+      prettier. Implement in `regen_backlog_from_plan.py::_parse_open_todos` — extend it to capture continuation
+      lines (up to the next `- [ ]` / blank-line / heading boundary) into the dispatched task brief, not just the
+      first physical line. **Original problem**: `task_template.md` §3 requires a todo's FIRST PHYSICAL LINE to carry
+      the complete instruction (because `_parse_open_todos` derives the dispatched `brief` from that line alone), but
       this repo's `.prettierrc` sets `proseWrap: always` + `printWidth: 120`, and `prettier-autostage.sh` runs on every
       commit. **Measured 2026-08-06 (`/plan-reconcile ao`)**: a worker fixing two line-1 defects watched prettier
       silently reflow both fixes back into incomplete lines on the very next hook run, and had to rewrite them under 120
       chars to make them stick. So any todo whose complete instruction exceeds ~120 characters CANNOT satisfy §3 — it
-      will self-revert. This is a structural contradiction between two enforced rules, not an authoring slip, and it
-      silently re-creates the exact defect class line 3 exists to catch. **Options**: (a) make the parser read
-      continuation lines into the brief (fixes the root cause, code change in `_parse_open_todos`); (b) add a prettier
-      override for `- [ ]` lines; (c) codify a hard "≤120-char self-contained line 1" authoring rule in §3 and teach
-      every fixer to measure. **Done when**: one option is ruled and applied, and §3 states the constraint explicitly
-      instead of leaving fixers to rediscover it.
+      will self-revert. This is a structural contradiction between two enforced rules, not an authoring slip. **Done
+      when**: `_parse_open_todos` captures the full multi-line instruction into the brief, and §3's
+      line-1-completeness rule is rewritten to state the parser now reads continuation lines (so authors no longer
+      need to compress to ≤120 chars on line 1 alone).
 - [ ] [REVIEW] P2. Once lines 2-4 are live, re-run the sports closeout hygiene audit end-to-end and confirm all 4 lines
       would have caught what the two manual/adversarial passes caught this session, as the acceptance test for this
       whole initiative. **RE-CHECKED 2026-07-24 (slot 2), verdict = 3/4 LIVE, line 2 NOT live — precondition still
@@ -318,6 +320,14 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
           this doc's item 2 definition to match reality instead of continuing to chase a full-corpus-sweep wire-in that
           corpus drift keeps re-blocking session after session. Not flipping this checkbox — the acceptance-test
           precondition is still unmet either way until the ruling lands.
+
+          **RULED 2026-08-21 (D111, ADOPTED-REC): prek-sufficient.** The already-shipped prek hard gates
+          (`check_line_caps.sh` + the other 6 checks at 0 corpus violations) satisfy line 2's intent — the
+          full-sweep target itself has moved for sessions (see the parser-fix ruling on the sibling todo above), so
+          a blanket `run_hygiene_sweep.sh` wire-in chasing a moving reference-paths ratchet is no longer the right
+          bar. Item 2's definition in § "The four lines of defense" is superseded by this ruling: line 2 = the prek
+          hard-gate set, not a full-sweep wire-in. The acceptance test itself (re-run the sports closeout hygiene
+          audit end-to-end) can now proceed as a follow-up — not executed in this pass.
 
 ## Codex SSOTs
 
@@ -390,3 +400,4 @@ existing codex SSOT names this 4-line architecture itself — once lines 2-4 are
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:071d1a58e8dfb973]: KEEP-NA, valid — 2 remaining items are a repeatedly-re-measured repo-wide CI-policy acceptance gap and an unresolved 3-option design fork (line-1-completeness vs prettier proseWrap), both explicitly non-bounded per a 2026-08-02 operator-ruling citation.
 - **na-eligibility-audit 2026-08-17 (ao tranche, re-verified)** [body-hash:81090077728d2b87]: KEEP-NA, valid — re-affirms the marker above, no change in substance.
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — 2 remaining items are a repeatedly-re-measured repo-wide CI-policy acceptance gap (line-2-wiring vs. corpus reference-path drift) and an unresolved 3-option design fork (line-1-completeness vs. prettier proseWrap), both explicitly self-flagged non-bounded per the 2026-08-02 operator-ruling citation. No change in substance since the 2026-08-17 markers.
+- **2026-08-21 — ruling D111 (Plan-quality defense rulings)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): Prek-sufficient (the full-sweep target has moved for sessions) and the parser fix (fixes the actual root cause, not prettier). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

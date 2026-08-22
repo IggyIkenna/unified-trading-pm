@@ -24,6 +24,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-12"
+last_updated: "2026-08-21"
 parent_epic: plan_hygiene_master
 priority: P2
 estimate_class: research
@@ -672,11 +673,14 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
 - [x] ✅ [REVIEW] P3. (ao-readiness)
       plans/archive/2026_08/issues/sports_manifest_consolidator_static_rows_out_injuries_2026_08_10.md — ambiguous verb
       "consider whether" with a conditional premise. **DONE (verified 2026-08-16)**: doc archived, 0 open todos — moot.
-- [ ] [REVIEW] P3. (ao-readiness) plans/active/sports_track_h_denominator_prereqs_2026_07_28.md — blocked status buried
-      at end of a long paragraph. **Still open (checked 2026-08-16)**: the sole open todo already carries an explicit
-      "CORRECTED 2026-08-12 (/plan-reconcile): retagged `[CODE]` → `[OPERATOR]`, blocked status surfaced" annotation —
-      the surfacing fix already landed; leaving open only because the underlying `[OPERATOR]` decision itself is still
-      unresolved (correctly so, not a doc-hygiene gap anymore).
+- [ ] [REVIEW] P3. **RULED 2026-08-21 (D112, ATTEMPT): attempt to resolve the sports_track_h denominator decision
+      with existing access — open `plans/active/sports_track_h_denominator_prereqs_2026_07_28.md`'s source record
+      directly and rule on it if the record resolves the question; if it's a genuine wall (no record settles it),
+      escalate with ≥2 concrete options.** (ao-readiness) plans/active/sports_track_h_denominator_prereqs_2026_07_28.md
+      — blocked status buried at end of a long paragraph. **Still open (checked 2026-08-16)**: the sole open todo
+      already carries an explicit "CORRECTED 2026-08-12 (/plan-reconcile): retagged `[CODE]` → `[OPERATOR]`, blocked
+      status surfaced" annotation — the surfacing fix already landed; the underlying `[OPERATOR]` decision itself was
+      still unresolved before this ruling.
 - [x] ✅ [REVIEW] P3. (ao-readiness) plans/archive/2026_08/issues/sfi_progressive_stats_json_truncation_2026_08_09.md —
       duplicate YAML frontmatter key `archive_exempt`. **DONE (verified 2026-08-16)**: only one `archive_exempt` key
       present in current frontmatter — no duplicate found; doc archived, `status: resolved`.
@@ -768,3 +772,5 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
   above, doc otherwise KEEP-NA valid. Cross-cutting tranche audit.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 22 open items (grep-verified, matches Phase-0=22) in a P2/P3 review-tracking backlog from the 2026-08-12 full-corpus /plan-reconcile run; already audited twice by this same skill (2026-08-17 x2) reaching KEEP-NA both. (4/22 items tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for next-run reassessment.)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)
+- **2026-08-21 — ruling D26 (Elysium SLA v5 reissue)**: OPERATOR-RULED 2026-08-21 — APPROVED: draft SLA v5 (30-day support period, corrected dates) for operator review BEFORE anything goes to the client. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. (No open todo in this doc names the Elysium reissue — this ruling was already applied interactively during the 2026-08-12 session's 4 judgment-call round; recorded here for the ledger trail only.)
+- **2026-08-21 — ruling D112 (sports Track-H denominator)**: ATTEMPT — open sports_track_h's source doc; rule directly if the record resolves it, else escalate the concrete options. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
