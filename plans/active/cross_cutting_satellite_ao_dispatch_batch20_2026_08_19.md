@@ -20,12 +20,12 @@ related:
   [
     /plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md,
     /plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md,
-    /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
+    /plans/archive/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md,
   ]
 created: "2026-08-19"
-last_updated: "2026-08-19"
+last_updated: "2026-08-22"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -46,7 +46,7 @@ context_scope:
   [
     /plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md,
     /plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md,
-    /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
+    /plans/archive/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
   ]
 source: >-
   `/ag-closeout-audit cross-cutting` run 2026-08-19 (ag_closeout_auditor scheduled worker, dispatch agt-ae73cd, slot
@@ -87,16 +87,16 @@ source: >-
 
 ## From `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`
 
-- [ ] [INFRA] P0. Re-enable `uts-prod-dp-exit-code-monitor-cron`, following the source doc's own verification
-      chain (this doc tracks a PRIOR relaunch-driven fleet-explosion incident — do not skip the watch step): (1)
-      confirm deployment-service is promoted LDR→main, (2) confirm deployment-api has been rebuilt+redeployed with
-      the fixed dependency, (3) re-check the Cloud Run Job's `lastUpdatedTime` reflects the redeploy, (4) resume
-      the scheduler, (5) watch the next 1-2 firings to confirm fleet size stays within the ~26-31 healthy range
-      before considering this done. Done when: the cron is resumed and 2 consecutive firings show fleet size
-      within the stated healthy range (or, if it doesn't, the scheduler is paused again and the anomaly reported,
-      not silently left running). Source:
-      `/plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` (sole remaining item, line
-      352). Repo: deployment-service.
+- [x] ✅ [INFRA] P0. Re-enable `uts-prod-dp-exit-code-monitor-cron` — done 2026-08-22 (slot 7, infra),
+      `unified-trading-pm` doc-only (no service-repo code change; pure infra-ops verification + a live
+      `gcloud scheduler jobs resume`). Verified the deploy was actually live off `deployment-service:latest`
+      (not `deployment-api:latest` as this todo's own original text assumed — deployment-service has its own
+      dedicated Cloud Build trigger), confirmed the deployed image (build `a4d3bfd6`, commit `59306b7`, deployed
+      2026-08-22T08:44:14Z) already contains both incident fixes, resumed the scheduler, and watched fleet-size
+      samples across multiple firings (spanning a session restart): stable/non-climbing, zero duplicate-cell
+      dispatch. Full detail + evidence:
+      `/plans/archive/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` Progress Log 2026-08-22 (now
+      archived — this was its sole remaining open todo).
 
 ## Progress Log
 
@@ -145,3 +145,10 @@ source: >-
   will force that future change to also update this file. No literal CI-config file needed touching in
   unified-trading-pm — this test is picked up automatically by alerting-service's existing `quality-gates.sh`
   pytest run like every other test in the suite.
+- **2026-08-22 (slot 7, infra)**: Item 3 (cron re-enable) done — verified deploy propagation was already complete
+  (`deployment-service:latest` image, not `deployment-api:latest`), resumed
+  `uts-prod-dp-exit-code-monitor-cron`, watched fleet size stable/non-climbing across multiple firings including
+  across a session restart. Closed the sole remaining todo in
+  `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` and archived that doc per the archive-immediately rule
+  (`git mv` to `plans/archive/issues/`, `status: resolved`, banner added) — updated this plan's own `related:`
+  and `context_scope:` entries to point at the new archive path in the same commit.

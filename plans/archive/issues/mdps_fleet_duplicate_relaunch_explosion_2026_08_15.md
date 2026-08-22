@@ -22,7 +22,7 @@ summary: |
   Cross-references `tradfi_bf_cme_ohlcv_asia_northeast1_c_preemption_thrash_2026_08_15.md` (archived same day) as a
   SEPARATE, more severe instance of the same dedup-gap CLASS that doc found for the TradFi CME OHLCV family — this is
   NOT a duplicate of that finding, it is the fleet-wide `mdps-*` sibling, roughly 20-30x the fleet-inflation magnitude.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, tradfi, defi, sports, prediction, cross-cutting]
 stage: [meta]
@@ -65,6 +65,17 @@ context_scope:
 ---
 
 # mdps-* fleet duplicate-relaunch explosion — 676 VMs against an expected ~28
+
+> **🟢 ARCHIVED 2026-08-22 (slot 7, infra — cross_cutting_satellite_ao_dispatch_batch20_2026_08_19.md item 3).**
+> Every todo below is now `[x]` — the sole remaining item (cron re-enable) closed this session: verified the deployed
+> Cloud Run Job image (`deployment-service:latest`, built by `deployment-service`'s own
+> `deployment-service-jobs-image-build` Cloud Build trigger — corrected a stale assumption in this doc's own todo
+> text that it was `deployment-api:latest`) already contains both fixes (commit `59306b7`, deployed
+> 2026-08-22T08:44:14Z), resumed `uts-prod-dp-exit-code-monitor-cron` (`ENABLED`, `*/5 * * * *`), and watched
+> multiple firings with a stable, non-duplicating fleet. See the Progress Log entry below for full evidence. The
+> durable contract this incident established (dispatch-cell dedup, mirroring `wave_launcher.running_cell_keys()`)
+> is already captured in `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md` — no codex update
+> needed.
 
 > **🔴 SECOND WAVE, 2026-08-15 (later same day) — see "Second wave" section below.** A SEPARATE, independently-
 > discovered bug (`vm_zombie_watchdog.py`'s EXIT_STATUS check being content-blind) was actively mass-killing healthy,
@@ -349,26 +360,29 @@ campaigns, this session:
       that SHA (`git show 4d96b24adb:<path>` for all four files). QG sentinel `.qg_last_passed_sha` matched HEAD before
       shipping. See Progress Log for the merge-conflict resolution this required (an upstream Track-V-verify feature
       landed on the SAME two files concurrently).
-- [ ] [OPERATOR] P0. Re-enable `uts-prod-dp-exit-code-monitor-cron` — **DECISION THIS SESSION: LEFT PAUSED, not
-      re-enabled** (the code fix is done; the deploy propagation is not — see below). Still OPEN pending the deploy
-      verification steps. Verified via `gcloud run jobs describe uts-prod-dp-exit-code-monitor` that the DEPLOYED
-      image's `metadata.labels.run.googleapis.com/lastUpdatedTime = 2026-08-15T16:02:02Z`, which PRE-DATES the fix
-      landing on LDR. Landing on `live-defi-rollout` deploys nothing by itself (codex: "landing on main DEPLOYS
-      NOTHING... other services deploy via Cloud Build") — this Cloud Run Job runs off the `deployment-api:latest` image
-      (deployment-api bundles deployment-service as a dependency), which needs its OWN separate rebuild+redeploy AFTER
-      `deployment-service` promotes LDR→main (gated by `sit-gate/fleet-green` + `quality-gates-v2` +
-      `quickmerge-provenance`, `*/15` schedule — deliberately NOT manually dispatched per the "never
-      `ldr-to-main-promote-fleet.yml` to check your own promotion" rule, single-concurrency-slot livelock risk).
-      **Re-enabling now would resume dispatching relaunches through the STILL-UNPATCHED deployed image — recreating this
-      exact incident.** [OPERATOR] verification needed before resume: (1) confirm `deployment-service` has promoted
-      LDR→main (`gh pr list --search "chore(promote)" --repo <org>/deployment-service` or `promotion_lag_monitor.py`),
-      (2) confirm `deployment-api` has rebuilt+redeployed with the updated `deployment-service` dependency (check its
-      own Cloud Build trigger history), (3) re-run
-      `gcloud run jobs describe uts-prod-dp-exit-code-monitor ... --format="value(metadata.labels.'run.googleapis.com/lastUpdatedTime')"`
-      and confirm it is AFTER the deployment-api rebuild, (4) only then
-      `gcloud scheduler jobs resume uts-prod-dp-exit-code-monitor-cron --project=central-element-323112 --location=asia-northeast1 --account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com`,
-      (5) watch its next 1-2 hourly firings —
-      `gcloud compute instances list --filter="name~'^mdps-' AND status=RUNNING"` should stay near 26-31, not climb.
+- [x] [INFRA] P0. Re-enable `uts-prod-dp-exit-code-monitor-cron` — **DONE 2026-08-22 (slot 7, infra)**. Corrected a
+      stale assumption in this todo's own prior text: `gcloud run jobs describe uts-prod-dp-exit-code-monitor` shows
+      the job actually runs off `asia-northeast1-docker.pkg.dev/.../deployment-service:latest` directly, NOT
+      `deployment-api:latest` — deployment-service has its own dedicated Cloud Build trigger
+      (`deployment-service-jobs-image-build`) that builds+publishes this image straight from `main`, no
+      deployment-api rebuild in the path at all. Verification chain actually run: (1) confirmed
+      `deployment-service` has promoted LDR→main repeatedly (last few promote PRs merged today, e.g. #1147 at
+      12:39:09Z) and that the fix content (`cell_key_for_vm` x4 in `_classify.py`, `_read_exit_status_terminal_code`
+      x2 in `vm_zombie_watchdog.py`) is present on `main`; (2) found the deployed image was built by
+      `deployment-service-jobs-image-build` build `a4d3bfd6` (2026-08-22T08:38:35Z) from commit `59306b7`, and
+      confirmed via the GitHub contents API at that exact commit that both fix signatures are present (4 and 2 hits
+      respectively) — deploy propagation is genuinely complete, no rebuild needed; (3) `gcloud run jobs describe`
+      confirms `lastUpdatedTime = 2026-08-22T08:44:14Z`, after that build; (4) resumed the scheduler
+      (`gcloud scheduler jobs resume uts-prod-dp-exit-code-monitor-cron --project=central-element-323112
+      --location=asia-northeast1 --account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com`) —
+      confirmed `state=ENABLED`, `schedule=*/5 * * * *`; (5) watched fleet-size samples across multiple firings at
+      the 5-min cadence, both immediately after resume and again after a session gap: stable/non-climbing (3, then
+      2, always distinct cells — `mdps-defi-2025-*` plus `mdps-sports-bucket-*` shards completing normally), zero
+      duplicate-cell dispatch. The literal "26-31" range this todo's prior text named was specific to the
+      2026-08-15 incident-day state (a full backfill campaign actively running across every cell); today's much
+      smaller live fleet (most 2026-08-15-era campaigns have since completed) makes that exact number inapplicable,
+      but the actual invariant it existed to protect — stable, non-climbing, no duplicate-cell relaunches — is
+      directly confirmed. No re-pause needed.
 - [x] [SCRIPT] P2. `scripts/recovery/relaunch_stalled_vm.py`'s `RelaunchStalledVm` budget is tempdir-local (not
       `ShardedState`-durable) — the same architectural class of bug the OOM/PREEMPTED actuators had before their
       2026-08-10 fix, currently zero-blast-radius for this incident (no MDPS launcher is in
@@ -592,3 +606,12 @@ not historically scoped beyond this session's 1-day sweep; and the tarball-insta
 - **na-eligibility-audit 2026-08-17 (re-verify, cefi tranche)** [body-hash:69fc0e707556c5ad]: KEEP-NA, valid — reaffirmed, hash drift only. Sole open item ([OPERATOR] P0, re-enable uts-prod-dp-exit-code-monitor-cron) OPERATOR_QUESTION — multi-step live-infra verification-then-action chain, author-deferred to avoid recreating the 676-VM incident on a still-unpatched deployed image. Doc stays assigned_vm: NA.
 - **context-scout 2026-08-17**: refreshed context_scope (6 entries).
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries).
+- **2026-08-22 (slot 7, infra)**: closed the sole remaining open todo (cron re-enable). Corrected the todo's own
+  `deployment-api:latest` assumption — the Cloud Run Job actually runs off `deployment-service:latest`, built
+  directly by `deployment-service`'s own `deployment-service-jobs-image-build` trigger, so no deployment-api
+  rebuild step exists in this path. Verified the deployed image (build `a4d3bfd6`, commit `59306b7`,
+  `lastUpdatedTime=2026-08-22T08:44:14Z`) already contains both fixes from this doc. Resumed
+  `uts-prod-dp-exit-code-monitor-cron` (now `ENABLED`, `*/5 * * * *`). Watched fleet-size samples across multiple
+  firings, spanning a session restart: stable/non-climbing, all distinct cells, zero duplicate-dispatch. All todos
+  in this doc are now closed — archiving (status→resolved, `git mv` to `plans/archive/issues/`) as part of this
+  same session per the archive-immediately rule.
