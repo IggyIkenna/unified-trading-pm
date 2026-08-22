@@ -734,21 +734,37 @@ prior diagnosis round in this doc).
       10-row `empty_confirmed`/`SOURCE_RETURNED_ZERO` placeholder, masking what is actually an
       upstream catalogue-availability gap. Split into the instruments-service-scoped todo below
       (different repo than this issue's `repos:` frontmatter — not freelanced here).
-- [ ] [DATA] P2. Check git history on `sentinels.py::_emit_tier3_for_dt`'s `dt == "trades"` guard on the Tier-3
+- [x] ✅ [DATA] P2. **RESOLVED 2026-08-22 (T5, /autonomous) — hypothesis DISPROVEN, definitively.** `git log --all
+      -S 'venue.upper() in {"POLYMARKET", "KALSHI"} and dt == "trades"' -- '**/sentinels.py'` finds exactly one
+      introducing commit: `market-tick-data-service@abe0904d` ("feat: prediction pre-fetch lifecycle gate +
+      Tier-3 typed no-fetch honest absence", 2026-07-14). The `dt == "trades"` guard was present in this diff's
+      very first hunk — there is no earlier, broader version of this guard in the full repo history. The
+      narrowing-left-CQG-rows-unrewritten hypothesis is ruled out; the still-unidentified writer of the
+      `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reasons on CQG cells has a different root cause, not this.
+      Check git history on `sentinels.py::_emit_tier3_for_dt`'s `dt == "trades"` guard on the Tier-3
       lifecycle map (line ~687) for whether it was ever broader (e.g. covered `prediction_canonical_question_group`
       too) before being narrowed, and whether that narrowing commit left already-stamped CQG rows unrewritten
       (corrected 2026-08-19, plan-reconcile observability_master: rewrapped for line-1 completeness —
       task_template.md §3). See "Diagnosis update (2026-08-18, slot-22)" above for why this is the leading
       hypothesis for the still-unidentified writer of the `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reasons on
       CQG cells. `market-tick-data-service`.
-- [ ] [DATA] P2. Find what recurring process touches the POLYMARKET `prediction_canonical_question_group` manifest
+- [ ] [DATA] P2. **Investigated 2026-08-22 (T5, /autonomous) — all checked sources came back negative, genuinely
+      not resolved, needs live production log access this session doesn't have.** Ruled out: (1) no `~01:3x`
+      cron in any `deployment-service/configs/**/*.yaml` (grepped all `cron:`/`schedule:` entries workspace-wide
+      — nearest hits are `"0 6 * * *"` prediction batch and unrelated hourly jobs at `:10`/`:23`); (2)
+      `gcloud scheduler jobs list --location=us-central1` returned empty for prediction/polymarket/kalshi
+      matches (and empty overall for that location — may be the wrong project/region for this check, not
+      conclusive); (3) cross-repo grep for `1:32`/`01:32`/`32 1` patterns across every repo's `scripts/`+
+      `configs/` found nothing. Find what recurring process touches the POLYMARKET `prediction_canonical_question_group` manifest
       cell at ~01:32 UTC on dates AFTER the cell's own date (measured live: 2026-07-27's cell rewritten again at
       07-30/07-31/08-09, always ~01:32-01:33 UTC) — NOT the documented `0 9 * * *` empty re-probe/auto-flip cron
       (corrected 2026-08-19, plan-reconcile observability_master: rewrapped for line-1 completeness). Wrong time,
       and that cron only re-touches TODAY's new empties per its own spec, not a 3-13-day-old cell. Search Cloud
       Scheduler job configs / `deployment-service`'s prediction-specific cron registrations for anything firing
       near 01:3x UTC. See "Diagnosis update (2026-08-18, slot-22)" above. `deployment-service` (or wherever the
-      ~01:32 cron is registered — unconfirmed).
+      ~01:32 cron is registered — unconfirmed). **Next step needs Cloud Run/Scheduler request-log tracing around
+      01:32 UTC on a real affected date, or the correct GCP project/region for the scheduler list — beyond this
+      session's available tooling.**
 - [x] ✅ [DATA] P3. Fixed 2026-08-19 slot-7 — `market-tick-data-service@f67a7480b3`. Scoped the misleading claim
       in `_polymarket_helpers.py::_emit_lifecycle_prefetch_skips`'s docstring to `data_type="trades"` ONLY (it now
       states the Tier-3 fan-out's lifecycle-map load is guarded on `dt == "trades"`, so `book_snapshot_5` and the
