@@ -830,10 +830,10 @@ Script:
 
 ## Todos
 
-- [ ] [DATA] P0. **Close the 6 remaining Headline P0s not covered by any in-flight workflow** — Turbo API 0/0 bug, CeFi
-      monotonicity guard alerting (live incident), is-daily-enum cloud crash, the 59-bug smoketest master record, the
-      Instruments Completion Tracker (33/37 open), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block (per the final
-      `wf_60ecfd13-752` Progress Log entry).
+- [ ] [DATA] P0. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D1): repeated audits agree this doc's remaining "close the 6
+      Headline P0s" umbrella is churn, not a live task; approved to stay as a historical discoverability pointer, no
+      further autonomous dispatch of this umbrella item (the individual P0s remain tracked in their own owning docs).
+      Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole todo is an umbrella 'close the 6
   remaining Headline P0s not covered by any in-flight workflow' across a 979-line, 5-asset-group audit — a portfolio of
   independently-scoped P0s, not a single determinable outcome, and several of its constituents are themselves
@@ -852,3 +852,7 @@ Script:
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed unchanged. Self-declared "HISTORICAL SNAPSHOT...
   discoverability index, not a live tracker"; sole open todo is still an umbrella over 6 independently-scoped major
   workstreams, several operator-gated, not a single determinable outcome. Cross-cutting tranche, batch 2 of 3.
+- **2026-08-22 — ruling D1 (Stale meta-doc disposition)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve all — repeated audits agree these are churn, not live tasks; the two
+  keep-open items and the one split are the only exceptions. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -600,3 +600,10 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   all 11 fixes; shipped as one batch, `unified-trading-pm@101efbe7c7`.
 - **context-scout 2026-08-20**: re-verified context_scope (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — 16 open items, a heterogeneous corpus of dead-link/staleness findings each individually needing human judgment (ambiguous successors, scope-mismatch calls, content-accuracy investigations); re-verified clean by 7+ prior audit passes with no new bounded item found on independent re-read.
+- **2026-08-22 — ruling D6 (Docs-reconcile findings sign-off)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve all — each item carries a per-doc recommendation; the two BIG findings need
+  named owners now, the rest is bounded cleanup. No single todo/marker in this doc maps 1:1 to this blanket sign-off
+  (every open item here is individually judgment-gated per 7+ prior na-eligibility-audit passes) — recorded as a
+  general go-ahead rather than a per-item retag; the doc's open items are unchanged pending named human owners for the
+  two BIG findings (root README.md broader-staleness pass; the `mvp-universe-per-asset-group.md` two-totals
+  contradiction). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -101,17 +101,13 @@ cannot be audited for completeness.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Confirm these six rulings are accurate as transcribed, or correct them.** Each is quoted verbatim
-      from the todo that applied it, but only you can confirm you issued them — and item 1 is already known to duplicate
-      a 2026-08-06 approval, which is the kind of thing an untraceable citation hides. If any is wrong, the todo that
-      acted on it needs revisiting, not just the wording here. **Done when**: this doc records your confirmation (or
-      correction) per item, dated. Repo: unified-trading-pm.
-- [ ] [DOCS] P2. **Give future ruling sessions a home at ruling time, not after the fact.** All six citations named a
-      session that never existed as a doc; the gate caught it only because it blocks shipping. Decide where an
-      interactive ruling session gets recorded (this doc's shape, an existing `plan_reconcile_*` doc, or the AO
-      BLOCKED-row lifecycle in `/codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md`) and write that into
-      `plans/PLAN_FORMAT.md` § operator-ruling citations so the next session cites a real path from the start. **Done
-      when**: the convention is documented and `task_template.md` points at it. Repo: unified-trading-pm.
+- **[OPERATOR] P1. CANCELLED — SUPERSEDED 2026-08-22 (D24 ruling: OPERATOR-RULED 2026-08-21 — CONFIRMED all 6
+  round-5 rulings accurate as transcribed; no correction needed).**
+- [ ] [DOCS] P2. Per D23 ruling (2026-08-22): dedicated ruling-record doc per session chosen — simplest, with 2
+      working precedents already in the corpus. Write that convention into `plans/PLAN_FORMAT.md` § operator-ruling
+      citations (this doc's own shape: a dedicated doc per interactive ruling session, transcribed verbatim from the
+      citing todos) so the next session cites a real path from the start. **Done when**: the convention is
+      documented and `task_template.md` points at it. Repo: unified-trading-pm.
 
 ## Progress Log
 
@@ -132,3 +128,9 @@ cannot be audited for completeness.
   an unresolved 3-way convention design choice with no stated preference in the doc itself.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:6829cfa50fbda5db]: KEEP-NA, valid — item 1 is an operator-only authenticity confirmation; item 2 is an unresolved 3-way convention design choice with no stated preference; both re-affirmed by 2 prior audit passes.
+- **2026-08-22 — ruling D23 (Ruling-record convention)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Dedicated ruling-record doc per session — simplest, with 2 working precedents
+  already in the corpus. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-22 — ruling D24 (Round-5 ruling transcription check)**: OPERATOR-RULED 2026-08-21 — CONFIRMED: all 6
+  round-5 rulings accurate as transcribed. Close the doc. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

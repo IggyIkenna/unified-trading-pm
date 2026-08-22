@@ -15,7 +15,10 @@ repos: [unified-trading-library, market-data-processing-service, agent-orchestra
 scope: [engineer, admin]
 created: 2026-07-27
 author: unknown
-assigned_vm: NA
+assigned_vm: planning # RULED 2026-08-22 (D141): dispatch now — gating a small resilience feature behind an
+  # open-ended unfixed root cause has cost more re-diagnosis time than the feature would take to ship. Overrides the
+  # 2026-08-02 option-A hold below.
+assigned_role: infra
 parent_epic: security_and_cross_cutting_master
 resolved_by:
 locked_by:
@@ -31,10 +34,11 @@ related:
 tags: [infra, worker-lifecycle, data-pipeline-check, flakiness]
 priority: P1
 execution_scope:
-  local-only # corrected 2026-08-02 (operator ruling on
-  # plan_reconcile_parked_operator_decisions_2026_08_02.md na-eligibility-audit item 20, option A): was
-  # orchestrator-agent, contradicting assigned_vm: NA. Stays NA until the shared-host RAM exhaustion mechanism
-  # (condition mdps-e2e-shared-host-teardown-fixed) is also closed, not just the partial root-cause on todo 1.
+  orchestrator-agent # RULED 2026-08-22 (D141): dispatch now (see assigned_vm note above) — supersedes the
+  # 2026-08-02 correction below, which is kept for historical context only. Was `local-only` (corrected 2026-08-02,
+  # operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md na-eligibility-audit item 20, option A):
+  # was orchestrator-agent, contradicting assigned_vm: NA. Stayed NA until the shared-host RAM exhaustion mechanism
+  # (condition mdps-e2e-shared-host-teardown-fixed) also closed, not just the partial root-cause on todo 1.
 drift_direction: advance-code
 depends_on: []
 context_scope:
@@ -173,9 +177,12 @@ tracked here rather than silently claimed complete.
       heartbeat-silent path, and this session HAD sent an HTTP ping (a rejected `/done` call) shortly before. That
       faster kill remains genuinely unexplained (no OS-level log access from this session to confirm/rule out an
       OOM-kill or a different, undiscovered reaper) — flagged as residual, not swept under this answered todo.
-- [ ] [SCRIPT] P2. Add a `--resume`/checkpoint capability to `unified_trading_library.pipeline_e2e_check`'s
-      `run_pipeline_check` so a killed driver process can resume from the next not-yet-attempted shard cell instead of
-      restarting the whole `--legs` matrix from scratch (repo: unified-trading-library).
+- [ ] [SCRIPT] P2. Per D141 ruling (2026-08-22): dispatch now — gating this small resilience feature behind the
+      still-open shared-host-RAM-exhaustion root cause has cost more re-diagnosis time (12+ reproductions logged
+      below) than the feature would take to ship. Add a `--resume`/checkpoint capability to
+      `unified_trading_library.pipeline_e2e_check`'s `run_pipeline_check` so a killed driver process can resume from
+      the next not-yet-attempted shard cell instead of restarting the whole `--legs` matrix from scratch (repo:
+      unified-trading-library).
 - [x] ✅ [SCRIPT] P2. **SHIPPED 2026-07-27 (slot-9)**: `unified-trading-library@7aad5833` (repointed 2026-08-06 —
       original sha orphaned by the 2026-08-05 history rewrite; content verified identical). Loosened the launcher-script
       VM-creation wait in `launch_vm_and_wait`/`_run_launcher_script` (`pipeline_e2e_check/launcher.py`): a
@@ -557,3 +564,7 @@ tracked here rather than silently claimed complete.
   (not `$!`, which is the setsid wrapper's own transient PID), then poll `ps -p <pid>` + `tail logfile` via plain
   (non-`run_in_background`) Bash calls — the notification layer for `run_in_background` itself appears to be what's
   unreliable in this failure mode, not necessarily the underlying process's survival.
+- **2026-08-22 — ruling D141 (pipeline_e2e --resume gate)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Dispatch now — gating a small resilience feature behind an open-ended unfixed root
+  cause has cost more re-diagnosis time than the feature would take to ship. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

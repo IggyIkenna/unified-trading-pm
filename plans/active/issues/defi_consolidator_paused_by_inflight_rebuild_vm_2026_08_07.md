@@ -136,10 +136,10 @@ this is inference from timing + the workspace's own documented operational contr
       with the scheduler firing successfully (even as a no-op) every ~1 min again. **Residual**: none — the
       rebuild-completion wait is covered by defi_track01's R3 item (see point 2); once that lands, a fresh consolidator
       run should show real `shards>0`, which is defi_track01's concern to verify, not a new todo here.
-- [ ] [SCRIPT] P3. Separately (not blocking): decide whether `CONSOLIDATOR_DOWN`'s routing rule should gain a Slack
-      channel so a real (non-known-cause) consolidator outage isn't silently undelivered end-to-end the way this one
-      currently is with both PagerDuty and email failing — this is an open design question, not something to change
-      unilaterally.
+- [ ] [SCRIPT] P3. Per D60 ruling (2026-08-22): approved — add a Slack channel to `CONSOLIDATOR_DOWN`'s alert routing
+      rule now, so a real (non-known-cause) consolidator outage isn't silently undelivered end-to-end the way this one
+      currently is with both PagerDuty and email failing. Cheap fix, closes a real zero-delivery gap on a CRITICAL
+      alert.
 
 ## Progress Log
 
@@ -176,3 +176,6 @@ this is inference from timing + the workspace's own documented operational contr
   item. 1 todo remains open (todo 3, operator/design-gated Slack-routing question) — doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:c9c0e4e2998c0916]: KEEP-NA, valid — Todos 1-2 are already closed with hard, live-verified evidence (Cloud Audit Log correlation of the scheduler pause to the in-flight rebuild VM;.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **2026-08-22 — ruling D60 (CONSOLIDATOR_DOWN Slack routing)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Add now — cheap, closes a real zero-delivery gap on a CRITICAL alert.
+  Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

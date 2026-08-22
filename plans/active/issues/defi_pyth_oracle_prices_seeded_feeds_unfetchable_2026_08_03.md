@@ -184,9 +184,12 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       separate, higher-risk work (changes `write_defi_rows`'s `instrument_type` from `SPOT_ASSET` to `SPOT_PAIR`, which
       also drives `SchemaContract` lookup + partition-path derivation for 17+ days of already-written production data) —
       it is the SAME work `[DATA] P3` below already tracks, not duplicated here.
-- [ ] [DATA] P3. Reconcile the 3 coexisting oracle_prices/PYTH `instrument_id` naming conventions onto one canonical
-      form so manifest reads don't need hand-rolled normalization to determine true per-feed coverage. (repo:
-      market-tick-data-service, unified-api-contracts)
+- [ ] [DATA] P3. Per D65 ruling (2026-08-22): canonicalize onto the `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD` form via a real
+      migration, gated on a regression test guarding the known false-"77 gap days" failure mode (a prior last-writer-
+      wins merge attempt shadowed real captured data — see the Progress Log 2026-08-03 entry). Reconcile the 3
+      coexisting oracle_prices/PYTH `instrument_id` naming conventions (`{SYM}_USD` / `{sym}/usd` /
+      `PYTH-SOLANA:SPOT_PAIR:{SYM}-USD`) onto that canonical form so manifest reads don't need hand-rolled
+      normalization to determine true per-feed coverage. (repo: market-tick-data-service, unified-api-contracts)
 - [x] ✅ [OPERATOR] P2. Authorize + launch a fresh, narrow post-fix Pyth `oracle_prices` verification collection VM
       covering the regression window (2026-07-15..present, superset of the 2026-07-19..2026-08-01 BTC/ETH/INF gap) — the
       plan's `[DATA] P2` re-verify todo (`defi_satellite_ao_dispatch_batch3_2026_07_26.md`) cannot ever complete without
@@ -450,3 +453,7 @@ Two genuinely different directions, not mutually exclusive with the naming recon
 - **na-eligibility-audit 2026-08-16** [body-hash:6e8ce2a479c03735]: KEEP-NA, valid — Read end-to-end, including the extensive Progress Log documenting a two-mechanism active data-loss regression (seeded-unfetchable family-3 rows AND a live BTC/ETH/INF drop via _filter_pyth_rows_to_is), both since fixed and live-verified via a VM capturing all 12 PYTH SOLANA feeds. 5 of 6 original todos are closed.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries)
+- **2026-08-22 — ruling D65 (Pyth instrument_id canonicalization)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): PYTH-SOLANA form with migration, gated on a regression test against the
+  known false-77-gap-days failure mode. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger.

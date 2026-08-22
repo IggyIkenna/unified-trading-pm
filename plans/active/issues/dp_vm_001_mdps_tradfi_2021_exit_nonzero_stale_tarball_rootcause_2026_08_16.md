@@ -172,13 +172,13 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
       six" hypothesis — pull `run.log` for the four other still-recent `mdps-tradfi-`/`tradfi-bf-` sibling VMs (2023,
       2025, 2026 shards + the CME 2020 shards, see `related:` above) via the same UTL-storage-client method, before
       their `vm-logs/` GCS objects age out of the 14-day retention window.
-- [ ] [DESIGN] P2. Retagged from [SCRIPT] 2026-08-18 (plan_reconciler) — this is an open design question ("consider
-      whether..."), not a bounded/executable script task. Consider whether `create-code-tarballs.sh`'s tarball
-      refresh cadence/triggers should include MDPS
-      (and other TradFi-pipeline service repos) more proactively — e.g. a scheduled `--asset-group TRADFI` (or
-      `--all`) refresh, or a CI hook on `market-data-processing-service` merges — rather than relying on an operator
-      to remember the scope flag per `/codex/05-infrastructure/vm-tarball-deployment.md`'s own documented "Lesson
-      learned (2026-04-19)" gap. Out of scope to design/ship in this one-shot escalation pass.
+- [ ] [INFRA] P2. Per D11 ruling (2026-08-22): approve a scheduled `create-code-tarballs.sh` refresh for MDPS (and
+      other TradFi-pipeline service repos) — e.g. a scheduled `--asset-group TRADFI` (or `--all`) refresh — plus a
+      narrower auto-dirty CI hook on `market-data-processing-service` merges, rather than relying on an operator to
+      remember the scope flag per `/codex/05-infrastructure/vm-tarball-deployment.md`'s own documented "Lesson
+      learned (2026-04-19)" gap. Defer the broader question of whether ALL service repos should always be
+      proactively re-tarred to its own design pass — that is a riskier shared-pipeline change than the two approved
+      items here.
 
 ## Progress Log
 
@@ -236,3 +236,7 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Todo 1 (`[OPERATOR]` relaunch-vs-wait) and todo 3
   (`[DESIGN]` tarball-refresh-cadence question) both remain genuinely operator/design-gated, unchanged since the 08-18
   pass. `assigned_vm` unchanged.
+- **2026-08-22 — ruling D11 (Tarball pipeline hardening)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve refresh + narrow auto-dirty, defer the gate — the first two close measured
+  recurring page classes cheaply; the gate is a riskier shared-pipeline change deserving its own design pass. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
