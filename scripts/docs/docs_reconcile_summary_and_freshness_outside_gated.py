@@ -29,10 +29,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+import docspec
 import yaml
 
 GATED_DIRS = ("02-data", "04-architecture", "05-infrastructure", "11-project-management")
@@ -40,13 +40,6 @@ GATED_DIRS = ("02-data", "04-architecture", "05-infrastructure", "11-project-man
 
 def _pm_root() -> Path:
     return Path(__file__).resolve().parents[2]
-
-
-def _load_docspec(pm_root: Path):
-    sys.path.insert(0, str(pm_root / "scripts" / "docs"))
-    import docspec
-
-    return docspec
 
 
 def check_summaries(pm_root: Path, docspec, files: list[Path]) -> int:
@@ -142,7 +135,6 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     pm_root = args.pm_root or _pm_root()
-    docspec = _load_docspec(pm_root)
 
     if not args.skip_summaries:
         if args.files:

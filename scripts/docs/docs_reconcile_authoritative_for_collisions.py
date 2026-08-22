@@ -32,10 +32,10 @@ verification step is what decides whether a candidate is real.
 from __future__ import annotations
 
 import argparse
-import sys
 from collections import defaultdict
 from pathlib import Path
 
+import docspec
 import yaml
 
 
@@ -54,8 +54,6 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     pm_root = args.pm_root or _pm_root()
-    sys.path.insert(0, str(pm_root / "scripts" / "docs"))
-    import docspec
 
     by_topic: dict[str, list[str]] = defaultdict(list)
     total_files = 0
