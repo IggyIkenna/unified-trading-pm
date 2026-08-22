@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [walkthrough, checkpoint, artifacts, client-artefact]
 related: [/plans/active/walkthrough_feedback_remediation_2026_08_21.md]
 created: 2026-08-21
-last_updated: 2026-08-21
+last_updated: 2026-08-22
 parent_epic: system_readiness_master
 assigned_vm: NA
 execution_scope: local-only
@@ -133,6 +133,81 @@ Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-44
       configs, algo-selection specifics) need per-service verification passes to reach zero-pending — the voice
       lane verified only today's landed fixes (its report, 2026-08-21).
 - [ ] [AGENT] P0. Republish both artifacts (same file paths) after the in-flight lanes land; relay landed shas.
+- [ ] [AGENT] P0. **Uniswap V2/V4 execution wiring — PARKED in execution-service working tree, blocked on
+      unified-api-contracts registry lane, 2026-08-22.** Operator directive: the market-data coverage registry
+      already lists Uniswap V2 and V4 but neither had execution wiring — the existing connector
+      (`protocols/uniswap.py`) only ever implemented V3 (SwapRouter02 swap + NPM mint/burn). Built full V2 + V4
+      execution wiring at the SAME dispatch seam V3 uses (`defi_live_dispatch.py` SWAP,
+      `lp_concentrated_dispatch.py` LP_MINT/LP_BURN), reachable end-to-end (handler `SUPPORTED_VENUES` sets +
+      UAC capability preflight mapping updated too, not just the connector). **All 14 files exist ONLY in the
+      execution-service working tree right now (uncommitted, nothing pushed)** — this todo is the durable record
+      in case the session compacts before the retry lands:
+      `execution_service/defi_execution/lp_concentrated_dispatch.py` (M),
+      `execution_service/defi_execution/protocols/base.py` (M),
+      `execution_service/defi_execution/protocols/uniswap.py` (M),
+      `execution_service/engine/handlers/defi_live_dispatch.py` (M),
+      `execution_service/engine/handlers/lp_burn_handler.py` (M),
+      `execution_service/engine/handlers/lp_mint_handler.py` (M),
+      `execution_service/engine/handlers/swap_handler.py` (M),
+      `tests/unit/defi_execution/test_lp_concentrated_dispatch.py` (M),
+      `tests/unit/test_defi_live_dispatch.py` (M),
+      `execution_service/defi_execution/protocols/uniswap_errors.py` (new),
+      `execution_service/defi_execution/protocols/uniswap_v2.py` (new),
+      `execution_service/defi_execution/protocols/uniswap_v4.py` (new),
+      `tests/defi_execution/unit/test_uniswap_v2_live_execution.py` (new),
+      `tests/defi_execution/unit/test_uniswap_v4_live_execution.py` (new).
+      **V2** (`uniswap_v2.py`): Router02 `swapExactTokensForTokens`/`addLiquidity`/`removeLiquidity` — real ABI
+      calldata encoding (verified selectors: `38ed1739`/`e8e33700`/`baa2abde`), own `_Web3V2Executor` tx
+      lifecycle, Ethereum-only (`V2_ROUTER02_BY_CHAIN` — the only chain UAC's `ALL_DEFI_VENUES` registers
+      `UNISWAP_V2-*` on). V2 has NO ticks/fee-tier/NFT — LP is a fungible pair-token balance, so it gets its
+      own `add_liquidity_v2()`/`remove_liquidity_v2()` connector methods (not shoehorned into
+      `mint_position()`/`burn_position()`'s V3-shaped signature) and its own `dispatch_lp_mint_live`/
+      `dispatch_lp_burn_live` branch in `lp_concentrated_dispatch.py`.
+      **V4** (`uniswap_v4.py`) is genuinely different, not a V3 variant: singleton `PoolManager` cannot be
+      called directly by an EOA wallet (it exposes only `unlock()`, which needs the CALLER to implement
+      `IUnlockCallback` — only a contract can do that), so swaps route through **Universal Router**
+      (`execute()`, command `V4_SWAP=0x10`) and LP through **PositionManager** (`modifyLiquidities()`), both
+      encoding an Actions-opcode mini-program (`SWAP_EXACT_IN_SINGLE`/`SETTLE_ALL`/`TAKE_ALL` for swap;
+      `MINT_POSITION`/`SETTLE_PAIR` for mint; `DECREASE_LIQUIDITY`or`BURN_POSITION`/`TAKE_PAIR` for burn) that
+      runs inside PoolManager's single unlock callback. Token pulls go through **Permit2**
+      (`0x000000000022D473030F116dDEE9F6B43aC78BA3`, ERC20-approve-to-Permit2 then Permit2-approve-to-
+      router/PM), not a direct ERC20 approve like V2/V3. `MINT_POSITION` needs an explicit pre-computed
+      `liquidity` value (V3's NPM.mint() derives it on-chain from desired amounts instead) — computed here via
+      the standard `LiquidityAmounts.getLiquidityForAmounts` formula, gated on the caller supplying
+      `sqrt_price_current` (never guessed; nothing in this codebase fetches a live V4 pool price yet for any
+      Uniswap version, so `mint_position(venue_override=<V4>, ...)` fails loudly rather than fabricate one).
+      Action/command opcodes and struct field orders were verified against `Uniswap/v4-periphery`
+      `src/libraries/{Actions,CalldataDecoder}.sol` + `src/{V4Router,PositionManager}.sol` at the published
+      `@uniswap/v4-periphery@latest` npm release (NOT the ahead-of-release `main` branch, which was caught
+      carrying an unreleased extra field), `Uniswap/universal-router` `Commands.sol`, and `Uniswap/v4-core`
+      tag `v4.0.0`; deployed addresses (PoolManager/UniversalRouter/PositionManager, Ethereum-only — the only
+      chain UAC registers `UNISWAP_V4-*` on) verified via direct block-explorer address-page hits. All 6
+      hardcoded addresses across both files carry `# DERIVED 2026-08-22 from <chain> <source>` citations (V2
+      Router02 + V4 PoolManager/UniversalRouter/PositionManager/Permit2), the null-hooks sentinel carries
+      `# QG-allow: defi-citation`. **Retry command once unified-api-contracts is clean** (run from
+      `execution-service/`, exact same command already attempted 2026-08-22 09:05 UTC — do not add
+      `--dep-branch`, that is human-only):
+      `bash scripts/quickmerge.sh "feat: Uniswap V2 and V4 execution wiring alongside the existing V3 path" --agent --isolated --files 'execution_service/defi_execution/lp_concentrated_dispatch.py execution_service/defi_execution/protocols/base.py execution_service/defi_execution/protocols/uniswap.py execution_service/engine/handlers/defi_live_dispatch.py execution_service/engine/handlers/lp_burn_handler.py execution_service/engine/handlers/lp_mint_handler.py execution_service/engine/handlers/swap_handler.py tests/unit/defi_execution/test_lp_concentrated_dispatch.py tests/unit/test_defi_live_dispatch.py execution_service/defi_execution/protocols/uniswap_errors.py execution_service/defi_execution/protocols/uniswap_v2.py execution_service/defi_execution/protocols/uniswap_v4.py tests/defi_execution/unit/test_uniswap_v2_live_execution.py tests/defi_execution/unit/test_uniswap_v4_live_execution.py'`.
+      **What the 4 completed full `quality-gates.sh --no-fix` runs already verified** (a 5th was launched then
+      killed unlanded per operator instruction, host-contention driven — never produced a verdict): run 1 found
+      + fixed 6 real ruff findings (4× E501, 2× I001) in these files; run 2 ran the FULL suite to completion —
+      9060 passed, only 2 failed and both are pre-existing/unrelated (`tests/unit/sports_execution/adapters/
+      unity/test_mock_feed_connector_e2e.py::TestBridgePumpRoundtrip::test_auth_fail_mode_blocks_bridge_
+      authenticate`, `.../test_unity_bridge.py::test_bridge_start_stop_with_real_subprocess` — zero reference
+      to uniswap/defi_execution anywhere in either file, and a sibling test in the same class already carries
+      an xfail documenting this exact class of pytest-xdist parallel-execution flake); run 3 found + fixed 2
+      real "imports inside functions" AST violations; run 4 found + fixed 3 real hard-gate violations (file
+      size, 3× method-size, 6× uncited-address). **What is still unverified**: no run ever reached a clean
+      terminal PASS (each subsequent run surfaced the NEXT category of finding after the prior one was fixed —
+      classic gate-discovery ordering, not flakiness in my own files); the LATEST fixes (uniswap.py refactored
+      down to 848 lines / all 3 methods ≤50L, all 6 citations dated) were re-verified LOCALLY only — by
+      replicating the gate's exact AST size-check and running the gate's own standalone
+      `check_defi_address_citations.py` script directly (both clean) — never through a full harness run to a
+      terminal banner; a bare `basedpyright <files>` spot-check outside the harness showed ~40
+      reportAny/reportUnknownMemberType findings that are almost certainly a missing-project-config false
+      positive (the harness's own STEP 5.21 showed ✅ in run 4, using the correct config) but this was NOT
+      re-confirmed after the latest edits. Full session detail: this todo's provenance is a fresh execution-
+      service session dispatched 2026-08-22, not yet in this doc's Progress Log.
 
 ## Lessons
 
