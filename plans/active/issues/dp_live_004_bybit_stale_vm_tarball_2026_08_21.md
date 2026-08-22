@@ -163,6 +163,19 @@ external action and is not performed by this escalation without that decision.
 
 ## Progress Log
 
+- **2026-08-22 (task `dp_live_004_bybit_stale_vm_tarball-953844d905c9`, slot 13, data_engineering)**: Re-dispatched
+  the same task id already logged by slot 21 immediately below (released back to queue, unchanged). Fresh-verified
+  rather than trusted: `gcloud compute instances list` shows both VMs still `RUNNING` (old since
+  2026-08-16T19:50:40-07:00, replacement `mtds-live-cefi-consolidated-20260821-200626` since
+  2026-08-21T13:07:39-07:00); SSH+sudo grep on BOTH VMs confirms `_log_subscribe_ack` count is still `0` in both
+  `bybit_ws.py` and `bybit_futures_book_ticker_ws.py` on each — `market-tick-data-service@efd0e788` (the
+  ack-logging fix) remains undeployed to either live VM. `GET /api/state`'s `blocked_queue` confirms
+  `BLK-9e8ffbb2` (recommending an operator-authorized `FORCE=true` relaunch to pick up `efd0e788`) is still
+  `answered_at: null` — no operator ruling has landed since slot 21's pass. This todo's precondition ("above is
+  fixed and a real captured row confirmed for all four BYBIT-FUTURES data types") is therefore still unmet; not
+  decommissioning the old VM. Did not re-file a duplicate blocked-question (same established reasoning as every
+  prior pass below). No code/infra/manifest changes made this pass. Releasing back to the queue via
+  `/skip-current-task` (`reason_code: GATED`) rather than looping on an unresolved operator decision.
 - **2026-08-22 (task `dp_live_004_bybit_stale_vm_tarball-953844d905c9`, slot 21, data_engineering)**: Picked up the
   open `[DATA] P1` decommission todo above. Its precondition ("above is fixed and a real captured row confirmed for
   all four BYBIT-FUTURES data types") is NOT met — fresh-verified rather than trusted from the doc: `gcloud compute
