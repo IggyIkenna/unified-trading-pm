@@ -952,14 +952,15 @@
         >
       </div>
       <div class="stat">
-        <span class="v">15 / 16</span
+        <span class="v">16 / 16</span
         ><span class="k"
           >Instruction types routed to real execution — TRADE places orders directly; SWAP/LEND/WITHDRAW/STAKE/
           UNSTAKE/BORROW/REPAY/TRANSFER/CANCEL/ATOMIC/BRIDGE/LP_MINT/LP_BURN route through live execution wiring
           (lending and credit via AAVE V3; BRIDGE via the Socket v2 route aggregator spanning Across, Stargate,
           CCTP and Hop; LP_MINT/LP_BURN via Uniswap V3 position management, with additional venues activated on
           demand); QUOTE registers the instrument for continuous quoting — its tick-driven loop submits and
-          updates the live order as the underlying moves</span
+          updates the live order as the underlying moves; CONTROL (KILL_SWITCH/FLATTEN_POSITION) dispatches too
+          (2026-08-21), see §04</span
         >
       </div>
       <div class="stat">

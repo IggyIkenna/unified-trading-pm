@@ -858,7 +858,7 @@
       </div>
       <div>
         <dt>Instruction types</dt>
-        <dd>11 + envelope</dd>
+        <dd>16 + envelope</dd>
       </div>
       <div>
         <dt>API route modules</dt>
@@ -1250,8 +1250,9 @@
         ><span>Identity, urgency, deadline, policy reference, attestations, eligible venues, constraints</span>
       </div>
       <div>
-        <b>Eleven subtypes</b
-        ><span>Trade, Swap, Lend, Borrow, Stake, Unstake, Quote, Transfer, Bridge, Atomic, Cancel</span>
+        <b>Sixteen subtypes</b
+        ><span>Trade, Swap, Lend, Borrow, Stake, Unstake, Quote, Transfer, Bridge, Atomic, Cancel, plus 5 more incl.
+        LpMint, LpBurn and Control (added 2026-08-21) — full union in §03</span>
       </div>
       <div>
         <b>Declares intent, not method</b
@@ -1684,7 +1685,7 @@
     </p>
     <div class="keypoints">
       <div>
-        <b>Automatic</b><span><code>LiquidationProximityCircuit</code> — seven graded responses to a health alert</span>
+        <b>Automatic</b><span><code>LiquidationProximityCircuit</code> — six graded responses to a health alert</span>
       </div>
       <div>
         <b>Operator-driven</b
@@ -2953,7 +2954,7 @@
       <div class="code">
         <i># What you provide</i>
         1. An archetype module that evaluates on each tick and returns zero or more StrategyInstructionV2 (the union of
-        the 11 types) 2. A config YAML declaring instruments, thresholds and capital budget, validated against the typed
+        the 16 types, see §03) 2. A config YAML declaring instruments, thresholds and capital budget, validated against the typed
         schemas in <a href="#s3">§03</a>
         3. A registry entry naming the archetype and its family
 
@@ -3950,7 +3951,7 @@
         archetypes account for most of the gap. Deployment profile is a separate, orthogonal axis: 34 of the 60
         archetypes run co-located-VM for latency (<code>ARCHETYPE_TO_DEPLOYMENT_PROFILE</code>) — mostly
         CARRY_AND_YIELD, ARBITRAGE_STRUCTURAL, MARKET_MAKING and STAT_ARB_PAIRS — while VOL_TRADING, EVENT_DRIVEN and
-        PORTFOLIO (26 archetypes) run distributed.
+        PORTFOLIO (24 archetypes) run distributed.
       </p>
     </details>
   </section>
