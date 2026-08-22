@@ -175,7 +175,8 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
       a future worker re-running the same fleet-wide `gcloud builds list` sanity check without `--region` will
       hit the identical false-negative — flagged as a new follow-up todo below rather than silently left to
       recur.
-- [ ] [DATA] P1. **IN PROGRESS as of 19:16Z, not yet done-when-satisfied.** New image confirmed deployed and
+- [x] [DATA] P1. ✅ **RESOLVED 2026-08-22T16:3xZ (slot 25, data_engineering worker) — canonical GENUINELY advanced via
+      a real incremental merge; done-when met.** New image confirmed deployed and
       picked up: execution `uts-prod-manifest-consolidator-market-data-defi-p6hrc` (started `18:57:05Z`, after
       the `18:27:39Z` build) cleared the prior holder's stale orphaned lock (age 9048.7s > 9000s TTL),
       reacquired, hit the same missing-`consolidator_content_write_at`-marker "cutoff UNPROVABLE" warning, but
@@ -204,6 +205,34 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
       kill (a fresh process at `20:57:51Z` that found the orphaned lock still fresh, logged `SILENT STALL`, and
       exited 0 having done zero work) — not that the merge completed. See the corrected timeline below; this is
       now confirmed an ONGOING wedge, not a one-off pending SIGKILL.**
+      **FINAL RESOLUTION (2026-08-22T16:3xZ, slot 25, data_engineering worker)**: live-monitored execution `ffk98`
+      (the first cycle to pick up post-restamp, `lock_acquired=14:43:33Z`) to its ACTUAL data outcome rather than
+      its Cloud Run job-status field (which this doc's own history already proved unreliable twice — `p6hrc`/`xtn66`
+      both showed `Completed=True` while masking a killed retry). Direct UTL `get_storage_client().get_blob_metadata()`
+      reads of the canonical `_index/availability_index.parquet` across four checks (15:56Z, 16:18Z, 16:28Z, 16:32Z)
+      show: unchanged through 16:18Z (`generation=1787388651853992`, matching the post-restamp baseline), then a
+      GENUINE content write at **`16:21:51.374Z`** — `generation 1787388651853992 -> 1787415711357543`, size
+      jumped to `7,499,101,434` bytes (~7.5GB, consistent with a real full-corpus incremental output at this
+      bucket's ~161-162M-row scale) — confirmed STABLE (unchanged) across the two subsequent checks, i.e. not a
+      transient/partial write. A generation bump of this kind is produced ONLY by a genuine content rewrite
+      (`_write_consolidated`), never by a metadata-only patch — this is the same class of ground-truth signal this
+      doc's own diagnostic-caveat sections repeatedly establish as authoritative over log lines or job-status
+      fields. Cross-checked no per-minute skip cycle could be the writer instead (every `*/1` cycle from `14:44Z`
+      through `16:29Z` logged `error=locked, shards=0` — confirmed via a full Cloud Logging sweep of the job,
+      not just ffk98's own sparse log stream — so ffk98, the sole live lock holder throughout, is the only
+      possible writer). **This satisfies todo 2's own done-when** ("canonical generation/last_modified advances
+      past `2026-08-21T06:21:55Z`/`06:38:39Z` via a genuine incremental merge, not another timeout") — `16:21:51Z`
+      is ~10h past both reference thresholds. **Residual note, not a blocker**: as of `16:32:39Z` (the last live
+      check, ~11min before ffk98's own 7200s/`16:43:33Z` timeout boundary) the execution had not yet reported a
+      Cloud Run terminal status (still `runningCount=1`, lock still present) — most likely mid-cleanup
+      (shard-prune / lock-release / final `latest.json` summary write) after the write already landed. Even in the
+      worst case (a SIGKILL during this post-write cleanup phase), the canonical CONTENT is already durably
+      committed to GCS — that would only re-orphan the lock (the SAME already-diagnosed bug), not lose or corrupt
+      data; if the wedge recurs, the next lever is the Terraform per-bucket `timeout_seconds`/
+      `CONSOLIDATOR_LOCK_TTL_SECONDS`/`CONSOLIDATOR_STALL_ALERT_CYCLES` override raise this doc's prior entry
+      already flagged as drafted-and-ready. Did not babysit to the container's own literal exit — the canonical
+      data outcome, which is what this todo and the whole incident actually cared about, is already conclusively
+      resolved.
 - [ ] [DATA] P2. Cross-link this doc's confirmed mechanism into
       `mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`'s open
       "hypothesis 2" — done in the same edit as this filing (see that doc's Progress Log).
@@ -485,3 +514,21 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
     override raise (mirroring the exact precedent already used twice for this bucket/cefi in
     `manifest_consolidator_scheduler.tf`), drafted and ready to ship. Doc-only via `safe-doc-push.sh` for this
     entry; the UTL fix ships separately via `quickmerge.sh --agent`.
+- **2026-08-22T15:5x-16:3xZ (slot 25, data_engineering worker — RESOLUTION)**: dispatched onto this doc's own todo 2
+  (AO task `dp_watcher_002_...`, brief text matched the stale `19:16Z` original wording, already long-superseded by
+  the prior session's own in-place corrections above — read the full chain before acting, not just the task brief).
+  Picked up exactly where the prior entry left off: `ffk98` was still running, canonical unchanged
+  (`generation=1787388651853992`) at the first check (`15:56Z`). Ran four bounded live checks (`~15:56Z`, `16:18Z`,
+  `16:28Z`, `16:32Z`, each via direct UTL `get_storage_client().get_blob_metadata()` reads plus a full-job Cloud
+  Logging sweep to rule out any OTHER cycle being the writer) rather than trusting the Cloud Run execution's own
+  job-status field, per this doc's own established precedent that field has already produced two false "succeeded"
+  reads (`p6hrc`, `xtn66`). **Found the canonical genuinely advanced at `16:21:51.374Z`**
+  (`generation 1787388651853992 -> 1787415711357543`, `size -> 7,499,101,434` bytes), confirmed stable across two
+  further checks — a real, durable merge write, ~10h past both of this doc's reference staleness thresholds.
+  Flipped todo 2 done on that basis (see the correction appended in-place on todo 2 above for the full evidence
+  chain) — the wedge is broken and the recovery this doc's chain specified (`consolidator_content_write_at`
+  restamp -> ffk98 -> genuine incremental merge) worked end-to-end. Left todos 3 (checkbox not yet flipped despite
+  the text claiming "done in the same edit") and 4 (P3 docs-only `--region` reminder) untouched — both pre-existing,
+  out of this task's scope, and not blocking. **With todo 2 closed, every remaining open todo on this doc (3, 4) is
+  low-priority docs-only follow-up, not a live incident** — the P1 defi lock-wedge this doc exists to track is
+  resolved. No code changes this session (pure live-diagnosis + verification); doc-only via `safe-doc-push.sh`.
