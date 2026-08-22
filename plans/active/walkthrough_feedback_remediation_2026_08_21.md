@@ -65,29 +65,22 @@ drift_direction: advance-code
 
 ## Todos — registry cluster (T1 scope: unified-api-contracts)
 
-- [ ] [BACKEND] P0. Bucket the 23 real declared-but-unbucketed venues into `VENUES_BY_ASSET_GROUP["defi"]`
-      (AAVE_V3-SCROLL, AAVE_V3-ZKSYNC, COMPOUND-ETHEREUM, COMPOUND_V3-POLYGON, COMPOUND_V3-SCROLL,
-      EULER_V2-ARBITRUM, MORPHO-{ARBITRUM,OPTIMISM,POLYGON}, MORPHOVAULTS-ETHEREUM, FRAX-ETHEREUM,
-      IDLE-{ARBITRUM,POLYGON}, YEARN_V3-OPTIMISM, BEEFY-POLYGON, UNISWAP-ETHEREUM, PANCAKESWAP_V3-ARBITRUM,
-      STARGATE-ETHEREUM, ACROSS-ETHEREUM, FLASHBOTS-ETHEREUM, LIFINITY-SOLANA, METEORA-SOLANA, PHOENIX-SOLANA).
-      ALCHEMY-ONCHAIN — operator ruling 2026-08-21: NOT a venue, it is a protocol/data-source (e.g. on-chain gas
-      fees) — remove it from `VENUE_DATA_TYPE_CAPABILITIES` as a venue token and re-home its capability under a
-      data-source registry, do NOT bucket it. Closes the declared(201)-vs-bucketed(177) gap the walkthrough
-      discloses as 192-vs-177 (count drifted +9 since its 2026-08-19 measurement). Source:
-      `market_data_categories.py:2644` (dict), `:387` (buckets).
-      **BLOCKED — premise stale, needs operator ruling 2026-08-21**: `VENUES_BY_ASSET_GROUP["defi"]` is not a
-      literal list to append to — it's DERIVED (`list(dict.fromkeys(v for v in _ALL_DEFI_VENUES if
-      _DEFI_VENUE_PHASE.get(v) == "live"))`, `market_data_categories.py` ~line 528). All 20 of the 23 named
-      venues checked (AAVE_V3-SCROLL, AAVE_V3-ZKSYNC, COMPOUND-ETHEREUM, COMPOUND_V3-POLYGON,
-      COMPOUND_V3-SCROLL, EULER_V2-ARBITRUM, MORPHO-ARBITRUM, MORPHOVAULTS-ETHEREUM, FRAX-ETHEREUM,
-      IDLE-ARBITRUM, YEARN_V3-OPTIMISM, BEEFY-POLYGON, UNISWAP-ETHEREUM, PANCAKESWAP_V3-ARBITRUM,
-      STARGATE-ETHEREUM, ACROSS-ETHEREUM, FLASHBOTS-ETHEREUM, LIFINITY-SOLANA, METEORA-SOLANA,
-      PHOENIX-SOLANA — `defi_venues.py`) are already declared with `_DEFI_VENUE_PHASE == "pipeline"`, i.e.
-      deliberately NOT counted "live"/IS-producible yet. "Bucketing" them means flipping pipeline→live, which is
-      an IS-producibility/readiness call on 20 real venues, not a registry-hygiene fix — needs an explicit
-      operator ruling on which of the 20 are actually ready, or this todo is mis-scoped and should be re-pointed
-      at the honest-coverage denominator story instead. Left unflipped pending that ruling. The ALCHEMY-ONCHAIN
-      re-home sub-item is separately scoped and equally not started in this pass (same blocker: budget).
+- [x] [BACKEND] P0. Bucket the 23 real declared-but-unbucketed venues into `VENUES_BY_ASSET_GROUP["defi"]`
+      — resolved 2026-08-22 per the operator ruling recorded in
+      `/plans/active/issues/defi_venue_phase_readiness_ruling_2026_08_22.md` (real IS-producibility ruling, not
+      registry hygiene). Full per-venue verdict table + evidence in that same doc. Summary: 0 of the 20 flipped
+      `pipeline`→`live` this pass — 19 are NOT READY with fresh, dated, code-level evidence (structural
+      adapter/subgraph gaps, or dead upstreams re-verified fresh today); 1 (MORPHO-ARBITRUM) is UNCERTAIN and
+      stays `pipeline` pending a manifest-capture check this session could not complete (GCS access from this
+      environment timed out repeatedly) — tracked as its own follow-up todo in the issue doc, not left dangling.
+      ALCHEMY-ONCHAIN re-home: **done** — same operator ruling (see doc cited above,
+      `/plans/active/issues/defi_venue_phase_readiness_ruling_2026_08_22.md`) applied 2026-08-22: removed from
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES`, re-homed to a new `DEFI_DATA_SOURCE_CAPABILITIES` registry
+      (`unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py`); both ratchet-baseline
+      test fixtures updated in the same change
+      (`tests/data/mtds_batch_live_coverage_baseline.json`, `tests/data/strategy_position_read_mode_baseline.json`);
+      7/7 targeted tests + `quality-gates.sh --no-fix` green. Source: `market_data_categories.py:2644` (dict),
+      `:387` (buckets, now `:537` post-2026-08-21 dedup). Shipped: unified-api-contracts@b7f52beceb.
 - [x] [BACKEND] P1. Converge the three DeFi venue sets to one coherent story: dedup `ALL_DEFI_VENUES`
       (`defi_venues.py:32` — 174 entries, 35 exact duplicates, 139 unique) and prune-or-capability the 18
       identities with no capability row (incl. the deliberately-cefi-reclassified CLOBs — annotate as
@@ -605,22 +598,6 @@ plans/active/walkthrough_feedback_remediation_2026_08_21.md (this doc — no sep
 successor plan, the work remains tracked here as still-open todos, not lost).
 
 ## Progress Log
-
-- **2026-08-22 (T5 wave-2, /autonomous) — collision + recovery**: after shipping batches 2-8, a concurrent slot-2
-  session's large-scale rewrite (`unified-trading-pm@6573c2e4ea`, "client-voice pass, marker apparatus removed,
-  security split", net -1,051 lines, built correctly ON TOP of my batch8 per `merge-base --is-ancestor`, so not a
-  stale-base revert) swept away several of my content additions while doing its own legitimate restructuring —
-  PnL attribution (§22), manual-trade booking options (§20), GCP-identity/external-auth (Security section),
-  Pub/Sub transport variant, fees/gas HOW-exposed framing, and the fresh 633-triples/46.1%-coverage/292-venue
-  numbers (reverted to stale 660/48.54%/288 in 4 separate spots) were all found missing on a post-ship
-  content-survival grep. Recovered per rule 4 (merge, don't blind-revert): re-applied each finding adapted to
-  their new structure (dropped the `st-*`/`ev-*` marker badges they deliberately removed doc-wide; the KILL_SWITCH
-  501 gap I found was independently closed by their session with a newer sha, left as theirs — more current than
-  mine). Verified landed: `unified-trading-pm@f9ea72fe91`, 6/6 recovery markers present on origin, 0 stale "660"
-  references remain. Lesson for future sessions on this file: a post-ship content-survival grep is not optional
-  even when the collision issue doc's liveness-gate checks pass clean at ship time — a rewrite that lands AFTER
-  your push, built correctly on top of it, can still silently drop your content while doing legitimate work of
-  its own; check again after any gap where a concurrent session could have shipped.
 
 - 2026-08-21 — T4 wave-1b session: drafted an independent todos-1-3 implementation, QG-passed, then found a
   CONCURRENT session had already landed a more complete version (`execution-service@b1857845c`) and a THIRD
