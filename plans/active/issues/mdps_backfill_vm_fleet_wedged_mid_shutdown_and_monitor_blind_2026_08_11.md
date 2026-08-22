@@ -305,3 +305,23 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
     the only change. `/done` posted with `one_shot_complete: true`.
 - **na-eligibility-audit 2026-08-17** [body-hash:d726b3c7c8b4120f]: KEEP-NA, stale-items corrected -- closed 3 of 6 open items (Cloud Run concurrency/lease, deployment-service@0c38c00d image-verification, 39-VM re-probe): all already done via the active cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (same parent_epic infrastructure_master), each ending with an explicit Source: citation to this exact doc -- deployment-service@2855b17833 (GCS CAS lease, 2026-08-15), image verification CONFIRMED YES (2026-08-15, tag 4048e78), and the 39-VM re-probe found NOT-ATTEMPTED-premise-unmet (VM names never persisted, fleet fully turned over). Doc stays assigned_vm: NA for its 3 remaining items (1 P0 unpause blocked-on-deploy, 1 P1 shutdown-path design, 1 P1 [OPERATOR] live-producer restart). Cross-cutting tranche audit conflict-check finding.
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries) — added the promoted probe_vm_serial_liveness.sh (named in the P2 re-probe todo).
+- **data_pipeline_failure escalation `agt-b48f43` (2026-08-22, slot 19)**: dispatched via `data_pipeline_failure.md` with
+  `CONTEXT=CRITICAL DP_CRON_DID_NOT_FIRE (DP-LIVE-003) — LONG_LIVED_LIVE producer prefix 'mdps-features-live-cefi-' has
+  ZERO running instances`. Ground-truth confirmed (`gcloud compute instances list --filter="name~'^mdps-features-live-'"`,
+  project `central-element-323112`): **ZERO** running `mdps-features-live-*` instances fleet-wide, for every
+  asset_group, not just cefi — a state change from this doc's still-open `[OPERATOR] P1` item below (`mdps-features-live-cefi`
+  / `mdps-features-live-defi` "wedged, last serial output 2026-08-09T00:00") from **hung-but-present** to **fully
+  absent**: the wedged VM(s) have since been reaped/terminated by some path (not this session's doing — no delete was
+  issued) and never relaunched, 13 days after the wedge was first found. `producer_lifecycle.py` correctly classifies
+  `mdps-features-live-cefi-` as `ACTIVE` (not `NOT_YET_ACTIVE`) — confirmed via
+  `dp_cron_did_not_fire_false_positive_burst_2026_08_10.md` finding #3, cefi/defi WERE genuinely running 2026-08-10 post
+  the 2026-08-07 pilot-fix re-launch — so this is a real regression, not a registry false-positive, and DP-LIVE-003 is
+  correctly paging. Did **NOT** relaunch: the existing `[OPERATOR] P1` todo below explicitly classifies this restart as
+  needing "investigation of what live data was missed, not a delete... a different action class" — and a prior pilot of
+  this exact launcher (`launch-mdps-features-live.sh`, cefi+tradfi) failed with an OOM bug before the 2026-08-07 fix
+  (`mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`), so a blind relaunch without
+  operator sign-off risks repeating either failure mode uninvestigated. Escalated via `/blocked` (`agt-b48f43`) with a
+  recommendation to relaunch now (launcher is registered + previously proven working 2026-08-07..09) while flagging the
+  ~13-day live-data gap (2026-08-09 onward) as a separate investigation the restart alone does not resolve. No new
+  issue doc filed — this is the same already-tracked gap, appended here per findings-triage
+  ("fits another plan → annotate it, don't fix"/never duplicate). `/done` posted with `one_shot_complete: true`.
