@@ -144,3 +144,80 @@ context_scope:
   instance per in-flight bucket merge, `max-instances` capped; in-region GCS↔Cloud Run egress is free, only op counts
   bill.
 - **2026-08-22 (operator follow-up)**: retirement + sequencing-gate + dual-shape + DEFI-issue-gate todos added after the backfill-gating question.
+- **2026-08-22 (autonomous session, in progress — Phase-0 sequencing gate + manifest v10)**: Worked the sequencing-gate
+  todo and the D19 root-cause-gate todo before touching anything cron/terraform-side, per this doc's own explicit
+  ordering. **Root-cause gate**: confirmed already satisfied by prior sessions —
+  `mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md` traces to the consolidator
+  lock-wedge fully diagnosed on `dp_watcher_002_defi_market_data_consolidator_lock_wedge_2026_08_21.md` (missing
+  `consolidator_content_write_at` marker → fail-closed full merge → 7200s Cloud Run timeout → SIGKILL → orphaned lock →
+  re-arm loop; bit-for-bit the mechanism already root-caused + fixed for cefi). Code fix is shipped
+  (`unified-trading-library@af783d92e4`/`53abdf72f3`); the live production recovery (clear the orphaned lock + GCS
+  metadata restamp) is correctly NOT executed — the doc's own most recent entry shows a prior session declining an
+  authorization claim that arrived through a non-verifiable channel (a doc entry, not the AO `/blocked` escalation
+  queue), and that precedent is respected here too: this is a separately-owned, carefully-gated live-ops decision, not
+  a D19 deliverable. Citing this as satisfying "root cause is fixed or explicitly shown orthogonal, cited here" — Phase
+  2 is not gated on the live recovery landing, only on the root cause being understood, which it is.
+  **Sequencing gate**: inventoried every wall-clock freshness consumer (`AG_STALENESS_BUDGET_SEC` / `_budget_for` /
+  `_entry_budget`, the ~48 VM launchers' `MANIFEST_CONSOLIDATED_STALENESS_SEC=` env values, `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC`,
+  deployment-api's cockpit dict + generated catalog). Found and fixed a real gap: `prediction` is a live, deployed
+  asset_group (`launch-prediction-*.sh`, `launch-mtds-prediction-*.sh` launchers exist) with NO calibrated override in
+  EITHER `AG_STALENESS_BUDGET_SEC` (UTL, the real read-path gate) or deployment-api's legacy fallback dict — both fell
+  through to the generic 120s default, the exact "120s-class check" this gate exists to catch: at a 900s worst-case
+  gap once Phase 1's `*/15` cron ships, prediction reads would false-trip into the degraded per-VM-shard fallback
+  almost every cycle, the identical failure class sports/defi/tradfi each independently hit and fixed in July/August.
+  Fixed: `unified-trading-library/unified_trading_library/manifest_writer/_staleness_budget.py` adds
+  `"prediction": 1800` (interim safe floor mirroring the sports precedent, pending a measured-cadence calibration
+  follow-up — not yet a live-measured value like the cefi/defi/tradfi entries); `deployment-api/deployment_api/routes/health_consolidator/__init__.py`
+  mirrors the same addition. **Investigated but did NOT fix** (kept for its own follow-up): deployment-api's
+  `_entry_budget()` reads a GENERATED `_CATALOG` (`scripts/gen_consolidator_catalog.py`) FIRST, before falling back to
+  the legacy dict — per `test_catalog_live_market_data_is_120_everything_else_86400`, the catalog currently assigns
+  `tradfi` the generic 120s "live tick" budget with no slow-merge exception (unlike defi's documented 3600s one),
+  which may itself be stale versus UTL's real measured ~hourly tradfi cadence (7200s) — a real, plausible, but
+  UNVERIFIED gap (reading the generator was out of scope for this pass); adding `tradfi` to the legacy dict alone was
+  reverted after breaking 2 pinned tests (`test_entry_budget_reads_catalog_then_falls_back`,
+  `test_budget_for_cefi_overrides_default_others_pass_through`) that explicitly assert today's pass-through behaviour
+  — flagging as a genuine open question rather than forcing an unverified fix through. **Follow-up todo**:
+  - [ ] [DATA] P2. Verify whether `deployment-api/scripts/gen_consolidator_catalog.py`'s tradfi budget (currently
+        120s "live tick", per `test_catalog_live_market_data_is_120_everything_else_86400`) should carry the same
+        slow-merge exception defi has (3600s), given UTL's own `AG_STALENESS_BUDGET_SEC["tradfi"]=7200` reflects a
+        real measured ~hourly cadence (`tradfi_third_es_mes_backfill_consolidator_staleness_gap_2026_07_31.md`) far
+        exceeding a 120s live-tick assumption. If stale, tradfi's deployment-api cockpit health view has been
+        showing false DOWN/degraded status independent of anything in D19 — a pre-existing bug, not caused by the
+        */15 cron change. Repo: deployment-api.
+  **Manifest v10 (this session's exclusive-ownership core deliverable)**: cross-referenced the sibling child plan
+  `trading_pipeline_config_shard_identity_and_latency_profile_2026_08_22.md` (D13/D17, owned by `batch_live_symmetry_master`,
+  not yet locked/started by anyone) for the precise field specs, since that plan — not this one — is where
+  `config_shard_id`/`config_version`/`code_semver`/`latency_profile_hash` are actually designed; this plan only
+  contributes `upstream_gap_class`/`upstream_gap_days`/`upstream_gap_ratio` (T5 "produced-with-gaps") directly.
+  Also found `MANIFEST_SCHEMA_VERSION` was still the live `9` despite `_rows.py`'s `quarantined_legs` field
+  (shipped 2026-08-15, `fail_hard_canonical_enforcement_design_2026_07_20.md` §5b Gap 1) already self-labelling its
+  own comment "v10" — the version-constant bump was apparently never actually done. That doc's OWN separate Stage-2
+  todo (`instrument_id_form`) also informally claimed "v10" but is DEPENDENCY_BLOCKED (reaffirmed 5+ times, most
+  recently 2026-08-21) on unrelated prerequisites with no near-term unblock — corrected that doc to "v11" (shipped
+  doc-only, `unified-trading-pm@cdc008a33f`) since only one batch can legitimately claim the constant. Landed the
+  real v10 bump as ONE coherent batch folding together: `quarantined_legs` (retroactive), `config_shard_id` /
+  `config_version` / `code_semver` / `run_attempt` / `latency_profile_hash` (D13/D17, this plan's sibling), and
+  `upstream_gap_class` / `upstream_gap_days` / `upstream_gap_ratio` (this plan's own T5 scope) —
+  `unified-trading-library/unified_trading_library/manifest_writer/_schema.py` (`MANIFEST_SCHEMA_VERSION = 10` +
+  full version-history comment matching the v5-v9 convention) and `_rows.py` (the 8 new dataclass fields, all
+  purely-additive with `""`/`0`/`0.0` defaults). Migration-plan verdict per
+  `/codex/02-data/chunk-safe-manifest-migrations.md`'s own three-part test: NO chunk-safe worker/coordinator rewrite
+  needed — none of the 8 new columns require backfilling a REAL value into any existing row (legacy rows correctly
+  read back as empty/zero, identical to how v6-v9's own additive columns already work); this is a pure additive
+  version bump, single-VM-shape by the doc's own criteria. **Still open**: the codex doc section itself
+  (`/codex/02-data/availability-manifest-and-data-status.md` "## Schema v9" → "## Schema v10", drafted but not yet
+  applied — holding until the code change actually ships so the doc can cite a real commit sha, not a placeholder).
+  **Not yet shipped**: both `_schema.py`/`_rows.py` (unified-trading-library) and the `_staleness_budget.py` +
+  deployment-api dict fix are complete locally and re-diagnosed clean (2 unified-trading-library test failures fixed
+  in `test_manifest_writer_per_vm.py` to reflect the corrected prediction behaviour; a 3rd, unrelated
+  `test_five_thousand_sequential_writers_do_not_leak_fds` timeout matches an independently-documented pre-existing
+  host-contention flake from a prior session on this exact host) — but `quality-gates.sh` has not yet returned a
+  clean run on this host: the QG governor itself reports `unified-trading-library` queued 1830s+ (30+min, still
+  climbing) on "host-wide cap 7" tokens all busy, and deployment-api's full re-run showed WORSENING, non-deterministic
+  subprocess/threading timeouts (auth-boot subprocess SIGKILLs with the correct stderr already captured before the
+  kill; a 60s gRPC-client-init timeout with a 9-worker-thread dump) in code paths this session never touched — direct,
+  governor-confirmed evidence of severe multi-agent host contention (≥4 concurrent Claude sessions in this one slot),
+  not a defect in this change. Per the HARD RULE (commit only from a green tree), holding until a clean run lands
+  rather than shipping on a red gate or hammering the shared host with repeated back-to-back full-suite retries.
+  Next tick: retry QG after a longer gap, ship both repos + the codex doc together, THEN move to Phase 0's remaining
+  follow-up todo above and D19 Phase 1 (terraform).
