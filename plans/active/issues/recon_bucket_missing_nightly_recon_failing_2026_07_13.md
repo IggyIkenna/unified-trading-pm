@@ -168,7 +168,11 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
 > 6 on 2026-08-22 — todo 3's fix needed a companion Terraform apply, split out as its own [INFRA] piece rather than
 > absorbed into [BACKEND] scope (see todo 3's DONE note + the new todo below it). Grew to 7 same day — todo 2's
 > verification surfaced an unrelated pre-existing ml-service bug blocking its done-when, split out as its own
-> [BACKEND] piece (mirror-image of the todo 3/4 split; see todo 2's DONE note + the new todo below it).
+> [BACKEND] piece (mirror-image of the todo 3/4 split; see todo 2's DONE note + the new todo below it). Grew to 8
+> same day — the [BACKEND] fix's own verification needs a container rebuild+redeploy (no CI trigger fires off
+> `live-defi-rollout` pushes for this repo — `gcloud builds triggers list` returns 0 project-wide), which is
+> infra-craft scope, not backend_engineer's; split out as its own [INFRA] piece (same mirror-image reasoning as the
+> todo 2/3 splits above; see the fixed todo's DONE note + the new todo below it).
 
 - [x] ✅ [INFRA] P0. Provision `uts-prod-execution-service-config-snapshot` Cloud Run Job (execution-service),
       replicating the same container-job Terraform pattern already used for strategy-service/mdps. Repo:
@@ -207,7 +211,7 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       wrong with the provisioning — and out of infra-craft scope (`does_not: Python service business logic →
       backend_engineer`), same craft-boundary reasoning as todo 3's own infra split, mirrored in the opposite
       direction. Split into the new [BACKEND] todo immediately below rather than crossing craft lines.
-- [ ] [BACKEND] P0. Fix `InferHandler.validate_config()` (`ml_service/inference/cli/main.py:166-192`) to scope
+- [x] ✅ [BACKEND] P0. Fix `InferHandler.validate_config()` (`ml_service/inference/cli/main.py:166-192`) to scope
       its feature-bucket accessibility check to the invocation's actual `--asset-group` argument instead of
       unconditionally looping over `svc_config.training_categories` (every category the service has ever
       declared, most irrelevant to a single-asset-group run). Also broaden the narrow `except` clause
@@ -217,8 +221,34 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       execution `uts-prod-ml-service-t1-recon-r89n4` (2026-08-22T12:32:53Z) crashed validating
       `features-prediction-prd-central-element-323112` (404 — does not exist) despite the job only running
       `--asset-group CEFI`, whose own `features-cefi-prd-central-element-323112` bucket validated accessible
-      seconds earlier in the same log. Done-when: `uts-prod-ml-service-t1-recon`'s next triggered execution
-      completes successfully and writes `t1-recon/ml/{date}/_SUCCESS` — cite the execution ID.
+      seconds earlier in the same log. — DONE (code) 2026-08-22 (slot-21): `validate_config()` now reads
+      `getattr(args, "asset_group", None)` (the `--asset-group` `dest=` set by UTL's `service_cli.py`, `nargs="+"`)
+      and, when the invocation names asset group(s), filters `svc_config.training_categories` to only the
+      requested ones (case-insensitive match, since the flag accepts lower/upper) before the per-category bucket
+      check; falls back to the full category list when `--asset-group` is omitted (unchanged prior behavior, no
+      regression for unscoped callers). Also added `google.api_core.exceptions.NotFound` to the caught exception
+      tuple. `ml-service@fc7fa37785` — QG green (sentinel keyed to that exact commit SHA), verified an ancestor of
+      `origin/live-defi-rollout`. **NOT YET independently verified end-to-end**: triggered a real execution
+      (`uts-prod-ml-service-t1-recon-bcfbz`, 2026-08-22T14:23-14:24Z) to check the done-when — it still failed on
+      the identical `features-prediction-prd-central-element-323112` 404, because the deployed Cloud Run Job's
+      container image predates this commit (no Cloud Build trigger fires off a `live-defi-rollout` push for this
+      repo — `gcloud builds triggers list` returns 0 project-wide fleet-wide; the last build for any repo was
+      2026-08-21). Rebuilding/redeploying the image against this commit is infra-craft scope, not
+      backend_engineer's (`does_not: Infra provisioning, VM launches, CI/CD, cloud → infra`) — same
+      craft-boundary reasoning as this doc's todo 2/3 splits. Split into the new [INFRA] todo immediately below.
+      Done-when (unchanged): `uts-prod-ml-service-t1-recon`'s next triggered execution completes successfully and
+      writes `t1-recon/ml/{date}/_SUCCESS` — cite the execution ID.
+- [ ] [INFRA] P0. Rebuild + redeploy `uts-prod-ml-service-t1-recon`'s Cloud Run Job container image off
+      `ml-service@fc7fa37785` (the `InferHandler.validate_config()` asset-group-scoping fix immediately above),
+      e.g. `gcloud builds triggers run <ml-service-build-trigger> --branch=live-defi-rollout` (mirrors the
+      2026-07-14 BLRS image-refresh recipe in the "2026-07-14 update" section above) or, if no such trigger
+      exists for this repo, provision one per the container-job Terraform pattern already used for
+      strategy/execution — then verify the deployed image's digest actually changed
+      (`gcloud run jobs describe uts-prod-ml-service-t1-recon --region=asia-northeast1
+      --format='value(spec.template.spec.template.spec.containers[0].image)'`). Repo: ml-service,
+      deployment-service. Done-when: a real triggered execution of `uts-prod-ml-service-t1-recon` completes
+      successfully and writes `t1-recon/ml/{date}/_SUCCESS` — cite the execution ID (this closes the
+      immediately-preceding todo's own done-when too).
 - [x] ✅ [BACKEND] P0. Implement a run-tag-aware `_SUCCESS`-marker writer in strategy-service's batch CLI
       (`t1-recon/strategy/{date}/_SUCCESS`) and add a self-default date fallback to `_resolve_date_args()`
       (mirroring ml-service/mdps's T-1 default) so the Terraform-provisioned job no longer hard-requires an explicit
@@ -564,3 +594,20 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   4 `[x]` for its own infra-scoped ask (the apply); split the blocking bug into a new `[BACKEND] P0.` todo
   (file:line + fix direction + live evidence) rather than crossing craft lines — same split pattern as
   todo-2/todo-3 above.
+
+- **backend_engineer 2026-08-22 (slot-21)**: fixed `InferHandler.validate_config()`
+  (`ml_service/inference/cli/main.py:166-192`) — scoped the feature-bucket accessibility loop to the invocation's
+  `--asset-group` arg (case-insensitive filter against `svc_config.training_categories`, falls back to the full
+  list when `--asset-group` is omitted) and added `google.api_core.exceptions.NotFound` to the caught exception
+  tuple. `ml-service@fc7fa37785`, QG green (sentinel keyed to that commit SHA), verified an ancestor of
+  `origin/live-defi-rollout`. Triggered a real execution (`uts-prod-ml-service-t1-recon-bcfbz`,
+  2026-08-22T14:23-14:24Z) to check the done-when before flipping the checkbox — it still failed on the
+  identical `features-prediction-prd-central-element-323112` 404 (log shows `Bucket accessible:
+  features-{cefi,tradfi,defi}-...` then the same crash on `features-prediction-...`), because the deployed Cloud
+  Run Job image predates this commit: `gcloud builds triggers list` returns 0 project-wide (no CI trigger fires
+  a rebuild off a `live-defi-rollout` push for this repo), and the most recent build fleet-wide was 2026-08-21 —
+  before today's commit. Rebuilding/redeploying the image is infra-craft scope
+  (`does_not: Infra provisioning, VM launches, CI/CD, cloud → infra`), not mine — flipped the code-fix todo `[x]`
+  with a DONE note documenting this gap and split the image-rebuild+redeploy+re-verify work into a new
+  `[INFRA] P0.` todo immediately below it (same craft-boundary split pattern as this doc's todo-2/todo-3 and
+  todo-4 splits above).
