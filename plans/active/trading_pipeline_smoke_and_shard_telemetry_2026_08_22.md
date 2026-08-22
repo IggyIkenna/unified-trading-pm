@@ -66,6 +66,7 @@ parent_epic: system_readiness_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
+milestone: M3
 estimate_class: infra
 estimate_baseline_ai_days: 40
 estimate_calibrated_ai_days: 32
@@ -204,6 +205,14 @@ context_scope:
   inferred from telemetry, launchers stop hard-coding; shard-loop = spawn-context processes (intra-shard subprocesses always permitted, audited + QG-hardened to stream/flush when memory-intensive), readers stream where a
   shard exceeds the ladder. Instrument spec deltas → `instruments_master` child; IS gets its own layer-0 honest
   coverage and the rollup shows IS and MTDS separately.
+
+- **D19 — Event-driven consolidation (ruled 2026-08-22).** Consolidators fire off per-VM shard writes (GCS
+  `OBJECT_FINALIZE` on `_index/per_vm/` → Pub/Sub → debounce dispatcher), floor-throttled to 15-min UTC boundaries
+  fleet-wide — no writes → no run; a mid-run trigger queues exactly one follow-up. Wall-clock staleness budgets retire
+  for trigger-aware staleness (newest per-VM write newer than consolidated AND no run within debounce + grace). Every
+  AG's worst-case merge must fit the 15-min window; the merge home (long-lived min-instances Cloud Run service with
+  warm DuckDB + spill volume vs the existing job) is decided by a per-AG worst-case benchmark with DEFI/CEFI rows
+  modelled at ~2× (measure the already-tagged share first). Child: `event_driven_manifest_consolidation_2026_08_22`.
 
 ## 2. Target architecture — the optimised setup
 
@@ -446,6 +455,9 @@ target (T6 decision).
   (`instruments_master`) — `InstrumentSpecVersion` with effective dates, execution reads specs by date, IS layer-0
   honest coverage with separate IS / MTDS rollups.
 
+- [`event_driven_manifest_consolidation_2026_08_22.md`](/plans/active/event_driven_manifest_consolidation_2026_08_22.md)
+  (`manifest_master`) — D19 write-triggered consolidation, 15-min floor, trigger-aware staleness, benchmark-gated merge home.
+
 ### T7 — Ratification, codex audit, closure
 
 - [ ] [OPERATOR] P0. **Ratify the decision ledger §1** (D1-D9: engine per family, telemetry contract ownership, price
@@ -499,3 +511,4 @@ target (T6 decision).
   running while shards process.
 - **2026-08-22 (interactive Q&A, slot 6, operator)**: Two rounds of rulings recorded as D13-D18; bare-read todo
   rewritten to migrate-all-then-ban; T8 became the child-plan index (four children, each under its owning epic).
+- **2026-08-22 (operator, consolidation-trigger ruling)**: D19 added; event_driven_manifest_consolidation child created under manifest_master; assigned to tranche B.

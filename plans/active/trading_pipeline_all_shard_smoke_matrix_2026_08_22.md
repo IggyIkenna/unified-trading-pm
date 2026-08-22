@@ -44,6 +44,7 @@ parent_epic: system_readiness_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P0
+milestone: M3
 estimate_class: infra
 estimate_baseline_ai_days: 15
 estimate_calibrated_ai_days: 12
@@ -146,7 +147,7 @@ will, with zero config drift and no standing job cost.
       registry + a small GCS verdict object + telemetry. Done-when: verdicts visible per AG/service and measured cost
       is a handful of Class A/B ops per bucket per tick.
 - [ ] [INFRA] P0. **Deadman on the consolidator itself** — the existing deadman / Cloud Run monitors page when a
-      consolidator job has not RUN within its per-bucket staleness budget (distinct from the sentinel's output-age
+      consolidator job has not RUN within its trigger-aware budget (D19 — newest per-VM write newer than consolidated AND no run within debounce+grace) (distinct from the sentinel's output-age
       verdict); registered in the data-pipeline alerts registry with state-transition dedup. Done-when: pausing a test
       consolidator fires exactly one page and a ✅ close on recovery.
 - [ ] [DATA] P0. **Pre-flight consumes the sentinel, never recomputes** — worker pre-flight reads the central verdict
