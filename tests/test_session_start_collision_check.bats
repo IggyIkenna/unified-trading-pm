@@ -184,6 +184,23 @@ _run_hook() {
     fakebin="${BATS_TEST_TMPDIR}/fakebin"
     mkdir -p "${fakebin}"
     for tool in pgrep lsof ps awk readlink tmux cat tr; do
+        if [ "${tool}" = "pgrep" ]; then
+            # `command -v pgrep` on an AO-spawned worker resolves to
+            # scripts/hooks/pkill-guard-bin/pgrep (installed ahead of the real binary on PATH),
+            # which REFUSES the bare `pgrep -f claude` this hook's detector needs -- symlinking
+            # that wrapper into fakebin would make this fixture assert its OWN detection is
+            # broken rather than exercising the no-jq fallback path this test targets. Walk every
+            # `pgrep` on PATH (resolving symlinks) and take the first that is NOT the guard, same
+            # exclusion slot-collision-detect.sh's own _real_pgrep() applies in production.
+            for p in $(type -a pgrep 2>/dev/null | awk '{print $NF}'); do
+                case "$(readlink -f "${p}" 2>/dev/null || printf '%s' "${p}")" in
+                    */pkill-guard-bin/*) continue ;;
+                esac
+                ln -sf "${p}" "${fakebin}/pgrep"
+                break
+            done
+            continue
+        fi
         p="$(command -v "${tool}" 2>/dev/null)" || continue
         ln -sf "${p}" "${fakebin}/${tool}"
     done

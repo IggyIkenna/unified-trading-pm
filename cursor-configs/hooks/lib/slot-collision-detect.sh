@@ -24,6 +24,30 @@
 #   slot-collision-detect.sh foreign-pids <slot>   -> prints live foreign claude PIDs, one per line
 #   slot-collision-detect.sh is-linked-worktree <dir> -> exit 0 if <dir> is a linked git worktree
 
+# _real_pgrep -> absolute path to the real `pgrep` binary on stdout, bypassing
+# scripts/hooks/pkill-guard-bin/pgrep (installed ahead of the real binary on every AO-spawned
+# worker's PATH -- see pkill-guard.sh). That wrapper is a real PATH-resolved executable, not a
+# shell function, so `command pgrep` does NOT bypass it (`command` only skips shell functions
+# and aliases, not other PATH entries) -- confirmed live: `command pgrep -f claude` still hit the
+# guard's REFUSED message. Falls back to the bare `pgrep` name if every PATH entry is the guard
+# (or none is found) -- foreign_claude_pids() already treats an empty/failed pgrep as "no signal",
+# so this degrades safely rather than erroring.
+_real_pgrep() {
+  local p resolved
+  for p in $(type -a pgrep 2>/dev/null | awk '{print $NF}'); do
+    # Resolve symlinks before the exclusion check -- a PATH entry can be a symlink INTO
+    # pkill-guard-bin (e.g. a curated/minimal PATH that only exposes one `pgrep` name) without
+    # the literal PATH entry itself containing that directory segment.
+    resolved="$(readlink -f "${p}" 2>/dev/null || printf '%s' "${p}")"
+    case "${resolved}" in */pkill-guard-bin/*) continue ;; esac
+    [ -x "${p}" ] && {
+      printf '%s' "${p}"
+      return 0
+    }
+  done
+  printf 'pgrep'
+}
+
 # _ppid_of <pid> -> ppid on stdout, empty on failure. /proc first (fast, Linux), `ps` fallback
 # (works on both, and is the ONLY option on macOS).
 _ppid_of() {
@@ -134,7 +158,19 @@ foreign_claude_pids() {
   command -v pgrep >/dev/null 2>&1 || return 0
   ancestors="$(_ancestor_pids)"
   slot_real="$(readlink -f "${slot_dir}" 2>/dev/null || echo "${slot_dir}")"
-  for pid in $(pgrep -f claude 2>/dev/null || true); do
+  # _real_pgrep bypasses scripts/hooks/pkill-guard-bin/pgrep (installed ahead of the real binary
+  # on every AO-spawned worker's PATH -- see that guard's own header comment, which documents an
+  # absolute-path invocation as the sanctioned bypass for exactly this case; `command pgrep` does
+  # NOT work here since the guard is a real PATH-resolved binary, not a shell function). A bare
+  # `pgrep -f claude` carries neither a numeric -g/-G/-P/-s/-U/-u/-T target nor a `.tabs/<N>/`
+  # substring, so the guard refuses it outright -- this scan is a genuinely host-wide, read-only
+  # liveness check (its entire purpose is finding a peer OUTSIDE this process's own slot), not the
+  # accidental cross-slot pkill the guard exists to prevent. Without this bypass, every consumer of
+  # this function (session-start hook, PreToolUse guard, the lsof-batching test) silently sees
+  # "no peer" on any host where the guard is installed, regardless of load --
+  # plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md's
+  # "host load" framing was the wrong root cause; this guard interception is deterministic.
+  for pid in $("$(_real_pgrep)" -f claude 2>/dev/null || true); do
     case "${ancestors}" in *" ${pid} "*) continue ;; esac
     candidates+=("${pid}")
   done
