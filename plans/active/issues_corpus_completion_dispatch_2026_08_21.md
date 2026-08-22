@@ -389,3 +389,14 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
   class before landing; re-verify before trusting it shipped. Launched a background agent (build-in-progress) for
   the POLYMARKET manifest reclassification dry-run tool in `deployment-service/scripts/migrations/`, dry-run only,
   `--apply` withheld pending explicit operator approval.
+- **2026-08-22 (tick 6)** — Confirmed via `git show origin/...` (not just local state): the 26-doc `assigned_vm`
+  flip DID land (7 attempts total — 5 failed on the same host-contention class documented in
+  `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, 2 on real dangling-reference content errors
+  now fixed, 1 finally landed clean). The archival-pass-2 reconciliation agent (`aa77a3d57eba3ef6c`) and the
+  manifest-dry-run agent (`afc28df9fb2034c5a`) both ended their turns claiming a background push/QG run was "still
+  running" — verified via `ps` that NEITHER process actually exists anymore. Resumed both via `SendMessage` with the
+  real state and explicit instructions to re-verify from scratch and finish in the foreground rather than assume a
+  phantom continuation. **Host contention across this shared slot is severe and sustained** (confirmed: 6+ other
+  live sessions in this slot since session start, dozens of concurrent `quality-gates.sh`/`safe-doc-push.sh`
+  processes observed across repos) — every ship this tick required 1-7 retries; this is the dominant cost driver
+  right now, not logic errors. Next tick: verify both resumed agents' real outcomes before trusting either.
