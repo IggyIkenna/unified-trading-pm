@@ -17,7 +17,7 @@ summary: >-
   slot-tagged stash" path when a finding is not part of the current task and intent can't be determined), stashed rather
   than committed or discarded: `stash@{0}` "slot8-2026-08-07: unexplained staged revert of fleet-workflow-dedup
   thin-caller-stubs...". Repo is now clean (`git status` empty, `ahead=0`).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -33,7 +33,6 @@ author: unknown
 source: [backlog task defi_satellite_ao_dispatch_batch9-018, slot 8]
 parent_epic: ci_master
 assigned_vm: planning
-archive_exempt: true
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
@@ -52,6 +51,10 @@ context_scope:
     agent-orchestrator/scripts/hooks/block_destructive_commands.py,
   ]
 ---
+
+> **📦 ARCHIVED 2026-08-22 (D3 ledger, stash-pile/stale-WIP cleanup)** — 0 open todos, no lock. The dangling stash was
+> ruled abandoned (2026-08-10) and confirmed gone by a fresh re-verify (2026-08-22, no stale-index reuse) — the
+> `features-service-clean-check` linked worktree's stash list is empty. Kept as a historical record.
 
 ## What was found
 

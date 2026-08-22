@@ -58,7 +58,7 @@ related_plans:
   - ../active/issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md
   - ../active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md
   - ../active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md
-  - ../active/issues/features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07.md
+  - ../archive/issues/features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07.md
   - ../active/issues/ff_pull_fleet_drift_rca_2026_08_11.md
   - ../active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md
   - ../active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md
@@ -347,7 +347,7 @@ _58 active plans/issues declare `parent_epic: ci_master` in their frontmatter (c
 **status**: open · **estimate**: 0.6 cal AI-days (class: research)
 **title**: deployment-api promote PR #501 test failure hits a real GCE metadata probe despite mocking — module-level global-state leak
 
-### [`features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07`](../active/issues/features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07.md)
+### [`features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07`](../archive/issues/features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07.md)
 **status**: open · **estimate**: 0.12 cal AI-days (class: research)
 **title**: Uncommitted, unexplained staged revert of fleet-workflow-dedup thin-caller-stubs found in features-service-clean-check
 
