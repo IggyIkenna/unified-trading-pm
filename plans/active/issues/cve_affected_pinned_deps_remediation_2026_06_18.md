@@ -673,6 +673,7 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml` bumped the existing inline pin
       in place (`"pip>=26.1.2"` → `"pip>=26.2"`), `uv.lock` resolves `pip==26.2`, working tree clean. No new code
       required — landed directly (main/harsh) between the todo's authoring and this pickup.
+<<<<<<< Updated upstream
 - [ ] [SCRIPT] P2. **features-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
       features-service)
 - [x] ✅ [SCRIPT] P2. **DONE — verified already-landed (2026-08-21, slot-10).** **fund-administration-service** — pip
@@ -687,6 +688,14 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       ancestor-or-equal of `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `pyproject.toml` declares
       `"pip>=26.2"`, `uv.lock` resolves `pip==26.2.1`, working tree clean. No new code required — landed directly
       (main/harsh) between the todo's authoring and this pickup.
+=======
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-21 (slot-9).** **features-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      features-service) — features-service@cb76489d (already at >=26.2 and QG-green verified).
+- [ ] [SCRIPT] P2. **fund-administration-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      fund-administration-service)
+- [ ] [SCRIPT] P2. **ibkr-gateway-infra** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      ibkr-gateway-infra)
+>>>>>>> Stashed changes
 - [ ] [SCRIPT] P2. **instruments-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
       instruments-service)
 - [ ] [SCRIPT] P2. **market-data-processing-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
