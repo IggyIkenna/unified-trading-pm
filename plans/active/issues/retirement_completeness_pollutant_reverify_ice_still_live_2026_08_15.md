@@ -26,7 +26,7 @@ related:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: "2026-08-15"
-last_updated: "2026-08-17"
+last_updated: "2026-08-22"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -136,16 +136,18 @@ I'm filing rather than escalating past what the evidence supports.
       the GCS objects they reference; if the objects were written today (not just re-stamped), this is live and needs
       the source dispatch bug found and fixed. Repo: market-tick-data-service. **RESOLVED — root cause is (b), stale
       re-registration, NOT a live re-fetch bug.** See "DIAG follow-up" in Progress Log below.
-- [ ] [OPERATOR] P2. Run the pause-consolidator → snapshot → filter → resume manifest-cleanup procedure this plan's DoD
-      calls for, to purge the ICE-databento-non-24h rows, the CBOE VIX-cash 17 stragglers, and the BARCHART 9,119 rows
-      from the manifest (GCS delete/filter of a prod manifest — needs delete-safety-protocol citation per CLAUDE.md,
-      hence `[OPERATOR]` — see `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, cited 2026-08-18
-      plan_reconciler; this doc's own `context_scope` did not previously carry the pointer). No live-billing urgency
-      (DIAG above ruled out an active fetch loop), but the stale ICE
-      objects on GCS should also be deleted, not just re-purged from the manifest, or a future rebuild will re-resurrect
-      the same rows. **NOTE (2026-08-18, plan_reconciler)**: the BARCHART row count/timestamp cited here (9,119 rows)
-      conflicts with this same doc's own fresher 2026-08-17 Progress Log entry below (4,655 rows, different
-      timestamp) — needs a fresh live remeasurement before this todo executes, do not trust either figure as-is.
+- [ ] [OPERATOR] P2. **D2 execution 2026-08-22 (dispositions.json, operator-ruled APPROVED ALL under each item's
+      stated precondition) — 2 of 3 items VERIFIED RESOLVED this pass, 1 item READY-TO-EXECUTE, blocked on host
+      contention this session.** See 2026-08-22 Progress Log entry below for full fresh evidence. Remaining action:
+      run `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh tradfi-ice-cboe-barchart-reverify
+      <start> <end> full` (dry-run first) against
+      `market-tick-data-service/scripts/one_offs/reverify_tradfi_ice_cboe_barchart_pollutants_2026_08_22.py`
+      (already written + syntax-validated, NOT YET COMMITTED) after a `quality-gates.sh`-green commit + quickmerge —
+      pause `uts-prod-manifest-consolidator-market-data-tradfi-cron` first, resume after. Superseded stale figures in
+      the original filing below: BARCHART is confirmed 4,655 rows (not 9,119) as of 2026-08-22, unchanged since
+      2026-08-17, 100% `empty_confirmed`; CBOE VIX-cash-index stragglers are confirmed **0 rows** as of 2026-08-22
+      (the 17 rows the original filing + the 2026-08-17 re-check both found are GONE — resolved by another session
+      between 2026-08-21 and 2026-08-22, per the parent umbrella plan's 2026-08-21 CBOE re-check finding 17).
 - [ ] [CODE] P3. Audit the surfaces leg (catalogue API / `/data-status` / UI) for any residual ICE/CBOE-VIX-cash/BARCHART display — not checked this session.
 - [x] [DIAG] P3. Cefi "equity-perp singles" — confirmed non-issue, no follow-up needed. (Tag+priority added 2026-08-16,
       plan_reconciler, tranche=tradfi, agt-a74a6a — was missing the `[TAG] Pn.` format every other todo in this corpus
@@ -255,3 +257,69 @@ on the actual run, which stays a separate, still-open follow-up (this P2 todo is
 Answered `BLK-op-retirement_completeness_pollutant_reverify_ice_still_live-adb53e8ea708` via
 `POST /api/blocked/{id}/answer` with this evidence (`from_role=operator`, `disposition=final`) — the blocked-question
 escalation is resolved with current status; the underlying purge action is not.
+
+### 2026-08-22 — D2 execution (dispositions.json, operator-ruled 2026-08-21 APPROVED ALL under stated precondition):
+fresh precondition + fresh measurement done, 2 of 3 legs verified resolved, ICE leg ready-to-execute (blocked on host
+contention this session — not a precondition failure)
+
+**Fresh precondition (§3a, gcs-and-manifest-delete-safety-protocol.md)**: `gcs_bucket_soft_delete_retention_seconds(
+market-data-tick-tradfi-prd-central-element-323112)` = **604800** (>= 604800 required) — PASSES, queried fresh this
+session via the sanctioned UTL helper (not gcloud subprocess — that path is hook-BLOCKED by
+`block_destructive_commands.py`, correctly).
+
+**Fresh live-manifest measurement** (bounded column-projected read, `read_availability_index(bucket, columns=[venue,
+source, instrument_id, capture_status, data_type, instrument_type, attempted_at])`, run via
+`scripts/dev/run-bounded-analysis.sh --mem-cap 4G`; total manifest rows at read time: **14,475,628**):
+
+- **ICE non-24h — STILL PRESENT, ready to purge.** 413,987 total non-24h ICE rows: `attempted_failed=396,493`,
+  `empty_confirmed=16,752` (untouched, already-correct), **`captured=742`** (661 `futures_chain` + 81 `ohlcv_1m`,
+  `max attempted_at=2026-08-16T03:43:46Z` — IDENTICAL counts/timestamp to the 2026-08-15/17 findings, confirming these
+  are the SAME static stale-reregistered objects, no new activity). `ohlcv_24h`/`ICE:INDEX:DXY-USD` kept-rows: 3,496
+  (untouched, correct).
+- **CBOE VIX-cash-index stragglers — 0 rows found (RESOLVED).** Mask `venue=CBOE AND instrument_type=index AND
+  instrument_id IN (CBOE:INDEX:VIX-USD, VIX)` matched **zero** rows, vs 17 on both 2026-08-15 and 2026-08-17. Resolved
+  by another session between the umbrella plan's 2026-08-21 re-check (still found 17,
+  `instruments_foundation_completeness_2026_06_24.md` §8) and this 2026-08-22 check — no purge action needed here.
+- **BARCHART — 4,655 rows, 100% `empty_confirmed`, unchanged since 2026-08-17 (CONFIRMS the 2026-08-17 correction,
+  supersedes the original 9,119 count).** `min/max attempted_at` both `2026-05-07T14:49:23.237671Z` (single static
+  stamp, exact match to 2026-08-17) — zero growth, zero non-`empty_confirmed` rows. Per this repo's own established
+  precedent (every purge/retire script that has ever run against this manifest —
+  `purge_tradfi_ice_non_24h_2026_07_14.py`, `delete_vix_cash_index_stragglers_2026_07_13.py`,
+  `retire_dex_pool_fees_all_captured_rows_2026_08_12.py`, `retire_rate_indices_legacy_captured_rows_2026_08_12.py` —
+  converges a pollutant TOWARD `empty_confirmed`, never physically deletes a manifest row), this population is
+  ALREADY at its terminal state — no manifest-row-deletion mechanic exists anywhere in this codebase, and inventing
+  one for a live 14.4M-row prod manifest is a bigger, less-reviewed risk than leaving an honest empty_confirmed
+  marker in place. **No action needed for this leg.**
+
+**ICE correction — built, not yet shipped.** Wrote
+`market-tick-data-service/scripts/one_offs/reverify_tradfi_ice_cboe_barchart_pollutants_2026_08_22.py` (3-leg script:
+leg 1 ICE reclass `captured`/`attempted_failed` → `empty_confirmed`/`EXPECTED_NO_PROVIDER_COVERAGE` + bounded
+prefix-scoped GCS-object delete for the reclassed cells — mirrors `purge_tradfi_ice_non_24h_2026_07_14.py`'s exact
+predicate but reads LIVE counts instead of a hardcoded stale baseline, matching this doc's own flagged staleness
+problem; legs 2/3 are hard-aborting verify-only checks, no mutation). Implements the codex's 2026-08-15 manifest-write
+coordination gate in full: `_assert_consolidator_paused()` hard-abort precondition + CAS
+`conditional_upload_file(if_generation_match=...)`, row-group-streamed read/write (bounded memory, mirrors
+`retire_dex_pool_fees_all_captured_rows_2026_08_12.py`'s pattern, not the older whole-pandas-frame-in-memory style).
+Fixed one real dtype-trap bug during review (the `available` column may be a genuine bool per
+`migrate_cme_monolith_trades_2026_07_26.py`'s documented precedent — the script now matches the schema's declared
+type instead of assuming string). Syntax-validated (`py_compile`). Added the matching VM-launcher category
+`tradfi-ice-cboe-barchart-reverify` to `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (4 insertion
+points: usage string, `_script_for()` case block with the standard 8-attempt jittered CAS-retry loop, the
+apply/dry-flag-suppression list, the final dispatch case list) — `bash -n` syntax-validated.
+
+**Why NOT executed to completion this session**: this is genuine Heavy I/O (whole-`_index` read-transform-write) that
+per `/codex/05-infrastructure/vm-launcher-runbook.md` must run on a dedicated VM, never this laptop — and
+`create-code-tarballs.sh` correctly refuses to tarball a repo with uncommitted changes without
+`--allow-dirty-tarball` (reserved for emergency hotfixes, not a routine dry-run — not used here). Committing needs a
+`quality-gates.sh`-green tree first. This session's host was measured at **`load averages: 321.31 241.65 220.20`**
+(`uptime`, 9 concurrent users) at the time — a single lightweight `gcs_bucket_soft_delete_retention_seconds()` call
+that normally completes in ~1s took **~19 minutes** wall-clock to return (it DID succeed, exit 0) under this
+contention, and even a bare `unified_trading_library` import did not complete within 60s in a supplementary check.
+Running `quality-gates.sh` for two services' worth of QG under this same contention would both take an
+unreasonably long time and further degrade an already-severely-contended shared host other agents depend on — the
+judgment call this pass was to NOT push a live prod-manifest write through under those conditions, rather than rush
+it. **Next step (unchanged scope, no re-diagnosis needed)**: once host load is sane, `quality-gates.sh --no-fix` on
+both changed files → `quickmerge --agent --files` (both repos) → dry-run VM via the new launcher category → verify
+dry-run output matches the fresh counts above → pause consolidator → `full` VM run → verify (0 residual
+captured/attempted_failed ICE non-24h rows, GCS re-list confirms 0 non-24h objects) → resume consolidator → flip
+this P2 todo with the VM's evidence.
