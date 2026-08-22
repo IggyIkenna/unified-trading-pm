@@ -172,12 +172,32 @@ could not track real consumption.
       on `AccountUsageRow` so the veto can require freshness, not just presence — a schema change,
       deliberately not bundled into this fix. Repo: agent-orchestrator.
 
-- [ ] [BACKEND] P2. Uniform refresh: `/api/accounts/{id}/refresh-usage` drives the `claude /usage`
-      pty TUI, which is Anthropic-only, with `refresh-deepseek-balance` bolted on as a second
-      endpoint — so the dashboard's refresh button is a per-provider exception, exactly what the
-      operator asked be removed. Dispatch it through a per-provider adapter (GLM now has
-      `fetch_glm_quota`; Codex has `codex_rate_limit_poller`'s real read; Gemini has
-      `gemini_headroom`) behind the one endpoint. Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P2. Uniform refresh — provider dispatch added to
+      `/api/accounts/{id}/refresh-usage` so the button is no longer Anthropic-only. — DONE
+      2026-08-22 for GLM, `agent-orchestrator@fd7bfbe531`. A GLM account now takes
+      `_refresh_glm_usage` (real Z.ai read, same generic fields, `rate_limited_until` from the
+      furthest exhausted window, slot rotation when genuinely blocked) instead of the
+      `claude /usage` pty — which is Anthropic-only by construction, and which also 400s on GLM
+      because GLM authenticates from GSM rather than an `oauth_token_env_file`. 6 new tests incl.
+      one asserting the pty is NEVER invoked for GLM. Full gate PASSED (5432 passed/5 skipped,
+      coverage 86.2214% vs 85.8559%). **Scope: GLM only** — Codex and Gemini still fall through to
+      the Anthropic path; see the two follow-ups directly below, which are what remains of "no
+      exceptions".
+
+- [ ] [BACKEND] P2. **Codex arm of the uniform refresh.** `codex_rate_limit_poller` already does a
+      REAL vendor read (`account/rateLimits/read` via the Codex SDK) and writes the same generic
+      `five_hour_pct`/`weekly_pct`, so this is wiring, not discovery — but it runs inside
+      `codex_bridge_server.py`'s OWN uvicorn process (port 8769), the only one holding an
+      authenticated `openai_codex.Codex()` session, so the refresh route cannot simply call it
+      in-process. Decide: proxy the refresh to the bridge, or move the read. Repo: agent-orchestrator.
+
+- [ ] [BACKEND] P2. **Gemini arm of the uniform refresh.** Gemini's real signal is RPM/RPD/TPM
+      per GCP project (`gemini_headroom.compute_gemini_capacity_snapshot`), NOT a 5-hour/weekly
+      pct pair — `AccountView` already carries the 5 gemini_* capacity fields for exactly this.
+      So the refresh arm should recompute + return that snapshot rather than forcing Gemini into a
+      Claude-shaped window, which is the same category error
+      `model_provider_badge_mismatch_2026_08_21` already fixed once in the dashboard's generic
+      `AccountRow`. Repo: agent-orchestrator.
 
 - [ ] [BACKEND] P3. Audit the remaining providers for the same estimate-vs-measurement confusion
       now that the pattern is known: confirm each poller's numbers are a genuine vendor read, and
@@ -219,3 +239,47 @@ could not track real consumption.
   `N802` violations in my new test files passed a GREEN gate and then blocked the commit at
   pre-commit. "Gate green" is the documented commit contract, so the gate and pre-commit disagreeing
   about what gets linted is a defect in the contract, not just an annoyance.
+
+## Deferred work after 2026-08-22
+
+Recommended NEXT item: **the Codex arm of the uniform refresh** — it is the only remaining
+"no exceptions" gap whose vendor read already exists and is proven, so it is wiring rather
+than investigation. Gemini's arm needs a shape decision first (RPM/RPD is not a 5h/weekly
+pair), and everything else below is either waiting on elapsed time or owned by a human.
+
+| item | state / why deferred | blocked on |
+| --- | --- | --- |
+| Codex arm of uniform refresh | **Not done** — vendor read exists (`codex_rate_limit_poller`), but it lives in the separate bridge process (:8769) that owns the authenticated Codex session; needs a proxy-or-move decision | nobody — pick it up |
+| Gemini arm of uniform refresh | **Not done** — needs the RPM/RPD/TPM shape, not a Claude-shaped 5h/weekly pair | nobody — pick it up |
+| Cross-provider audit: every poller writes `rate_limited_until`, not just percentages | **Not done** — the GLM lesson generalises; `ollama`/`gemma-self-hosted` should be modelled as "no vendor quota" explicitly rather than silently None | nobody — pick it up |
+| Residual ≤29-min staleness window in `tmux_pruner`'s pct veto | **Not done** — needs a "last probed at" column on `AccountUsageRow` so the veto can require freshness, not just presence. Deliberately NOT bundled: it is a schema change | nobody, but it is a design step |
+| Gate lints `server/` only, pre-commit lints everything staged | **Operator-owned** — operator said 2026-08-22 they will take this with another agent. Do not start it | operator (explicitly claimed) |
+| 4 `gemini-*` accounts have no env file; `gemini-3-5-flash-lite-proj5` is still `healthy`/selectable | **Operator-owned** — `claude setup-token` is an interactive OAuth flow, not scriptable. Until then every spawn onto one 503s | operator |
+| GLM/DeepSeek/Gemma resume | **Cannot be done yet** — operator paused them deliberately; GLM's own weekly meter is also exhausted until 2026-08-23 07:20 UTC regardless | elapsed time + operator |
+
+## Lessons (would otherwise be re-learned the hard way)
+
+- **An absence-proof is only as good as the vocabulary it probed.** "Z.ai exposes no quota
+  signal, full stop" came from inspecting INFERENCE response headers. The quota lives on a
+  separate monitoring endpoint. Before trusting any in-repo "X does not exist" claim, check
+  what was actually probed — the claim here was confidently written, cited a live check, and
+  was wrong.
+- **A wrong number in the SAFE direction is worse than no number.** The estimate read 14%
+  weekly against a real 100%. Had it errored or returned None, dispatch would have skipped the
+  account; instead it kept selecting it. Hence: a failed fetch now leaves prior values alone
+  and never substitutes a fabricated one.
+- **A percentage never stopped dispatch — `rate_limited_until` does.** Any future provider
+  poller that writes only percentages will reproduce this bug in its own provider.
+- **Gate green ≠ commit-ready** (see the todo above), and **a task-completion notification's
+  exit code is not the gate's verdict** — one run reported "exit code 0" for a gate that
+  exited 1, because a trailing `echo` in the backgrounded command was what exited 0. Read the
+  log, and read every `── step ──` header's own verdict: one run failed on a single
+  `ruff format` step at the TOP of a 9,578-line log while all 5,419 tests passed, and the
+  standard failure-greps (`FAILED`, `error:`, `N failed`) do not match ruff's
+  `Would reformat:` wording.
+- **Rejected approach**: restructuring `tmux_pruner`'s pct veto. Its premise ("real-probe
+  evidence overrides a weak text match") is correct and it was added for a real 2026-08-17
+  incident; the premise was simply FALSE for GLM. Fixing the data source fixed the veto. Do
+  not weaken that guard — a stale/re-rendered banner really can re-block a healthy account.
+- **The quota is per-PLAN, not per-account** for GLM: both accounts share
+  `glm-coding-plan-api-key` and return byte-identical numbers.
