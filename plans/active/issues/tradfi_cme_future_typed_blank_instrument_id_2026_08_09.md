@@ -46,7 +46,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-archive_exempt: true # SUPERSEDED AGAIN 2026-08-22 (slot-6): the retire todo below is now done (0 open todos) -- this bridges the mode-2 cross-repo flip-then-archive split (plan-completion-and-archival-discipline.md § archive_exempt bridge); dropped in the immediately-following git-mv archival commit. Prior rationale (2026-08-10, superseded 2026-08-19): follow-up tracked in batch11 plan.
+archive_exempt: true # CORRECTED 2026-08-22 (slot-6): the retire todo is done, but the archival git-mv itself is NOT yet done -- 2 active docs (empty_confirmed_and_coverage_correctness_audit_2026_08_15.md, tradfi_satellite_ao_dispatch_batch13_2026_08_13.md) cite this path in their OWN `related:` frontmatter and must be repointed first (plan-completion-and-archival-discipline.md step 5), which is genuinely more work than this session's D2-execution scope -- tracked as the new todo below rather than left prose. Drop this field once that todo ships the git-mv. Prior rationale (2026-08-10, superseded 2026-08-19): follow-up tracked in batch11 plan.
 resolved_by:
 source:
   [
@@ -172,6 +172,17 @@ Not urgent (static, not actively growing) but real and unaddressed.
       before dropping it — 649/76,454 combos in the 2026-08-10 census had NO `futures_chain` counterpart at all, so a
       blind blanket drop is unsafe). **Done when**: live manifest recount shows 0 `instrument_type=FUTURE` rows with
       populated `underlying` + null `instrument_id` (the ORIGINAL Done-when this issue was filed against).
+
+- [ ] [SCRIPT] P3. **NEW 2026-08-22** — complete the 6-step archival ritual for this now-fully-done doc: (1) repoint
+      the `related:` frontmatter in `plans/active/empty_confirmed_and_coverage_correctness_audit_2026_08_15.md`
+      (2 hits) and `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md` (1 hit) away from this path —
+      no new codex contract to write (this session applied an already-documented pattern, nothing new to capture),
+      so repoint at whichever still-active doc now owns the relevant context, or drop the stale `related:` entry if
+      none does; (2) `git mv` this doc to `plans/archive/issues/` with an archived-banner + `superseded_by` pointer;
+      (3) drop `archive_exempt` in the same commit. Per plan-completion-and-archival-discipline.md's cross-repo
+      mode-2 rule, this MUST be its own commit, separate from any other doc edit. **Done when**: this doc lives at
+      `plans/archive/issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md`, `archive_exempt` is gone, and
+      both referrer docs point elsewhere.
 
 ## Progress Log
 
