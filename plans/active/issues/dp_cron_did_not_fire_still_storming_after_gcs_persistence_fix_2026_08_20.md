@@ -234,3 +234,19 @@ so they are recorded here and tagged for the owning tranche rather than acted on
   (data-pipeline-correctness, aging, no owner) rather than re-diagnosing further. No code/infra/manifest changes
   made this pass; no registry append warranted (both dominant events, `DP_CRON_DID_NOT_FIRE` storm and the
   CME/BYBIT productivity gaps underneath it, are already registered and already tracked).
+- **2026-08-22T09:2xZ (slot-21, data_pipeline_failure, escalation `agt-13a28f`, DP-WATCHER-002 page)**: paged for
+  `manifest-consolidator-defi` cron "did not fire on schedule (last output 317m ago)". Live-verified all three
+  defi manifest-consolidator identities the name could plausibly refer to
+  (`uts-prod-manifest-consolidator-market-data-defi-cron`, `-instruments-defi-cron`, `-features-defi-cron`,
+  `asia-northeast1`): Cloud Scheduler `lastAttemptTime` for each is within its own cadence (market-data-defi
+  `*/1min`, last attempt 09:26:01Z against a 09:26:28Z check time; instruments-defi + features-defi hourly, both
+  last attempted 09:00Z), and `gcloud run jobs executions list` for each shows the 3 most recent executions all
+  `succeededCount=1`/`failedCount=0` with completion times matching that same cadence (market-data-defi completed
+  09:26:35Z/09:25:47Z/09:24:44Z; instruments-defi 09:01:11Z/08:51:02Z/08:35:56Z; features-defi
+  09:00:59Z/08:00:59Z/07:01:05Z). No staleness anywhere close to 317m found on any of the three — this is the
+  same false-positive/stale-alert class this doc + its 3 predecessors already document (dedup-defeat + duplicate-
+  consumer routing history above), not a new root cause. Per findings-triage ("fits another plan → annotate it,
+  don't fix"), no duplicate issue doc filed and no code changed — this entry is the annotation. Did not have
+  scope/time this pass to re-check the alert's own recurring-cooldown/dedup path for why a since-resolved-looking
+  condition is still generating a fresh 09:2xZ page (todo 4 below already tracks reconciling this doc family's
+  stale-vs-current status; this occurrence is further evidence that pass is still owed).
