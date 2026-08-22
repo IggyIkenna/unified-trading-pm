@@ -169,3 +169,29 @@ confirms the remaining pressure is legitimate concurrent fleet work, not orphans
 Lesson for future multi-lane pushes: an isolated-worktree gate whose parent agent dies keeps running and can keep
 spawning, so a session that loses agents (network outage, crash) should sweep for `ppid=1` gate trees rather than
 assume its work stopped with it.
+
+## Coverage-quality push, scoped 2026-08-22 (operator ask: get unattributed, sports and unverified down)
+
+- [ ] [BACKEND] P1. **Unattributed venues, re-measure then close the remainder.** Hypothesis to TEST first, not
+      assume: the 24 manifest-unattributed tokens substantially overlap the 24 declared-but-unbucketed venues the
+      SSOT fix just bucketed (23 DeFi venues bucketed, ALCHEMY-ONCHAIN re-homed to DATA_SOURCE_CAPABILITIES).
+      After that lands, re-run the coverage dump and DIFF the still-unattributed set against the fix. Whatever
+      remains is a manifest-side naming mismatch (pre-canonical bare-protocol tokens with no chain suffix), which
+      needs a manifest attribution pass keyed on the canonical venue vocabulary, not another registry edit. Close
+      to zero, then delete the Unattributed node from the client trees.
+- [ ] [BACKEND] P1. **Sports coverage, honest root cause.** The sports tree is dominated by the eight Unity
+      central-wallet child books (3ET, BROKER5, CROWN, SBO, SHARPBET, VX, BETDEX, IBC), which carry
+      NO_ADAPTER_YET in venue_adapter_keys.py. This is OUR missing connector work, NOT venue-side onboarding, so
+      the "coming soon (venue-side)" wording must not be used for them. Either build the Unity central-wallet
+      adapter path (one integration unlocks all eight) or state them as covered by the Unity integration when it
+      lands. Separately, extend the smoke-dump proof to the odds-API books that DO have adapters so their cells
+      show proven data.
+- [ ] [BACKEND] P1. **Unverified badges, extend the proven smoke-dump method.** The DeFi batch proved the harness
+      works (30 venues proven via one-block dumps to -test- buckets, see defi_venue_smoke_batch1_2026_08_20.md).
+      Extend the same harness to the remaining unverified CeFi, TradFi and prediction venues, and to sports per
+      the item above. Blocked-on-credentials venues get the credential ask, never a silent unverified. Prereq to
+      re-run cleanly: the IS_TEST_RUN bucket-routing fix (landed, market-tick-data-service@473c9c866c) and the
+      -test- manifest-write gap tracked in the ws-resilience C3 issue.
+- [ ] [DOC] P2. Once the three above land, refresh both client artefacts: coverage trees regenerated from the new
+      measurement, Unattributed node deleted, sports stated accurately, and the header ready/not-ready tallies
+      re-derived (they are still the 2026-08-19 snapshot and cannot be hand-edited).
