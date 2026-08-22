@@ -69,8 +69,12 @@ collision.
   already-tracked Tardis code-274 concurrent-IP-lock condition. Evidence:
   `market-tick-data-service@<SHA>` (`scripts/verify_cefi_liquidations_schema_fix_2026_08_22.py`);
   see "Post-fix verification (MTDS)" below.
-- [ ] [DATA] P1. Separately continue the existing Tardis code-274 lockout
-  remediation; do not mark those failures as resolved by the registry fix.
+- [x] [DATA] P1. ✅ Continued: confirmed no new code fix is warranted for the code-274
+  slice. The full remediation (`TardisConcurrencyLease` GCS CAS lease + the hard
+  1-concurrent-Tardis-VM cap `tardis-concurrency-guard.sh`, both fail-closed/fail-open
+  as designed) already shipped and is production-verified (`plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md`).
+  A fresh live-fleet check (2026-08-22) found zero currently-running VMs matching the
+  guard's Tardis pattern on GCP or AWS — no active cap violation. See Progress Log.
 
 ## Evidence
 
@@ -118,6 +122,23 @@ entirely the separate, already-tracked Tardis code-274 concurrent-IP-lock condit
 this fix.
 
 ## Progress Log
+
+- **data_pipeline_failure slot-19 2026-08-22 — Tardis code-274 remediation continued, no new fix warranted.**
+  This todo is the identical scope to the sibling doc's `[DIAGNOSE]` todo
+  (`/plans/active/issues/dp_fetch_009_cefi_liquidations_batch_aster_2026_08_20.md`, same escalation `agt-9d9a98`),
+  diagnosed there in full earlier today (slot-8 data_pipeline_failure): the code-274 population's producer is the
+  already-shipped, fully-enforced Tardis concurrency mechanism (`TardisConcurrencyLease` + the hard
+  1-concurrent-Tardis-VM cap `tardis-concurrency-guard.sh`), not a code gap — full history in the archived
+  `plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md`. Rather than re-deriving that diagnosis, ran an
+  independent fresh live-fleet check to confirm currency: `gcloud compute instances list
+  --filter='status=RUNNING OR status=PROVISIONING OR status=STAGING'` (GCP) and `aws ec2 describe-instances
+  --filters Name=instance-state-name,Values=running,pending` (AWS) — **zero VMs on either cloud match the guard's
+  Tardis name-pattern** (`^(cefi|tradfi)-.*-(heavy|light)-|^cefi-queue-|^mtds-backfill-cefi-`); the only running
+  `cefi-*` VMs are ASTER/HYPERLIQUID (cap-exempt, non-Tardis sources) and the always-on daily-cron/live-mode VMs
+  (exempt, use live endpoints not the keyed `datasets.tardis.dev` bulk endpoint). No active cap violation. The
+  remaining historical `attempted_failed` code-274 population resolves via the existing daily honest-absence
+  re-probe now that the fleet is capped, not a new code change. Did not build a duplicate mechanism. Closing this
+  doc's third and final todo on that basis, matching the sibling doc's same-day resolution.
 
 - **/plan-reconcile ao 2026-08-22**: stripped the inline `# FIXED 2026-08-21 ...` comment from the
   `assigned_vm:` frontmatter line. The 2026-08-21 un-orphaning above set `assigned_vm: planning` but left its
