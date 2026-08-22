@@ -12,7 +12,7 @@ summary: >-
   human-only-permanent, or conflict-gated (see the parked doc for the full breakdown). Conflict-checked against all
   6 known real covering cefi plans (batch20+finalize, batch21+finalize, track2-coverage-backfill-checkpoints+
   finalize) and a corpus-wide grep for the source doc's basename — zero hits, nothing else claims this ground.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -31,6 +31,7 @@ parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P3
+milestone: M3
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.15
@@ -95,3 +96,9 @@ source: >-
   — zero hits anywhere, confirming the Phase-1 agent's own finding. Source doc's checkbox flipped at authoring time
   to cite this batch, explicitly noting it's currently draft/unapproved so a future reader isn't misled into
   thinking the work is already dispatched.
+- **2026-08-22 — ruling D8 (Draft satellite batches activation)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Promote all — already conflict-checked, vetted work idle only for
+  lack of sign-off. Re-ran the conflict-check fresh (2026-08-22): the sole source doc
+  (`cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md`) is claimed only here, no new sibling
+  batch has appeared since 2026-08-19. Flipped `status: draft` → `active` above. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

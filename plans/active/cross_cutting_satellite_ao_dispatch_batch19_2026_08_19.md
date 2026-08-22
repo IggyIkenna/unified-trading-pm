@@ -10,7 +10,7 @@ summary: >-
   drafting via a basename grep across all of them — zero hits for any of the 6 target docs, so nothing here
   duplicates ground an existing dispatched todo already claims. `status: draft` per CLAUDE.md's "Plan destination —
   ASK BEFORE CREATING" HARD RULE — never auto-shipped, requires explicit operator approval to flip `active`.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -33,6 +33,7 @@ parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
+milestone: M2
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
@@ -138,3 +139,12 @@ prior batches have (a dated note + checkbox flip), not duplicated here.
   classified, 7 `orphaned_never_touched` + `ao_eligible:true`, 6 extracted cleanly here — conflict-check against
   every existing cross-cutting batch + both closeout docs found zero overlap for all 6). `status: draft` — awaiting
   operator approval to dispatch.
+- **2026-08-22 — ruling D8 (Draft satellite batches activation)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Promote all — already conflict-checked, vetted work idle only for
+  lack of sign-off. Re-ran the conflict-check fresh (2026-08-22) across all 7 source docs (`dp_exit_code_monitor_
+  cadence_stale_after_hourly_reconcile_2026_08_19`, `docs_reconcile_bigger_scope_findings_2026_08_19`,
+  `data_pipeline_alerts_batch_remediation_2026_07_15`, `cross_ag_live_capture_parity_2026_08_14`,
+  `e2e_wiring_reachability_audit_2026_08_15`, `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14`,
+  `mvp_could_exist_rollup_dual_scope_2026_08_12`) — no other active plan claims the same specific sub-items this
+  batch targets. Flipped `status: draft` → `active` above. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -38,6 +38,7 @@ parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
+milestone: M2
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
@@ -219,19 +220,20 @@ source:
       which is why three table/tree attempts were rejected. Needs `GET /api/backlog/graph` behind it. **Gate**: design
       received → implemented → the relation a table cannot express (one prereq gating tasks in multiple plans) is
       visible in one view.
-- [ ] [INFRA] P2. Per D34 ruling (OPERATOR-RULED 2026-08-21 — APPROVED: reactivate l2_book_microstructure_capture
-      so the reopen-drop dispatch-defect re-test can run): flip
-      `plans/active/l2_book_microstructure_capture_2026_07_13.md`'s `assigned_vm: NA` back to
-      `assigned_vm: planning` (`execution_scope: orchestrator-agent`), then execute the re-test gate described
-      below. ⚠️ **RE-SCOPED 2026-07-23 — the original measurement is now VOID; do NOT close this as fixed.**
-      Re-measured on the migrated live DB: only **1** `l2_book%` task row survives
-      (`l2_book_microstructure_capture-001`, `done`), while the plan still shows **2 open todos**. That looks like the
-      same divergence, only worse — **but it is not evidence any more**: the plan is now `assigned_vm: NA` (swept into
-      the operator's fleet-wide dispatch pause, `unified-trading-pm@468a0f580`), so regen does NOT ingest it and absent
-      task rows are the CORRECT, expected behaviour rather than a defect. **The bug is unobservable while dispatch is
-      paused, not proven fixed.** **Re-test gate**: when this plan returns to `assigned_vm: planning`, confirm every
-      open `- [ ]` gets a task row — if the two BLOCKED todos are again absent while the plan is ingested, the
-      reopen-drop defect is live and this todo becomes actionable. Original finding: **NEW 2026-07-17 — the l2_book
+- [ ] [INFRA] P2. **UN-VOIDED 2026-08-22 (D34 ruling, OPERATOR-RULED 2026-08-21 — APPROVED: reactivate
+      `l2_book_microstructure_capture` so the reopen-drop dispatch-defect re-test can run)**:
+      `plans/active/l2_book_microstructure_capture_2026_07_13.md` was flipped `assigned_vm: NA` → `assigned_vm:
+      planning` this dispatch (`unified-trading-pm`, this commit) — the re-test gate's precondition is now met, so
+      this todo is live/actionable again, not void. **Re-test gate (now open)**: once `regen_backlog_from_plan.py`
+      next ingests the reactivated plan, confirm its 2 open `- [ ]` todos (`l2_book_microstructure_capture-005`/
+      `-007`, both `BLOCKED-*`-tagged) each get a live task row in the orchestrator `tasks` table. If either is
+      absent from the table while the plan shows `status: active` + `assigned_vm: planning` (ingested), the
+      reopen-drop dispatch defect is CONFIRMED live and needs its actual root-cause fix (candidate causes already
+      catalogued below — orphan-GC pruning queued-undispatched zombies, positional-id instability, or a `BLOCKED-*`
+      brief exclusion not yet found in `server/dispatch.py`). If both rows appear and stay live, the defect did NOT
+      reproduce on this migrated backlog and this todo can close citing that measurement. **Do not close by
+      re-reopening the task rows manually** — that is what decayed twice already; only a fresh regen-driven ingest
+      counts as a real test. Original finding: **NEW 2026-07-17 — the l2_book
       reopen did NOT hold, and its own verification says it did.**
       `backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16` records that infra slot-2 reopened
       `l2_book_microstructure_capture-005`/`-007`, and verified they STUCK (`status: queued`, `done_sha: None`,
@@ -308,3 +310,9 @@ source:
 - **2026-08-21 — ruling D34 (l2_book plan reactivation)**: OPERATOR-RULED 2026-08-21 — APPROVED: reactivate
   l2_book_microstructure_capture (assigned_vm: planning) so the reopen-drop dispatch-defect re-test can run.
   Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-22 — D34 executed**: flipped `plans/active/l2_book_microstructure_capture_2026_07_13.md`'s
+  `assigned_vm: NA` → `planning` (`unified-trading-pm`, this commit) and un-voided item 5's re-test todo above —
+  the gate's precondition (plan back in `planning`) is now met, so the todo is live/actionable rather than
+  void-pending-retest. The actual re-test (confirming both `l2_book_microstructure_capture-005`/`-007` task rows
+  appear on the next `regen_backlog_from_plan.py` ingest) is a follow-on dispatch/verification step, not done in
+  this doc-only edit.

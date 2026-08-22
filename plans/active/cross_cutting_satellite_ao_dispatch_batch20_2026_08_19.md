@@ -9,7 +9,7 @@ summary: >-
   shipped `cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md` first (`unified-trading-pm@697c15573e`) — its 6
   items and this batch's 3 items are from DISJOINT source docs (verified by direct comparison, zero overlap), so
   this is genuinely additive, not a duplicate. `status: draft` per the skill's safety rail.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -30,6 +30,7 @@ parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
+milestone: M2
 estimate_class: infra
 estimate_baseline_ai_days: 0.7
 estimate_calibrated_ai_days: 0.6
@@ -106,3 +107,15 @@ source: >-
   items are genuinely additive. Full tranche orphan taxonomy (what's in batch19, what's in batch20, and the ~17
   remaining deferred docs with their gating reason) is in
   `ag_closeout_audit_cross_cutting_parked_2026_08_19.md`.
+- **2026-08-22 — ruling D8 (Draft satellite batches activation)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Promote all — already conflict-checked, vetted work idle only for
+  lack of sign-off. Re-ran the conflict-check fresh (2026-08-22): confirmed `mdps_fleet_duplicate_relaunch_
+  explosion_2026_08_15.md`'s sole open todo (the `uts-prod-dp-exit-code-monitor-cron` re-enable) is claimed only
+  here — the two other docs citing that source (`cefi_satellite_ao_dispatch_batch20_2026_08_16.md`,
+  `prediction_satellite_ao_dispatch_batch14_2026_08_19.md`) explicitly did NOT claim this item (one already
+  shipped a different pair of items concurrently, the other explicitly flagged-not-claimed as cross-AG-out-of-
+  scope); and `live_path_has_no_stale_producer_revocation_2026_08_14.md`'s two claimed todos (actuator wiring,
+  anti-inertness guard) are distinct from `producer_silence_flatten_protocol_2026_08_14.md`'s already-shipped,
+  explicitly-scoped-narrower producer-liveness-detection slice ("the other 22 todos... remain open — this was a
+  deliberately scoped slice, not a claim on the rest of the plan"). No conflicts found. Flipped `status: draft` →
+  `active` above. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

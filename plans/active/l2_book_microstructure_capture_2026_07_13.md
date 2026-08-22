@@ -18,9 +18,10 @@ tags: [strategy, v2-engine, market-making, orderbook, microstructure]
 related: [/plans/active/v2_engine_venue_buildout_2026_06_15.md, /plans/active/cefi_consolidated_closeout_2026_07_18.md]
 created: 2026-07-13
 parent_epic: strategy_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
+milestone: M3
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
@@ -451,3 +452,8 @@ Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit
   status: resolved); step 1 of 3 now has a live AO-dispatch path (batch13 todo 2) but steps 2-3 remain un-authorized.
 - **na-eligibility-audit 2026-08-16** [body-hash:97979de97c852aab]: KEEP-NA, valid — 7-todo plan, 6/7 done with hard commit-sha evidence (including two premise-corrections and a caught backlog-vs-plan-doc tracking discrepancy).
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-22 — ruling D34 (l2_book plan reactivation)**: OPERATOR-RULED 2026-08-21 — APPROVED: reactivate
+  `l2_book_microstructure_capture` (`assigned_vm: planning`) so the reopen-drop dispatch-defect re-test in
+  `issues/ao_residuals_after_dispatch_hardening_2026_07_17.md` (item 5) can run. Flipped `assigned_vm: NA` →
+  `planning` above (`execution_scope: orchestrator-agent` was already correctly set). Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

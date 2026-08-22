@@ -12,7 +12,7 @@ summary: >-
   not-yet-covered list. This batch also carries no [OPERATOR]-tagged items — every extracted todo is a read-only
   verification, a re-run-and-report VM check, or a reversible manifest reclassification already dry-run tested and
   cited against the GCS delete-safety protocol.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -36,6 +36,7 @@ parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
+milestone: M3
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
@@ -63,8 +64,15 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 19 — 2026-08-21
 
-**Status is `draft` / `assigned_vm: NA` deliberately** — per the same skill safety rail `batch14`/`batch18` used,
-flipping to `active`/`planning` is an operator decision, not made here.
+> **2026-08-22 — promoted per D8 ruling.** Was `draft` / `assigned_vm: NA` deliberately (per the same skill safety
+> rail `batch14`/`batch18` used) pending explicit sign-off. D8 (ADOPTED-REC 2026-08-21, autonomous-dispatch
+> authority, AUTONOMOUS_AGENT_RULES rule 2) supplies that sign-off ("Promote all — already conflict-checked,
+> vetted work idle only for lack of sign-off; the defi batch also stops recurring false DP-FETCH-009 pages").
+> Flipped `status: draft` → `active` above (per this dispatch's literal instruction). **`assigned_vm` stays `NA`**
+> — flipping it to `planning` requires a gated finalize-companion plan per `task_template.md` §4 (the plan-hygiene
+> pre-commit gate confirmed this: `check_ag_closeout_linkage`/finalize-coverage failed on the attempt), which is
+> its own follow-on authoring task, not part of this dispatch; left as a `- [ ]` follow-up in this doc's own todos
+> if/when AO dispatch of this batch is wanted. The batch is now a normal active, human-executed (`NA`) plan.
 
 ## Todos
 
@@ -142,6 +150,11 @@ flipping to `active`/`planning` is an operator decision, not made here.
   `PROVED NOTHING.*DEFI`, and `pipeline-e2e-check-mdps` — only hit is the source doc itself
   (`data_pipeline_check_mdps_features_2026_07_20.md`, the consolidating parent doc, is a citation target, not a
   competing claim on the DEFI-leg re-run specifically). Clear.
+- **2026-08-22 re-check (D8 promotion)**: re-ran all 3 basename greps fresh — same zero-conflict result as
+  2026-08-21 authoring time; `defi_turbo_api_hides_real_captured_data_2026_07_07.md`'s own remaining open todo
+  still reads "➡️ EXTRACTED → plans/active/defi_satellite_ao_dispatch_batch19_2026_08_21.md" (its other citing
+  docs — batch2/batch3_finalize/lst_rates_residual/instruments_completion_tracker — reference already-closed,
+  different historical sub-items, not this one). No drift since drafting.
 
 ## Not extracted this batch — non-batchable taxonomy (rows read in full this pass)
 
