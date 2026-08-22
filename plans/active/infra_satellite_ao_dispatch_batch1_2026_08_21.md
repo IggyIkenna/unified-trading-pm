@@ -100,6 +100,18 @@ context_scope:
 
 ## Todo 2 — sweep the ~694 `# Epic: infrastructure_master` script-lifecycle-marker header comments
 
+> **SPLIT 2026-08-22 (measured fresh at pickup)**: true scope is 1250 total corpus-wide
+> `^# Epic: infrastructure_master$` hits, 1182 under `scripts/`+`tests/` across **25 repos** — larger than the
+> source doc's 2026-08-18 694-count and the plan's own "comparable to or larger than the 297+118-doc sweep" scale
+> note anticipated. Too large for one dispatch — splitting into per-repo sub-todos per this todo's own instruction
+> ("if the true scope proves too large for one dispatch once measured fresh, split further and note the split
+> here"). The original todo (below) stays unchecked as the umbrella item; done when every Todo 2a sub-item is
+> checked. Methodology (directory-based, mirrors the source plan's Rule A-E): `scripts/cicd/**` +
+> `scripts/self-hosted-runners/**` + `scripts/workflow-templates/**` -> `ci_master`; UAC schema/API-contract
+> scripts (e.g. `scripts/openapi/**`) -> `uac_master`; everything else -> `security_and_cross_cutting_master`
+> (ambiguous cases default to `security_and_cross_cutting_master` per the source plan's own ambiguous-doc
+> precedent).
+
 - [ ] [SCRIPT] P1. **Reclassify every `# Epic: infrastructure_master` script-lifecycle-marker header comment across
       `scripts/` + `tests/`** — extracted verbatim from `epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md`'s
       Phase 3 follow-up todo (found during that plan's own corpus-wide `infrastructure_master` sweep, out of that
@@ -133,8 +145,54 @@ context_scope:
       plans/active/issues/*.md` → only the source plan's own text (describing the finding), no other active plan
       claims this sweep. First dispatch of this item.
 
+## Todo 2a — per-repo sub-batches (split 2026-08-22, see Todo 2's SPLIT note for methodology)
+
+Each sub-item: `rg -c "^# Epic: infrastructure_master\$" scripts/ tests/` -> 0 for that repo, `quality-gates.sh`-
+green, shipped via `quickmerge.sh --agent --files`. File count is the 2026-08-22 measured count (will drift —
+re-measure fresh at pickup). Cross-repo case: flip the sub-item in this plan (unified-trading-pm) in the SAME
+worker turn as the code commit in the target repo, per RULES.md § 2.
+
+- [x] [SCRIPT] P1. ✅ DONE 2026-08-22 — `unified-trading-pm` (699 files: 59 -> `ci_master`, 25 -> `uac_master`,
+      615 -> `security_and_cross_cutting_master`) — `unified-trading-pm@6ff53a98d9`.
+- [ ] [SCRIPT] P1. `deployment-service` (323 files; concentrated in `scripts/vm/`, `scripts/migrations/`,
+      `scripts/recovery/` — almost entirely `security_and_cross_cutting_master` per methodology, no CI/UAC
+      candidates observed in the 2026-08-22 directory sample).
+- [ ] [SCRIPT] P1. `unified-api-contracts` (33 files — UAC's own repo, strong `uac_master` prior; verify per-file
+      before assuming 100%).
+- [ ] [SCRIPT] P1. `e2e-testing` (29 files).
+- [ ] [SCRIPT] P1. `market-tick-data-service` (18 files).
+- [ ] [SCRIPT] P1. `ibkr-gateway-infra` (11 files).
+- [ ] [SCRIPT] P1. `unified-trading-system-ui` (10 files).
+- [ ] [SCRIPT] P1. `instruments-service` (10 files).
+- [ ] [SCRIPT] P1. `features-service` (10 files).
+- [ ] [SCRIPT] P1. `unified-trading-library` (8 files).
+- [ ] [SCRIPT] P1. `system-integration-tests` (7 files).
+- [ ] [SCRIPT] P1. `agent-orchestrator` (4 files).
+- [ ] [SCRIPT] P1. `strategy-service` (3 files).
+- [ ] [SCRIPT] P1. `market-data-processing-service` (3 files).
+- [ ] [SCRIPT] P1. `alerting-service` (3 files).
+- [ ] [SCRIPT] P1. `ml-service` (2 files).
+- [ ] [SCRIPT] P1. `fund-administration-service` (2 files).
+- [ ] [SCRIPT] P1. `deployment-ui` (2 files).
+- [ ] [SCRIPT] P1. `unified-trading-api`, `trading-agent-service`, `greeks-service`, `execution-service`,
+      `deployment-api`, `client-reporting-api`, `batch-live-reconciliation-service` (1 file each — small enough to
+      bundle into one dispatch if convenient, or split further per-repo).
+
+**Note**: several of the above hits are on template-managed files (`scripts/setup.sh`, `scripts/quality-gates.sh`,
+`scripts/setup-workspace.sh`) that are byte-identical copies stamped per-repo from a common origin, not live
+symlinks (verified 2026-08-22: no live template dir found under `unified-trading-pm` for these — each repo carries
+its own independently-editable copy). No single-point fix exists; each repo's copy needs its own edit.
+
 ## Progress Log
 
+- **infra worker, 2026-08-22**: picked up Todo 2. Measured fresh scope at pickup: 1250 total corpus-wide
+  `^# Epic: infrastructure_master$` hits (1182 under `scripts/`+`tests/`, 25 repos) — larger than the source doc's
+  694-count. Split into Todo 2a per-repo sub-todos per Todo 2's own instruction. Completed `unified-trading-pm`'s
+  699-file sub-item this dispatch (directory-based classification: `scripts/cicd/**` +
+  `scripts/self-hosted-runners/**` + `scripts/workflow-templates/**` -> `ci_master` (59);
+  `scripts/openapi/**` -> `uac_master` (25); everything else -> `security_and_cross_cutting_master` (615)) —
+  `unified-trading-pm@6ff53a98d9`. `quality-gates.sh` run + evidence recorded below once it completes. 24 repos
+  remain in Todo 2a for future dispatch.
 - **na-eligibility-audit 2026-08-21 (infra tranche, wave 2)**: drafted. Item 1 extracted from
   `check_line_caps_issues_subdir_full_corpus_glob_gap_2026_08_19.md` todo 1 (KEEP-NA todo 2, the operator-gated
   content-split question for the concrete over-cap doc, stays in the source doc). Item 2 extracted from
