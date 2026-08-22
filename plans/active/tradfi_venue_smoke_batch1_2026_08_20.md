@@ -40,9 +40,14 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 - [x] ✅ [BACKEND] P0. Execute the canonical batch smoke contract for every current non-Databento TradFi row; Gate: each row proves capture, canonical path, manifest atom, and genuine capture status. Runtime evidence: market-tick-data-service@b89f288c06; six rows produced canonical objects, with FRED/FX/ICE manifest atoms `capture_status=captured`; KRX/NASDAQ/NYSE are genuine `empty_confirmed` zero-row exceptions tracked in the progress log.
 - [x] ✅ [BACKEND] P1. Record one testnet verdict for every TradFi venue, distinguishing non-Databento sourcing from the exempt cells; Gate: every distinct venue has a written verdict. — Evidence: all 8 declared `VENUE_TO_ASSET_GROUP["tradfi"]` venues (CBOE, CME, FRED, FX, ICE, KRX, NASDAQ, NYSE — the complete set the work-list generator iterates) have a written, code-grounded verdict: 6 route through `IbkrTradFiAdapter` (IBKR paper port 4002 declared but real order placement structurally gated off, so simulation via the adapter's own L1/L2 matching engine is the honest current answer); 2 (FRED, KRX) have no execution adapter at all — data-only reference/index feeds. Full table + per-venue Databento-exempt-vs-non-Databento cell breakdown in the 2026-08-22 (slot 13) Progress Log entry below.
-- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; file an operator credential request when a credential gap is confirmed. Gate: no venue is silently omitted because it is TradFi.
+- [x] ✅ [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; file an operator credential request when a credential gap is confirmed. Gate: no venue is silently omitted because it is TradFi. — Evidence: execution-service@c531ca3bb3 adds + runs `scripts/run_tradfi_testnet_connectivity_smoke.py` live. Finding: `ibkr-account-credentials` (GSM) resolves live — NOT a credential gap — but no IB Gateway process is reachable from anywhere in the project; all 6 IBKR-routed venues honestly report `provisioned_gateway_unreachable`, FRED/KRX report `not_applicable_no_execution_surface`. No credential request filed — none is warranted; see Progress Log.
 - [ ] [BACKEND] P1. Track every failed or absent TradFi row with its resolved source and data type; Gate: a declared Databento exemption is never used to hide a non-Databento failure.
 - [x] ✅ [BACKEND] P0. Re-run the source resolver and prove the eight exemption cells are exactly CBOE/CME/NASDAQ/NYSE ohlcv_1m/ohlcv_1s; Gate: a non-exempt negative control fails. — unified-api-contracts@b84bc7df + runtime resolver evidence below.
+- [ ] [OPERATOR] P3. Decide whether to stand up the IB Gateway VM (`ibkr-gateway-infra` Terraform; credential already
+      provisioned as `ibkr-account-credentials`) ahead of TradFi's live/paper cutover, or leave it undeployed until
+      that cycle begins (current state — consistent with "TradFi is batch-only this cycle" per
+      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md:82`). Once decided/deployed, re-run
+      `execution-service/scripts/run_tradfi_testnet_connectivity_smoke.py` to confirm `provisioned_and_reachable`.
 
 ## Progress Log
 
@@ -84,3 +89,30 @@ filed); 2 (FRED, KRX) are data-only reference/index feeds with no execution surf
 apply to them by nature. Every non-Databento data source used by this batch's 8 in-scope cells (`fred`,
 `yahoo_finance`) independently declares `supports_testnet=False` in the registry — consistent with the adapter-level
 finding above, not contradicting it.
+
+**2026-08-22 (slot 9, backend_engineer) — testnet smoke coverage + credential-provisioning check, todo 3.** Added
+`execution-service/scripts/run_tradfi_testnet_connectivity_smoke.py` (mirrors the CeFi sibling
+`run_cefi_testnet_connectivity_smoke.py`'s structure/taxonomy) and ran it live this session — a real Secret Manager
+read + a real TCP probe, not a mock. Cross-checked against
+`plans/active/issues/ibkr_place_order_guard_determinism_proof_infeasible_2026_08_21.md`: that issue answers a
+DIFFERENT question (can `place_order` be proven safe to enable) and does not cover credential provisioning or
+connectivity smoke coverage — no overlap, no redundant work.
+
+| Check | Result | Basis |
+|---|---|---|
+| `ibkr-account-credentials` (GSM secret, backs all 6 IBKR-routed venues) | **PROVISIONED** — `get_ibkr_credentials()` resolves live (real Secret Manager read); independently confirmed via `gcloud secrets versions list ibkr-account-credentials` → 1 enabled version since 2026-03-23 | Not a credential gap — the login secret genuinely exists and is populated |
+| IB Gateway reachability (CBOE/CME/FX/ICE/NASDAQ/NYSE — all share ONE physical Gateway, one host:port) | **UNREACHABLE** — live TCP probe (`IbkrTradFiAdapter.health_check()`) to 127.0.0.1:4002 failed on every venue; `gcloud compute instances list --filter="name~ibkr"` (project `central-element-323112`) returns zero instances — no Gateway VM is deployed anywhere in this project today | Measured, not assumed. `ibkr_tradfi.py` has zero call sites for `get_ibkr_credentials()` — IBKR's socket API takes no per-call credential, so this is a pure infra-deployment gap, independent of the (already-provisioned) credential |
+| FRED, KRX | **NOT APPLICABLE** — no execution adapter exists (confirmed via directory listing of `execution_service/trade_execution/adapters/`); already established in todo 2 | No execution surface by nature |
+
+**Why no operator credential request was filed**: the todo's "file an operator credential request when a credential
+gap is confirmed" is conditional — no gap was confirmed. Filing a `BLOCKED-CREDENTIALS` request would misrepresent the
+actual state per `/codex/02-data/external-data-always-available-rule.md`'s own status taxonomy (that tag means "no
+secret exists yet"; this secret exists and resolves). The real gap is that no Gateway VM is currently deployed, which
+lines up with the standing, already-documented "TradFi is batch-only this cycle" scoping — there has been no
+operational need to run a live Gateway. Recorded as a new P3 `[OPERATOR]` follow-up above rather than an urgent
+credential ask, since standing up broker infrastructure ahead of schedule is a timing/scope decision, not a
+missing-secret blocker.
+
+**8/8 declared TradFi venues have an explicit, honest connectivity/credential verdict** — none silently omitted for
+being TradFi. Live script output this session: 6× `provisioned_gateway_unreachable`, 2×
+`not_applicable_no_execution_surface`.
