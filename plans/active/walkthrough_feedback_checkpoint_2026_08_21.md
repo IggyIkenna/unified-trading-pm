@@ -197,7 +197,7 @@ Integration Guide → https://claude.ai/code/artifact/866511c2-02d6-40a4-aa40-24
       so this is a genuine, documented external dependency, not a stub or a guess: an unwired
       caller gets an honest FAILED result naming exactly what is missing, never a fabricated
       liquidity number. Do not market V4 LP provisioning as push-button until that price feed
-      is wired (follow-up, not filed as a separate todo yet).
+      is wired; that work is tracked as its own todo below.
       **Retry command below is now HISTORICAL (already executed successfully) -- kept for
       provenance, not for reuse** (run from
       `execution-service/`, exact same command already attempted 2026-08-22 09:05 UTC — do not add
@@ -292,6 +292,16 @@ other processes.
 - [ ] [DOC] P2. Once the three above land, refresh both client artefacts: coverage trees regenerated from the new
       measurement, Unattributed node deleted, sports stated accurately, and the header ready/not-ready tallies
       re-derived (they are still the 2026-08-19 snapshot and cannot be hand-edited).
+
+- [ ] [AGENT] P1. **Wire a live Uniswap pool-price read so V4 LP_MINT is callable end to end.** The V4
+      MINT_POSITION execution path is complete (PositionManager calldata, Permit2 allowances, Actions
+      encoding, execution-service@ca9eda1bf) but requires the caller to supply `sqrt_price_current`, and
+      nothing in this codebase fetches a live pool price for ANY Uniswap version. Until this lands, V4 LP
+      provisioning is not push-button and must stay out of the LP venue lists in both client documents
+      (swap and LP_BURN are unaffected and are claimable today). Scope: a pool-price read on the V4
+      singleton PoolManager `StateView.getSlot0`, surfaced through the connector so `mint_position` can
+      default it, with the existing loud-failure path retained for the case where the read itself fails.
+      Provenance: measured during the V2/V4 wiring ship, 2026-08-22.
 
 ## Published artefact URLs, current as of 2026-08-22
 
