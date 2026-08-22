@@ -4974,3 +4974,5 @@
 {"timestamp": "2026-08-22T15:14:54Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.155.2 (branch=main, bump=patch)", "commit_sha": "1d2f240faf696689d5a242d3b8f217ec70161e80"}
 {"timestamp": "2026-08-22T15:17:15Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.107.1 (branch=main, run=32581217813)", "commit_sha": "7aacba21344ca3ca8df39837e6d6783244c23b20"}
 {"timestamp": "2026-08-22T15:17:19Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.107.1 (branch=main, bump=patch)", "commit_sha": "7aacba21344ca3ca8df39837e6d6783244c23b20"}
+{"timestamp": "2026-08-22T15:18:47Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "ml-service=0.58.69 (branch=main, run=32581293170)", "commit_sha": "25f4cdfbde10e08d67ef7878c7f25d707deaff9e"}
+{"timestamp": "2026-08-22T15:18:52Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "ml-service=0.58.69 (branch=main, bump=patch)", "commit_sha": "25f4cdfbde10e08d67ef7878c7f25d707deaff9e"}
