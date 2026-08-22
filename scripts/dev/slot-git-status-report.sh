@@ -90,6 +90,15 @@ STASH_WARN_COUNT="${STASH_WARN_COUNT:-15}"
 STASH_WARN_AGE_DAYS="${STASH_WARN_AGE_DAYS:-14}"
 STASH_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/stash-pile-detect.sh"
 
+# Slot-0 (bare root checkout) dirty/untracked alert
+# (bare_root_repo_agent_writes_unenforced_2026_08_21.md P1). The numbered-slot loop
+# above pages via check_starvation_for_slot/check_stash_pile_for_slot; the slot-0
+# branch previously only ever called classify_repo + post_snapshot — passive
+# telemetry, no alert — so a write landing in a bare root checkout instead of a
+# worker's assigned .tabs/<N>/<repo>/ slot could sit undetected for ~20h (confirmed
+# incident). Toggle off with SLOT0_DIRTY_WATCHDOG=0.
+SLOT0_DIRTY_WATCHDOG="${SLOT0_DIRTY_WATCHDOG:-1}"
+
 # Token-near-expiry early warning
 # (git_status_reporter_stale_public_url_token_expiry_2026_07_24.md option (a) —
 # the reporter already resolves the bearer token to build the Authorization
@@ -787,6 +796,39 @@ check_stash_pile_for_slot() {
     done
 }
 
+# Slot-0 dirty/untracked alert. Given the already-classified rows_tsv for slot 0
+# (the same TSV classify_repo/post_snapshot use), pings once per (slot 0, repo)
+# DIRTY episode — mirrors check_starvation_for_slot/check_stash_pile_for_slot's
+# exact dedup-per-episode marker pattern (STARVE_STATE_DIR + post_starve_ping),
+# clearing the marker the moment the repo goes clean again so a fresh dirty
+# episode re-pings. Read-only: never touches git state, only reads the TSV rows
+# the slot-0 walk already computed.
+check_slot0_dirty_alert() {
+    local rows_tsv="$1"
+    [[ "${SLOT0_DIRTY_WATCHDOG}" -eq 1 ]] || return 0
+    local token
+    token=$(resolve_token_for_slot "0") || return 0
+    mkdir -p "${STARVE_STATE_DIR}" 2>/dev/null || true
+
+    local name branch state dirty_files rest marker payload
+    while IFS=$'\t' read -r name branch state dirty_files rest; do
+        [[ -z "${name}" ]] && continue
+        marker="${STARVE_STATE_DIR}/slot-0__${name}.root-dirty"
+        if [[ "${dirty_files}" -gt 0 ]] 2>/dev/null; then
+            if [[ ! -f "${marker}" ]]; then
+                payload="Bare root checkout '${name}' (slot 0, NOT a .tabs/<N>/ slot worktree) is DIRTY — ${dirty_files} uncommitted/untracked file(s) on branch '${branch}'. This is agent-write drift into the un-slotted base checkout (see /plans/active/issues/bare_root_repo_agent_writes_unenforced_2026_08_21.md) — investigate the writer, commit/quarantine via the correct slot worktree, never edit slot 0 directly."
+                if post_starve_ping "0" "${name}" "${payload}" "${token}" "root-dirty-ping"; then
+                    : > "${marker}" 2>/dev/null || true
+                fi
+            else
+                log_quiet "[root-dirty-dup] slot 0/${name} — already signalled this episode"
+            fi
+        else
+            [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+        fi
+    done <<< "${rows_tsv}"
+}
+
 # Decode the `exp` (Unix epoch, UTC) claim from a JWT's second (payload) segment.
 # Prints the epoch on success; prints nothing and returns non-zero on any malformed/
 # undecodable input — callers MUST treat that as "can't tell, skip" rather than
@@ -967,6 +1009,7 @@ if slot_in_filter "0"; then
     done
     if [[ -n "${rows_tsv//[$'\n\t ']/}" ]]; then
         post_snapshot "0" "${rows_tsv}"
+        check_slot0_dirty_alert "${rows_tsv}"
     else
         log_quiet "[skip:empty] slot 0 (main workspace) — no git repos found"
     fi
