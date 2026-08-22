@@ -433,9 +433,17 @@ events to accounts via each slot's most-recent account-carrying event, run direc
       DB's cached account-health state (poller/status-write timing, not a dispatch-routing bug). Not
       chased further; worth a look if it turns out to cause a mis-routed spawn onto an
       already-rate-limited account. Repo: agent-orchestrator.
-- [ ] [INFRA] P2. Per D30 ruling (ADOPTED-REC 2026-08-21: "Re-disable — explicitly cancelled as unneeded; a
-      one-line reversible disable beats provisioning an idle spare"): re-disable `gemini-3-5-flash-lite-proj4`
-      and `gemini-3-7-flash-proj4`. **Context (found live 2026-08-21 15:37-15:42 UTC by an `/ao-watchdog` run)**:
+- [x] [INFRA] P2. ✅ **DONE 2026-08-22 (`/ao-watchdog` run, slot 29) — `gemini-3-7-flash-proj4` disabled.**
+      `gemini-3-5-flash-lite-proj4` was already `status: disabled` at check time (done in an earlier pass); this
+      run found `gemini-3-7-flash-proj4` still `status: healthy` — the D30 ruling was only half-applied.
+      `POST /api/accounts/gemini-3-7-flash-proj4/disable` (loopback, no token needed) → 200,
+      response confirms `"status":"disabled"`. **Verified**: both accounts now show `disabled` via a fresh
+      `GET /api/accounts` read. **Not independently verified this run**: the second half of the original
+      done-when ("the two reconciler services stop hitting the env_file-does-not-exist error on their next
+      cycle") — that needs the next `data-pipeline-alerts-reconciler.service` / `escalation-queue-reconciler.service`
+      cycle to be observed, not just the account flip. Per D30 ruling (ADOPTED-REC 2026-08-21: "Re-disable —
+      explicitly cancelled as unneeded; a one-line reversible disable beats provisioning an idle spare").
+      **Original context (found live 2026-08-21 15:37-15:42 UTC by an `/ao-watchdog` run)**:
       the 2026-08-21 12:41-13:49 resume above (`account_status: null` for all 10 gemini-* accounts) put these two
       back in the live selection pool, but neither ever had a real credential file provisioned — they were created
       paused on 2026-08-16 (`grok_gemini_translation_proxy_2026_08_14.md`, "paid proj4 pair kept registered-paused
