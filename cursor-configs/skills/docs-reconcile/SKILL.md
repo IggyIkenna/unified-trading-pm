@@ -124,15 +124,28 @@ spawn; set `model=` explicitly, default sonnet):
 1. **`authoritative_for` collision hunters** — `rg -A0 '^authoritative_for:' codex/**/*.md`, group by topic string
    (fuzzy-match near-duplicates, e.g. "manifest schema" vs "manifest schema v9"), flag any topic claimed by 2+
    `status: current` docs. Verify it's a real collision, not a parent/child split (e.g. one doc is the general SSOT, the
-   other is a narrower sub-topic — read both bodies before flagging).
+   other is a narrower sub-topic — read both bodies before flagging). **Cheap direct-check alternative** (added
+   2026-08-22, doesn't need sub-agents — a raw `rg` pass misses multi-line YAML `authoritative_for:` block-lists, a
+   real blind spot; this reuses the trusted `docspec.parse_frontmatter`):
+   `python3 scripts/docs/docs_reconcile_authoritative_for_collisions.py` — reports exact-string collisions
+   (high-confidence) + a noisy near-duplicate candidate count (needs human/sub-agent triage, expect boilerplate-phrase
+   false positives). Several historical runs already did this by hand as a "cheap sanity floor" when nothing in the
+   changed-doc set touched `authoritative_for` — this script is that same check, formalized.
 2. **Summary-quality hunters** — sweep `summary:` fields corpus-wide for placeholder/near-empty patterns (< ~40 chars,
    "TBD", "see body", a bare restatement of the title). Read the doc body to confirm the summary really is unusable
-   before flagging (a short summary can still be a complete one).
+   before flagging (a short summary can still be a complete one). **Cheap direct-check alternative** (added
+   2026-08-22): `python3 scripts/docs/docs_reconcile_summary_and_freshness_outside_gated.py --files <paths>` (proper
+   parser — a naive `grep '^summary:'` false-positives on YAML `>-` folded block-scalar summaries, whose real value
+   lives on the following indented lines, not the `summary:` line itself).
 3. **Doctrine-consistency hunters** — beyond the two hardcoded QG surfaces, sweep `.cursor/rules/*.mdc` and
    `agents/*.md` (role charters) for retrieval-doctrine references that have gone stale (naming a retired file path, a
    superseded index format, or contradicting the current L0/L1/L2/L3/L4 terminology).
 4. **Codex-freshness scope report** — for docs outside the 4 gated dirs, report staleness distribution (not a per-doc
-   finding list) so the operator can decide if/when to widen the ratchet.
+   finding list) so the operator can decide if/when to widen the ratchet. **This exact distribution was hand-recomputed
+   from scratch in nearly every historical run** (grep the Progress Log entries in `docs_reconcile_remaining_broken_links_
+2026_08_02.md` / `docs_reconcile_operator_decisions_2026_08_02.md` for examples) — use
+   `python3 scripts/docs/docs_reconcile_summary_and_freshness_outside_gated.py --skip-summaries` instead (added
+   2026-08-22) rather than re-deriving it again.
 5. **Broken-link triage hunters** — batch the `known_broken` entries from BOTH `doc_reference_baseline.yaml` and
    `doc_body_link_baseline.yaml` that fall inside your audit scope (skip the rest — the two baselines are corpus-wide,
    not scoped to whatever slice you're reconciling) and, for each, determine: (a) does it still reproduce (target still
@@ -152,6 +165,14 @@ spawn; set `model=` explicitly, default sonnet):
    within one sentence (read it once as a skeptic hunting for the word that undercuts the clause before it). Piggyback
    this on whichever hunter already opens that doc's full body (item 2's summary-quality read is the natural host) — no
    new dedicated pass needed, just an explicit item on the checklist so it isn't assumed as a side-effect of reading.
+   **Cheap first-pass filters for (a)** (added 2026-08-22, generalized from an ad-hoc pass built by a sub-agent fan-out
+   — cut candidate-hunting time on large files, but every hit is still a CANDIDATE for the semantic read above to judge,
+   not a confirmed defect on its own): `awk -f scripts/docs/docs_reconcile_structural_balance.awk <file>` (same-line
+   bracket/backtick/bold imbalance — noisy, most hits are legitimate 2-line-spanning prose, not defects),
+   `awk -f scripts/docs/docs_reconcile_structural_cross_blank.awk <file>` (the real defect shape: a bold/paren span that
+   opens then hits a BLANK line before closing — high-confidence), `awk -f
+scripts/docs/docs_reconcile_structural_table_break.awk <file>` (a table row's content spilled onto an orphaned
+   non-pipe line right after it).
 
 Candidate contract: `<relpath>` + verbatim quote ≤200 chars + why it's a finding; severity P0 (breaks retrieval
 correctness — collision, generator crash) / P1 (degrades retrieval — dead summary, stale doctrine ref, broken link with
@@ -202,6 +223,12 @@ Note what this does and does not buy you: checkpointing protects work already DO
 before finishing its first batch (plan_reconciler's 2026-08-03/08-04 deaths were 1m48s and 5m14s in — nothing to
 checkpoint yet). Sharding is the fix for that class; this is the fix for losing hours of completed work.
 
+**On a shared checkout, expect `safe-doc-push.sh` over `quickmerge.sh` for pure doc/HTML edits** (added 2026-08-22):
+if quickmerge's full pipeline (Stage 1.5 dependency alignment, etc.) is blocked by an unrelated pre-existing repo-wide
+issue — check `plans/active/issues/` for an already-tracked one before assuming it's new — CLAUDE.md's own git-
+discipline section already names `safe-doc-push.sh` as the sanctioned doc-only path (it skips dependency validation
+entirely, by design); don't get stuck retrying the full quickmerge pipeline against a blocker that isn't yours to fix.
+
 ## Phase 5 — report
 
 Finish with text: counts by severity/class, applied-fix list (commit shas), operator-decision list, refuted-candidate
@@ -223,6 +250,15 @@ broken links," and the report must not conflate the two.
 - `scripts/quality_gates/check_doc_body_links.py` — inline markdown BODY link existence check, ratcheted against
   `scripts/quality_gates/doc_body_link_baseline.yaml`; has its own unit tests in the sibling
   `test_check_doc_body_links.py`
+- `scripts/docs/docs_reconcile_authoritative_for_collisions.py` (added 2026-08-22) — Phase 1 item 1's cheap
+  direct-check alternative to a sub-agent fan-out (proper-parser exact-collision + near-duplicate scan)
+- `scripts/docs/docs_reconcile_summary_and_freshness_outside_gated.py` (added 2026-08-22) — Phase 1 items 2 + 4's
+  cheap direct-check alternative (summary-quality via proper parser; the outside-gated-dirs freshness distribution
+  report, previously hand-recomputed every run)
+- `scripts/docs/docs_reconcile_structural_balance.awk` / `docs_reconcile_structural_cross_blank.awk` /
+  `docs_reconcile_structural_table_break.awk` (added 2026-08-22) — Phase 1 item 6(a)'s cheap first-pass candidate
+  filters (same-line imbalance / cross-blank-line span / orphaned table row) — candidates only, still need the
+  semantic read to confirm
 - `plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md` — this skill's origin + the AGENTS.md gap it
   fixed
 - `cursor-configs/skills/plan-reconcile/SKILL.md` — the sibling skill for plans-corpus contradictions (different scope,
