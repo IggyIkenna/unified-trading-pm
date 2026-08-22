@@ -89,12 +89,21 @@ context_scope:
       design plan todo 2's amend-order gap. Done-when: a round-trip test proves `get_order()` reflects the new
       quantity/price after the call, against BOTH persistence backends. — execution-service@f1f3dfc3 + evidence:
       quality-gates.sh passed (8,876 passed, 22 skipped, 1 xpassed).
-- [ ] [BACKEND] P1. **Integration-test `PostgreSQLOrderPersistence` against a real (or test-container) Postgres**
+- [x] ✅ [BACKEND] P1. **Integration-test `PostgreSQLOrderPersistence` against a real (or test-container) Postgres**
       — decide the exact test-infra approach at implementation time (a local ephemeral container is the
       preferred shape; if the repo's existing test suite has no such pattern, mock only at the driver-call
       boundary, never re-implement the SQL in the test). Done-when: `save_order`→`get_order`→
       `update_order_status`→`get_order` round-trips correctly, proving the schema and query bodies are right,
-      not just that they don't raise.
+      not just that they don't raise. — execution-service@bca96bf8a6 + evidence: new
+      `tests/integration/test_postgresql_order_persistence_integration.py` round-trips save/get/update_status
+      (incl. COALESCE semantics)/update_quantity_price/get_by_status/get_by_strategy against an ephemeral
+      `postgres:16-alpine` docker container (skips cleanly if docker unavailable). Caught a real bug the mocked
+      unit test couldn't: asyncpg does not auto-decode `jsonb`, so `fills` was returning as raw JSON text
+      instead of a `list` — fixed by registering a jsonb type codec on pool init
+      (`_register_jsonb_codec` in `postgresql.py`). Full `quality-gates.sh` passed (224s), sentinel
+      bca96bf8a60ad94b1ff5b6549b73e767209e3ef7; basedpyright clean. Also declared + resolved (upstream)
+      repo-blocker RB-f94cb3d7 for an unrelated pre-existing `qg_red` (mint_position method-size cap),
+      see `plans/archive/issues/execution_service_uniswap_mint_position_method_size_cap_2026_08_22.md`.
 
 ### Phase B — write contract in `OrderAdapter` (the hot-path wiring)
 
