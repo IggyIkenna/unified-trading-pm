@@ -284,3 +284,40 @@ context_scope:
       section (`/plans/epics/system_readiness_master.md`) updated to match: messaging bridge, vocabulary, and
       kill-switch/flatten-position items flipped to done; the 4 deployment-topology/external-hosting items
       correctly left open, pointing here for detail rather than duplicating it.
+
+## Progress Log
+
+- **2026-08-22 (slot 4, backend_engineer)** — P1 "Registered-client management ... allow-list check" (line 264):
+  implementation complete, committed, **not yet pushed** — do not re-implement, just finish shipping.
+  - `execution-service` — `_enforce_registered_client()` added to `execution_service/api/external_instruction_api.py`
+    (called before `_enforce_client_org_binding` in `submit_external_instruction`): config-driven allow-list via new
+    `ExecutionServicesConfig.registered_external_client_org_ids: list[str]` (service_config.py). Internal/S2S callers
+    bypass (`auth.is_internal`, same precedent as `_enforce_client_org_binding`); an EMPTY list is a bootstrap-safe
+    no-op (so this doesn't retroactively lock out the ~100 pre-existing external-caller tests, which use org
+    `org-external-test` with no registry configured); once populated, an absent `org_id` is denied HTTP 403. New
+    tests: `TestRegisteredClientAllowList` in `tests/unit/test_external_instruction_api.py` (empty-registry no-op,
+    unregistered-403, registered-pass-through, internal-bypass) — patches the field on the live
+    `get_execution_config()` singleton via `monkeypatch.setattr`, reverted automatically per-test.
+  - Commit (execution-service, this slot's worktree `.tabs/4/execution-service`): `20d580b7e17ac2a2d3aec0c9e8c50b6cb2f96bd2`
+    — `feat(external-api): registered-client allow-list on the external instruction surface` (3 files, 123 insertions;
+    includes `Quickmerge: agent` trailer). **`git rev-list --count HEAD ^origin/live-defi-rollout` = 1 — NOT pushed
+    yet.**
+  - **Why not shipped yet**: this session died mid-task once already (orchestrator's orphan-WIP auto-commit recovered
+    the diff intact — verified byte-identical to what was implemented, see commit above), and on resume, Pass-1
+    `bash scripts/quality-gates.sh --no-fix` was queued ~75s+ behind the shared host's QG governor (`host-wide cap 6`,
+    heavy contention from sibling slots 14/16/19 running their own QG concurrently) before finally acquiring a token
+    and starting. Ran as a tracked background Bash call (not `nohup` — stays harness-tracked across compaction), log
+    at (this slot's scratchpad) `qg_run2.log`. **Resume by checking that background task's outcome first** — do not
+    blindly re-run QG without checking whether it already finished.
+  - **Next steps for whoever resumes** (same session after compact, or a fresh one if this session doesn't survive):
+    1. Check the Pass-1 QG background result. If exit 0 → `bash scripts/quickmerge.sh "<msg>" --agent --files
+       'execution_service/api/external_instruction_api.py execution_service/service_config.py
+       tests/unit/test_external_instruction_api.py'` (from `.tabs/4/execution-service`), verify
+       `git merge-base --is-ancestor 20d580b7... origin/live-defi-rollout` (or the new SHA if quickmerge re-commits),
+       then flip line 264's checkbox to `- [x]` with the shipped SHA + evidence, commit via `docs(plans):` in this
+       PM worktree, push, then `/done`.
+    2. If QG failed for a REAL reason (not contention) — fix and re-run; do not skip.
+    3. After this todo ships, the ONLY remaining open item in this plan is the P2 "Scaffold the client-hosted
+       deployment option" todo a few lines up (line 243) — everything else in the plan is already `[x]`. Once BOTH are
+       done, this plan is fully complete and should be archived per
+       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (6-step ritual) — it is not there yet.
