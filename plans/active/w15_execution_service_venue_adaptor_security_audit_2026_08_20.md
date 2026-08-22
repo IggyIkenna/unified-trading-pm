@@ -233,8 +233,12 @@ impression:
 
 - [x] ✅ [AGENT] P0. Post-phase codex audit — check whether any codex doc under `/codex/04-architecture/` or
       `/codex/06-coding-standards/` makes a claim this audit's findings contradict (e.g. a doc claiming a
+<<<<<<< Updated upstream
       pattern is "always" applied that a finding shows isn't); correct in place. — unified-trading-pm@9031553091
       + evidence: see Progress Log entry below.
+=======
+      pattern is "always" applied that a finding shows isn't); correct in place. — execution-service@audit-only + evidence: verified `defi-execution-overview.md` correctly documents the live-capable connector standard (`supports_live = True`, fail-closed simulation guard, `BaseConnector` credential/signing shape), which matches all audited findings; no contradictions found in visited codex architecture/coding-standards docs.
+>>>>>>> Stashed changes
 - [ ] [AGENT] P0. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
       plan's real landed state once every todo above is done or explicitly re-scoped.
 
