@@ -787,6 +787,45 @@ check_stash_pile_for_slot() {
     done
 }
 
+# Bare-root (slot-0) dirty/untracked alert watchdog
+# (bare_root_repo_agent_writes_unenforced_2026_08_21.md). Slot 0's classify_repo() calls
+# already tell us per-repo `state` (dirty/clean/...), but until now the slot-0 branch only
+# ever fed that into post_snapshot() — passive dashboard telemetry, never an alert. This
+# reuses the SAME dedup-per-episode marker pattern check_starvation_for_slot/
+# check_stash_pile_for_slot already use (one ping per (slot, repo) DIRTY episode, cleared
+# the moment the repo goes clean so a future episode re-pings) — but operates on the
+# rows_tsv the slot-0 loop already computed, rather than re-invoking git or the detector
+# scripts, since classify_repo() already did the git-status work once per repo this tick.
+DIRTY_ALERT_WATCHDOG="${DIRTY_ALERT_WATCHDOG:-1}"
+
+check_bare_root_dirty_alert() {
+    local slot_id="$1" rows_tsv="$2"
+    [[ "${DIRTY_ALERT_WATCHDOG}" -eq 1 ]] || return 0
+    local token
+    token=$(resolve_token_for_slot "${slot_id}") || return 0
+    mkdir -p "${STARVE_STATE_DIR}" 2>/dev/null || true
+
+    local name branch state dirty_files ahead behind local_sha int_branch dirty_oldest \
+          unpushed_plans dirty_sample repo_dirty_ticks ahead_oldest behind_oldest marker payload
+    while IFS=$'\t' read -r name branch state dirty_files ahead behind local_sha int_branch \
+            dirty_oldest unpushed_plans dirty_sample repo_dirty_ticks ahead_oldest behind_oldest; do
+        [[ -z "${name}" ]] && continue
+        marker="${STARVE_STATE_DIR}/slot-${slot_id}__${name}.dirty-warn"
+        if [[ "${state}" == "dirty" ]]; then
+            if [[ ! -f "${marker}" ]]; then
+                payload="Bare root repo checkout slot-0/${name} is DIRTY (${dirty_files} files, oldest since ${dirty_oldest:-unknown}). Sample: ${dirty_sample:-<none>}. A bare \`${name}/\` checkout is NEVER a valid slot worktree (per-tab-worktrees.md) — writes here go undetected by the numbered-slot loop's alert path. Investigate + reconcile into the correct .tabs/<N>/ slot."
+                if post_starve_ping "${slot_id}" "${name}" "${payload}" "${token}" "bare-root-dirty"; then
+                    : > "${marker}" 2>/dev/null || true
+                fi
+            else
+                log_quiet "[bare-root-dirty-dup] slot ${slot_id}/${name} — already signalled this episode"
+            fi
+        else
+            [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+        fi
+    done <<< "${rows_tsv}"
+}
+
 # Decode the `exp` (Unix epoch, UTC) claim from a JWT's second (payload) segment.
 # Prints the epoch on success; prints nothing and returns non-zero on any malformed/
 # undecodable input — callers MUST treat that as "can't tell, skip" rather than
@@ -967,6 +1006,7 @@ if slot_in_filter "0"; then
     done
     if [[ -n "${rows_tsv//[$'\n\t ']/}" ]]; then
         post_snapshot "0" "${rows_tsv}"
+        check_bare_root_dirty_alert "0" "${rows_tsv}"
     else
         log_quiet "[skip:empty] slot 0 (main workspace) — no git repos found"
     fi

@@ -91,11 +91,12 @@ The monitoring gap itself is unfixed: `slot-git-status-report.sh`'s slot-0 branc
 
 ## Recommended fix
 
-- [ ] [BACKEND] P1. Wire the same alert path the numbered-slot loop already has
+- [x] ✅ [BACKEND] P1. Wire the same alert path the numbered-slot loop already has
       (`check_starvation_for_slot`/`check_stash_pile_for_slot`'s dedup-per-episode pattern) into the slot-0 branch
       of `unified-trading-pm/scripts/dev/slot-git-status-report.sh` (around the `if slot_in_filter "0"` block) — a
       DIRTY or untracked-files verdict on a bare root repo should page the same way FF-pull-starvation or stash-pile
-      regrowth already does. Extend `classify_repo`'s slot-0 call site, not the numbered-slot one.
+      regrowth already does. Extend `classify_repo`'s slot-0 call site, not the numbered-slot one. —
+      `unified-trading-pm` (this commit)
 - [ ] [AGENT] P2. Once the alert lands, re-verify CLAUDE.md's slot-0 line (already corrected this session to
       "reported not enforced every 5 min") reads as accurate again — flip back to describing real enforcement only
       after the alert path is live and proven (at least one real DIRTY-slot-0 page observed).
@@ -112,3 +113,12 @@ The monitoring gap itself is unfixed: `slot-git-status-report.sh`'s slot-0 branc
   enforced" in `cursor-configs/CLAUDE.md`) re-verified ACCURATE as-is — flipping it now would reintroduce the
   overstated enforcement claim this issue exists to remove. **P2 remains gated on BOTH: P1 landed + first real
   DIRTY-slot-0 page observed.** Next worker on P2: confirm both conditions before touching CLAUDE.md.
+- 2026-08-22, slot 7 (P1 fix; task `…-c77574a3f999`): shipped the alert wiring. Added
+  `check_bare_root_dirty_alert()` to `scripts/dev/slot-git-status-report.sh` — reuses the SAME
+  dedup-per-episode marker pattern `check_starvation_for_slot`/`check_stash_pile_for_slot` already use (one ping
+  per (slot, repo) DIRTY episode via `post_starve_ping`, marker cleared on return-to-clean so a future episode
+  re-pings), operating on the `rows_tsv` the slot-0 loop already computes rather than re-running git. Wired into
+  the `if slot_in_filter "0"` block right after `post_snapshot "0"`. P1 checkbox flipped above. **P2 still
+  gated**: the alert path is now live but "at least one real DIRTY-slot-0 page observed" has not yet happened
+  (all three bare-root repos were clean as of the prior progress-log entry) — next worker on P2 must still
+  confirm a real page fired before touching CLAUDE.md's wording.
