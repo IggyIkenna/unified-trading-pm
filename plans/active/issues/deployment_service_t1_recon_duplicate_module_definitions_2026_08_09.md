@@ -138,12 +138,12 @@ because:
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Confirm the old `audit03_cron_provisioning.tf` labels (`purpose=t1-batch-{cefi,prediction}`,
+- [ ] [INFRA] P2. Per D69 ruling (2026-08-22): for_each chosen as sole owner, after the external-consumer check.
+      Confirm the old `audit03_cron_provisioning.tf` labels (`purpose=t1-batch-{cefi,prediction}`,
       `finding=cefi-monotonicity-guard-alerting-2026-07-07`) have no external consumer (dashboards/alert routing/cost
-      queries outside this repo), then approve removing `module.instruments_cefi_t1_recon_job` +
+      queries outside this repo), then remove `module.instruments_cefi_t1_recon_job` +
       `module.instruments_prediction_t1_recon_job` + their 2 `_imports_reconcile.tf` import blocks, leaving
-      `t1_recon_instruments_jobs.tf`'s for_each as sole owner of all 4 asset groups — or state a different resolution if
-      the old labels matter and should be adopted into the for_each's label scheme instead.
+      `t1_recon_instruments_jobs.tf`'s for_each as sole owner of all 4 asset groups.
 - [ ] [SCRIPT] P3. Once the above is ruled, execute: `tofu state rm` on the losing module address(es) BEFORE deleting
       their `.tf` block (state-rm-then-delete-code, never delete-code-then-plan, to avoid an accidental destroy plan on
       a live job), remove the corresponding `import` blocks from `_imports_reconcile.tf`, then verify a fresh
@@ -156,7 +156,8 @@ because:
       document for 2 prior removals (`plan_hygiene_sweep`/`plan_hygiene_sweep_cron`). Currently HARD-BLOCKS any
       untargeted `ENV=dev tofu plan` (confirmed live; likely also `ENV=staging`, not separately re-confirmed). Remove
       this one `import {}` block (lines 13-16), following the same precedent as the sibling removals in this file.
-- [ ] [OPERATOR] P1. **NEW 2026-08-15 (slot-7)** — Broader systemic risk found while diagnosing the above:
+- [ ] [INFRA] P1. Per D69 ruling (2026-08-22): for imports, verify whether dev/staging state already aliases any of
+      these addresses first, then pick an isolation scheme. **NEW 2026-08-15 (slot-7)** — Broader systemic risk found while diagnosing the above:
       `_imports_reconcile.tf`'s header self-describes as "live-but-unimported PROD resources", and every one of its
       ~20 remaining `import {}` blocks (15 Cloud Run Job/Scheduler/Storage-bucket imports + 25
       `google_project_iam_member` bindings for `unified-trading-sa`, none env-parameterized — contrast
@@ -207,3 +208,7 @@ because:
   2026-08-17. 2 remaining items both explicitly `[OPERATOR]`-tagged (canonical-module choice; the ~20-import
   env-gating structural risk) — not worker-determinable.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- **2026-08-22 — ruling D69 (t1-recon Terraform ownership)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): for_each as sole owner after the external-consumer check; for imports, verify
+  whether dev/staging state already aliases any address first, then pick an isolation scheme. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

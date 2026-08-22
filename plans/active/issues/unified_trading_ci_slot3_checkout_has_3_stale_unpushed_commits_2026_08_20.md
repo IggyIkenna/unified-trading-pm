@@ -91,10 +91,10 @@ are plausible without reading the actual workflow content and the commits' own d
       `reset --hard`, which this slot's own guardrail hook blocks for autonomous workers): git's own
       equivalent-change detection recognized and skipped all 3 as "previously applied". Result: `ahead=0
       behind=0`, tree clean. No push needed — the content was never actually missing from origin.
-- [ ] [OPERATOR] P3. If the audit above finds these are genuinely someone's abandoned work, consider whether
-      `scripts/dev/check-slot-commit-identity.sh` or a similar periodic sweep should catch "a slot checkout carries
-      >0 commits ahead of origin for >24h with no activity" as a standing alert — this was found by chance during an
-      unrelated pre-compact ritual, not by any existing monitor.
+- [ ] [SCRIPT] P3. Per D137 ruling (2026-08-22): approved — add it, cheap insurance against silently orphaned commits.
+      Extend `scripts/dev/check-slot-commit-identity.sh` (or a similar periodic sweep) to catch "a slot checkout
+      carries >0 commits ahead of origin for >24h with no activity" as a standing alert — this was found by chance
+      during an unrelated pre-compact ritual, not by any existing monitor. Repo: unified-trading-pm.
 
 ## Progress Log
 
@@ -108,3 +108,6 @@ are plausible without reading the actual workflow content and the commits' own d
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche, batch 3/3): KEEP-NA, valid — sole open item is
   explicitly `[OPERATOR]`-tagged ("consider whether a periodic sweep should catch this... genuinely their call").
   No change since filing.
+- **2026-08-22 — ruling D137 (Ahead-of-origin slot sweep)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Add it — cheap insurance against silently orphaned commits. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

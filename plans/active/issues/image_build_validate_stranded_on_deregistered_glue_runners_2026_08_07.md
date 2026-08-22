@@ -123,12 +123,9 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
       `market-tick-data-service`, `ml-service`) are private repos never touched by
       `self_hosted_runner_public_repo_revert_2026_08_05.md` (that revert scoped to PUBLIC repos only) — their glue
       registration is unaffected by this extraction, so this is not a stranding case.
-- [ ] [INFRA] P3. Add a standing check (or extend an existing rollout/extraction script) that flags "a reusable workflow
-      file changed HOST REPO visibility (private→public) or its callers' runner registration changed" as a trigger to
-      re-audit `runs-on:` choices — this is the second time in two days a repo-visibility/extraction change silently
-      stranded a workflow (see the sibling dangling-PM-reference bug in
-      `agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`, same root class: an extraction moved a
-      file without re-validating every consumer/runner-registration assumption that moved with it).
+- [ ] [INFRA] P3. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D87): don't build — 5+ audit passes found no recurrence and
+      there's no existing tracker to diff against. Source:
+      /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 
 ## Progress Log
 
@@ -210,3 +207,7 @@ workflow's host-repo visibility change or a caller's runner-registration drift a
 choices — requires designing a new detection heuristic from scratch (no existing historical-state tracker to diff
 against), independently corroborated by `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`'s own
 todo 10 raising the identical question. No `assigned_vm` change.
+
+**2026-08-22 — ruling D87 (Visibility/runner-drift re-audit check)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+authority, AUTONOMOUS_AGENT_RULES rule 2): Don't build — 5+ audit passes found no recurrence and there's no existing
+tracker to diff against. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

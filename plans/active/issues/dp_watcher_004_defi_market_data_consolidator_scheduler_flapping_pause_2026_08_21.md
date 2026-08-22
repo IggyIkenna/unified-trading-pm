@@ -208,8 +208,11 @@ pending that answer, not by omission.
       share a root cause (something intermittently disrupting the defi consolidator's steady
       state, of which "output blob staleness" and "scheduler flapping paused" are two symptoms) —
       not established this session, flagged as a hypothesis only.
-- [ ] [OPERATOR] P1. Answer blocked question `BLK-fbcafec2` (posted 2026-08-21 by agt-0b7473, unanswered
-      after the 2-minute bound): is the repeated MacOS-session pause/resume of
+- [ ] [INFRA] P1. **RULED 2026-08-22 (D74)**: operator did NOT claim the MacOS session — ADOPT REC: leave the defi
+      consolidator paused, keep identifying the session owner (never resume blind). `BLK-fbcafec2` is answered by
+      this ruling — leave-paused (option A) is the disposition; the residual open work is identifying the session
+      owner, not whether to resume. Original blocked question `BLK-fbcafec2` (posted 2026-08-21 by agt-0b7473,
+      unanswered after the 2-minute bound): is the repeated MacOS-session pause/resume of
       `uts-prod-manifest-consolidator-market-data-defi-cron` deliberate active work (leave alone, no
       further agent action needed) or a stuck/erroneous local loop (needs stopping, then the job resumed)?
       ~~Job is currently `PAUSED` pending this answer.~~ **CORRECTED 2026-08-21 (agt-0fc6b2, slot 9): job is
@@ -354,3 +357,6 @@ pending that answer, not by omission.
   shipped — this session's contribution is the new correlating VM evidence, appended above and here. Doc
   stays `assigned_vm: planning`, `status: open`, `priority: P2`. One-shot escalation `agt-bb2394` closing
   out here.
+- **2026-08-22 — ruling D74 (DeFi consolidator pause ownership)**: OPERATOR-RULED 2026-08-21 — operator did NOT claim
+  the MacOS session. ADOPT REC: leave the defi consolidator paused, keep identifying the session owner (never resume
+  blind). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

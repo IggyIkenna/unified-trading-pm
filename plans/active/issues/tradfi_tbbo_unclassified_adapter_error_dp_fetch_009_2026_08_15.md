@@ -305,12 +305,14 @@ answer):**
       know which provider handled a given failed shard). (repos: unified-api-contracts, market-tick-data-service) —
       still valid/open, unrelated to the MDPS finding above; not attempted by agt-bb295c (out of this escalation's
       root cause).
-- [ ] [DESIGN] P2. [OPERATOR] Decide the disposition per the "Recommended decision" in the UPDATE above (Option A:
-      gate MDPS's tbbo scan by `VENUE_DATA_TYPE_CAPABILITIES` — recommended; or Option B: design + register the
-      missing `tbbo_1m` `SchemaContract` for EQUITY). Only THEN register `("tradfi","tbbo")` in `KNOWN_DEAD_CELLS`
-      if Option A ships (mirrors `("tradfi","mbp_10")`) — registering it without a capability change first would be a
-      hollow band-aid per `is_known_dead()`'s own re-arm-on-new-activity safety contract. (repos: deployment-service,
-      market-data-processing-service, unified-api-contracts)
+- [ ] [BACKEND] P2. Per D133 ruling (2026-08-22): Option A chosen — gate out. Gate MDPS's tbbo data_type scan against
+      `VENUE_DATA_TYPE_CAPABILITIES` (the same registry `venue_fetch.py` already uses on the fetch side) so MDPS
+      naturally skips (`expected_unattempted`) tbbo for NYSE/NASDAQ instead of attempting real historical data with no
+      output contract — matches the decided MVP scope with the smaller single-repo change; Option B (registering the
+      missing `tbbo_1m` SchemaContract) would require affirmatively reversing that ruling. Once shipped, register
+      `("tradfi","tbbo")` in `KNOWN_DEAD_CELLS` (mirrors `("tradfi","mbp_10")`) — registering it without the capability
+      change first would be a hollow band-aid per `is_known_dead()`'s own re-arm-on-new-activity safety contract.
+      (repos: deployment-service, market-data-processing-service, unified-api-contracts)
 
 ## Progress Log
 
@@ -338,3 +340,7 @@ answer):**
   design choice (scoped registry alias vs. a cross-cutting provider-tag threading change to shared shard-level-failure
   machinery), not pure execution. The `[OPERATOR]` disposition-decision todo stays genuinely gated. `assigned_vm`
   unchanged.
+- **2026-08-22 — ruling D133 (Equity tbbo scope)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Gate out — matches the decided scope with the smaller single-repo change; the
+  alternative requires affirmatively reversing a ruling. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

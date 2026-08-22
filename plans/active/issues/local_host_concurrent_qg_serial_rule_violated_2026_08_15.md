@@ -98,8 +98,10 @@ the single largest contributor measured here.
 - [x] ✅ [DOC] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 10 (na-eligibility-audit 2026-08-17). Record the swap-thrash signature in the quality-gates codex: a load average in the hundreds on this host
       means swap exhaustion, not CPU saturation, and the correct response is to WAIT rather than retry or override.
       Repo: unified-trading-pm.
-- [ ] [OPERATOR] P2. Consider whether 24 GiB physical is sufficient for the current slot count, or whether the practical
-      concurrent-gate ceiling should be documented as a hard number for this host.
+- [ ] [DOCS] P2. Per D91 ruling (2026-08-22): document the ceiling first; consider RAM only if the queueing/serial-gate
+      fixes above don't reduce contention enough on their own. Document the practical concurrent-QG-gate ceiling for
+      this host (Mac.mynet, 10 cores / 24 GiB physical + 25 GiB swap) in the quality-gates codex. Repo:
+      unified-trading-pm.
 - [ ] [CODE] P1. **The per-repo sub-cap queue starves the oldest waiter — it is not FIFO.** Measured 2026-08-15 10:40:
       four distinct `quality-gates.sh` runs on `unified-api-contracts` (sub-cap 1) from `.tabs/4` (×2 sessions — the
       shared-slot case), `.tabs/1` and the root checkout. The run that had waited **36:49** was still printing `queued`,
@@ -120,3 +122,6 @@ the single largest contributor measured here.
 
 - **context-scout 2026-08-17**: populated context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:a9ed035183a85708]: RECLASSIFY (per-todo split) -- extracted the 1 bounded item (record the swap-thrash signature in the quality-gates codex) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 10. Doc stays assigned_vm: NA for its remaining items. Cross-cutting tranche audit.
+- **2026-08-22 — ruling D91 (Mac host QG concurrency)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Document the ceiling first; consider RAM only if queueing fixes don't reduce
+  contention. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -474,14 +474,16 @@ a new todo below, not built blind this session.
       The GCS `health_factor` feature_group `REQUIRED_OUTPUT_COLUMNS` schema is retired as the wrong target — the
       real consumers (`liquidation_capture.py`/`liquidation_bundle.py`) already read the live
       `margin_health_cache` path instead, not that GCS parquet. Do not build a calculator against this schema.
-- [ ] [BACKEND] P2. Scope + build the MTDS-side on-chain risk-parameter collector infrastructure for
-      COMPOUND_V3/VENUS/EULER_V2 (real sources confirmed 2026-08-21: Comet.getAssetInfoByAddress() live-verified;
-      Venus/BENQI Comptroller markets() mapping; Euler V2 per-vault LTVConfig via Lens) -- this is RPC-credentialed
-      on-chain data, so it belongs in market-tick-data-service (mirrors aave_positions.py /
-      _radiant_oracle_collection.py, not a features-service HTTP-API calculator) with features-service's data_loader
-      consuming it, matching the load_rate_indices() precedent. BENQI needs its Core-Markets Comptroller address
-      resolved first (only the Isolated-Markets address was found). Fluid needs its Resolver-contract shape
-      researched before it can be scoped at all -- separate sub-item.
+- [ ] [BACKEND] P2. Per D78 ruling (2026-08-22): per-protocol collectors approach chosen — matches existing patterns,
+      avoids a vendor. Operator must name the exact protocol/field mapping before scoping begins. Scope + build the
+      MTDS-side on-chain risk-parameter collector infrastructure for COMPOUND_V3/VENUS/EULER_V2 (real sources
+      confirmed 2026-08-21: Comet.getAssetInfoByAddress() live-verified; Venus/BENQI Comptroller markets() mapping;
+      Euler V2 per-vault LTVConfig via Lens) -- this is RPC-credentialed on-chain data, so it belongs in
+      market-tick-data-service (mirrors aave_positions.py / _radiant_oracle_collection.py, not a features-service
+      HTTP-API calculator) with features-service's data_loader consuming it, matching the load_rate_indices()
+      precedent. BENQI needs its Core-Markets Comptroller address resolved first (only the Isolated-Markets address
+      was found). Fluid needs its Resolver-contract shape researched before it can be scoped at all -- separate
+      sub-item.
 - [x] ✅ [BACKEND] P2. **SHIPPED 2026-08-22 — `market-tick-data-service@33c728d2`.** Built the Radiant
       reserve-data reader (`lending_indices_radiant.py`, real direct-RPC collector using the V2-shaped
       `getLendingPool()`/`getReserveData()` path, wired into the lending-indices dispatch alongside
@@ -555,3 +557,7 @@ a new todo below, not built blind this session.
   mismatch, not a straight reuse. All 3 need on-chain RPC calls, which features-service's existing calculators don't
   do (HTTP-only, DefiLlama) -- building requires MTDS-side collector work, scoped as follow-up todos rather than a
   same-session cross-service-boundary build.
+- **2026-08-22 — ruling D78 (On-chain collectors for 5 feature groups)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Per-protocol collectors — matches existing patterns, avoids a vendor;
+  operator must name the protocol/field mapping before scoping. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

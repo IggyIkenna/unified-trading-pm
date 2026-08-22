@@ -110,20 +110,15 @@ not already done. That key is not reproduced here.
       `GET /api/accounts` returns `health_status: "degraded"` for that account and the banner is visible in the live
       dashboard. Repo: agent-orchestrator (host config, no sha).
 
-- [ ] [INFRA] P1. Capture the NVIDIA playground's real wire request for `google/gemma-4-31b-it` and diff it against
-      attempt 3's payload in the evidence table above: DevTools → **Network** (not Console) → filter Fetch/XHR → send
-      a playground message → find the `chat/completions` request → right-click → Copy → **Copy as cURL**. Likely
-      differences to check: a different `api_base`/route entirely, extra headers (a session/trace id NVIDIA's gateway
-      may require), or a different `stream`/`chat_template_kwargs` shape than NVIDIA's own docs example used.
-      Done-when: the captured cURL is pasted into this doc's evidence table and each differing field is named.
-      Repo: agent-orchestrator.
+- [ ] [INFRA] P1. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D83): stop pursuing further investigation — blind-retrying
+      guidance applies, and the remaining lead (capturing the NVIDIA playground's wire request to diff against attempt
+      3's payload) has no guaranteed resolution. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+      ledger.
 
-- [ ] [INFRA] P2. If the item above reveals a fixable gap, apply it to `config/litellm/grok_gemini_proxy.yaml`'s
-      `gemma-4-31b-it` `litellm_params` and re-run attempts 1-2's tool-use round trip for real. Done-when: a real
-      (non-mocked) tool-use round trip returns a non-zero-byte response, logged in the evidence table.
-      Repo: agent-orchestrator.
+- **[INFRA] P2. CANCELLED — SUPERSEDED 2026-08-22 (D83 ruling: investigation stopped per the item above, so no
+  diff-based proxy fix will be pursued).**
 
-- [ ] [OPERATOR] P3. If no meaningful diff is found, treat this as a probable NVIDIA-side outage/degradation specific
+- [ ] [OPERATOR] P3. Per D83 ruling (2026-08-22): treat this as a probable NVIDIA-side outage/degradation specific
       to this model's public API route (distinct from the playground's route): raise a direct NVIDIA support/forum
       check, or re-test after real elapsed time (days, not another same-session retry). Done-when: either a support
       thread is filed and linked here, or a fresh dated attempt is added to the evidence table.
@@ -220,3 +215,6 @@ not already done. That key is not reproduced here.
   than an NVIDIA-side wait.
 
 - **context-scout 2026-08-20**: re-verified context_scope (4 entries), unchanged.
+- **2026-08-22 — ruling D83 (gemma-4-31b investigation)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Stop — blind-retrying guidance applies; the remaining lead has no guaranteed
+  resolution. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
