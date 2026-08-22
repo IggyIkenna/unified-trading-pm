@@ -1,0 +1,916 @@
+{
+  "asset_group": "defi",
+  "source_date": "2026-08-21",
+  "generated_at": "2026-08-21T09:18:34Z",
+  "axes": {
+    "venues": [
+      {
+        "value": "AAVE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "AAVE_V3",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "ACROSS",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "AERODROME_V3",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "AERODROME_V3-BASE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "ALCHEMY",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "ANKR",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "ASTER",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BALANCER",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BALANCER-ARBITRUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BALANCER-AVALANCHE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BALANCER-BASE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BALANCER-ETHEREUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BALANCER-OPTIMISM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BALANCER-POLYGON",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BEEFY",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BENQI",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BINANCE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BINANCE-FUTURES",
+        "is_canonical": false,
+        "exception_reason": null
+      },
+      {
+        "value": "BITFINEX-FUTURES",
+        "is_canonical": false,
+        "exception_reason": null
+      },
+      {
+        "value": "BITGET-FUTURES",
+        "is_canonical": false,
+        "exception_reason": null
+      },
+      {
+        "value": "BLAZESTAKE",
+        "is_canonical": false,
+        "exception_reason": "operator-accepted DeFi venue alias (LEGACY_DEFI_VENUE_ALIASES already folds it via normalize_defi_venue) or dead/removed-venue historical residue \u2014 see DEFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES / DEFI_VENUE_ACCEPTED_DEAD_RESIDUE for which"
+      },
+      {
+        "value": "BYBIT-FUTURES",
+        "is_canonical": false,
+        "exception_reason": null
+      },
+      {
+        "value": "CAMELOT_V3",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "CAMELOT_V3-ARBITRUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "CHAINLINK",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "COINBASE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "COMPOUND",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "COMPOUND_V3",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "CONVEX",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "CURVE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "CURVE-AVALANCHE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "CURVE-ETHEREUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "EIGENLAYER",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "ETHENA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "ETHERFI",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "EULER_V2",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "EXTENDED",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "FLASHBOTS",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "FLUID",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "FRAX",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "GMX",
+        "is_canonical": false,
+        "exception_reason": "operator-accepted DeFi venue alias (LEGACY_DEFI_VENUE_ALIASES already folds it via normalize_defi_venue) or dead/removed-venue historical residue \u2014 see DEFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES / DEFI_VENUE_ACCEPTED_DEAD_RESIDUE for which"
+      },
+      {
+        "value": "HYPERLIQUID",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "IDLE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "JITO",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "JITORESTAKING",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "JUPITER",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "KAMINO",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "KAMINO-SOLANA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "KAMINO_LENDING",
+        "is_canonical": false,
+        "exception_reason": null
+      },
+      {
+        "value": "KARAK",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "KELPDAO",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "LIDO",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "LIFINITY",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "LIGHTER",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "MAKER",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "MANTLE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "MARGINFI",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "MARGINFI-SOLANA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "MARINADE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "METEORA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "MORPHO",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "MORPHOVAULTS",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "ORCA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "PANCAKESWAP_V3",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "PANCAKESWAP_V3-BASE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "PANCAKESWAP_V3-BSC",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "PANCAKESWAP_V3-ETHEREUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "PENDLE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "PHOENIX",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "PUFFER",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "PYTH",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "RADIANT",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "RAYDIUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "RENZO",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "ROCKETPOOL",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SANCTUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SOLANA-NATIVE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SOLBLAZE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SOLBLAZE-SOLANA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SOLEND",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SOLEND-SOLANA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SPARK",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "STADER",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "STAKEWISE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "STARGATE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SUSHISWAP",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SUSHISWAP-ARBITRUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SUSHISWAP_V2",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SUSHISWAP_V3",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SUSHISWAP_V3-AVALANCHE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SUSHISWAP_V3-BASE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SUSHISWAP_V3-ETHEREUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SWELL",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SYMBIOTIC",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "TRADER_JOE_V2",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "UNISWAP",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "UNISWAP_V2",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "UNISWAP_V3",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "UNISWAP_V3-ARBITRUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "UNISWAP_V3-BASE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "UNISWAP_V3-ETHEREUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "UNISWAP_V3-OPTIMISM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "UNISWAP_V3-POLYGON",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "UNISWAP_V4",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "VELODROME_V2",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "VENUS",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "YEARN_V3",
+        "is_canonical": true,
+        "exception_reason": null
+      }
+    ],
+    "instrument_types": [
+      {
+        "value": "<blank>",
+        "is_canonical": false,
+        "exception_reason": null
+      },
+      {
+        "value": "PERPETUAL",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "a_token",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "debt_token",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "lending",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "lst",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "perpetual",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "pool",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "restaking",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "solana_amm_pool",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "solana_lending",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "solana_vault",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "spot_asset",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "spot_pair",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "staking",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "yield_bearing",
+        "is_canonical": true,
+        "exception_reason": null
+      }
+    ],
+    "data_types": [
+      {
+        "value": "bridge_events",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "derivative_ticker",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "dex_pool_state",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "dex_pool_swaps",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "dex_pools",
+        "is_canonical": false,
+        "exception_reason": null
+      },
+      {
+        "value": "dex_swaps",
+        "is_canonical": false,
+        "exception_reason": null
+      },
+      {
+        "value": "eigenlayer_rewards",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "flash_loan_availability",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "flash_loan_events",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "gas_fees",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "governance_events",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "lending_indices",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "liquidation_candidate_snapshots",
+        "is_canonical": false,
+        "exception_reason": null
+      },
+      {
+        "value": "liquidation_events",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "liquidations",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "lst_rates",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "mev_events",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "native_staking_rates",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "oracle_prices",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "perp_daily_ctx",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "perp_funding",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "perp_mark_price",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "perp_trades",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "position_data",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "rewards",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "risk_params",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "staking_yields",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "token_transfers",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "utilization",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "vault_apy",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "vault_share_price",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "vault_tvl",
+        "is_canonical": true,
+        "exception_reason": null
+      }
+    ],
+    "chains": [
+      {
+        "value": "ARBITRUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "AURORA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "AVALANCHE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BASE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BLAST",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "BSC",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "CELO",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "ETHEREUM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "FANTOM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "GNOSIS",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "HYPERLIQUID",
+        "is_canonical": false,
+        "exception_reason": null
+      },
+      {
+        "value": "LINEA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "MANTLE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "METIS",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "MODE",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "MOONBEAM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "OPTIMISM",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "PLASMA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "POLYGON",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SCROLL",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "SOLANA",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "STARKNET",
+        "is_canonical": true,
+        "exception_reason": null
+      },
+      {
+        "value": "ZKSYNC",
+        "is_canonical": true,
+        "exception_reason": null
+      }
+    ]
+  },
+  "non_canonical_count": {
+    "venues": 5,
+    "instrument_types": 1,
+    "data_types": 3,
+    "chains": 1
+  }
+}
