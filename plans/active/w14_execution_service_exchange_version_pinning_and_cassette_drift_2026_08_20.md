@@ -118,9 +118,14 @@ context_scope:
 
 ### Phase 2 — build per-transport version pinning
 
-- [ ] [AGENT] P1. **Add the decided version marker to every native (non-ccxt) REST adapter.** Confirm which
+- [x] [AGENT] P1. **Add the decided version marker to every native (non-ccxt) REST adapter.** Confirm which
       adapters (from Phase 1's inventory) genuinely lack one before adding — some URLs may already embed a version
-      segment that just needs to be asserted rather than newly introduced.
+      segment that just needs to be asserted rather than newly introduced. — execution-service@200805dada: all
+      three native-REST venues (Bitfinex, Bitget, Kraken Spot+Futures) already embedded a version segment
+      (`v2`/`api/v2`/`/0`/`api/v3`) but nothing asserted it; added a shared `assert_versioned_path()` helper
+      (`_native_base.py`) and wired it into every native-REST request-building call site, naming the previously
+      unnamed Kraken Futures `/api/v3` literal as `_KRAKEN_FUTURES_API_VERSION`. 12 new unit tests
+      (`test_native_rest_version_pinning.py`); full `quality-gates.sh` green (9096 passed).
 - [x] [AGENT] P1. **Confirm and, if needed, tighten the ccxt-wrapped venues' version story** per Phase 1's
       decision — either document why the existing pyproject range is sufficient, or add the per-venue check
       decided in Phase 1. — execution-service@48bf2728: added `CCXT_VERSION_RANGE` (">=4.5.24,<5.0.0", matching
@@ -179,3 +184,21 @@ context_scope:
 - 2026-08-21, slot 14: real run at 2026-08-21T00:00:00Z inspected 17 cassettes, found 13 stale at the 90-day budget and 4 undated sports cassettes, and exited 1. This confirms an actionable failure state rather than a forced-green stub.
 - **2026-08-21, slot 14, implementation ship**: `execution-service@1d7c1cf4a6` landed via quickmerge after `bash scripts/quality-gates.sh --no-fix` exited 0 (8,898 passed, 22 skipped, 1 xfailed; 82.57% coverage). The checker is offline and read-only: it fingerprints normalized response structure, ignores values/order/timestamps, and applies a 90-day capture-date budget; the live run reported 13 stale and 4 undated cassettes for Phase 4 follow-up.
 - **2026-08-22, slot 8, ccxt version-story confirmation**: `execution-service@48bf2728`. Confirmed the pyproject/uv.lock ccxt range (`>=4.5.24,<5.0.0`, resolved `4.5.39`) is still the pinning mechanism per Phase 1's decision — no upstream-venue HTTP assertion added underneath ccxt, structural cassette checks remain the drift guard. Made this a real runnable check rather than only a design-doc claim: `CCXT_VERSION_RANGE` + `assert_ccxt_version_pinned()` in `ccxt_common.py`, with unit tests (`test_ccxt_common.py::TestAssertCcxtVersionPinned`) covering both the in-range pass and an out-of-range `RuntimeError`. Full `quality-gates.sh` green; shipped via quickmerge, verified on origin.
+- **2026-08-22, slot 21, native-REST version-marker assertion**: `execution-service@200805dada`. Confirmed all three
+  native-REST venues (Bitfinex `v2`, Bitget `api/v2`, Kraken Spot `/0` + Futures `api/v3`) already embedded a
+  version segment in their request paths per Phase 1's inventory — nothing was genuinely missing, so the work was
+  making the existing segment an assertable, testable contract rather than an unchecked literal. Added
+  `assert_versioned_path(path, expected_version_marker, venue)` to `_native_base.py` (shared across all native
+  adapters) and wired it into: Bitfinex's `place_order` path build, Bitget's `place_order` path build
+  (spot + futures), and all four Kraken REST transport call sites (`_do_public_get`, `_do_private_post`,
+  `_do_futures_private_post`, `_do_futures_private_get`). Named the previously-unnamed Kraken Futures `/api/v3`
+  literal (repeated at each `kraken_futures_orders.py` call site) as `_KRAKEN_FUTURES_API_VERSION` in
+  `kraken_rest_mapping.py` so it can actually be asserted against. **Trap avoided**: an assertion built purely from
+  the same constant it checks (tried first for `_do_public_get`, where the path is *constructed* by concatenating
+  `_KRAKEN_API_VERSION` itself) is tautological — it can never fail, so it was dropped from that one call site;
+  the meaningful assertions are the ones checking a value some OTHER call site built independently (Bitfinex/Bitget
+  path strings, Kraken's `url_path`/`endpoint_path` built in `kraken_rest_adapter.py`/`kraken_futures_orders.py`),
+  which genuinely catch a future hardcoded-literal drifting from the declared marker. 12 new unit tests in
+  `test_native_rest_version_pinning.py` (helper behavior + real drift-detection via patched version constants,
+  not just happy-path). Full `quality-gates.sh --no-fix` green (9096 passed, 21 skipped, 1 xpassed); shipped via
+  quickmerge, verified `200805dada` is an ancestor of `origin/live-defi-rollout`.
