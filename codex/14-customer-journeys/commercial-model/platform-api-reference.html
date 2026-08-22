@@ -2136,7 +2136,10 @@
       <p>
         <b>All sixteen of sixteen <code>StrategyInstructionV2</code> action types execute for real through this
         endpoint (2026-08-21).</b> The request body type is a 16-member discriminated union
-        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:299-489</code>). A
+        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py</code>).
+        <code>StrategyInstructionV2</code> is that union;
+        <code>StrategyInstructionEnvelope</code> is the shared base class each of its sixteen members extends, so a
+        request names one concrete member and carries the envelope's common fields. A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
         internal DART manual-trade surface uses in production. BORROW/REPAY route through the same AAVE V3
@@ -2152,7 +2155,7 @@
         fungible pair token. All five DeFi-execution action types above plus BRIDGE/LP_MINT/LP_BURN are LIVE-WIRED
         for a named venue/protocol set so far (AAVE V3, Lido, Uniswap, Socket) and fall back to their existing ALPHA_ZERO benchmark-price simulation outside LIVE/MANUAL
         operational mode. <code>QUOTE</code> is the fifteenth: it registers delta-proxy repricing synchronously
-        (<code>_register_quote_instruction()</code>, <code>external_instruction_api.py:133-171</code>) and reaches
+        (<code>_register_quote_instruction()</code>, <code>external_instruction_api.py</code>) and reaches
         the venue asynchronously through its own tick-driven loop rather than inline in its own response; see the
         tick-loop paragraph below.
       </p>
@@ -2619,7 +2622,10 @@
       <h2>Client Reporting API: client-reporting-api</h2>
     </div>
     <p class="lede">
-      The client-reporting API exposes <b>102 routes</b> across 24 route modules for reports, statements, exports
+      The client-reporting API exposes <b>102 routes</b> across <b>34 route modules</b>, counting every module
+      under <code>client_reporting_api/api/routes/</code> that declares at least one route, the
+      <code>invoices/</code> and <code>reporting/</code> subpackages included. They cover reports, statements,
+      exports
       and document signing, gated by the same shared
       <code>create_api_auth("client-reporting-api")</code> dependency as §01, plus a second, per-route layer this
       service adds on top: entitlement scoping tied to <code>client_id</code>.
@@ -3578,8 +3584,9 @@
       <h2>Signal-leasing API: strategy-service</h2>
     </div>
     <p class="lede">
-      The Signal Leasing surface is the outbound stream of the platform's own <code>StrategyInstructionEnvelope</code>
-      emissions (strategy-service's polymorphic v2 instruction schema: <code>TradeInstruction</code>,
+      The Signal Leasing surface is the outbound stream of the platform's own instruction emissions, carried on
+      the shared <code>StrategyInstructionEnvelope</code> base that every member of the
+      <code>StrategyInstructionV2</code> union extends (<code>TradeInstruction</code>,
       <code>SwapInstruction</code>, <code>LendInstruction</code>, and siblings), delivered to a counterparty at their
       entitled payload depth: pull it via REST or receive it pushed to your webhook, then acknowledge it.
       <code>strategy-service/strategy_service/signal_broadcast/</code> (15 modules: <code>router.py</code>,
@@ -4034,6 +4041,8 @@
 This browses the full declared registry, 194 declared venues across 5 asset groups (171 of them live and
         producing data today, see <a href="platform-external-api-walkthrough.html#s3">the walkthrough's venue count</a>),
         683 declared (venue, instrument type, data type) shards total (CeFi 25/230 &middot; DeFi 126/311 &middot; TradFi 8/105 &middot; Sports 33/33 &middot; Prediction 2/4, venues/shards).
+        That is the declared-registry basis; the walkthrough's readiness-dump scope is a different one, 633 shards
+        over 292 declared &cup; observed venues, so the two counts are not directly comparable.
         <b>Declared since: not declared</b> means the capability is live-only: reachable on the streaming path
         with no batch start date, because nothing has backfilled it yet. That is a statement about which path exists
         today, not a claim that the capability itself is not real.
