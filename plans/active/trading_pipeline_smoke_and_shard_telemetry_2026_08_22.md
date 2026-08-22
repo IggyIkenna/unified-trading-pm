@@ -512,3 +512,21 @@ target (T6 decision).
 - **2026-08-22 (interactive Q&A, slot 6, operator)**: Two rounds of rulings recorded as D13-D18; bare-read todo
   rewritten to migrate-all-then-ban; T8 became the child-plan index (four children, each under its owning epic).
 - **2026-08-22 (operator, consolidation-trigger ruling)**: D19 added; event_driven_manifest_consolidation child created under manifest_master; assigned to tranche B.
+- **Tranche ownership (2026-08-22, dispatch round)** — five /autonomous agents, one per tab/slot; boundaries are the
+  collision contract, recorded here so the dispatch prompts are regenerable from the repo alone. **A**: T0+T1+T2 +
+  provider auth/billing probe (smallest real pull per provider per AG → `plans/audit/results/provider_auth_billing_probe_<date>.md`;
+  Databento = BLOCKED-CREDENTIALS until new keys); OWNS the `pipeline_e2e_check` engine + the `ShardRunTelemetry`
+  contract (ships it first, posts sha here). **B**: T3+T5 + the whole event_driven_manifest_consolidation plan, in its
+  stated order (sequencing gate before any cron slows); OWNS `manifest_writer/**` + `manifest_consolidator.py` — v10
+  columns land only through B. **C**: T4 + instrument_spec_versions_and_is_layer0_coverage; adopts `run_shard_loop`
+  after D posts its sha. **D**: shard_plan_and_resource_driven_shapes; OWNS `run_shard_loop` + the MDPS/execution
+  reader files (streaming). **E**: config_shard_identity_and_latency_profile + the matrix BUILD-OUT (runner, launcher,
+  baked image, sentinel/deadman, controller — but NOT the matrix runs) + T6 sizing; `check_config_shard_fresh` lives in
+  `manifest_freshness.py`, not `manifest_writer/**`. **Excluded fleet-wide**: executing the all-shard matrix, its
+  3-checkpoint cadences and skip-time SLO — operator-triggered with an operator `--day` per AG. **The post-completion
+  audit must verify the performance analytics and resource analytics end-to-end** (telemetry rows per shard/leg → BQ →
+  deployment-ui expected-vs-actual, VM + Cloud Run parity) before any smoke run is prepared. Session lessons: BSD awk
+  has no `\s` (use `[[:space:]]` — a silent no-op cost one push cycle); prefer append-only Progress-Log edits over
+  mid-file matching once prettier has re-wrapped a landed doc; `TMPDIR=$HOME/.cache/...` keeps safe-doc-push's isolated
+  worktree out of swept temp roots; a HEAD-behind checkout makes new-at-origin files look untracked — `git pull
+  --ff-only` before editing them.
