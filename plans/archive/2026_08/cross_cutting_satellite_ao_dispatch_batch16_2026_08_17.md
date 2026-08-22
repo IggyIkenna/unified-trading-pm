@@ -10,7 +10,7 @@ summary: >-
   (orchestrator_master, agent_operating_framework_master, plan_hygiene_master, infrastructure_master), the
   cross-cutting consolidated closeout, and existing satellite batches (13/14/15) before drafting — no item here
   duplicates ground an existing dispatched todo already claims.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,7 +26,8 @@ related:
     /plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-17"
+last_updated: "2026-08-22"
+superseded_by:
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -54,6 +55,13 @@ source: >-
 ---
 
 # cross-cutting satellite AO dispatch batch 16
+
+> **🟢 ARCHIVED 2026-08-22 — COMPLETE.** All 5 items shipped and verified landed against
+> `origin/live-defi-rollout` (see the finalize plan's reconciliation todo for the per-item SHAs). Reconciliation of
+> each item's evidence back into its source doc's citation, and a zero-open-todo re-check of all 3 source docs
+> (each still carries genuine remaining open work, so none archived alongside this batch), completed in
+> `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17_finalize.md`, archived in the same session. Successor:
+> none.
 
 ## From `git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`
 

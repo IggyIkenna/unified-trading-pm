@@ -34,8 +34,6 @@ related_plans:
   - ../active/ao_satellite_ao_dispatch_batch25_finalize_2026_08_19.md
   - ../active/asset_class_to_asset_group_rename_2026_07_21.md
   - /codex/11-project-management/doc-frontmatter-schema.md
-  - ../active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md
-  - ../active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17_finalize.md
   - ../active/data_pipeline_e2e_milestones_gate_2026_07_24.md
   - ../active/doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md
   - ../active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md
@@ -449,14 +447,6 @@ _(no plans currently assigned at this priority)_
 ### Context-scout frontmatter and plan-brainstorm plumbing
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra)
 **title**: Complete context_scout plumbing + close a frontmatter-schema drift + add a plan-brainstorm skill
-
-### [`cross_cutting_satellite_ao_dispatch_batch16_2026_08_17`](../active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md)
-**status**: active · **estimate**: 2.0 cal AI-days (class: infra)
-**title**: cross-cutting satellite AO dispatch batch 16 — 2026-08-17
-
-### [`cross_cutting_satellite_ao_dispatch_batch16_2026_08_17_finalize`](../active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17_finalize.md)
-**status**: active · **estimate**: 0.5 cal AI-days (class: infra)
-**title**: Finalize — cross-cutting satellite AO dispatch batch 16 (2026-08-17)
 
 ### [`doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08`](../active/doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md)
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra)

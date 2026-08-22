@@ -5,7 +5,7 @@ summary: >-
   Gated finalize for `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`. Reconciles each item's landed
   evidence back into its source doc's citation, re-checks the source docs' own remaining lower-confidence/gated
   items for a since-cleared gate, archives any source doc left at zero open todos, then archives batch16 itself.
-status: active
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -14,13 +14,13 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, finalize, na-eligibility-audit]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md,
     /plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md,
     /plans/active/issues/na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md,
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-17"
+last_updated: "2026-08-22"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -70,9 +70,18 @@ source: >-
       doc's open-todo count is confirmed, and any genuinely-zero doc is archived.
       Evidence: confirmed open todos remain in all three sources: stash issue 3, hash issue 1, venue-readiness 6;
       no source doc was eligible for archival.
-- [ ] [DOC] P3. Run the standard 6-step archival ritual on `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`
+- [x] ✅ [DOC] P3. Run the standard 6-step archival ritual on `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`
       itself once every todo above is done and all 5 of its own items are `[x]`. Done-when: batch16 is archived
       with corpus-wide referrer-path fixup complete.
+      Evidence: batch16 archived to `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`
+      with an archived banner; this finalize plan archived alongside it; `related_plans:`/body entries in
+      `plans/epics/agent_operating_framework_master.md` and `plans/active/INDEX.md` (regenerated) updated to drop
+      both docs from the active corpus. Prose citations of batch16 in other active docs (source-doc extraction
+      citations, historical audit notes) are left as-is per the archival discipline — only structural `related:`
+      pointers require repointing, and none of the remaining hits are structural `related:` frontmatter citing
+      this doc.
+
+> **🟢 ARCHIVED 2026-08-22 — COMPLETE.** Every todo above done; batch16 reconciled and archived. Successor: none.
 
 ## Progress Log
 
