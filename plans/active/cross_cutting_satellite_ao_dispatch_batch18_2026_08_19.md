@@ -119,7 +119,7 @@ source: >-
       list to match the doc's real content.~~ **DONE 2026-08-22** — verified the doc's body content (audit trail of
       `build_instrument_catalogue.py`/`enumerate_expected_universe.py`/`migrate_instruments_store_v9.py` +
       the UAC validity matrix, all instruments-service/UAC) and corrected `repos:` to
-      `[instruments-service, unified-api-contracts]` — `unified-trading-pm@<sha>`. Source:
+      `[instruments-service, unified-api-contracts]` — `unified-trading-pm@c8aa4158c2`. Source:
       `plan_reconciler_findings_cross_cutting_2026_08_18.md` "Plans not reached" item 4.
 - [ ] [DIAG] P3. **`data_pipeline_e2e_milestones_gate_2026_07_24.md`** — a Deferred-work-table row still marked "IN
       PROGRESS" for the "Operator-requested broader audit pass, part 3" relay/triage step, whose stated completion
