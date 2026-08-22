@@ -268,6 +268,11 @@ todos only to confirm they are data-movement, then leave it.
       state to be in once the keys land.
       Copper/manual-transfer/prime-broker eligibility on `VenueCapabilityV2.transfer_capability` (shipped
       `unified-api-contracts@45a545e5ad`).
+- [x] ✅ [AGENT] P1. **Spun out into a dedicated AO plan, 2026-08-22** —
+      `/plans/active/w23_pod_collateral_delegation_transfer_rail_2026_08_22.md` (+ finalize), per operator directive
+      (WhatsApp thread with POD's Timo): a POD API to instruct cross-venue collateral moves (no signing on our
+      side). Unified under the existing `TransferIntent`/`TransferAdapter` path, not `CustodyProvider` — distinct
+      from Ceffu above (Ceffu signs; POD instructs-and-confirms). Closes here; track progress there.
 - [x] ✅ [FROM-T5] P0. **Shipped — `execution-service@7202047877`.** Expose a real per-venue instruction-path check in `execution-service` — this is the leg the
       readiness dump names as the structural reason its rows cannot confirm execution readiness. T5 has done the
       groundwork and needs only the venue-aware surface; the shape asked for is deliberately minimal.

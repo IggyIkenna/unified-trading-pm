@@ -412,6 +412,71 @@ express a Solana-destined intent end-to-end.
 - Whether a dedicated atomic-execution SSOT doc (covering `AtomicBundleExecutor` + the `RecursiveLeverageReceiver` flash
   flows together) should be created. Not decided.
 
+## Custodian-mediated collateral delegation (`CUSTODIAN_COLLATERAL_DELEGATION`, 2026-08-22)
+
+> **Status: design ruled, build tracked in
+> [`/plans/active/w23_pod_collateral_delegation_transfer_rail_2026_08_22.md`](/plans/active/w23_pod_collateral_delegation_transfer_rail_2026_08_22.md)
+> (+ finalize). Not yet built as of this writing.**
+
+POD (first DeFi allocator client) is building an API where we instruct "move X asset from venue A to venue B for
+fund Y" and POD internally resolves custodian address + exchange account and executes it — we never see a wallet
+address and never sign anything (WhatsApp thread with POD's Timo, 2026-08-21/22). This is mechanically distinct from
+every existing `BusTransferType` member: not CCXT (`CEX_WITHDRAW`/`SUBACCOUNT_MOVE`), not on-chain
+(`ON_CHAIN`/`BRIDGE`/`CUSTODY_TRANSFER`), and not signing-based like Copper/CEFFU's `CustodyProvider`.
+
+**Operator architecture ruling, 2026-08-22**: do not force this into `CustodyProvider` — treat it as one more
+instruction on the same unified `TransferIntent` path every other rail already uses. Strategy states `(from_venue,
+to_venue, asset, amount)`; execution-service's adapter absorbs the venue/custodian-specific mechanics. This composes
+directly with this doc's existing "manual acknowledged transfers are part of the model rather than an exception"
+principle above — POD is one more mechanism reaching the same single source of truth for balances (a "wallet"
+abstraction regardless of whether it's an on-chain address, a CEX sub-account, or opaque custodian-internal state we
+can't read directly and must poll/wait on), not a special case.
+
+- **New rail**: `BusTransferType.CUSTODIAN_COLLATERAL_DELEGATION`, `TransferRail.OTHER` (same family as
+  `UNITY_WALLET_OP`/`IBKR_FUND_MOVE` — neither CCXT nor on-chain). Generic, not POD-specific — any future custodian
+  offering the same instruct-and-confirm model reuses it.
+- **Adapter wiring**: follows the `BRIDGE` precedent exactly — a duck-typed `execute_collateral_delegation` method on
+  `TransferAdapter` implementations (not a required `Protocol` member, so it can't break existing fake adapter test
+  doubles), dispatched via `TransferHandler._execute_custodian_delegation_transfer`. Confirmation reuses the existing
+  rail-agnostic `TransferConfirmationPoller`/`get_transfer_status()` unchanged.
+- **Restrictions registry**: which venue-pairs a custodian can move between lives in the UAC capability registry
+  (`unified_api_contracts.registry.capability`'s `SourceCapability`/`register_capability`), not hardcoded in
+  execution-service — this is the "restrictions" mechanism the operator's ruling calls for.
+- **Balance pre-check**: POD exposes no balance-query endpoint (confirmed absent from the WhatsApp thread), so the
+  pre-flight check reads PBMS's balances projection (epic `system_readiness_master.md` W9 "Account balances: the
+  single strategy I/O"), not POD directly.
+
+### Proposed external API — pending POD's confirmation
+
+Draft sent to POD 2026-08-22, field names chosen to map near-1:1 onto `TransferIntent`/`TransferResult` (below) so the
+real `LivePodCollateralAdapter` needs minimal translation once POD builds to it.
+
+**Submit** — `POST /v1/collateral-transfers`
+
+| Field            | Type               | Maps to (our side)                  | Notes                                                                     |
+| ---------------- | ------------------ | ----------------------------------- | ------------------------------------------------------------------------- |
+| `instruction_id` | `string` (uuid)    | `TransferIntent.idempotency_key`    | resubmitting the same id returns the cached result, never double-executes |
+| `fund_id`        | `string`           | POD-side mapping of our `client_id` | static 1x mapping, not renegotiated per call                              |
+| `from_venue`     | `string`           | `TransferIntent.source_venue`       | canonical venue code                                                      |
+| `to_venue`       | `string`           | `TransferIntent.dest_venue`         |                                                                           |
+| `asset`          | `string`           | `TransferIntent.asset`              |                                                                           |
+| `amount`         | `string` (decimal) | `TransferIntent.amount`             | decimal string, never float                                               |
+| `requested_at`   | `string` (ISO8601) | `TransferIntent.timestamp`          | UTC                                                                       |
+
+Sync ack: `instruction_id` (echoed), `pod_reference_id` (POD's own tracking id, stored alongside ours),
+`status` (`ACCEPTED`/`REJECTED`), `reject_reason` (closed-set code, populated only if `REJECTED`), `accepted_at`.
+
+**Status** — `GET /v1/collateral-transfers/{instruction_id}`, plus a webhook push if POD can offer one (saves both
+sides a poll loop): `pod_reference_id`, `status` (`ACCEPTED`/`PROCESSING`/`COMPLETED`/`FAILED`/`REJECTED` — maps onto
+our `TransferStatus.PENDING`/`CONFIRMED`/`FAILED`, `PROCESSING`/`ACCEPTED` both collapse to `PENDING` on our side),
+`requested_amount`, `settled_amount` (only if it can legitimately differ), `completed_at`, `error_code` + `error_message`
+(closed set, `FAILED` only).
+
+**Open questions for POD** (mirrors the same class of gap CEFFU's stub left open — worth asking upfront): decimal
+precision per asset; sync-only vs webhook vs poll; rate limits / minimum transfer amount; sandbox base URL + test
+credentials; whether POD's venue codes match ours or need a translation table; auth (HMAC-SHA256 matching our Copper
+convention, or a different scheme).
+
 ## Related Docs
 
 - [Kill Switch & Circuit Breaker](kill-switch-circuit-breaker.md) -- halt conditions that freeze transfers

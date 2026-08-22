@@ -810,6 +810,29 @@ Codex SSOTs: `/codex/02-data/live-data-persistence-and-event-log.md` (EventTrans
 
 ---
 
+## W23 — POD collateral-delegation transfer rail
+
+Operator ruling 2026-08-22 (WhatsApp thread with POD's Timo): POD is building an API where we instruct "move X asset
+from venue A to venue B for fund Y" and POD internally resolves custodian address + exchange account — no signing,
+no wallet addresses on our side. Real API spec not yet delivered (Copper+Binance prod integration in progress,
+Copper sandbox can't delegate capital, prod access pending — "early Sep likely" per the thread). Unified under the
+EXISTING `TransferIntent`/`TransferAdapter`/`TransferConfirmationPoller` path per operator ruling, not
+`CustodyProvider` (that protocol is signing-specific; POD never signs). Full detail:
+`/plans/active/w23_pod_collateral_delegation_transfer_rail_2026_08_22.md` (+ finalize).
+
+- [ ] [BACKEND] P0. New `BusTransferType.CUSTODIAN_COLLATERAL_DELEGATION` member (rail `OTHER`, generic — not
+      POD-specific) + POD registered in the UAC capability registry (venue-pair coverage as the "restrictions"
+      source, per operator ruling). STILL OPEN, not started.
+- [ ] [BACKEND] P0. `execute_collateral_delegation` adapter method (BRIDGE's duck-typed-Protocol-extension
+      pattern) + `TransferHandler._execute_custodian_delegation_transfer` dispatch + a fuller async
+      `MockPodCollateralAdapter` state-machine (multi-poll PENDING→CONFIRMED/FAILED, not instant) per operator's
+      explicit "fuller async simulator" ruling. STILL OPEN, not started.
+- [ ] [BACKEND] P1. Proposed external API schema committed to `/codex/04-architecture/transfer-architecture.md`
+      (WhatsApp-ready draft already produced 2026-08-22) — 1:1 field mapping onto `TransferIntent`/`TransferResult`
+      so the eventual real adapter needs near-zero translation. STILL OPEN, not started.
+- [ ] [BACKEND] P2. BLOCKED-CREDENTIALS — Real `LivePodCollateralAdapter` REST wiring, POD API spec pending
+      (mirrors the CEFFU stub-shipped pattern). Not started; not expected before POD's spec lands.
+
 ---
 
 ## Issue-doc corpus, 2026-08-17/18 — folded in so nothing is tracked only in an issue doc

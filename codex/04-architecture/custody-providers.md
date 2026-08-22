@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Custody Providers — single SSOT
-summary:
-  "Single SSOT for custody integration: the pluggable CustodyProvider protocol + all implementations
+summary: "Single SSOT for custody integration: the pluggable CustodyProvider protocol + all implementations
   (mock/local_key/cloud_kms/copper/ceffu/fireblocks), factory + SigningSurface mapping, per-(asset_group,venue) coverage
   matrix, mode matrix, and the §10A custody-ping health-check contract. May-23 default is CLOUD_KMS_ENCRYPTED."
 status: current
@@ -851,6 +850,12 @@ SSOT" invariant + slot 8 audit PB-19 deferred QG ratchet).
 
 ## §10 References
 
+- **POD collateral delegation is NOT a `CustodyProvider`** — POD's API instructs a cross-venue move and confirms it
+  without us ever signing or seeing a wallet address, mechanically distinct from every provider in §2. See
+  [Transfer Architecture § Custodian-mediated collateral delegation](transfer-architecture.md#custodian-mediated-collateral-delegation-custodian_collateral_delegation-2026-08-22)
+  for the design + proposed external API, and
+  [`/plans/active/w23_pod_collateral_delegation_transfer_rail_2026_08_22.md`](/plans/active/w23_pod_collateral_delegation_transfer_rail_2026_08_22.md)
+  for the build.
 - [Tenderly Execution Provider](tenderly-execution-provider.md) -- fork-based execution for batch/paper
 - [Wallet Hierarchy and Capital Flow](wallet-hierarchy-and-capital-flow.md) -- treasury/trading wallet architecture
 - [Interface Credential Convention](interface-credential-convention.md) -- how services get API keys
