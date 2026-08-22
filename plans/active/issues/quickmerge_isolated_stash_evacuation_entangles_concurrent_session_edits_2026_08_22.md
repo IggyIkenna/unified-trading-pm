@@ -189,3 +189,31 @@ during that window, it would have seen its own work vanished — a genuine near-
       against origin, one quickmerge run with an UNRELATED `--files` list) either succeeds without
       touching the foreign file, or fails with a message that clearly identifies the file as not
       the caller's own and does not leave the caller session responsible for resolving it.
+
+- **2026-08-22 (cross-session forensics, peers `2-f2`/`2-83`, relayed by T2 session)** — attribution
+  for the live `test_orchestrator_helpers.py` UU conflict above, gathered so whoever resolves it
+  doesn't have to re-derive it:
+  - The dirty set also included `instruments_service/reference_data/catalogue_field_history.py`,
+    `tests/unit/test_catalogue_point_in_time_equivalence.py` (untracked), and
+    `scripts/quality-gates.sh` — all confirmed as THIS T2 session's own two dispatched sub-agents'
+    in-progress work (the equivalence-proof + query-don't-derive-gate todos on
+    `instruments_catalogue_definitions_and_field_history_2026_08_17.md`), not foreign. `2-83`
+    flagged a live hazard while these stay staged in the shared index: any OTHER slot-2 session
+    committing in `instruments-service` should `git restore --staged` them first, or they ride
+    along into an unrelated commit.
+  - The genuinely foreign, unresolved piece is narrower than first reported: only
+    `instruments_service/engine/orchestrator/defi.py` (modified) +
+    `tests/unit/test_orchestrator_helpers.py` (UU, 2 conflicting hunks). `2-f2` traced the conflict's
+    other side to a LANDED commit, `878bc989` (`ikennaigboaka [slot-8·planning]`, an AO worker — not
+    a laptop session — 2026-08-22 14:10:43 UTC, `fix(defi): migrate IS-producibility denominator
+    consumers to UAC DEFI_LIVE_VENUES`). Context: `unified-api-contracts@326f9a6bfa` split
+    `VENUES_BY_ASSET_GROUP["defi"]` (now full canonical membership, matching cefi/tradfi/sports/
+    prediction) from the new `DEFI_LIVE_VENUES` (the IS-producible, phase-live subset, 103 of 126) —
+    slot-8's commit moves denominator consumers onto the narrower, correct constant. If the
+    conflicting local WIP in `defi.py`/`test_orchestrator_helpers.py` still treats
+    `VENUES_BY_ASSET_GROUP["defi"]` as the producibility denominator, that side is the stale one —
+    **a hypothesis for the resolver to verify, not yet confirmed**, since neither peer would resolve
+    a file they don't own without the actual owner confirming. The owner is likely reachable only via
+    the `planning` VM/AO channel, not a laptop-slot broadcast (`ListAgents`' peer-session list did
+    not surface it) — worth checking AO's own dispatch/worker log for whatever task landed `878bc989`
+    before assuming a human session owns the other side.
