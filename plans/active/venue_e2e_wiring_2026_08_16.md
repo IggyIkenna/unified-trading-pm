@@ -198,6 +198,19 @@ ruling, and it is what stops the sweep manufacturing green.
       both directions with no new baseline growth.
 - [ ] [BACKEND] P1. **The carve-out's contracted scope is fully wired** — the four CEX venues plus Lido across the
       contracted archetypes, since this is the subset with a delivery date attached.
+- [ ] [BACKEND] P2. **File AAVE-PLASMA into strategy-service's archetype/slot catalogue** — per D66 (OPERATOR-RULED
+      2026-08-21: "AAVE-PLASMA IS a priority; file the strategy-service archetype/slot catalogue implementation
+      todo now", `issues_corpus_completion_dispatch_2026_08_21.md` ledger), resolving
+      `issues/defi_venue_e2e_batch1_deferred_followups_2026_08_17.md`'s todo 2 (the operator-gated "should Plasma
+      be added" question — now answered YES). Adapter resolution already supports the venue
+      (`VENUE_TO_ADAPTER_KEY["AAVE-PLASMA"] = "aave_v3"`, chain threaded via `RoutingConfig`'s free-form RPC
+      fields) but no slot anywhere selects Plasma as a chain. Wire it into
+      `strategy-service/strategy_service/engine/strategies/v2/archetype_slots_defi.py` +
+      `target_universe/catalog_carry.py`/`catalog_yield_defi.py` (whichever archetype(s) the current AAVE-family
+      slot definitions already cover for other chains — mirror that shape for Plasma, do not invent a new
+      archetype). Repo: strategy-service. Done when: at least one archetype's slot table includes an AAVE-PLASMA
+      entry, `quality-gates.sh` green, and `issues/defi_venue_e2e_batch1_deferred_followups_2026_08_17.md`'s todo 2
+      is flipped `[x]` citing this commit.
 
 ## Progress Log
 

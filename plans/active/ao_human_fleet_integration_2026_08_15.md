@@ -905,6 +905,27 @@ investigation confirmed are both achievable with existing primitives:
       workspace root. Per-tab visibility is working as designed; it requires each window to actually be opened at
       its own `.tabs/N` folder (this workspace's own existing "an interactive session IS slot N" rule), which at
       least this session isn't. Not fixed here — flagged to Harsh directly, his call how to restructure his windows.
+
+### Phase 9 — D35 re-verification: does the shipped Phase 2b mechanism cover the reopened IDE-heartbeat ask (2026-08-22)
+
+> D35 (OPERATOR-RULED 2026-08-21) reopened "the IDE-compatible human-fleet heartbeat design" as a fresh mechanism
+> revisit requiring a carrier different from the rejected `UserPromptSubmit` hook — see the Progress Log entry
+> above for the full trace. Phase 2b (shipped 2026-08-19, before the ruling) already built exactly that: a
+> transcript-file-poll cron (`ao-liveness-heartbeat.py`), not a Claude Code hook at all. This phase confirms the
+> fit rather than re-designing from scratch.
+
+- [ ] [BACKEND] P2. **Confirm Phase 2b's `ao-liveness-heartbeat.py` fully satisfies D35's reopened ask, or name the
+      precise residual gap.** Re-read `ao_review_slot_hard_rule_and_diagnostics_2026_08_17.md`'s original Todo 5
+      wording (the source this D35 ruling answers) against what Phase 2b/2c actually ship today: (a) fires
+      identically in terminal + IDE-extension sessions — confirmed live for both, Phase 2b/2c evidence above; (b)
+      is NOT `UserPromptSubmit` or any other Claude Code hook — confirmed, it's an external cron reading transcript
+      mtimes; (c) reuses `ao_client.sh`'s existing bearer-token transport — confirmed, same auth path as every
+      other human-fleet script. If all three hold with no further gap, close this todo citing Phase 2b/2c's
+      existing evidence (no new code needed) and retag `ao_review_slot_hard_rule_and_diagnostics_2026_08_17.md`'s
+      Todo 5 as resolved-by-reference here. If a genuine gap remains (e.g. the operator wanted usage/context-window
+      reporting too, which Phase 2b deliberately left unreported), scope that gap as its own new todo rather than
+      re-opening the UserPromptSubmit question. Done when: either a clean resolved-by-reference closure with cited
+      evidence, or a precisely-scoped residual-gap todo.
 - **2026-08-19 (same session, scope leak found + fixed, cron repointed to a stable checkout)**: Harsh asked whether the
   cron only scans this workspace — it did not. `ao-fleet-sync-tick.sh`'s usage-push loop globbed
   `~/.claude/projects/*/*.jsonl` with no project filter, so ANY local Claude Code project's real, priced token spend
@@ -939,3 +960,19 @@ investigation confirmed are both achievable with existing primitives:
   and still 0 unblocked-of-706 queued tasks). No new facts since the 2026-08-19 per-todo-split verdict; the one
   item that RECLASSIFIED then (Fleet-table role-badge exclusion) is already extracted and tracked in
   `ao_satellite_ao_dispatch_batch25_2026_08_19.md`. Doc stays `assigned_vm: NA`.
+- **2026-08-22 — ruling D35 (IDE heartbeat mechanism) resolved against this doc's own already-shipped work**:
+  D35 (OPERATOR-RULED 2026-08-21, `issues_corpus_completion_dispatch_2026_08_21.md` ledger) reopened "the
+  IDE-compatible human-fleet heartbeat design" as a fresh mechanism revisit, explicitly requiring a carrier
+  DIFFERENT from the rejected `UserPromptSubmit` hook. Re-reading this doc's own **Phase 2b** (shipped
+  2026-08-19, `agent-orchestrator@0affeffedd` — two days BEFORE the D35 ruling) found it already IS that
+  different carrier: `ao-liveness-heartbeat.py` polls the local `~/.claude/projects/<cwd-slug>/<session-id>.jsonl`
+  transcript file on a `crontab`-driven schedule (`ao-fleet-sync-tick.sh`/`install-fleet-sync-cron.sh`) — a
+  filesystem-mtime signal read by an EXTERNAL process, not a Claude Code hook payload at all, so it is
+  structurally unrelated to `UserPromptSubmit` and fires identically for a terminal CLI session and a
+  Cursor/VS Code IDE-extension session alike (verified live in production for both, Phase 2b's own todos above).
+  This closes the exact gap D35's source todo (`ao_review_slot_hard_rule_and_diagnostics_2026_08_17.md`, "Todo 5")
+  describes — that todo was filed 2026-08-17, two days before Phase 2b shipped, and never updated to reflect it.
+  **New todo authored per D35** (this doc, immediately below): confirm the shipped mechanism covers the full ask
+  or file the residual gap, rather than re-proposing a carrier from scratch. Retagged the stale duplicate copy in
+  `ao_review_slot_hard_rule_and_diagnostics_2026_08_17.md` to redirect here instead of re-describing the (already
+  superseded) UserPromptSubmit approach.

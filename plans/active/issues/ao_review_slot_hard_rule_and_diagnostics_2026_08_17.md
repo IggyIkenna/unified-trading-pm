@@ -132,9 +132,19 @@ own design pass first (see Todo 2), not a copy-paste of this guard.
       it, what guardrails replace the dirty-worktree refusal's safety rationale, how it avoids repeating the exact
       2026-07-17 incident this refusal was built to prevent) before implementation — do not rush a change to this
       code path.
-- [ ] [BACKEND] P2. Per D35 ruling (OPERATOR-RULED 2026-08-21 — APPROVED: reopen the IDE-compatible human-fleet
-      heartbeat design as a FRESH ruling/mechanism revisit; the UserPromptSubmit rejection STANDS, propose a
-      DIFFERENT carrier): design + propose a non-UserPromptSubmit IDE-compatible heartbeat carrier reusing
+- [ ] [BACKEND] P2. REDIRECTED 2026-08-22 (D35 ruling applied) — → `ao_human_fleet_integration_2026_08_15.md` Phase 9.
+      Per D35 (OPERATOR-RULED 2026-08-21 — APPROVED: reopen the IDE-compatible human-fleet heartbeat design as a
+      FRESH ruling/mechanism revisit; the UserPromptSubmit rejection STANDS, propose a DIFFERENT carrier): the
+      design work now lives in `ao_human_fleet_integration_2026_08_15.md`'s new Phase 9 (the doc that actually owns
+      this mechanism) rather than duplicated here. **Finding while retagging**: this todo's own body (preserved
+      below for context) still describes building a `UserPromptSubmit`-driven carrier — exactly the approach
+      D35/the 2026-08-19 ruling reject; it was never updated after that ruling landed. Separately, that doc's own
+      Phase 2b (shipped 2026-08-19, BEFORE this todo's last edit) already built a genuinely different,
+      non-hook carrier — `ao-liveness-heartbeat.py`, an external cron polling the local transcript file's mtime,
+      verified live in both a terminal and a Cursor/VS Code IDE-extension session — which looks like it already
+      answers this todo's original ask. Phase 9 there is where that gets confirmed or a residual gap gets scoped;
+      not re-litigated here. Original (superseded) text preserved for context only, do NOT implement it:
+      ~~design + propose a non-UserPromptSubmit IDE-compatible heartbeat carrier reusing
       `scripts/human_fleet/ao_client.sh`'s existing IDE-agnostic bearer-token transport — a hook/mechanism that
       fires identically across terminal/IDE/Desktop/web without re-litigating the rejected UserPromptSubmit
       approach. Done-when: a concrete carrier mechanism is proposed and either implemented or handed back for
@@ -147,7 +157,7 @@ own design pass first (see Todo 2), not a copy-paste of this guard.
       Claude Code's `UserPromptSubmit` hook is confirmed to fire identically across terminal/IDE/Desktop/web (official
       docs: "Hooks run wherever Claude Code runs... fire the same hook events"). Build a `UserPromptSubmit`-driven
       equivalent heartbeat sender reusing `scripts/human_fleet/ao_client.sh`'s existing IDE-agnostic bearer-token
-      transport, so a Cursor-hosted session gets credited the same as a terminal one.
+      transport, so a Cursor-hosted session gets credited the same as a terminal one.~~
 - [ ] [SCRIPT] P3. **Harden the human-fleet heartbeat setup into pre-commit**, same operator ask as above ("also
       harden that setup into pre commit so that people cant miss it with message as to the coddex docs that define
       setup"), deferred by the same pivot. Add a check (in `unified-trading-pm/scripts/pre-commit-templates/`, rolled
@@ -180,3 +190,9 @@ own design pass first (see Todo 2), not a copy-paste of this guard.
   IDE-compatible human-fleet heartbeat design as a FRESH ruling/mechanism revisit (the UserPromptSubmit rejection
   stands; propose a different carrier). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
   ledger.
+- **2026-08-22 — D35 applied**: retagged Todo 5 as REDIRECTED to `ao_human_fleet_integration_2026_08_15.md`'s new
+  Phase 9 (the doc that actually owns this mechanism) rather than duplicating the design work here — its own
+  UserPromptSubmit-based text was stale/superseded and never actually implementable per D35. Found while
+  retagging: that doc's Phase 2b (shipped 2026-08-19) already built a genuinely different, non-hook carrier
+  (`ao-liveness-heartbeat.py`, cron-driven transcript-mtime poll) that looks like it already answers this todo's
+  original ask — Phase 9 confirms or scopes the residual gap.
