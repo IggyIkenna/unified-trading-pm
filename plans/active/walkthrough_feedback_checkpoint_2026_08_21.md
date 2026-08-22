@@ -166,9 +166,16 @@ read. Terminated that tree only (36696, 36699, 73190, 73715, SIGTERM, all confir
 had a live parent and was left untouched per the never-bulk-kill-a-peer rule. Load did not materially drop, which
 confirms the remaining pressure is legitimate concurrent fleet work, not orphans.
 
-Lesson for future multi-lane pushes: an isolated-worktree gate whose parent agent dies keeps running and can keep
-spawning, so a session that loses agents (network outage, crash) should sweep for `ppid=1` gate trees rather than
-assume its work stopped with it.
+CORRECTION, same day: that kill was WRONG and cost a live lane about an hour. A deliberately detached gate
+(`nohup`, `disown`, or any backgrounded run whose launching shell has exited) is ALSO reparented to init, so
+`ppid=1` is not evidence of abandonment. The lane whose run I killed was alive and waiting on it, and the load did
+not drop afterwards, which was the tell that the tree was not the pressure source.
+
+Lesson, stated as the rule to follow: `ppid=1` ALONE never justifies killing a gate. Require corroboration before
+touching any gate process: the log has stopped growing (mtime frozen well past the step's normal duration), no live
+agent maps to that worktree, and ideally the owning session is confirmed dead. Under fleet-wide load the correct
+move is to stop ADDING gates (no full-suite re-runs, prefer the isolated single-file gate) and wait, not to prune
+other processes.
 
 ## Coverage-quality push, scoped 2026-08-22 (operator ask: get unattributed, sports and unverified down)
 
