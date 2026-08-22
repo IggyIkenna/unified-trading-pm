@@ -121,3 +121,48 @@ EOF
 
     [[ "${found}" == *"${peer}"* ]]
 }
+
+# ── the pkill-guard PATH shim must not blind the detector ──────────────────
+#
+# unified-trading-pm@8df3df58a1 (2026-08-21) put scripts/hooks/pkill-guard-bin/ FIRST on PATH,
+# shimming `pgrep` as well as `pkill` and REFUSING (exit 1, message on stderr, nothing on stdout)
+# any invocation without a slot-specific discriminator. foreign_claude_pids' sweep is deliberately
+# host-wide -- a peer occupying THIS slot is by construction outside our own process tree -- so the
+# shim refused it on every invocation, `2>/dev/null` swallowed the refusal, and the detector
+# reported "no collision" everywhere the shim was installed. Measured on slot 33, 2026-08-22.
+#
+# This test pins the fix INDEPENDENTLY of whether the real guard happens to be on PATH: it installs
+# its own refusing shim, so it exercises the regression on a bare CI runner too (where the real
+# guard dir is absent and the four tests that first caught this would otherwise pass vacuously).
+@test "a refusing pgrep guard shim first on PATH does not blind foreign_claude_pids" {
+    source "${_SCD_LIB}"
+
+    local guard="${BATS_TEST_TMPDIR}/pkill-guard-bin"
+    mkdir -p "${guard}"
+    cat >"${guard}/pgrep" <<'EOF'
+#!/usr/bin/env bash
+echo "REFUSED: 'pgrep $*' lacks a slot-specific discriminator." >&2
+exit 1
+EOF
+    chmod +x "${guard}/pgrep"
+    PATH="${guard}:${PATH}"
+
+    # Sanity: the shim really is what a bare `pgrep` now resolves to. (`run` merges stderr into
+    # $output, so the refusal message lands there -- what matters is that no PIDs came back.)
+    run pgrep -f claude
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"REFUSED"* ]]
+
+    ( cd "${SLOT}" && exec -a claude-bats-fake-peer sleep 20 ) &
+    _PEER_PIDS+=("$!")
+    local peer="$!"
+    local deadline=$((SECONDS + 10))
+    local found=""
+    while [ "${SECONDS}" -lt "${deadline}" ]; do
+        found="$(foreign_claude_pids "${SLOT}")"
+        [ -n "${found}" ] && break
+        sleep 0.1
+    done
+
+    [[ "${found}" == *"${peer}"* ]]
+}

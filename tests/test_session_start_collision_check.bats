@@ -184,7 +184,18 @@ _run_hook() {
     fakebin="${BATS_TEST_TMPDIR}/fakebin"
     mkdir -p "${fakebin}"
     for tool in pgrep lsof ps awk readlink tmux cat tr; do
-        p="$(command -v "${tool}" 2>/dev/null)" || continue
+        # `command -v pgrep` resolves to scripts/hooks/pkill-guard-bin/pgrep -- a WRAPPER that
+        # `source`s ../pkill-guard.sh relative to its own location. Symlinked into ${fakebin} that
+        # relative source has nothing to find, so the link would be a wrapper that fails outright
+        # rather than the tool this fixture means to provide. Take the first PATH match that is NOT
+        # a guard wrapper, mirroring slot-collision-detect.sh's own _real_pgrep resolution.
+        p=""
+        while read -r _p_cand; do
+            case "${_p_cand}" in */pkill-guard-bin/*) continue ;; esac
+            p="${_p_cand}"
+            break
+        done < <(type -aP "${tool}" 2>/dev/null)
+        [ -n "${p}" ] || continue
         ln -sf "${p}" "${fakebin}/${tool}"
     done
     # Without jq the hook can't parse the stdin JSON payload at all (by

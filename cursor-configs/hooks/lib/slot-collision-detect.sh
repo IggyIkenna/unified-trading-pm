@@ -126,15 +126,42 @@ _cwd_of_batch() {
   '
 }
 
+# _real_pgrep <args...> -> `pgrep`, resolved PAST the pkill-guard PATH shim. Empty output + non-zero
+# on failure, like pgrep itself.
+#
+# WHY THIS EXISTS. `scripts/hooks/pkill-guard-bin/` shims BOTH `pkill` and `pgrep` and REFUSES any
+# invocation lacking a slot-specific discriminator (unified-trading-pm@8df3df58a1, 2026-08-21); that
+# dir is prepended to PATH, so a bare `pgrep` resolves to the shim, not the binary. The guard is
+# correct for its purpose -- it stops a host-wide `pkill` reaping a PEER slot's live process, a WRITE
+# hazard. But this detector's sweep is a READ: it enumerates every candidate and then filters by cwd,
+# and the host-wide scope IS the point, since a peer occupying THIS slot is by definition outside our
+# own process tree. Under the shim the call returned exit 1 with no stdout, the existing `2>/dev/null`
+# swallowed the refusal message, and `foreign_claude_pids` reported "no collision" on EVERY host with
+# the shim on PATH -- the exact structural no-op this library's header says it was created to end,
+# re-entered through a different door one day after the guard shipped. Measured 2026-08-22 (slot 33):
+# `pgrep -f claude` -> "REFUSED: ... lacks a slot-specific discriminator", 4 bats tests red; with the
+# shim dir removed from PATH, 14/14 green.
+#
+# Deliberately resolves by SKIPPING the guard dir rather than hardcoding /usr/bin/pgrep: the guard dir
+# may move, and this library is shared with macOS hosts where the real binary's path differs.
+_real_pgrep() {
+  local p
+  while read -r p; do
+    case "${p}" in */pkill-guard-bin/*) continue ;; esac
+    "${p}" "$@"
+    return $?
+  done < <(type -aP pgrep 2>/dev/null)
+  return 1
+}
+
 # foreign_claude_pids <slot_dir> -> PIDs (one per line) of live `claude` processes whose cwd is
 # inside <slot_dir>, EXCLUDING this process's own ancestry. Empty output means no collision.
 foreign_claude_pids() {
   local slot_dir="$1" ancestors slot_real pid resolved candidates=()
   [ -n "${slot_dir}" ] || return 0
-  command -v pgrep >/dev/null 2>&1 || return 0
   ancestors="$(_ancestor_pids)"
   slot_real="$(readlink -f "${slot_dir}" 2>/dev/null || echo "${slot_dir}")"
-  for pid in $(pgrep -f claude 2>/dev/null || true); do
+  for pid in $(_real_pgrep -f claude 2>/dev/null || true); do
     case "${ancestors}" in *" ${pid} "*) continue ;; esac
     candidates+=("${pid}")
   done
