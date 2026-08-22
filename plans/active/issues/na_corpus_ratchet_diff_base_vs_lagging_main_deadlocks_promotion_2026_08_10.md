@@ -42,7 +42,7 @@ locked_by:
 supersedes:
 superseded_by:
 resolved_by: ""
-last_updated: 2026-08-10
+last_updated: 2026-08-21
 context_scope:
   [
     unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
@@ -123,11 +123,14 @@ a normal ratchet into a self-reinforcing wall.
       `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-trading-pm@715a90d7ac` (`DIFF_BASE_REF` now
       resolves from the triggering CI event — push uses `before` SHA, PR uses `GITHUB_BASE_REF`, other triggers stay
       baseline+buffer; verified via 5 simulated scenarios).
-- [ ] [BACKEND] P2. **Promote PRs re-gate already-gated content.** A `chore(promote)` PR is a bot-generated projection
-      of LDR content that each already passed the LDR entry gate commit-by-commit; re-running corpus-growth ratchets
-      over the aggregate is double jeopardy and is what converts ordinary corpus growth into a promotion blocker. Decide
-      (operator call, not a unilateral backend change — it narrows a hard gate) whether corpus-growth ratchets should be
-      ENTRY gates only (LDR push / precommit) rather than promotion gates. Repo: unified-trading-pm.
+- [ ] [BACKEND] P2. **Make corpus-growth ratchets ENTRY gates only.** Per D104 ruling (2026-08-21,
+      issues_corpus_completion_dispatch_2026_08_21.md ledger): Entry only — re-gating aggregate PRs is what converts
+      ordinary corpus growth into the documented promotion deadlock, with no demonstrated safety benefit. Remove
+      `check_na_corpus_ratchet`, `check_reference_paths`, `check_archive_candidates`, `check_effort_signal_ratchet`,
+      and `check_ag_closeout_linkage` from the promotion-PR (`chore(promote)`) gate path, keeping them as ENTRY gates
+      only (LDR push / precommit via `run_hygiene_sweep.sh`). Done-when: a `chore(promote)` PR's QG slice no longer
+      re-runs these corpus-growth ratchets, while a direct LDR push / precommit still enforces them. Repo:
+      unified-trading-pm.
 - [x] ✅ [BACKEND] P2. **No detection surface for this failure class.** The wall stood 22h with 17 `sit_failure`
       dispatches, none of which escalated "this gate cannot converge" as distinct from "this gate is red". Add a
       detector for a _non-convergeable_ gate — e.g. the same check failing across N consecutive distinct HEADs with a
@@ -321,3 +324,7 @@ spec. Doc stays NA overall; this is a split extraction, not a whole-doc reclassi
   counting script live under a promote-gate time pressure. Verified locally post-bump:
   `check_na_corpus_ratchet.py` exits 0. Shipped via quickmerge:
   `scripts/plan-hygiene/na_corpus_baseline.yaml` + this doc.
+- **2026-08-21 — ruling D104 (NA-ratchet gate scoping)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Entry only — re-gating aggregate PRs is what converts ordinary growth into the
+  documented promotion deadlock, with no demonstrated safety benefit. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

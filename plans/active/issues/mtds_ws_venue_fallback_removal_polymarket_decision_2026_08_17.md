@@ -32,7 +32,7 @@ parent_epic: observability_master
 depends_on: []
 resolved_by:
 locked_by:
-last_updated: 2026-08-17
+last_updated: 2026-08-21
 context_scope:
   [
     market-tick-data-service/market_tick_data_service/live/connectors/polymarket_ws.py,
@@ -66,17 +66,14 @@ fix depends on a product/architecture call this doc doesn't have the authority t
 
 ## Todos
 
-- [ ] [OPERATOR] P3. Decide: (a) accept polymarket's two-connector dual-casing split as the permanent final
-      state (both keys already resolve directly; the fallback is not needed for it — so answering "yes" clears
-      the way to remove the fallback fleet-wide with zero registration changes), or (b) treat it as a state that
-      still needs the fallback as a documented, permanent accommodation. Once decided: if (a), remove the
-      case-insensitive fallback in `resolve_ws_feed_venue_key()` (module-level) and
-      `WebsocketStreamingHandler._resolve_connector` entirely and update its docstring — corrected 2026-08-19,
-      plan-reconcile observability_master: the prior `:138-142` line-number citation had drifted, those lines are
-      now `_resolve_connector`'s parameter list; the real fallback logic lives in `resolve_ws_feed_venue_key()`
-      (module-level, lines ~63-85 as of this correction, cite the symbol not the line if it moves again); if
-      (b), replace the blanket fallback with a narrower, explicitly-commented one scoped only to
-      the polymarket case. Repo: market-tick-data-service.
+- [ ] [BACKEND] P3. Remove the case-insensitive venue-key fallback fleet-wide — per D103 ruling (2026-08-21,
+      issues_corpus_completion_dispatch_2026_08_21.md ledger): every venue's dual-registration makes it redundant;
+      both polymarket connectors already resolve under canonical keys. Remove the fallback logic in
+      `resolve_ws_feed_venue_key()` (module-level — cite the symbol, its line range has already drifted once, see
+      the 2026-08-19 correction below) and `WebsocketStreamingHandler._resolve_connector`, and update both
+      docstrings. Done-when: a live dispatch test confirms every registered venue (including both polymarket
+      connectors under their own canonical-cased keys) still resolves correctly with the fallback removed, and
+      `quality-gates.sh` is green. Repo: market-tick-data-service.
 
 ## Progress Log
 
@@ -91,3 +88,7 @@ fix depends on a product/architecture call this doc doesn't have the authority t
   [OPERATOR] binary product/architecture decision the doc's own text says it lacks authority to make; both
   downstream code outcomes are already fully pre-specified once the decision lands. Cross-cutting tranche, batch
   2 of 3.
+- **2026-08-21 — ruling D103 (Venue-key case fallback removal)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Remove — every venue's dual-registration makes it redundant; both
+  polymarket connectors already resolve under canonical keys. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

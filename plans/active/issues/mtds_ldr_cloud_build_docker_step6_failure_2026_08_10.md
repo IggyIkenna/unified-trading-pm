@@ -27,6 +27,7 @@ related:
   - /plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
 created: 2026-08-10
+last_updated: 2026-08-21
 author: /ci-reconcile (interactive, slot-2·laptop)
 parent_epic: ci_master
 priority: P2
@@ -173,11 +174,13 @@ is why these two MTDS conditions were hard to tell apart from the alert alone.
       that file EVERY run, leaving `UU` conflict markers that then fail the workflow-YAML gate. Observed and reverted to
       status quo ante 2026-08-10 — do NOT retry there until that stale WIP is cleared, or you will re-corrupt a peer's
       working tree for a cosmetic version stamp.
-- [ ] [OPERATOR] P3. **Confirm MTDS having no `-prod` Cloud Build trigger is intentional** (pre-cutover), not an
-      accidental deletion like the UTL one that
-      `utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md` tracks. If intentional, note it in the
-      cutover register so the next sweep does not re-investigate; if not, recreate it mirroring
-      `instruments-service-prod`. Repo: unified-trading-pm (register) / GCP.
+- [ ] [OPERATOR] P3. BLOCKED-OPERATOR-DECISION naming 'MTDS `-prod` Cloud Build trigger intentionality — pending
+      confirmation from whoever owns MTDS cutover phasing, 2026-08-21' (per D101 ruling, issues_corpus_completion_
+      dispatch_2026_08_21.md ledger: Confirm intentional, pending input from whoever owns MTDS cutover phasing — the
+      canonical-cutover register has no entry either way). If intentional (pre-cutover, not an accidental deletion
+      like the UTL one `utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md` tracks), note it in
+      `/codex/02-data/canonical-cutover-register.md` so the next sweep does not re-investigate; if not, recreate the
+      trigger mirroring `instruments-service-prod`. Repo: unified-trading-pm (register) / GCP.
 - [x] ✅ [BACKEND] P3. **`scripts/self-hosted-runners/hosted-baseline/cloud-build-router.yml` is now stale** vs the live
       workflow — this session fixed `build_error_detail` (credential-preamble strip + SA/credential-path scrub) in the
       LIVE `.github/workflows/cloud-build-router.yml` only. That baseline is a `derived` snapshot per its own
@@ -233,3 +236,6 @@ is why these two MTDS conditions were hard to tell apart from the alert alone.
   cutover state, not Cloud Build trigger provisioning, so it does not resolve this item; the [OPERATOR] P3
   confirmation stays genuinely open. The sibling [BACKEND] P3 item stays blocked on 2 other repos' own broken
   states, unchanged. Cross-cutting tranche, batch 2 of 3.
+- **2026-08-21 — ruling D101 (MTDS missing -prod trigger)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Confirm intentional, pending input from whoever owns MTDS cutover phasing — the
+  register has no entry either way. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

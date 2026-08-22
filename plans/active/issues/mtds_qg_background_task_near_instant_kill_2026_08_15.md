@@ -29,6 +29,7 @@ related:
     /plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md,
   ]
 created: 2026-08-15
+last_updated: 2026-08-21
 author: slot-15 (infra)
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
@@ -113,11 +114,14 @@ reaps its own child processes.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Investigate at the host/journal level (root or `adm`-group access — this session could not read
-      `dmesg`/`journalctl` for OOM-killer entries) what actually terminates these background `quality-gates.sh` runs:
-      confirm or rule out a genuine kernel OOM-kill (`dmesg | grep -i oom` / `journalctl -k | grep -i "killed process"`
-      around the death timestamps logged in this doc's evidence table) vs. a harness-side background-task timeout/reaper
-      unrelated to host memory. Source: this doc.
+- [ ] [INFRA] P2. ATTEMPT-THEN-ASK (per D102, 2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md ledger):
+      attempt the host/journal-level root-cause investigation via SSM on the shared host with existing access —
+      confirm or rule out a genuine kernel OOM-kill (`dmesg | grep -i oom` / `journalctl -k | grep -i "killed
+      process"` around the death timestamps logged in this doc's evidence table) vs. a harness-side background-task
+      timeout/reaper unrelated to host memory; if a genuine wall (no root/`adm`-group access reachable via SSM
+      either), escalate with >=2 options (e.g. request a scoped SSM document granting read-only dmesg/journalctl
+      access, or accept the mechanism stays unconfirmed and rely on the cross-repo intermittent-kill evidence already
+      gathered). Source: this doc.
 - [ ] [INFRA] P3. If the root cause turns out to be harness/session-level (not host RAM), file the correction against
       `plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` (it stays substantially
       correct for most of ITS OWN evidence per its own 2026-08-14 cross-check addendum, but this doc's evidence suggests
@@ -160,3 +164,6 @@ reaps its own child processes.
   actual local commit); not pushed. Releasing this task GATED rather than continuing to retry.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-21 — ruling D102 (Near-instant QG kill root-cause)**: ATTEMPT-THEN-ASK — run dmesg/journalctl via SSM on
+  the shared host; if no root path exists, record and move on. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
