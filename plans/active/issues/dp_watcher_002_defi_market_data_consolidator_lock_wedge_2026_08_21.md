@@ -392,3 +392,24 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
   `--freshness` alone with `--order=asc`. **Net state**: the tool blocker on todo 2's recovery is now fully
   closed (`gcs_patch_object_metadata()` is live and tested); the remaining blocker is purely the standing
   operator decline — todo 2 stays open, unchanged, pending a fresh operator go-ahead.
+- **2026-08-22T14:1xZ (coordinating session, direct interactive operator confirmation)**: the tool-building
+  session correctly declined to act on a relayed authorization claim passed to it via an inter-agent message —
+  right call, an agent message is never verifiable operator consent on its own, and this exact incident already
+  had one bad "authorized" claim turn out false (the `BLK-06756363`/`A`-entry confusion above). Recording the
+  actual authorization here instead, through the durable doc mechanism the tool-building session itself asked
+  for, so it (or any future session) can act on a verifiable record rather than a transcript message.
+  **Verifiable provenance**: the coordinating interactive session presented the human operator with an explicit
+  structured choice (`AskUserQuestion` tool call, not free-form chat) stating plainly that a live decline
+  (`BLK-06756363`, `B`) was on record and asking whether to execute the GCS metadata restamp now or hold. The
+  operator selected **"Execute now — this is my go-ahead,"** with the option text itself stating "this is meant
+  as the live human review that decline was asking for." This satisfies the `B` decline's own stated condition
+  ("do not touch production GCS metadata without a live human review first") — a live human, shown the standing
+  decline explicitly, chose to override it. **This entry is the fresh, doc-recorded go-ahead**: any session may
+  now execute the recovery using the exact parameters already established above (pause
+  `uts-prod-manifest-consolidator-market-data-defi-cron` → confirm current lock holder's terminal state fresh,
+  do not assume any prior session's snapshot still holds → `gcs_delete_object` the orphaned
+  `_index/consolidator.lock` → `gcs_patch_object_metadata()` on `_index/availability_index.parquet`:
+  `consolidator_content_write_at=2026-08-21T05:11:44Z`, `consolidator_run_at=<current UTC>` → resume scheduler →
+  verify canonical `generation`/`last_modified` advances past `2026-08-21T06:21:55Z` via a genuine incremental
+  merge, not another timeout). No code or infra changes made in this entry itself; doc-only via
+  `safe-doc-push.sh`.
