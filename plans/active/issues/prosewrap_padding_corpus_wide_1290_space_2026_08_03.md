@@ -219,7 +219,7 @@ Mechanical, bounded remediation — not a design/judgment call:
   fixed while investigating this**: `check_prosewrap_padding.sh` gained a `--diff-base <ref>` mode on 2026-08-11
   (identical signature-set-comparison shape to reference-paths/archive-candidates/effort-ratchet/ na-corpus/ag-closeout)
   but `run_hygiene_sweep.sh`'s `run_check` call for it was never actually passed the shared `DIFF_BASE_REF`, unlike its
-  5 siblings — a real wiring gap, now closed (`unified-trading-pm@<pending>`). This does **not** fix the promote-PR
+  5 siblings — a real wiring gap, now closed (`unified-trading-pm@5d497d7736`). This does **not** fix the promote-PR
   streak above: `DIFF_BASE_REF` is deliberately empty on `promote/*` heads and the `live-defi-rollout` dispatch (the
   2026-08-10 double-jeopardy/deadlock design, `run_hygiene_sweep.sh` lines ~350-385), so promote-path behavior for this
   check is unchanged by the wiring fix — it only affects the rare "normal PR into main" CI path. Confirmed via direct
@@ -233,7 +233,9 @@ Mechanical, bounded remediation — not a design/judgment call:
 - **Resolved 2026-08-15 (cicd escalation agt-f4b815, slot 19) — same recurrence, this time via the `ldr_qg_failure` path
   (promote PR #3180, wall `ldr_main_qg_failure`).** Corpus count had climbed to 2118 (baseline 1639, +479).
   Hand-repaired every currently-flagged file via `fix_prosewrap_padding.py` (content-preserving, `git diff -w` empty
-  confirmed) and lowered the baseline to 329 — `unified-trading-pm@<pending>`. **6 files were deliberately excluded**
+  confirmed) and lowered the baseline to 340 (corrected from this entry's original "329", which didn't match the committed
+  `prosewrap_padding_baseline.yaml` value — verified via `git show d71059effe`) — `unified-trading-pm@d71059effe`.
+  **6 files were deliberately excluded**
   from this pass because they are already over the hard 1000-line plan cap (`check_line_caps.sh`) and staging them at
   all (even a whitespace-only diff) trips that separate hard gate: `data_completion_defi_2026_07_15.md` (1033L),
   `data_pipeline_check_mdps_features_2026_07_20.md` (1002L), `data_pipeline_reconciliation_skill_2026_07_20.md` (1003L),
