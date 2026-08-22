@@ -400,13 +400,26 @@ delete, but the same evidentiary bar applies given real financial data is at sta
       unified-trading-library) **RESOLVED 2026-08-17 (slot-4, backend_engineer): NOT an orphan — `1-6831d99c` was a
       legitimately still-running long merge that completed successfully.** Direct evidence, not inference — see
       Progress Log entry for full detail. unified-trading-library@864f62c2f7 (DIAG script committed this session).
-- [ ] [DIAG] P3. Retry this doc's `logs`-mode Cloud Logging check (script
+- [x] ✅ [DIAG] P3. Retry this doc's `logs`-mode Cloud Logging check (script
       `unified-trading-library/scripts/check_defi_consolidator_prune_backlog.py logs --project
       central-element-323112`) once the shared `ReadRequestsPerMinutePerProject`/`PerUser` (60/min) Cloud Logging
       quota that blocked every attempt in the 2026-08-16 session (5 retries, ~10+ min, zero successful reads) is not
       under contention — confirm whether the `ManifestConsolidator: pruned N consolidated per-VM shard(s)` INFO
       line has appeared at all in the job's recent run history, which would date how long the backlog above has
-      been accumulating. (repo: unified-trading-library)
+      been accumulating. **RESOLVED 2026-08-22 (slot 21, data_engineering): CLOSED AS SUPERSEDED, not obtained —
+      retried 5 more attempts (90s apart, ~7.5 min total), 100% `ResourceExhausted` 429
+      (`ReadRequestsPerMinutePerProject`/`PerUser`, 60/min) on every single attempt, zero successful reads. This is
+      now the SECOND independent session (2026-08-16 + 2026-08-22, ~10 total retries across both) to exhaust every
+      retry against this exact quota with zero successes — evidence this project's Cloud Logging read quota is
+      chronically saturated, not a one-off busy window; a longer or larger retry budget would not plausibly help.
+      More importantly, the question this check existed to answer (how long has the prune backlog been
+      accumulating / root-cause `_prune_consolidated_shards` falling behind) was already independently RESOLVED
+      2026-08-17 (slot 20, infra, see that Progress Log entry) via `gcloud run jobs executions list` +
+      `_index/latest.json`/`consolidator.lock` reads — a path that explicitly sidesteps this same Cloud Logging
+      quota entirely and found the actual mechanism (lock-contention / long-merge-starvation, not an
+      unbounded-backlog-age question). The `logs`-mode confirmation is therefore no longer load-bearing for any
+      open decision in this doc — closing rather than leaving a permanently-retrying, now-moot P3 diagnostic open.
+      (repo: unified-trading-library)
 - [x] ✅ [DIAG] P2. Confirm `gcloud builds list --project=central-element-323112` shows a FRESH successful build for
       `market-data-processing-service` — **RESOLVED 2026-08-17 (slot 13): the premise was checking the wrong
       signal.** MDPS deploys its batch/backfill compute via **VM TARBALL snapshot**, never Cloud Build, in this
@@ -772,3 +785,11 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   doc as a candidate for that sweep's "Group: defi-related epics" todo (not yet added there — out of this run's scope
   to edit a different epic's doc; flagging for the lead session / next sweep pass instead).
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries)
+- **2026-08-22 (slot 21, data_engineering)**: closed the `[DIAG]` P3 `logs`-mode Cloud Logging retry todo as
+  superseded. Retried the script 5 more times (90s apart, ~7.5 min total, backgrounded to respect the async-wait
+  discipline) — 100% `ResourceExhausted` 429 on the same `ReadRequestsPerMinutePerProject`/`PerUser` (60/min) quota
+  that blocked the entire 2026-08-16 session, zero successful reads across both sessions' ~10 combined attempts.
+  Did not keep retrying indefinitely: the underlying root-cause question this check existed to answer was already
+  independently resolved 2026-08-17 (slot 20, infra) via a different data source (`gcloud run jobs executions
+  list` + lock/latest.json reads) that bypasses this exact quota — so the logs confirmation is no longer needed to
+  unblock anything in this doc. No other open todo in this doc depends on this one.
