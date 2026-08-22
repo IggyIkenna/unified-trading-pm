@@ -500,7 +500,7 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       actually contains this fix before re-triggering (compare the digest / a log line unique to the new code);
       if it predates the fix, split a new `[INFRA] P0.` rebuild+redeploy todo (mirrors this doc's todo-2c/3c
       precedent) rather than re-triggering against stale code.
-- [ ] [BACKEND] P0. Wire `--run-tag` into calendar's `--operation compute` CLI parser. Live evidence: both
+- [x] ✅ [BACKEND] P0. Wire `--run-tag` into calendar's `--operation compute` CLI parser. Live evidence: both
       triggered executions of `uts-prod-features-calendar-service-t1-recon` (`...-bcgmc`, 2026-08-22) failed
       identically with `error: unrecognized arguments: --run-tag t1-recon` — `features_service/calendar/cli/
       handlers/batch_handler.py` internally threads `run_tag` defensively (`getattr(self.args, "run_tag",
@@ -512,7 +512,42 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       features_service/calendar/cli/*.py` returns nothing). Repo: features-service. Done-when:
       `uts-prod-features-calendar-service-t1-recon`'s next triggered execution accepts `--run-tag t1-recon`
       without an argparse error and completes successfully — cite the execution ID. Same image-freshness caveat
-      as the todo above (verify the deployed image contains the fix before re-triggering).
+      as the todo above (verify the deployed image contains the fix before re-triggering). — DONE (code) 2026-08-22:
+      root cause confirmed as suspected — `--operation compute` dispatches through `ServiceBootstrap`
+      (`features_service/calendar/cli/main.py::main_service_cli`, `operations={"compute":
+      CalendarBatchModeHandler, ...}`), whose `extra_args_fn` callback (`_add_service_args`) never registered
+      `--run-tag`, so UTL's `ServiceCLI` (`unified_trading_library/service_cli.py`) built its `argparse.ArgumentParser`
+      without it and `parser.parse_args()` rejected the flag for EVERY operation, not just `compute` (the
+      economic_results/corporate_actions/forexfactory handlers only ever read `getattr(self.args, "run_tag",
+      None)` defensively — none of them registers the argument either; the "OTHER operations already accept
+      it" premise in this todo's own text didn't hold, confirmed by grep). `CalendarBatchModeHandler.run()`
+      (the actual "compute" handler) already threaded `run_tag=str(getattr(self.args, "run_tag", "batch") or
+      "batch")` through to `run_batch()` — it only needed the value to exist on `args`. Fixed by adding a
+      `--run-tag` `add_argument` (default `"batch"`, same help text as `batch_handler.py`'s legacy standalone
+      `create_parser()`) to `_add_service_args` in `cli/main.py` — this fixes ALL FOUR operations at once, since
+      `extra_args_fn` is applied once to the shared parser. Added 2 unit tests
+      (`TestServiceBootstrapExtraArgs`, `tests/calendar/unit/test_cli.py`) asserting `--run-tag` parses and
+      defaults to `"batch"` via `_add_service_args` directly (the actual live dispatch path — the existing
+      `TestCLIParser` class in that file only covers the separate, not-Terraform-invoked
+      `batch_handler.create_parser()`). `features-service@d9d19e2e`, QG green, verified an ancestor of
+      `origin/live-defi-rollout`. **NOT YET independently verified end-to-end**: same deployment-freshness gap
+      this doc has hit repeatedly for this repo — the deployed `uts-prod-features-calendar-service-t1-recon`
+      image necessarily predates this commit (built before the fix existed), so the next triggered execution
+      would still fail identically until a rebuild+redeploy lands; that step is infra-craft scope, not
+      backend_engineer's (`does_not`: Infra provisioning, VM launches, CI/CD, cloud). Split into the new
+      `[INFRA]` todo immediately below rather than crossing craft lines (same split pattern as this doc's
+      earlier todo-2c/3c/4 precedents).
+- [ ] [INFRA] P0. Rebuild + redeploy `uts-prod-features-calendar-service-t1-recon`'s Cloud Run Job container
+      image off `features-service@d9d19e2e` (the `--run-tag` argparse fix immediately above), then trigger a
+      real execution and verify it accepts `--run-tag t1-recon` without an argparse error and completes
+      successfully. No Cloud Build trigger may exist for features-service project-wide (verify via
+      `gcloud builds triggers list`) — if none, use a manual `gcloud builds submit --config=cloudbuild.yaml
+      --substitutions=SHORT_SHA=$(git rev-parse --short HEAD) .` off LDR HEAD (mirrors the ml-service/
+      features-service manual-submit recipes already used repeatedly in this doc — watch for the
+      `publish-wheel` step's `.git`-context gap on a manual submit, same workaround as those precedents).
+      Repo: features-service, deployment-service. Done-when: `uts-prod-features-calendar-service-t1-recon`'s
+      next triggered execution accepts `--run-tag t1-recon` without an argparse error and completes
+      successfully — cite the execution ID (this closes the immediately-preceding todo's own done-when too).
 - [ ] [BACKEND] P1. Implement the `--run-tag`-aware `_SUCCESS`-marker writer this doc's original todo asked for
       (mirroring ml-service's `_write_t1_recon_success_marker`, `ml_service/inference/cli/main.py:65-80`) across
       all 6 feature families, writing to `t1-recon/features/{family}/{date}/_SUCCESS` once each family's
