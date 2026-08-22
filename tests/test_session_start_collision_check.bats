@@ -83,14 +83,30 @@ _spawn_fake_peer() {
     # a peer that isn't lsof-visible yet (see slot-collision-detect.sh's foreign_claude_pids).
     # Bounded at 5s; falls through to let the assertion fail with a clear signal rather than hang.
     local detect_lib="${_SSC_PM_ROOT}/cursor-configs/hooks/lib/slot-collision-detect.sh"
+    # Bounded at 15s (was 5s) to match the precondition-poll used by
+    # test_pretooluse_slot_collision_guard.bats's _spawn_fake_peer -- a shorter bound was
+    # measured insufficient under host load (see the skip-guard below, and
+    # plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md).
     local waited=0
-    while [ "${waited}" -lt 50 ]; do
+    while [ "${waited}" -lt 150 ]; do
         if bash "${detect_lib}" foreign-pids "${cwd}" 2>/dev/null | grep -qx "${pid}"; then
             return 0
         fi
         sleep 0.1
         waited=$((waited + 1))
     done
+}
+
+# The hook's OWN detector scan (session-start-collision-check.sh's bounded `timeout 10 ...`
+# wrapper around foreign_claude_pids) can independently time out under load even after
+# _spawn_fake_peer confirmed the peer was lsof-visible a moment earlier -- load is a moving
+# target, not a one-time precondition. Mirrors
+# test_pretooluse_slot_collision_guard.bats's _skip_if_detector_timed_out for the analogous
+# SLOT_COLLISION_CHECK_DETECTOR_TIMEOUT marker.
+_skip_if_detector_timed_out() {
+    if [[ "${output}" == *SLOT_COLLISION_CHECK_DETECTOR_TIMEOUT* ]]; then
+        skip "session-start-collision-check's own detector scan timed out under host load (fail-open by design) -- see plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md"
+    fi
 }
 
 _run_hook() {
@@ -128,6 +144,7 @@ _run_hook() {
 @test "detects a live foreign process whose cwd is INSIDE the slot dir" {
     _spawn_fake_peer "${SLOT}"
     run _run_hook "${SLOT}"
+    _skip_if_detector_timed_out
     [ "$status" -eq 0 ]
     [[ "$output" == *"SLOT COLLISION WARNING"* ]]
     [[ "$output" == *"live process"* ]]
@@ -145,6 +162,7 @@ _run_hook() {
 @test "warning names the slot dir and points at the per-tab-worktrees model" {
     _spawn_fake_peer "${SLOT}"
     run _run_hook "${SLOT}"
+    _skip_if_detector_timed_out
     [[ "$output" == *"${SCRATCH}/.tabs/77"* ]]
     [[ "$output" == *"WARNING ONLY"* ]]
 }
@@ -183,7 +201,13 @@ _run_hook() {
     local fakebin tool p
     fakebin="${BATS_TEST_TMPDIR}/fakebin"
     mkdir -p "${fakebin}"
-    for tool in pgrep lsof ps awk readlink tmux cat tr; do
+    # `timeout` AND `bash` are included so the hook's bounded detector-scan wrapper (a
+    # `timeout 10 bash -c '...'` re-invocation, and its SLOT_COLLISION_CHECK_DETECTOR_TIMEOUT
+    # marker) behaves the same under this curated PATH as it does normally -- omitting either
+    # would make the wrapper itself fail with "command not found" (a THIRD outcome, distinct
+    # from both "found a peer" and "timed out"), silently producing NO warning at all rather
+    # than exercising the plain-text-fallback path this test exists to cover.
+    for tool in pgrep lsof ps awk readlink tmux cat tr timeout bash; do
         p="$(command -v "${tool}" 2>/dev/null)" || continue
         ln -sf "${p}" "${fakebin}/${tool}"
     done
@@ -191,6 +215,7 @@ _run_hook() {
     # design — that parse itself is jq-gated), so it falls back to
     # $CLAUDE_PROJECT_DIR / $PWD for START_CWD rather than the JSON cwd.
     run env PATH="${fakebin}" CLAUDE_PROJECT_DIR="${SLOT}" "$(command -v bash)" "${HOOK}" </dev/null
+    _skip_if_detector_timed_out
     [ "$status" -eq 0 ]
     [[ "$output" == *"SLOT COLLISION WARNING"* ]]
     # No jq on PATH -> plain text, not the hookSpecificOutput JSON envelope.

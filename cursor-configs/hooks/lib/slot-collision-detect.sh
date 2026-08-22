@@ -126,15 +126,43 @@ _cwd_of_batch() {
   '
 }
 
+# _real_pgrep -> absolute path to a genuine `pgrep` binary on stdout, or empty if none found.
+# Deliberately bypasses whatever `pgrep` a plain PATH lookup would resolve first: every AO-spawned
+# worker pane prepends cursor-configs/hooks/pkill-guard-bin ahead of the rest of $PATH
+# (agent-orchestrator/server/tmux_spawn.py, pkill_guard_dead_on_exec_into_claude_recurrence4_2026_08_21.md),
+# and that wrapper REFUSES a bare `-f claude` pattern (no numeric target, no `.tabs/<N>/`
+# substring) exactly as designed for `pkill` -- but `pgrep` is READ-ONLY and can never kill
+# anything, so refusing it buys none of the safety the guard exists for while silently breaking
+# this detector's only working signal. Measured 2026-08-22: on a PATH where that wrapper is
+# installed, a bare `pgrep -f claude` here returns REFUSED/empty on EVERY call, unconditional on
+# host load -- this, not a slow lsof walk, is what several independent sessions that same day
+# mis-diagnosed as pure host-load flakiness at steadily dropping load thresholds (164 -> 90-150 ->
+# 7.71-48 -> 3.91 -- see this issue's own Progress Log). Absolute-path invocation is the guard's
+# OWN documented, sanctioned bypass (pkill-guard.sh's module docstring: "deliberate bypass:
+# `command pkill ...` or an absolute path") -- `command pgrep` alone does NOT work here because
+# the wrapper is a real PATH-resolved executable, not a shell function, so `command` still finds
+# it first.
+_real_pgrep() {
+  local p
+  for p in /usr/bin/pgrep /bin/pgrep /usr/local/bin/pgrep /opt/homebrew/bin/pgrep; do
+    [ -x "${p}" ] && {
+      printf '%s' "${p}"
+      return 0
+    }
+  done
+  command -v pgrep 2>/dev/null # last resort -- may still resolve to a guard wrapper
+}
+
 # foreign_claude_pids <slot_dir> -> PIDs (one per line) of live `claude` processes whose cwd is
 # inside <slot_dir>, EXCLUDING this process's own ancestry. Empty output means no collision.
 foreign_claude_pids() {
-  local slot_dir="$1" ancestors slot_real pid resolved candidates=()
+  local slot_dir="$1" ancestors slot_real pid resolved candidates=() pgrep_bin
   [ -n "${slot_dir}" ] || return 0
-  command -v pgrep >/dev/null 2>&1 || return 0
+  pgrep_bin="$(_real_pgrep)"
+  [ -n "${pgrep_bin}" ] || return 0
   ancestors="$(_ancestor_pids)"
   slot_real="$(readlink -f "${slot_dir}" 2>/dev/null || echo "${slot_dir}")"
-  for pid in $(pgrep -f claude 2>/dev/null || true); do
+  for pid in $("${pgrep_bin}" -f claude 2>/dev/null || true); do
     case "${ancestors}" in *" ${pid} "*) continue ;; esac
     candidates+=("${pid}")
   done

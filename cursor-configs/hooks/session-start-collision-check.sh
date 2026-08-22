@@ -110,11 +110,42 @@ _SSCC_LIB="${BASH_SOURCE[0]%/*}/lib/slot-collision-detect.sh"
 [ -r "${_SSCC_LIB}" ] && . "${_SSCC_LIB}"
 
 if declare -F foreign_claude_pids >/dev/null 2>&1; then
-  _sscc_pids="$(foreign_claude_pids "${SLOT_DIR}")"
-  foreign_count=0
-  for _sscc_p in ${_sscc_pids}; do foreign_count=$((foreign_count + 1)); done
-  if [ "${foreign_count:-0}" -gt 0 ]; then
-    WARNINGS+=("${foreign_count} other live process(es) matching 'claude' have their cwd inside this slot (${SLOT_DIR})")
+  # Bound the scan the same way the PreToolUse guard bounds its own detector call
+  # (subprocess.run(..., timeout=10)) -- this script previously called foreign_claude_pids()
+  # in-process with NO time bound at all, so it had no equivalent of the guard's own
+  # SLOT_COLLISION_GUARD_DETECTOR_TIMEOUT marker: a slow lsof walk under host load just made
+  # signal 2 quietly take longer, indistinguishable from "no peer found". Run it under `timeout`
+  # in a child bash so a load-induced stall is OBSERVABLE (a greppable marker) rather than
+  # silently identical to a clean "no peer" scan -- see
+  # plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md.
+  _sscc_timeout_bin=""
+  if command -v timeout >/dev/null 2>&1; then
+    _sscc_timeout_bin="timeout"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    _sscc_timeout_bin="gtimeout"
+  fi
+  if [ -n "${_sscc_timeout_bin}" ]; then
+    # ${BASH:-bash}, not a bare `bash`: $BASH is this already-running interpreter's OWN resolved
+    # absolute path, so the child needs no fresh PATH lookup for the interpreter itself -- on a
+    # curated/minimal PATH that omits `bash`, a bare `bash -c` here would fail with "command not
+    # found" (a third, silent-no-warning outcome distinct from both "found a peer" and "timed
+    # out"), exactly the kind of PATH-dependent surprise this whole fix exists to stop chasing.
+    _sscc_pids="$("${_sscc_timeout_bin}" 10 "${BASH:-bash}" -c '. "$1"; foreign_claude_pids "$2"' _ "${_SSCC_LIB}" "${SLOT_DIR}" 2>/dev/null)"
+    _sscc_detect_rc=$?
+  else
+    # No timeout binary on this host (or a curated PATH that omits it) -- run unbounded rather
+    # than drop signal 2 outright; there is simply no timeout marker to report in this case.
+    _sscc_pids="$(foreign_claude_pids "${SLOT_DIR}")"
+    _sscc_detect_rc=0
+  fi
+  if [ "${_sscc_detect_rc}" -eq 124 ]; then
+    WARNINGS+=("SLOT_COLLISION_CHECK_DETECTOR_TIMEOUT — peer cwd scan did not complete within 10s (host load); signal 2 skipped this run, not a clean no-peer verdict")
+  else
+    foreign_count=0
+    for _sscc_p in ${_sscc_pids}; do foreign_count=$((foreign_count + 1)); done
+    if [ "${foreign_count:-0}" -gt 0 ]; then
+      WARNINGS+=("${foreign_count} other live process(es) matching 'claude' have their cwd inside this slot (${SLOT_DIR})")
+    fi
   fi
 fi
 

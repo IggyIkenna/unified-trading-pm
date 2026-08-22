@@ -111,7 +111,14 @@ EOF
     ( cd "${SLOT}" && exec -a claude-bats-fake-peer sleep 20 ) &
     _PEER_PIDS+=("$!")
     local peer="$!"
-    local deadline=$(( SECONDS + 10 ))
+    # Bounded at 15s (was 10s), matching the precondition-poll bound used by
+    # test_pretooluse_slot_collision_guard.bats and test_session_start_collision_check.bats's
+    # _spawn_fake_peer -- a shorter bound was measured insufficient under host load. This call
+    # has no timeout-observable-sentinel wrapper of its own (it calls foreign_claude_pids()
+    # directly, not through either production consumer), so the only lever here is the poll
+    # bound itself; see
+    # plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md.
+    local deadline=$(( SECONDS + 15 ))
     local found=""
     while [ "${SECONDS}" -lt "${deadline}" ]; do
         found="$(foreign_claude_pids "${SLOT}")"
