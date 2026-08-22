@@ -279,3 +279,39 @@ clean, new regression coverage (`tests/test_account_view_provider.py`'s
 `dashboard/tests/e2e/gemini-capacity.spec.ts` asserting the seeded Gemini account's
 Accounts-panel row shows real RPM/RPD/TPM and has zero `.acc-bars` elements — the exact
 shape of the bug being regressed).
+
+## Progress Log
+
+- **2026-08-22 (slot 15, interactive → `/autonomous`)**: closed the WRITE-side half of this bug
+  class (section above), shipped `agent-orchestrator@8d19f986f2` on a green full gate. Entry
+  point was an operator question about slot 24 showing `ACCOUNT_ID=glm-5-turbo` alongside
+  `MODEL=claude-sonnet-5`; the live process settled it — no `--model` flag at all,
+  `ANTHROPIC_MODEL=glm-5-turbo`, so the account was right and the model string was wrong. Two
+  regressions were caught by the gate BEFORE shipping, both worth remembering: (1) passing
+  `_do_spawn`'s `account` (typed `Any`, duck-typed as `SimpleNamespace`/`MagicMock` in several
+  tests) into a function that assumes the `AccountDef` shape — fixed by narrowing with
+  `isinstance` after verifying BOTH production call sites take `account` from
+  `select_account_for_spawn`, which returns an `AccountDef`; (2) naming a local widened `Any` →
+  `Any | str`, unassignable to the `AccountProvider` Literal. Also: the first gate run's
+  completion notification reported "exit code 0" while the gate had really exited 1 — the
+  trailing `echo` in the backgrounded command was what exited 0. Read the log, never the
+  notification (same trap as
+  `/plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` Part 5).
+
+- **2026-08-22 — BIG FINDING, carried into the GLM quota work (tracked in its own sibling issue
+  doc, not here)**: `server/glm_quota_poller.py`'s own docstring asserts *"Z.ai's API also has
+  no documented usage-query endpoint ... there is no server-side quota signal to poll for GLM,
+  full stop"*. **Measured wrong today.** The 2026-08-18 investigation it cites probed the
+  INFERENCE response headers on `POST /api/anthropic/v1/messages` — sound for headers, but it
+  never looked for a separate monitoring API. `GET https://api.z.ai/api/monitor/usage/quota/limit`
+  (header `Authorization: <token>`; Bearer prefix optional, both 200) returns real quota:
+  `{"limits":[{"unit":3,"number":5,"usage":2000,"currentValue":1322,"remaining":677,
+  "percentage":66,"nextResetTime":…},{"unit":6,"number":1,"usage":10000,"currentValue":10010,
+  "remaining":0,"percentage":100,…}],"level":"lite"}` — `unit=3,number=5` is the 5-hour meter,
+  `unit=6,number=1` the weekly. At probe time the WEEKLY meter was **100% / `remaining: 0`**
+  (resets 2026-08-23 07:20 UTC) while AO's estimate said 14% and `account_status: healthy`.
+  That one fact explains the fleet-wide GLM 429 storm, and why every "5 hour" reset came and
+  went without recovery — the binding meter was the weekly one. The guessed CEILINGS in config
+  are exactly right (2000 / 10000 match `usage`); it is `glm_assumed_credits_per_request` and
+  the count-based model that cannot see real consumption. A wrong-vocabulary absence-proof —
+  the exact failure mode CLAUDE.md warns about.
