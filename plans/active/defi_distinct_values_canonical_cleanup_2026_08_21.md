@@ -204,12 +204,12 @@ drift_direction: advance-code
 
 | item | state / why deferred | blocked-on |
 | --- | --- | --- |
-| Todo 8 canon-swap apply (`--drain-gate` → snapshot → `--apply-prod --confirm-prod-write` on the VM) | **Cannot be done yet** — needs the projection to finish; VM `defi-manifest-projection-20260821-195038` had written 39/~81 parts at 01:35 and was NOT in the instance list → likely SPOT-preempted; verify `vm-logs/<vm>/EXIT_STATUS` + part count first; relaunch from deployment-service (launcher fix IS on origin now) if preempted | projection completion |
-| Todo 6 purge-half (existing blanket perp_funding/derivative_ticker rows on non-perp venues) | **Not done** — forward seeding stopped (uac@4b06013aea + is@0020df5f); historical rows still in the index; needs a one-off in the purge script's pattern (Kleene mask, server-side snapshot, pause bracket, CAS) scoped to the 71-protocol population the IS report enumerated; run SERIAL with other index rewrites | nothing |
+| Todo 8 canon-swap apply (`--drain-gate` → snapshot → `--apply-prod --confirm-prod-write` on the VM) | **Cannot be done yet** — needs the projection to finish. VM `…-20260821-195038` was NOT preempted: its in-guest stall watchdog killed a HEALTHY run (rc=137, 39 parts, last part 53s before the kill) because the launcher's `STALL_PROGRESS_REGEX=progress:` matched 0 lines of run.log. Launcher regex + `BACKFILL_CMD` module-form both re-fixed (local, ship pending dep-clean) → relaunched `defi-manifest-projection-20260822-074226` (e2-standard-8 per measured 175% CPU / 3.3 GB RSS; UAC tarball one unrelated commit stale, warn-mode) with ONE sized monitor (`monitor_vm_072651.py <run-ts>`, 14h cap, stall = parts flat 3h) | projection completion |
+| Todo 6 purge-half (existing blanket perp_funding/derivative_ticker rows on non-perp venues) | **Not done (apply pending)** — forward seeding stopped (uac@4b06013aea + is@0020df5f); one-off `purge_blanket_perp_stamps_nonperp_defi_venues_2026_08_22.py` authored + dry-run MEASURED 441,402 rows / 0 captured (local, 22 min); apply runs on an in-region VM via `deployment-service/scripts/vm/launch-defi-blanket-perp-stamp-purge-vm.sh --apply --expect-delete 441402` (needs `create-code-tarballs.sh --include market-tick-data-service --force` so the untracked one-off rides the tarball, consolidator re-paused immediately before launch, resumed after the terminal verdict); serialize with every other index write | nothing |
 | Todo 9 rollup regen + panel verification | **Not done** — run `measure_honest_coverage.py` (or its nightly job) AFTER the index rewrites settle, then re-derive `/data-status/distinct-values/defi` via the production functions (`dump_defi_distinct.py` pattern in the census artifacts) and record before/after distinct counts (before: 108 venues / 32 data_types / 16 instrument_types / 23 chains) | todos 6-half, 8 |
 | Todo 16 (29 twinless dex_pools → dex_pool_state), todo 17 (213 legacy glued object deletes), todo 10 (blank itype), 11, 12 (`retire_rate_indices_legacy_captured_rows_2026_08_12.py` already exists), 14, 15 | **Not done** — bounded, tooling mostly exists | nothing (serialize index writes) |
 | Todo 13 boundary disposition (HYPERLIQUID/ASTER/EXTENDED/LIGHTER + `*-FUTURES` carry-basis in DeFi distinct values) | **Operator-owned** | operator |
-| MTDS one-off scripts commit (purge + rekey, lessons embedded) | quickmerge `--isolated` launched at checkpoint — verify `ONEOFFS_QM_EXIT` + `git show origin:scripts/one_offs/...` | in flight |
+| MTDS one-off scripts commit (purge + rekey + NEW todo-6 purge script, lessons embedded) + deployment-service launcher regex fix | **Not done** — quickmerge attempts 1 (type-check timeout under host load ~200) and 2 (Stage-1 dep gate: foreign WIP in UAC 9 files + UTL 10 files) FAILED; scripts intact + untracked locally; a dep-clean watcher is armed → re-ship `--isolated` the moment UAC+UTL are clean, verify by `git show origin:<file> \| grep <symbol>` | peer WIP in UAC/UTL |
 
 **Recommended NEXT**: verify the projection VM (preempted? → relaunch), then run the todo-6 purge-half while the
 projection runs (independent: purge = index write, projection = GCS scan + read-only plan), then todo 8 apply after
@@ -217,6 +217,43 @@ drain, then todo 9. Serialize EVERY index rewrite (CAS makes a race a wasted hou
 
 ## Progress Log
 
+- **2026-08-22 ~09:10 London (todo 7 SECOND CORRECTION + relaunch #4; todo 6 dry-run measured)** — ⛔ VM
+  `defi-manifest-projection-20260822-072651` died rc=2 in 10s on the OLD file-path command (`can't open
+  …/workspace/mtds/scripts/rebuild_defi_manifest.py`). The launcher's module-style `BACKFILL_CMD` fix had NEVER
+  landed on origin (`git log origin -- <launcher>` = only 99b46b9f + the fleet-wide `python -u` commit; the swept
+  copy still sits in deployment-service `stash@{0}: quickmerge-8919`), and the local file had been reverted to origin
+  content. My 2026-08-21 "verified 2 hits for `-m market_tick_data_service.scripts`" check matched the launcher's
+  HEADER COMMENT, which always showed the module form. LESSON (third ahead=0-class miss): verify the FUNCTIONAL line
+  (`git show origin:<file> | grep -n 'BACKFILL_CMD='`), never a symbol that also appears in prose. Re-applied the
+  `-m` form with an inline "measured twice" comment; relaunched `defi-manifest-projection-20260822-074226`
+  (e2-standard-8 SPOT, warn-mode tarball) — RUNNING, 19 parts by 07:58Z (2021 chunks ~30s each; the 2025-26 tail
+  measured 23 min/chunk last night). Monitor re-armed with the fix that `EXIT_STATUS` reads literal `RUNNING` while
+  alive (numeric = terminal). Todo 6 dry-run (read-only, local, 22 min): **441,402 rows** would be deleted —
+  exactly the census prediction; 0 `captured` rows in the delete set; keep-set resolved to
+  {ASTER, EXTENDED, HYPERLIQUID, LIGHTER} + `*-FUTURES`/`*-PERP`. Apply goes to an in-region VM (restamp-launcher
+  pattern, `VM_TASK=canonical-migration`), serialized after nothing (the projection VM only READS the index at its
+  swap-plan step; a CAS race costs a re-run, not corruption).
+- **2026-08-22 ~08:30 London (todo 7 ROOT CAUSE + relaunch; todo 6 purge script authored)** — (1) VM
+  `defi-manifest-projection-20260821-195038` was NOT SPOT-preempted: `EXIT_STATUS=137`, run.log tail =
+  `WORKER_STALLED (no-progress-marker): no progress in 7206s (threshold=7200s)` — the in-guest watchdog killed it
+  exactly 7200s after start while it was HEALTHY (part0039 written 22:03:08, kill 22:04:01; chunk cadence 3-23 min).
+  Root cause: the launcher set `STALL_PROGRESS_REGEX=progress:` and its comment claimed the script logs
+  "progress: chunk N/M done" — FALSE; `rebuild_defi_manifest.py` logs `chunk N complete: …` and deliberately
+  suppresses the `[[VM_PROGRESS]]` marker in `--dry-run`. Measured: 0 matches in the whole 8.4MB run.log. Fix:
+  regex `chunk.[0-9]+.complete` (metadata-safe) + corrected comment in
+  `deployment-service/scripts/vm/launch-defi-manifest-projection-vm.sh` (local; ship blocked on dep dirt, see
+  Deferred). Relaunched `defi-manifest-projection-20260822-072651` (`--end-date 2026-08-22`, `MACHINE_TYPE=
+  e2-standard-8` — rightsizing from the measured profile 175% CPU / 3.3 GB RSS on 16 vCPU; `LC_TARBALL_FRESHNESS=
+  warn` because the UAC tarball @72af5a19 is stale only by `venue_granularity.py` NASDAQ/NYSE commits — irrelevant
+  to DeFi naming — and UAC's tree carries live peer WIP so it cannot be republished). Monitor armed (scratchpad
+  `monitor_vm_072651.py`: parts count = progress metric, EXIT_STATUS = terminal, 14h cap). (2) Host load 138-211
+  (76 foreign QG/pytest processes, slots 2/4/6): a bare UTL import takes 70s, `gcloud` 60s+; every local probe
+  >100s — size timeouts accordingly, never conclude "hung" under 5 min. (3) Todo 6 purge-half script authored:
+  `market-tick-data-service/scripts/one_offs/purge_blanket_perp_stamps_nonperp_defi_venues_2026_08_22.py` — keep-set
+  derived at runtime from UAC `PROTOCOL_CAPABILITIES` (+ HYPERLIQUID/ASTER/EXTENDED/LIGHTER, `*-FUTURES`, `*-PERP`),
+  hard-aborts on any `captured` row in the delete set, `--apply` requires `--expect-delete N` from the dry-run;
+  census CSV predicts ~441k rows (475,649 non-captured perp-dt rows − EXTENDED 14,460 − LIGHTER 17,352 − ASTER 2,435;
+  BINANCE/COINBASE bare rows are LST-protocol cross-join stamps, in scope). Read-only dry-run running locally.
 - **2026-08-22 ~01:40 London (pre-compact checkpoint — lessons, not just state)** — (1) **Uplink is the bottleneck**
   for local index rewrites: each attempt moves ~7.5GB down + 7.5GB up; 3 attempts died on 600s read-timeouts /
   connection resets during peak host load; the final successful purge upload took ~1h. Server-side `copy_blob`
