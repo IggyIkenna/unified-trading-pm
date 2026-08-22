@@ -33,9 +33,9 @@ source:
     "2026-08-11 — surfaced while cleaning up the team allow-list: a clone-by-clone status sweep found 4/12 clones with
     the tracked settings.json dirty, 2 of them from an unattributed rewrite",
   ]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-21

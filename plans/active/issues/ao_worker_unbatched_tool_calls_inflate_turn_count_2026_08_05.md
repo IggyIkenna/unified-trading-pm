@@ -33,8 +33,8 @@ last_updated: 2026-08-21
 author: ikennaigboaka [interactive session]
 parent_epic: orchestrator_master
 priority: P2
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 resolved_by:
 locked_by:
 source: ["interactive session, cost-per-task investigation, transcript sample via SSM against the live orchestrator VM"]

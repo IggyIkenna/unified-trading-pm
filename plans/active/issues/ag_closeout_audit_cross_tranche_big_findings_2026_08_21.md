@@ -21,8 +21,8 @@ created: 2026-08-21
 last_updated: 2026-08-21
 author: claude-session-2026-08-21
 parent_epic: security_and_cross_cutting_master
-assigned_vm: NA
-execution_scope: human
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: research
 estimate_baseline_ai_days: 0

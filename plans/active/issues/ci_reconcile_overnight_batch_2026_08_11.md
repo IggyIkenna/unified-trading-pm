@@ -59,10 +59,10 @@ last_updated: 2026-08-21
 parent_epic: ci_master
 priority: P1
 source: ci-reconcile skill, Slack #ci-failures 2026-08-10T23:14Z-2026-08-11T04:00Z
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---

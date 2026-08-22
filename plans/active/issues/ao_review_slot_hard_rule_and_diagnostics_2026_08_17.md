@@ -42,8 +42,8 @@ locked_by:
 source: >-
   Operator screenshot + live investigation, 2026-08-17, escalated into a generalized hard-rule request across
   scheduler/cicd/escalation agents plus dashboard tagging.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 drift_direction: advance-code
 depends_on: []

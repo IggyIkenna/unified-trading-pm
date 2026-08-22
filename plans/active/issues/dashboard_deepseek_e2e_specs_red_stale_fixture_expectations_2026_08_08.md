@@ -28,8 +28,8 @@ last_updated: 2026-08-21
 author: interactive-session (slot 4)
 priority: P2
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []

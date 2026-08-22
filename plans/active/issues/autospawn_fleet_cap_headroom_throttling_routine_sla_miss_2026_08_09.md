@@ -38,11 +38,11 @@ author: slot-5-backend_engineer
 priority: P3
 parent_epic: orchestrator_master
 source: "slot-5, backend_engineer, 2026-08-09 — surfaced during live-recheck todo of the sibling follow-up doc"
-execution_scope: local-only
+execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 context_scope: [agent-orchestrator/server/autospawn.py, agent-orchestrator/server/config.py, /agents/worker.md]

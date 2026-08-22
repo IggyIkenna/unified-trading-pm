@@ -56,12 +56,12 @@ source:
     slot 15, 2026-08-14. Verified the wall was already resolved by a prior worker's commit and filed this doc per
     cicd.md's 'verify LIVE, note it in the issue doc, close out' instruction for that known gap.",
   ]
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 last_updated: 2026-08-21
 ---

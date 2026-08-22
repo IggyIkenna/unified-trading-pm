@@ -51,8 +51,8 @@ created: 2026-07-17
 author: unknown
 last_updated: 2026-08-21
 parent_epic: cefi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 6.0

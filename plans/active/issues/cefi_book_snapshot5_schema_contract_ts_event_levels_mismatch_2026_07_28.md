@@ -84,8 +84,8 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 resolved_by:
   "market-tick-data-service@339ca767 + unified-api-contracts@8db188fe (contract shape + ts_event) +
   unified-api-contracts@1c4d8864 (deep-level nullable gap, 2026-07-31); deployment-service@a564cca (2026-07-31,

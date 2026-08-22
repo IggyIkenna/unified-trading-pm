@@ -37,8 +37,8 @@ source: >-
   Main-agent routine stale-slot sweep (STEP 2.4/2.6), 2026-08-08 17:45Z-18:32Z window. Escalated straight to durable
   park once the task hit a 4th distinct slot without completing, per the standing mitigation rule established in the
   solana repeat-wedge precedent.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:

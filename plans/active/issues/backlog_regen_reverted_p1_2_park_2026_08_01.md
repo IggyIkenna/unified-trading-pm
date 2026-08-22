@@ -38,8 +38,8 @@ created: "2026-08-01"
 last_updated: "2026-08-21"
 author: unknown
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 drift_direction: none

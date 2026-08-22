@@ -51,10 +51,10 @@ source:
   'Operator, 2026-07-08: "for all the issues for example aave_v3 are we reconciling at gcs data level (the parquets
   themselves) the manifest level and the deployment ui/api level? because we should" + "we should document that at
   least, fixing will be in stages ofc."'
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 thinking_tier: medium
 estimate_class: research

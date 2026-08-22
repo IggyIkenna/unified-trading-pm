@@ -34,8 +34,8 @@ last_updated: "2026-08-21"
 author: interactive session (/autonomous)
 priority: P2
 parent_epic: security_and_cross_cutting_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 sequential: false
 depends_on: []
 locked_by:

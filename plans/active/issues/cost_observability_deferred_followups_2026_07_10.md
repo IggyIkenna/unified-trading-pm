@@ -30,8 +30,8 @@ priority: P2
 source:
   migrated from cost_observability_ui_2026_07_08.md (Deferred / fast-follow + audit findings) at archival — operator
   2026-07-10
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 model_tier: sonnet
 thinking_tier: medium
 estimate_class: design

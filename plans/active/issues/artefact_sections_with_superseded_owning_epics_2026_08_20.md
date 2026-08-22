@@ -29,11 +29,11 @@ context_scope:
 created: 2026-08-20
 last_updated: "2026-08-21"
 parent_epic: system_readiness_master
-assigned_vm: NA
+assigned_vm: planning
 locked_by:
 locked_since:
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 priority: P1
 severity: P1
 source: >-

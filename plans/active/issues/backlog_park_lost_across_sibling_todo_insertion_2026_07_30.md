@@ -39,8 +39,8 @@ source:
   "slot-8, review — dispatched ao_db_lock_storm_and_stuck_shutdown_outage-007 (the same parked REVIEW todo), found the
   precondition (live systemd unit still carries --reload, confirmed directly via ps on the orchestrator VM) still unmet,
   then found the -005/-006 park itself had silently reverted to a fresh ungated -007 id"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 resolved_by:

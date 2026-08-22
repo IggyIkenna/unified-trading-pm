@@ -35,8 +35,8 @@ author: unknown
 last_updated: 2026-08-21 # re-verified against the live VM (main): DB_PATH todo CLOSED (gate passes), l2_book todo
 # re-scoped (measurement void under the dispatch pause), backlog-relations still blocked-upstream after 6 days
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 2
