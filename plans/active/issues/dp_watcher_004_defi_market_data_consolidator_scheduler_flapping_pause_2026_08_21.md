@@ -44,7 +44,7 @@ related:
     /plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md,
     /plans/active/issues/mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md,
   ]
-priority: P2
+priority: P0
 resolved_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -236,6 +236,34 @@ pending that answer, not by omission.
       up rather than erratic tinkering. `BLK-fbcafec2` is STILL formally unanswered — did not resume,
       did not duplicate the blocked-question (same reasoning as the 3 prior escalations: an open,
       unanswered question already covers this exact decision). See Progress Log.**
+      **CORRECTED 2026-08-22 (worker, slot 25, dispatched against this exact todo): the disposition is NOT
+      holding. Live check at 15:08Z found the job `ENABLED` (`userUpdateTime: 2026-08-22T14:42:38Z`) — the
+      unclaimed macOS-session actor paused then resumed it again today at 14:38:55Z/14:42:38Z, 26 minutes before
+      this check, continuing the same toggle pattern for 20+ continuous hours across two calendar days. The
+      actor's own tooling version-bumped mid-window (`agent-name/claude-code_2-1-237_agent` →
+      `claude-code_2-1-239_agent`) — an actively-used, updated client, not a stuck stale process — and a FIFTH
+      caller shape appeared at ~00:06Z today: a raw `grpc-python` call with no `gcloud`/CLI wrapper at all. A NEW
+      legitimate `defi-manifest-projection-20260822-074226` VM (`asset-group=defi env=prod
+      managed-by=deployment-service`) is concurrently RUNNING since ~07:49Z today — the same VM class D74's own
+      rationale cited as justifying a paused consolidator — so the current `ENABLED` state may itself be a live
+      data-correctness risk, not just an unresolved-identity item. Did NOT touch the scheduler (neither pause nor
+      resume) — re-pausing would be a new unilateral action carrying the same racing risk every prior escalation
+      here declined to take, and "leave paused" reads as "do not proactively resume", not a mandate to actively
+      fight a third party's live changes. Filed a NEW `/blocked` (`BLK-33006070` — `BLK-fbcafec2` is answered by
+      D74 and doesn't cover this reversal), reframing the standing question as a credential/access-security
+      concern (WHO/WHAT holds `unified-trading-sa` credentials capable of macOS-originated, non-interactive
+      `gcloud` calls, 20+ hours unclaimed) rather than a one-off ownership lookup. See Progress Log for the full
+      audit trail. Bumped `priority: P2 -> P0`. This todo stays OPEN — the residual "identify the session owner"
+      work is not resolved, and flipping it would misrepresent the situation as settled when it has escalated.**
+- [ ] [OPERATOR] P0. **NEW 2026-08-22**: audit which principal/device holds `unified-trading-sa` credentials
+      capable of a macOS-originated, non-interactive `gcloud scheduler jobs {pause,resume}` call against
+      `uts-prod-manifest-consolidator-market-data-defi-cron` — unclaimed by the operator per D74 yet still active
+      20+ hours later (last toggle 2026-08-22T14:42:38Z, client tooling version-bumped mid-window), spanning at
+      least 4 distinct caller shapes across the incident (macOS gcloud-CLI on two tool versions, an
+      orchestrator-style Linux `claude_code` caller, and a raw grpc-python caller with no CLI wrapper). Decide:
+      (a) rotate/scope down the credential if genuinely unclaimed, (b) whether to re-pause given the concurrent
+      `defi-manifest-projection-20260822-074226` VM. Tracked via `BLK-33006070`. (repo: none — an IAM/credential
+      decision, not a code change)
 - [ ] [CODE] P3. Separate, confirmed, genuine gap (not the cause of this incident): if FLEET_HALT is
       *supposed* to be able to halt the manifest-consolidator schedulers during a defi-scoped revocation
       (implied by `_register_maintenance_windows`'s own docstring, which assumes the write/read bucket
@@ -360,3 +388,27 @@ pending that answer, not by omission.
 - **2026-08-22 — ruling D74 (DeFi consolidator pause ownership)**: OPERATOR-RULED 2026-08-21 — operator did NOT claim
   the MacOS session. ADOPT REC: leave the defi consolidator paused, keep identifying the session owner (never resume
   blind). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-22, worker session (slot 25, dispatched against the D74 `[INFRA] P1` todo)**: live re-verification found
+  D74's "leave paused" disposition is NOT holding — `gcloud scheduler jobs describe` at 15:08Z showed `state:
+  ENABLED`, `userUpdateTime: 2026-08-22T14:42:38Z`. A corrected-format Cloud Audit Log pull
+  (`timestamp>="2026-08-22T00:00:00Z"`) shows the toggle pattern continuing all day: ~00:06Z a resume via raw
+  `grpc-python` (no `gcloud` wrapper at all — a caller shape not seen in any prior session on this doc), further
+  mac+linux toggles at ~00:33Z/08:23Z/08:53Z/09:40Z/09:47Z, ending in the 14:38:55Z Pause → 14:42:38Z Resume pair 26
+  minutes before this check. The macOS actor's own `google-cloud-sdk` client identified as
+  `agent-name/claude-code_2-1-237_agent` in every prior session's evidence now shows
+  `agent-name/claude-code_2-1-239_agent` partway through today's window — an active, updated tool, not a stuck stale
+  process. `gcloud compute instances list` confirmed a NEW `defi-manifest-projection-20260822-074226` VM
+  (`asset-group=defi env=prod managed-by=deployment-service purpose=defi-manifest-projection`) RUNNING since ~07:49Z
+  today — the same VM class D74's own rationale cited as evidence for leaving the consolidator paused, now running
+  WHILE the consolidator is enabled, not held off. Attempted to check for a live `scheduler_maintenance` window on
+  the bucket but the in-repo Python check failed in this worktree (`ModuleNotFoundError: unified_api_contracts` — an
+  environment/venv issue, not investigated further this session) — maintenance-window state is UNCONFIRMED, not
+  ruled out. Did NOT pause or resume the job myself. Filed a new `/blocked` (`BLK-33006070`) rather than treating
+  this as covered by the already-answered `BLK-fbcafec2`, since D74 ruled on a state (settled, paused) that current
+  evidence shows did not hold — reframed the question as a credential/access-security concern (root cause) with the
+  pause/resume tactical question as secondary, `can_continue: true`. Bumped `priority: P2 -> P0` given 20+ hours of
+  continued unclaimed activity against an explicit operator ruling plus a live concurrent VM. Appended a new
+  `[OPERATOR] P0` todo. Did NOT flip the D74 `[INFRA] P1` todo to done — its own "residual open work is identifying
+  the session owner" is not resolved, and the disposition it records is actively contradicted by live state;
+  flipping it would misrepresent the situation as settled. Doc stays `assigned_vm: planning`, `status: open`.
+  Awaiting `BLK-33006070`'s answer before any further scheduler action.
