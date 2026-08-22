@@ -82,9 +82,13 @@ beyond the earlier 13-day bounded validation window, and the MDPS bucket/movemen
       chunk if the writer's manifest pre-flight-skip makes a full re-run cheap) and `2025-01-01 → 2026-08-06`
       (never launched) — via `scripts/reprocess_sports_odds.py --start-date <X> --end-date <Y> --workers 16 --force`
       per the existing launcher pattern (repo: market-data-processing-service, deployment-service).
-- [ ] [SCRIPT] P2. Update this plan's stale `> 🟢 CAMPAIGN IN PROGRESS 2026-08-21` banner once the above two
-      re-launches are confirmed complete, or remove it now since no VM is currently running (repo:
-      unified-trading-pm).
+- [x] ✅ [SCRIPT] P2. **Already done — same commit that filed this issue doc.** The stale `🟢 CAMPAIGN IN
+      PROGRESS 2026-08-21` banner in `sports_taxonomy_p4_backfill_2026_08_08.md` was replaced (not just removed)
+      with an accurate `🟡 CAMPAIGN STALLED 2026-08-22` banner citing this issue doc, at the same time the REVIEW
+      P0 todo that found the stale state was landed — `unified-trading-pm@fe5640f967`. Verified current: plan file
+      line 61 reads `🟡 CAMPAIGN STALLED 2026-08-22 (see issue doc)`, no `🟢 CAMPAIGN IN PROGRESS` text remains in
+      the file, tree clean, commit on `origin/live-defi-rollout`. No further edit needed — the above two [DATA] P0
+      relaunch todos remain open and unaffected by this.
 
 ## Evidence
 
