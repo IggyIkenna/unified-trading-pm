@@ -86,6 +86,18 @@ assigned_role: backend_engineer
   upstream code needs to be tested against realistic PENDING→CONFIRMED/FAILED timing before POD's real endpoint
   exists.
 
+- 2026-08-22 — Slot 10 picked up Section E's "Unit tests for `MockPodCollateralAdapter`" todo and found it genuinely
+  GATED: `MockPodCollateralAdapter` (Section B item 4, `execution_service/engine/transfers/mock_pod_adapter.py`) does
+  not exist on disk yet and is currently `dispatched` to another slot (live backlog check,
+  `w23_pod_collateral_delegation_transfer_rail-7c1285c3deb7`, `collision_group: script:mock_pod_adapter.py`) — a test
+  file importing a nonexistent module can't pass `quality-gates.sh`, so this todo's done-when condition genuinely
+  isn't met yet. Per `worker.md` § 4c this is a `reason_code: GATED` skip, not a blocked-question or a "just implement
+  it yourself" absorption (that would race the in-flight slot on the same new file). Also corrected this section's
+  test-file path above: `tests/unit/engine/transfers/` never existed in execution-service — sibling POD-adapter tests
+  (`test_live_pod_adapter.py`, `test_transfer_handler_collateral_delegation_dispatch.py`) all sit flat under
+  `tests/unit/`, same as `test_live_bridge_adapter.py`. Whoever next picks up this todo (once Section B item 4 lands):
+  write `execution-service/tests/unit/test_mock_pod_adapter.py` against the real class.
+
 - 2026-08-22 — Section B item 1 shipped (execution-service@fbde066bf3): the duck-typed
   `execute_collateral_delegation` interface + `TransferHandler._get_collateral_delegation_execute()` getattr-dispatch
   resolver + its unit tests. **Scope note for whoever picks up item 2 next**: item 1's title ("Add
@@ -229,8 +241,10 @@ assigned_role: backend_engineer
       writing a new file). Done: green under `unified-api-contracts`'s `quality-gates.sh`.
 - [ ] [BACKEND] P0. **Unit tests for `MockPodCollateralAdapter`'s state machine + `TransferConfirmationPoller` against
       it** (multi-poll PENDING→CONFIRMED, PENDING→FAILED, `force_outcome` override) — new file
-      `execution-service/tests/unit/engine/transfers/test_mock_pod_adapter.py`, following the existing
-      `tests/unit/engine/transfers/` layout. Done: green under `execution-service`'s `quality-gates.sh`.
+      `execution-service/tests/unit/test_mock_pod_adapter.py` (flat under `tests/unit/`, mirroring
+      `test_live_pod_adapter.py` / `test_live_bridge_adapter.py` / `test_transfer_handler_collateral_delegation_dispatch.py`
+      — a `tests/unit/engine/transfers/` subdirectory does NOT exist in this repo; the prior wording pointed at a
+      layout that was never real). Done: green under `execution-service`'s `quality-gates.sh`.
 - [ ] [BACKEND] P0. **Unit tests for `TransferHandler._execute_custodian_delegation_transfer` dispatch routing +
       `CompositeTransferAdapter`'s `pod_adapter` wiring** (both the configured and honestly-not-configured
       fails-loud path). Done: green under `execution-service`'s `quality-gates.sh`.
