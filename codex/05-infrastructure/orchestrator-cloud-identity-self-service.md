@@ -112,9 +112,19 @@ aws iam put-role-policy --role-name uts-orchestrator-epic-role --policy-name <na
 
 Current managed-policy grants: `AmazonS3FullAccess`, `AmazonRDSFullAccess`, `AmazonDynamoDBFullAccess`,
 `AmazonECS_FullAccess`, `AmazonEC2ContainerRegistryPowerUser`, `uts-orchestrator-epic-policy` (custom). Inline:
-`disk-recovery-ssm-temp`, `orchestrator-state-s3-rw`, `self-manage-own-policies`. Re-verify via
+`allow-codebuild-readonly`, `ci-cost-explorer-readonly`, `ci-escalation-runner-ssm-param-access`,
+`deployment-registry-ssm-config`, `disk-recovery-ssm-temp`, `orchestrator-state-s3-rw`, `self-manage-own-policies`,
+`self-ec2-createtags-instance` (`ec2:CreateTags` scoped to `instance/*` — the role's own EC2 grants didn't cover
+tagging a newly-launched instance; added 2026-08-22 to launch a throwaway CI-bootstrap-verify EC2 host), `self-passrole-to-ec2`
+(`iam:PassRole` scoped to the role's own ARN, condition `iam:PassedToService=ec2.amazonaws.com` — needed to attach the
+role's own instance profile to a NEW instance via `run-instances`; added 2026-08-22), `self-ec2-lifecycle-throwaway-verify`
+(`ec2:{Reboot,Stop,Terminate}Instances` scoped to `instance/*` with condition `ec2:ResourceTag/Lifecycle=throwaway-verify`
+— deliberately narrowed to only instances carrying that exact tag, so it can never touch the real fleet; added
+2026-08-22), `temp-manifest-consolidator-aws-decommission`. Re-verify via
 `aws iam list-attached-role-policies --role-name uts-orchestrator-epic-role` / `list-role-policies` before assuming a
-policy is present.
+policy is present — note IAM inline-policy grants can take up to ~15-30s to propagate before a dependent API call
+succeeds (confirmed 2026-08-22: an immediate retry after `put-role-policy` still 403'd; a second retry ~15s later
+passed).
 
 ## Provenance
 

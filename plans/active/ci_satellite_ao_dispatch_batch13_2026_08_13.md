@@ -287,6 +287,43 @@ source: >-
       instance per the same recipe, `aws ssm send-command` will now work ambiently with zero setup, register the GH
       runner via `setup-glue-runners.sh` with `POOL_TAG=ci-bootstrap-verify`, verify, then teardown +
       terminate-instances immediately).
+      **UPDATE 2026-08-22 (slot-18, infra) — toolchain-install leg now PROVEN end-to-end; runner-registration leg hit
+      a NEW blocker, still open.** Confirmed slot-25's fix live: this session runs AMBIENT as
+      `uts-orchestrator-epic-role` with zero setup, `aws ssm send-command` against `i-0c9b283b31d6b5ca7` succeeds
+      immediately. Proceeded per steps 4-5 above. **Three new narrow IAM gaps hit and self-granted (least-privilege,
+      live-verified, documented in `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`'s inline
+      list in the same commit)**: `ec2:RunInstances` itself needed `iam:PassRole` (scoped to the role's own ARN,
+      condition `PassedToService=ec2.amazonaws.com`) and `ec2:CreateTags` (scoped to `instance/*`) — this role had
+      never launched a raw EC2 instance directly before; and cleanup needed `ec2:{Reboot,Stop,Terminate}Instances`
+      (scoped by `ResourceTag/Lifecycle=throwaway-verify` so it can never touch the real fleet). **Toolchain-install
+      leg PROVEN 2x** (`i-0641314cb67f66211` t3.medium, `i-0fbdb1f176c8ff14a` t3.medium+`CpuCredits=unlimited`):
+      `bootstrap-ci-host.sh` (base packages, gh, gcloud, awscli, uv, Python 3.13, node, claude-code CLI, `verify()`)
+      ran to completion, exit 0, both times. **Found + fixed inline (folded into `bootstrap-ci-host.sh`'s own header
+      per its own "update at every deploy step" discipline, same commit)**: cloning the repo under `/root/...` (the
+      first, obvious choice for a root SSM session) breaks `uv python install` with a confusing "Permission denied"
+      reading a relative `uv.toml` — `/root`'s default `700` perms block `sudo -u ubuntu uv ...` from even traversing
+      into the directory. Fix: clone under `/home/ubuntu/...` instead (`t3.small` attempt 1 hit this, `t3.medium`
+      retries did not). **NEW BLOCKER — genuinely unresolved, reproduced 3x**: `setup-glue-runners.sh install`
+      reliably kills the SSM command channel itself (`document process failed unexpectedly: ipc messaging received
+      timeout signal`) on every attempt — `t3.small` (default credits), `t3.medium` (default credits), `t3.medium`
+      (`CpuCredits=unlimited`) — ruling out both memory pressure and CPU-credit-throttling as the cause (the
+      `CpuCredits=unlimited` run failed identically). The SSM agent's own ping channel (`describe-instance-information`)
+      stayed `Online` throughout every failure, but every NEW `send-command` on that same instance — even a bare
+      `echo` — failed identically afterward, indefinitely; this is a genuinely broken document-worker execution path
+      per-instance, not a transient blip (confirmed via a dedicated retry + a 15s-delayed re-probe, both failed
+      identically). Full hypothesis + exact recovery recipe for a future attempt written into
+      `bootstrap-ci-host.sh`'s own header comment (prime suspect: the runner's own `installdependencies.sh` apt step
+      tips `needrestart` from "deferred" to actually bouncing `snap.amazon-ssm-agent.amazon-ssm-agent.service`,
+      severing the exact channel running the command — not confirmed with process-tree evidence, since the channel
+      was lost before it could be captured). **All 3 throwaway instances from this session terminated** (`i-024842a810786f219`,
+      `i-0641314cb67f66211`, `i-0fbdb1f176c8ff14a`) — confirmed via `describe-instances`, none left running/billing.
+      **This todo's own checkbox stays OPEN**: the runner-registration leg (systemd units + actual GitHub
+      registration + `./setup-glue-runners.sh status` + independent `gh api .../actions/runners` verification) is
+      genuinely not proven yet. What changes for the next pickup: no SSM/IAM setup needed at all now (confirmed
+      twice); the toolchain-install leg is proven, skip straight to `setup-glue-runners.sh install` after a fresh
+      launch + `bootstrap-ci-host.sh` run; but that exact next command is the one that breaks the channel — read
+      `bootstrap-ci-host.sh`'s own header gotcha note FIRST and capture `journalctl`/`needrestart -r a` evidence
+      before the channel dies if it's reproduced again, rather than re-discovering the same dead end from scratch.
 - [x] ✅ [CODE] P2. implement the consumer-QG promote fan-out gate in UAC's promote-gate workflow (per the 2026-08-08
       operator ruling; design + target consumer already specified in the doc) Source:
       `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` — ✅ **DONE 2026-08-14

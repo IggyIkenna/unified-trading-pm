@@ -26,12 +26,18 @@
 #      images mask. Reproduce:
 #        docker run --rm -v "$PWD/bootstrap-ci-host.sh:/b.sh:ro" ubuntu:24.04 \
 #          bash -c 'useradd -m -s /bin/bash ubuntu; bash /b.sh'
-#   ❌ NOT PROVEN — a container cannot exercise these; only a real bare VM can:
-#        · IMDS / EC2 instance role (AWS identity resolution)
-#        · GCP ADC (interactive; STEP 2b's trim depends on runner-user ADC)
+#   ✅ PROVEN (2026-08-22, real bare EC2 host via SSM, `i-0fbdb1f176c8ff14a`/`i-0641314cb67f66211`,
+#      reproduced 2x): IMDS / EC2 instance role (AWS identity resolution — `aws sts get-caller-identity`
+#      ambiently resolves the launch-time IAM instance profile, no env override needed) AND the full
+#      non-interactive toolchain install (base/gh/gcloud/aws/uv/python3.13/node/claude-code) +
+#      `verify()`, end to end, exit 0.
+#   ❌ STILL NOT PROVEN — blocked by the SSM-channel-death gotcha above, not a container limitation:
+#        · GCP ADC (interactive; STEP 2b's trim depends on runner-user ADC) — deliberately out of scope
+#          for a throwaway host per the security-scoping note in
+#          `/plans/active/ci_satellite_ao_dispatch_batch13_2026_08_13.md`'s own todo write-up
 #        · systemd — so `setup-glue-runners.sh install` (units, slice, timer) is UNTESTED end-to-end
 #        · actual runner registration against GitHub
-#   Do not upgrade this to "works" off the container pass alone.
+#   Do not upgrade either of those two to "works" off the toolchain-install pass alone.
 #
 # TOOL INVENTORY — measured 2026-07-16 across the 38 MOVE workflows (occurrence counts):
 #   gh 181 · jq 111 · python3 105 · uv 32 · aws 22 · gcloud 16 · pip 15 · npm 1
@@ -48,6 +54,26 @@
 # After this succeeds:
 #   1. authenticate:  gh auth login   (or seed a PAT)  +  gcloud auth application-default login
 #   2. sudo GH_PAT=… ./setup-glue-runners.sh install
+#
+# GOTCHA (found 2026-08-22, live bare-EC2-host verification via SSM): clone this repo under a path
+# RUNNER_USER can traverse (e.g. /home/ubuntu/...), never under /root — /root's default 700 perms
+# block `sudo -u ${RUNNER_USER} uv ...` from even OPENING a relative uv.toml, surfacing as a
+# confusing "Permission denied" on `uv python install`, not an obviously-CWD-related error.
+#
+# GOTCHA (found 2026-08-22, same session, UNRESOLVED): on a fresh bare host reached ONLY via SSM (no
+# SSH), `setup-glue-runners.sh install` reliably killed the SSM command channel itself (document
+# worker crashes with "ipc messaging received timeout signal") — reproduced 3x across t3.small,
+# t3.medium, and t3.medium with CpuCredits=unlimited, ruling out both memory pressure and CPU-credit
+# throttling. The SSM agent's own ping channel stayed Online throughout; only NEW send-command
+# document-worker executions kept failing afterward, on that exact same instance, indefinitely. Prime
+# suspect (not yet confirmed — the channel was lost before process-tree evidence could be captured):
+# the runner's own `installdependencies.sh` apt step triggers `needrestart` to actually bounce
+# `snap.amazon-ssm-agent.amazon-ssm-agent.service` (this script's own base-package apt step already
+# shows needrestart FLAGGING that unit as "deferred" — install_repo_python/setup-glue-runners.sh may
+# be what tips it from deferred to actually restarted), which severs the very channel running the
+# command. If reproduced again: capture `journalctl -u snap.amazon-ssm-agent.amazon-ssm-agent.service
+# --since -10min` and `needrestart -r a` output BEFORE the channel dies, and consider pre-satisfying
+# every package `installdependencies.sh` would touch so its apt step becomes a no-op.
 set -euo pipefail
 
 RUNNER_USER="${RUNNER_USER:-ubuntu}"
