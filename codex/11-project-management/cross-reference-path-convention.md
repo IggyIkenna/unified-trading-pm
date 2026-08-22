@@ -85,6 +85,17 @@ planned-but-never-shipped codex content, refs to plans since renamed/archived un
 cleanup tracking: `/plans/archive/issues/reference_path_convention_2026_07_23.md`. Ratchet DOWN as entries get fixed
 (`--update-baseline` after fixing a batch) — never hand-raise a count.
 
+## Fenced-code-block exemption (D47 ruling, 2026-08-21)
+
+A shell/CLI example inside a fenced code block (triple-backtick or `~~~`) that contains a literal repo-relative
+`codex/NN-name/...md` path is a **command**, not a cross-doc reference — prefixing it with a leading slash would make
+the command wrong (a command runs relative to the repo root, without the leading `/`). `check_reference_paths.py`'s
+FORMAT scan (`BARE_CODEX_RE`, via `_fenced_code_spans()`) exempts a match whose position falls inside a fenced code
+block from this check, so a legitimate command example no longer needs the previous workaround (an unmatchable glob
+like `codex/14-*/...`) to avoid a false FORMAT violation. Prose references are unaffected — the exemption only applies
+inside fenced blocks. Ruling: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2),
+source `/plans/archive/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md`.
+
 ## What `/plan-reconcile` covers that this mechanical check can't
 
 The hygiene check is deterministic: does this path exist, is it in the right format. It cannot decide:

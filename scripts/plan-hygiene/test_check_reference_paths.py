@@ -101,3 +101,45 @@ def test_corpus_wide_quiet_still_prints_evidence_on_failure(capsys, monkeypatch)
     assert exit_code != 0
     out = capsys.readouterr().out
     assert "FORMAT" in out
+
+
+def test_bare_codex_ref_inside_fenced_code_block_not_flagged() -> None:
+    """D47 ruling (2026-08-21): a shell example inside a fenced code block containing a
+    literal repo-relative codex/... path is a COMMAND, not a cross-doc reference -- must
+    not be flagged as a FORMAT violation."""
+    text = (
+        "Some prose.\n\n"
+        "```bash\n"
+        "python3 scripts/plan-hygiene/check_reference_paths.py "
+        "codex/06-coding-standards/quality-gates.md\n"
+        "```\n"
+    )
+
+    fmt, _exist = checker._scan_text(text, "dummy.md", lambda _t: True)
+
+    assert fmt == []
+
+
+def test_bare_codex_ref_outside_fenced_code_block_still_flagged() -> None:
+    """The exemption is scoped to fenced blocks only -- a prose reference is unaffected."""
+    text = "See codex/06-coding-standards/quality-gates.md for details.\n"
+
+    fmt, _exist = checker._scan_text(text, "dummy.md", lambda _t: True)
+
+    assert len(fmt) == 1
+    assert "codex/06-coding-standards/quality-gates.md" in fmt[0]
+
+
+def test_bare_codex_ref_mixed_fenced_and_prose_only_prose_flagged() -> None:
+    """A prose reference and an identical-looking one inside a fenced block in the same
+    file -- only the prose one is a violation."""
+    text = (
+        "See codex/06-coding-standards/quality-gates.md for details.\n\n"
+        "```bash\n"
+        "cat codex/06-coding-standards/quality-gates.md\n"
+        "```\n"
+    )
+
+    fmt, _exist = checker._scan_text(text, "dummy.md", lambda _t: True)
+
+    assert len(fmt) == 1
