@@ -38,8 +38,8 @@ drift_direction: advance-code
 # Session checkpoint — 2026-08-21 walkthrough coordinator
 
 **Published artifacts (STABLE URLs — republish the same file path, or pass `url` from another session):**
-API Reference → https://claude.ai/code/artifact/98ca8a91-7cd1-442c-aed6-532f3df701fc ·
-Integration Guide → https://claude.ai/code/artifact/cfb54486-2ce1-4676-be29-443a968ff8d4
+API Reference → https://claude.ai/code/artifact/ee9cdcb6-4bd1-48a4-8887-af2c45de7711 ·
+Integration Guide → https://claude.ai/code/artifact/866511c2-02d6-40a4-aa40-24bea45fd617
 
 ## In-flight lane table (state at checkpoint)
 
@@ -277,3 +277,20 @@ other processes.
 - [ ] [DOC] P2. Once the three above land, refresh both client artefacts: coverage trees regenerated from the new
       measurement, Unattributed node deleted, sports stated accurately, and the header ready/not-ready tallies
       re-derived (they are still the 2026-08-19 snapshot and cannot be hand-edited).
+
+## Published artefact URLs, current as of 2026-08-22
+
+API reference: https://claude.ai/code/artifact/ee9cdcb6-4bd1-48a4-8887-af2c45de7711
+Integration guide: https://claude.ai/code/artifact/866511c2-02d6-40a4-aa40-24bea45fd617
+
+Publishing note, learned the hard way this session: an artefact URL is bound to the account that published it, so when
+the operator's account changed the previously published pair became unreachable for both reading and updating, and the
+in-document banner cross-links pointing at them went dead. Recovery is to copy the two HTML files to FRESH filenames in
+the scratchpad and publish those, which mints new URLs, then repoint the in-document cross-links. Do not fight the old
+URL. The publish copies live in the session scratchpad and are regenerable at any time by copying the two files from
+codex/14-customer-journeys/commercial-model/, so losing them costs nothing.
+
+Session state at this checkpoint: unified-api-contracts@326f9a6bfa landed the venue-parity split (declared equals
+bucketed at 194, DEFI_LIVE_VENUES preserves the producible 103, 21 NO_ADAPTER_YET sentinels, parity regression test).
+Both previously blocked lanes were released against it: the strategy-service signals wiring fix and the
+execution-service Uniswap V2/V4 wiring, each holding a verified diff and a recorded retry command.
