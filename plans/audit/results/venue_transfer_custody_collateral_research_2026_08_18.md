@@ -77,7 +77,21 @@ The todo as written claims *"no UAC registry field answers these — `VenueCapab
   entries were never written.
 
 This is the more useful and more actionable finding than either extreme ("doesn't exist" or "fully built"): the
-schema is **declared and consumed, not populated.** The registry-extension todo below is "populate," not "design."
+schema is **declared and consumed, not populated.**
+
+> **Correction (2026-08-22)**: a follow-up pass re-verified this framing before building against it and found it
+> was itself incomplete — grepping fleet-wide for `VenueCapabilityV2(` (real construction, not the class
+> definition) turned up **zero production call sites**, only test fixtures. The registry/resolver mechanism that
+> would let a caller GET a populated `VenueCapabilityV2` for a real venue didn't exist either — there was no
+> `dict[venue_id, VenueCapabilityV2]` and no resolver function anywhere in `unified-api-contracts`, so "populate
+> the schema" had nowhere to populate INTO. This was a **skeleton-and-population gap, not a population-only
+> gap.** The skeleton (`unified_api_contracts/registry/capability_declarations/venue_capability_v2/` — split by
+> venue family into `_cefi_derivatives.py` / `_defi_lending.py`, aggregated by an `__init__.py` exposing
+> `VENUE_CAPABILITY_V2: dict[str, VenueCapabilityV2]` and `get_venue_capability_v2(venue) -> VenueCapabilityV2 |
+> None`) now exists, seeded with 2 real venues (`BINANCE-FUTURES`, `AAVE_V3-ETHEREUM`) and wired into one real
+> caller (`strategy-service`'s `FourLayerGateOrchestrator.evaluate(venue_id=...)`). The registry-extension todo
+> below is updated accordingly — it is now genuinely "populate the remaining ~50-58 venues," not "design," but it
+> was NOT that narrow before this correction.
 
 Custody eligibility and transfer-rail eligibility remain genuinely absent — no field on `VenueCapabilityV2` or
 anywhere else declares "Copper-eligible / Ceffu-eligible / manual-transfer-eligible / automated-prime-broker-
@@ -131,9 +145,10 @@ Suggested wording for the elysium/nickai children — adapt to each artefact's r
 >
 > **Collateral usability and cross-margin, per venue** — <b class="ev ev-assumed">~ assumed</b>. The schema
 > exists (per-asset LTV/haircut collateral rules, cross-margin and portfolio-margin support flags, netting
-> rules) and is already read by strategy-service's risk simulation — but no venue has real values populated yet,
-> so every venue currently resolves to "no collateral/margin data available" rather than a declared answer. This
-> is a population gap, not a design gap.
+> rules) and is already read by strategy-service's risk simulation. As of 2026-08-22 a registry/resolver skeleton
+> exists with 2 venues populated (`BINANCE-FUTURES`, `AAVE_V3-ETHEREUM`); every other venue still resolves to "no
+> collateral/margin data available." See the 2026-08-22 correction above — this was a skeleton-and-population
+> gap, not a population-only gap; the skeleton is now built, population of the remaining venues is not.
 
 ## Registry-extension todo spawned under W5
 
@@ -141,10 +156,15 @@ Per the parent todo's own requirement ("this todo's output must spawn a registry
 artefact ends up downstream of a machine SSOT instead of becoming one"), added to
 [`system_readiness_master.md`](/plans/epics/system_readiness_master.md) W5:
 
-- **Populate `VenueCapabilityV2.collateral_rules` / `.margin_spec` for every live venue** — the schema
-  (`CollateralRulesV2`, `MarginSpec`) is real and already consumed by `strategy-service/strategy_service/risk/
-  v2/{margin_sim,preflight,orchestrator}.py`; zero venues have real values today, so every risk-v2 read
-  degrades silently to "no data" rather than surfacing an honest gap. **Population, not schema design.**
+- **Populate `VenueCapabilityV2.collateral_rules` / `.margin_spec` for the remaining ~50-58 relevant venues** —
+  the schema (`CollateralRulesV2`, `MarginSpec`) is real and already consumed by `strategy-service/
+  strategy_service/risk/v2/{margin_sim,preflight,orchestrator}.py`. **2026-08-22 update**: the registry/resolver
+  skeleton this todo assumed already existed did not — it has now been built
+  (`unified_api_contracts/registry/capability_declarations/venue_capability_v2/`, split by venue family,
+  `get_venue_capability_v2(venue) -> VenueCapabilityV2 | None`) and seeded with 2 real venues
+  (`BINANCE-FUTURES`, `AAVE_V3-ETHEREUM`, both wired into a real strategy-service caller). Every other relevant
+  CeFi-derivatives/DeFi-lending venue still resolves to `None` (no data). This is genuinely population-only work
+  now — the skeleton exists, per-family files avoid concurrent-edit collisions on a shared host.
 - **Add per-venue custody-eligibility and transfer-rail-eligibility declarations** — genuinely absent, no
   existing type to extend (unlike collateral/margin above). New fields on `VenueCapabilityV2` or a sibling
   registry: Copper-eligible / Ceffu-eligible / manual-transfer-eligible / automated-prime-broker-eligible (per

@@ -375,13 +375,20 @@ superset, "because using it as the denominator over-counts". The operator's 2026
 
 The registry must answer commercial and operational questions, not just "does this venue exist".
 
-- [ ] [BACKEND] P0. **Collateral that can actually be used, per venue — POPULATE, don't design.** Re-verified
-      2026-08-18 (client_artefact_remediation_2026_08_18.md § E research todo): the schema already exists —
-      `VenueCapabilityV2.collateral_rules` (`CollateralRulesV2`: per-asset LTV/haircut, `cross_margin_supported`,
-      `portfolio_margin_supported`) in `unified-api-contracts/unified_api_contracts/internal/architecture_v2/
-      schemas.py` — and is already consumed by `strategy-service/strategy_service/risk/v2/{margin_sim,preflight,
-      orchestrator}.py`. Zero venues have a populated `collateral_rules`/`margin_spec` today, so every risk-v2
-      read degrades silently to "no data." See
+- [ ] [BACKEND] P0. **Collateral that can actually be used, per venue — populate the remaining ~50-58 venues.**
+      Re-verified 2026-08-18 (client_artefact_remediation_2026_08_18.md § E research todo): the schema already
+      exists — `VenueCapabilityV2.collateral_rules` (`CollateralRulesV2`: per-asset LTV/haircut,
+      `cross_margin_supported`, `portfolio_margin_supported`) in `unified-api-contracts/unified_api_contracts/
+      internal/architecture_v2/schemas.py` — and is already consumed by `strategy-service/strategy_service/
+      risk/v2/{margin_sim,preflight,orchestrator}.py`. **2026-08-22 correction**: the research doc's "populate,
+      don't design" framing was itself incomplete — the registry/resolver mechanism (a `dict[venue_id,
+      VenueCapabilityV2]` + resolver function) didn't exist either, so there was nowhere to populate INTO. Both
+      are now built: `unified_api_contracts/registry/capability_declarations/venue_capability_v2/` (split by
+      venue family — `_cefi_derivatives.py`, `_defi_lending.py`), `get_venue_capability_v2(venue) ->
+      VenueCapabilityV2 | None`, seeded with 2 real venues (`BINANCE-FUTURES`, `AAVE_V3-ETHEREUM`) and wired
+      into `strategy-service`'s `FourLayerGateOrchestrator.evaluate(venue_id=...)`. Remaining work is genuinely
+      population-only now: ~50-58 more relevant CeFi-derivatives/DeFi-lending venues, each real-sourced with a
+      cited official URL per number (no guessed values — see the two seeded entries for the pattern). See
       [research findings](/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md).
 - [ ] [BACKEND] P0. **Cross-margin logic where it exists**, declared rather than discovered — same
       `MarginSpec`/`CollateralRulesV2` population gap as above, not a separate design task.

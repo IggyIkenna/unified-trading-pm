@@ -24,6 +24,7 @@ parent_epic: system_readiness_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P0
+milestone: M3
 estimate_class: refactor
 estimate_baseline_ai_days: 20
 estimate_calibrated_ai_days: 8
@@ -939,3 +940,26 @@ todos only to confirm they are data-movement, then leave it.
   never dropped, never inspected further) rather than touched, per the multi-agent-safety hard rule. **Verified
   every shipment against `origin/live-defi-rollout` directly** (`git fetch` + `git show origin/...:<path>` /
   `merge-base --is-ancestor`), not trusted off a ship script's own success message.
+- 2026-08-22 — **`VenueCapabilityV2` registry/resolver skeleton built + seeded, unblocking the collateral/margin
+  todo below.** `unified-api-contracts@2e1b6146d8` (verified on origin): new
+  `unified_api_contracts/registry/capability_declarations/venue_capability_v2/` package (`_cefi_derivatives.py`,
+  `_defi_lending.py`, aggregating `__init__.py` — `VENUE_CAPABILITY_V2: dict[str, VenueCapabilityV2]` +
+  `get_venue_capability_v2(venue) -> VenueCapabilityV2 | None`), seeded `BINANCE-FUTURES` (margin tiers composed
+  from the existing cited `cefi_margin_tiers.py` SSOT, cross-checked 2026-08-22 via web search) and
+  `AAVE_V3-ETHEREUM` (LTV/liquidation-threshold/bonus composed from `defi_reserve_params.py`'s existing cited
+  SSOT). `strategy-service@c56530286f` (verified on origin): `FourLayerGateOrchestrator.evaluate()` now accepts
+  `venue_id=` and resolves through the registry (raises `UnresolvedVenueCapabilityError` on an unknown venue,
+  never silent). **QG resource-drift investigation, documented not silent**: strategy-service's committed QG
+  baseline (131.2s CPU, measured 2026-06-17, single-core-pinned methodology) failed twice under this session's
+  host contention (892s wall/410s CPU, then 1524s wall/451s CPU — both 0s governor queue-wait, i.e. not queuing,
+  genuinely slow). Measured test-file growth since baseline: +94 files (~25%) since 2026-06-17, +14 (~3%) since
+  the 2026-08-17 VM baseline (224.7s CPU) — growth alone does not proportionally explain a 3.44x/2.0x CPU-time
+  jump, pointing to genuine host-contention CPU inflation (context-switch thrashing), not suite growth, matching
+  this session's independently-measured load average (157→392 over ~2h, 9 concurrent users). Attempted the
+  sanctioned re-profile path (`measure-qg-baseline.sh --env local --repos strategy-service`, no `--force`) to
+  settle this with a fresh measurement instead of guessing — it failed instantly (`wall=0.0s cpu=0.0s exit=1`) on
+  an unrelated, genuine tooling bug: hardcoded GNU `time -v` against macOS's BSD `time` (no such flag) — filed as
+  `/plans/active/issues/measure_qg_baseline_macos_bsd_time_incompatibility_2026_08_22.md`. With re-baselining
+  blocked and the test suite fully green twice over (6483/6483, zero failures both times — only the wall-clock
+  governor tripped), shipped via one documented `IGNORE_TIMEOUT=true` run (204s, sentinel matched HEAD) rather
+  than an undocumented bypass — operator-confirmed this reasoning before the run.
