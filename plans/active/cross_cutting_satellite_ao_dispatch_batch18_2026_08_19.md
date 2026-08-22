@@ -162,11 +162,13 @@ source: >-
       2026-08-17T13:32:38Z) — the audit was accurate when written, not an over-count. A fresh grep of the target doc
       now shows exactly 1 open item (the re-gate-message wording fix), matching the corrected marker text. —
       unified-trading-pm@2de315f432.
-- [ ] [DOC] P3. **`prosewrap_padding_corpus_wide_1290_space_2026_08_03.md`** — 2 "DONE"/"shipped" Progress Log
-      claims (the 2026-08-15 "Re-opened" and "Resolved... cicd escalation agt-f4b815" entries) cite a literal
-      unfilled `<pending>` placeholder instead of a real commit sha. Identify which of several nearby commits (per
-      `git log`) is the real one, backfill the citation. Done when: both entries cite a real, reachable commit sha.
-      Source: `plan_reconciler_findings_cross_cutting_2026_08_18.md` "Plans not reached" item 10.
+- [x] ✅ [DOC] P3. **`prosewrap_padding_corpus_wide_1290_space_2026_08_03.md`** — both `<pending>` citations backfilled
+      with real, reachable commit shas identified via `git log -S`/`--since` search. "Re-opened" entry's wiring-gap
+      citation -> `5d497d7736` (message matches the entry's own description exactly). "Resolved... agt-f4b815"
+      entry's baseline-lowering citation -> `d71059effe` (its commit message cites the identical "2118 (baseline
+      1639)" figures the entry uses) — also corrected the entry's stated result ("329") to match what actually
+      landed in `prosewrap_padding_baseline.yaml` ("340"), an adjacent discrepancy surfaced while verifying the sha.
+      — unified-trading-pm@1feb2c90c3.
 
 ## Progress Log
 
