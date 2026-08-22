@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [vm-launcher-runbook, tarball-freshness, stale-code, silent-failure, quickmerge, shared-checkout]
 related:
   [
-    /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
+    /plans/archive/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
     /plans/archive/2026_08/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
@@ -55,7 +55,7 @@ context_scope:
   [
     deployment-service/scripts/vm/lib/launcher_common.sh,
     deployment-service/scripts/vm/create-code-tarballs.sh,
-    /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
+    /plans/archive/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
   ]
 ---
 

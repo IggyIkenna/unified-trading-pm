@@ -15,7 +15,7 @@ tags: [defi, ao-dispatch, finalize, batch-18, ag-closeout-audit, archival]
 related:
   [
     /plans/active/defi_satellite_ao_dispatch_batch18_2026_08_19.md,
-    /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_19.md,
+    /plans/archive/issues/ag_closeout_audit_defi_parked_2026_08_19.md,
   ]
 created: "2026-08-19"
 last_updated: "2026-08-19"
@@ -40,7 +40,7 @@ context_scope:
   [
     /plans/active/defi_satellite_ao_dispatch_batch18_2026_08_19.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_19.md,
+    /plans/archive/issues/ag_closeout_audit_defi_parked_2026_08_19.md,
   ]
 source: >-
   ag_closeout_auditor 2026-08-19 (dispatch agt-fa5ded, slot 28) — every AO-dispatched satellite batch needs a gated

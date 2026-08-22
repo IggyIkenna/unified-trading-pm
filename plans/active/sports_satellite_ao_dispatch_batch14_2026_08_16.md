@@ -12,7 +12,7 @@ summary: >-
   Phase-3 conflict-check found 10 source docs' remaining items are both bounded (worker-determinable outcome) and
   conflict-clear today — extracted here. Everything else is operator-gated, time-gated, dependency-gated, needs its
   own scoped design/investigation pass, or is a carried finding from the 2026-08-09 archived audit — see
-  `/plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md` for the full deferred ledger with taxonomy
+  `/plans/archive/issues/ag_closeout_audit_sports_parked_2026_08_16.md` for the full deferred ledger with taxonomy
   tags. One item (todo 2) merges two source docs that turned out to name the SAME underlying catalogue-rebuild action
   — drafted as a single todo citing both, not two competing ones.
 status: active
@@ -43,7 +43,7 @@ related:
     /plans/active/issues/sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md,
     /plans/active/issues/sports_honest_coverage_gap_closure_2026_08_14.md,
     /plans/active/issues/dp_vm_001_mdps_sports_2026_staleness_guard_and_timeouts_2026_08_16.md,
-    /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md,
+    /plans/archive/issues/ag_closeout_audit_sports_parked_2026_08_16.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -237,7 +237,7 @@ possibly-ripe-once-Phase-1-is-independently-reverified, not guessed at here.
   2 docs naming the same action); 4 items were held back after a deeper conflict-check read (1 live-VM-lineage
   conflict, 1 machine-gated dependency, 1 consequential-action caution, 1 unverifiable-narrative-claim caution) — see
   "Conflict-check findings" above. The remaining orphaned-doc items and the 7 self-dispatched-but-stalled docs are
-  parked in `/plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md` by taxonomy category. **Status left
+  parked in `/plans/archive/issues/ag_closeout_audit_sports_parked_2026_08_16.md` by taxonomy category. **Status left
   `draft`** per this skill's autonomous-mode safety rail — flipping to `active` needs explicit operator approval
   before this batch dispatches.
 

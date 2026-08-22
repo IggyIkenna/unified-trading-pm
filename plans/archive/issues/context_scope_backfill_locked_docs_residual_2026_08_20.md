@@ -42,17 +42,22 @@ source: >-
   (corpus-wide context_scope backfill + FieldSpec hardening).
 ---
 
+> > **📦 ARCHIVED 2026-08-22 (archival pass 2 side-resolution)** — 0 open todos, no lock. The 4 named docs archived
+> > as part of `issues_corpus_completion_dispatch_2026_08_21.md`'s locked_by-placeholder cleanup, resolving this doc's
+> > sole todo exactly as D54 predicted. Kept as a historical record.
+>
+
 # context_scope backfill — 4 locked docs residual
 
 ## The 4 docs
 
-All `status: resolved`, `locked_by: live-defi-rollout` — a live lock, not a stale one (not independently verified for
-liveness this session):
+**RESOLVED 2026-08-22 — all 4 archived.** Were all `status: resolved`, `locked_by: live-defi-rollout` (the placeholder
+lock bug, not a genuine claim); cleared and archived in archival pass 2:
 
-- `plans/active/issues/empty_reprobe_disagreement_all_2026_08_18.md`
-- `plans/active/issues/empty_reprobe_disagreement_all_2026_08_19.md`
-- `plans/active/issues/manifest_hygiene_red_all_2026_08_18.md`
-- `plans/active/issues/manifest_hygiene_red_cefi_2026_08_16.md`
+- `plans/archive/issues/empty_reprobe_disagreement_all_2026_08_18.md`
+- `plans/archive/issues/empty_reprobe_disagreement_all_2026_08_19.md`
+- `plans/archive/issues/manifest_hygiene_red_all_2026_08_18.md`
+- `plans/archive/issues/manifest_hygiene_red_cefi_2026_08_16.md`
 
 All 4 are already `status: resolved` — the most likely path to resolution is that whatever process holds the lock
 archives them (a `doc_type: issue` archive move goes to flat `plans/archive/issues/`, out of `check_frontmatter_schema.py`'s

@@ -36,7 +36,6 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
 locked_by:
 locked_since:
 resolved_by:
@@ -53,6 +52,9 @@ context_scope:
   ]
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2)** — BRIDGE resolved: 0 open todos (todo 3 citation-closed against
+> `defi_satellite_ao_dispatch_batch14_2026_08_16.md`); this dispatch's archival pass 2 is the follow-on pass
+> the bridge note deferred to. Kept as a historical record.
 ## What was found (measured, not inferred)
 
 Ran `bash scripts/backfill_lst_yields_30day.sh` for real (project `central-element-323112`, `GCP_PROJECT_ID` exported)

@@ -497,7 +497,7 @@ deployed to the VM + verified). Remaining live-run findings:
       path (backlog resumes via git/PlanRegenLoop, regen-authoritative). Found 2026-06-12 while answering the
       backup-vs-seed design question.
 - [x] ✅ [CREDS] P0. **RESOLVED 2026-08-08 (operator ruling, ao round-5 apply session item 23 —
-      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "Approve the grant."** Was:
+      /plans/archive/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "Approve the grant."** Was:
       BLOCKED-CREDENTIALS — `harsh-worker` IAM lacks SSM read/run (`ssm:GetParameters` broke the launcher's Ubuntu-AMI
       resolution — worked around via `AMI_ID=ami-0bf052f8a9dd8bf42`; `ssm:DescribeInstanceInformation`/
       `ssm:SendCommand` broke the verify harness — worked around via SSH). Self-granted live (the `admin_od` AWS

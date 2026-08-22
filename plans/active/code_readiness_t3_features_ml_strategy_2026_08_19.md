@@ -380,7 +380,7 @@ todos only to confirm they are data-movement, then leave it.
       Layer-1 ADV-ranked candidate discovery, Layer-3 curtailment mechanism, both side-decisions) is `[x]`,
       shipped 2026-07-23 through 2026-07-26, weeks before this plan existed. Grepped the whole doc for any
       remaining `- [ ]` — zero. This item is fully done, not operator-gated; nothing to re-ask. Evidence:
-      `/plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`. Follow-up: that
+      `/plans/archive/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`. Follow-up: that
       issue doc looks archival-eligible (every todo done, unlocked) — worth a dedicated archival pass, not done
       here to stay scoped to this correction.
 - [x] ✅ [BACKEND] P1. **Corrected 2026-08-21 — the prior re-triage was stale.** The issue doc already carries an
@@ -777,7 +777,7 @@ todos only to confirm they are data-movement, then leave it.
       all 5 items in the issue doc are `[x]`, dated 2026-07-27 through 2026-08-06 (`features-service@a9429cba`
       confirmed + fixed the residual; `deployment-service@c1e0481` shipped the tarball-freshness default flip).
       Found 2026-08-20 already at this state, predating this plan. Evidence:
-      `/plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`.
+      `/plans/archive/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`.
 - [x] ✅ [BACKEND] P2. **Already fully shipped — verified 2026-08-21.** `plans/archive/2026_06/features_registry_status_versioning_2026_05_28.md`: `status: complete`, 20/20 todos done, archived (all 5 phases — schema
       extension, 1,382-spec catalogue, per-group parquet stamping, `features-status` CLI + drift baseline, this
       codex doc itself). Nothing left to build; this todo was stale. SSOT: `/codex/02-data/feature-formula-versioning.md`.

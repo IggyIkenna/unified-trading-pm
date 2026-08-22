@@ -46,7 +46,7 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/archive/issues/plan_reconciler_findings_sports_2026_08_16.md,
-    /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md,
+    /plans/archive/issues/ag_closeout_audit_sports_parked_2026_08_16.md,
   ]
 ---
 

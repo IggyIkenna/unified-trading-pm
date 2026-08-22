@@ -8,7 +8,7 @@ assigned_vm: planning
 source:
   - manifest_hygiene_daily.py
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
-locked_by: live-defi-rollout
+locked_by:
 summary: "The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: cefi, defi, prediction, sports, tradfi. ..."
 status: resolved
 nature: process
@@ -26,6 +26,9 @@ last_updated: 2026-08-19
 resolved_by: market-tick-data-service@f67a7480b3 (docstring fix); root-cause fix work tracked on manifest_hygiene_red_all_2026_08_17's still-open todos
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2)** — `locked_by: live-defi-rollout` placeholder cleared (corpus-wide
+> fix, `scripts/plans/clear_locked_by_placeholder_2026_08_12.py --apply`); 0 open todos, `status: resolved`.
+> Kept as a historical daily-monitor record.
 # Manifest hygiene RED — 4 AG(s) with findings (2026_08_18)
 
 > Auto-filed by the daily data-pipeline audit `manifest_hygiene_daily.py` (Wave 4b, Phase 5

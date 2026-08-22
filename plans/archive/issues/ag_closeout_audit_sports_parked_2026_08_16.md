@@ -29,7 +29,7 @@ summary: >-
   `parked_findings=27`, `entries_written=27` — balanced (25 taxonomy-tagged residual-work entries + 2 investigation
   notes; 2 further findings were resolved in-run and are recorded as prose only, not counted in this tally per the
   skill's "informational/fixed-in-run is not a todo" rule).
-status: open
+status: superseded
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -76,10 +76,14 @@ resolved_by:
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: ag_closeout_audit_sports_parked_2026_08_21
 context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md, /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md, /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py]
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2) — SUPERSEDED** by the 2026-08-21 re-run of the same audit
+> (`ag_closeout_audit_sports_parked_2026_08_21.md`, itself already archived —
+> `plans/archive/issues/ag_closeout_audit_sports_parked_2026_08_21.md`). 0 open todos, no lock. Kept as a
+> historical audit-run record.
 # Sports closeout-audit findings, 2026-08-16
 
 ## Finding 1 — one mistag fixed in-run, one left genuinely uncertain

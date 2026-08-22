@@ -342,6 +342,6 @@ understanding the root cause to be valuable.
   reproduction ("needs the SAME `.git` directory two processes operate on concurrently") in the most common
   possible shape this workspace now has for hitting it — a fork of one's own session is an everyday pattern, not an
   edge case, so this hazard is broader than "two unrelated concurrent slots." Full incident writeup:
-  `/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_19.md` Part C. No code changed by this
+  `/plans/archive/issues/ag_closeout_audit_cross_cutting_parked_2026_08_19.md` Part C. No code changed by this
   entry — corroboration only, per the doc's own established pattern of logging rather than acting on todo 3 blind.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

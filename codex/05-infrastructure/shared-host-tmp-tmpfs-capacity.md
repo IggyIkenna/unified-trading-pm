@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [infra, tmpfs, /tmp, disk-space, shared-host, pytest, scratch, parquet, capacity]
 related:
   [
-    /plans/active/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md,
+    /plans/archive/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
@@ -35,7 +35,7 @@ authoritative_for: [
   ]
 referenced_by:
   [
-    /plans/active/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md,
+    /plans/archive/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
   ]
 owner:
@@ -167,7 +167,7 @@ The reaper is **liveness-gated** precisely so it never deletes another slot's in
 an open handle, regardless of age. Manual cleanup of a currently-large `/tmp` file must confirm genuine ownership (is
 the writing process still alive? — check `lsof`/`fuser` first) per the multi-agent-safety HARD RULE against touching
 another slot's untracked/in-flight state — do not blind-delete. See
-`/plans/active/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md` for the incident + ownership-audit caution.
+`/plans/archive/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md` for the incident + ownership-audit caution.
 
 ## Precedent + coverage
 

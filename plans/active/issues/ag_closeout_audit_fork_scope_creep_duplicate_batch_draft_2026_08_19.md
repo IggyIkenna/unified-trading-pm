@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [ag-closeout-audit, fork, sub-agent-scope, concurrent-dispatch, batch-naming, agent-orchestrator, near-miss]
 related:
   [
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_19.md,
+    /plans/archive/issues/ag_closeout_audit_cross_cutting_parked_2026_08_19.md,
     /plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -57,7 +57,7 @@ context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_19.md,
+    /plans/archive/issues/ag_closeout_audit_cross_cutting_parked_2026_08_19.md,
   ]
 source: >-
   Discovered live during the 2026-08-19 `/ag-closeout-audit cross-cutting` run (dispatch agt-ae73cd, slot 27) — full

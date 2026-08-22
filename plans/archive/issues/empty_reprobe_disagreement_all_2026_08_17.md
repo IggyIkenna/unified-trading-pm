@@ -29,7 +29,7 @@ priority: P1
 source: [reprobe_new_empty_confirmed.py, data_pipeline_hardening_self_monitoring_2026_06_22.md]
 assigned_vm: planning
 resolved_by: plan_reconciler 2026-08-19 (epic-scoped observability_master pass) — sole todo [x] w/ HARD evidence
-locked_by: live-defi-rollout
+locked_by:
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -44,6 +44,9 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2)** — `locked_by: live-defi-rollout` placeholder cleared (corpus-wide
+> fix, `scripts/plans/clear_locked_by_placeholder_2026_08_12.py --apply`); 0 open todos, `status: resolved`.
+> Kept as a historical daily-monitor record.
 # Empty re-probe disagreements — today's new empties may be C1 bugs (2026_08_17)
 
 > Auto-filed by the daily data-pipeline audit `reprobe_new_empty_confirmed.py` (Wave 4b, Phase 5

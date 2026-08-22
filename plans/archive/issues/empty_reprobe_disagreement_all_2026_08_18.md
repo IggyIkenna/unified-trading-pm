@@ -8,7 +8,7 @@ assigned_vm: planning
 source:
   - reprobe_new_empty_confirmed.py
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
-locked_by: live-defi-rollout
+locked_by:
 summary: "The daily empty re-probe found cells that became empty_confirmed+SOURCE_RETURNED_ZERO today where the UAC coverage oracle SHOULD_HAVE_DATA (or a wired re-fetch returned rows), plus ambiguous ..."
 status: resolved # corrected 2026-08-19 -- sole todo [x], diagnosed as duplicate of already-tracked P0 blocker
   # tradfi_databento_account_billing_suspended_2026_08_09.md, no code fix applicable
@@ -27,6 +27,9 @@ last_updated: 2026-08-19
 resolved_by: interactive session 2026-08-19 -- diagnosed as duplicate of tracked P0 billing blocker, no code fix applicable
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2)** — `locked_by: live-defi-rollout` placeholder cleared (corpus-wide
+> fix, `scripts/plans/clear_locked_by_placeholder_2026_08_12.py --apply`); 0 open todos, `status: resolved`.
+> Kept as a historical daily-monitor record.
 # Empty re-probe disagreements — today's new empties may be C1 bugs (2026_08_18)
 
 > Auto-filed by the daily data-pipeline audit `reprobe_new_empty_confirmed.py` (Wave 4b, Phase 5

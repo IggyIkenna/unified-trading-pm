@@ -73,7 +73,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md,
-    /plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md,
+    /plans/archive/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md,
     /plans/active/issues/dp_vm_001_mdps_defi_2022_exit_nonzero_singledate_hang_2026_08_15.md,
   ]
 context_scope:

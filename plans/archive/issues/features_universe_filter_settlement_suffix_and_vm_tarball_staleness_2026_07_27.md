@@ -28,7 +28,6 @@ drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
 resolved_by:
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 context_scope:
@@ -40,6 +39,9 @@ context_scope:
   ]
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2)** — BRIDGE resolved: `locked_by` placeholder cleared 2026-08-12,
+> 0 open todos; this dispatch's archival pass 2 is the explicitly-deferred follow-on pass. Kept as a
+> historical record (universe-filter suffix fix + VM tarball-staleness `auto`-mode default flip, both shipped).
 # features-service universe filter + VM tarball staleness (2026-07-27)
 
 ## Finding 1 — universe filter dropped every real CeFi instrument (FIXED, shipped)

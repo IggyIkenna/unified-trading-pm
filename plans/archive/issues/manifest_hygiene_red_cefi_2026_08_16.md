@@ -9,7 +9,7 @@ assigned_vm: planning
 source:
   - manifest_hygiene_daily.py
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
-locked_by: live-defi-rollout
+locked_by:
 summary:
   "Daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for cefi
   (schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk) — first real
@@ -33,6 +33,9 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2)** — `locked_by: live-defi-rollout` placeholder cleared (corpus-wide
+> fix, `scripts/plans/clear_locked_by_placeholder_2026_08_12.py --apply`); 0 open todos, `status: resolved`.
+> Kept as a historical daily-monitor record.
 # Manifest hygiene RED — 1 AG(s) with findings (2026_08_16)
 
 > Auto-filed by the daily data-pipeline audit `manifest_hygiene_daily.py` (Wave 4b, Phase 5

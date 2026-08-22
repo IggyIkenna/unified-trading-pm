@@ -9,7 +9,8 @@ summary: >-
   (an active P0 incident, and a high-value item deliberately excluded from casual batch-extraction). This is a
   Phase-0-2-adjacent parked doc per the skill's own rule that every genuine finding gets a durable home in the SAME
   run that found it, whichever phase the run stops at.
-status: open
+status: superseded
+superseded_by: ag_closeout_audit_ao_parked_2026_08_21
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -41,6 +42,9 @@ source: >-
 context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/active/ao_consolidated_closeout_2026_08_12.md, /plans/active/ao_satellite_ao_dispatch_batch22_2026_08_16.md, /plans/active/ao_open_work_consolidated_tracker_2026_08_14.md]
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2) — SUPERSEDED** by the 2026-08-21 re-run of the same audit
+> (`ag_closeout_audit_ao_parked_2026_08_21.md`, active). 0 open todos, no lock. Kept as a historical
+> audit-run record.
 # `/ag-closeout-audit ao` 2026-08-16 — parked findings
 
 ## Needs direct operator attention (surfaced here, not silently filed)

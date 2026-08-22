@@ -23,7 +23,7 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md,
-    /plans/active/issues/ag_closeout_audit_cefi_parked_2026_08_19.md,
+    /plans/archive/issues/ag_closeout_audit_cefi_parked_2026_08_19.md,
   ]
 created: "2026-08-19"
 last_updated: "2026-08-19"

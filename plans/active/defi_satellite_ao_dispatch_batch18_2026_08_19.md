@@ -30,7 +30,7 @@ tags: [defi, ao-dispatch, satellite-extraction, batch-18, ag-closeout-audit]
 related:
   [
     /plans/active/defi_satellite_ao_dispatch_batch18_2026_08_19_finalize.md,
-    /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_19.md,
+    /plans/archive/issues/ag_closeout_audit_defi_parked_2026_08_19.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md,
     /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
@@ -61,7 +61,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_19.md,
+    /plans/archive/issues/ag_closeout_audit_defi_parked_2026_08_19.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -178,7 +178,7 @@ drift_direction: advance-code
   Non-batchable-taxonomy: genuinely human-only.
 - The remaining ~48 orphaned docs (of 65 total classified this run) carry ONLY operator/design/human/time-gated
   remaining work, each already independently reconfirmed correctly-NA by 3-8+ prior na-eligibility-audit rounds. Full
-  per-doc breakdown (verdict + citation trail) is in `plans/active/issues/ag_closeout_audit_defi_parked_2026_08_19.md`
+  per-doc breakdown (verdict + citation trail) is in `plans/archive/issues/ag_closeout_audit_defi_parked_2026_08_19.md`
   — not re-listed here to avoid this batch doc breaching its line cap with non-actionable content.
 
 ## Progress Log

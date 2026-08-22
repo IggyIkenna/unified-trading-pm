@@ -38,6 +38,11 @@ source:
 depends_on: []
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2, D1 ruling)** — 0 open todos, no lock. Operator ruling D1
+> (`issues_corpus_completion_dispatch_2026_08_21.md`): stale meta-doc, churn not a live task; the sole remaining
+> item (replace this grep-derived index with a primary transcript if one is ever exported) is understood-and-closed,
+> not a tracked successor doc. Kept as a historical cross-reference record.
+
 # ao round-5 apply session — operator Q&A index
 
 Plain index, not a new source of truth: each row below is a verbatim citation already present in the named plan file.
@@ -75,8 +80,11 @@ docs, not an isolated unverifiable claim (contrast the incident that motivated t
 
 - [x] [DOCS] P3. Compile this index from the corpus (grep-only, no independent claims added). DONE — this doc, built
       2026-08-08 during `ldr_qg_failure` escalation `agt-9bdc09`.
-- [ ] [DOCS] P3. If a genuine dashboard/DB transcript of the round-5 blocked-questions session is ever exported, replace
-      this grep-derived index with (or augment it with a link to) that primary record.
+- [x] ✅ [DOCS] P3. **CANCELLED (D1, issues_corpus_completion_dispatch_2026_08_21, autonomous-dispatch authority)** —
+      no dashboard/DB transcript of the round-5 session has ever surfaced across repeated audits (2026-08-09, 08-18);
+      the understanding is closed via this grep-derived index, not via a pending primary-record replacement. If a
+      genuine transcript export is ever produced it can supersede this doc directly; nothing tracks toward that
+      happening.
 
 ## Progress Log
 

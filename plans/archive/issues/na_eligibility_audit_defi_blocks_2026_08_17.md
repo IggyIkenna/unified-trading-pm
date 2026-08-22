@@ -6,7 +6,8 @@ summary: >-
   hunters: 16 defi-owned in-scope, 7 non-owned report-only). Not a work item itself — a batchable index of the
   DISTINCT operator-decision asks found across the tranche, plus the MISCLASSIFIED_LIKELY_AO_ELIGIBLE items still
   genuinely unresolved after this run's own RECLASSIFY pass. Supersedes na_eligibility_audit_defi_blocks_2026_08_16.md.
-status: open
+status: superseded
+superseded_by: na_eligibility_audit_defi_blocks_2026_08_18
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -46,6 +47,9 @@ source: >-
   classified docs (16 defi-owned + 7 report-only from other tranches).
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2) — SUPERSEDED** by the 2026-08-18 re-run of the same audit
+> (`na_eligibility_audit_defi_blocks_2026_08_18.md`, itself superseded onward — see the chain). 0 open todos,
+> no lock. Kept as a historical audit-run record.
 > **SUPERSEDED 2026-08-18** by
 > [`na_eligibility_audit_defi_blocks_2026_08_18.md`](/plans/active/issues/na_eligibility_audit_defi_blocks_2026_08_18.md)
 > — that doc carries the fresh Phase-1b consolidation for today's run, including this doc's still-genuinely-open

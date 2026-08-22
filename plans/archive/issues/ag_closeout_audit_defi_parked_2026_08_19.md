@@ -12,7 +12,8 @@ summary: >-
   were already extracted into the still-draft `defi_satellite_ao_dispatch_batch14_2026_08_16.md`, and the rest carry
   only operator/design/human/time-gated remaining work, the large majority independently reconfirmed correctly-NA by
   3-8+ prior na-eligibility-audit rounds each. 10 findings total.
-status: open
+status: superseded
+superseded_by: ag_closeout_audit_defi_parked_2026_08_21
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -53,6 +54,9 @@ context_scope:
   ]
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2) — SUPERSEDED** by the 2026-08-21 re-run of the same audit
+> (`ag_closeout_audit_defi_parked_2026_08_21.md`, active). 0 open todos, no lock. Kept as a historical
+> audit-run record.
 # ag-closeout-audit defi parked findings — 2026-08-19
 
 Prior parked docs for this tranche (2026-08-06, 08-07, 08-08, 08-10) were checked first — none are in

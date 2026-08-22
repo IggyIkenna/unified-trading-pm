@@ -43,7 +43,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md,
     /plans/active/issues/dp_vm_001_mdps_defi_2022_exit_nonzero_singledate_hang_2026_08_15.md,
-    /plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md,
+    /plans/archive/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md,
     /plans/archive/2026_08/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md,
     /plans/active/issues/pendle_venue_onboarding_2026_08_16.md,
     /plans/active/issues/dp_vm_001_mdps_defi_2026_lock_ttl_staleness_budget_mismatch_2026_08_15.md,
@@ -177,7 +177,7 @@ separate re-grep was needed to establish "no overlap" for these 8 items.
       that one has since gone stale) — now unblocked on the manifest-consolidator/HYPERLIQUID `perp_funding` side
       per the doc's own 2026-08-14 re-check. Repo: market-tick-data-service. Source:
       `defi_satellite_ao_dispatch_batch14_2026_08_16.md` extracted from
-      `plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md`
+      `plans/archive/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md`
       todo 3. Done when: the backfill run completes and the target window's `lst_yields`/`lst_native_rates` rows are
       manifest-verified.
 

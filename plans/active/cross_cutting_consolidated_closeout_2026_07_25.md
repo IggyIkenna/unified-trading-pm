@@ -699,8 +699,8 @@ batch)
   leak / data-shape burst), no fix shipped, fire-and-forget launcher gap unaddressed. 3 of 4 remaining items are
   operator-gated/judgment calls; 1 (fix the stale `TASK=features-backfill` VM metadata label) is small and bounded but
   not enough alone to justify a fresh batch — held for a future batch or direct pickup.
-- [`empty_reprobe_disagreement_all_2026_08_18.md`](/plans/active/issues/empty_reprobe_disagreement_all_2026_08_18.md)
-  and [`manifest_hygiene_red_all_2026_08_18.md`](/plans/active/issues/manifest_hygiene_red_all_2026_08_18.md) —
+- [`empty_reprobe_disagreement_all_2026_08_18.md`](/plans/archive/issues/empty_reprobe_disagreement_all_2026_08_18.md)
+  and [`manifest_hygiene_red_all_2026_08_18.md`](/plans/archive/issues/manifest_hygiene_red_all_2026_08_18.md) —
   auto-filed 2026-08-18 by the daily empty-reprobe and manifest-hygiene audits (`reprobe_new_empty_confirmed.py`,
   `manifest_hygiene_daily.py`), non-empty candidate CSVs spanning cefi/defi/prediction/sports/tradfi, still awaiting
   per-candidate triage.

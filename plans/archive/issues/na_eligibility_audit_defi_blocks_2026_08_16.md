@@ -6,7 +6,8 @@ summary: >-
   defi-owned). Not a work item itself — a batchable index of the DISTINCT operator-decision and credential asks
   found across the tranche, plus the MISCLASSIFIED_LIKELY_AO_ELIGIBLE items still genuinely unresolved after this
   run's own RECLASSIFY pass (several were independently resolved this run and are excluded, noted below).
-status: open
+status: superseded
+superseded_by: na_eligibility_audit_defi_blocks_2026_08_17
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -45,6 +46,9 @@ context_scope:
   ]
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2) — SUPERSEDED** by the 2026-08-17 re-run of the same audit
+> (`na_eligibility_audit_defi_blocks_2026_08_17.md`, itself superseded onward — see the chain). 0 open todos,
+> no lock. Kept as a historical audit-run record.
 > **SUPERSEDED 2026-08-17** by
 > [`na_eligibility_audit_defi_blocks_2026_08_17.md`](/plans/active/issues/na_eligibility_audit_defi_blocks_2026_08_17.md)
 > — that doc carries the fresh Phase-1b consolidation for today's run, including this doc's still-genuinely-open

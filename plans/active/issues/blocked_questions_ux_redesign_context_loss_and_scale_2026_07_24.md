@@ -141,7 +141,7 @@ exists" section together before scoping the workstream.
 ## Todos
 
 - [x] ✅ [DESIGN] P2. **DECIDED — operator ruling 2026-08-08** (ao round-5 apply session, item 5 —
-      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "All three: session_id capture +
+      /plans/archive/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "All three: session_id capture +
       transcript-jump + dedup/similarity." Scope the blocked-question UX redesign — capture `claude_session_id` on
       `BlockedRow` at creation time, wire a transcript-jump affordance into the resolution UI, and address
       cross-question dedup/similarity; explicitly deferred by the operator 2026-07-24, renewed interest 2026-08-03,

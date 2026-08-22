@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [vm-launcher, test-run, service-account, iam, silent-failure, pipeline-e2e-check, benchmark]
 related:
   [
-    /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
+    /plans/archive/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
     /plans/archive/2026_08/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md,
     /plans/archive/2026_08/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md,

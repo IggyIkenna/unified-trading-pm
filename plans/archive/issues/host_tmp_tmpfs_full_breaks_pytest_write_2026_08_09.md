@@ -53,9 +53,12 @@ context_scope:
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
   ]
 source: slot 22, deployment-service QG run during cross_cutting_satellite_ao_dispatch_batch5-77d480c19d08, 2026-08-09
-archive_exempt: true # 0-open-todos 2026-08-10 (both todos folded + DONE via infra_satellite_ao_dispatch_batch15_2026_08_10.md todo 1); archival blocked by that active parent plan still referencing this doc — bridge until it reaches a terminal status
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2)** — BRIDGE resolved: both todos done 2026-08-10; the gating parent
+> plan (`infra_satellite_ao_dispatch_batch15_2026_08_10.md`) has itself since archived
+> (`plans/archive/2026_08/infra_satellite_ao_dispatch_batch15_2026_08_10.md`), reaching the terminal status
+> the bridge was waiting on. Kept as a historical record.
 # Shared-host /tmp tmpfs full — breaks pytest fleet-wide
 
 ## What I found

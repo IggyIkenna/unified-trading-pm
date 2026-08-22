@@ -151,7 +151,7 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 ## 🚧 BLOCKED-OPERATOR-DECISION 3 — 14 locked issue-docs with truncated `summary:` frontmatter (added 2026-08-06)
 
 - [x] ✅ [DOCS] P2. **DONE (operator ruling 2026-08-08, ao round-5 apply item 9 — see
-      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md: "Authorize all 14"; actually APPLIED
+      /plans/archive/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md: "Authorize all 14"; actually APPLIED
       2026-08-10 — see Progress Log, the 2026-08-08 entry's cited SHA `97ce494ecd` was a context-scout sweep commit that
       never touched these `summary:` fields; all 14 were still truncated until today).** Apply (or authorize applying)
       the pre-drafted replacement `summary:` on 14 `locked_by`-gated `plans/active/issues/*.md` docs — re-applied

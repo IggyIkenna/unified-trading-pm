@@ -51,7 +51,6 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: fix
-archive_exempt: true
 locked_by:
 locked_since:
 supersedes:
@@ -60,6 +59,9 @@ resolved_by:
 depends_on: []
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2)** — both todos done 2026-08-10 (line-cap+prettier fix shipped,
+> `unified-trading-pm@74366a0e00`); the `archive_exempt: true` bridge asked for a human-reviewed follow-on
+> archival pass rather than immediate auto-archive — this dispatch is that pass. Kept as a historical record.
 # defi_cefi_venue_chain_axis_contamination doc is over-cap + prettier-dirty — routine edits blocked
 
 ## What I found

@@ -17,7 +17,7 @@ tags: [defi, na-eligibility-audit, operator-questions, credential-ask, misclassi
 related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/na_eligibility_audit_defi_blocks_2026_08_18.md,
+    /plans/archive/issues/na_eligibility_audit_defi_blocks_2026_08_18.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: 2026-08-19

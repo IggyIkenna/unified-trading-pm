@@ -41,7 +41,7 @@ summary: >-
   items were re-drafted as `batch20` (`unified-trading-pm@679cde5a74`). See the "Concurrent-dispatch collision"
   section below for the full resolution trail — this is recorded here because it is a genuine process finding, not
   just administrative color.
-status: open
+status: superseded
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -73,7 +73,7 @@ drift_direction: none
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: ag_closeout_audit_cross_cutting_parked_2026_08_21
 resolved_by:
 depends_on: []
 source: >-
@@ -90,6 +90,9 @@ context_scope:
   ]
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2) — SUPERSEDED** by the 2026-08-21 re-run of the same audit
+> (`ag_closeout_audit_cross_cutting_parked_2026_08_21.md`, active). 0 open todos, no lock. Kept as a
+> historical audit-run record.
 # Parked findings — 2026-08-19 `/ag-closeout-audit cross-cutting` run
 
 ## Part A — 22 mistags retagged this run (`unified-trading-pm@de7b30407c`)

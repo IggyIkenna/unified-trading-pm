@@ -17,7 +17,7 @@ summary: >-
   `orphaned_never_touched`/`bounded-ao-eligible` verdict to `exclude_cross_cutting` — its own cited evidence
   (5-AG tag, `parent_epic: instruments_master`, the sports tranche's own audit already calling it
   "cross-tranche CONTESTED... owning tranche: instruments_master") contradicted its stated verdict.
-status: open
+status: superseded
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -46,7 +46,7 @@ drift_direction: none
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: ag_closeout_audit_cefi_parked_2026_08_21
 resolved_by:
 depends_on: []
 context_scope:
@@ -60,6 +60,9 @@ source: >-
   dispatch agt-5a343c, one-shot). Phase 1 Workflow run id `wf_92f7654b-5d7`.
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2) — SUPERSEDED** by the 2026-08-21 re-run of the same audit
+> (`ag_closeout_audit_cefi_parked_2026_08_21.md`, active). 0 open todos, no lock. Kept as a historical
+> audit-run record.
 # Parked findings — 2026-08-19 `/ag-closeout-audit cefi`
 
 ## Resolved this run (not parked findings)

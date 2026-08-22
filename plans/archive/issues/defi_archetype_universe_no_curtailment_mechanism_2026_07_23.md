@@ -36,7 +36,6 @@ resolved_by:
 locked_by:
 source: agent-discovered (per-archetype DeFi universe mapping audit, 2026-07-23)
 depends_on: []
-archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
 context_scope:
   [
     /codex/04-architecture/tier-and-import-architecture.md,
@@ -48,6 +47,9 @@ context_scope:
   ]
 ---
 
+> **📦 ARCHIVED 2026-08-22 (archival pass 2)** — BRIDGE resolved: 0 open todos since the na-eligibility-audit
+> 2026-08-16 pass; this dispatch's archival pass 2 is the follow-on pass the bridge note deferred to. Kept as a
+> historical design/investigation record.
 # DeFi strategy archetype universe — no curtailment mechanism, two unreconciled registries, one dead field
 
 ## Context
