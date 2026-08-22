@@ -362,6 +362,8 @@ baseline:
     count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/_lending_grain.py:
     count: 15
+  market-tick-data-service/market_tick_data_service/cli/handlers/_lending_process_helpers.py:
+    count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/_lst_rates_write.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/_morpho_oracle_collection.py:
@@ -420,8 +422,6 @@ baseline:
     count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/jupiter_quote_handler.py:
     count: 5
-  market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py:
-    count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_subgraph.py:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/liquidation_events_handler.py:
