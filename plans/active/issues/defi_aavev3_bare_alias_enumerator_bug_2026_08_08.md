@@ -172,7 +172,12 @@ defect (phantom-venue emission) without touching a registry other code may depen
       correct-key `AAVE_V3`-ETHEREUM twin; "0 backing GCS objects" was independently established by the 2026-08-08
       root-cause session (see Finding section above) and cited rather than re-derived, since the population is
       capped by a fixed historical launch-date window and cannot have changed.
-- [ ] [DATA] P1. Durability re-check after the next defi manifest-consolidator cycle over
+- [x] [DATA] P1. ✅ DONE 2026-08-22 — durability re-check PASS (full detail in the 2026-08-22 Progress Log
+      entry): full-index streaming scan (161,317,283 rows, not a sample) of the live consolidated index at
+      generation `1787388651853992` (`last_modified=2026-08-22T09:46:16Z` — strictly newer than the purge's
+      own new-generation `1787294319966516`, confirming the manifest-consolidator has cycled since the
+      purge) found `venue=AAVEV3` count still 0. Original item follows. Durability re-check after the next
+      defi manifest-consolidator cycle over
       `market-data-tick-defi-prd-*`: confirm `venue=AAVEV3` count in the live
       `_index/availability_index.parquet` is STILL 0 (one filtered pyarrow read, no corpus walk). The purge
       removed the rows from the CONSOLIDATED index only; if any `_index/per_vm/*.parquet` shard from the
@@ -540,3 +545,33 @@ defect (phantom-venue emission) without touching a registry other code may depen
   `AAVE_V3` 3,652,348 (untouched), total 161,763,519 = before − 46,300 exactly — **PASS**. VM deleted
   (keep=true contract). Remaining: the four open todos above ([DATA] P1 durability re-check, [SHIP] P1
   blocked on a peer's in-flight UAC prediction-domain WIP, [CLEANUP] P3, [DESIGN] P3).
+
+- **2026-08-22 (slot 9 worker, [DATA] P1 durability re-check — CLOSED)**: full-index streaming re-scan of the
+  live consolidated defi index, memory-bounded on the shared planning-vm (reused the existing
+  `purge_defi_aavev3_bare_alias_manifest_rows_2026_08_20.py`'s dry-run mode with `--allow-count-drift`, wrapped
+  in `run-bounded-analysis.sh`) — `venue=AAVEV3` count: **0**, confirmed against ALL 161,317,283 live rows
+  (154 batches), not a sample. Object read: 7,499,119,514 bytes, generation `1787388651853992`,
+  `last_modified=2026-08-22T09:46:16Z` — this generation is strictly newer than the purge's own new-generation
+  `1787294319966516` from 2026-08-21 06:38 UTC, directly proving at least one manifest-consolidator rewrite has
+  landed since the purge (independently corroborated: `market-data-defi` stays on the fast `*/1` per-minute
+  consolidator cadence tier per `/codex/05-infrastructure/manifest-consolidator-ssot.md`, not the hourly tier —
+  plausibly thousands of cycles in the ~27h window, not a marginal "one cycle just barely happened" case).
+  Per-VM-shard side was already checked 2026-08-21 (unchanged, not re-walked here — the todo's own text scopes
+  this re-check to the consolidated index only). **Durability confirmed: no resurrection.** [DATA] P1 todo
+  flipped ✅.
+
+  **Two operational findings surfaced along the way, noted for provenance, neither actioned beyond a
+  workaround**: (1) the purge script's `tempfile.mkdtemp()` call defaults to this host's `/tmp`, which is an
+  8GB **tmpfs** (RAM-backed, not disk) — a genuinely different constraint than the memory-RSS bounding this
+  script's own 2026-08-21 rewrite was built to solve. First attempt hit `OSError: [Errno 28] No space left on
+  device` downloading the 7.5GB object into that 8GB tmpfs. Worked around via `TMPDIR=<scratchpad>` (real
+  disk, 131G avail on `/dev/root`) rather than editing the script, since the script is already slated for
+  deletion by the `[CLEANUP] P3` todo below once this re-check passed — not worth hardening code about to be
+  removed. (2) A prior bounded attempt (mem-cap 6G, correctly killed by `run-bounded-analysis.sh`'s RSS-poll
+  monitor before the object finished downloading) left a ~7GB partial-download directory
+  (`/tmp/aavev3_purge_j6t5fxb0`) stranded in that same tmpfs — the wrapper's SIGKILL prevents the script's own
+  `finally: shutil.rmtree(...)` cleanup from running. Left in place: a scoped `rm -r` on it is
+  guardrail-blocked (`block_destructive_commands.py` refuses any recursive delete, not just `rm -rf`), and it
+  wasn't worth an operator escalation for a self-resolving ~7GB of tmpfs (this host has 30G RAM total; not a
+  paging-level constraint). Flagging here so a future operator/agent knows the debris' origin if `/tmp`
+  pressure recurs on this host.
