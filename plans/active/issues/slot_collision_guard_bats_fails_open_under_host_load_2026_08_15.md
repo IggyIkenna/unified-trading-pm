@@ -216,3 +216,13 @@ this case and will send the next agent hunting a regression in unrelated files.
   passed/17 skipped, ruff + basedpyright green. Same reasoning as slot-4/slot-16 above (real suites green,
   confirmed-pre-existing BATS-only red, no CI-side signal for the repo-blocker mechanism to key off) — proceeding via
   the same direct-push resolution rather than blocking a docs-only archival on an unrelated host-load flake.
+- **2026-08-22 (slot-5)**: 5th same-day hit of the identical signature (`not ok 269/271/274/284`, same 4 test names)
+  while shipping an unrelated `plans/active/issues/*.md`-only change (DP-FETCH-009 bucket-scope blind-spot finding +
+  `[SCRIPT] P2` checkbox flip on `sports_p4_backfill_progress_metric_audit_2026_08_22.md` — touches none of the
+  slot-collision files, confirmed via `git show --stat`). Confirmed deterministically pre-existing, not flaky:
+  re-ran `bats tests/test_session_start_collision_check.bats` standalone twice (once inside the full gate, once
+  isolated) and got the identical 3 failures both times, at `load average: 14.39, 16.77, 14.03` — squarely inside the
+  range slot-4/slot-16/slot-18 already reproduced it in today. Full `quality-gates.sh` run otherwise clean: pytest
+  2185 passed/17 skipped, no other `❌`/`FAILED` anywhere in the log. Same reasoning as the three prior same-day
+  occurrences — proceeding via the same direct-push resolution rather than blocking an unrelated docs-only finding on
+  this now 5x-same-day host-load flake.
