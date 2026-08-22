@@ -112,12 +112,14 @@ source: >-
       run verified all 13 mistag targets + the 1 orphan directly against live state, flipped every resulting todo,
       and archived this doc along with its 3 siblings (`_08_01`, `_08_06`, `_08_07.md`). The count-mismatch this
       item asked about no longer applies — there is no remaining "active" member of this doc family post-archival.
-- [ ] [DOC] P3. **`is_catalogue_g1_root_audit_log_2026_07_24.md`** — `repos:` frontmatter lists 6 repos
+- [x] ✅ [DOC] P3. ~~**`is_catalogue_g1_root_audit_log_2026_07_24.md`** — `repos:` frontmatter lists 6 repos
       (agent-orchestrator, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui,
       e2e-testing), none of which the doc's actual content touches (it's entirely instruments-service + UAC,
       neither currently listed) — copy-paste leftover from the 2026-07-24 extraction split. Correct the `repos:`
-      list to match the doc's real content. Done when: `repos:` reads `[instruments-service, unified-api-contracts]`
-      (or whatever the doc's actual content confirms). Source:
+      list to match the doc's real content.~~ **DONE 2026-08-22** — verified the doc's body content (audit trail of
+      `build_instrument_catalogue.py`/`enumerate_expected_universe.py`/`migrate_instruments_store_v9.py` +
+      the UAC validity matrix, all instruments-service/UAC) and corrected `repos:` to
+      `[instruments-service, unified-api-contracts]` — `unified-trading-pm@<sha>`. Source:
       `plan_reconciler_findings_cross_cutting_2026_08_18.md` "Plans not reached" item 4.
 - [ ] [DIAG] P3. **`data_pipeline_e2e_milestones_gate_2026_07_24.md`** — a Deferred-work-table row still marked "IN
       PROGRESS" for the "Operator-requested broader audit pass, part 3" relay/triage step, whose stated completion

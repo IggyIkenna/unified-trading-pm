@@ -12,15 +12,7 @@ status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    agent-orchestrator,
-    batch-live-reconciliation-service,
-    deployment-api,
-    deployment-service,
-    deployment-ui,
-    e2e-testing,
-  ]
+repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [coordinator, migration, manifest, data-layer, catalogue, instruments-service, g1, audit-log]
 related:
@@ -37,7 +29,7 @@ estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
-last_updated: "2026-08-19"
+last_updated: "2026-08-22"
 locked_by:
 locked_since:
 supersedes:
@@ -442,3 +434,9 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — Self-described historical/audit-log record ('this doc is a historical/audit record, not itself gating anything'). All 4 open todos are cross-AG rollup/gate trackers, not standalone work: G1.code and G1.dry-run track.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — reaffirms the chain of 4 prior audit passes (2026-08-02/08/17/19), unchanged: self-described historical/audit-log record ('not itself gating anything'); all 4 open todos are cross-AG rollup/gate trackers, not standalone work — G1.code/G1.dry-run track per-AG owner plans' own completion status, G1.run is explicitly gated on IS-backfill+UAC-accuracy+v9-canonicalisation per AG, G1.run-prediction is explicitly redirected to `prediction_phase_ab_residuals_2026_07_24.md`.
+- **2026-08-22**: corrected `repos:` frontmatter from a copy-paste leftover of the 2026-07-24 extraction split
+  (`[agent-orchestrator, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui,
+  e2e-testing]` — none of which this doc's content touches) to `[instruments-service, unified-api-contracts]`,
+  matching the doc's actual content (`build_instrument_catalogue.py`, `enumerate_expected_universe.py`,
+  `migrate_instruments_store_v9.py`, the UAC validity matrix). Source: `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md`
+  item, itself sourced from `plan_reconciler_findings_cross_cutting_2026_08_18.md` "Plans not reached" item 4.
