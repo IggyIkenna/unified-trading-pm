@@ -134,7 +134,7 @@ drift_direction: advance-code
       2026-08-16 re-retirement held; the census's 454,014 counted rows of any status, not captured rows). Exactly 29
       captured rows remain, ALL twinless ORCA/RAYDIUM address-keyed Solana pools dated 2025-01-17 (full list in the
       log) — these keep `dex_pools` alive in the distinct-values panel; follow-up todo 16. Scan-guard
-      (todo 2, mtds@36e4c830) now prevents regrowth.
+      (todo 2, market-tick-data-service@36e4c830) now prevents regrowth.
 - [ ] [DATA] P1. 16. **Migrate the 29 twinless `dex_pools` rows to `dex_pool_state`.** The 29 ORCA/RAYDIUM
       address-keyed pool rows (2025-01-17, no canonical twin — the only remaining captured `dex_pools` rows) are
       pool-STATE content: copy their objects to the `data_type=dex_pool_state` canonical path (no new data_type),
@@ -147,23 +147,32 @@ drift_direction: advance-code
       SOLEND-SOLANA 81, SOLBLAZE-SOLANA 1,330 (SOLBLAZE re-keyed rather than purged — its rows fold onto bare SOLBLAZE);
       server-side snapshot + CAS write, new generation 1787358781949362; consolidator re-enabled. Legacy glued OBJECT
       deletes deliberately NOT yet done → todo 17. Original scope text:
-- [ ] [DATA] P1. 17. **Delete the legacy glued Solana objects** (the 213 `venue={PROTOCOL}-SOLANA/...` source objects
-      now superseded by verified canonical twins): re-verify `gcs_bucket_soft_delete_retention_seconds() >= 604800` on
-      `market-data-tick-defi-prd-*`, re-verify each twin (size+crc32c) immediately before delete, then
-      `gcs_delete_object` each legacy URI from the copy plan; a twin mismatch = skip + report, never delete. Authorized
-      by the banner ruling (/plans/active/defi_distinct_values_canonical_cleanup_2026_08_21.md § Operator rulings).
-      (repo: market-tick-data-service)
+- [x] [DATA] P1. 17. ✅ **Delete the legacy glued Solana objects** — APPLIED 2026-08-22 09:30 London via
+      `market-tick-data-service/scripts/one_offs/delete_legacy_glued_solana_defi_objects_2026_08_22.py --apply`
+      (untracked until the dep-clean ship; lessons embedded): retention re-checked fresh = 604800s; ALL 293 copy-plan
+      rows (not 213 — the copy plan enumerated 293 legacy objects, 80 of which already had matching twins before the
+      copy pass) verified `deletable` (twin exists, size+crc32c equal) → `Deleted 293 legacy glued-venue object(s);
+      skipped {}`; 0 twin_missing / 0 twin_mismatch. Evidence: session `task17_dryrun.log` + `task17_apply.log`.
+      Authorized by the banner ruling (/plans/active/defi_distinct_values_canonical_cleanup_2026_08_21.md § Operator
+      rulings). (repo: market-tick-data-service)
 - [ ] [DATA] P0. 5-original. **Migrate Class-B Solana glued objects to canonical.** Bounded (hundreds of objects): UTL
       `gcs_copy_object` to `venue={BARE}/chain=SOLANA/...` + canonical filename, re-key the manifest rows, then delete
       legacy objects (reversibility-qualified: verify `gcs_bucket_soft_delete_retention_seconds() >= 604800` first;
       content-equality proof per copied object). SOLBLAZE-SOLANA rows: verify backing objects under the vocabulary the
       writer actually emits before verdict — purge-as-phantom only on a confirmed-absent probe. (repos:
       instruments-service, market-tick-data-service)
-- [ ] [DATA] P1. 6. **Purge blanket perp_funding/derivative_ticker honest-absence stamps on non-perp defi venues**
-      (empty_confirmed/expected_unattempted rows on LST/DEX/lending venues that structurally cannot have perp data) AND
-      root-fix the expected-universe seeder / capability declaration so they don't reseed. KEEP: carry-basis 6-venue
-      rows (operator-accepted), HYPERLIQUID/EXTENDED/LIGHTER perp rows (todo 13). (repos: unified-api-contracts,
-      instruments-service)
+- [x] [DATA] P1. 6. ✅ **Purge blanket perp_funding/derivative_ticker honest-absence stamps on non-perp defi venues**
+      AND root-fix the seeder/capability declaration. Root-fix SHIPPED both layers: unified-api-contracts@4b06013aea
+      (defi-scoped union-fallback exclusion) + instruments-service@0020df5f (`_defi_perp_capable_protocols()` gate).
+      Purge APPLIED 2026-08-22 08:50:51Z on in-region VM `mtds-defi-blanket-perp-stamp-purge` (e2-standard-4, Pattern A
+      launcher `deployment-service/scripts/vm/launch-defi-blanket-perp-stamp-purge-vm.sh --apply --expect-delete
+      441402`, one-off `purge_blanket_perp_stamps_nonperp_defi_venues_2026_08_22.py`): pass-1 census = 441,402 rows
+      (0 `captured`), pass-2 `kept=161317283 deleted=441402`, server-side snapshot
+      `_index/snapshots/pre_blanket_perp_stamp_purge_*` + `.bak`, CAS write → **new generation 1787388651853992**
+      (`Purge applied. Deleted 441402 rows`, rc=0, run.log `vm-logs/mtds-defi-blanket-perp-stamp-purge/`). KEEP-set
+      untouched by construction: ASTER/EXTENDED/HYPERLIQUID/LIGHTER + `*-FUTURES`/`*-PERP`. Consolidator cron paused
+      for the write, resumed after. (repos: unified-api-contracts, instruments-service, market-tick-data-service,
+      deployment-service)
 - [ ] [INFRA] P0. 7. **Launch the N5r/N6r projection VM** (`deployment-service/scripts/vm/
       launch-defi-manifest-projection-vm.sh`, shipped @99b46b9f2d) — no defi rebuild VM is running (verified 2026-08-21,
       GCE list), so the 2026-08-10 blocker is clear. Verify STARTED + progress + terminal state; record the swap
@@ -205,7 +214,7 @@ drift_direction: advance-code
 | item | state / why deferred | blocked-on |
 | --- | --- | --- |
 | Todo 8 canon-swap apply (`--drain-gate` → snapshot → `--apply-prod --confirm-prod-write` on the VM) | **Cannot be done yet** — needs the projection to finish. VM `…-20260821-195038` was NOT preempted: its in-guest stall watchdog killed a HEALTHY run (rc=137, 39 parts, last part 53s before the kill) because the launcher's `STALL_PROGRESS_REGEX=progress:` matched 0 lines of run.log. Launcher regex + `BACKFILL_CMD` module-form both re-fixed (local, ship pending dep-clean) → relaunched `defi-manifest-projection-20260822-074226` (e2-standard-8 per measured 175% CPU / 3.3 GB RSS; UAC tarball one unrelated commit stale, warn-mode) with ONE sized monitor (`monitor_vm_072651.py <run-ts>`, 14h cap, stall = parts flat 3h) | projection completion |
-| Todo 6 purge-half (existing blanket perp_funding/derivative_ticker rows on non-perp venues) | **Not done (apply pending)** — forward seeding stopped (uac@4b06013aea + is@0020df5f); one-off `purge_blanket_perp_stamps_nonperp_defi_venues_2026_08_22.py` authored + dry-run MEASURED 441,402 rows / 0 captured (local, 22 min); apply runs on an in-region VM via `deployment-service/scripts/vm/launch-defi-blanket-perp-stamp-purge-vm.sh --apply --expect-delete 441402` (needs `create-code-tarballs.sh --include market-tick-data-service --force` so the untracked one-off rides the tarball, consolidator re-paused immediately before launch, resumed after the terminal verdict); serialize with every other index write | nothing |
+| Todo 6 purge-half (existing blanket perp_funding/derivative_ticker rows on non-perp venues) | **Not done (apply pending)** — forward seeding stopped (unified-api-contracts@4b06013aea + instruments-service@0020df5f); one-off `purge_blanket_perp_stamps_nonperp_defi_venues_2026_08_22.py` authored + dry-run MEASURED 441,402 rows / 0 captured (local, 22 min); apply runs on an in-region VM via `deployment-service/scripts/vm/launch-defi-blanket-perp-stamp-purge-vm.sh --apply --expect-delete 441402` (needs `create-code-tarballs.sh --include market-tick-data-service --force` so the untracked one-off rides the tarball, consolidator re-paused immediately before launch, resumed after the terminal verdict); serialize with every other index write | nothing |
 | Todo 9 rollup regen + panel verification | **Not done** — run `measure_honest_coverage.py` (or its nightly job) AFTER the index rewrites settle, then re-derive `/data-status/distinct-values/defi` via the production functions (`dump_defi_distinct.py` pattern in the census artifacts) and record before/after distinct counts (before: 108 venues / 32 data_types / 16 instrument_types / 23 chains) | todos 6-half, 8 |
 | Todo 16 (29 twinless dex_pools → dex_pool_state), todo 17 (213 legacy glued object deletes), todo 10 (blank itype), 11, 12 (`retire_rate_indices_legacy_captured_rows_2026_08_12.py` already exists), 14, 15 | **Not done** — bounded, tooling mostly exists | nothing (serialize index writes) |
 | Todo 13 boundary disposition (HYPERLIQUID/ASTER/EXTENDED/LIGHTER + `*-FUTURES` carry-basis in DeFi distinct values) | **Operator-owned** | operator |
@@ -217,6 +226,33 @@ drain, then todo 9. Serialize EVERY index rewrite (CAS makes a race a wasted hou
 
 ## Progress Log
 
+- **2026-08-22 ~10:00 London (todo 6 DONE on VM; stale-EXIT_STATUS monitor trap; doc-push path)** — Purge VM
+  attempt 2 (with `VM_ASSET_GROUP=DEFI`) ran end-to-end in 13 min in-region: download + census 4 min, pass 2 7 min,
+  7.15 GB CAS upload 81 s → generation 1787388651853992 (vs ~1h+ per attempt over the laptop uplink yesterday —
+  the VM route is the only sane one for this index). LESSON: a relaunched VM with the SAME name inherits the previous
+  attempt's `vm-logs/<vm>/EXIT_STATUS` blob until the new boot overwrites it with `RUNNING` (~2 min after create) —
+  my monitor read the stale `78` and declared TERMINAL while attempt 2 was healthy; monitors must ignore an
+  EXIT_STATUS older than the launch, or the launcher should delete the previous run's blobs. Doc push: isolated mode
+  keeps abandoning ("plan changed on origin since last sync" — false alarm, only my own re-wrapped content) and the
+  shared-index fallback correctly REFUSES (exit 16) because the co-occupant's 2 local-only CODE commits sit ahead of
+  origin in this PM checkout — `SDP_ALLOW_UNRELATED_AHEAD=1` would ship their ungated code, so NOT used; pushing
+  docs from a temp worktree at `origin/live-defi-rollout` (hygiene sweep run there) instead. Next: verify the first
+  post-purge defi consolidator cycle (marker-strip self-heal = one full merge), todo 8 after the projection VM
+  finishes, todo 9 rollup.
+- **2026-08-22 ~09:40 London (todo 17 DONE; todo 6 VM apply attempt 1 rc=78 → relaunch; cefi finding)** — (1) Todo
+  17 applied: 293 legacy glued Solana objects deleted after per-object twin re-verify (size+crc32c) and a fresh
+  retention check (604800s) — see the todo's evidence line. (2) Todo 6 apply VM `mtds-defi-blanket-perp-stamp-purge`
+  (Pattern A launcher `launch-defi-blanket-perp-stamp-purge-vm.sh`, one-off rides the force-republished mtds tarball
+  @7facfa43 — verified by `tar -tzf`) died rc=78 BEFORE Python: `setup-data-pipeline-vm.sh` §5b OOM-preflight
+  defaulted the asset group to CEFI and found the **CEFI consolidated `_index` 133134s stale** (last_modified
+  2026-08-20T19:29Z, cron `…-cefi-cron` ENABLED, last attempt 08:00Z today) → exited 78. Fix: launcher now sets
+  `VM_ASSET_GROUP=DEFI` (defi index last_modified 2026-08-22T00:33Z = my rekey, fresh). Relaunched with the defi
+  consolidator cron re-verified PAUSED. The cefi staleness is a real, unrelated data-pipeline finding → issue doc
+  `/plans/active/issues/cefi_manifest_consolidated_index_stale_37h_2026_08_22.md` (outside this plan's scope;
+  operator notified in the session report). (3) Gotcha journaled: `create-code-tarballs.sh` upload step imports
+  deployment_service → needs `GCP_PROJECT_ID` in env or it tracebacks AFTER building the tarball (first publish
+  attempt lost 1 min that way); `.tmp/` IS tarball-excluded, and this session's 88 GB of local index copies under
+  MTDS `.tmp/` were unlinked.
 - **2026-08-22 ~09:10 London (todo 7 SECOND CORRECTION + relaunch #4; todo 6 dry-run measured)** — ⛔ VM
   `defi-manifest-projection-20260822-072651` died rc=2 in 10s on the OLD file-path command (`can't open
   …/workspace/mtds/scripts/rebuild_defi_manifest.py`). The launcher's module-style `BACKFILL_CMD` fix had NEVER
@@ -294,7 +330,7 @@ drain, then todo 9. Serialize EVERY index rewrite (CAS makes a race a wasted hou
   `copy_blob` snapshots (zero egress, generation-pinned); attempt 7 running with a pause→apply→resume consolidator
   bracket. MTDS ship (todos 1+2): size-gate fix applied (`scan_and_rebuild` 213L→~196L via `_log_retired_skip` +
   `_covered_key` extraction); quickmerge attempt 4 mid-re-gate (pytest ~80%).
-- **2026-08-21 ~15:15 London (todos 1+2 CODE-COMPLETE, ship pending)** — mtds@d188fb2e (LOCAL commit, 10 files
+- **2026-08-21 ~15:15 London (todos 1+2 CODE-COMPLETE, ship pending)** — a LOCAL market-tick-data-service commit (superseded on LDR by market-tick-data-service@36e4c830; 10 files
   +557/-29; NOT yet on LDR — quickmerge dirty-deps-blocked, see choke point below). Root causes: (1)
   `_lending_grain.py:141-145` `_PROTOCOL_TO_CANONICAL_VENUE` mapped kamino_lending/solend/marginfi to GLUED
   `X-SOLANA` venues — feeds risk_params/lending_indices handlers; `write_defi_rows`'s `build_canonical_instrument_id`
@@ -310,7 +346,7 @@ drain, then todo 9. Serialize EVERY index rewrite (CAS makes a race a wasted hou
   rows; consolidator cron PAUSED for the write, resume after terminal verdict). Todo 7 projection VM launch attempt 2
   ABORTED at the tarball-freshness gate (dirty UAC checkout). **Single choke point: co-occupant sessions' uncommitted
   WIP in slot-3 UAC (`venue_instrument_type_axis.py`, actively being QG'd by its owner) + UTL (`ledger/run_writer.py`)
-  blocks ALL of: MTDS ship (d188fb2e), IS seeder-fix ship, deployment-service launcher ship, and the VM tarball
+  blocks ALL of: MTDS ship (the local pre-36e4c830 commit), IS seeder-fix ship, deployment-service launcher ship, and the VM tarball
   publish.** Dep-clean watcher armed (60s poll, 45min cap) → on fire: relaunch VM + retry all three quickmerges.
   Purge agent also left `scripts/one_offs/rekey_solana_glued_venue_defi_rows_2026_08_21.py` (task-5 manifest re-key,
   untracked) — run after task-3 completes + copies verified.
