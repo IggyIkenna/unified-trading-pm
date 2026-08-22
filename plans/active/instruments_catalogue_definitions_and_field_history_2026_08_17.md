@@ -208,18 +208,19 @@ Both paths must return the same answer, and that equivalence is a test, not an a
       rolled-up `CATALOG_COLUMNS` this writer actually diffs does NOT carry tick_size/min_size/pool_fee_tier/
       rate_method_selector at all — only `contract_size` survives into the interim set. Flagging so UAC's
       declaration accounts for this gap rather than declaring fields the catalogue can't currently historise.
-- [ ] [BACKEND] P0. **Add the definitions to the rolled-up catalogue** at monthly grain, split by venue — the actual
+- [x] ✅ [BACKEND] P0. **Add the definitions to the rolled-up catalogue** at monthly grain, split by venue — the actual
       gap that currently forces day-by-day reads.
-      **2026-08-22 — CODE BUILT, not yet shipped.** `instruments_service/reference_data/catalogue_monthly_rollup.py`
-      (75 lines) + a partition-correctness/idempotency test, wired into `promote_catalogue()`. Queued behind the
-      host QG governor as of this note; evidence pending in the T2 tranche plan once landed.
-- [ ] [BACKEND] P0. **Implement the field-change log** with the schema above, written by the same writer that updates
+      **2026-08-22 — SHIPPED.** `instruments_service/reference_data/catalogue_monthly_rollup.py` (75 lines) +
+      partition-correctness/idempotency test, wired into `promote_catalogue()`. Evidence:
+      `instruments-service@a1fa51a0b9`, ancestor+content-verified on `origin/live-defi-rollout`.
+- [x] ✅ [BACKEND] P0. **Implement the field-change log** with the schema above, written by the same writer that updates
       current state, in the same transaction/step — never a later reconciliation pass, or the two drift.
-      **2026-08-22 — CODE BUILT, not yet shipped.** `instruments_service/reference_data/catalogue_field_history.py`
-      (202 lines), written BEFORE `promote_catalogue()`'s final `copy_blob`/`delete_blob` finalize (a retry after a
-      write failure re-diffs against the still-old `previous` state — safe/idempotent, never drifts from current-
-      state). 4-part negative-control test suite written (genuine change → 1 row; undeclared/immutable field change
-      → 0 rows; no change → 0 rows; two consecutive changes → 2 distinct rows). Queued behind QG; evidence pending.
+      **2026-08-22 — SHIPPED.** `instruments_service/reference_data/catalogue_field_history.py` (202 lines), written
+      BEFORE `promote_catalogue()`'s final `copy_blob`/`delete_blob` finalize (a retry after a write failure
+      re-diffs against the still-old `previous` state — safe/idempotent, never drifts from current-state). 4-part
+      negative-control test suite (genuine change → 1 row; undeclared/immutable field change → 0 rows; no change →
+      0 rows; two consecutive changes → 2 distinct rows). Evidence: `instruments-service@a1fa51a0b9`, same commit,
+      ancestor+content-verified.
 - [ ] [BACKEND] P1. **Prove point-in-time equivalence**: for a sampled set of instruments and dates, the change-log
       replay and the monthly catalogue agree. Include a negative control — a known tick-size change must make a naive
       latest-state read visibly wrong.
