@@ -112,10 +112,34 @@ designed to watch git/GitHub state.
       review-branch PRs (plan_reconciler graduated off that pattern 2026-08-16, nothing else ever used it) — this is
       a preventive gap-closer for if the pattern is reintroduced, not an active incident. Repo: agent-orchestrator.
 
+## Finding 3 — `check-scheduled-job-health.sh` is hardcoded to SSM, fails outright when run ON the orchestrator VM
+
+Found live 2026-08-22 by an `/ao-watchdog` scheduled run dispatched directly on the orchestrator VM (a
+`plan_health`-family worker, not an interactive laptop session). The script always dispatches its check via `aws
+ssm send-command` against the orchestrator instance, with no branch for "I'm already running on that host, just
+curl localhost directly." A `plan_health`-dispatched worker's IAM identity does not necessarily carry
+`ssm:SendCommand` on the instance (this run hit `AccessDeniedException: User:
+arn:aws:iam::427895769566:user/ikenna-worker is not authorized to perform: ssm:SendCommand`), so the script fails
+with zero data instead of degrading to a local call — even though the script's own SSM payload is nothing more
+than a curl against `http://localhost:8765`, the exact host the failing caller was already on.
+
+- [ ] [INFRA] P3. Add a local-execution branch to `check-scheduled-job-health.sh`: detect `curl -s -m 5
+      localhost:8765/api/mode` succeeding (same detection this skill's own Step 1 already uses) and, if so, call
+      `http://localhost:8765` directly instead of wrapping every request in an SSM `send-command`/
+      `get-command-invocation` round trip. Cheap workaround documented in `/ao-watchdog`'s own SKILL.md Step 5 in
+      the meantime (call `/api/scheduled-jobs/recent?within_hours=N` and `/api/agents?include_finished=true`
+      directly), but the script itself should not require a manual workaround for its own most-privileged caller.
+      Repo: agent-orchestrator.
+
 ## Progress Log
 
 - **2026-08-20**: doc authored, completing the Track B synthesis todo in
   `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md`.
+- **`/ao-watchdog` 2026-08-22 (slot 29, scheduled run)**: added Finding 3 — `check-scheduled-job-health.sh`'s
+  SSM-only dispatch fails when the caller is already on the orchestrator VM and lacks `ssm:SendCommand`. Worked
+  around live by calling the same two `localhost:8765` endpoints the script's own SSM payload hits, and documented
+  that workaround in the skill file itself (per its "folding findings back in" standing instruction) so the next
+  run doesn't rediscover it from scratch.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
 - **na-eligibility-audit 2026-08-21 (ao tranche)**: KEEP-NA, stale items — closed the DOC retag item above with hard
   evidence (target doc already archived, meaning the stale tag it tracked was already resolved through normal
