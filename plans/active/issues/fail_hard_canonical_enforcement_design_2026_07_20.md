@@ -78,7 +78,7 @@ Evidence, strongest first:
 | **0 — OBSERVE**           | Classify at every write/manifest/read site. Count + log only, **zero behaviour change**.                          | NOW                  | nothing                                                                             |
 | **P — PREREQUISITES**     | A-iso (per-shard isolation, §4); explicit `violation_classes` at the 3 oracle callsites; the `None`-map latch fix | NOW, parallel with 0 | nothing                                                                             |
 | **1 — WRITE ENFORCE**     | Lanes raise; registry-gated quarantine; `record_failed(NON_CANONICAL_INSTRUMENT_ID)`                              | after 0 + P          | Stage 0 clean + P complete. **NOT the catalogue gap.**                              |
-| **2 — MANIFEST CLASSIFY** | Schema v10 `instrument_id_form` on new writes; backfill classifies existing rows                                  | after 1              | Stage 1 + the v2 dedup `--apply` (else it rejects rows the cleanup is about to fix) |
+| **2 — MANIFEST CLASSIFY** | Schema v11 `instrument_id_form` on new writes; backfill classifies existing rows                                  | after 1              | Stage 1 + the v2 dedup `--apply` (else it rejects rows the cleanup is about to fix) |
 | **3 — READ ENFORCE**      | Read gate raises on non-canonical / unregistered-quarantine                                                       | after 2              | **Stage 2 populated — NOT the catalogue**                                           |
 
 ## 3. The quarantine model (for genuinely-unresolvable instruments)
@@ -239,9 +239,25 @@ implementation todos on that check, since they're each independently reviewable 
       — **SHIPPED `unified-api-contracts@989e9d16`** (quarantine model + `classify_id_form()`) — standalone module, not
       yet wired into any write/read guard (that's Stage 3, still future work per the `[DESIGN] P1` todo above). Stale
       checkbox flip per the same Deferred-item re-check — commit verified to exist.
-- [ ] [DATA] P3. Schema v10 `instrument_id_form` + backfill classification (Stage 2), after the v2 dedup `--apply`.
+- [ ] [DATA] P3. Schema v11 `instrument_id_form` + backfill classification (Stage 2), after the v2 dedup `--apply`.
 
 ## Progress Log
+
+- **2026-08-22 (D19 manifest-consolidation session)**: corrected this doc's own stale "v10" claim — a version-number
+  collision found while landing an unrelated schema bump. `MANIFEST_SCHEMA_VERSION` (`_schema.py`) was still the live
+  `9`; this doc's Stage 2 todo names "v10" but is DEPENDENCY_BLOCKED (reaffirmed across 5+ na-eligibility-audit passes,
+  most recently 2026-08-21) on Stage 1 write-enforce + the v2 dedup `--apply`, neither imminent. Meanwhile
+  `event_driven_manifest_consolidation_2026_08_22.md`'s manifest-v10 proposal (config_shard_id/config_version/
+  code_semver/run_attempt/latency_profile_hash/upstream_gap_class+days+ratio) is ready to ship now and legitimately
+  claims the actual next version number in the live constant. Since only one batch can be "v10" in the constant and
+  this doc's own Stage 2 has no near-term unblock, retitled this doc's still-open todo (+ the staged-rollout table
+  above) to v11 so it doesn't collide when it eventually ships. `quarantined_legs` (`_rows.py`, shipped 2026-08-15,
+  self-labeled "v10" in its own comment but never actually bumped the constant) is retroactively folded into the real
+  v10 bump alongside the D19 columns — see `unified-trading-library/unified_trading_library/manifest_writer/_schema.py`
+  for the authoritative v10 payload. No code changes in this repo from this correction — doc-only, via
+  `safe-doc-push.sh`.
+
+
 
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 2, operator ruling)**: the Gap 1-3 implementation question —
   **run the §5b sanity check first, then proceed** — extracted to
