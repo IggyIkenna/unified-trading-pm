@@ -1693,11 +1693,7 @@
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>instruments-service/instruments_service/api/routers/external.py</code>,
-        <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>,
-        <code>execution-service/execution_service/api/external_instruction_api.py</code>,
-        <code>execution-service/execution_service/api/external_instruction_defi.py</code> and
-        <code>execution-service/execution_service/engine/quote_maintenance.py</code>. Full parameters, request and
+        Full parameters, request and
         response schemas, worked examples, the auth model and every error code are documented endpoint by endpoint in
         <a href="#s26">§26</a>. Rate limiting (instruments-service, market-tick-data-service) and
         market-tick-data-service's <code>delivery/batch</code> continuation cursor are both built, see §26 and the
@@ -2037,8 +2033,7 @@
           DeFi venues</b> shown above, it is a deliberately-curated wallet-grouping subset for shared-wallet routing,          not a chain-coverage inventory, and its docstring says so explicitly. Neither
           <code>measure_honest_coverage.py</code> nor its expected-universe builder imports it (zero references in
           either), so the coverage percentages in <a href="#s5">§05</a> derive from <code>ALL_DEFI_VENUES</code>/
-          <code>ChainKind</code>, not from this map. <b>Source:</b>
-          <code>unified_api_contracts/registry/venue_constants.py::VENUE_CHAIN_MAP</code>.
+          <code>ChainKind</code>, not from this map.
         </p>
       </div>
       <h3>Canonical instrument IDs, one builder, five asset groups</h3>
@@ -2101,11 +2096,6 @@
       <p>
         Delivery: query for a single instrument, or take the whole universe as a parquet dump and join it locally, live
         today as <code>GET /v1/instruments</code> and <code>GET /v1/instruments/bulk</code> on instruments-service.
-      </p>
-      <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>unified_api_contracts/canonical/instrument_key.py</code>,
-        <code>unified_api_contracts/_instrument_enums.py</code> and
-        <code>instruments-service/instruments_service/api/routers/external.py</code>.
       </p>
     </details>
   </section>
@@ -2205,7 +2195,7 @@
           asset group reads 72.62%. The ~26-point spread is method, not data, which is why the basis is stated rather
           than the number quoted alone. Denominator is captured + attempted-failed + expected-unattempted; the
           not-expected class is excluded, since counting a venue's pre-existence as a gap makes a complete dataset look
-          broken. Source: instruments-service <code>measure_honest_coverage.py</code>, re-run 2026-08-22.
+          broken. Measured by instruments-service's <code>measure_honest_coverage.py</code>, re-run 2026-08-22.
         </p>
       </div>
     </details>
@@ -15393,7 +15383,7 @@
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>'s
+        <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>'s
         <code>/delivery/stream</code> route is backed by the UTL
         <code>unified_trading_library.streaming.event_facade</code>
         (<code>get_transport</code>), the same facade the internal live-tick sink publishes through. Full parameter
@@ -15410,9 +15400,9 @@
         than a day behind live.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: manifest schema v9's <code>cadence</code> column
-        (<code>"one_off_backfill" | "t1_daily" | "scheduled_recurring" | "continuous_live" | "recovery_replay"</code>),
-        an axis orthogonal to <code>pipeline_mode</code>, one endpoint can serve both a nightly T+1 run and a
+        Manifest schema v9's <code>cadence</code> column
+        (<code>"one_off_backfill" | "t1_daily" | "scheduled_recurring" | "continuous_live" | "recovery_replay"</code>)
+        is an axis orthogonal to <code>pipeline_mode</code>: one endpoint can serve both a nightly T+1 run and a
         long-term backfill under the same mode.
       </p>
       <h3>WebSocket reconnection, a stale window is flagged, never silently treated as fresh</h3>
@@ -15429,10 +15419,10 @@
         non-limited key rather than stalling the whole feed on one exhausted credential.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>market-tick-data-service/market_tick_data_service/live/_ws_window_helpers.py</code>'s
-        <code>WSFeedConnector.pop_reconnect_flag()</code>;
-        <code>market_tick_data_service/live/websocket_runner.py</code>'s 60-second
-        <code>PipelineHeartbeatTimer</code> stall watchdog; key-pool rotation in
+        Reconnect detection is <code>WSFeedConnector.pop_reconnect_flag()</code> in
+        <code>market-tick-data-service/market_tick_data_service/live/_ws_window_helpers.py</code>; the stall
+        watchdog is the 60-second <code>PipelineHeartbeatTimer</code> in
+        <code>market_tick_data_service/live/websocket_runner.py</code>; key-pool rotation lives in
         <code>market_tick_data_service/market_interface/clients/thegraph_base_client.py</code> and
         <code>databento_base_client.py</code>.
       </p>
@@ -15998,8 +15988,8 @@ Content-Type: application/json
         required param with no default): loud-fail on load, by design, not a bug in this endpoint. This validation
         checks archetype membership and JSON well-formedness only; it deliberately does not import
         strategy-service's own <code>PARAM_SCHEMA_REGISTRY</code> (no service→service dependency), deep per-param
-        schema checking is strategy-service-side. <b>Source:</b>
-        <code>deployment-api/deployment_api/routes/strategy_wizard.py</code>.      </p>
+        schema checking is strategy-service-side.
+      </p>
     </details>
   </section>
 
@@ -16096,7 +16086,7 @@ Content-Type: application/json
         versioned, any fill can be traced to the exact policy that governed it.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>execution-service/execution_service/algorithms/registry.py</code> maps algorithm IDs
+        <code>execution-service/execution_service/algorithms/registry.py</code> maps algorithm IDs
         (<code>TWAP</code>, <code>VWAP</code>, <code>ICEBERG</code>) to their execution and config classes; a straight
         market order is the default when no policy names an algo.
       </p>
@@ -16245,9 +16235,9 @@ Content-Type: application/json
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>execution-service/execution_service/isolation_policy.py</code>'s
-        <code>assert_client_allowed()</code>, called from the live path in
-        <code>execution-service/execution_service/engine/modes/live/trigger.py</code>, a cross-client event is logged
+        <code>execution-service/execution_service/isolation_policy.py</code>'s
+        <code>assert_client_allowed()</code> is called from the live path in
+        <code>execution-service/execution_service/engine/modes/live/trigger.py</code>: a cross-client event is logged
         and dropped, not executed.
       </p>
       <h3>Signing surfaces</h3>
@@ -16293,10 +16283,6 @@ Content-Type: application/json
           </table>
         </div>
       </div>
-      <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>
-        and <code>execution-service/execution_service/engine/handlers/transfer_handler.py::TransferHandler</code>.
-      </p>
       <div class="callout">
         <span class="tag">What's genuinely absent, custody and transfer eligibility, per venue</span>
         <p>No field, in any registry, declares which venues are Copper-eligible,
@@ -16380,7 +16366,7 @@ Content-Type: application/json
         it is used and avoiding cross-region egress cost.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>unified_trading_library/cloud_interface/bucket_naming.py</code>'s
+        Every bucket name resolves through <code>unified_trading_library/cloud_interface/bucket_naming.py</code>'s
         <code>resolve_bucket_name()</code>. Provider duality follows the platform's bucket-isolation and
         cloud-agnostic script patterns; the IONOS build is underway. Detail on either is available on request.
       </p>
@@ -16412,8 +16398,8 @@ Content-Type: application/json
         multi-person sign-off enforced in the code path, not left to operational policy.
       </p>
       <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Source: <code>deployment-api/deployment_api/routes/client_treasury.py::approve_withdrawal</code>
-        (<code>get_required_approvers()</code>), signature verified via
+        Approver counts come from <code>deployment-api/deployment_api/routes/client_treasury.py::approve_withdrawal</code>
+        (<code>get_required_approvers()</code>), and each signature is verified via
         <code>execution_service.custody.withdrawal_signing.sign_withdrawal_approval()</code>.
       </p>
       <h3>Custody adapts to the client, not the reverse</h3>
@@ -16428,9 +16414,7 @@ Content-Type: application/json
         integrate with what the client already uses, rather than requiring them to move onto ours.
       </p>
       <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>,
-        <code>execution-service/execution_service/engine/handlers/transfer_handler.py::TransferHandler</code>. Full
-        provider-by-provider state: <a href="#s13">§13</a>.
+        Full provider-by-provider state: <a href="#s13">§13</a>.
       </p>
     </details>
   </section>
@@ -16514,8 +16498,8 @@ Content-Type: application/json
         what makes <code>paper(W) == batch-rerun(W)</code> an enforceable property rather than a hoped-for one.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>unified_trading_library/streaming/event_facade.py</code>'s
-        <code>get_transport()</code> dispatch.
+        The dispatch point is <code>get_transport()</code> in
+        <code>unified_trading_library/streaming/event_facade.py</code>.
       </p>
     </details>
   </section>
@@ -16793,9 +16777,9 @@ Content-Type: application/json
       <p style="font-size: 0.9rem; color: var(--ink-3)">
         The flag is orthogonal to <code>ManualExecutionMode</code> (<code>EXECUTE</code> routes to the venue via the
         orchestrator; <code>RECORD_ONLY</code> skips venue execution and records a fill directly, for OTC or a
-        missed trade). Either mode can be booked standard or recon-excluded. <b>Source:</b>
-        <code>unified_api_contracts/internal/execution.py::ManualExecutionMode</code>,
-        <code>execution_service/api/manual_instruction_ledger.py</code>. Both are shipped and reachable in
+        missed trade). Either mode can be booked standard or recon-excluded. Both the mode enum
+        (<code>unified_api_contracts/internal/execution.py::ManualExecutionMode</code>) and the ledger
+        (<code>execution_service/api/manual_instruction_ledger.py</code>) are shipped and reachable in
         production.
       </p>
       <div class="callout">
@@ -16886,9 +16870,9 @@ Content-Type: application/json
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source:
+        The exclusion is applied by <code>_exclude_recon_excluded</code> in
         <code>batch-live-reconciliation-service/batch_live_reconciliation_service/engine/daily_determinism_stage.py</code>
-        (<code>_exclude_recon_excluded</code>) and <code>models/recon_report.py</code>. Stage-by-stage detail is
+        and reported through <code>models/recon_report.py</code>. Stage-by-stage detail is
         available on request.
       </p>
     </details>
@@ -16957,9 +16941,7 @@ Content-Type: application/json
           <code>strategy-service</code>'s <code>PnLAttributionAggregator.aggregate()</code> is real and complete, it
           sums per-position attribution dicts into a <code>PortfolioPnLAttribution</code> across all 12 dimensions
           above, plus the asset-group/strategy groupings. What is not yet built: no endpoint, periodic job, or event
-          consumer constructs one in production today (zero non-test call sites). <b>Source:</b>
-          <code>strategy_service/position/core/pnl_attribution_aggregator.py</code>,
-          <code>unified_api_contracts/canonical/domain/position/__init__.py::PortfolioPnLAttribution</code>.
+          consumer constructs one in production today (zero non-test call sites).
         </p>
       </div>
     </details>
@@ -17423,8 +17405,6 @@ Content-Type: application/json
             Supplying <code>data_type</code> without <code>venue</code> returns every venue's entry for that
             data_type (<code>data_type_summary_by_venue</code>, from the same rollup the <code>venue</code>+
             <code>data_type</code> path uses) rather than the unfiltered <code>asset_group</code> summary.
-            <b>Source:</b>
-            <code>market-tick-data-service/market_tick_data_service/api/routers/external.py::get_availability</code>.
           </p>
         </div>
         <div class="plate">
@@ -17865,7 +17845,7 @@ Content-Type: application/json
             not a Pub/Sub mirror of every action type on this endpoint, only the multi-leg atomic path, for a
             strategy publishing directly onto the event log rather than calling this REST endpoint. Each consumed
             leg converts through the same instruction-conversion code the manual-trade path uses, then executes via
-            the same orchestrator. Source:
+            the same orchestrator. The consumer is
             <code>execution_service/engine/strategy_instruction_subscriber.py</code>, wired at startup in
             <code>api/main.py::_run_strategy_instruction_subscriber</code>.
           </p>
@@ -18278,26 +18258,23 @@ Content-Type: application/json
           callers and any org whose <code>subscription_tier</code> isn't explicitly tightened receive the complete
           catalogue (default-full, reference data is the product's front door; tightening a specific tier's scope
           is a config edit, not a route-logic one). A request for an out-of-scope <code>asset_group</code> 403s.
-          <b>Source:</b> <code>instruments-service/instruments_service/api/entitlement.py</code>,
-          <code>instruments-service/instruments_service/api/routers/external.py</code> (catalogue query and bulk
-          parquet dump).
         </p>
         <p>
           On execution-service, <code>POST /external/instructions</code> binds the caller's org to the
           instruction's own <code>identity.client_id</code>: an external caller can only submit, cancel, or
           transfer for the one client_id its own org owns, rejected with <code>403</code> the moment
           <code>auth.org_id != identity.client_id</code>. Internal/S2S callers bypass the check. One seam covers
-          all 16 <code>StrategyInstructionV2</code> action types, not a per-route copy. <b>Source:</b>
-          <code>execution_service/api/external_instruction_api.py::_enforce_client_org_binding</code>, called once
-          at the top of <code>submit_external_instruction</code> before any action-type branching.
+          all 16 <code>StrategyInstructionV2</code> action types, not a per-route copy:
+          <code>execution_service/api/external_instruction_api.py</code>'s
+          <code>_enforce_client_org_binding</code> is called once
+          at the top of <code>submit_external_instruction</code>, before any action-type branching.
         </p>
         <p>
           On market-tick-data-service, the auth dependency is mounted at the router level
           (<code>dependencies=[Depends(_api_auth)]</code>,
           <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>), every
           request needs a valid token before any handler runs, the same shared dependency the other two services
-          use. <b>Source:</b>
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>.
+          use.
         </p>
       </div>
 
@@ -18348,9 +18325,10 @@ Content-Type: application/json
           </table>
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          Identical defaults on both services today, a single config table per service, editable independently.
-          <b>Source:</b> <code>instruments-service/instruments_service/api/rate_limit.py</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/rate_limit.py</code>.
+          Identical defaults on both services today, a single config table per service
+          (<code>instruments-service/instruments_service/api/rate_limit.py</code>,
+          <code>market-tick-data-service/market_tick_data_service/api/rate_limit.py</code>), editable
+          independently.
         </p>
         <p> <b>Pagination.</b> <code>GET /v1/instruments</code>'s
           <code>limit</code> semantics are unchanged (row cap per page, default 2000, max 20000, <code>/bulk</code>
@@ -18369,11 +18347,6 @@ Content-Type: application/json
           <code>truncated: true</code>. <code>delivery/stream</code> is unchanged, its
           <code>after</code>/<code>limit</code> watermark pairing was already a real continuation mechanism, being a
           stream rather than a list.
-        </p>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b>Source:</b> <code>instruments-service/instruments_service/api/routers/external.py</code>,
-          <code>instruments-service/instruments_service/engine/orchestrator/catalogue_query.py</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>.
         </p>
       </div>
 
@@ -18410,8 +18383,7 @@ Content-Type: application/json
           exports (production candidates) read real backing stores.
         </p>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
-          Full 102-route index, grouped by module, with reachability per route:
-          <code>codex/14-customer-journeys/commercial-model/platform-api-reference.html</code> §05.
+          Full 102-route index, grouped by module, with reachability per route: the API reference, §05.
         </p>
       </div>
       <div class="callout">
@@ -18432,8 +18404,7 @@ Content-Type: application/json
           per-counterparty entitlements, not per-request choices.
         </p>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
-          Full endpoint depth (parameters, example bodies, error tables):
-          <code>codex/14-customer-journeys/commercial-model/platform-api-reference.html</code> §06.
+          Full endpoint depth (parameters, example bodies, error tables): the API reference, §06.
         </p>
       </div>
       <div class="callout">
@@ -18448,20 +18419,13 @@ Content-Type: application/json
           whose value actually changed, so a consumer re-wires its connection pool only on real rotation, never on
           every poll tick. In production use today in execution-service, instruments-service,
           market-tick-data-service (per-venue API keys) and strategy-service (per-counterparty HMAC secrets, the
-          block above). <b>Source:</b> <code>unified_trading_library/api_key_reloader.py</code>.
+          block above). The implementation is <code>unified_trading_library/api_key_reloader.py</code>.
         </p>
       </div>
 
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>instruments-service/instruments_service/api/routers/external.py</code>,
-        <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>,
-        <code>execution-service/execution_service/api/external_instruction_api.py</code>,
-        <code>unified_trading_library/cloud_interface/api_auth.py</code>,
-        <code>client-reporting-api/client_reporting_api/api/main.py</code> +
-        <code>api/routes/**/*.py</code>, and <code>strategy-service/strategy_service/signal_broadcast/</code>. The
-        full OpenAPI-shaped companion, with every endpoint on this page (and the two above) at full per-route
-        depth, is
-        <code>codex/14-customer-journeys/commercial-model/platform-api-reference.html</code>.
+        The full OpenAPI-shaped companion, with every endpoint on this page (and the two above) at full per-route
+        depth, is the separate API reference linked from the masthead.
       </p>
     </details>
   </section>
@@ -22429,8 +22393,8 @@ Content-Type: application/json
         family is a trading decision, not a different integration.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>'s
-        <code>StrategyFamily</code>, <code>StrategyArchetype</code> and <code>ARCHETYPE_TO_FAMILY</code>.
+        <code>StrategyFamily</code>, <code>StrategyArchetype</code> and <code>ARCHETYPE_TO_FAMILY</code> all live in
+        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>.
       </p>
     </details>
   </section>
@@ -22554,8 +22518,8 @@ Content-Type: application/json
         DeFi-native shapes, not spot/perp/future/option/swap/ETF ones.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>unified_api_contracts/_instrument_enums.py</code>,
-        <code>unified_api_contracts/canonical/instrument_key.py</code> and
+        The instrument-type vocabulary is <code>unified_api_contracts/_instrument_enums.py</code> and
+        <code>unified_api_contracts/canonical/instrument_key.py</code>, with per-venue membership in
         <code>unified_api_contracts/registry/venue_constants.py</code>'s <code>INSTRUMENT_TYPES_BY_VENUE</code>.
       </p>
     </details>
@@ -22741,7 +22705,7 @@ Content-Type: application/json
         extension point, not a promise about turnaround time.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Source: <code>execution-service/execution_service/algo_library/base_algorithm.py</code>,
+        The algorithm library is <code>execution-service/execution_service/algo_library/base_algorithm.py</code>,
         <code>adaptive_twap.py</code>, <code>almgren_chriss.py</code>, <code>passive_aggressive.py</code>,
         <code>pov_dynamic_calculator.py</code>, <code>twap_calculator.py</code>, <code>sor_dex.py</code>,
         <code>sor_cross_chain.py</code>, <code>solver_auction.py</code>, <code>multicall_batcher.py</code> and

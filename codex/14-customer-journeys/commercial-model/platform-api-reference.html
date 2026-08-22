@@ -1202,9 +1202,6 @@
           complete universe (default-full, reference data is the product's front door; the filter seam is real
           and tested today, tightening a specific tier's scope is a config edit, not a route-logic one). A request
           for an <code>asset_group</code> outside a tightened tier's scope 403s. 401 behavior is unchanged.
-          <b>Source:</b> <code>instruments-service/instruments_service/api/entitlement.py</code>,
-          <code>instruments-service/instruments_service/api/routers/external.py</code> (catalogue query and bulk
-          parquet dump).
         </p>
         <p>
           On market-tick-data-service the auth dependency is still mounted at
@@ -1222,10 +1219,7 @@
           single venue was explicitly named. Internal/S2S callers and any org with no registered entitlement record are
           unrestricted (default-full, reference/market data is the front door; the seam is real and tested today,
           tightening a specific org's scope is a data change via <code>register_org_entitlement</code>, not a route-logic
-          one). 401 behavior is unchanged. <b>Source:</b>
-          <code>market-tick-data-service/market_tick_data_service/api/entitlement.py</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code> (availability,
-          batch delivery and stream delivery).
+          one). 401 behavior is unchanged.
         </p>
       </div>
       <div class="callout">
@@ -1276,9 +1270,10 @@
           </table>
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          Identical defaults on both services today: a single config table, editable independently per service.
-          <b>Source:</b> <code>instruments-service/instruments_service/api/rate_limit.py</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/rate_limit.py</code>.
+          Identical defaults on both services today: a single config table
+          (<code>instruments-service/instruments_service/api/rate_limit.py</code>,
+          <code>market-tick-data-service/market_tick_data_service/api/rate_limit.py</code>), editable
+          independently per service.
         </p>
       </div>
       <div class="callout">
@@ -1289,10 +1284,10 @@
           <code>client_id</code> outside the authenticated caller's own <code>auth.org_id</code>: an external caller
           can only submit, cancel, or transfer for the one client_id its own org owns. Internal/S2S callers
           (<code>auth.is_internal</code>) bypass the check, the same precedent client-reporting-api's
-          <code>enforce_entitlement</code> (see <a href="#s5">§05</a>) already established. <b>Source:</b>
-          <code>execution_service/api/external_instruction_api.py</code>,
-          <code>_enforce_client_org_binding()</code>, called once at the top of
-          <code>submit_external_instruction</code> before any action-type branching: one seam covers all 16
+          <code>enforce_entitlement</code> (see <a href="#s5">§05</a>) already established.
+          <code>execution_service/api/external_instruction_api.py</code>'s
+          <code>_enforce_client_org_binding()</code> is called once at the top of
+          <code>submit_external_instruction</code>, before any action-type branching: one seam covers all 16
           <code>StrategyInstructionV2</code> action types, not a per-route copy.
         </p>
       </div>
@@ -1416,10 +1411,10 @@
           so a given-day walk never skips or duplicates a row across pages. A <code>cursor</code> minted for different
           query params, or paired with an explicit <code>day</code> that conflicts with the cursor's pinned day, 400s
           rather than silently resolving the wrong page.
-          <b>Source:</b>
-          <code>instruments-service/instruments_service/api/routers/external.py</code> (<code>_encode_cursor</code> /
-          <code>_decode_cursor</code>), <code>instruments-service/instruments_service/engine/orchestrator/catalogue_query.py</code>
-          (offset walk, <code>limit + 1</code> peek for an honest <code>truncated</code>).
+          Cursor encoding and decoding are <code>_encode_cursor</code> / <code>_decode_cursor</code> in
+          <code>instruments-service/instruments_service/api/routers/external.py</code>; the offset walk, with a
+          <code>limit + 1</code> peek for an honest <code>truncated</code>, is in
+          <code>instruments-service/instruments_service/engine/orchestrator/catalogue_query.py</code>.
         </p>
         <p>
           The <code>instruments</code> row shape is whatever columns the underlying
@@ -1688,7 +1683,7 @@
             <code>venue</code> returns that data_type's entry for every venue that has it, keyed
             <code>data_type_summary_by_venue</code> (built from the same <code>by_venue_data_type</code> rollup used
             when <code>venue</code> is also supplied). Passing both narrows to that one venue's entry, unchanged.
-            <b>Source:</b> <code>market_tick_data_service/api/routers/external.py</code>, the
+            In <code>market_tick_data_service/api/routers/external.py</code> this is the
             <code>elif data_type is not None:</code> branch immediately below the <code>venue is not None</code>
             branch.
           </p>
@@ -1861,8 +1856,9 @@
           4,000 non-matching objects without reaching 200 matches reports
           <code>truncated: true</code>. A <code>cursor</code> that fails to decode, or does not itself look
           like an object name for the requested asset_group/venue/data_type/date shard, 400s.
-          <b>Source:</b> <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>
-          (<code>_encode_cursor</code> / <code>_decode_cursor</code> / <code>_list_matching_objects</code>).
+          The listing and cursor logic is <code>_encode_cursor</code> / <code>_decode_cursor</code> /
+          <code>_list_matching_objects</code> in
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>.
         </p>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           <code>file</code> is an internal object path and not part of the documented contract; its structure may
@@ -2009,7 +2005,7 @@
           <code>period_end</code>, <code>source</code>, <code>available_at</code>, <code>retention_class</code>, exactly
           one of <code>payload_inline</code> / <code>payload_pointer</code>, <code>venue</code>, <code>chain</code>,
           <code>instrument_id</code>, <code>instrument_type</code>, <code>correlation_id</code>, <code>vm_name</code>.
-          <b>Source:</b> <code>unified-api-contracts/unified_api_contracts/events/persist.py</code>.
+          The envelope is defined in <code>unified-api-contracts/unified_api_contracts/events/persist.py</code>.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -2345,10 +2341,6 @@
         cloud-KMS envelope encryption is shipped, and Copper MPC custody is the production provider for every DeFi
         chain and non-Binance CeFi venue, so integrating a client's own custodian or wallet arrangement is a
         deployment-time configuration choice within an existing extension point, not a platform rebuild.
-      </p>
-      <p style="font-size: 0.9rem; color: var(--ink-3)">
-        Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>,
-        <code>execution-service/execution_service/engine/handlers/transfer_handler.py::TransferHandler</code>.
       </p>
     </div>
 
@@ -2739,8 +2731,7 @@
           Rounding is 6dp for a BTC-denominated account and 2dp otherwise
           (<code>rnd = 6 if is_btc else 2</code>, <code>_is_btc_account(curve)</code>); if the client has no equity
           history at all, the response is still <code>200</code> with a body of <code>"No data\n"</code> rather than a
-          <code>404</code>, worth handling explicitly rather than assuming an error status. <b>Source:</b>
-          <code>client-reporting-api/client_reporting_api/api/routes/exports.py</code>.
+          <code>404</code>, worth handling explicitly rather than assuming an error status.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
