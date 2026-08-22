@@ -98,6 +98,27 @@ context_scope:
 - [ ] [INFRA] P2. **Test-bucket runs reuse the dispatcher** — the matrix controller's post-run `-test-` consolidation
       (D16) fires through the same dispatcher (manual trigger), keeping one code path and zero drift. Done-when: one
       matrix run consolidates its test buckets via the dispatcher.
+- [ ] [BACKEND] P0. **Sequencing gate — freshness consumers go trigger-aware BEFORE any cron slows.** Inventory every
+      consumer of wall-clock index freshness (backfill-VM launcher stale-index loud-fails, `ManifestReader`'s 7200 s
+      consolidated-blob fallback, `_staleness_budget` readers, the DP monitors/alerts keyed on blob age) and flip each
+      to the trigger-aware definition (or a raised interim budget) FIRST — otherwise Phase 1's `*/15` cron immediately
+      false-trips the 120 s-class checks and can block or kill RUNNING backfill VMs that gate on index freshness.
+      Done-when: the inventory table is in this plan and every consumer is trigger-aware before the Phase-1 terraform
+      applies; a running backfill VM survives a full 15-min quiet window without a monitor kill.
+- [ ] [BACKEND] P0. **Root-cause gate — the open DEFI stale-consolidated issue first** — `plans/active/issues/`
+      `mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md` shows the
+      consolidated blob hours stale while minutely runs report success: evidence the incremental content-write-marker
+      cutoff can skip real merges. D19 leans harder on that exact logic, so the issue is a dependency, not a neighbour.
+      Done-when: that issue's root cause is fixed or explicitly shown orthogonal, cited here, before Phase 2 ships.
+- [ ] [BACKEND] P1. **Dual-shape transition for per-VM shards** — while old-code VMs still write single-file
+      `per_vm/{instance}.parquet` and new code writes append-only parts (parent T3), the consolidator and the
+      self-shard read merge BOTH shapes; no flag-day. Done-when: a mixed-shape bucket consolidates correctly in a test.
+- [ ] [INFRA] P1. **Retire the old cadence when done** — once Phase 2/3 is proven: delete the `*/15` primary crons
+      (keep ONE slow fallback trigger, e.g. hourly, as the missed-notification safety net the deadman watches), remove
+      the retired wall-clock budgets and their config, and mark the superseded sections of
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` — never leave the scheduled and event-driven paths both
+      primary. Done-when: scheduler list shows only the fallback; a killed notification path is caught by deadman +
+      fallback within one hour in a test.
 - [ ] [DOC] P1. **Codex** — rewrite `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s cadence + runtime
       sections for D19 (trigger rule, floor, trigger-aware staleness, benchmark-ruled home; SUPERSEDED banners on the
       minutely/always-job framing). Done-when: doc merged, `check_codex_refs.sh` clean.
@@ -122,3 +143,4 @@ context_scope:
   merges were near-continuous, which D19 prevents). Autoscaling: per-bucket Pub/Sub push with concurrency=1 gives one
   instance per in-flight bucket merge, `max-instances` capped; in-region GCS↔Cloud Run egress is free, only op counts
   bill.
+- **2026-08-22 (operator follow-up)**: retirement + sequencing-gate + dual-shape + DEFI-issue-gate todos added after the backfill-gating question.
