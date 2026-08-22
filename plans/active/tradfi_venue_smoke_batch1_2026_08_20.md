@@ -41,7 +41,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 - [x] ✅ [BACKEND] P0. Execute the canonical batch smoke contract for every current non-Databento TradFi row; Gate: each row proves capture, canonical path, manifest atom, and genuine capture status. Runtime evidence: market-tick-data-service@b89f288c06; six rows produced canonical objects, with FRED/FX/ICE manifest atoms `capture_status=captured`; KRX/NASDAQ/NYSE are genuine `empty_confirmed` zero-row exceptions tracked in the progress log.
 - [x] ✅ [BACKEND] P1. Record one testnet verdict for every TradFi venue, distinguishing non-Databento sourcing from the exempt cells; Gate: every distinct venue has a written verdict. — Evidence: all 8 declared `VENUE_TO_ASSET_GROUP["tradfi"]` venues (CBOE, CME, FRED, FX, ICE, KRX, NASDAQ, NYSE — the complete set the work-list generator iterates) have a written, code-grounded verdict: 6 route through `IbkrTradFiAdapter` (IBKR paper port 4002 declared but real order placement structurally gated off, so simulation via the adapter's own L1/L2 matching engine is the honest current answer); 2 (FRED, KRX) have no execution adapter at all — data-only reference/index feeds. Full table + per-venue Databento-exempt-vs-non-Databento cell breakdown in the 2026-08-22 (slot 13) Progress Log entry below.
 - [x] ✅ [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; file an operator credential request when a credential gap is confirmed. Gate: no venue is silently omitted because it is TradFi. — Evidence: execution-service@c531ca3bb3 adds + runs `scripts/run_tradfi_testnet_connectivity_smoke.py` live. Finding: `ibkr-account-credentials` (GSM) resolves live — NOT a credential gap — but no IB Gateway process is reachable from anywhere in the project; all 6 IBKR-routed venues honestly report `provisioned_gateway_unreachable`, FRED/KRX report `not_applicable_no_execution_surface`. No credential request filed — none is warranted; see Progress Log.
-- [ ] [BACKEND] P1. Track every failed or absent TradFi row with its resolved source and data type; Gate: a declared Databento exemption is never used to hide a non-Databento failure.
+- [x] ✅ [BACKEND] P1. Track every failed or absent TradFi row with its resolved source and data type; Gate: a declared Databento exemption is never used to hide a non-Databento failure. — Evidence: `market-tick-data-service@b7ed88f583` adds `track_tradfi_failed_absent_rows_2026_08_22.py`; live run this session found 6/8 captured, 2 failed/absent (NASDAQ/ohlcv_1h, NYSE/ohlcv_1h — 42/42 empty_confirmed), gate overlap=0. Full details in the Progress Log entry below.
 - [x] ✅ [BACKEND] P0. Re-run the source resolver and prove the eight exemption cells are exactly CBOE/CME/NASDAQ/NYSE ohlcv_1m/ohlcv_1s; Gate: a non-exempt negative control fails. — unified-api-contracts@b84bc7df + runtime resolver evidence below.
 - [ ] [OPERATOR] P3. Decide whether to stand up the IB Gateway VM (`ibkr-gateway-infra` Terraform; credential already
       provisioned as `ibkr-account-credentials`) ahead of TradFi's live/paper cutover, or leave it undeployed until
@@ -116,3 +116,65 @@ missing-secret blocker.
 **8/8 declared TradFi venues have an explicit, honest connectivity/credential verdict** — none silently omitted for
 being TradFi. Live script output this session: 6× `provisioned_gateway_unreachable`, 2×
 `not_applicable_no_execution_surface`.
+
+**2026-08-22 (slot 23, backend_engineer) — failed/absent row tracker + anti-hiding gate, todo 4.**
+Shipped `market-tick-data-service/market_tick_data_service/scripts/track_tradfi_failed_absent_rows_2026_08_22.py`
+(permanent, re-runnable — same lifecycle as `generate_venue_smoke_test_work_list.py`). It resolves the 8 in-scope
+non-Databento `(venue, data_type, source)` cells and the 8 Databento-exempt cells via the SAME UAC registry calls
+the generator uses (`get_source_priority`/`is_source_capable_for_venue` + `VENUE_DATA_TYPE_CAPABILITIES`/
+`VENUE_TO_ASSET_GROUP`, imported through the sanctioned one-level `unified_api_contracts`/`unified_api_contracts.registry`
+facades, not the UAC-internal `canonical.crosscutting.*` deep path — two deep-import QG violations found and fixed
+during this session), reads each cell's LIVE PROD manifest `capture_status` distribution via
+`read_availability_index_safe`, and classifies each cell `captured` (any captured row exists) vs failed/absent
+(`attempted_failed` / `empty_confirmed` / `expected_unattempted` / no rows at all). `assert_exemption_gate()` is the
+Gate this todo names: it raises loudly if any failed/absent cell's `(venue, data_type)` collides with the Databento
+exemption set — proving a real failure was never masked by mistaking a non-Databento cell for an exempt one. The
+concrete risk this protects against: CBOE, NASDAQ, and NYSE each carry BOTH a Databento-exempt cell (their
+`ohlcv_1m`/`ohlcv_1s`) AND a non-exempt in-scope cell (`ohlcv_24h` for CBOE, `ohlcv_1h` for NASDAQ/NYSE) — a report
+reasoning at VENUE grain instead of `(venue, data_type)` grain would silently drop the non-exempt cell's own
+failures from view; this script always resolves per-cell, never per-venue, and `mixed_venues()` reports the three
+mixed venues explicitly so the independence is visible, not just asserted. A dedicated negative-control unit test
+(`test_find_exemption_overlap_detects_a_real_collision` / `test_assert_exemption_gate_raises_on_overlap`) feeds the
+gate a fabricated exemption collision and proves it actually raises — the gate has teeth, not a trivially-true
+pass-by-construction.
+
+Live run this session (read-only, no `--apply`/writes) against the PROD tradfi manifest:
+
+| Venue | data_type | source | status | captured | attempted_failed | empty_confirmed | expected_unattempted | total |
+|---|---|---|---|---|---|---|---|---|
+| CBOE | ohlcv_24h | yahoo | **captured** | 8,674 | 7,397 | 3,470 | 0 | 19,541 |
+| FRED | ohlcv_1d | fred | **captured** | 2,870 | 0 | 1,182 | 0 | 4,052 |
+| FRED | yield_curve | fred | **captured** | 14,409 | 0 | 1,164 | 0 | 15,573 |
+| FX | ohlcv_24h | yahoo | **captured** | 3,637 | 2,144 | 1,881 | 0 | 7,662 |
+| ICE | ohlcv_24h | yahoo | **captured** | 1,906 | 11,763 | 1,933 | 0 | 15,602 |
+| KRX | ohlcv_24h | yahoo | **captured** | 4,377 | 3,339 | 2,733 | 8,292 | 18,741 |
+| NASDAQ | ohlcv_1h | yahoo | **empty_confirmed** | 0 | 0 | 42 | 0 | 42 |
+| NYSE | ohlcv_1h | yahoo | **empty_confirmed** | 0 | 0 | 42 | 0 | 42 |
+
+**Result: 6/8 captured, 2/8 failed/absent (NASDAQ/ohlcv_1h and NYSE/ohlcv_1h, both 100% `empty_confirmed` — no
+`attempted_failed` rows for either), gate overlap = 0.** KRX/ohlcv_24h is now `captured` — a genuine change from
+todo 1's 2026-08-20 evidence ("KRX/NASDAQ/NYSE are genuine `empty_confirmed` zero-row exceptions"), confirming
+fleet activity in the intervening two days filled it in; this tracker reflects CURRENT live state, not a stale
+snapshot, which is the point of shipping it as a re-runnable script rather than one-off prose. CBOE/ohlcv_24h is
+also confirmed `captured` (8,674 rows) — consistent with todo 1's "CBOE objects are present" finding; its separate
+manifest-finalize warning (an unrelated malformed Databento shard message) stays its own open follow-up, untouched
+by this todo.
+
+**Scoping note, stated transparently rather than buried:** classification is at `(venue, data_type)` CELL grain
+(does a captured row exist at all), matching todo 1's own established framing and the CeFi/Sports sibling
+implementations of this identical todo — NOT per-day completeness. Several "captured" cells carry large
+`attempted_failed` counts (ICE 11,763/15,602 = 75% failed-attempt days; CBOE 7,397/19,541 = 38%; KRX 3,339/18,741 =
+18%; FX 2,144/7,662 = 28%) — genuinely low daily completeness despite passing the binary "can we backtest this
+venue at all" bar this plan's smoke-test bar targets (`venue_smoke_test_bar_2026_08_16.md` § "Why": *"BACKTESTABLE
+is the floor... a batch smoke test per data type per venue, so at minimum we know we can research and backtest the
+venue honestly"*). Per-day completeness percentage is a DIFFERENT, already-standing mechanism
+(`reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)`,
+[`honest-coverage-model.md`](/codex/02-data/honest-coverage-model.md)) — not duplicated here; the raw per-status
+counts are reported above so nothing is hidden, but a cell is not reclassified failed/absent purely for having a
+low completeness percentage. Not filed as a new finding: these counts are the raw ingredients the standing
+honest-coverage mechanism already surfaces elsewhere, not a gap this todo introduces or need fix.
+
+Quality gates: full `quality-gates.sh --no-fix` passed (11,304 passed, 28 skipped, 1 xpassed); two deep-UAC-import
+violations found and fixed during the session (both now route through the sanctioned one-level facade). Landed
+`market-tick-data-service@b7ed88f583`, independently re-verified as a live ancestor of `origin/live-defi-rollout`
+via `git merge-base --is-ancestor` (not trusted from quickmerge's own printed message alone).
