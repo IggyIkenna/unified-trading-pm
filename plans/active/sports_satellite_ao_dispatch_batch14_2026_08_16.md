@@ -15,7 +15,7 @@ summary: >-
   `/plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md` for the full deferred ledger with taxonomy
   tags. One item (todo 2) merges two source docs that turned out to name the SAME underlying catalogue-rebuild action
   — drafted as a single todo citing both, not two competing ones.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -170,14 +170,14 @@ possibly-ripe-once-Phase-1-is-independently-reverified, not guessed at here.
       (repo: features-service, market-data-processing-service). Done when: the 3-date export gap is root-caused +
       fixed (or confirmed honest-absence) with evidence, and the Option-C ownership/staleness question is resolved
       with evidence, both cited in the source doc.
-- [ ] [DIAG] P2. **DUPLICATE — do not dispatch, found by plan_reconciler 2026-08-18.** ~~Repair Track O `attempted_at`
-      keys against current venue names...~~ This exact task (same source doc, same scope) was already extracted the
-      SAME day (2026-08-16) to `/plans/active/sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md` (+
-      gated finalize), per `sports_track_o_attempted_at_keys_extinct_2026_08_14.md`'s own Progress Log ("2026-08-16 —
-      na-eligibility-audit follow-up... extracted to `sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md`
-      for AO dispatch"). This batch's own "Conflict-check findings" section did not catch this one. Leaving this item
-      struck-through (not deleted) for traceability rather than silently dropped — do NOT activate/dispatch it; the
-      live copy is the other doc.
+- **[DIAG] P2. CANCELLED — DUPLICATE, found by plan_reconciler 2026-08-18 (retagged 2026-08-22, was a live
+  checkbox despite the note below — regen's `_UNCHECKED_RE` is indentation-agnostic and would have dispatched it).**
+  ~~Repair Track O `attempted_at` keys against current venue names...~~ This exact task (same source doc, same
+  scope) was already extracted the SAME day (2026-08-16) to
+  `/plans/active/sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md` (+ gated finalize), per
+  `sports_track_o_attempted_at_keys_extinct_2026_08_14.md`'s own Progress Log ("2026-08-16 — na-eligibility-audit
+  follow-up... extracted to `sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md` for AO dispatch").
+  This batch's own "Conflict-check findings" section did not catch this one. The live copy is the other doc.
 - [ ] [CODE] P2. **Fix ml-service `_infer_domain` missing FOOTYSTATS venue classification.**
       `cross_asset_training_pipeline.py::_infer_domain`'s venue-classification set is missing FOOTYSTATS, which
       causes FOOTYSTATS-derived `instrument_id`s to misclassify as CEFI. Add FOOTYSTATS to the correct
@@ -240,3 +240,14 @@ possibly-ripe-once-Phase-1-is-independently-reverified, not guessed at here.
   parked in `/plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md` by taxonomy category. **Status left
   `draft`** per this skill's autonomous-mode safety rail — flipping to `active` needs explicit operator approval
   before this batch dispatches.
+
+- **2026-08-22 (operator-directed blocked-backlog re-check)**: operator asked to re-verify the AO dashboard's
+  "N blocked" figure against reality and unblock what's genuinely resolvable. Live re-check via
+  `/api/backlog/{id}/blockers` (the exact function the dispatcher itself uses) found this draft plan gating 11
+  downstream `_finalize` tasks via `gate_on_depends` — the single highest-impact structural blocker in the current
+  440-task blocked population. Fresh conflict re-check: all
+  6 named related source docs still genuinely open (no staleness), the extraction is still valid; also found todo 5
+  (Track O duplicate) was left as a live `- [ ]` checkbox despite its own "do NOT dispatch" note — regen's
+  indentation-agnostic unchecked-line parser would have dispatched it once this plan activated. Fixed that line to
+  the proper bold CANCELLED form (task_template.md §3) and flipped `status: draft` → `active` under the operator's
+  explicit direction this session — this is the "explicit operator approval" this doc's own safety rail asked for.
