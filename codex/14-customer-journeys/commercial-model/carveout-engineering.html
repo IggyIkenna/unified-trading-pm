@@ -1,4 +1,4 @@
-<title>Strategy Carve-Out — Engineering Architecture &amp; Hand-Over Boundary — Odum Research × Elysium</title>
+<title>Strategy Carve-Out, Engineering Architecture and Hand-Over Boundary, Odum Research × POD</title>
 
 <style>
   /* Tokens carried from the platform-architecture document so the two read as one set.
@@ -770,106 +770,54 @@
       display: none;
     }
   }
-
-  /* Claim marks — status (what the system does) and evidence tier (how we know), per rule 13.
-     SSOT: /codex/14-customer-journeys/_ssot-rules/13-artefact-claim-marks.md */
-  .st {
-    font-family: var(--sans);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 3px;
-    white-space: nowrap;
-    border: 1px solid currentColor;
-  }
-  .st-live {
-    color: var(--good);
-    background: var(--g-data-wash);
-  }
-  .st-part {
-    color: var(--warn);
-    background: var(--g-post-wash);
-  }
-  .st-plan {
-    color: var(--crit);
-    background: var(--accent-wash);
-  }
-  .ev {
-    font-family: var(--mono);
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 1px 8px;
-    border-radius: 10px;
-    white-space: nowrap;
-    border: 1px dashed currentColor;
-    background: transparent;
-  }
-  .ev-verified {
-    color: var(--g-data);
-  }
-  .ev-check {
-    color: var(--ink-3);
-  }
-  .ev-assumed {
-    color: var(--warn);
-  }
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 22px;
-    align-items: baseline;
-    font-family: var(--sans);
-    font-size: 12px;
-    color: var(--ink-3);
-    margin: 18px 0 0;
-  }
-  .legend span {
-    display: flex;
-    gap: 8px;
-    align-items: baseline;
-  }
 </style>
-
 <div class="shell">
   <header class="masthead">
     <div class="eyebrow">
-      <span class="mark">ODUM RESEARCH × ELYSIUM</span>
+      <span class="mark">ODUM RESEARCH × POD</span>
       <span class="sep">/</span>
-      <span>Engineering architecture &amp; hand-over boundary</span>
+      <span>Engineering architecture and hand-over boundary</span>
       <span class="sep">/</span>
       <span>CTO discussion document</span>
       <span class="conf">Confidential</span>
     </div>
 
-    <h1>Strategy carve-out <span class="light">— architecture, hand-over boundary and acceptance</span></h1>
+    <h1>Strategy carve-out for POD <span class="light">architecture, hand-over boundary and acceptance</span></h1>
 
     <p class="standfirst">
-      This document defines a credible standalone hand-over of the contracted strategy: the components transferred and
-      the form each takes, the runtime path through them, the interfaces at which platform services are substituted, and
-      the acceptance test that says the hand-over is complete. It is written to be planned and contracted against.
+      This document defines a credible standalone hand-over of the contracted strategy into a POD segregated portfolio:
+      the components transferred and the form each takes, the runtime path through them, the interfaces at which
+      platform capabilities are substituted, and the acceptance test that says the hand-over is complete. It is written
+      to be planned and contracted against.
     </p>
 
     <div class="principle">
       <span class="tag">Working principle</span>
       <p>
-        The hand-over transfers a strategy that a competent engineering team can make operational — not a replica of the
-        operating platform built around strategies. The boundary is made explicit in code: strategy decision logic is
-        portable, and every point where the platform normally supplies a capability appears as a typed interface rather
-        than as something silently absent.
+        The hand-over transfers a strategy that POD's engineering team can make operational inside a segregated
+        portfolio. It does not transfer a replica of the operating platform built around strategies, and it does not
+        need to, because POD already operates that layer. The boundary is made explicit in code: strategy decision
+        logic is portable, and every point where a capability is supplied from outside the strategy appears as a typed
+        interface rather than as something silently absent.
       </p>
     </div>
 
     <dl class="factbar">
+      <div>
+        <dt>Counterparty</dt>
+        <dd>POD</dd>
+      </div>
+      <div>
+        <dt>Contract basis</dt>
+        <dd>Elysium AM consulting agreement, 3 March 2025</dd>
+      </div>
       <div>
         <dt>Audience</dt>
         <dd>CTO / engineering</dd>
       </div>
       <div>
         <dt>Revision</dt>
-        <dd>2.0 · 11 Aug 2026</dd>
+        <dd>3.0 · 22 Aug 2026</dd>
       </div>
       <div>
         <dt>Packages</dt>
@@ -883,107 +831,278 @@
         <dt>Language</dt>
         <dd>Python 3.13</dd>
       </div>
-      <div>
-        <dt>Governing terms</dt>
-        <dd>Agreement + SLA</dd>
-      </div>
     </dl>
 
     <nav class="contents" aria-label="Contents">
-      <h2>Contents — every section opens to full detail; summaries stay visible</h2>
+      <h2>Contents, every section opens to full detail; summaries stay visible</h2>
       <ol>
         <li>
           <a href="#s1"
-            ><span class="num">01</span><span class="ttl">What "runnable" means — the acceptance bar</span></a
+            ><span class="num">01</span><span class="ttl">The counterparty, the contract, and the scope it sets</span></a
           >
         </li>
         <li>
           <a href="#s2"
-            ><span class="num">02</span><span class="ttl">The package: 11 components and their ship form</span></a
+            ><span class="num">02</span><span class="ttl">What "runnable" means, the acceptance bar</span></a
           >
         </li>
         <li>
-          <a href="#s3"><span class="num">03</span><span class="ttl">Runtime path through the carved system</span></a>
-        </li>
-        <li>
-          <a href="#s4"
-            ><span class="num">04</span><span class="ttl">The platform seam — 10 interface contracts</span></a
+          <a href="#s3"
+            ><span class="num">03</span><span class="ttl">The package: 11 components and their ship form</span></a
           >
         </li>
         <li>
-          <a href="#s5"><span class="num">05</span><span class="ttl">Configuration and parameter snapshot</span></a>
+          <a href="#s4"><span class="num">04</span><span class="ttl">Runtime path through the carved system</span></a>
         </li>
         <li>
-          <a href="#s6"><span class="num">06</span><span class="ttl">Hand-over acceptance criteria</span></a>
-        </li>
-        <li>
-          <a href="#s7"
-            ><span class="num">07</span><span class="ttl">Operational responsibilities on self-operation</span></a
+          <a href="#s5"
+            ><span class="num">05</span><span class="ttl">The substitution seam, 10 interface contracts</span></a
           >
         </li>
         <li>
-          <a href="#s8"><span class="num">08</span><span class="ttl">Extension work-items</span></a>
+          <a href="#s6"><span class="num">06</span><span class="ttl">Configuration and parameter snapshot</span></a>
         </li>
         <li>
-          <a href="#s9"><span class="num">09</span><span class="ttl">Appendix — the source estate</span></a>
+          <a href="#s7"><span class="num">07</span><span class="ttl">Hand-over acceptance criteria</span></a>
+        </li>
+        <li>
+          <a href="#s8"
+            ><span class="num">08</span><span class="ttl">Operational responsibilities on self-operation</span></a
+          >
+        </li>
+        <li>
+          <a href="#s9"><span class="num">09</span><span class="ttl">Extension work items</span></a>
+        </li>
+        <li>
+          <a href="#s10"><span class="num">10</span><span class="ttl">Appendix, the source estate</span></a>
         </li>
       </ol>
     </nav>
-
-    <div class="legend">
-      <span><b class="st st-live">live</b> reachable on a production path AND validated with real capital</span>
-      <span><b class="st st-part">partial</b> built, reachable for some cases</span>
-      <span><b class="st st-plan">planned</b> specified, not yet built</span>
-    </div>
-    <div class="legend">
-      <span
-        ><b class="ev ev-verified">✓ verified</b> checked against code or measured data — verifying source named
-        inline</span
-      >
-      <span><b class="ev ev-check">? check</b> stated in good faith, not yet independently validated</span>
-      <span><b class="ev ev-assumed">~ assumed</b> best current understanding — explicitly not verified</span>
-    </div>
   </header>
 
   <!-- ==================== 01 ==================== -->
   <section id="s1">
     <div class="sec-head">
       <span class="num">01</span>
-      <h2>What "runnable" means — the acceptance bar</h2>
-      <b class="st st-plan">planned</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md — the carve-out spec this section documents"
-        >owner: elysium_carveout_stubbed_strategy_service</b
-      >
+      <h2>The counterparty, the contract, and the scope it sets</h2>
     </div>
 
     <p class="lede">
-      "Runnable" is defined narrowly and deliberately. It means a team can take the package, supply credentials and
-      infrastructure, complete a clearly identified set of platform substitutions, and run the contracted strategy
-      against the agreed venues and instruments. It does not mean inheriting an operating model.
+      POD is the entity that would operate the carved system, inside one of its segregated portfolios. The consulting
+      agreement between Elysium AM Ltd and IkeNova Ltd, executed on 3 March 2025 and signed for Elysium by Patrick
+      Lynch, is the contract the work originated under and remains the basis on which this hand-over is scoped. The
+      boundary described in this document is not a commercial preference expressed after the fact. It follows from that
+      agreement and from what POD already operates.
+    </p>
+
+    <div class="keypoints">
+      <div>
+        <b>The operator</b
+        ><span
+          >POD, a regulated fund operating system administered under the Central Bank of Ireland, running segregated
+          portfolios inside an SPC, one sub-fund per portfolio manager</span
+        >
+      </div>
+      <div>
+        <b>The contract</b
+        ><span
+          >Annex A already lists the excluded scope; Article 4 already sets the ownership test. Both predate this
+          document</span
+        >
+      </div>
+      <div>
+        <b>The intent</b
+        ><span
+          >A system POD can run today and layer its own risk management on top of, rather than a system that needs the
+          rest of a platform underneath it</span
+        >
+      </div>
+    </div>
+
+    <details class="sec-body" open>
+      <summary>Where the boundary comes from, and what falls on each side of it</summary>
+
+      <h3>Three reasons the boundary sits where it does</h3>
+
+      <p>
+        <strong>First, the agreement already excludes the fast and clever parts.</strong> Annex A lists, under Scope
+        Exclusions: tokenisation of fund, fund setup and administration, fund settlement and clearing, prime broker and
+        exchange relationship management, ultra low latency execution, liquidity provision, and post-launch maintenance
+        and upgrades, the last of these noted as arrangeable separately. Excluding smart and fast execution is
+        therefore the agreed scope of the engagement rather than a restriction introduced at hand-over.
+      </p>
+
+      <p>
+        <strong>Second, Article 4 sets the ownership test.</strong> All Work Product developed under the engagement is
+        works made for hire and the exclusive property of the Elysium group, with an irrevocable assignment of anything
+        that cannot be classified that way. What the agreement reserves to the Consultant is generic programming
+        methods and open-sourced components. The line therefore falls between what was developed under this engagement
+        and independent platform IP built before and beside it. The basis and staked-basis strategy sits on POD's side
+        of that line and transfers. The multi-asset-group platform, its smart execution layer and the other archetypes
+        sit on ours and do not.
+      </p>
+
+      <p>
+        <strong>Third, POD already owns the layer that is excluded.</strong> Fund administration, NAV, fee calculation
+        and fund accounting run on-chain inside POD. Custody runs through Ceffu, Copper and Coinbase Prime. Venue
+        connectivity runs through Haruko at more than 140 venues. Excluding our reconciliation engine, our wallet
+        transfer path and our treasury layer is a decision not to duplicate infrastructure POD already operates and
+        already trusts, rather than capability withheld. POD's own positioning is that trading IP is owned entirely by
+        the trading teams and portfolio managers, and this hand-over is drawn to match that.
+      </p>
+
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">The scope boundary</span>
+          <span class="note">The right column is the reason, stated per item</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>In the carve-out</th>
+                <th>Why the line falls here</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="grp grp-exec"><strong>Basis and staked-basis archetypes</strong></td>
+                <td><span class="sf sf-full">yes</span></td>
+                <td>Developed under the engagement, so Article 4 places them on POD's side of the ownership line</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Stable execution</strong></td>
+                <td><span class="sf sf-full">yes</span></td>
+                <td>
+                  Limit order types, and a basic fill algorithm that works an order at market or limit. Enough to
+                  express the strategy's intent, and simple enough to reason about in production
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Static universe and one parameter set</strong></td>
+                <td><span class="sf sf-full">yes</span></td>
+                <td>The agreed venue and instrument set, frozen as at hand-over and changed by editing configuration</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Smart execution algorithms</strong></td>
+                <td><span class="sf sf-red">no</span></td>
+                <td>
+                  Annex A excludes ultra low latency execution and liquidity provision from the engagement. Anything
+                  whose value is speed falls with them
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>The other nine carry and yield archetypes</strong></td>
+                <td><span class="sf sf-red">no</span></td>
+                <td>Independent platform IP, built before and beside the engagement</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Dynamic parameter surfaces</strong></td>
+                <td><span class="sf sf-red">no</span></td>
+                <td>
+                  The controls that let a strategy change coins, venues and weights while running are part of the
+                  platform, not of the strategy. The handed-over configuration is a frozen set
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Reconciliation</strong></td>
+                <td><span class="sf sf-iface">POD</span></td>
+                <td>POD's fund administration and NAV layer already performs it against custody and venue truth</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Wallet transfers and treasury movement</strong></td>
+                <td><span class="sf sf-iface">POD</span></td>
+                <td>POD's custody arrangements with Ceffu, Copper and Coinbase Prime already own the movement of funds</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Fund setup, administration, settlement and clearing</strong></td>
+                <td><span class="sf sf-iface">POD</span></td>
+                <td>An Annex A scope exclusion, and the layer POD is built to provide</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Prime broker and venue relationship management</strong></td>
+                <td><span class="sf sf-iface">POD</span></td>
+                <td>An Annex A scope exclusion. POD's Haruko connectivity already reaches more than 140 venues</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>CI/CD and deployment automation</strong></td>
+                <td><span class="sf sf-red">no</span></td>
+                <td>
+                  Annex A excludes post-launch maintenance and upgrades, noted as arrangeable separately. Container
+                  artefacts and an example runbook ship in their place
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Disaster recovery and kill-switch protocols</strong></td>
+                <td><span class="sf sf-red">no</span></td>
+                <td>
+                  Local hard limits that halt the strategy are included. The protocol that decides when to halt a book
+                  and on what terms to resume belongs to POD's risk framework
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Hot configuration reload</strong></td>
+                <td><span class="sf sf-red">no</span></td>
+                <td>
+                  Configuration is read at startup. A process that cannot change its own parameters mid-run is the
+                  easier one to operate, audit and reason about after the fact
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="tag">What the restriction is for</span>
+        <p>
+          Each exclusion above makes the delivered system smaller, more legible and easier to take responsibility for.
+          A strategy that reads a frozen configuration at startup, places limit orders, halts on a local hard limit and
+          reports its state to your own reconciliation and NAV layer is a system POD can run today and own the risk of.
+          A strategy carrying its own dynamic universe rotation, its own execution optimiser, its own treasury path and
+          its own kill-switch protocol would arrive with a second operating model attached to it, competing with the
+          one POD already runs.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ==================== 02 ==================== -->
+  <section id="s2">
+    <div class="sec-head">
+      <span class="num">02</span>
+      <h2>What "runnable" means, the acceptance bar</h2>
+    </div>
+
+    <p class="lede">
+      "Runnable" is defined narrowly and deliberately. It means your team can take the package, supply credentials and
+      infrastructure, complete a clearly identified set of substitutions, and run the contracted strategy against the
+      agreed venues and instruments inside a POD segregated portfolio, with POD's administrator, custody and NAV layer
+      sitting where the platform's own post-trade services would otherwise sit. It does not mean inheriting an
+      operating model.
     </p>
 
     <div class="keypoints">
       <div>
         <b>In scope</b
         ><span
-          >Strategy decision logic, static universe and configuration, thin venue connectivity, basic execution, a local
-          test harness</span
+          >Strategy decision logic, static universe and configuration, thin venue connectivity, stable execution, a
+          local test harness</span
         >
       </div>
       <div>
         <b>Substituted</b
         ><span
-          >Ten platform capabilities, each behind a typed interface with a local or static implementation supplied</span
+          >Ten capabilities, each behind a typed interface, resolving to a POD service, a local implementation or a
+          static value</span
         >
       </div>
       <div>
         <b>Out of scope</b
         ><span
-          >Execution algorithms, dynamic universe and allocation, reconciliation and attribution, version governance,
-          multi-client machinery</span
+          >Smart execution, dynamic universe and allocation, reconciliation and attribution, treasury movement, version
+          governance, multi-client machinery</span
         >
       </div>
     </div>
@@ -1017,42 +1136,66 @@
               <tr>
                 <td class="grp grp-exec"><strong>Static universe and config</strong></td>
                 <td><span class="sf sf-full">yes</span></td>
-                <td>The agreed venue and instrument set, and one parameter set fixed as at hand-over</td>
+                <td>
+                  The agreed venue and instrument set, and one parameter set frozen as at hand-over. Read once at
+                  startup
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>Venue connectivity</strong></td>
                 <td><span class="sf sf-red">thin</span></td>
                 <td>
-                  Market data, order submission and account reads sufficient for the strategy. No generalised custody or
-                  treasury fabric
+                  Market data, order submission and account reads sufficient for the strategy, plus the signing path
+                  for the on-chain staking leg. No generalised custody or treasury fabric
                 </td>
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>Execution</strong></td>
-                <td><span class="sf sf-red">minimal</span></td>
+                <td><span class="sf sf-red">stable</span></td>
                 <td>
-                  The order placement needed to express strategy intent. Execution algorithms remain platform-side
+                  Limit order types and a basic fill algorithm that works an order at market or limit, enough to
+                  express strategy intent. No execution algorithms and no latency optimisation
                 </td>
               </tr>
               <tr>
                 <td class="grp grp-data"><strong>Simulation</strong></td>
                 <td><span class="sf sf-red">targeted</span></td>
                 <td>
-                  A strategy-local harness for logic verification against replay fixtures. Not the batch/live symmetry
-                  framework
+                  A strategy-local harness for logic verification against replay fixtures. Not the batch and live
+                  symmetry framework
                 </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Deployment</strong></td>
                 <td><span class="sf sf-static">example</span></td>
                 <td>
-                  Container artefacts and an example runbook. Not CI/CD, environment promotion or fleet orchestration
+                  Container artefacts and an example runbook. Not CI/CD, deployment automation, environment promotion
+                  or fleet orchestration
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Recovery and halt policy</strong></td>
+                <td><span class="sf sf-red">local only</span></td>
+                <td>
+                  Hard limits that stop the strategy placing orders. The kill-switch protocol, its resume matrix and
+                  disaster recovery belong to POD's risk framework
                 </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Reconciliation and attribution</strong></td>
                 <td><span class="sf sf-iface">interface</span></td>
-                <td>Typed contracts with documented extension points; the implementation is built or sourced</td>
+                <td>
+                  Typed contracts with documented extension points, sized to attach to POD's existing fund
+                  administration, NAV and fund accounting layer
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Treasury and custody</strong></td>
+                <td><span class="sf sf-iface">interface</span></td>
+                <td>
+                  Balance reads and a typed transfer contract. The movement of funds resolves to POD's Ceffu, Copper
+                  and Coinbase Prime arrangements rather than to anything we ship
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Dynamic universe and allocation</strong></td>
@@ -1065,7 +1208,8 @@
                 <td class="grp grp-post"><strong>Governance and compliance trail</strong></td>
                 <td><span class="sf sf-iface">interface</span></td>
                 <td>
-                  No version governance, approval trail, per-client or share-class rules, or centralised audit machinery
+                  No version governance, approval trail, per-client or share-class rules, or centralised audit
+                  machinery. POD's administrator and SPC structure already carry that obligation
                 </td>
               </tr>
             </tbody>
@@ -1080,72 +1224,67 @@
       </p>
       <ul>
         <li>
-          <strong>Odum-operated.</strong> The strategy runs on the platform as a client-isolated deployment. POD holds
-          read access to its own positions, runs, attribution and strategy decision records, queryable remotely. The ten
-          interfaces in §04 resolve to maintained services.
+          <strong>Odum-operated.</strong> The strategy runs on our platform as a client-isolated deployment mapped to a
+          POD segregated portfolio. POD holds read access to its own positions, runs, attribution and strategy decision
+          records, queryable remotely. The ten interfaces in §05 resolve to maintained services.
         </li>
         <li>
-          <strong>Self-operated.</strong> The package in §02 transfers. The ten interfaces resolve to local or static
-          implementations, and §07 lists the standing operational functions that come with running it.
+          <strong>POD-operated.</strong> The package in §03 transfers. The ten interfaces resolve to POD services,
+          local implementations or static values, and §08 lists the standing operational functions that come with
+          running it, most of which POD already discharges for every sub-fund it hosts.
         </li>
       </ul>
 
       <div class="callout">
         <span class="tag">Status of this specification</span>
         <p>
-          The eleven packages in §02 are a proposed extraction structure, not existing repositories. The strategy,
+          The eleven packages in §03 are a proposed extraction structure, not existing repositories. The strategy,
           adapter and contract code they contain is production code running today; the packaging, the interface layer
-          and the local implementations are scoped extraction work. §06 is the acceptance test that would close it.
+          and the local implementations are scoped extraction work. §07 is the acceptance test that would close it.
         </p>
         <p>
           <strong>Inspection is not transfer, and the two have different scopes.</strong> Separately from this
-          specification, the complete strategy service is being shared for inspection — which is broader than the
-          package a carve-out would transfer, because it is the whole repository rather than an extraction from it. This
-          document describes what a self-run <em>hand-over</em> would contain; it does not describe the limits of what
-          is made available to read. Where the two differ, the difference is deliberate.
+          specification, the complete strategy service is being shared for inspection, which is broader than the
+          package a carve-out would transfer, because it is the whole repository rather than an extraction from it.
+          This document describes what a self-run <em>hand-over</em> would contain; it does not describe the limits of
+          what is made available to read. Where the two differ, the difference is deliberate.
         </p>
       </div>
     </details>
   </section>
 
-  <!-- ==================== 02 ==================== -->
-  <section id="s2">
+  <!-- ==================== 03 ==================== -->
+  <section id="s3">
     <div class="sec-head">
-      <span class="num">02</span>
+      <span class="num">03</span>
       <h2>The package: 11 components and their ship form</h2>
-      <b class="st st-plan">planned</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md — the carve-out spec this section documents"
-        >owner: elysium_carveout_stubbed_strategy_service</b
-      >
     </div>
 
     <p class="lede">
       Eleven components, each with a declared ship form. The distinction between them is the substance of the boundary:
-      what arrives complete, what arrives deliberately thinned, what arrives frozen, and what arrives as a contract with
-      no implementation behind it.
+      what arrives complete, what arrives deliberately thinned, what arrives frozen, and what arrives as a contract
+      with no implementation behind it.
     </p>
 
     <div class="sf-legend">
       <span><span class="sf sf-full">full</span> substantially transferable</span>
       <span><span class="sf sf-red">reduced</span> deliberately thinned implementation</span>
       <span><span class="sf sf-static">static</span> frozen snapshot at hand-over</span>
-      <span><span class="sf sf-iface">interface only</span> contracts, schemas and mocks</span>
+      <span><span class="sf sf-iface">interface only</span> contracts, schemas and local implementations</span>
     </div>
 
     <div class="keypoints">
-      <div><b>4 full</b><span>Strategy core, configuration, runner, and the documentation and examples set</span></div>
+      <div><b>3 full</b><span>Strategy core, the process runner, and the documentation and examples set</span></div>
+      <div><b>2 static</b><span>The frozen configuration snapshot, and the local operations artefacts</span></div>
       <div>
         <b>5 reduced</b
         ><span>Venue adapters, instrument model, basic execution, local risk guards, simulation harness</span>
       </div>
-      <div><b>1 interface only</b><span>The platform contracts package — the seam, and the subject of §04</span></div>
+      <div><b>1 interface only</b><span>The contracts package, the seam, and the subject of §05</span></div>
     </div>
 
     <details class="sec-body">
-      <summary>All eleven components — contents, exclusions, and the source they derive from</summary>
+      <summary>All eleven components, contents, exclusions, and the source they derive from</summary>
 
       <div class="plate">
         <div class="plate-head">
@@ -1169,12 +1308,14 @@
                 <td><span class="sf sf-full">full</span></td>
                 <td>
                   The strategy decision layer: state machine, opportunity scoring, basis and funding calculations,
-                  desired exposures, strategy-local risk limits, deterministic parameter loading. Two archetypes —
-                  perpetual basis and staked basis — plus the dynamic hedge-ratio logic
+                  desired exposures, strategy-local risk limits, deterministic parameter loading. Two archetypes,
+                  perpetual basis and staked basis, plus the dynamic hedge-ratio logic
                 </td>
                 <td>
-                  The other four archetypes in the same family, the allocator framework, cross-strategy capital logic,
-                  and the feature platform
+                  The other nine archetypes in the carry and yield family, among them the four remaining basis
+                  variants: dated basis, inverse dated basis, inverse perpetual basis and dated staked basis. Also the
+                  allocator framework, cross-strategy capital logic, the dynamic coin, venue and weight surfaces, and
+                  the feature platform
                 </td>
                 <td class="mono">strategy-service</td>
               </tr>
@@ -1183,11 +1324,11 @@
                 <td><span class="sf sf-static">static</span></td>
                 <td>
                   Production-equivalent configuration for the agreed scope: venues, instruments, thresholds, cadence,
-                  risk caps, and one parameter set
+                  risk caps, and one parameter set. Loaded once at process start
                 </td>
                 <td>
-                  Parameter history, the optimisation service, rollout governance, dynamic config service, per-client
-                  and share-class overlays
+                  Hot configuration reload, parameter history, the optimisation service, rollout governance, the
+                  dynamic config service, per-client and share-class overlays
                 </td>
                 <td class="mono">strategy-service</td>
               </tr>
@@ -1210,24 +1351,12 @@
                 <td>
                   Direct REST and WebSocket adapters for the four agreed venues: market data, order submit and cancel,
                   order, fill and account events, rate-limit and reconnect handling, and the shared venue error
-                  classification
+                  classification. Plus the narrow signing path the on-chain staking leg requires
                 </td>
                 <td>
                   The adapter framework, the other sixteen venue adapters, the normalised reference-data fabric,
-                  automated reconciliation, custody switching, treasury routing, execution optimisers
-                </td>
-                <td class="mono">execution-service</td>
-              </tr>
-              <tr>
-                <td class="grp grp-exec"><strong>custody-adapters-lite</strong></td>
-                <td><span class="sf sf-red">reduced</span></td>
-                <td>
-                  Signing and settlement against the two agreed custody providers, and the on-chain staking leg for the
-                  contracted liquid-staking token
-                </td>
-                <td>
-                  The pluggable custody factory, provider switching, tri-party mirroring, treasury-versus-trading
-                  separation, cross-chain bridging
+                  automated reconciliation, the pluggable custody factory, provider switching, tri-party mirroring,
+                  treasury routing, cross-chain bridging, execution optimisers
                 </td>
                 <td class="mono">execution-service</td>
               </tr>
@@ -1249,11 +1378,12 @@
                 <td><span class="sf sf-red">reduced</span></td>
                 <td>
                   Post, cancel and replace sufficient to translate a target position into venue instructions, including
-                  the multi-leg sequencing the structure requires
+                  the multi-leg sequencing the structure requires. Limit order types, and a basic fill algorithm that
+                  works an order at market or limit
                 </td>
                 <td>
-                  The algorithm library, venue selection, slicing and queue logic, impact modelling, hedge
-                  orchestration, the paper matching engine
+                  The algorithm library, venue selection, slicing and queue logic, impact modelling, every
+                  latency-sensitive path, hedge orchestration, the paper matching engine
                 </td>
                 <td class="mono">execution-service</td>
               </tr>
@@ -1261,12 +1391,13 @@
                 <td class="grp grp-post"><strong>risk-guards-local</strong></td>
                 <td><span class="sf sf-red">reduced</span></td>
                 <td>
-                  Strategy-local hard limits: maximum size and notional, stale-data guard, malformed-state checks,
-                  kill-switch hook
+                  Strategy-local hard limits: maximum size and notional, stale-data guard, malformed-state checks, and
+                  a local halt that stops the process placing new orders
                 </td>
                 <td>
-                  Cross-strategy circuit breakers, dynamic portfolio and risk allocators, client-level limits, global
-                  inventory controls, the centralised risk service
+                  The kill-switch protocol and its resume matrix, disaster recovery, cross-strategy circuit breakers,
+                  dynamic portfolio and risk allocators, client-level limits, global inventory controls, the
+                  centralised risk service
                 </td>
                 <td class="mono">strategy-service · unified-trading-library</td>
               </tr>
@@ -1279,7 +1410,7 @@
                 </td>
                 <td>
                   The historical data platform, the simulation estate, the exchange-time fill engine, research
-                  orchestration, the batch/live determinism proof
+                  orchestration, the batch and live determinism proof
                 </td>
                 <td class="mono">strategy-service · e2e-testing</td>
               </tr>
@@ -1287,12 +1418,12 @@
                 <td class="grp grp-post"><strong>ops-local</strong></td>
                 <td><span class="sf sf-static">static</span></td>
                 <td>
-                  Container definition and compose file, example metrics and logging configuration, environment-variable
-                  schema, and a sample runbook
+                  Container definition and compose file, example metrics and logging configuration,
+                  environment-variable schema, and a sample runbook
                 </td>
                 <td>
-                  CI/CD, the quality gate, secret rotation, release governance, the observability platform, alert
-                  topology, automated rollback
+                  CI/CD, deployment automation, the quality gate, secret rotation, release governance, the
+                  observability platform, alert topology, automated rollback
                 </td>
                 <td class="mono">unified-trading-ci · deployment-service</td>
               </tr>
@@ -1300,8 +1431,9 @@
                 <td class="grp grp-post"><strong>contracts-platform</strong></td>
                 <td><span class="sf sf-iface">interface only</span></td>
                 <td>
-                  Typed interfaces and event schemas for the ten substituted capabilities, each with a local or static
-                  implementation or a documented extension point. This is the architectural seam — see §04
+                  Typed interfaces and event schemas for the ten substituted capabilities, each with a local
+                  implementation, a static value or a documented extension point. This is the architectural seam, and
+                  the place POD's own administration, custody and NAV layer attaches. See §05
                 </td>
                 <td>All implementations. Nothing behind these contracts transfers</td>
                 <td class="mono">unified-api-contracts</td>
@@ -1311,7 +1443,7 @@
                 <td><span class="sf sf-full">full</span></td>
                 <td>
                   Architecture overview, sequence diagrams, configuration examples, local-run instructions, failure
-                  modes, interface descriptions, and the acceptance procedure in §06
+                  modes, interface descriptions, and the acceptance procedure in §07
                 </td>
                 <td>Internal engineering playbooks and the operating documentation for the wider platform</td>
                 <td class="mono">unified-trading-pm</td>
@@ -1322,27 +1454,27 @@
       </div>
 
       <p>
-        Two notes on the source column. First, no package is a directory copy: each is an import closure taken over the
-        repository tier graph, which is computable exactly because imports only ever point downward through that graph —
+        Three notes on the table. First, no package is a directory copy: each is an import closure taken over the
+        repository tier graph, which is computable exactly because imports only ever point downward through that graph,
         so the package is reproducible from a commit rather than assembled by hand. Second, the count of components is
         larger than the count of source repositories, because the extraction splits along capability lines rather than
-        along our internal repository boundaries. §09 maps it the other way, from the estate to the package.
+        along our internal repository boundaries. §10 maps it the other way, from the estate to the package.
+      </p>
+      <p>
+        Third, there is no custody package. Our own custody integrations are Cloud KMS held keys and Copper, and Copper
+        is one of the three providers POD already uses. Rather than ship a second custody abstraction alongside POD's
+        Ceffu, Copper and Coinbase Prime arrangements, the package carries only the narrow signing path the on-chain
+        staking leg needs. Everything else about where assets sit and how they move resolves at the treasury contract
+        in §05.
       </p>
     </details>
   </section>
 
-  <!-- ==================== 03 ==================== -->
-  <section id="s3">
+  <!-- ==================== 04 ==================== -->
+  <section id="s4">
     <div class="sec-head">
-      <span class="num">03</span>
+      <span class="num">04</span>
       <h2>Runtime path through the carved system</h2>
-      <b class="st st-plan">planned</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md — the carve-out spec this section documents"
-        >owner: elysium_carveout_stubbed_strategy_service</b
-      >
     </div>
 
     <p class="lede">
@@ -1352,7 +1484,7 @@
 
     <div class="keypoints">
       <div>
-        <b>Seven steps</b><span>Event, normalise, decide, guard, order intent, place, persist — one owner each</span>
+        <b>Seven steps</b><span>Event, normalise, decide, guard, order intent, place, persist. One owner each</span>
       </div>
       <div>
         <b>One decision point</b
@@ -1362,7 +1494,7 @@
     </div>
 
     <details class="sec-body" open>
-      <summary>The seven steps, their owners, and where the platform normally intervenes</summary>
+      <summary>The seven steps, their owners, and where a capability is supplied from outside</summary>
 
       <figure>
         <svg
@@ -1426,7 +1558,7 @@
           <text x="184" y="134" style="fill: var(--ink-3); font-family: var(--mono); font-size: 10px">model-lite</text>
           <path d="M326 67 L340 67" style="fill: none; stroke: var(--ink-3); stroke-width: 1.2" marker-end="url(#a2)" />
 
-          <!-- step 3 — the decision -->
+          <!-- step 3, the decision -->
           <rect
             x="344"
             y="34"
@@ -1536,11 +1668,11 @@
           <!-- seam note -->
           <line x1="24" y1="164" x2="1136" y2="164" style="stroke: var(--rule); stroke-width: 1" />
           <text x="24" y="186" style="fill: var(--ink-3); font-family: var(--sans); font-size: 11.5px">
-            Steps 1, 2, 4 and 7 each call outward to a substituted capability — features and marks in, reference-data
+            Steps 1, 2, 4 and 7 each call outward to a substituted capability: features and marks in, reference-data
             refresh,
           </text>
           <text x="24" y="202" style="fill: var(--ink-3); font-family: var(--sans); font-size: 11.5px">
-            breaker state, reconciliation and attribution out. Those calls are the ten interfaces in §04.
+            breaker state, reconciliation and attribution out. Those calls are the ten interfaces in §05.
           </text>
 
           <defs>
@@ -1558,54 +1690,48 @@
           </defs>
         </svg>
         <figcaption>
-          <b>Figure 1 — the runtime path.</b> Seven steps, one owner each. The heavier outline at step 3 marks the only
-          step containing strategy logic; everything either side is transport, normalisation, safety or persistence. The
-          path is deliberately shallow so a reviewer can follow a single tick end to end without reading platform code.
+          <b>Figure 1, the runtime path.</b> Seven steps, one owner each. The heavier outline at step 3 marks the only
+          step containing strategy logic; everything either side is transport, normalisation, safety or persistence.
+          The path is deliberately shallow so a reviewer can follow a single tick end to end without reading platform
+          code.
         </figcaption>
       </figure>
 
       <p>
-        The design intent is that every place where the platform normally adds capability is an explicit interface
-        boundary rather than something embedded invisibly in the carved code. That gives a clean engineering choice at
-        each seam: implement the dependency, or resolve it to a maintained service.
+        The design intent is that every place where a capability is supplied from outside the strategy is an explicit
+        interface boundary rather than something embedded invisibly in the carved code. That gives a clean engineering
+        choice at each seam: point it at a service POD already runs, implement it locally, or resolve it to a
+        maintained Odum service.
       </p>
     </details>
   </section>
 
-  <!-- ==================== 04 ==================== -->
-  <section id="s4">
+  <!-- ==================== 05 ==================== -->
+  <section id="s5">
     <div class="sec-head">
-      <span class="num">04</span>
-      <h2>The platform seam — 10 interface contracts</h2>
-      <b class="st st-part">partial</b>
-      <b
-        class="ev ev-verified"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md § A — checked 2026-08-12: this section already states each of the ten interfaces resolves to a local, static or mock implementation"
-        >✓ verified</b
-      >
-      <b
-        class="own"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md — the ten interface contracts specified here"
-        >owner: elysium_carveout_stubbed_strategy_service</b
-      >
+      <span class="num">05</span>
+      <h2>The substitution seam, 10 interface contracts</h2>
     </div>
 
     <p class="lede">
-      The seam is the most useful part of this specification. Ten capabilities the strategy depends on are declared as
-      typed interfaces in <code>contracts-platform</code>. In the carved package each resolves to a local, static or
-      mock implementation. In the hosted form each resolves to a maintained service. The interface is identical either
-      way.
+      The seam is the most useful part of this specification, and it is the part that makes the exclusions in §01
+      workable rather than awkward. Ten capabilities the strategy depends on are declared as typed interfaces in
+      <code>contracts-platform</code>. Six of them name things POD already operates, so in a POD deployment they
+      resolve to POD services. The rest resolve to local or static implementations. In the hosted form each resolves to
+      a maintained Odum service. The interface is identical in every case.
     </p>
 
     <div class="keypoints">
       <div>
-        <b>One boundary, two resolutions</b
+        <b>One boundary, several resolutions</b
         ><span
-          >The same contract is satisfied locally or by a service — so the choice is per-capability, not
-          all-or-nothing</span
+          >The same contract is satisfied by a POD service, a local implementation or a maintained service, so the
+          choice is per-capability rather than all-or-nothing</span
         >
       </div>
-      <div><b>No implementation transfers</b><span>Contracts, schemas and mocks only; nothing behind them</span></div>
+      <div>
+        <b>No implementation transfers</b><span>Contracts, schemas and local implementations only; nothing behind them</span>
+      </div>
       <div>
         <b>Reversible per capability</b
         ><span
@@ -1622,7 +1748,7 @@
         <svg
           viewBox="0 0 1160 470"
           role="img"
-          aria-label="Diagram: the carved package calls through a single typed-interface seam named contracts-platform, containing ten interfaces. The seam resolves two ways: under self-operation to local, static or mock implementations that the receiving team supplies, and under Odum hosting to maintained platform services. The interface is identical in both cases."
+          aria-label="Diagram: the carved package calls through a single typed-interface seam named contracts-platform, containing ten interfaces. The seam resolves two ways: under POD operation to POD services, local implementations and static values, and under Odum hosting to maintained platform services. The interface is identical in both cases."
         >
           <!-- package -->
           <rect
@@ -1676,7 +1802,7 @@
             Derived as an import closure over
           </text>
           <text x="36" y="360" style="fill: var(--ink-3); font-family: var(--sans); font-size: 11px">
-            the tier graph — reproducible from
+            the tier graph, reproducible from
           </text>
           <text x="36" y="376" style="fill: var(--ink-3); font-family: var(--sans); font-size: 11px">
             a commit, not assembled by hand
@@ -1795,22 +1921,22 @@
               letter-spacing: 0.13em;
             "
           >
-            RESOLUTION A · SELF-OPERATED
+            RESOLUTION A · POD-OPERATED
           </text>
           <text x="660" y="100" style="fill: var(--ink); font-family: var(--sans); font-size: 12px; font-weight: 600">
-            Local, static or mock implementations, supplied with the package
+            POD services, plus local and static implementations shipped with the package
           </text>
           <text x="660" y="124" style="fill: var(--ink-2); font-family: var(--sans); font-size: 11.5px">
             · Static universe and frozen configuration satisfy the universe and config contracts
           </text>
           <text x="660" y="142" style="fill: var(--ink-2); font-family: var(--sans); font-size: 11.5px">
-            · Mocks and documented extension points for reconciliation and attribution
+            · Reconciliation, attribution and treasury attach to POD fund administration
           </text>
           <text x="660" y="160" style="fill: var(--ink-2); font-family: var(--sans); font-size: 11.5px">
             · Feature and pricing readers built directly against venue APIs
           </text>
           <text x="660" y="184" style="fill: var(--ink-3); font-family: var(--sans); font-size: 11px">
-            Each contract is then implemented, sourced or deliberately left inert.
+            Each contract resolves to a POD service, a local implementation, or stays inert.
           </text>
 
           <!-- odum hosted -->
@@ -1854,7 +1980,7 @@
           <!-- legend -->
           <line x1="20" y1="428" x2="1140" y2="428" style="stroke: var(--rule); stroke-width: 1" />
           <text x="20" y="450" style="fill: var(--ink-3); font-family: var(--sans); font-size: 11.5px">
-            Dashed — a component the receiving team supplies. · Solid green — an existing maintained service. · The seam
+            Dashed, a component the receiving team supplies. · Solid green, an existing maintained service. · The seam
             itself is identical in both paths, which is what makes the choice reversible per capability.
           </text>
 
@@ -1895,17 +2021,18 @@
           </defs>
         </svg>
         <figcaption>
-          <b>Figure 2 — one seam, two resolutions.</b> The strategy calls ten typed interfaces. Under self-operation
-          they resolve to local implementations the receiving team owns; under Odum hosting they resolve to maintained
-          services. Because the contract is the same in both directions, the decision is per-capability and reversible
-          rather than a single irreversible election — and the strategy code does not change either way.
+          <b>Figure 2, one seam, several resolutions.</b> The strategy calls ten typed interfaces. Under POD operation
+          they resolve to POD's own administration, custody and NAV layer where that layer already covers the
+          capability, and to local implementations elsewhere; under Odum hosting they resolve to maintained services.
+          Because the contract is the same in both directions, the decision is per-capability and reversible rather
+          than a single irreversible election, and the strategy code does not change either way.
         </figcaption>
       </figure>
 
       <div class="plate">
         <div class="plate-head">
           <span class="label">The ten contracts</span>
-          <span class="note">Illustrative signatures — the shipped interfaces are typed and versioned</span>
+          <span class="note">Illustrative signatures; the shipped interfaces are typed and versioned</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
@@ -1913,7 +2040,7 @@
               <tr>
                 <th>Interface</th>
                 <th>Illustrative contract</th>
-                <th>In the carved package</th>
+                <th>In a POD deployment</th>
               </tr>
             </thead>
             <tbody>
@@ -1921,60 +2048,78 @@
                 <td class="grp grp-data"><strong>FeatureProvider</strong></td>
                 <td class="mono">staking_apy() · funding_apy() · feature_version()</td>
                 <td>
-                  Direct-from-venue readers. Formula versioning becomes a convention rather than an enforced property
+                  Direct-from-venue readers ship with the package. Formula versioning becomes a convention rather than
+                  an enforced property
                 </td>
               </tr>
               <tr>
                 <td class="grp grp-data"><strong>PricingService</strong></td>
                 <td class="mono">mark_price() · carry_rates() · pricing_asof()</td>
-                <td>Self-marked from venue prices. Independent marking is the substitution most often overlooked</td>
+                <td>
+                  Self-marked from venue prices, or resolved to POD's independent marks. Independent marking is the
+                  substitution most often overlooked, and the one POD is best placed to supply
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-data"><strong>ReferenceDataProvider</strong></td>
                 <td class="mono">resolve_instrument() · venue_symbol() · tick_size() · contract_multiplier()</td>
-                <td>Static export for the agreed universe; re-exported when a venue changes a specification</td>
+                <td>Static export for the agreed universe, re-exported when a venue changes a specification</td>
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>ExecutionService</strong></td>
                 <td class="mono">submit_intent() · cancel_intent() · hedge_intent() · execution_events()</td>
                 <td>
-                  <code>execution-basic</code> satisfies it with direct order placement; algorithms remain platform-side
+                  <code>execution-basic</code> satisfies it with direct limit-order placement. Execution algorithms and
+                  latency-sensitive paths are outside the engagement and remain platform-side
                 </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>PortfolioRiskService</strong></td>
                 <td class="mono">capital_budget() · risk_limits() · circuit_state() · target_allocation()</td>
                 <td>
-                  Static budget and limits from configuration; <code>circuit_state()</code> returns a locally computed
-                  value
+                  Static budget and limits from configuration, and the natural attachment point for POD's own risk
+                  framework, which owns the halt decision and the terms of resuming
                 </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>TreasuryService</strong></td>
                 <td class="mono">available_balance() · request_transfer() · transfer_status() · custody_location()</td>
                 <td>
-                  Balance reads against the trading account; transfers are an operational procedure rather than a call
+                  Balance reads against the trading account, with movement resolving to POD's Ceffu, Copper and
+                  Coinbase Prime arrangements. Wallet transfers and treasury movement are outside the carve-out
                 </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>ReconciliationService</strong></td>
                 <td class="mono">position_snapshot() · balance_snapshot() · exceptions() · reconciled_state()</td>
-                <td>Mock with a documented extension point. Production reconciliation is built or sourced</td>
+                <td>
+                  A documented extension point sized for POD's fund administration layer, which already reconciles
+                  against custody and venue truth for every sub-fund it hosts
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>AttributionService</strong></td>
                 <td class="mono">decision_pnl() · execution_pnl() · funding_pnl() · attribute_by()</td>
-                <td>Mock. The ledgers the package writes contain the inputs an implementation would need</td>
+                <td>
+                  Resolves to POD's on-chain NAV, fee calculation and fund accounting. The ledgers the package writes
+                  contain the inputs that layer needs
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>ConfigVersionService</strong></td>
                 <td class="mono">active_config() · version_id() · approval_metadata() · rollout_state()</td>
-                <td>Returns the frozen configuration and its version identifier; approval and rollout are inert</td>
+                <td>
+                  Returns the frozen configuration and its version identifier. There is no hot reload, so the running
+                  configuration is whatever the process started with
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>UniverseService</strong></td>
                 <td class="mono">eligible_instruments() · ranking() · rebalance_events()</td>
-                <td>Returns the static list. Ranking is constant and no rebalance event is ever emitted</td>
+                <td>
+                  Returns the static list. Ranking is constant and no rebalance event is ever emitted, because the
+                  dynamic coin, venue and weight surfaces are outside the carve-out
+                </td>
               </tr>
             </tbody>
           </table>
@@ -1983,24 +2128,17 @@
     </details>
   </section>
 
-  <!-- ==================== 05 ==================== -->
-  <section id="s5">
+  <!-- ==================== 06 ==================== -->
+  <section id="s6">
     <div class="sec-head">
-      <span class="num">05</span>
+      <span class="num">06</span>
       <h2>Configuration and parameter snapshot</h2>
-      <b class="st st-plan">planned</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md — the carve-out spec this section documents"
-        >owner: elysium_carveout_stubbed_strategy_service</b
-      >
     </div>
 
     <p class="lede">
-      At the hand-over point the package receives a configuration snapshot. Several values that the configuration format
-      presents as constants are, on the platform, outputs of services that recompute them — and the file format does not
-      distinguish the two cases, so it is stated here explicitly.
+      At the hand-over point the package receives a configuration snapshot, read once when the process starts. Several
+      values that the configuration format presents as constants are, on the platform, outputs of services that
+      recompute them, and the file format does not distinguish the two cases, so it is stated here explicitly.
     </p>
 
     <div class="keypoints">
@@ -2015,7 +2153,7 @@
         <b>Not transferred</b
         ><span
           >Parameter history, the search space, the optimisation pipeline, auto-tuning, alternate variants, research
-          notebooks</span
+          notebooks, hot reload</span
         >
       </div>
       <div>
@@ -2031,19 +2169,22 @@
       <ul>
         <li>One parameter set, appropriate to the agreed universe at the agreed version and date.</li>
         <li>A human-readable schema describing every strategy parameter and its validation constraints.</li>
-        <li>The exact venue and instrument universe covered by the acceptance test in §06.</li>
+        <li>The exact venue and instrument universe covered by the acceptance test in §07.</li>
         <li>A version identifier tying source, configuration and test fixtures together.</li>
         <li>The replay fixtures the acceptance test runs against.</li>
       </ul>
       <p>
         It does not include the parameter history, the search space, the optimisation pipeline, an auto-tuning loop,
-        alternate strategy variants, or research notebooks, unless separately agreed.
+        alternate strategy variants, or research notebooks, unless separately agreed. Nor does it include a reload
+        path: changing a parameter means editing the configuration and restarting the process, which is a deliberate
+        simplification rather than an omission. It means the configuration a run started with is the configuration it
+        ran on, and that is a property worth having when the run has to be explained to an administrator afterwards.
       </p>
 
       <div class="plate">
         <div class="plate-head">
           <span class="label">Constants here, services there</span>
-          <span class="note">Capability boundary — mechanism detail is out of scope for this document</span>
+          <span class="note">Capability boundary; mechanism detail is out of scope for this document</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
@@ -2057,9 +2198,9 @@
             <tbody>
               <tr>
                 <td class="grp grp-exec"><strong>Instrument universe</strong></td>
-                <td>A fixed list in configuration</td>
+                <td>A static list in configuration</td>
                 <td>
-                  <code>UniverseService</code> — selected from cross-venue rate data and re-evaluated on a schedule
+                  <code>UniverseService</code>, selected from cross-venue rate data and re-evaluated on a schedule
                 </td>
               </tr>
               <tr>
@@ -2072,8 +2213,8 @@
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>Capital allocation</strong></td>
-                <td>One allocation, changed by editing configuration</td>
-                <td><code>PortfolioRiskService</code> — allocated across strategies, venues and versions</td>
+                <td>One allocation, changed by editing configuration and restarting</td>
+                <td><code>PortfolioRiskService</code>, allocated across strategies, venues and versions</td>
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>Hedge and sizing parameters</strong></td>
@@ -2082,9 +2223,9 @@
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Which configuration is live</strong></td>
-                <td>Whatever is deployed</td>
+                <td>Whatever the running process started with</td>
                 <td>
-                  <code>ConfigVersionService</code> — a staged promotion ladder with pre-flight gates; the tested
+                  <code>ConfigVersionService</code>, a staged promotion ladder with pre-flight gates; the tested
                   artefact and the promoted artefact are the same artefact
                 </td>
               </tr>
@@ -2102,30 +2243,24 @@
       </div>
 
       <p>
-        Whether a fixed set drifts materially over a given horizon is a question about the strategy's environment rather
-        than about the software, and it is measurable directly — compare a frozen set's behaviour against a re-derived
-        one over the same window. It is raised here only because it is not visible from reading the package.
+        Whether a frozen parameter set drifts materially over a given horizon is a question about the strategy's
+        environment rather than about the software, and it is measurable directly: compare its behaviour against a
+        re-derived one over the same window. It is raised here only because it is not visible from reading the package.
       </p>
     </details>
   </section>
 
-  <!-- ==================== 06 ==================== -->
-  <section id="s6">
+  <!-- ==================== 07 ==================== -->
+  <section id="s7">
     <div class="sec-head">
-      <span class="num">06</span>
+      <span class="num">07</span>
       <h2>Hand-over acceptance criteria</h2>
-      <b class="st st-plan">planned</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md — the carve-out spec this section documents"
-        >owner: elysium_carveout_stubbed_strategy_service</b
-      >
     </div>
 
     <p class="lede">
-      The hand-over is complete when these nine conditions hold. They are written to be executed and signed off rather
-      than agreed in principle, and the last one is the most important.
+      The hand-over is complete when these nine conditions hold on POD infrastructure, against a POD segregated
+      portfolio. They are written to be executed and signed off rather than agreed in principle, and the last one is
+      the most important.
     </p>
 
     <div class="keypoints">
@@ -2142,7 +2277,7 @@
       </div>
       <div>
         <b>Condition 9 is the real test</b
-        ><span>Your team can enumerate every external dependency it must replace to operate independently</span>
+        ><span>Your team can enumerate every external dependency it must resolve to operate independently</span>
       </div>
     </div>
 
@@ -2168,7 +2303,7 @@
                 <td class="step-col">01</td>
                 <td class="grp grp-post"><strong>Build</strong></td>
                 <td>
-                  The package set builds from a clean checkout using documented dependencies, on your infrastructure,
+                  The package set builds from a clean checkout using documented dependencies, on POD infrastructure,
                   without access to our estate
                 </td>
               </tr>
@@ -2176,8 +2311,8 @@
                 <td class="step-col">02</td>
                 <td class="grp grp-exec"><strong>Connectivity</strong></td>
                 <td>
-                  Connects to each agreed venue in sandbox or an agreed safe production mode, authenticating with your
-                  credentials
+                  Connects to each agreed venue in sandbox or an agreed safe production mode, authenticating with the
+                  segregated portfolio's own credentials
                 </td>
               </tr>
               <tr>
@@ -2196,14 +2331,17 @@
                 <td class="step-col">05</td>
                 <td class="grp grp-exec"><strong>Orders</strong></td>
                 <td>
-                  Expresses strategy order intents through the basic execution implementation, including the multi-leg
-                  sequence
+                  Expresses strategy order intents as limit orders through the basic execution implementation,
+                  including the multi-leg sequence the structure requires
                 </td>
               </tr>
               <tr>
                 <td class="step-col">06</td>
                 <td class="grp grp-post"><strong>Safety</strong></td>
-                <td>Local hard limits and the kill-switch path are demonstrated to fire under induced conditions</td>
+                <td>
+                  Local hard limits and the local halt are demonstrated to fire under induced conditions, and the halt
+                  is observable to POD's own risk framework
+                </td>
               </tr>
               <tr>
                 <td class="step-col">07</td>
@@ -2219,8 +2357,9 @@
                 <td class="step-col">09</td>
                 <td class="grp grp-data"><strong>Documentation</strong></td>
                 <td>
-                  Your engineering team can enumerate every external dependency it must replace to operate independently
-                  — the ten contracts in §04 and the nine functions in §07
+                  Your engineering team can enumerate every external dependency it must resolve to operate
+                  independently: the ten contracts in §05 and the nine functions in §08, with the POD service that
+                  answers each one named
                 </td>
               </tr>
             </tbody>
@@ -2230,31 +2369,25 @@
 
       <p>
         Condition 9 carries the most weight because it is the one that prevents a hand-over from looking complete and
-        failing later. A package that builds, connects and trades in a sandbox but leaves its substitution list implicit
-        is the failure mode worth designing against, which is why the interface seam exists as a shipped artefact rather
-        than as an appendix to a document.
+        failing later. A package that builds, connects and trades in a sandbox but leaves its substitution list
+        implicit is the failure mode worth designing against, which is why the interface seam exists as a shipped
+        artefact rather than as an appendix to a document. In a POD deployment most of that list resolves to something
+        POD already runs, which is precisely why it is worth enumerating rather than assuming.
       </p>
     </details>
   </section>
 
-  <!-- ==================== 07 ==================== -->
-  <section id="s7">
+  <!-- ==================== 08 ==================== -->
+  <section id="s8">
     <div class="sec-head">
-      <span class="num">07</span>
+      <span class="num">08</span>
       <h2>Operational responsibilities on self-operation</h2>
-      <b class="st st-plan">planned</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md — the carve-out spec this section documents"
-        >owner: elysium_carveout_stubbed_strategy_service</b
-      >
     </div>
 
     <p class="lede">
       The package is software. Running it in production requires an operational estate around it. This is what that
-      estate contains, drawn from what currently sits around the same code — written to be audited line by line against
-      what Elysium already runs, since several may already be satisfied.
+      estate contains, drawn from what currently sits around the same code, and written to be audited line by line
+      against what POD already runs, since most of it is already satisfied by POD's own operating stack.
     </p>
 
     <div class="keypoints">
@@ -2266,12 +2399,12 @@
         >
       </div>
       <div>
-        <b>Mostly fixed-cost</b
-        ><span>Seven of the nine cost substantially the same for one strategy as for several</span>
+        <b>Four already sit with POD</b
+        ><span>Reconciliation, independent marking, reporting and data retention are the fund operating layer</span>
       </div>
       <div>
-        <b>Audit, don't accept</b
-        ><span>Check each against your existing infrastructure rather than treating the list as new build</span>
+        <b>Mostly flat-cost</b
+        ><span>Seven of the nine cost substantially the same for one strategy as for several</span>
       </div>
     </div>
 
@@ -2281,7 +2414,7 @@
       <div class="plate">
         <div class="plate-head">
           <span class="label">Standing operational functions</span>
-          <span class="note">Some may be satisfiable by existing Elysium infrastructure</span>
+          <span class="note">Several are already satisfied by POD's fund operating stack</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
@@ -2289,7 +2422,7 @@
               <tr>
                 <th>Function</th>
                 <th>What it involves</th>
-                <th>Discharged on the platform by</th>
+                <th>Discharged on the Odum platform by</th>
               </tr>
             </thead>
             <tbody>
@@ -2317,33 +2450,44 @@
               <tr>
                 <td class="grp grp-exec"><strong>Reconciliation</strong></td>
                 <td>
-                  Continuous comparison of believed position and balance against venue truth, with a defined response to
-                  a mismatch
+                  Continuous comparison of believed position and balance against venue truth, with a defined response
+                  to a mismatch
                 </td>
-                <td>Position monitor plus the daily batch/live determinism verdict</td>
+                <td>
+                  Position monitor plus the daily batch and live determinism verdict. In a POD deployment this is
+                  POD's fund administration layer
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Independent marking</strong></td>
                 <td>Marks and carry rates produced separately from the strategy that took the position</td>
-                <td>Pricing service writing to a global pricing ledger</td>
+                <td>
+                  Pricing service writing to a global pricing ledger. In a POD deployment this is POD's NAV layer
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Reporting</strong></td>
                 <td>
                   Performance reporting, fee and high-water-mark accounting, and the audit trail behind each figure
                 </td>
-                <td>Client-reporting service reading the four ledgers</td>
+                <td>
+                  Client-reporting service reading the four ledgers. In a POD deployment this is POD's on-chain fee
+                  calculation and fund accounting
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Breakers</strong></td>
                 <td>Automatic halt conditions, and defined criteria for resuming after one fires</td>
-                <td>Alerting service driving breakers, with a gated resume matrix</td>
+                <td>
+                  Alerting service driving breakers, with a gated resume matrix. In a POD deployment the halt policy
+                  belongs to POD's risk framework; the package supplies the local hard limits it acts on
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>On-call</strong></td>
                 <td>
-                  A rotation with escalation paths, covering the hours the strategy trades — continuous, for crypto
-                  venues
+                  A rotation with escalation paths, covering the hours the strategy trades, which for crypto venues is
+                  continuous
                 </td>
                 <td>One rotation across all strategies, with automated recovery attempted before a person is paged</td>
               </tr>
@@ -2353,7 +2497,10 @@
                   Storage, retention and backup for ledgers, decision records and captured inputs, at whatever horizon
                   your auditor requires
                 </td>
-                <td>Shared storage estate with per-shard coverage accounting</td>
+                <td>
+                  Shared storage estate with per-shard coverage accounting. In a POD deployment the audit horizon is
+                  already set by the administrator
+                </td>
               </tr>
             </tbody>
           </table>
@@ -2361,31 +2508,27 @@
       </div>
 
       <p>
-        One structural note for planning. Of the nine, seven are insensitive to how many strategies they serve: a
-        release pipeline, a monitoring estate and an on-call rota cost substantially the same for one strategy as for
-        several. That is why the operational estate rather than the strategy code tends to dominate the cost of a
-        self-run deployment — and it is the part most usefully estimated against your own infrastructure rather than
-        from this document.
+        Two structural notes for planning. First, four of the nine functions are the fund operating layer rather than
+        the trading layer: reconciliation, independent marking, reporting and data retention are exactly what POD is
+        built to provide, which is why the corresponding capabilities are excluded from the package rather than
+        duplicated inside it. Second, of the nine, seven are insensitive to how many strategies they serve. A release
+        pipeline, a monitoring estate and an on-call rota cost substantially the same for one strategy as for several.
+        That is why the operational estate rather than the strategy code tends to dominate the cost of a self-run
+        deployment, and it is the part most usefully estimated against your own infrastructure rather than from this
+        document.
       </p>
     </details>
   </section>
 
-  <!-- ==================== 08 ==================== -->
-  <section id="s8">
+  <!-- ==================== 09 ==================== -->
+  <section id="s9">
     <div class="sec-head">
-      <span class="num">08</span>
-      <h2>Extension work-items</h2>
-      <b class="st st-plan">planned</b>
-      <b class="ev ev-check">? check</b>
-      <b
-        class="own"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md — the carve-out spec this section documents"
-        >owner: elysium_carveout_stubbed_strategy_service</b
-      >
+      <span class="num">09</span>
+      <h2>Extension work items</h2>
     </div>
 
     <p class="lede">
-      If the mandate grows, each direction is a defined set of work items. Both columns below contain real engineering —
+      If the mandate grows, each direction is a defined set of work items. Both columns below contain real engineering:
       calibration, live probing and a cutover are required either way. The difference is how many layers each item
       touches, and whether the layer beneath it already exists.
     </p>
@@ -2394,21 +2537,21 @@
       <div>
         <b>An instrument</b
         ><span
-          >Platform: a universe entry once capture covers it. Standalone: capture, features, list, re-validation — per
-          name</span
+          >Odum-hosted: a universe entry once capture covers it. POD-operated: capture, features, list, re-validation,
+          per name</span
         >
       </div>
       <div>
         <b>A venue</b
         ><span
-          >Both: an adapter, collateral calibration, a cutover. Standalone additionally builds the spine the adapter
+          >Both: an adapter, collateral calibration, a cutover. POD-operated additionally builds the spine the adapter
           attaches to</span
         >
       </div>
       <div>
         <b>A regulated venue</b
         ><span
-          >A discontinuity rather than an increment — different protocol family, clearing relationship, margin model,
+          >A discontinuity rather than an increment: different protocol family, clearing relationship, margin model,
           settlement path</span
         >
       </div>
@@ -2420,7 +2563,7 @@
       <div class="plate">
         <div class="plate-head">
           <span class="label">Work items by direction of growth</span>
-          <span class="note">Neither column is zero — the difference is layers touched, not effort avoided</span>
+          <span class="note">Neither column is zero; the difference is layers touched, not effort avoided</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
@@ -2428,7 +2571,7 @@
               <tr>
                 <th>Direction</th>
                 <th>Odum-hosted</th>
-                <th>Self-operated</th>
+                <th>POD-operated</th>
               </tr>
             </thead>
             <tbody>
@@ -2440,7 +2583,7 @@
                   Capture already spans a broad base-asset universe, so a name becomes eligible once listed and liquid
                   enough, and enters the universe without per-name engineering
                 </td>
-                <td>Extend capture, extend features, extend the fixed list, re-validate — per name</td>
+                <td>Extend capture, extend features, extend the static list, re-validate, per name</td>
               </tr>
               <tr>
                 <td class="grp grp-exec">
@@ -2453,7 +2596,8 @@
                   bounded and repeatable
                 </td>
                 <td>
-                  The same adapter work, plus building the spine it attaches to, then repeating that judgement per venue
+                  The same adapter work, plus building the spine it attaches to, then repeating that judgement per
+                  venue
                 </td>
               </tr>
               <tr>
@@ -2462,9 +2606,10 @@
                   ><span class="mono">Rocket Pool · EtherFi · Jito · Marinade</span>
                 </td>
                 <td>
-                  A collateral-matrix entry, a wrap-step decision, an on-chain rate reader and rebasing reconciliation —
-                  an established pattern. Gated on venue-side cross-margin acceptance, which is a commercial step on
-                  your side either way
+                  Lido is wired end to end for live on-chain staking and unstaking, so a further protocol is a
+                  collateral-matrix entry, a wrap-step decision, an on-chain rate reader and rebasing reconciliation
+                  against an established pattern. Gated on venue-side cross-margin acceptance, which is a commercial
+                  step on your side either way
                 </td>
                 <td>
                   The same items without the pattern, the reconciliation, or the calibration history behind the
@@ -2476,11 +2621,13 @@
                   <strong>More chains</strong><span class="mono">registry-driven pattern</span>
                 </td>
                 <td>
-                  The leg builder resolves collateral, staking protocol and LST from the registry row rather than from
-                  bespoke per-chain code, so a further chain is a new registry row and adapter, not a rebuilt engine
+                  Ten chains carry a live decentralised venue today, and the leg builder resolves collateral, staking
+                  protocol and LST from the registry row rather than from bespoke per-chain code, so a further chain is
+                  a new registry row and adapter, not a rebuilt engine
                 </td>
                 <td>
-                  A first chain integration with no in-codebase precedent, including RPC, gas and settlement differences
+                  A first chain integration with no in-codebase precedent, including RPC, gas and settlement
+                  differences
                 </td>
               </tr>
               <tr>
@@ -2489,8 +2636,9 @@
                   ><span class="mono">dated basis · recursive · lending rotation</span>
                 </td>
                 <td>
-                  Written against the same tick interface, emitting the same instruction contract, writing the same
-                  ledgers — inheriting the determinism check, attribution, risk layer and promotion ladder
+                  Nine further archetypes in the same family, written against the same tick interface, emitting the
+                  same instruction contract and writing the same ledgers, inheriting the determinism check,
+                  attribution, risk layer and promotion ladder
                 </td>
                 <td>A second engine plus its own collaborators, and a reconciliation problem between the two books</td>
               </tr>
@@ -2500,27 +2648,39 @@
                   ><span class="mono">arbitrage · volatility · stat-arb · portfolio</span>
                 </td>
                 <td>Built and running on the same spine; adoption is a commercial conversation</td>
-                <td>Out of scope — never part of the engagement and not in any hand-over</td>
+                <td>Outside the engagement, and therefore not in any hand-over</td>
               </tr>
               <tr>
-                <td class="grp grp-post"><strong>More share classes or clients</strong></td>
+                <td class="grp grp-post"><strong>More share classes or sub-funds</strong></td>
                 <td>
                   A configuration entry. Isolation, treasury separation, subscription and redemption flows and fee
                   accounting already model it
                 </td>
-                <td>A structural change to a system built on one book</td>
+                <td>
+                  POD's SPC structure already provides the segregation; the package itself is built around one book,
+                  so a second portfolio means a second deployment
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-data">
                   <strong>Regulated venues</strong><span class="mono">futures · options</span>
                 </td>
-                <td>An integration onto existing groundwork — see below</td>
+                <td>An integration onto existing groundwork, see below</td>
                 <td>A second platform with a compliance surface attached</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+
+      <h3>Two numbers about decentralised venues that measure different things</h3>
+      <p>
+        Fifty-nine decentralised protocols are covered as data sources, which is what the research and backtest surface
+        reads and what a strategy can be developed against. Three protocol families are wired end to end for live
+        on-chain instruction dispatch: Uniswap for swaps, AAVE V3 for supply, withdraw, borrow and repay, and Lido for
+        staking and unstaking. Those are different measurements and the second is the one that matters to a live book.
+        For this hand-over it is the relevant one too, because Lido is the leg the staked-basis structure uses.
+      </p>
 
       <h3>Regulated venues as the worked discontinuity</h3>
       <p>
@@ -2534,7 +2694,7 @@
         a regulated broker, a TradFi market-data path with its own vendor integration and instrument definitions for
         futures and options, a pricing service already computing greeks and carry-family rates, and a delta-one feature
         family. Adding a regulated venue is an integration project with a compliance workstream beside it.
-        Self-operated, the same ambition is a futures-capable trading system built next to the crypto one, then
+        POD-operated, the same ambition is a futures-capable trading system built next to the crypto one, then
         reconciled with it.
       </p>
 
@@ -2543,35 +2703,24 @@
         <p>
           Every strategy on the platform emits the same instruction contract and writes the same ledgers, so an
           improvement to execution, reconciliation or a venue integration applies to all of them. A transferred package
-          is a snapshot at a commit and does not receive later platform work — a property of any code transfer, stated
-          here so it is priced rather than discovered.
+          is a snapshot at a commit and does not receive later platform work. That is a property of any code transfer,
+          stated here so it is priced rather than discovered.
         </p>
       </div>
     </details>
   </section>
 
-  <!-- ==================== 09 ==================== -->
-  <section id="s9">
+  <!-- ==================== 10 ==================== -->
+  <section id="s10">
     <div class="sec-head">
-      <span class="num">09</span>
-      <h2>Appendix — the source estate</h2>
-      <b class="st st-part">partial</b>
-      <b
-        class="ev ev-verified"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md — verified 2026-08-16 against strategy-service@efa1525813's EXTRACTION_AUDIT.md: per-repository code coupling measured directly for all 26 repositories in the table below (zero code coupling confirmed for MTDS/MDPS/ml-service, instruments-service, features-service beyond the listed contributions, deployment-api/-service/-ui, unified-trading-pm and SIT), not assumed"
-        >✓ verified</b
-      >
-      <b
-        class="own"
-        title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md — the carve-out spec this section documents"
-        >owner: elysium_carveout_stubbed_strategy_service</b
-      >
+      <span class="num">10</span>
+      <h2>Appendix, the source estate</h2>
     </div>
 
     <p class="lede">
-      For completeness, the mapping in the other direction: the twenty-six repositories the platform comprises, which of
-      them contribute code to the package in §02, and what the remainder do. Counts re-derived from the workspace tree
-      on the date of this revision.
+      For completeness, the mapping in the other direction: the twenty-six repositories the platform comprises, which
+      of them contribute code to the package in §03, and what the remainder do. Counts re-derived from the workspace
+      tree on the date of this revision.
     </p>
 
     <div class="keypoints">
@@ -2584,9 +2733,9 @@
         ><span>Data plane, valuation and post-trade, control plane and delivery, surfaces and assurance</span>
       </div>
       <div>
-        <b>Reconciles to §02</b
+        <b>Reconciles to §03</b
         ><span
-          >Eleven packages from six source repositories — the extraction splits by capability, not by repository</span
+          >Eleven packages from six source repositories; the extraction splits by capability, not by repository</span
         >
       </div>
     </div>
@@ -2598,8 +2747,8 @@
         <div class="stat"><span class="v">26</span><span class="k">Repositories in the estate</span></div>
         <div class="stat"><span class="v">6</span><span class="k">Contribute code to the package</span></div>
         <div class="stat">
-          <span class="v">2<span class="u"> / 6</span></span
-          ><span class="k">Carry archetypes transferred</span>
+          <span class="v">2<span class="u"> / 11</span></span
+          ><span class="k">Carry and yield archetypes transferred</span>
         </div>
         <div class="stat">
           <span class="v">4<span class="u"> / 20</span></span
@@ -2610,8 +2759,8 @@
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Contributing repositories — 6</span>
-          <span class="note">Each contributes a subset, mapped to the packages in §02</span>
+          <span class="label">Contributing repositories, 6</span>
+          <span class="note">Each contributes a subset, mapped to the packages in §03</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
@@ -2626,9 +2775,9 @@
               <tr>
                 <td class="grp grp-exec"><strong>strategy-service</strong></td>
                 <td>
-                  Archetypes across every family — carry and yield, structural arbitrage, statistical arbitrage,
-                  volatility, market making, ML- and rules-directional, event-driven and portfolio — plus the backtest
-                  harness, risk engine, position monitor and P&amp;L attribution
+                  Sixty archetypes across nine families: carry and yield, structural arbitrage, statistical arbitrage,
+                  volatility, market making, ML-directional, rules-directional, event-driven and portfolio. Plus the
+                  backtest harness, risk engine, position monitor and P&amp;L attribution
                 </td>
                 <td class="mono">strategy-basis-core · strategy-config · risk-guards-local · sim-harness</td>
               </tr>
@@ -2639,7 +2788,7 @@
                   routing; the policy registry; paper and live matching engines; custody integrations; multi-leg atomic
                   execution
                 </td>
-                <td class="mono">exchange-adapters-lite · custody-adapters-lite · execution-basic</td>
+                <td class="mono">exchange-adapters-lite · execution-basic</td>
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>unified-api-contracts</strong></td>
@@ -2661,8 +2810,9 @@
               <tr>
                 <td class="grp grp-data"><strong>features-service</strong></td>
                 <td>
-                  Feature computation across on-chain, delta-one, volatility, calendar, microstructure, cross-instrument
-                  and cross-asset-group families, with formula versioning binding a value to the version a backtest used
+                  Feature computation across on-chain, delta-one, volatility, calendar, microstructure,
+                  cross-instrument and cross-asset-group families, with formula versioning binding a value to the
+                  version a backtest used
                 </td>
                 <td class="mono">strategy-basis-core (staking-yield calculator)</td>
               </tr>
@@ -2681,8 +2831,8 @@
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Non-contributing repositories — 20</span>
-          <span class="note">Grouped by function; each maps to one or more interfaces in §04 or functions in §07</span>
+          <span class="label">Non-contributing repositories, 20</span>
+          <span class="note">Grouped by function; each maps to one or more interfaces in §05 or functions in §08</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
@@ -2698,7 +2848,7 @@
                 <td class="grp grp-data"><strong>Data plane</strong><span class="mono">3</span></td>
                 <td class="mono">market-tick-data-service · market-data-processing-service · ml-service</td>
                 <td>
-                  <code>FeatureProvider</code> · data retention (§07). Historical series and per-shard coverage
+                  <code>FeatureProvider</code> · data retention (§08). Historical series and per-shard coverage
                   accounting do not transfer
                 </td>
               </tr>
@@ -2710,7 +2860,7 @@
                 </td>
                 <td>
                   <code>PricingService</code> · <code>ReconciliationService</code> · <code>AttributionService</code> ·
-                  breakers and reporting (§07)
+                  breakers and reporting (§08). In a POD deployment this whole group is POD's own fund operating layer
                 </td>
               </tr>
               <tr>
@@ -2720,7 +2870,7 @@
                   ibkr-gateway-infra
                 </td>
                 <td>
-                  <code>ConfigVersionService</code> · release, provisioning and on-call (§07). Note that deployment
+                  <code>ConfigVersionService</code> · release, provisioning and on-call (§08). Note that deployment
                   topology configuration is a runtime dependency, not documentation
                 </td>
               </tr>
@@ -2754,7 +2904,7 @@
                 configuration. Correct on the day; each needs an owner and a refresh path afterwards.
               </li>
               <li>
-                <strong>Does not transfer:</strong> anything whose value is in being continuously produced — captured
+                <strong>Does not transfer:</strong> anything whose value is in being continuously produced: captured
                 history, coverage accounting, independent marks, the determinism verdict, and later platform work.
               </li>
             </ul>
@@ -2769,13 +2919,14 @@
       Odum Research · Ikenna Igboaka, Founder &amp; CEO · ikenna@odum-research.com · FCA registered firm, FRN 975797
     </p>
     <p>
-      Engineering architecture and hand-over boundary, prepared for Elysium and POD, 11 August 2026. Revision 2.0.
-      Companion to the platform architecture document; where the two differ, the architecture document is the more
-      recent. The eleven packages in §02 are a proposed extraction structure rather than existing repositories.
-      Repository, module and adapter counts were re-derived from the workspace tree on the date of this revision.
-      Commercial terms, the election point and the support period are governed by the consulting agreement and the
-      service-level agreement, not by this document. Confidential — not for onward distribution without our written
-      consent.
+      Engineering architecture and hand-over boundary, prepared for POD, 22 August 2026. Revision 3.0. The contract
+      basis is the consulting agreement between Elysium AM Ltd and IkeNova Ltd executed on 3 March 2025; the scope
+      exclusions in §01 are those the agreement itself sets. Companion to the platform architecture document; where the
+      two differ, the architecture document is the more recent. The eleven packages in §03 are a proposed extraction
+      structure rather than existing repositories. Repository, module, archetype and adapter counts were re-derived
+      from the workspace tree on the date of this revision. Commercial terms, the election point and the support period
+      are governed by the consulting agreement and the service-level agreement, not by this document. Confidential, not
+      for onward distribution without our written consent.
     </p>
   </footer>
 </div>
