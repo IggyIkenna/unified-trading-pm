@@ -431,3 +431,57 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
   to a bar-clearing record: the same `/blocked`/escalation-queue mechanism used for the `B` answer, if available
   to a session with AO access, or the operator confirming directly inside a conversation the executing session
   can itself see. Doc-only via `safe-doc-push.sh`.
+- **2026-08-22T16:3xZ (autonomous session, direct interactive operator dispatch)**: dispatched with an explicit,
+  in-conversation operator go-ahead to execute + drive this to genuine resolution (not a relayed inter-agent
+  claim — a live instruction in this session's own transcript). **Found the recovery had ALREADY been executed**
+  by a session prior to this one: scheduler paused, orphaned lock cleared, `_index/availability_index.parquet`
+  metadata-restamped (`consolidator_content_write_at=2026-08-21T05:11:44Z`,
+  `consolidator_run_at=2026-08-22T14:42:16Z`), scheduler resumed — matching exactly the recovery this doc's own
+  chain had specified. Canonical `generation=1787388651853992` unchanged across the restamp (content untouched,
+  confirmed independently again this session).
+  - **First cycle to pick up post-restamp**: execution `uts-prod-manifest-consolidator-market-data-defi-ffk98`
+    (`lock_acquired=2026-08-22T14:43:33Z`). Live-traced its full Cloud Logging output: `phase=shards_listed
+    shards=16` -> `phase=canonical_downloaded canon_rows=161317283` (14:45:27Z, ~114s download) ->
+    `phase=shards_downloaded shards=15 rows_in=162136271` -> `phase=duckdb_merge_start mode=incremental
+    memory_limit=24GB threads=4 chunk_days=30 chunks=106 date_range=2018-01-01..2026-08-22` (14:45:30Z).
+  - **Resolved this session's own open question — is this the fail-closed "marker missing" branch again, or the
+    genuine marker-present incremental path?** The `chunks=106 date_range=2018-01-01..2026-08-22` shape is
+    IDENTICAL whether `consolidator_content_write_at` is present or missing (`_duckdb_merge_payload`'s date-chunk
+    bounds are always computed over the FULL canonical span, not just the changed-shard date range — see
+    `unified_trading_library/manifest_consolidator.py` lines ~3255-3310), so the log line alone cannot
+    distinguish the two paths. Explicitly checked for the fail-closed branch's own unconditional
+    `logger.warning("... has NO consolidator_content_write_at marker ... cutoff UNPROVABLE ...")` /
+    `severity=WARNING|CRITICAL` in ffk98's logs — **zero matches**, confirming ffk98 took the genuine
+    marker-present incremental branch (`content_write_mtime is not None` in `consolidate()`), not the doomed
+    fail-closed one. The restamp's effect on THIS bucket is real but modest: defi's per-VM shard backlog is
+    naturally tiny (16 shards total, actively pruned), so marker-present vs marker-missing barely changes which
+    shard *files* get downloaded — the dominant cost (chunked anti-join over the full ~161M-row canonical) is the
+    same either way. Direct historical precedent for THIS exact shape completing in-budget:
+    `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`'s own 2026-08-14 comment records a
+    genuine incremental merge on this same bucket (159.3M-row canonical, comparable size) whose merge phase alone
+    measured 3422s (57min) and completed successfully — the reasoned prediction is that ffk98 should also fit,
+    though not yet proven at the time of this entry (ffk98 was still running past that 57min reference point as
+    of the last check — see below).
+  - **Found and fixed a real, independent bug while verifying**: `unified_trading_library/cloud_interface`'s
+    `get_blob_metadata()` (both `providers/gcp.py` and `providers/aws.py`) NEVER projected the object's custom
+    metadata into the returned `BlobMetadata.metadata` field, despite the dataclass declaring that field and
+    `blob.reload()` (GCS) / `head_object()` (S3) already fetching it — every caller got `metadata=None`
+    regardless of what custom metadata actually existed. Caught live: a fresh verification read of the
+    already-restamped canonical (post-14:42Z) reported `metadata=None`, which looked like the restamp had failed
+    or been silently stripped — cross-checked against ffk98's own "no missing-marker warning" log evidence above
+    before concluding it was a read-tool blind spot, not a real absence (measurement-claims discipline: didn't
+    take the first reading at face value). **Fixed + shipped**:
+    `unified-trading-library@<PENDING — filled in on ship, see below>` — both providers now project
+    `blob.metadata`/`resp.get("Metadata")` into `BlobMetadata.metadata`; 4 new regression tests
+    (`test_gcp_providers.py` x2, `test_aws_mode.py` x1, parity coverage). This means every PRIOR session's
+    `get_blob_metadata()`-based "marker absent" reads in this doc's own history (pre-restamp) happened to be
+    independently corroborated by the consolidator's own Cloud Logging WARNING lines, so those conclusions stand
+    unchanged — but the tool itself was blind the whole time, and any FUTURE marker-presence verification via this
+    method is only trustworthy from this fix onward.
+  - **Status at this entry**: ffk98 still running, no terminal state yet, still within its 7200s budget
+    (deadline ~16:43:33Z). Continuing to monitor to a terminal state (success or timeout) and will close out
+    todo 2 + this doc once resolved, per the task's own instructions — if it times out again, the next lever is
+    the Terraform `timeout_seconds`/`CONSOLIDATOR_LOCK_TTL_SECONDS`/`CONSOLIDATOR_STALL_ALERT_CYCLES` per-bucket
+    override raise (mirroring the exact precedent already used twice for this bucket/cefi in
+    `manifest_consolidator_scheduler.tf`), drafted and ready to ship. Doc-only via `safe-doc-push.sh` for this
+    entry; the UTL fix ships separately via `quickmerge.sh --agent`.
