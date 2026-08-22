@@ -816,3 +816,32 @@ One new regression test. Full `quality-gates.sh` green before commit; quickmerge
 `[DIAG] P2` todo for the live-production confirmation step (needs the fix live in the deployed image + one real
 capture cycle — could not be done in this session). This closes the doc's original `[CODE] P1` todo but the doc
 itself stays `open` pending that DIAG P2 follow-up.
+
+**2026-08-22 — forensic investigation verdict on the `[DIAG][OPERATOR] P2` "WHO/WHAT executed the removal" todo
+(this session, does NOT resolve the todo — recorded findings only, todo stays open).** Investigated the population
+collapse (4,281,228→211,291 captured rows) and later regrowth (211,291→4,352,441) documented in the two
+`[DIAG][OPERATOR] P0/P1` todos above.
+
+- Sibling docs `sports_cf8_out_of_window_mechanism_reconciliation_2026_08_16.md` and
+  `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` are confirmed UNCONNECTED — disjoint populations (cf8) and a
+  read-only investigation (halftime SFI-vs-inplay) respectively; neither performed or explains a row-removal.
+- `dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md` is ADJACENT (same shared
+  `odds-api-key`, same VM class) but only supplies a regrowth *hypothesis* — it has no executed action that
+  explains either event (the collapse or the regrowth) on its own.
+- The `_index/snapshots/k2_stale_twin_presync/` GCS prefix found during the fresh precondition check is confirmed
+  UNRELATED — it is from a wholly different, month-earlier 2026-07-22 K2 league_id-casing migration, not this
+  incident.
+- No uncommitted/off-repo script was found responsible. No commit in `market-tick-data-service` in the
+  2026-08-18→2026-08-22 window performs a manifest row-removal/CAS-write for `odds_horizon_bucket`.
+
+**FINAL VERDICT — collapse**: the original population collapse (4,281,228→211,291 captured rows) is a genuine,
+unrecoverable audit-trail gap. Recording it as such per this todo's own fallback option ("the gap is explicitly
+accepted as unrecoverable audit-trail loss").
+
+**Leading hypothesis, NOT a firm conclusion — regrowth**: the later regrowth (211,291→4,352,441) has a
+plausible-but-only-partially-confirmed explanation: backfill VM `mtds-backfill-odds-20260817-062648` was preempted
+2026-08-19T23:57-58Z and recreated 2026-08-20T00:01Z, predating the writer fix `market-tick-data-service@e00fc618`
+(2026-08-20T14:38Z). But the VM's own date-range metadata (`2022-05-09` to `2026-03-28`) does NOT cover the full
+observed regrowth span (`2020-06-06` to `2026-08-15`) — so this is stated as a leading hypothesis, not a firm
+conclusion; the `[DIAG][OPERATOR] P0` todo above (root-causing the regrowth before any row-removal plan proceeds)
+stays genuinely open pending closing that date-range gap.

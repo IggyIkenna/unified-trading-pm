@@ -551,6 +551,20 @@ logic and that no second archetype could ever want. That must be stated, not ass
   not gated): new `stablecoin_conventions.py` module, both consumers switched to import from it, 4 near-duplicate
   constants → 2 canonical ones. Remaining ambiguous: 3 clusters / 4 rows (`_FAMILY_TO_ASSET_GROUP`,
   `_STRIKE_INCREMENT`, `_LP_CONCENTRATED_POOLS`), still needs the operator.
+- **2026-08-22 — operator ruling received on the 3 ambiguous clusters.** `_FAMILY_TO_ASSET_GROUP` and
+  `_LP_CONCENTRATED_POOLS` keep their existing "no action, unchanged" recommendation — the operator did not
+  override those two. `_STRIKE_INCREMENT` is the exception: the operator explicitly ruled to BUILD a live
+  Deribit-strikes lookup to replace the static local rounding grid, overriding the default "keep static grid"
+  recommendation from the 2026-08-21 prep work above. This ruling was submitted through AO's real
+  `/api/blocked/{id}/answer` endpoint on `BLK-op-strategy_service_centralization_fixes-522fbe508abe` with
+  `ruling_action=instruct`, `ruling_role=backend_engineer` (HTTP 200, `disposition=final`) — it should materialize
+  as a real dispatched `backend_engineer` task on AO's next `regen_backlog_from_plan.py` tick. Checked the live AO
+  backlog (read-only, `check-ao-backlog-status.sh` via SSM, no access issues): the Deribit-strikes/`_STRIKE_INCREMENT`
+  `backend_engineer` task has **not materialized yet**. The original blocked question
+  `strategy_service_centralization_fixes-522fbe508abe` still shows `status=blocked`; a meta-task
+  `strategy_service_centralization_fixes-522fbe508abe--ruling` ("Apply operator ruling for ...-522fbe508abe") is
+  `status=queued` — this is the apply-ruling mechanism that will spawn the concrete follow-up task, not the
+  Deribit-strikes task itself. No task id to record yet; re-check after the next backlog regen tick.
   (2) Per this plan's own `sequential: true` rule, worked the first open todo after the ambiguous-cluster todo in
   file order: "Gate the regression" (P2, BACKEND) — built `reference_constant_gate.py`, mirroring A4's
   `catalog_engine_coverage.py` shape (measured-set / shrink-only baseline / two tests), baselined at 74 post-

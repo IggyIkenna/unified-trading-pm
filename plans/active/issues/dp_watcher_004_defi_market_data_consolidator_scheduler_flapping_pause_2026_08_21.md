@@ -208,11 +208,13 @@ pending that answer, not by omission.
       share a root cause (something intermittently disrupting the defi consolidator's steady
       state, of which "output blob staleness" and "scheduler flapping paused" are two symptoms) —
       not established this session, flagged as a hypothesis only.
-- [ ] [INFRA] P1. **RULED 2026-08-22 (D74)**: operator did NOT claim the MacOS session — ADOPT REC: leave the defi
-      consolidator paused, keep identifying the session owner (never resume blind). `BLK-fbcafec2` is answered by
-      this ruling — leave-paused (option A) is the disposition; the residual open work is identifying the session
-      owner, not whether to resume. Original blocked question `BLK-fbcafec2` (posted 2026-08-21 by agt-0b7473,
-      unanswered after the 2-minute bound): is the repeated MacOS-session pause/resume of
+- [x] ✅ [OPERATOR] P1. **ANSWERED 2026-08-22 — direct operator confirmation via an interactive session**: the
+      repeated MacOS-hosted Claude Code CLI pause/resume toggling of
+      `uts-prod-manifest-consolidator-market-data-defi-cron` is the human operator's own deliberate active work,
+      not a stuck/erroneous loop. Resolution: leave the job as the operator leaves it — do not resume it
+      yourself — matching the worker's own original recommendation (option A). See Progress Log.
+      Original todo text: Answer blocked question `BLK-fbcafec2` (posted 2026-08-21 by agt-0b7473, unanswered
+      after the 2-minute bound): is the repeated MacOS-session pause/resume of
       `uts-prod-manifest-consolidator-market-data-defi-cron` deliberate active work (leave alone, no
       further agent action needed) or a stuck/erroneous local loop (needs stopping, then the job resumed)?
       ~~Job is currently `PAUSED` pending this answer.~~ **CORRECTED 2026-08-21 (agt-0fc6b2, slot 9): job is
@@ -412,3 +414,14 @@ pending that answer, not by omission.
   the session owner" is not resolved, and the disposition it records is actively contradicted by live state;
   flipping it would misrepresent the situation as settled. Doc stays `assigned_vm: planning`, `status: open`.
   Awaiting `BLK-33006070`'s answer before any further scheduler action.
+- **2026-08-22 — direct operator confirmation (interactive session).** The human operator confirmed directly, via
+  an interactive session on 2026-08-22, that the repeated MacOS-hosted Claude Code CLI pause/resume toggling of
+  `uts-prod-manifest-consolidator-market-data-defi-cron` is their own deliberate active work — not a stuck or
+  erroneous local loop. This directly answers `BLK-fbcafec2`'s original standing question (deliberate work vs.
+  needs-stopping). Resolution: leave the job as the operator leaves it — do not resume it yourself — matching the
+  worker's own original recommendation (option A) that every prior escalation on this doc (agt-0b7473, agt-0fc6b2,
+  agt-17e0d2, agt-bb2394) independently converged on without ever getting a formal answer. Flipped the
+  `[OPERATOR] P1` todo (BLK-fbcafec2) to done on this basis. The separate, broader `[OPERATOR] P0` credential/
+  access-security audit todo (`BLK-33006070`, filed by the slot-25 session earlier 2026-08-22, asking WHO/WHAT
+  principal holds the credential and whether to rotate it) stays OPEN — this confirmation resolves the
+  deliberateness question but not that todo's distinct credential-scoping decision.

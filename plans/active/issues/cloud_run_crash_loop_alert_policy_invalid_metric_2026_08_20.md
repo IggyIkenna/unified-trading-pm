@@ -142,12 +142,23 @@ the one confirmed-real target).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Resolve target-service identity for 2 of the 3 monitored names before any metric fix ships**:
-      confirm whether `market-data-query-service` was decommissioned/renamed/merged (candidates: `features-service`,
-      `client-reporting-api` — not verified) and whether `run-jobs-tardis-data-loader` (the one live service with a
-      similar name/purpose) is genuinely `central-market-data-tardis-loader`'s successor. The memory-high +
-      instance-zero policies for both are ALREADY live in prod monitoring nothing under these names — this is a
-      standing, silent gap independent of the crash-loop metric bug below. Source: this doc's 2026-08-21 addendum.
+- [x] ✅ [OPERATOR] P1. **RESOLVED 2026-08-22 — both target-service identity questions answered, neither is a
+      rename/merge/successor.** `market-data-query-service` and `central-market-data-tardis-loader` were
+      deliberately DECOMMISSIONED OUTRIGHT on 2026-08-07 (not renamed, not merged) — see
+      `/plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md` lines 87-102 (market-data-query-service:
+      zero real traffic in 7 days, sole revision undeployed for ~10 months, its backing bucket retired 2026-04-18,
+      deleted via `gcloud run services delete`) and lines 299-303 (central-market-data-tardis-loader: dead since
+      2024-12-16, 0 logs in 7d, deleted the same session) — cross-confirmed live via `gcloud run services list`.
+      Neither `features-service` nor `client-reporting-api` (the candidates floated in the 2026-08-21 addendum) is a
+      successor to `market-data-query-service` — they were never the same service under a new name, just
+      superficially plausible by function. `run-jobs-tardis-data-loader` is NOT `central-market-data-tardis-loader`'s
+      successor either: it is a separate, older (2024-08-22), architecturally distinct legacy Cloud Function
+      trigger-wrapper for the Cloud Run Job `tardis-data-loader` — confirmed via `gcloud run services describe`/
+      `gcloud run jobs list`, and cross-checked against `/codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`
+      (`/plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md` line 159) which already lists them as
+      two distinct legacy items, not a rename pair. The memory-high + instance-zero policies for both decommissioned
+      services are confirmed-stale liveness targets monitoring nothing — tracked as a new follow-up todo below
+      (removal, not a metric fix, since there is no live service left to monitor).
 - [ ] [INFRA] P2. Rework `google_monitoring_alert_policy.cloud_run_service_crash_loop`
       (`deployment-service/terraform/gcp/cloud_run_service_liveness.tf:135`) onto a real metric — recommended: add a
       `google_logging_metric` (`logging.googleapis.com/user/cloud_run_crash_loop`) counting Cloud Run
@@ -158,6 +169,10 @@ the one confirmed-real target).
       `cloud_run_service_liveness.tf` so prod drift clears, and annotate in the file that crash-loop coverage for
       these 3 services is intentionally dropped (memory-high + instance-zero remain). Repo: deployment-service.
       Source: this doc.
+- [ ] [CODE] P2. Remove the 2 stale liveness targets (market-data-query-service, central-market-data-tardis-loader)
+      from deployment-service/terraform/gcp/cloud_run_service_liveness.tf's cloud_run_service_liveness_targets
+      locals block (lines 42-58) — both services were decommissioned 2026-08-07, monitoring nothing since. Only
+      uts-prod-data-status-rollup-svc remains a real current target.
 
 ## Progress Log
 
@@ -167,3 +182,14 @@ the one confirmed-real target).
   fails. Memory-HIGH + instance-zero policies for the same services confirmed live. This is a permanent 404, not a
   transient. Filed this doc with the recommended fix (logs-based metric). No code change to deployment-service
   performed (config fix tracked in the todos above).
+- **2026-08-22 — target-service identity resolved (interactive session).** Confirmed both `market-data-query-service`
+  and `central-market-data-tardis-loader` were deliberately decommissioned outright 2026-08-07 (not renamed/merged)
+  per `/plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md` lines 87-102 and 299-303, cross-verified
+  live via `gcloud run services list`. Neither `features-service` nor `client-reporting-api` is a successor to the
+  first; `run-jobs-tardis-data-loader` is a separate, older (2024-08-22), architecturally distinct legacy Cloud
+  Function trigger-wrapper for the Cloud Run Job `tardis-data-loader`, not a successor to the second — confirmed via
+  `gcloud run services describe`/`gcloud run jobs list`, cross-checked against
+  `/codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md` (line 159 of its plan-archive counterpart)
+  which already lists them as two distinct legacy items. Flipped the `[OPERATOR] P1` todo to done on this basis and
+  added a new `[CODE] P2` follow-up todo to remove the 2 now-confirmed-stale liveness targets from
+  `cloud_run_service_liveness.tf` (not implemented this session, just filed).

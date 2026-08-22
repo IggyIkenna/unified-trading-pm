@@ -73,3 +73,9 @@ declared-absence hiding a real gap) requires.
 **2026-08-21 — slot 21.** Filed while executing `cefi_venue_smoke_batch1_2026_08_20.md` todo
 #3. No live attempt was made for this venue (no URL exists to attempt) — recorded directly as
 a confirmed credential/access gap per the todo's own instruction.
+
+**2026-08-22 — direct operator confirmation (interactive session).** The human operator directly confirmed they
+will personally initiate the Coinbase Derivatives Exchange (CDE) institutional/UAT onboarding request themselves
+— this is a business/account action outside what any agent can self-serve (no self-serve signup, no discoverable
+public `base_url`, per this doc's own findings). The `[OPERATOR] P2` todo above stays OPEN pending that
+follow-through — not flipped, since the credentials/access have not actually been granted yet.
