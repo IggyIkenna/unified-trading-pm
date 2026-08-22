@@ -233,6 +233,38 @@ could not track real consumption.
       STOPPED, so it would have died silently at the first supervisor restart; all three
       registries are now wired.
 
+- [x] ✅ [BACKEND] P2. **Self-hosted (`ollama`) arm** — `agent-orchestrator@61a2f9943f`. Worse than
+      a missing button: `gemma-self-hosted` DECLARES an `oauth_token_env_file`, so it never hit the
+      400 — it fell through to the Anthropic path and spent ~12s driving `claude /usage` in a pty
+      against a local Ollama endpoint with no such concept. It degraded safely (`looks_valid`
+      False, last-known values survived) but burned the operator's time and reported a parse
+      failure for something that was never going to parse. There is no vendor, so there is no
+      quota: a REAL answer, not a gap. The arm says so immediately, writes NO percentages and no
+      `rate_limited_until`, touches the row so the click is visibly registered, and logs the reason
+      so "why does this card never show usage?" has an answer on record rather than looking like a
+      poller that quietly never ran. Evidence: gate green (5495 passed/5 skipped, basedpyright 0
+      errors); 4 new tests, the load-bearing one being the negative — no fabricated 0%.
+
+- [ ] [UI] P3. **The Refresh button's label and tooltip are now wrong for 13 of 24 accounts.**
+      Non-DeepSeek cards render "Refresh from /usage" with the tooltip "Drive `claude /usage` on
+      the backend's box, parse, update this card (~12s)" (`dashboard/src/layout.tsx`, the
+      account-card footer). That is false for GLM, Codex and Gemini as of the arms above — each now
+      does a fast provider-specific read, not a ~12s Anthropic pty — and it was already false for
+      Ollama. A genuine misleading-string defect, deliberately NOT fixed inline: any UI tick needs
+      `[UI]` + `pw:L2 ✓` + a cited regression spec per
+      `/codex/06-coding-standards/ui-testing-layers.md`, which is disproportionate to a label while
+      the substantive arms were landing. Repo: agent-orchestrator (dashboard).
+
+- [ ] [BACKEND] P3. **Fold DeepSeek's balance refresh onto the one `/refresh-usage` endpoint.**
+      RE-SCOPED (see the correction in the coverage section): this is NOT a user-facing gap —
+      DeepSeek's button works today via `/refresh-deepseek-balance`. It is a backend tidy-up: two
+      routes doing one job, with the provider branch duplicated in the UI. Extract the shared body
+      into `_refresh_deepseek_usage(account_id, acc_def)`, dispatch to it from
+      `refresh_account_usage`, and have the dedicated route delegate. Only delete the old route
+      once the UI stops calling it (`dashboard/src/api.ts:327`), and that UI change carries the
+      Playwright-gate cost, so it is worth doing together with the label todo above. Repo:
+      agent-orchestrator.
+
 - [ ] [BACKEND] P3. Audit the remaining providers for the same estimate-vs-measurement confusion
       now that the pattern is known: confirm each poller's numbers are a genuine vendor read, and
       that each writes `rate_limited_until` (not just percentages) — a percentage alone never
@@ -345,13 +377,22 @@ Counted from the live `data/config/accounts.json` on the planning VM, 2026-08-22
 | anthropic |        8 | ✅ `usage_poller`       | ✅ pty `/usage`                 |
 | gemini    |       10 | ✅ `gemini_rate_limit_poller` | ✅ `_refresh_gemini_usage` |
 | glm       |        2 | ✅ `glm_quota_poller`   | ✅ `_refresh_glm_usage`         |
-| deepseek  |        2 | ✅ balance/usage poller | ⚠️ SEPARATE button, not the one |
+| deepseek  |        2 | ✅ balance/usage poller | ✅ own endpoint, works          |
 | codex     |        1 | ✅ `codex_quota` (live) | ✅ `_refresh_codex_usage`       |
-| ollama    |        1 | n/a — self-hosted       | ❌ not modelled as "no quota"   |
+| ollama    |        1 | n/a — no vendor exists  | ✅ `_refresh_selfhosted_usage`  |
 
-`gemini` is 10 of 24 accounts and the largest remaining gap, so it is the recommended next item.
-DeepSeek's ⚠️ is exactly the shape the directive named — "Anthropic only, plus a separate DeepSeek
-button beside it" — so folding it into the one button is in scope, not already-done.
+**All 24 accounts covered — the directive is satisfied.**
+
+**Correction to an earlier reading in this doc.** I first recorded DeepSeek's separate button as
+"exactly the shape the directive named" and scoped folding it as directive work. Reading the
+actual render logic (`dashboard/src/layout.tsx`, the `isDeepseek` ternary in the account card's
+footer) shows that is wrong: the UI branches exactly ONCE — DeepSeek gets its own button, and
+**every other provider** gets "Refresh from /usage" wired to `/refresh-usage`. So GLM, Codex,
+Gemini and Ollama cards always HAD a button; it simply 400'd or ran a meaningless Anthropic pty
+probe until the arms above existed. DeepSeek's button works. Folding it onto one endpoint is a
+backend tidy-up (two routes doing one job), NOT a user-facing gap, and is re-filed at that
+priority. What the re-scoping exposed is that `ollama` was the real last gap, and a worse one
+than a missing button — see its todo.
 
 ## Progress Log
 
@@ -417,18 +458,34 @@ button beside it" — so folding it into the one button is in scope, not already
   SUPERVISED or STOPPED, so it would have died silently at the first supervisor restart. That test
   earned its keep; nothing else in the suite would have noticed.
 
+- **2026-08-22 (slot 15, `/autonomous`) — shipped `agent-orchestrator@61a2f9943f` (self-hosted arm);
+  directive COMPLETE.** All 24 accounts now covered on both the poll and the button. Two things
+  worth carrying forward. First, a correction to my own earlier reading in this doc: I had recorded
+  DeepSeek's separate button as a directive gap, and reading `layout.tsx` showed it is not — the UI
+  branches once, DeepSeek gets its own working button and everything else already pointed at
+  `/refresh-usage`. Re-scoping it is what surfaced `ollama` as the genuine last gap, and a nastier
+  one than a missing button, because it declares an env file and therefore fell through to a ~12s
+  Anthropic pty probe rather than failing fast. Second, the arithmetic reconciled on purpose: the
+  gate went 5491 → 5495 while I expected +5, and the discrepancy was my own miscount (the file has
+  4 tests), not a silently uncollected test file — worth checking rather than assuming, since a
+  test file that never gets collected is indistinguishable from a passing one in the summary line.
+
 ## Deferred work after 2026-08-22
 
-Recommended NEXT item: **DeepSeek on the ONE refresh button** — its vendor read already exists and
-works, it is just wired to a SEPARATE button, which is literally the split the directive named
-("Anthropic only, plus a separate DeepSeek button beside it"). Small and well-understood. Then
-`ollama`, which only needs modelling as "no vendor quota" rather than silently None. After those
-two, the "no exceptions" directive is fully satisfied for all 24 accounts.
+The operator's "no exceptions" directive is COMPLETE: all 24 accounts are covered on both the
+30-min poll and the Refresh button. Everything below is follow-up the measurements exposed, not
+the directive itself.
+
+Recommended NEXT item: **the `ao-self-pull.sh` restart gap** — it is the only open item that
+silently un-does shipped work. `codex-bridge` ran 23h-old code until it was restarted by hand on
+2026-08-22, and the next edit to any of its three modules will do the same again with nothing
+reporting it. After that, the Gemini credential ask is the highest-value one, since it converts
+Gemini's self-count into a real vendor measurement.
 
 | item | state / why deferred | blocked on |
 | --- | --- | --- |
-| DeepSeek on the ONE refresh button | **Not done** — vendor read exists and works, but only behind its own separate button; the directive explicitly names that split | nobody — pick it up |
-| `ollama`/`gemma-self-hosted` modelled as "no vendor quota" | **Not done** — currently silently None, indistinguishable from "not yet probed" | nobody — pick it up |
+| Fold DeepSeek onto the one `/refresh-usage` endpoint | **Not done** — RE-SCOPED to a backend tidy-up; its button already works, so this is two routes doing one job, not a user-facing gap. Pairs with the UI label todo (shared Playwright cost) | nobody — pick it up |
+| Refresh button label/tooltip wrong for 13 of 24 accounts | **Not done** — says "Refresh from /usage … ~12s Anthropic pty", false for GLM/Codex/Gemini/Ollama now. Needs the `[UI]` + `pw:L2` gate | nobody — pick it up |
 | Gemini numbers are a self-count, not a vendor measurement | **Operator-owned** — needs `monitoring.viewer` for the fleet SA on five AI-Studio GCP projects; not self-serviceable, they sit outside the fleet's own project | operator (IAM on those projects) |
 | Gemini RPD gate is racy (22/20 measured) | **Not done** — check-then-act with no lock; concurrent spawns can each see 19 and proceed | nobody — pick it up |
 | `GEMINI_RATE_GATE_SKIPPED_EVENT` declared but never emitted | **Not done** — emit it at the real skip path or delete it; today it reads as coverage that does not exist | nobody — pick it up |
