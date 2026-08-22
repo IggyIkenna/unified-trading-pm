@@ -323,23 +323,39 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
       genuinely stuck (404 retry loop), killed + relaunched via the registered launcher with the current fix baked in.
       The ~11 bounded backfill VMs: left alone per the ruling — 9/10 had already self-deleted on completion, only 1
       still running, untouched.
-- [ ] [SCRIPT] P1. D34: flip `l2_book_microstructure_capture` to `assigned_vm: planning` + un-void the re-test todo.
-- [ ] [SCRIPT] P1. D8: promote cefi batch22, cross_cutting batch19/20, defi batch19 from draft to active (re-run the
-      conflict check first).
-- [ ] [BACKEND] P1. D66: file the AAVE-PLASMA archetype/slot catalogue todo in strategy-service's owning plan.
-- [ ] [SCRIPT] P1. D35: author the IDE-compatible heartbeat design todo (fresh carrier proposal; UserPromptSubmit stays
-      rejected) in the human-fleet doc.
-- [ ] [SCRIPT] P1. D26/D27: draft Elysium SLA v5 (30-day, corrected dates) for operator review; open the carve-out repo
-      build as a tracked todo in the Elysium disclosure doc.
-- [ ] [SCRIPT] P1. Apply every ledger disposition (ruled + adopted) to its affected docs: write the dated ruling
-      line, replace each stale operator-gate marker with the reflecting disposition marker per task_template §3, and
-      convert the now-executable units into todos. Done-when: grep of the 180 gated docs shows no stale operator-gate
-      marker lacking a 2026-08-21 ruling line. 44/179 docs done (chunks 0-2, `46ab72dbde`…`935aae14cb`), 1 flagged for
-      archive (`ao_round5_apply_session_operator_qa_index_2026_08_08`); ~35 now-executable units spun into
-      `issues_corpus_executable_queue_2026_08_21.md`. Chunks 3-11 (135 docs) hit the session-limit reset — retrying
-      via `wnroqem2n`.
-- [ ] [INFRA] P2. ATTEMPT set: D4, D53, D70, D102, D81, D112, D131, D58, D130 — each resolved with its own evidence line
-      in the Progress Log or escalated with concrete options.
+- [x] N. ✅ [SCRIPT] P1. D34: flip `l2_book_microstructure_capture` to `assigned_vm: planning` + un-void the re-test
+      todo. **DONE 2026-08-22** — `unified-trading-pm@403eaa6e9b`.
+- [x] N. ✅ [SCRIPT] P1. D8: promote cefi batch22, cross_cutting batch19/20, defi batch19 from draft to active
+      (re-run the conflict check first). **DONE 2026-08-22** — `unified-trading-pm@403eaa6e9b`. All 4 conflict-
+      checks re-verified clean; `defi_satellite_ao_dispatch_batch19_2026_08_21.md`'s `assigned_vm` stays `NA`
+      (flipping to `planning` needs a gated finalize-companion plan per task_template §4 — confirmed by a real gate
+      failure — left as a named follow-up in that doc).
+- [x] N. ✅ [BACKEND] P1. D66: file the AAVE-PLASMA archetype/slot catalogue todo in strategy-service's owning
+      plan. **DONE 2026-08-22** — `unified-trading-pm@403eaa6e9b`. Filed in
+      `/plans/active/venue_e2e_wiring_2026_08_16.md` (repos includes strategy-service).
+- [x] N. ✅ [SCRIPT] P1. D35: author the IDE-compatible heartbeat design todo (fresh carrier proposal; UserPromptSubmit
+      stays rejected) in the human-fleet doc. **DONE 2026-08-22** — `unified-trading-pm@403eaa6e9b`. Authored Phase
+      9 in `/plans/active/ao_human_fleet_integration_2026_08_15.md`; found its own already-shipped Phase 2b
+      (2026-08-19, before this ruling) likely already IS the different, non-hook carrier this ruling asks for
+      (`ao-liveness-heartbeat.py`, a cron transcript-mtime poll) — Phase 9's todo confirms or scopes the residual.
+- [x] N. ✅ [SCRIPT] P1. D26/D27: draft Elysium SLA v5 (30-day, corrected dates) for operator review; open the
+      carve-out repo build as a tracked todo in the Elysium disclosure doc. **DONE 2026-08-22** —
+      `unified-trading-pm@403eaa6e9b`. Drafted `/codex/14-customer-journeys/commercial-model/ODUM_SLA_v5_2026-08-22.md`
+      (DRAFT, not sent) — 30-day support period needed no change, v4 already had it consistent; only the 5 stale
+      June/May-2026 dates were corrected. Carve-out todo confirmed already tracked in
+      `elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md` since 2026-08-11, not duplicated.
+- [x] N. ✅ [SCRIPT] P1. Apply every ledger disposition (ruled + adopted) to its affected docs: write the dated
+      ruling line, replace each stale operator-gate marker with the reflecting disposition marker per task_template
+      §3, and convert the now-executable units into todos. **DONE 2026-08-22 — 179/179 docs, verified by direct
+      measurement** (fresh grep of every doc in `dispositions_by_doc.json` for its D-number(s) co-occurring with a
+      2026-08-21/22-dated line, re-run against `origin/live-defi-rollout` after every ship, ending at 0 remaining).
+      Finished via 4 parallel batch sub-agents (~17 docs each) plus 6 docs handled directly where they overlapped
+      with Task-2 D-item execution. Prior 44/179 count was stale/superseded.
+- [x] N. ✅ [INFRA] P2. ATTEMPT set: D4, D53, D70, D102, D81, D112, D131, D58, D130 — each resolved with its own
+      evidence line in the Progress Log or escalated with concrete options. **DONE 2026-08-22** —
+      `unified-trading-pm@9de638a1d3` + `@74fafbb805`. D4/D70/D58/D130/D131 genuinely EXECUTED with real evidence
+      (an IAM grant, a new IAM user+GSM credential, two code-verified design resolutions, an archived-doc
+      cross-reference); D53/D81/D102/D112 ESCALATED with concrete options each, no fabricated completions.
 
 ### Wave 3 — executable queue
 
@@ -425,3 +441,10 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
   live sessions in this slot since session start, dozens of concurrent `quality-gates.sh`/`safe-doc-push.sh`
   processes observed across repos) — every ship this tick required 1-7 retries; this is the dominant cost driver
   right now, not logic errors. Next tick: verify both resumed agents' real outcomes before trusting either.
+- **2026-08-22 (tick 7)** — Finished the ruling-sweep to 179/179 (measured, not trusted) and every remaining
+  Wave-2 D-item (D34/D8/D66/D35/D26/D27 + full ATTEMPT set) — see the flipped checkboxes above for per-item
+  evidence. Sustained severe host contention required multiple ship retries and 2 local-edit reversions caught +
+  refixed (a bold-non-checkbox marker and a resolved-without-archival frontmatter state, both real plan-hygiene
+  gate hits, not false positives) plus resolving 2 unrelated peers' merge conflicts conservatively before this
+  session's own pushes could land. Remaining: Wave 1's archival-pass-2 (already delegated) and Wave 3's
+  executable-queue execution (352 docs, not started this tick).
