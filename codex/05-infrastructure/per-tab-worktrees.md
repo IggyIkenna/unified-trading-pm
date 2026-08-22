@@ -1369,8 +1369,23 @@ lands, so a halted slot restarts on a **good working tree on the right branch** 
    → inherit; a DIFFERENT live tmux session owning a fresh `.agent-claim`, or a dirty file with mtime < 120 s (a live
    interactive editor) → **PROTECT** (never stomp). **Quarantine is never terminal** — a dead maker's WIP is always
    eventually inherited.
+4. **FM9 conflict-marker guard — PARK, don't refuse (relaxed 2026-08-22, operator ruling).** A tracked file still
+   holding unresolved merge-conflict markers is committed to the `wip-preserve/` ref anyway, with a WARNING block in
+   the commit message naming the affected paths, and the slot is realigned clean. It is still REFUSED when HEAD is not
+   the base branch (that path pushes HEAD to a real branch). Safe because the commit provably cannot reach the shared
+   branch: the base-branch route pushes only to `wip-preserve/…`, and `push_or_preserve_ahead_commits` will only push an
+   ahead commit to `origin/<base>` when a `.qg_last_passed_sha` sentinel matches HEAD's tree — an orphan-wip commit
+   changes the tree, so it always routes to another `wip-preserve/` ref instead. WHY: refusing outright made
+   `resolve_dirty_state` return `quarantined` every tick FOREVER with no self-heal and no alert — 201 of 375 quarantine
+   failures in 24h across 8 slots (2026-08-22), i.e. nothing preserved AND the slot permanently out of the fleet. This
+   PARKS, it does not RESOLVE: there is still no safe mechanical fix for a real conflict, and a human must resolve the
+   markers before the preserved content is reused.
 
-**FM9 operator-PAUSED slots — AO does not touch them at all (HARD RULE, codified 2026-08-21).** A slot with
+**Operator-PAUSED slots — AO does not touch them at all (HARD RULE, codified 2026-08-21).** (Deliberately NOT
+given an `FM<n>` number: `FM1`-`FM9` are the dirty-resolution guards in
+`agent-orchestrator/server/worktree_clean_check/`, and the code's own `FM9` is the conflict-marker guard. This rule and
+the stray-dir rule below sit alongside that sequence, not inside it — an earlier draft of this doc numbered them FM9/FM10
+and collided with the code, corrected 2026-08-22.) A slot with
 `status="paused"` is OUT of the fleet by operator action, for one of exactly two reasons, and both mean hands off: (1)
 an interactive session is using that checkout to debug — frequently to debug AO itself; (2) capacity restriction. While
 paused, AO must not commit, push, stash, realign or reset that slot's worktree, and must not kill its session.
@@ -1401,7 +1416,7 @@ pushed to `wip-preserve/orchestrator-slot-<N>-<short-sha>` (and, for an ahead/di
 `git show --stat <sha>`, then restore into the working tree with `git cherry-pick --no-commit <sha>` — it applies
 cleanly onto a moved HEAD. Do NOT `git reset --hard` first.
 
-**FM10 a stray git dir under a slot is never one of that slot's repos (HARD RULE, codified 2026-08-22).** A slot's repo
+**A stray git dir under a slot is never one of that slot's repos (HARD RULE, codified 2026-08-22).** A slot's repo
 directory is the checkout of the repo it is NAMED for. Two positive stray signals, both evidence-based: (1) `.git` is a
 FILE — a linked worktree; no sanctioned isolation tool (quickmerge `--isolated`, `safe-doc-push.sh`,
 `ship-from-worktree.sh`) ever places one flat under a slot dir, they all root under `${TMPDIR:-/tmp}`, so one found
@@ -1418,7 +1433,7 @@ stashes, never quarantines or gates a spawn, and a linked worktree's shared stas
 
 WHY (measured 2026-08-22, same issue doc): all four walks hand-rolled the enumeration, so ship-script leftovers
 (`pm-fix`, `pm-ship.MpuQMt`, `oms-wt.oc3YkB`, `unified-trading-pm-current`) and history-rewrite backup clones counted as
-slot repos. Each carries 190-231 uncommittable dirty files, the FM9-era conflict-marker guard refuses them **correctly**
+slot repos. Each carries 190-231 dirty files with unresolved markers, which the code's FM9 guard refused **correctly**
 — there is no safe mechanical fix for unresolved merge-conflict markers — and `resolve_dirty_state` then quarantines the
 WHOLE slot. With no self-heal that is permanent: **239 of 355 autospawn failures (67%) and 104 of 141
 escalation-dispatch failures (74%) in 24h**, across 10 slots, slot 11 alone 54 times. Note the guard was never the bug;

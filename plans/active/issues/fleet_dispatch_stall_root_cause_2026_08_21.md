@@ -348,8 +348,8 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       repo with markers too, this fix removes half the cause but **unwedges no slot on its own**
       — confirmed live: quarantines continued post-deploy, now naming only canonical repos.
 
-- [ ] [BACKEND] P0. **Conflict-marker quarantine is a PERMANENT, unalertable wedge — this is
-      what is actually holding the fleet.** A canonical repo in a slot checkout with unresolved
+- [x] [BACKEND] P0. **Conflict-marker quarantine WAS a permanent, unalertable wedge — FIXED
+      2026-08-22 on the operator's ruling.** A canonical repo in a slot checkout with unresolved
       markers can never be preserved (FM9 refuses, correctly), so `resolve_dirty_state` returns
       `quarantined` on every tick forever, with no self-heal, no escalation, and no alert. 201
       failures in 24h across slots 5/6/8/9/11/22/23/25.
@@ -362,17 +362,34 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       22's `workspace-manifest.json` has strictly HIGHER versions upstream (0.114.0 vs 0.112.0);
       slot 25's `kraken_rest_adapter.py` sides are **semantically identical** — one-line vs
       black-wrapped `frozenset`, pure formatter churn.
-      Two candidate fixes, both needing an operator ruling before implementation because both
-      touch un-shipped content in slots this session does not own: (a) let the preserve path
-      commit marker-bearing content to the `wip-preserve/` ref specifically — that ref exists to
-      quarantine exactly this, so nothing is lost and the slot unwedges, inverting today's
-      "nothing preserved AND slot wedged"; (b) resolve to `Updated upstream` and drop the stale
-      stash side. (a) is non-destructive and is the recommendation. Do NOT implement either
-      without the ruling — the FM9 guard was added after markers were committed and shipped, and
-      that reasoning still holds for the slot's own branch.
-      Regardless of which is chosen, a repeatedly-unresolvable quarantine must raise ONE
-      actionable, state-transition-deduped alert naming the files — a wedge nothing reports is
-      how this survived unnoticed.
+      **Operator chose (a): park it on `wip-preserve/`, don't resolve it.** The rejected
+      alternative was resolving to `Updated upstream` and dropping the stash side — smaller, and
+      supported by all four sampled files, but destructive on the unsampled remainder.
+      Implemented: on the base branch the preserve path now commits marker-bearing content,
+      pushes it to `wip-preserve/orchestrator-slot-<N>-<sha>`, realigns the slot clean, and puts
+      a WARNING block naming the affected paths into the commit message so a later
+      `git cherry-pick --no-commit <sha>` cannot silently reintroduce them. Still REFUSED when
+      HEAD is not the base branch (that path pushes HEAD to a real branch, where the original
+      corruption reasoning is unchanged). Marker paths are recorded on
+      `orphan_commits[].conflict_marker_paths` in the activity log.
+      **Why it cannot leak to the shared branch — enforced, not conventional:**
+      `push_or_preserve_ahead_commits` pushes an ahead commit to `origin/<base>` ONLY when a
+      `.qg_last_passed_sha` sentinel matches HEAD's tree, and an orphan-wip commit changes the
+      tree, so it is always routed to another `wip-preserve/` ref instead.
+      `test_preserved_commit_lands_only_on_wip_preserve_never_the_shared_branch` asserts the
+      shared branch SHA does not move — if that test ever fails, REVERT the relaxation.
+      Complexity stayed under the C901 cap by extracting `_fm9_conflict_marker_verdict` and
+      `_orphan_commit_message` (28 → passing); the cap was NOT raised.
+      — `agent-orchestrator@fb903131a3` + `tests/test_conflict_marker_preserved_to_wip_preserve.py`
+      (6 tests; suite 5445 → 5451, 0 failed)
+
+- [ ] [BACKEND] P3. **Decide whether an unresolvable-quarantine alert is still worth building.**
+      The original premise no longer holds: post-fix the slot's tree is realigned CLEAN, so the
+      markers live only on the preserve ref and there is nothing left for a human to fix in the
+      slot — a per-occurrence alert would now be mostly noise. Kept as a todo rather than
+      silently dropped because one residual case remains alertable: a wip-preserve PUSH failure
+      leaves the commit local, and the non-base-branch path still refuses outright (dead in the
+      current topology, since `tab/<op>/<N>` is retired). Re-measure before building anything.
 - [ ] [INFRA] P2. **`ORCHESTRATOR_WORKER_MEMORY_MAX=10G` is set but not applied.** Every spawn
       logs `systemd-run --user unavailable — spawning worker UNCAPPED` (26 occurrences in one
       hour). The host shows cgroup `memory.high` throttling active (counter 613,421) with 6 GB of
@@ -446,8 +463,10 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       still excludes paused, and a SOURCE-level check that fails the moment any sweep re-introduces
       a bare `select(SlotRow)`. Each behavioural test also asserts the ordinary slot IS still swept,
       so this can never degrade into a blanket disable.
-      Recovery recipe written into `/codex/05-infrastructure/per-tab-worktrees.md` § FM9 as this
-      todo asked.
+      Recovery recipe written into `/codex/05-infrastructure/per-tab-worktrees.md`
+      § "Operator-PAUSED slots" as this todo asked. (That section was briefly headed "FM9" —
+      renamed 2026-08-22 because `FM1`-`FM9` are the code's own dirty-resolution guards and its
+      FM9 is the conflict-marker guard, so the number collided.)
       ACCEPTED TRADE-OFF, recorded so it is not rediscovered as a bug: genuinely-abandoned WIP in a
       slot that is THEN paused stays un-preserved until the slot is unpaused.
 - [x] [INFRA] P2. **The same slot reset also deleted the repo `.venv`** — the gate aborts with
@@ -478,7 +497,8 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
 | Re-measure the fleet 24h after the fixes (`[INFRA] P1` above) | **Cannot be done yet** — needs elapsed time; the fixes went live 22:20Z and 4-min-old signals are not evidence | wall-clock only |
 | Role/reserve starvation (`[BACKEND] P1`) | **DONE 2026-08-22 — FALSIFIED.** Re-measured with AO's own predicates: 0 of 349 capacity-waiting tasks have no eligible slot, and dropping both reserves frees 0 more. The 62% figure ignored generic slots, which accept every role. No change needed | — |
 | Stray git dirs permanently quarantining slots (`[INFRA] P2`) | **DONE 2026-08-22** — one enumerator, `classify_slot_dirs`. Accounts for 174 of 375 quarantine failures; unwedges no slot alone (see scope correction) | — |
-| Conflict-marker quarantine is a permanent, unalertable wedge (`[BACKEND] P0`) | **Not done — BLOCKED-OPERATOR-DECISION.** The live blocker: 201 of 375 quarantine failures, slots 5/6/8/9/11/22/23/25. Evidence gathered, two fixes scoped, recommendation is (a) preserve onto the `wip-preserve/` ref. Needs a ruling because both options touch un-shipped content in slots this session does not own | operator ruling |
+| Conflict-marker quarantine, the permanent unalertable wedge (`[BACKEND] P0`) | **DONE 2026-08-22** — operator ruled "park on `wip-preserve/`, don't resolve"; marker-bearing WIP is now preserved with a warning block and the slot realigns clean. `agent-orchestrator@fb903131a3` | — |
+| Is an unresolvable-quarantine alert still worth building? (`[BACKEND] P3`) | **Not done** — the premise weakened once slots stop being wedged; re-measure the residual cases (push failure, retired tab-branch path) before building | nobody |
 | `vm-disk-guard.sh` paused-slot exemption (`[INFRA] P2`) | **DONE 2026-08-22** — a fourth, DURABLE keep-signal; the other three are all instantaneous and read a paused interactive slot as idle | — |
 | `prereqs` blocks 439 of 789 queued tasks (56%) | **Not done** — now the largest single fleet-scope blocker by a wide margin, and the natural next lever. Decomposes into the durable-park defect (already fixed once, re-verify) and the two operator rulings below | partly operator |
 | `explain_blocked` lists 14 phantom human slots as "eligible" (`[BACKEND] P2`) | **Not done** — diagnostics honesty, no behaviour change | nobody |
@@ -488,12 +508,9 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
 | 6 named prerequisites nothing can ever set (`[OPERATOR] P3`) | **Operator-owned** — needs a ruling on what clears each | operator |
 | Interactive-session-in-an-AO-slot hazard (`[INFRA] P1`) | **DONE 2026-08-21** — operator ruled paused = hands off; `agent-orchestrator@3cfd9bcfb8` | — |
 
-**Recommended NEXT item: the `[BACKEND] P0` conflict-marker wedge — it needs an operator ruling
-first, so ASK before anything else.** It is the live blocker (201 of 375 quarantine failures,
-8 slots) and the evidence is already gathered; only the ruling is missing.
-
-**Then the `prereqs` fleet-scope blocker.** With the reserve falsified and the stray half of the
-quarantine wedge fixed, this is the next constraint on the queue: 439 of 789 queued tasks fail
+**Recommended NEXT item: the `prereqs` fleet-scope blocker.** With the reserve falsified and BOTH
+halves of the quarantine wedge fixed (strays + conflict markers), this is the next constraint on
+the queue: 439 of 789 queued tasks fail
 `_prereqs_met`, so no slot can claim them regardless of capacity. Start by splitting that 439 into
 (a) genuine upstream-incomplete, (b) durable-park conditions never cleared, (c) the 6 unsettable
 named prerequisites — only (b) is a code bug, and it has been fixed once already, so verify before
@@ -598,3 +615,30 @@ code 0" for a gate run that had actually ABORTED — the durable `QG_EXIT_CODE=$
 is the only trustworthy signal. (c) The tmux server was found dead with zero live workers, which
 looks like the headline cause but is downstream: every spawn attempt was failing at the
 dirty-state gate before ever reaching tmux, so no session was ever created to keep it alive.
+
+Post-deploy, I measured the fix rather than assuming it and had to correct my own write-up
+within the hour: splitting the 375 quarantine failures by the repo actually named showed only
+174 were strays, 201 named CANONICAL repos — and since a slot quarantines only when EVERY dirty
+repo fails, and each affected slot had both, the enumerator fix unwedged no slot on its own.
+Quarantines continued after the deploy, now naming only canonical repos. The lesson generalises:
+"the fix is deployed and the error count dropped" was not the same claim as "this fix addresses
+that error", and only splitting the population by cause separated them.
+
+That left a decision that was not mine to make — both ways of unwedging the 8 slots touch
+un-shipped content in slots this session does not own — so I gathered the evidence and asked.
+The markers turned out to be uniformly failed-`git stash pop` residue, and in all four sampled
+files `Updated upstream` was the strictly correct side (slot 25's two sides were byte-equivalent
+modulo a black wrap). Operator ruled: PARK on `wip-preserve/`, do not resolve. Implemented in
+`agent-orchestrator@fb903131a3`. The property that made it safe was already enforced rather than
+conventional, which is why it was acceptable at all: `push_or_preserve_ahead_commits` will only
+push an ahead commit to `origin/<base>` behind a `.qg_last_passed_sha` tree match, and an
+orphan-wip commit changes the tree — so a marker-bearing commit can only ever reach another
+`wip-preserve/` ref. I verified that by reading the guard, not by trusting the docstring that
+claimed it, and pinned it with a test that asserts the shared branch SHA does not move.
+
+Two smaller corrections made in the same pass. The C901 complexity cap went 26 → 28 with the new
+branches; I extracted two helpers rather than raise the baseline. And I had introduced an FM
+numbering collision the day before — this codex labelled the paused-slot rule "FM9" while the
+code's own FM9 is the conflict-marker guard (`FM1`-`FM9` are all real, in
+`worktree_clean_check/`). Both codex headings are now un-numbered, with the collision recorded so
+the next reader does not re-derive it.
