@@ -184,12 +184,33 @@ could not track real consumption.
       the Anthropic path; see the two follow-ups directly below, which are what remains of "no
       exceptions".
 
-- [ ] [BACKEND] P2. **Codex arm of the uniform refresh.** `codex_rate_limit_poller` already does a
-      REAL vendor read (`account/rateLimits/read` via the Codex SDK) and writes the same generic
-      `five_hour_pct`/`weekly_pct`, so this is wiring, not discovery — but it runs inside
-      `codex_bridge_server.py`'s OWN uvicorn process (port 8769), the only one holding an
+- [x] ✅ [BACKEND] P2. **Codex arm of the uniform refresh** — `agent-orchestrator@b52c306750`.
+      **This todo's own stated premise was wrong, and disproving it WAS the unit.** It said the read
+      "runs inside `codex_bridge_server.py`'s OWN uvicorn (port 8769), the only one holding an
       authenticated `openai_codex.Codex()` session, so the refresh route cannot simply call it
-      in-process. Decide: proxy the refresh to the bridge, or move the read. Repo: agent-orchestrator.
+      in-process — decide: proxy, or move the read." Neither was needed: the poller opens its OWN
+      `with Codex()` every tick, and `Codex()` authenticates from `~/.codex/auth.json` on DISK, not
+      from any in-process session. Verified by running the exact RPC from this slot's venv,
+      out-of-process, while the live bridge was up — real data returned. The route now calls
+      `fetch_codex_quota()` directly.
+      Two defects found only because the read was actually measured rather than wired:
+      (a) **the account has TWO limit buckets** — `rate_limits` (the headline field the old poller
+      read) is only `limit_id="codex"`; `rate_limits_by_limit_id` also carries `codex_bengalfox`
+      ("GPT-5.3-Codex-Spark"). Reading the headline alone is the SAME defect as this issue's own
+      exhausted-weekly-behind-healthy-5h. New `server/codex_quota.py` parses every bucket and
+      reports the max per window kind, because `_account_has_headroom` asks "is there room".
+      (b) **`resetsAt` was dropped entirely**, so codex never wrote `rate_limited_until` — the only
+      field that actually gates dispatch. An exhausted account stayed selectable until a real 429,
+      whose 300s cooldown then re-opened it. Now written from the FURTHEST-OUT exhausted window.
+      Trap pinned by test: Codex's `resetsAt` is epoch **seconds**, Z.ai's is **milliseconds** —
+      mixing them lands in 1970 or year 58000 and never raises.
+      Cadence 5min → 30min. Evidence: gate green (5462 passed/5 skipped, basedpyright 0 errors,
+      coverage ratchet held); 30 new tests across `test_codex_quota.py`,
+      `test_codex_rate_limit_poller.py`, `test_refresh_account_usage_codex_provider.py`, with the
+      verbatim measured vendor payload as the fixture; live end-to-end through the real route arm
+      returned `5h=0 wk=37 binding=weekly rate_limited_until=None`, identical to the direct read.
+      Three docstrings asserting the now-disproved "no proactive quota API exists for Codex" /
+      "only this process can read it" corrected in the same change.
 
 - [ ] [BACKEND] P2. **Gemini arm of the uniform refresh.** Gemini's real signal is RPM/RPD/TPM
       per GCP project (`gemini_headroom.compute_gemini_capacity_snapshot`), NOT a 5-hour/weekly
@@ -205,6 +226,55 @@ could not track real consumption.
       stopped dispatch. `ollama`/`gemma-self-hosted` is self-hosted with no vendor quota at all and
       should be explicitly modelled as "no quota" rather than silently None. Repo:
       agent-orchestrator.
+
+- [ ] [BACKEND] P2. **`ao-self-pull.sh` restarts ONLY `orchestrator` — the two sibling uvicorn
+      services keep running stale code forever.** Measured 2026-08-22 (slot 15): the script's only
+      restart target is `systemctl restart orchestrator`, while `codex-bridge.service` (:8769) and
+      `deepseek-native-proxy.service` (:8767) run from the SAME checkout and are never restarted.
+      `RESTART_RELEVANT_PATHS=(server/ config/ pyproject.toml uv.lock)` already matches edits to
+      `server/codex_bridge_server.py`, `server/codex_rate_limit_poller.py` and
+      `server/deepseek_native_proxy_server.py` — the relevance gate fires, but the wrong process is
+      bounced. Consequence: any change to those three modules (including the codex poller's new
+      30-min cadence and `rate_limited_until` write, shipped above) is invisible until someone
+      restarts the bridge by hand, and nothing reports the drift. Note the ordering constraint the
+      script already documents for `orchestrator` — restarts are deliberately rate-limited because
+      the fleet ships its own commits to LDR (52 self-restarts on 2026-08-21) — so the fix must be
+      relevance-scoped per service (bounce codex-bridge only when a codex module changed), not a
+      blanket "restart all three on any `server/` change". Repo: agent-orchestrator.
+
+- [ ] [DOCS] P3. **The restart runbook has no `codex-bridge` / `deepseek-native-proxy` entry at
+      all.** `/codex/15-runbooks/safe-service-restart-procedures.md` returns zero matches for either
+      (grepped 2026-08-22), so the fix-vs-not table CLAUDE.md points every agent at is silent on two
+      of the three live uvicorn services — including what an in-flight Codex turn loses on a bounce.
+      Depends on the todo above resolving how they get restarted. Repo: unified-trading-pm.
+
+- [ ] [BACKEND] P3. **Re-decide `free_provider_priority` now that codex has a real headroom
+      signal.** The default `[deepseek, gemini, glm, ollama, codex]` puts codex LAST on the stated
+      grounds that "it has no proactive quota/rate-limit poller at all, so it never fails a headroom
+      check regardless of real usage". That premise is void as of the change above — codex now
+      reports per-window percentages AND a `resetsAt` for every limit bucket, and fails a headroom
+      check on real exhaustion. `/codex/04-architecture/agent-orchestrator-autospawn.md` §4 has been
+      corrected to say the rationale no longer holds AND that the ordering has not been re-decided;
+      this todo is the re-decision (there may still be cost/capability reasons to keep codex last —
+      that is a separate argument from the one that was actually written down). Repo:
+      agent-orchestrator.
+
+## Coverage of the "no exceptions" directive — measured, not estimated
+
+Counted from the live `data/config/accounts.json` on the planning VM, 2026-08-22 (24 accounts):
+
+| provider  | accounts | 30-min poll             | Refresh button                  |
+| --------- | -------: | ----------------------- | ------------------------------- |
+| anthropic |        8 | ✅ `usage_poller`       | ✅ pty `/usage`                 |
+| gemini    |       10 | ❌                      | ❌                              |
+| glm       |        2 | ✅ `glm_quota_poller`   | ✅ `_refresh_glm_usage`         |
+| deepseek  |        2 | ✅ balance/usage poller | ⚠️ SEPARATE button, not the one |
+| codex     |        1 | ✅ `codex_quota`        | ✅ `_refresh_codex_usage`       |
+| ollama    |        1 | n/a — self-hosted       | ❌ not modelled as "no quota"   |
+
+`gemini` is 10 of 24 accounts and the largest remaining gap, so it is the recommended next item.
+DeepSeek's ⚠️ is exactly the shape the directive named — "Anthropic only, plus a separate DeepSeek
+button beside it" — so folding it into the one button is in scope, not already-done.
 
 ## Progress Log
 
@@ -240,18 +310,36 @@ could not track real consumption.
   pre-commit. "Gate green" is the documented commit contract, so the gate and pre-commit disagreeing
   about what gets linted is a defect in the contract, not just an annoyance.
 
+- **2026-08-22 (slot 15, `/autonomous`) — shipped `agent-orchestrator@b52c306750` (Codex arm).**
+  The unit turned out to be disproving this issue's own recorded premise. The todo asserted the
+  read was locked inside the bridge process and needed a proxy-or-move decision; measuring it
+  first showed the poller opens its OWN `with Codex()` per tick and authenticates from
+  `~/.codex/auth.json` on disk, so the route calls it directly and neither option was needed.
+  Two live defects surfaced only because the response was actually read: a SECOND limit bucket
+  (`codex_bengalfox`) invisible to the headline `rate_limits` field, and `resetsAt` being dropped
+  so codex never wrote the one field that gates dispatch. Both are the same shapes this issue
+  already documents for GLM, which is the argument for treating the pattern as cross-provider
+  rather than per-vendor. Also measured: `ao-self-pull.sh` restarts ONLY `orchestrator`, so
+  `codex-bridge`/`deepseek-native-proxy` run stale code after every LDR pull — filed as its own
+  P2 todo, since it means poller changes to those modules do not take effect on their own.
+
 ## Deferred work after 2026-08-22
 
-Recommended NEXT item: **the Codex arm of the uniform refresh** — it is the only remaining
-"no exceptions" gap whose vendor read already exists and is proven, so it is wiring rather
-than investigation. Gemini's arm needs a shape decision first (RPM/RPD is not a 5h/weekly
-pair), and everything else below is either waiting on elapsed time or owned by a human.
+Recommended NEXT item: **the Gemini arm of the uniform refresh** — 10 of the 24 live accounts are
+`gemini`, by far the largest remaining "no exceptions" gap. It needs a shape decision first
+(RPM/RPD/TPM per GCP project, NOT a Claude-shaped 5h/weekly pair), which is why it was not taken
+ahead of Codex. DeepSeek follows: its vendor read exists but hangs off a SEPARATE button, which is
+literally the split the directive named.
 
 | item | state / why deferred | blocked on |
 | --- | --- | --- |
-| Codex arm of uniform refresh | **Not done** — vendor read exists (`codex_rate_limit_poller`), but it lives in the separate bridge process (:8769) that owns the authenticated Codex session; needs a proxy-or-move decision | nobody — pick it up |
-| Gemini arm of uniform refresh | **Not done** — needs the RPM/RPD/TPM shape, not a Claude-shaped 5h/weekly pair | nobody — pick it up |
-| Cross-provider audit: every poller writes `rate_limited_until`, not just percentages | **Not done** — the GLM lesson generalises; `ollama`/`gemma-self-hosted` should be modelled as "no vendor quota" explicitly rather than silently None | nobody — pick it up |
+| Gemini arm of uniform refresh | **Not done** — 10/24 accounts, the largest gap. Needs the RPM/RPD/TPM shape, not a Claude-shaped 5h/weekly pair | nobody — pick it up |
+| DeepSeek on the ONE refresh button | **Not done** — vendor read exists and works, but only behind its own separate button; the directive explicitly names that split | nobody — pick it up |
+| `ollama`/`gemma-self-hosted` modelled as "no vendor quota" | **Not done** — currently silently None, indistinguishable from "not yet probed" | nobody — pick it up |
+| `ao-self-pull.sh` restarts only `orchestrator`; `codex-bridge` + `deepseek-native-proxy` run stale code | **Not done** — measured 2026-08-22. Fix must be relevance-scoped per service, not a blanket restart-all (the script rate-limits restarts for a real reason: 52 fleet self-restarts on 2026-08-21) | nobody — pick it up |
+| Restart runbook has no `codex-bridge` / `deepseek-native-proxy` entry | **Not done** — zero grep matches; depends on the row above deciding how they get restarted | the row above |
+| Re-decide `free_provider_priority` now codex has a real headroom signal | **Not done** — the written rationale for codex-last is void; the ordering itself may still be right for other reasons | nobody, but it is a judgment call |
+| Cross-provider audit: every poller writes `rate_limited_until`, not just percentages | **Not done** — the GLM lesson generalises; codex is now done, the rest are not | nobody — pick it up |
 | Residual ≤29-min staleness window in `tmux_pruner`'s pct veto | **Not done** — needs a "last probed at" column on `AccountUsageRow` so the veto can require freshness, not just presence. Deliberately NOT bundled: it is a schema change | nobody, but it is a design step |
 | Gate lints `server/` only, pre-commit lints everything staged | **Operator-owned** — operator said 2026-08-22 they will take this with another agent. Do not start it | operator (explicitly claimed) |
 | 4 `gemini-*` accounts have no env file; `gemini-3-5-flash-lite-proj5` is still `healthy`/selectable | **Operator-owned** — `claude setup-token` is an interactive OAuth flow, not scriptable. Until then every spawn onto one 503s | operator |
@@ -283,3 +371,17 @@ pair), and everything else below is either waiting on elapsed time or owned by a
   not weaken that guard — a stale/re-rendered banner really can re-block a healthy account.
 - **The quota is per-PLAN, not per-account** for GLM: both accounts share
   `glm-coding-plan-api-key` and return byte-identical numbers.
+- **A premise recorded in a todo is not evidence — re-measure it before designing around it.**
+  The Codex todo above confidently framed the work as "proxy or move the read", and both options
+  were real engineering. Neither was necessary: one 30-second out-of-process probe disproved the
+  constraint. The premise had been written down twice (module docstring, then copied into the
+  todo), which is exactly what makes this class of error survive — each restatement reads as
+  corroboration. Cost of checking: one command. Cost of not checking: a cross-process proxy
+  nobody needed.
+- **"One vendor field per meter" is an assumption, not a reading.** Codex reports MULTIPLE limit
+  buckets keyed by model family, and the response's headline field is only the first of them.
+  Before trusting any vendor usage number, enumerate what the response actually contains — the
+  aggregate you want may not be the one the API puts in the obvious place.
+- **Epoch units differ per vendor and fail silently.** Z.ai's `nextResetTime` is milliseconds;
+  Codex's `resetsAt` is seconds. Both parse. Both produce a plausible-looking `datetime`. Only one
+  is in this decade. Any new vendor timestamp gets an explicit assertion on the resulting YEAR.

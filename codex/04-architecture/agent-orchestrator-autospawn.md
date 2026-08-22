@@ -172,10 +172,17 @@ GLM vs. Codex vs. Ollama, not just which Claude account. Registered providers to
    of dispatch off Claude regardless of real headroom, until fixed 2026-08-21.
 4. **`free_provider_priority`-ordered walk** across registered free providers, then any
    registered-but-unlisted provider alphabetically as a safety net. Default as of 2026-08-21:
-   `[deepseek, gemini, glm, ollama, codex]` — codex LAST deliberately: it has no proactive quota/
-   rate-limit poller at all (`nvidia_codex_exhaustion_observability_gap_2026_08_19`, still open), so
-   it never fails a headroom check regardless of real usage; providers with an OBSERVABLE real signal
-   (Gemini RPM/RPD, GLM's `glm_quota_poller.py` pct fields) get first refusal. Previously
+   `[deepseek, gemini, glm, ollama, codex]` — codex LAST. **The original rationale for that position
+   no longer holds** and the ordering has not yet been re-decided (see the todo in
+   `/plans/active/issues/glm_quota_estimate_masked_exhausted_account_2026_08_22.md`). It was "codex has
+   no proactive quota/rate-limit poller at all, so it never fails a headroom check regardless of real
+   usage" — false since 2026-08-22: `server/codex_quota.py` reads the vendor's real
+   `account/rateLimits/read` (per-window percentages AND a per-window `resetsAt`, across every limit
+   bucket on the account), `codex_rate_limit_poller` writes it on the same 30-min cadence as every
+   other provider, and it now populates `rate_limited_until`, so codex DOES fail a headroom check on
+   real exhaustion. `nvidia_codex_exhaustion_observability_gap_2026_08_19` is ARCHIVED, not open.
+   Providers with an OBSERVABLE real signal (Gemini RPM/RPD, GLM's and Codex's pct + reset fields) get
+   first refusal — a set that now includes codex itself. Previously
    `["deepseek"]` with everything else alphabetical — `codex < gemini < glm` meant codex won the
    waterfall almost unconditionally whenever DeepSeek was gated out, which was most of the time
    (measured: 488/24h codex-luna selections vs. 0 for two healthy GLM accounts).
