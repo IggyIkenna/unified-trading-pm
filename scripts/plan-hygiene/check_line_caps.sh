@@ -141,7 +141,7 @@ echo ""
 if [ -n "$SCOPED" ]; then
   TARGETS=("${FILES[@]}")
 else
-  TARGETS=("$PM_DIR/plans/active"/*.md "$PM_DIR/plans/epics"/*.md)
+  TARGETS=("$PM_DIR/plans/active"/*.md "$PM_DIR/plans/active/issues"/*.md "$PM_DIR/plans/epics"/*.md)
 fi
 
 for f in "${TARGETS[@]}"; do

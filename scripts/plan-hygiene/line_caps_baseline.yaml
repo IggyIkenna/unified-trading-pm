@@ -26,4 +26,4 @@ note: >-
   2052L, the only one over the new 2000L epic cap). This is a policy tightening making the count go UP once, not a
   regression -- the same 17 files were already either over-cap-and-tracked or quietly-exempt; none of them got worse
   today. Lower this count as each of the 17 is resolved; it should reach 0.
-hard_count: 17
+hard_count: 6
