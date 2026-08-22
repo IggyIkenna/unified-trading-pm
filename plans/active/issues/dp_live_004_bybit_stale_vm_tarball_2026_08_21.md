@@ -163,6 +163,21 @@ external action and is not performed by this escalation without that decision.
 
 ## Progress Log
 
+- **2026-08-22 (task `dp_live_004_bybit_stale_vm_tarball-953844d905c9`, slot 21, data_engineering)**: Picked up the
+  open `[DATA] P1` decommission todo above. Its precondition ("above is fixed and a real captured row confirmed for
+  all four BYBIT-FUTURES data types") is NOT met — fresh-verified rather than trusted from the doc: `gcloud compute
+  instances list` shows both VMs still `RUNNING` (old since 2026-08-16T19:50:40-07:00, replacement
+  `mtds-live-cefi-consolidated-20260821-200626` since 2026-08-21T13:07:39-07:00), and SSH+sudo grep on the
+  replacement VM confirms `_log_subscribe_ack` count is still `0` in both `bybit_ws.py` and
+  `bybit_futures_book_ticker_ws.py` — `market-tick-data-service@efd0e788` (the ack-logging fix, confirmed an
+  ancestor of local `origin/live-defi-rollout` HEAD) is still not deployed to either live VM. This is identical to
+  every escalation logged today (`agt-521494`/`agt-81aea5`/`agt-ebe5eb`/`agt-b28ff1`) — no forward progress since the
+  standing blocked-question `BLK-9e8ffbb2` (recommending an operator-authorized relaunch to pick up `efd0e788`) was
+  filed and remains unanswered (`GET /api/escalations/active` returns `[]` right now — nothing currently dispatched
+  to push this forward). Did not re-file a duplicate blocked-question per the same established reasoning in the
+  entries below. Not decommissioning the old VM — doing so before a real captured row is confirmed on the
+  replacement would leave BYBIT-FUTURES with zero live capture on either VM. Releasing this task back to the queue
+  as gated on the same unresolved operator decision; no code/infra/manifest changes made this pass.
 - **2026-08-22 (data_pipeline_failure escalation `agt-b28ff1`, slot 33)**: DP-LIVE-004 re-fired again for the OLD VM
   (`mtds-live-cefi-consolidated-20260817-025031`), venue BYBIT-FUTURES, data_type `trades` this time (previous
   same-day re-fires were `book_snapshot_5`) — last attempt 0.2h old. `gcloud compute instances list` confirms both
