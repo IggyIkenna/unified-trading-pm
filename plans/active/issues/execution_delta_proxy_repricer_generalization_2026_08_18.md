@@ -570,14 +570,14 @@ POST_ONLY as two independently composable fields.
 - [ ] [BACKEND] P2. **Extend `ExecutionPolicyResolver`/`algorithms/selector.py` with an
       actionable-given-current-price-move gate** — today `DeltaProxyRepricer`'s `stale=True` just silently clamps
       with no re-route, the same class of gap the epic's W16 fail-closed ruling already names.
-- [ ] [DESIGN] P2. **Resolve judgment call 7** — should a strategy-triggered instruction gain access to real
-      `MARKET` execution (today `MANUAL_ONLY`) once a live credit/trigger check has already fired?
+- [ ] [DESIGN] P2. **RULED (D77): allow triggered MARKET** once a live credit/trigger check has fired — the
+      backtest-realism concern for `MARKET` (today `MANUAL_ONLY`) no longer applies post-trigger.
 - [ ] [REVIEW] P2. **Audit which instruction_types Layer 2 will ever emit and confirm none silently hits a GHOST
       algo** (`BEST_PRICE`/`SEQUENTIAL_LEGS`/`SPREAD_ROLL`/`KELLY_STAKE` — no implementation class, fails loud via
       `ValueError`) through the canonical `algorithms/selector.py` — build the missing implementation, or route
       those instruction types through their existing bespoke path (e.g. `atomic_leg_executor.py`) instead.
-- [ ] [DESIGN] P2. **Resolve judgment call 8** — does Layer 2 need explicit per-path routing among the three
-      parallel execution paths, or is a fourth unifying router worth its cost?
+- [ ] [DESIGN] P2. **RULED (D77): route explicitly** among the three parallel execution paths (canonical
+      `algorithms/selector.py`, `atomic_leg_executor.py`, `v2/mev_router.py`) — a fourth unifying router is premature.
 - [ ] [BACKEND] P2. **Wire `RefPricingMode.DELTA_ADJUSTED_TO_UNDERLYING` and `TimeInForce.POST_ONLY` end-to-end for
       at least one real venue** — today zero venues have either wired, per `VENUE_ORDER_SEMANTICS`'s own honest gap
       registry. This is the formal, already-declared name for the pattern this whole issue is about; wiring it real
@@ -663,6 +663,7 @@ POST_ONLY as two independently composable fields.
 
 ## Progress Log
 
+- **2026-08-22 — ruling D77**: Allow triggered MARKET (post-trigger) + route explicitly, no 4th router. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 **2026-08-18 — filed and substantially deepened across one extended interactive session.** Started from a single
 MEV-latency question and grew into a full 3-layer design (strategy intent / execution sensitivity cache / order-fill
 algorithm) after the operator pushed on CeFi-execution analogies, the generic "credit"/delta concept across arb

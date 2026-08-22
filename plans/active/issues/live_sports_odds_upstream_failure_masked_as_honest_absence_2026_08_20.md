@@ -128,8 +128,10 @@ correctness hard rule ("only a genuine 200+empty stays honest-absence; an error 
       `market-tick-data-service` — `market-tick-data-service@40b9b624` (landed on
       `live-defi-rollout` 2026-08-20; QG green; 85 unit tests pass incl. new
       `TestOddsApiUpstreamFailureReason`). Verified ancestor of `origin/live-defi-rollout`.
-- [ ] [OPERATOR] P1. Top-up / rotate the shared `odds-api-key` (15M exhausted, 2 remaining) so
-      `mtds-live-sports-odds-api-odds-*` can capture. BLOCKED-CREDENTIALS until operator action.
+- [ ] [OPERATOR] P1. BLOCKED-CREDENTIALS — RULED 2026-08-22 (D7): APPROVED — operator tops up/rotates the shared
+      `odds-api-key` (15M exhausted, 2 remaining); once that lands, agent bounds the batch backfill consumer so it
+      cannot starve live, then relaunches the live odds VM (`mtds-live-sports-odds-api-odds-*`) on current LDR once the
+      key works. Re-ask only if the key top-up has not landed by the next check.
 - [ ] [BACKEND] P2. Verify after the key is restored: the shard shows `captured` rows again and
       DP-LIVE-004 stops firing for this VM.
 
@@ -141,6 +143,10 @@ correctness hard rule ("only a genuine 200+empty stays honest-absence; an error 
   (`OddsApiWSFeedConnector.upstream_failure_reason()`, QG green, landed on `live-defi-rollout`).
   Operator-gated `odds-api-key` top-up remains open (BLOCKED-CREDENTIALS).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-22 — ruling D7 (the-odds-api key exhaustion)**: OPERATOR-RULED 2026-08-21 — APPROVED: operator tops
+  up/rotates the the-odds-api key; agent bounds the batch backfill consumer so it cannot starve live, then relaunches
+  the live odds VM on current LDR once the key works. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 - **ag-closeout-audit 2026-08-21 (sports tranche, Phase 2 sweep)**: found this doc and
   `dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md` document the SAME incident
   (same VM `mtds-live-sports-odds-api-odds-20260816-145019`, same root-cause chain: shared `odds-api-key`

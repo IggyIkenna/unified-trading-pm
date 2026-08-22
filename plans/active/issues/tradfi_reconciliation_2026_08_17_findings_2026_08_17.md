@@ -119,8 +119,10 @@ engineering-latitude choice, not an authority-level call. Item 7 is a one-line "
       `_migration_backup_2026_07_25/` and add a disposition line to `/codex/02-data/non-canonical-path-inventory.md`
       (register-patch stanza already drafted in `data_pipeline_reconciliation_tradfi_2026_08_17.md` Phase 2). (repo:
       unified-trading-pm)
-- [ ] [DATA] P3. Design + apply a join convention for multi-token equity symbols (e.g. `BRK B` -> `BRK-B` or
-      `BRK.B`) and re-stamp the affected rows once decided. (repo: unified-api-contracts + market-tick-data-service)
+- [ ] [DATA] P3. Apply the dot-join convention for multi-token equity symbols (e.g. `BRK B` -> `BRK.B`) and re-stamp
+      the affected rows (`NYSE:EQUITY:BRK B-USD` / `BF B-USD`, 38 rows measured). Per D132 ruling (2026-08-22): dot-join
+      — matches standard ticker convention; zero corpus precedent existed, this was the operator's naming call.
+      (repo: unified-api-contracts + market-tick-data-service)
 - [x] ✅ [DATA] P3. EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-071b5c) →
       `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo 5. Investigate the 4,142
       `venue=CME, instrument_type=UNKNOWN, data_type=ohlcv_1m, attempted_failed` rows. (repo:
@@ -162,3 +164,6 @@ engineering-latitude choice, not an authority-level call. Item 7 is a one-line "
   never whole-doc-reclassified when a mix like this exists).
 - **context-scout 2026-08-17**: populated context_scope (5 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-22 — ruling D132 (Share-class symbol convention)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Dot-join — matches standard ticker convention; zero corpus precedent exists, so this
+  is the operator's naming call. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -445,19 +445,14 @@ delete, but the same evidentiary bar applies given real financial data is at sta
         `[OPERATOR]` migration-plan-destination todo below should get a precise per-asset_group VM-scale count as
         its own first step, per that todo's existing text). market-data-processing-service@61294cec19
         (script committed this session).
-- [ ] [OPERATOR] P2. Now that the defi `processed_candles/.../instrument_type=POOL/` population is scoped (~17.4M
-      objects projected, order-of-magnitude, one confirmed `data_type=dex_pool_swaps`, both known `pipeline_mode`s
-      affected — see the resolved defi-scoping DIAG todo above) — AND cefi/tradfi/prediction are now CONFIRMED
-      (not just risked) to carry the same non-canonical uppercase-path population fleet-wide (see the resolved
-      cross-AG DIAG todo above, corpus size TBD pending the new cefi/tradfi/prediction scoping todo above) — decide
-      plan destination for the actual migration (COPY-to-canonical-lowercase per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5, never a blind rename/move) per
-      CLAUDE.md's "ask before creating" rule — AO-dispatched (`assigned_vm: planning`) vs human (`assigned_vm: NA`) —
-      then author the dedicated plan this issue's DIAG todos already recommended, scoped to EVERY affected
-      asset_group, not defi-only. The migration itself is genuinely corpus-scale (order 10M+ objects across
-      multiple asset_groups) and belongs on a dedicated VM per `/codex/05-infrastructure/vm-launcher-runbook.md`,
-      not an interactive slot session. A precise (non-sampled) corpus-wide count per asset_group should be the
-      plan's own first step, not assumed from any todo's sample-based projection.
+- [ ] [DATA] P2. Author the dedicated corpus-wide migration plan (`assigned_vm: NA`, human-driven) for the
+      `processed_candles/.../instrument_type=` uppercase-path population across defi/cefi/tradfi/prediction
+      (COPY-to-canonical-lowercase per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5, never a
+      blind rename/move), scoped to EVERY affected asset_group, not defi-only. Per D64 ruling (2026-08-22):
+      human-driven — needs a precise per-AG count first and spans 4 prod buckets; matches the human-default rule for
+      judgment-adjacent scale. First step: a precise (non-sampled) corpus-wide count per asset_group, not the
+      sample-based projections already gathered. The migration itself belongs on a dedicated VM per
+      `/codex/05-infrastructure/vm-launcher-runbook.md`, not an interactive slot session.
 - [x] ✅ [OPERATOR] P1. **RESOLVED 2026-08-22 (D10 remediation, `dispositions.json` `issues_corpus_completion_2026_08_21`)
       — operator disposition: kill+relaunch the 2 LONG_LIVED `mdps-features-live-*` VMs now; let bounded backfill
       VMs finish naturally with a corrective re-pass noted.** Re-enumerated the CURRENT live fleet first, per this
@@ -515,6 +510,10 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   Logging read-quota exhaustion for the whole session — filed as a separate P3 follow-up rather than block this
   todo on it, since the state-mode evidence stands alone. Filed 2 new follow-up todos (root-cause the stall;
   retry the logs check once quota clears) — see Todos list.
+- **2026-08-22 — ruling D64 (Uppercase-corpus migration plan type)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Human-driven — needs a precise per-AG count first and spans 4 prod
+  buckets; matches the human-default rule for judgment-adjacent scale. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 - **2026-08-16 (slot 19, backend_engineer)**: resolved the `[BACKEND]` P0 writer fix todo. Corrected the
   investigation's own line-374 attribution en route (see the todo's resolution note for detail): the actual
   physical GCS-path builder is the `build_canonical_candle_object_path(...)` call in `canonical_writer.py`, not

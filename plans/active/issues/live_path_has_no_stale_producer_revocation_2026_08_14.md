@@ -208,18 +208,14 @@ none of them appear as todos in that plan.
       fail-open scaffold — verified directly against `alerting-service/alerting_service/dependency_health_prober.py`
       (`_dispatch()` unconditionally returns `True`; `probe_fn` has zero production injection sites, confirmed via
       `rg`). Added that caveat inline in the WIRED section so a reader doesn't come away thinking probing is real.
-- [ ] [OPERATOR] P1. Decide the lightweight-launcher admission-gate question (see "Admission-gate coverage for the
-      lightweight launcher path" above) — one of: migrate the affected `launcher_common.sh` launchers onto
-      `vm-exec-with-gcs-tee.sh`; grant a narrow documented exception to the cloud-CLI-in-startup-script guardrail for a
-      single-object hold-marker read; or accept the lightweight path as deliberately ungated and record it in the codex.
-      Blocked on this decision, not further investigation. **SCOPE CORRECTED 2026-08-15 — this todo said "~158", which
-      would have sized the decision wrongly by an order of magnitude.** That figure counted every launcher using ANY of
-      `launcher_common.sh`'s ~20 shared `lc_*` helpers (singleton locks, tarball pins, gcloud-create wrappers — used by
-      canonical-path launchers too). The launchers actually on the lightweight-observability opt-out are those calling
-      `lc_log_upload_trap_block`/`lc_log_upload_continuous_block`: **12**, of which the census in
-      `/plans/archive/2026_08/revocation_arming_2026_08_14.md` found **1** genuine migration candidate
-      (`launch-prediction-pipeline-vm.sh`). Read that census before deciding — at this size "migrate them" is a small
-      job, not a migration plan.
+- [ ] [INFRA] P1. Migrate `launch-prediction-pipeline-vm.sh` (the single genuine migration candidate per the
+      2026-08-14 census, `/plans/archive/2026_08/revocation_arming_2026_08_14.md`) onto `vm-exec-with-gcs-tee.sh` so it
+      gets the admission-gate hold-marker read. Per D90 ruling (2026-08-22): migrate the single candidate — the census
+      already found it's a small job. **Scope note (2026-08-15)**: the original "~158" launcher count was an
+      order-of-magnitude oversize (that figure counted every launcher using ANY of `launcher_common.sh`'s ~20 shared
+      `lc_*` helpers); the actual lightweight-observability opt-out population (calling
+      `lc_log_upload_trap_block`/`lc_log_upload_continuous_block`) is 12, of which only this one is a genuine migration
+      candidate.
 
 ## Evidence
 
@@ -252,3 +248,6 @@ none of them appear as todos in that plan.
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17** [body-hash:5873004379ff646b]: KEEP-NA, valid -- The doc's main risk decision is already resolved into a dedicated plan (producer_silence_flatten_protocol_2026_08_14.md); its two superseded todos are already checked off here. The 3 remaining open items are the genuinely-not-covered remainder: todo 1 (wire dependency_health_policy to an actuator, sequenced probe-inject -> register-services -> kill-switch-bus wiring) touches live-trading kill-switch machinery directly -- the doc itself documents the kill switch is in-process and structurally different depending on which service dies, so correctly wiring a new actuator onto it is safety-critical design work bundled as one item, not a bounded refactor. Todo 2 (anti-inertness CI guard) depends on todo 1 landing a real consumer to assert against. Todo 3 is an explicit [OPERATOR] tag needing a 3-way decision on the lightweight-launcher admission-gate question, and is stated as "blocked on this decision, not further investigation." Re-confirmed on independent re-read, cross-cutting tranche audit.
+- **2026-08-22 — ruling D90 (Lightweight-launcher admission gating)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Migrate the single candidate (launch-prediction-pipeline-vm.sh) — the
+  census already found it's a small job. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

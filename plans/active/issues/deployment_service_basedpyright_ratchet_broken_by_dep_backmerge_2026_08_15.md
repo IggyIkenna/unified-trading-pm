@@ -178,23 +178,14 @@ cannot find it — the fix has to be sought in the two dependency repos.
       appears to be wrong.** Closing this todo as "methodology executed, hypothesis falsified" rather than leaving it
       open against a premise the evidence no longer supports; the 2 follow-on leads (sentinel-cache-hit vs.
       never-truly-1259) are new open questions, tracked below as Todo 3, not a continuation of this bisection.
-- [ ] [OPERATOR] P2. **BLOCKED-OPERATOR-DECISION.** Two guessing passes (5 candidate commits) plus a rigorous
-      isolated-worktree elimination (all 3 known editable deps pinned pre-window simultaneously) have now all failed to
-      find a code-level culprit — the evidence increasingly says this isn't a simple "backmerge broke it" regression.
-      Options: (a) temporarily raise `BASEDPYRIGHT_MAX_ERRORS` from 1259 to 1261 (against the ratchet-only-goes-down
-      norm) to unblock all deployment-service shipping — including the already-written, already-tested Todo 2 fix in
-      `dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` sitting uncommitted — while Todo 3's sentinel-cache
-      investigation runs in parallel; (b) hold all deployment-service quickmerges until Todo 3 resolves.
-      **Recommendation: (a)** — the ratchet's purpose is catching real regressions in deployment-service's own surface,
-      and 3 independent lines of evidence now say this isn't one; blocking all shipping on an unresolved
-      measurement-methodology question has a real cost (a P0 truncated-sweep fix is parked). DoD: a stated decision, not
-      a default. **Update 2026-08-15 (Todo 3 resolved, see below): the recommendation strengthens, unchanged in
-      direction** — the ratchet's last GENUINE full-run verification (not this doc's originally-cited `bf69b2b289`) was
-      commit `0aeb925f` at `00:57:58Z`, itself ~23 minutes BEFORE the disputed UAC/UTL backmerge-completion commits
-      (`01:20-01:23Z`) even landed. "1259" was therefore never live-verified against ANY tree state that includes the
-      dependency versions now current — the isolated-worktree bisection (Todo 1) already showed pinning those deps back
-      doesn't recover 1259 either, so the gap predates and is independent of the backmerge this doc was originally filed
-      against.
+- [ ] [DIAG] P2. Run a deeper bisection beyond the 3 known editable LOCAL_DEPS (`unified-api-contracts`,
+      `unified-trading-library`, `deployment-api`) to find the actual cause of the 1259→1261 basedpyright regression —
+      do NOT raise `BASEDPYRIGHT_MAX_ERRORS` yet. Per D13 ruling (2026-08-22): ratchets-only-go-down is a HARD RULE and
+      a cross-slot measurement (slot 5, same day) shows 1259 IS reachable on a current tree — raising the ratchet is a
+      last resort only, not the next step. Two guessing passes (5 candidate commits) plus a rigorous isolated-worktree
+      elimination (all 3 known editable deps pinned pre-window simultaneously) have failed to find the code-level
+      culprit so far; the ratchet's last GENUINE full-run verification was commit `0aeb925f`, ~23 minutes before the
+      disputed UAC/UTL backmerge-completion commits even landed — worth re-deriving from there.
 
       **CROSS-SLOT MEASUREMENT 2026-08-15 (slot 5) — READ BEFORE SPENDING THE OPERATOR DECISION.** In slot 5's
           checkout the count is **1259, not 1261** — at `deployment-service@657c897b`, `unified-api-contracts@e8a55ca8`,
@@ -294,3 +285,7 @@ independent of whether Todo 3's cache-hit investigation ever resolves the "why."
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:0196a6655c035b95]: KEEP-NA, valid -- Sole remaining todo is explicitly tagged [OPERATOR] with a BLOCKED-OPERATOR-DECISION marker: whether to relax the BASEDPYRIGHT_MAX_ERRORS ratchet ceiling from 1259 to 1261 against the workspace's own 'ratchet-only-goes-down' norm, or hold all deployment-service quickmerges. Two guessing passes plus a rigorous isolated-worktree bisection all failed to find a code-level culprit, and a cross-slot measurement note narrows but does not resolve the decision (1259 is reachable on another current tree, arguing against relaxing the ratchet yet).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-22 — ruling D13 (Basedpyright ratchet 1259 vs 1261)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Deeper bisection first — ratchets-only-go-down is a HARD RULE and a
+  cross-slot measurement shows 1259 is reachable on a current tree; raise only as last resort. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

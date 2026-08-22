@@ -186,21 +186,17 @@ context_scope:
       `daily_trading_analyst_llm_job_design_2026_07_29.md`)**: escalation-N = 3 days, initial `assigned_vm` default for
       freshly auto-filed finding issue docs = `planning`. Recorded in that doc's own §5 todo 6 (now `[x]`). (repo:
       unified-trading-pm)
-- [ ] [OPERATOR] P3. **sports_predictions_live_mode_activation_readiness_2026_07_21.md's final live-trading go-ahead is
-      deliberately still open** — real-money live trading, reserved for your own explicit sign-off per the workspace's
-      live-trading-activation HARD RULE, not defaulted by this sweep regardless of how many adjacent items got resolved.
-      Review the full Groups A-H readiness ladder directly before deciding. **operator ruling 2026-08-08 (cross-cutting
-      round 5, id=60, and its sports-tranche duplicate id=80)**: re-confirmed — not yet, stays pending, permanent
-      hard-stop. No change; genuinely still open. (repo: unified-trading-pm)
-- [ ] [OPERATOR] P0. **ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md's fork-PR-approval setting
-      needs a manual click, no safe API path exists.** `unified-trading-pm` is public with 8 self-hosted runners; the
-      operator already ruled "require approval for fork PRs" (option a) this session, but the actual GitHub setting
-      (Settings → Actions → General → "Fork pull request workflows from outside collaborators" → "Require approval for
-      all outside collaborators") has no documented REST endpoint — checked live 2026-08-06 against
-      `actions/permissions`, `actions/permissions/workflow`, and `actions/required-workflows`, none expose it. This is
-      the actual code-execution security gate, still open. **operator ruling 2026-08-08 (cross-cutting round 5, id=61,
-      same as id=42)**: will do it later — leave blocked for now, no change. (repo: unified-trading-pm, GitHub settings
-      only)
+- [ ] [OPERATOR] P3. BLOCKED-OPERATOR-DECISION — RULED 2026-08-22 (D21): When ready — every prior pass re-confirmed
+      `sports_predictions_live_mode_activation_readiness_2026_07_21.md`'s final live-trading go-ahead as a
+      not-time-sensitive reserved sign-off with no new readiness evidence; real-money live trading stays reserved for
+      the operator's own explicit sign-off per the live-trading-activation HARD RULE. Re-ask only when readiness
+      evidence changes (review the full Groups A-H readiness ladder). (repo: unified-trading-pm)
+- [ ] [OPERATOR] P0. BLOCKED-OPERATOR-DECISION — RULED 2026-08-22 (D20): operator will click "Require approval for
+      all outside collaborators" in GitHub Settings → Actions → General → "Fork pull request workflows from outside
+      collaborators" (`unified-trading-pm` is public with 8 self-hosted runners; no safe REST/API path exists —
+      checked live 2026-08-06 against `actions/permissions`, `actions/permissions/workflow`, and
+      `actions/required-workflows`, none expose it). Re-ask only once verified via the repo settings that the click has
+      been made. (repo: unified-trading-pm, GitHub settings only)
 - [x] ✅ [DIAG] P2. **VERIFIED 2026-08-14 — CME FUTURE `instrument_id` format confirmed against BOTH code (3 convergent
       call sites) AND the live production catalogue.** Format: `CME:FUTURE:<PRODUCT_ROOT>-USD@LIN-YYYYMMDD` (the
       OKX-FUTURES-style `@LIN` marker DOES carry over, contrary to this todo's own caution not to assume it — turns out
@@ -272,3 +268,10 @@ different task than writing the ruling:
   editorial line-cap trim needing human judgment -- whole doc stays NA.
 - **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:1b2b82f1cd31bf0e]: KEEP-NA, valid — all 3 remaining open todos carry explicit dated operator rulings confirming they stay open (live-trading go-ahead hard-stop; fork-PR-approval needs a manual GitHub UI click; a line-cap trim needs editorial judgment).
+- **2026-08-22 — ruling D20 (GitHub outside-collaborator approval)**: OPERATOR-RULED 2026-08-21 — operator will click
+  'Require approval for all outside collaborators' in the GitHub UI. Pending-operator; verify via the repo settings
+  once done. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-22 — ruling D21 (Live-trading hard-stop timing)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): When ready — every prior pass re-confirmed these as not-time-sensitive reserved
+  sign-offs with no new readiness evidence. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

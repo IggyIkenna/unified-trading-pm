@@ -75,6 +75,7 @@ resolved_by: >-
   investigation got right vs. what a same-day archived doc already established more directly.
 locked_by:
 depends_on: []
+archive_exempt: true
 ---
 
 # Fleet-wide QG cascade recurrence — none of it was agents skipping QG
@@ -192,11 +193,9 @@ more forensic depth, not a new third occurrence, so that threshold is not yet me
 
 ## Todos
 
-- [ ] [OPERATOR] P3. If runner-host SSH/log access is available, confirm whether `_work/<repo>/unified-trading-pm`
-      on the `glue-1` self-hosted runner instances is reused (not freshly cloned) across successive job runs. Now a
-      SECONDARY-priority check per the Correction section (the incident's primary mechanism is understood — a
-      genuinely persistent dangling-link break, not runner staleness — for at least 2 of 9 repos); this only
-      resolves whether runner staleness ALSO plays a role for the other repos' moments that tested clean.
+- **[OPERATOR] P3. CANCELLED — SUPERSEDED 2026-08-22 (D82 ruling: skip — low-value confirmation the doc itself
+  treats as optional; the incident's primary mechanism — a genuinely persistent dangling-link break, not runner
+  staleness — is already understood for at least 2 of 9 repos).**
 - [x] ✅ [SCRIPT] P1. Root-cause all 9 alerted #ci-failures CRITICALs. DONE — see Finding 1: none were agent-QG
       discipline failures; all 9 repos' current HEAD confirmed green.
 - [x] ✅ [SCRIPT] P1. Identify why the already-shipped 2026-08-18 retry fix didn't prevent this recurrence. DONE —
@@ -224,3 +223,10 @@ job runs) explicitly requires runner-host SSH/log access — a live-infra check 
 the doc's own text already downgrades it to secondary priority (the incident's primary mechanism — a genuinely
 persistent dangling-link break, not runner staleness — is understood for at least 2 of 9 repos). No `assigned_vm`
 change.
+- **2026-08-22 — ruling D82 (glue-1 checkout-reuse check)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Skip — low-value confirmation the doc itself treats as optional. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-22 (archive-exemption note)**: this D82 retag closed the doc's last open checkbox (0 open todos remain).
+  Marked `archive_exempt: true` rather than archiving — out of scope for this ruling-sweep pass per the parent task's
+  explicit "do not archive any doc" instruction; a future archive-candidates pass should run the normal 6-step ritual
+  instead.

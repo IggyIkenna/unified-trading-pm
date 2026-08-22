@@ -145,14 +145,13 @@ without knowing what it is). No further action was taken on `deployment-api` —
       shipped clean via quickmerge — `execution-service@d75c99a0`.
 - [x] ✅ 2. [INFRA] P2. N/A — `mtds_meta.py` was never actually renamed/removed upstream (see todo 1); this conditional
       baseline-regeneration step does not apply.
-- [ ] [INFRA] P3. 3. Consider whether STEP 5.83 should validate against a canonical/fresh state (e.g.
-      `git show origin/<branch>:<path>` for sibling repos) rather than each shipping repo's local, possibly-stale
+- [ ] [INFRA] P3. Change STEP 5.83 (`no_adapter_contract_regression.sh`) to validate against canonical/fresh sibling
+      state (`git show origin/<branch>:<path>` for sibling repos) instead of each shipping repo's local, possibly-stale
       sibling checkouts on a shared multi-tenant host — so one host's checkout drift doesn't block shipping from every
-      OTHER repo on that same host. Cross-reference
-      `/plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`
-      (ARCHIVED 2026-08-04, all todos done — same STEP 5.83 check, different flake class — timeout-under-contention vs
-      missing-file-under-drift; both pointed at the same check being fragile to shared-host state it doesn't fully
-      control).
+      OTHER repo on that same host. Per D68 ruling (2026-08-22): mildly favor origin — this fragility has recurred
+      twice (this doc +
+      `/plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`'s
+      timeout-under-contention flake, same underlying check).
 
 ## Progress Log
 
@@ -224,3 +223,7 @@ Doc's actual blocking scope (todo 1, deployment-api checkout staleness) was reso
 deliberately retained only for the sole remaining item (todo 3, `[INFRA] P3`): an explicit undecided architecture
 tradeoff ("Consider whether STEP 5.83 should validate against a canonical/fresh state... rather than each shipping
 repo's local, possibly-stale sibling checkouts") with no stated decision or done-when. No `assigned_vm` change.
+
+- **2026-08-22 — ruling D68 (QG 5.83 sibling-repo source)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Mildly favor origin — this fragility has recurred twice. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

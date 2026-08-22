@@ -73,12 +73,13 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 1 — what is `cursor-rules/` for?
 
-- [ ] [OPERATOR] P2. **REOPENED 2026-08-12 (/plan-reconcile) — was checked `[x]` RESOLVED 2026-08-08, but this doc's own
-      same-day CORRECTION below (round5 ao investigation) found the resolution's premise FALSE and explicitly states
-      "NOT resolving this item, re-flagging it" — the checkbox was never reverted to match. See the CORRECTION paragraph
-      below for the materially new evidence (a live CI consumer, `.github/workflows/rules-alignment-agent.yml`, was
-      missed by all 4 prior passes) and the genuine A/B/C operator call it now requires.** What is the 25-file
-      `cursor-rules/` tree's purpose today, and should it be kept, repurposed, or archived?
+- [ ] [REVIEW] P2. **Assign a named owner to decide the `cursor-rules/` CI-consumer disposition** — restore
+      `cursor-rules/` so `rules-alignment-agent.yml` has a real target again, retarget/retire the workflow now that its
+      target moved to `.cursor/rules/`, or confirm the graceful no-op is intentional and leave both as-is (see the
+      CORRECTION paragraph below for the full option set; a live CI consumer,
+      `.github/workflows/rules-alignment-agent.yml`, was missed by all 4 prior passes). Per D6 ruling (2026-08-22):
+      approved for action — this is one of the "two BIG findings" the ruling flags as needing a named owner now, not a
+      guessed answer.
 
   Verified fact (not in question): `cursor-rules/` (25 `.mdc` files, top-level dir) and `.cursor/rules/` (150 `.mdc`
   files, dot-dir) have **zero file overlap** — confirmed via basename spot-check across both trees. The real, current
@@ -191,8 +192,11 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 4 — Fireblocks custody credential rotation cadence: two SSOTs disagree (added 2026-08-08)
 
-- [ ] [OPERATOR] P0. **Reconcile the Fireblocks RSA rotation cadence between `credentials-matrix.md` and
-      `credential-rotation-runbook.md` — pick the correct number and fix the other doc to match.**
+- [ ] [DOCS] P0. **Fix `credential-rotation-runbook.md`'s Custody row to carve out Fireblocks RSA separately
+      (~quarterly) from Copper/CEFFU HMAC (60d), matching `credentials-matrix.md`.** Per D6 ruling (2026-08-22):
+      approved per option A (weakly favored) — the runbook's own §3.2 already describes Fireblocks as RSA-based, and a
+      distinct key type plausibly warrants a distinct cadence. This is one of the "two BIG findings" the ruling flags as
+      needing a named owner now (security-relevant credential class).
 
   Found by the 2026-08-08 `/docs-reconcile --autonomous` sweep's `authoritative_for` collision hunter, independently
   re-verified against both live docs (not just the hunter's report) before parking. Both docs declare
@@ -223,9 +227,10 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 5 — `plan-hygiene.md` duplicated verbatim in two dirs, both `authoritative_for` "plan hygiene" (added 2026-08-09)
 
-- [ ] [OPERATOR] P1. **Decide the disposition of `/codex/12-agent-workflow/plan-hygiene.md` vs
-      `/codex/11-project-management/plan-hygiene.md` — merge, split with cross-links, or re-scope one's
-      `authoritative_for` claim.**
+- [ ] [DOCS] P1. **Add explicit `related:` cross-references between the two `plan-hygiene.md` docs and narrow each
+      `authoritative_for` claim to be unambiguous** (12-agent-workflow keeps "silent-failure modes + severity ladder",
+      11-project-management keeps "script suite + frontmatter field list"). Per D6 ruling (2026-08-22): approved per
+      option B (recommended) — lower-risk than a merge, preserves both docs' distinct content.
 
   Found by the 2026-08-09 `/docs-reconcile --autonomous` sweep's `authoritative_for` collision hunter, independently
   re-verified against both live docs before parking. Both `status: current`, both literally titled "Plan Hygiene":
@@ -261,8 +266,11 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 6 — `alwaysApply: true` doesn't track the `core/` directory it's meant to (added 2026-08-10)
 
-- [ ] [OPERATOR] P2. **Decide whether `.cursor/rules/core/`'s membership should be reconciled to match `alwaysApply: true`,
-      or the flag reconciled to match the directory — then apply that decision fleet-wide.**
+- [ ] [INFRA] P2. **Move the 4 `alwaysApply: true` files that sit outside `core/` INTO `core/`**
+      (`imports/uci-no-domain-schemas.mdc`, `testing/no-manual-pytest.mdc`, `ci-cd/ci-rollout-ownership.mdc`,
+      `dependencies/dependency-install-protocol.mdc`), so `core/` becomes exactly "the alwaysApply:true set". Per D6
+      ruling (2026-08-22): approved per option A (recommended) — matches the codex SSOT's stated intent with the
+      least net change.
 
   Found while fixing a docs-reconcile doctrine-consistency finding (a misplaced rule file,
   `cursor-configs/imports/uac-import-surface-enforcement.mdc`, `alwaysApply: true`, sitting outside `.cursor/rules/`
@@ -448,3 +456,7 @@ just tracked here so they aren't lost:
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:0aec3afabab2e46a]: KEEP-NA, valid — all 4 remaining items are explicit BLOCKED-OPERATOR-DECISION authority calls (doctrine/authoritative_for collisions) per docs-reconcile's own contract; item 1 correctly REOPENED 2026-08-12 with new evidence (a live CI consumer), not stale.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — all 4 remaining items are explicit BLOCKED-OPERATOR-DECISION authority calls (doctrine/`authoritative_for` collisions) per docs-reconcile's own contract; unchanged since 2026-08-17.
+- **2026-08-22 — ruling D6 (Docs-reconcile findings sign-off)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve all — each item carries a per-doc recommendation; the two BIG findings need
+  named owners now, the rest is bounded cleanup. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

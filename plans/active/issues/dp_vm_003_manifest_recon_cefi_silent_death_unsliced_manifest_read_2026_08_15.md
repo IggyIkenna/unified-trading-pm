@@ -154,11 +154,10 @@ was never previously flagged as at-risk for this same unsliced read.
       full schema. Verify via `quality-gates.sh` + a re-run of the
       `--unphantom-only --venues BINANCE-FUTURES,KRAKEN-FUTURES` scan (or a smaller synthetic venue set) proving
       identical output to the unsliced read.
-- [ ] [OPERATOR] P3. Reconsider whether `launcher_registry.LAUNCHER_FOR_VM_PREFIX["manifest-recon-"]` should map to
-      `launch-manifest-recon-all-vm.sh` (enabling `relaunch_stalled_vm.py`/`relaunch_backfill_vm.py` auto-recovery for
-      this VM class) now that a genuine stall/silent-death has been observed for it, or whether the deliberate `None`
-      (manual-judgment-only) should stand. If kept `None`, no action needed; if changed, the ≤2/(vm-prefix,day) budget
-      already applies uniformly via `vm_prefix()`'s longest-prefix match.
+- [ ] [OPERATOR] P3. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D73): Keep
+      `launcher_registry.LAUNCHER_FOR_VM_PREFIX["manifest-recon-"] = None` (no auto-relaunch) — the root cause was
+      memory sizing, already fixed via column-slimming; auto-relaunch would mask future OOMs. Source:
+      /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 - [x] ✅ [OPERATOR] P3. Confirm `manifest-recon-cefi-20260815-100959` (currently running on `e2-highmem-16`) completes
       successfully and its output satisfies `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo #P3
       (cefi BINANCE-FUTURES/KRAKEN-FUTURES `--unphantom-only` re-run) — flip that checkbox once confirmed; this issue
@@ -202,3 +201,6 @@ was never previously flagged as at-risk for this same unsliced read.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-17 (re-verify, cefi tranche)** [body-hash:ceaa7f459d29dec2]: KEEP-NA, valid — re-confirmed, same 1 open item as yesterday's marker (hash drift only — context_scope refresh, no content staleness found on this pass). Line 157 ([OPERATOR] P3, reconsider whether `launcher_registry.LAUNCHER_FOR_VM_PREFIX["manifest-recon-"]` should enable auto-recovery) OPERATOR_QUESTION — explicit `[OPERATOR]` tag, genuine policy fork (manual-judgment-only vs. auto-recovery for this VM class) with no decision on record. Doc stays assigned_vm: NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-22 — ruling D73 (manifest-recon auto-relaunch)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Keep None — the root cause was memory sizing (already fixed via column-slimming);
+  auto-relaunch would mask future OOMs. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

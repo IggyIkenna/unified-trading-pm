@@ -91,17 +91,12 @@ P3.
 
 ## Recommended decision
 
-- [ ] [LOCAL] P3. BLOCKED-OPERATOR-DECISION — **Resolve the Aave/Chainlink aggregate-zero-path signal design question**
-      _(retagged 2026-08-12 (/plan-reconcile): `[LOCAL]` alone is not a recognized ingestion-gate marker —
-      `regen_backlog_from_plan.py`'s `_UNCHECKED_RE` only skips `BLOCKED-<TOKEN>`/`[OPERATOR]`/`_(stretch, optional)_`
-      lines — so on a doc with `assigned_vm: planning` this todo would otherwise be dispatched to an AO worker who
-      cannot resolve it; the doc's own text (below) already calls this "a genuine human design call." The design
-      question itself stays open for the operator — this edit only fixes dispatch-gating, does not answer it.)_ (which
-      of: classify+thread the caught exception type into `fetch_evidence`, vs surface per-reserve/per-feed exception
-      counts up to the empty-path recorder) as a human/local decision FIRST — mirrors
-      `defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md`'s already-resolved item 5 pattern. THEN file the
-      scoped CODE todo(s) against that decision (market-tick-data-service: `_aave_oracle_collection.py` +
-      `oracle_prices_handler.py`'s Chainlink leg).
+- [ ] [CODE] P3. Classify + thread the caught exception type (transport `HTTPError` w/ real status vs JSON-RPC
+      `Web3RPCError`/`ContractLogicError` vs connection/timeout) into `fetch_evidence` for Aave's per-reserve RPC
+      swallow (`_aave_oracle_collection.py`) and Chainlink's per-feed swallow
+      (`oracle_prices_handler.py::_query_chain_feeds`). Per D63 ruling (2026-08-22): classify+thread — mirrors the
+      shipped Pyth `http_status` pattern (market-tick-data-service@480e76dd) and reuses existing machinery.
+      (repo: market-tick-data-service)
 - [x] [CODE] P2. **Thread Pyth's already-in-hand HTTP status into the clean-empty path** (market-tick-data-service):
       widen `_fetch_pyth_prices`/`_fetch_pyth_prices_at_timestamp`'s return signature to also carry the resolved
       `http_status` (200 on the normal empty-after-filter path, 404 on the Hermes no-data-at-timestamp case), and thread
@@ -199,3 +194,6 @@ P3.
   `market-tick-data-service@<sha>` evidence.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries)
+- **2026-08-22 — ruling D63 (Oracle empty-path classification)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Classify+thread — mirrors the shipped Pyth http_status pattern and reuses
+  existing machinery. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -42,7 +42,7 @@ source: agent-discovered (orphaned-archetype build, mechanical pre-flight sweep,
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
+    /plans/archive/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
     strategy-service/strategy_service/engine/strategies/v2/target_universe/,
     strategy-service/strategy_service/engine/strategies/v2/orchestrator.py,
@@ -772,17 +772,12 @@ auto-generated section's own owner script, rather than hand-editing the table) �
       doc's own earlier Recommendation §3 update: "✅ DONE 2026-07-24 ... CARRY_FUNDING_DISPERSION (78 rows) ...
       DEFI_LP_CONCENTRATED/_POOL/_VAULT (3 rows each) all confirmed firing cleanly, zero silent-degradation found." This
       checkbox predated that confirmation and was never flipped.
-- [ ] [DESIGN] P2. **RULED 2026-08-09 (operator): pollable-candidate-registry design (not push-on-tick)** for the live
-      liquidation-candidate feed integration (`LIQUIDATION_CAPTURE` + `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, both currently
-      `_ALLOWED_EMPTY_ARCHETYPES`). The transport-shape decision is resolved — **still NOT AO-dispatchable**: a second
-      design sub-decision remains open (features-service's `liq_candidate_*_<id>` dynamically-keyed calculator is an
-      unprecedented per-candidate feature-naming shape needing its own design call, per the "Scope of the real, unbuilt
-      integration" section above), and the 3-repo build (market-tick-data-service forking `position_data_handler.py` to
-      poll candidates sorted by `healthFactor` ascending via the UTL `EventTransport` facade; features-service's new
-      calculator; strategy-service's live params-mutation path on `V2EngineOrchestrator`/`BaseArchetypeEngineV2`, which
-      today sets `self.params` once and never rewrites it) still needs to be broken into bounded, AO-dispatchable todos
-      against this now-resolved direction. Next step: a LOCAL/human design pass that resolves the feature-naming
-      sub-decision and scopes the pollable-registry build into concrete todos — not yet actioned.
+- [ ] [REVIEW] P2. Check whether existing sibling work already resolves the features-service `liq_candidate_*_<id>`
+      per-candidate dynamic-feature-naming design sub-decision (the remaining open piece of the 2026-08-09
+      pollable-candidate-registry ruling for `LIQUIDATION_CAPTURE` + `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`) before running
+      a fresh LOCAL/human design pass. Per D59 ruling (2026-08-22): check the sibling work first — it may make this
+      design question moot. If no precedent is found, proceed with the original design pass (feature-naming decision +
+      scoping the 3-repo pollable-registry build into concrete AO-dispatchable todos).
 - [x] ✅ [DESIGN] P2. **`RecursiveLoopOrchestrator` translation layer for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` /
       `CARRY_BASIS_PERP_INV`** (both currently `_ALLOWED_EMPTY_ARCHETYPES`, gated on `staking_yield_enabled=false`).
       **RULED 2026-08-09 (operator, interactive, recorded in this doc's own DRAFT PROPOSAL 2026-08-09 subsection below

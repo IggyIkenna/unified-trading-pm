@@ -204,9 +204,10 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
       (missing/wrong/stale-row detection, mirrors the agent-orchestrator parity-test pattern) + 10 unit tests
       (`test_check_cron_branch_override_parity.py`, incl. a live end-to-end smoke against the real repo files) +
       wired into `quality-gates.sh` alongside the existing manifest-canonical guard. Full `quality-gates.sh` green.
-- [ ] [OPERATOR] P3. Decide whether to collapse registries (B)/(C) into a single manifest-driven lookup
-      (removes the duplicate-registry class of bug entirely) or keep them separate with the new parity test as
-      the guard — design call, not blocking. Repo: unified-trading-pm. **Scope correction 2026-08-19
+- [ ] [OPERATOR] P3. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D136): Registry consolidation declined — keep the
+      separate (A)/(B)/(C)/(D) registries as-is; the parity test already shipped
+      (`scripts/quality_gates/check_cron_branch_override_parity.py`) is the adopted guard, not a full manifest-driven
+      collapse. Repo: unified-trading-pm. **Scope correction 2026-08-19
       (plan_reconciler)**: this doc's own root-cause framing names only THREE registries (A/B/C above), but a
       FOURTH independently hand-maintained copy of the same "what branch does repo X use" fact exists:
       `scripts/dev/slot-git-status-report.sh:312-326` (fixed independently, `unified-trading-pm@b92d9ba52fe`,
@@ -249,7 +250,9 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
       forbids an outside session touching a live slot. Do it when they go idle. Note the standing
       "its own worker reconciles in due course" assumption has now empirically failed — slot 0 has been
       diverged since 2026-08-11 (10 days).
-- [ ] [OPERATOR] P2. Revive the `Mac` laptop's slot cron + reporter — `/api/fleet/git-health` (2026-08-21)
+- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — RULED 2026-08-22 (D136): Mac laptop check-in NOT scheduled by
+      operator; stays [OPERATOR] with this date. Re-ask only when the operator schedules a physical check-in for that
+      host. Revive the `Mac` laptop's slot cron + reporter — `/api/fleet/git-health` (2026-08-21)
       shows all 11 of its `unified-trading-ci` rows last reported `2026-08-19T19:57:03Z` with
       `reporter_stale: true`, `ff_cron_stale: true` and `ff_pull_last_result: conflict` from
       `2026-08-19T19:53:14Z`. That host has not run a sweep in 2 days, so its 11 diverged rows are a STALE
@@ -364,3 +367,10 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
   before. It is only a candidate once every host reports clean — and even then it is an operator call: the
   2026-08-07 ruling (`unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`, archived) deliberately chose
   "enforced single-branch + stop pushing to LDR" and reconciled the branches byte-identical rather than deleting.
+
+## Progress Log addendum
+
+- **2026-08-22 — ruling D136 (Branch-registry consolidation + Mac check-in)**: OPERATOR-RULED 2026-08-21 — Mac laptop
+  check-in NOT scheduled by operator; stays [OPERATOR] with this date. Registry consolidation: keep separate
+  registries + parity test (REC adopted). Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

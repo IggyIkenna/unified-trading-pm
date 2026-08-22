@@ -620,10 +620,9 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
       (`features-service/features_service/sports/app/pubsub/subscriber.py:76`) if this trigger path is no longer
       wanted. Currently: sports live feature computation via this specific trigger silently never fires. Done when:
       either a publisher ships and the subscriber receives real messages, or the dead subscriber/topic is removed.
-- [ ] [REVIEW] P1. **Track the remaining corpus-wide outstanding items** — this doc's sections B-F list dozens of
-      still-open items as plain prose/bullets, never checkboxes (e.g. B1-B6 canonical-id migration, C2-C8 DeFi
-      adapter/coverage gaps, D1-D9 prediction/sports wiring gaps, F1-F3 data-ops follow-ups); see those sections for the
-      full item-by-item list, evidence, and fix options.
+- **[REVIEW] P1. CANCELLED — SUPERSEDED 2026-08-22 (D1 ruling: repeated audits agree the sections B-F outstanding
+  items are churn, not live tasks — approved as closed by default, except the doc's own keep-open items and one split
+  item, which stay tracked individually where they already are).**
 
 ## Progress Log
 
@@ -684,3 +683,7 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirms prior verdicts; genuinely mixed operator-judgment
   index/tracker doc across 5 asset groups, sole tracked checkbox is open-ended meta-tracking over dozens of prose
   findings including an explicit §E "operator decisions required" section.
+- **2026-08-22 — ruling D1 (Stale meta-doc disposition)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve all — repeated audits agree these are churn, not live tasks; the two
+  keep-open items and the one split are the only exceptions. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

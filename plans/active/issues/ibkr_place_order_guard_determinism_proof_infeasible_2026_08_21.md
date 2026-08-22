@@ -116,11 +116,11 @@ already correct).
 
 ## What would need to happen for a future attempt to succeed
 
-- [ ] [DESIGN] P2. Wire at least one tradfi archetype (e.g. an S&P/ES-futures strategy) into the paper engine —
-      `resolve_paper_universe` + a `GCSFeatureProvider`/data-source wiring entry mirroring §4.6's DeFi rows — a
-      genuine feature-build, not a test. Needed before any tradfi-venue determinism proof can exist. Owner: whoever
-      picks up tradfi paper-trading readiness next; likely blocked on the operator's own live-trading cutover timeline
-      for tradfi (currently explicitly out of scope, "batch-only this cycle").
+- [ ] [DESIGN] P2. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D86): Keep deferred — no evidence the tradfi cycle-scope
+      ruling ("batch-only this cycle") has changed. Wiring at least one tradfi archetype (e.g. an S&P/ES-futures
+      strategy) into the paper engine — `resolve_paper_universe` + a `GCSFeatureProvider`/data-source wiring entry
+      mirroring §4.6's DeFi rows — remains future work once cycle scope changes; needed before any tradfi-venue
+      determinism proof can exist. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 - [ ] [CODE] P2. Land the spine's G1 gap (batch running the same `GroupCRunner` smart-matching layer paper uses) —
       cross-cutting, not tradfi-specific; tracked at `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`
       §7, plan-of-record `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`.
@@ -137,3 +137,9 @@ already correct).
 
 `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` (the determinism-spine SSOT this proof would need
 to instantiate); `/codex/12-agent-workflow/measurement-claims-discipline.md` (why a proxy proof was not substituted).
+
+## Progress Log
+
+- **2026-08-22 — ruling D86 (TradFi paper-engine wiring)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Keep deferred — no evidence the cycle-scope ruling changed. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -144,12 +144,11 @@ watchdog. The real fix here is either (a) migrating these 8 launchers off `lc_lo
       above onto the shared `setup-data-pipeline-vm.sh` route so they inherit `vm-exec-with-gcs-tee.sh`'s existing
       byte-growth watchdog). Done when: a deliberately-wedged workload under one of the 8 launchers is killed within a
       configured timeout instead of running indefinitely.
-- [ ] [HUMAN] P2. **Extend the naming heuristic (or add an explicit allowlist) so the 6 doubly-unprotected launcher
-      VM_NAMEs** (`aave-lending-rate-val-*`, `amm-golden-*`, `cefi-fwd-daily-cron-*`, `prediction-features-*`,
-      `prediction-pipeline-*`, `tradfi-fwd-daily-cron-*`) **route through `heartbeat_stall_watcher.py`'s
-      run-log-freshness liveness path**, once the whole-fleet naming-collision review the parent issue doc's
-      blast-radius rule requires has been done (this doc intentionally does NOT ship that change — it was out of scope
-      for the narrowly-verified Gap-3 fix). Done when: `_is_backfill_vm()` returns `True` for all 6 without any
+- [ ] [INFRA] P2. **Add an explicit allowlist (not a heuristic widening)** so the 6 doubly-unprotected launcher
+      VM_NAMEs (`aave-lending-rate-val-*`, `amm-golden-*`, `cefi-fwd-daily-cron-*`, `prediction-features-*`,
+      `prediction-pipeline-*`, `tradfi-fwd-daily-cron-*`) route through `heartbeat_stall_watcher.py`'s
+      run-log-freshness liveness path. Per D140 ruling (2026-08-22): allowlist — gets protection without re-opening
+      the heuristic to every fleet VM name. Done when: `_is_backfill_vm()` returns `True` for all 6 without any
       newly-introduced false positive against a legitimately-continuous live/paper VM name. **NOTE 2026-08-03 (slot-7,
       `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2i)**: `gcs-migration-bundle-*` removed from this list —
       `launch-gcs-migration-bundle-vm.sh` was confirmed-dead code and deleted, so it no longer needs a stall-kill fix.
@@ -213,3 +212,6 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (4 entries), unchanged.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries)
+- **2026-08-22 — ruling D140 (Class-B stall-watch coverage)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Allowlist — gets protection without re-opening the heuristic to every fleet VM name.
+  Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
