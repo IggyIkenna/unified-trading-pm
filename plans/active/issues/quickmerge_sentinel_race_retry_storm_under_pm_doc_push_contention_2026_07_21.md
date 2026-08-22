@@ -21,6 +21,7 @@ scope: [engineer]
 tags: [quickmerge, ship-pipeline, sentinel-race, retry-storm, contention, quality-gates, throughput, efficiency, fleet]
 related: [/plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md]
 created: "2026-07-21"
+last_updated: "2026-08-21"
 author: unknown
 parent_epic: agent_operating_framework_master
 priority: P2
@@ -118,10 +119,14 @@ instruction not to dispatch a change to `quickmerge.sh` blind.
 
 ## Todos
 
-- [ ] [INFRA] P2. **Implement fix 1 (content-hash QG green-tree fast-path)**, and fix 3 (serialized PM-doc-push queue)
-      only if 1+2 prove insufficient — both remain unimplemented; fix 1 is "the biggest win" (skip the full
-      `quality-gates.sh` re-run on a lost sentinel race when the staged content is unchanged since the last green gate),
-      deliberately deferred pending careful review since `quickmerge.sh` is high-blast-radius shared ship infra.
+- [ ] [INFRA] P2. **D120 ruling applied 2026-08-21 (issues_corpus_completion_dispatch_2026_08_21.md ledger): re-measure
+      the sentinel-race retry-storm first.** Check whether fix 2 (backoff+jitter, shipped
+      `unified-trading-pm@e264b3c9`) has materially reduced the wasted-full-QG-rerun pattern this doc reports, under a
+      current high-contention doc-push window (sample consecutive-QG-attempt counts on a real slot). If the waste is
+      still material, implement fix 1 (content-hash QG green-tree fast-path) with an operator-reviewed design —
+      `quickmerge.sh` is high-blast-radius shared ship infra, do not ship the fast-path predicate without review — and
+      fix 3 (serialized PM-doc-push queue) only if 1+2 prove insufficient. If the re-measurement shows the waste is
+      now negligible, close this todo citing the fresh measurement instead. Repo: unified-trading-pm.
 
 ## Progress Log
 
@@ -174,3 +179,9 @@ genuinely-needed gate.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries).
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- The doc carries an explicit, verbatim, still-present section heading — 'for operator / careful review — do NOT dispatch blind: quickmerge is high-blast-radius shared ship infra' — directly above its remaining candidate fixes, and the Notes section reiterates operator sign-off is required because an over-eager fast-path predicate could bypass a genuinely-needed gate. Fix 2 (backoff+jitter) already shipped via a sibling doc (unified-trading-pm@e264b3c9); only fix 1 (content-hash QG green-tree...
+
+- **2026-08-21 — ruling D120 (QG green-tree fast-path)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Re-measure first; if still material, the fast-path with operator-reviewed design.
+  Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. Applied: retagged the sole open todo
+  above to an executable "re-measure, then act" todo (attempt the re-measurement; only build fix 1 with operator
+  review if the waste is confirmed still material).

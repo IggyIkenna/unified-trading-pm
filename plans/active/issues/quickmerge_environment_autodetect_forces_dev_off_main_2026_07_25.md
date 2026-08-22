@@ -40,6 +40,7 @@ related:
     /plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
   ]
 created: 2026-07-25
+last_updated: "2026-08-21"
 author: unknown
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
@@ -174,20 +175,17 @@ change needs a caller audit across the repo before touching it — out of scope 
 
 ## Todos
 
-- [ ] [INFRA] P2. **Finish the quickmerge environment auto-detect follow-up.** **Steps 2+4 are DONE, only step 3
-      remains** — corrected 2026-08-07 (na-eligibility-audit; the text below was stale, see marker below for why): step
-      3 (revisit whether `scripts/quickmerge.sh`'s branch check should broaden to `live-defi-rollout`/`staging`) is the
-      only genuinely open sub-item. **Blocker citation corrected 2026-08-19 (plan_reconciler)**: this item is NO
-      LONGER gated on `scripts/quickmerge.sh` ownership contention with `ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s
-      own todo 1 — that contention was CLEARED 2026-08-09, confirmed live in the now-archived
-      `plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md:118-126` ("BOTH blockers
-      cleared... `scripts/quickmerge.sh` is free again... batch-5 (or later) should extract it as a bounded AO
-      todo"), and `ci_satellite_ao_dispatch_batch4_2026_07_31.md` is itself `status: complete`, archived — not
-      `status: active` as this item previously (and repeatedly, through 2026-08-18) still claimed. The recommended
-      extraction was never actually executed by batch5/6/15 despite the clearing. The genuinely still-live reason
-      this stays open/NA is the design/judgment call itself — it is a design/judgment call on the fleet-wide
-      shipping-pipeline gate every repo depends on — appropriately stays NA on that basis alone, independent of the
-      now-stale ownership-contention framing.
+- [ ] [INFRA] P2. **D119 ruling applied 2026-08-21 (issues_corpus_completion_dispatch_2026_08_21.md ledger): broaden
+      `scripts/quickmerge.sh`'s ENVIRONMENT auto-detect branch check to also treat `live-defi-rollout`/`staging` as
+      production** (same as `main`) — the specific risk the 2026-07-25 trial fix exposed
+      (`UnifiedCloudServicesConfig`'s silently-dropped `environment=` kwarg) is fixed
+      (`unified-trading-library@dc1dc7df`) and a fleet-wide grep confirmed no other repo relies on the risky
+      ambient-default pattern (2026-08-06 finding). The prior `scripts/quickmerge.sh` ownership contention with
+      `ci_satellite_ao_dispatch_batch4_2026_07_31.md` cleared 2026-08-09 (that plan is archived, `status: complete`).
+      Repo: unified-trading-pm (`scripts/quickmerge.sh`). Done-when: the broadened branch check is applied, a full
+      local `quality-gates.sh` run on `unified-trading-library` passes identically under
+      `ENVIRONMENT=development`/`production` (mirroring the 2026-07-25 verification), and a live quickmerge run on
+      `live-defi-rollout` resolves `ENVIRONMENT=production`.
 
 ## na-eligibility-audit verdict
 
@@ -277,3 +275,9 @@ Sole open item (step 3: whether `quickmerge.sh`'s branch check should broaden be
 `live-defi-rollout`/staging) remains an explicit design/judgment call on fleet-wide shared ship infrastructure,
 gated on file-ownership contention with `ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s own todo 1 (tracked there
 as Deferred D4-1). Steps 2 and 4 stay done with commit evidence. No `assigned_vm` change.
+
+- **2026-08-21 — ruling D119 (quickmerge ENVIRONMENT autodetect)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Broaden — the specific risk the trial exposed is fixed and confirmed
+  fleet-clean. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. Applied: retagged the
+  sole open todo above from a design/judgment-call framing to a plain dispatchable "broaden the branch check" todo
+  with a concrete done-when.

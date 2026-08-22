@@ -42,7 +42,7 @@ related:
   ]
 created: 2026-08-03
 author: unknown
-last_updated: 2026-08-09 # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale ~5 days behind the doc's own
+last_updated: 2026-08-21 # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale ~5 days behind the doc's own
   # most recent (na-eligibility-audit 2026-08-09) Progress Log entry
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -580,3 +580,11 @@ incident docs rather than reopening this specific 4-doc chain. Both open todos c
 or archive on the Phase 2-3 landing alone. Out of this tranche-wave's scope to touch the sibling founding/`continued2`
 docs that would need coordinating for the "archive all four together" outcome todo 3 anticipates; flagging this
 finding for whoever next touches the chain rather than folding it in silently. No `assigned_vm` change.
+
+- **2026-08-21 — ruling D1 (Stale meta-doc disposition)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve all — repeated audits agree these are churn, not live tasks; the two
+  keep-open items and the one split are the only exceptions. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. Applied: this doc is one of the two named
+  "keep-open" exceptions — the na-eligibility-audit verdict immediately above (2026-08-21, same day) independently
+  found 2 fresh post-fix recurrences and explicitly ruled "both open todos correctly stay open — do NOT close or
+  archive on the Phase 2-3 landing alone." No todo changed by this ruling; recorded here for the ledger.

@@ -57,7 +57,7 @@ related:
   ]
 created: 2026-08-03
 author: unknown
-last_updated: 2026-08-16 # line-cap remediation split (Trust Mode) -- extracted the bulk 2026-08-03 Progress Log to the archive doc above; was 1013L, flagged unresolved since 2026-08-15
+last_updated: 2026-08-21 # line-cap remediation split (Trust Mode) -- extracted the bulk 2026-08-03 Progress Log to the archive doc above; was 1013L, flagged unresolved since 2026-08-15
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
@@ -148,3 +148,13 @@ trusted the claim): that doc is genuinely at plans/archive/2026_08/, status: com
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries).
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 2 open P3 todos, both tracking/gating on qg_governor_glue_runner_ledger_coordination_2026_08_03.md's capacity-side fix. That fix has technically landed (archived, status:complete, Phase 2-3 both [x]) but this doc's own Progress Log (2026-08-09, plan_reconciler) and embedded na-eligibility-audit verdict (2026-08-10) both independently confirm recurrence continued PAST the fix landing -- a fresh corroborating occurrence on 2026-08-09 (market-tick-data-service, under measured heavy host...
+
+- **2026-08-21 — ruling D1 (Stale meta-doc disposition)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Approve all — repeated audits agree these are churn, not live tasks; the two
+  keep-open items and the one split are the only exceptions. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. Applied: this doc is one of the two named
+  "keep-open" exceptions — its own 2026-08-21 na-eligibility-audit verdict (below) independently found 2 fresh
+  post-fix recurrences (`deployment_api_qg_pre_existing_red_inventory_classification_2026_08_19.md`,
+  `utl_qg_host_pressure_perf_and_fd_failures_2026_08_20.md`) and explicitly ruled "both open todos correctly stay
+  open — do NOT close or archive on the Phase 2-3 landing alone." No todo changed by this ruling; recorded here for
+  the ledger.
