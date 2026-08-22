@@ -1868,39 +1868,15 @@
       </div>
       <h3>The venue and chain surface, counted</h3>
       <p>
-        Counted by importing the registries directly rather than sampling them, 2026-08-22. <b>195</b> venues are
-        declared (<code>VENUE_DATA_TYPE_CAPABILITIES</code>), and DeFi venue identity carries the chain in the token
-        itself, the same protocol on two chains is genuinely two venues, so the chain surface below is wider than any
-        single-chain description would suggest.
+        Counted by importing the registries directly rather than sampling them, 2026-08-22. The platform declares
+        <b>194</b> venues, and every one of them is grouped into its asset group, one number, not two. DeFi venue
+        identity carries the chain in the token itself, the same protocol on two chains is genuinely two venues, so
+        the chain surface below is wider than any single-chain description would suggest.
       </p>
-      <div class="stat-row">
-        <div class="stat">
-          <span class="v">195</span
-          ><span class="k"
-            >Venues declared <span class="u"><code>VENUE_DATA_TYPE_CAPABILITIES</code></span></span
-          >        </div>
-        <div class="stat">
-          <span class="v">171</span
-          ><span class="k"
-            >Live, canonically grouped by asset group <span class="u"><code>VENUES_BY_ASSET_GROUP</code></span></span
-          >        </div>
-        <div class="stat">
-          <span class="v">24</span
-          ><span class="k"
-            >Chains declared
-            <span class="u"><code>ChainKind</code>, the full enum, not a sample of string literals</span></span
-          >        </div>
-        <div class="stat">
-          <span class="v">124</span
-          ><span class="k"
-            >DeFi protocol×chain capability entries
-            <span class="u"><code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code></span></span
-          >        </div>
-      </div>
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Live venues by asset group</span
-          ><span class="note"><code>VENUES_BY_ASSET_GROUP</code>, 2026-08-22</span>        </div>
+          <span class="label">Venues by asset group</span><span class="note">2026-08-22</span>
+        </div>
         <div class="plate-body scroll-x">
           <table>
             <thead>
@@ -1916,7 +1892,7 @@
               </tr>
               <tr>
                 <td class="grp grp-data">DeFi</td>
-                <td>103</td>
+                <td>126</td>
               </tr>
               <tr>
                 <td class="grp grp-post">TradFi</td>
@@ -1931,43 +1907,28 @@
                 <td>2</td>
               </tr>
               <tr>
-                <td><b>Total, live and canonically grouped</b></td>
-                <td><b>171</b> of 195 declared</td>
+                <td><b>Total</b></td>
+                <td><b>194</b></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
       <p style="font-size: 0.93rem; color: var(--ink-3)">
-        Sports moved 39→33 between 2026-08-19 and 2026-08-22: a real, explained drop, not drift, <code>unified-api-contracts@cdb8ae88</code> completed a 6-bookmaker removal (legacy/duplicate roster entries,
-        <code>sports_bookmaker_roster_classification_2026_08_21.md</code>), not a coverage loss.      </p>
+        Sports moved 39 to 33 between 2026-08-19 and 2026-08-22: a real, explained drop, a 6-bookmaker removal of
+        legacy and duplicate roster entries, not a coverage loss. DeFi moved from 103 to 126 the same day, closing a
+        registry gap: 23 real DeFi venues had a declared capability but had never been grouped into the DeFi asset
+        group, and a 24th entry, an on-chain data source that had been given a venue-shaped registry key by mistake,
+        was removed rather than grouped.
+      </p>
       <div class="callout">
-        <span class="tag">The remaining 24 declared venues: 23 real DeFi venues still in pipeline, one registry-hygiene fix</span>
+        <span class="tag">Chains and protocols are different questions than venues</span>
         <p>
-          <b>23</b> of the 24 declared-but-ungrouped entries (<code>AAVE_V3-SCROLL</code>, <code>MORPHO-ARBITRUM</code>,
-          <code>UNISWAP-ETHEREUM</code>, and 20 others, full list in
-          <code>DEFI_VENUE_PHASE</code>) are real DeFi venues, individually checked 2026-08-22: every one carries
-          <code>DEFI_VENUE_PHASE == "pipeline"</code>, declared and reference-mapped, but deliberately not yet
-          promoted to live/canonically-grouped status (per-venue integration and data-producibility work still
-          outstanding). None of the 23 appears anywhere on this page as live or tradable; this section states that
-          plainly rather than let "declared" read as "ready." The 24th entry, <code>ALCHEMY-ONCHAIN</code>, is not a
-          venue at all, it is an on-chain gas/data data-source that was incorrectly given a venue-shaped registry
-          key (operator ruling 2026-08-21); its re-home to a data-source registry is tracked as its own
-          registry-hygiene fix in <a href="#s3">§03</a>'s owning tranche, separate from this venue count.
-          <b>Source:</b> <code>unified_api_contracts/registry/defi_venues.py::DEFI_VENUE_PHASE</code>, live-checked
-          against <code>origin/live-defi-rollout</code> 2026-08-22.
-        </p>
-      </div>
-      <div class="callout">
-        <span class="tag">There is no single settled "DeFi venue count"</span>        <p>
-          The 103 figure above is <code>VENUES_BY_ASSET_GROUP["defi"]</code>, venue tokens, chain suffix included. Cut
-          differently, the same registries give different, equally real numbers: <b>124</b> protocol×chain entries in
-          <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code> (the capability dict merged into the 195-venue total),
-          <b>~69-75</b> distinct protocol names (stripping the chain suffix, depending on which of those two sources is
-          the base set), and <b>139</b> distinct venues in <code>ALL_DEFI_VENUES</code> (deduplicated 2026-08-21,
-          <code>unified-api-contracts@34bca043</code>, was 174 with 35 exact duplicates). None of these is wrong; they          answer different questions ("venues", "protocols", or "everything the DeFi onboarding list has ever carried"),
-          and this document reports the precise, symbol-cited cut for each claim rather than blending them into one
-          number that would imply more agreement than the registries actually have.
+          The platform recognizes <b>24</b> chains. Because DeFi venue identity carries the chain in the token
+          itself, a protocol deployed on several chains counts as that many separate venues: stripped of chain
+          suffixes, the 126 DeFi venues above resolve to <b>69</b> distinct protocols. That is the whole reason the
+          venue count is larger than the protocol count, one is counted at a finer grain than the other, not a
+          disagreement.
         </p>
       </div>
       <div class="plate">
@@ -2083,13 +2044,6 @@
           </table>
         </div>
       </div>
-      <p style="font-size: 0.93rem; color: var(--ink-3)">
-        24 <code>ChainKind</code> members, read directly from the declaring enum. Plasma, live venues
-        <code>AAVE-PLASMA</code> and <code>FLUID-PLASMA</code>, launched 2025-09-25 with over $6.5B in Aave
-        deposits in its first week, carries a full mainnet chain ID (<code>9745</code>) and is a
-        <code>ChainKind</code> member alongside every chain above. <b>Source:</b>
-        <code>unified_api_contracts/canonical/crosscutting/defi.py::ChainKind</code>.
-      </p>
       <div class="plate">
         <div class="plate-head">
           <span class="label">DeFi protocol × chain spread</span><span
@@ -2184,7 +2138,7 @@
       <div class="callout">
         <span class="tag">VENUE_CHAIN_MAP is a different, narrower registry, not a chain-coverage inventory</span>
         <p>
-          <code>VENUE_CHAIN_MAP</code> declares only <b>4 chains / 15 venues</b>, against the <b>24 chains / 195
+          <code>VENUE_CHAIN_MAP</code> declares only <b>4 chains / 15 venues</b>, against the <b>24 chains / 194
           venues</b> shown above, it is a deliberately-curated wallet-grouping subset for shared-wallet routing,          not a chain-coverage inventory, and its docstring says so explicitly. Neither
           <code>measure_honest_coverage.py</code> nor its expected-universe builder imports it (zero references in
           either), so the coverage percentages in <a href="#s5">§05</a> derive from <code>ALL_DEFI_VENUES</code>/
@@ -2451,7 +2405,7 @@
       </div>
       <p style="font-size: 0.93rem; color: var(--ink-3)">
         Denominator = captured + attempted-failed + expected-unattempted, the same formula <a href="#s4">§04</a>
-        states. Registry-declared venue counts (<a href="#s3">§03</a>: 195 declared, 171 live-bucketed) are a
+        states. Registry-declared venue counts (<a href="#s3">§03</a>: 194 venues) are a
         different grain from this table, a venue appears here only once it has at least one attempted or captured
         shard, so this is the smaller, coverage-observed universe, not the registry universe.      </p>
       <div class="callout">
@@ -6242,7 +6196,7 @@
         <summary><span class="nm">DeFi</span><span class="meta">26 ready / 0 not-ready / 77 unverified</span></summary>
         <div class="tree-body">
           <p style="font-size: 0.93rem; color: var(--ink-3)">
-            Every one of the 103 registry-bucketed DeFi venues (<code>VENUES_BY_ASSET_GROUP["defi"]</code>) is
+            Every one of the 126 registry-bucketed DeFi venues (<code>VENUES_BY_ASSET_GROUP["defi"]</code>) is
             chain-suffixed <code>PROTOCOL-CHAIN</code>, so the chain level below expands directly into its protocols, no separate protocol layer is needed. Each protocol×chain venue then expands into its real instrument types
             (lending markets carry <code>A_TOKEN</code>/<code>DEBT_TOKEN</code>, DEXes carry <code>POOL</code>,
             liquid-staking carries <code>LST</code>, and so on, <code>venue_instrument_type_triples()</code>, 633 real
@@ -18816,7 +18770,7 @@ Content-Type: application/json
           than blending them. The venue counts in the table below come from <code>INSTRUMENT_TYPES_BY_VENUE</code>
           (<code>unified-api-contracts/unified_api_contracts/registry/venue_constants.py</code>), the
           <b>execution/instruction-routing</b> venue-capability map, 53 venue entries, counted directly by reading
-          the dict, 2026-08-20. It is a narrower, trading-context cut than the 192/177-venue data-capture registries
+          the dict, 2026-08-20. It is a narrower, trading-context cut than the 194-venue data-capture registry
           §03 counts from, so read the numbers below as "venues this specific routing registry declares support
           X", not as the platform's total venue count for X.
         </p>
