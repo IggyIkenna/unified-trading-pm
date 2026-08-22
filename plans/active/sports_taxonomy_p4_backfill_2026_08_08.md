@@ -125,25 +125,31 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       manifest resumability yet), an efficiency-north-star violation, not a shortcut worth taking. See the new
       [DATA] P1 todo immediately below (which this one's completion unblocks) and the 2026-08-22 Progress Log entry
       for the full evidence trail.
-- [ ] [DATA] P1. **Wire manifest instrumentation into the arb historical-backfill path, then launch the full
-      2020-06-06→present campaign.** `features-service/features_service/sports/cli/handlers/arb_detect_handler.py::
-      _run_historical_backfill` (and/or `arb/store.py::write_arb_opportunities`) needs a `ManifestWriter.record_captured`
-      (nonzero-opportunity day) / `record_empty` (honest-absence day) call + a coarse per-day pre-flight-skip lookup,
-      mirroring `market-data-processing-service/scripts/reprocess_sports_odds.py`'s `_coarse_row_key`/
-      `_bucket_preflight_skip` pattern — give the coarse row a `venue` sentinel distinct from any existing sports
-      coarse row (2026-08-20 collision lesson in that same file: an omitted `row_key` column is a WILDCARD in
-      `ManifestWriter.lookup()`, not "must be empty"). `record_captured`'s real signature needs `df`/`asset_group`/
-      `instrument_type` — the right `instrument_type` stamp for a cross-venue derived event needs a short design
-      decision, not a guess (that's why this wasn't done inline — see the 2026-08-22 Progress Log entry). The UAC
-      closed-set prerequisite (`BATCH_FEATURES_SPORTS_ARB` PipelineMode + matching SOURCE_PRIORITY/
-      SOURCE_MODE_CAPABILITY/AVAILABILITY_AT_SEMANTICS/COMPUTED_SOURCES entries) already landed —
-      unified-api-contracts@dee6ec1093. The VM launcher already exists —
-      `deployment-service/scripts/vm/launch-features-sports-arb-backfill.sh` (registered in both
-      `LAUNCHER_FOR_VM_PREFIX` and `VM_PREFIX_TO_BUCKET`, `features-arb-backfill-` prefix) — and is
-      live-validated (2026-08-22 Progress Log entry) but currently has NO resume-from-progress: launching it for the
-      full ~2,270-day range before this todo lands would replay the whole window on any SPOT preemption, violating
-      `/codex/05-infrastructure/spot-vms-for-backfill.md`'s HARD RULE. Once wired, launch (SPOT default, `full` mode)
-      2020-06-06 → present and flip the todo above.
+- [x] ✅ [DATA] P1. **Wired manifest instrumentation into the arb historical-backfill path — 2026-08-22 (slot-21,
+      data_engineering).** `ArbDetectHandler._run_historical_backfill` now does a coarse per-day pre-flight-skip lookup
+      + `ManifestWriter.add()` (captured) / `record_empty` (`STRATEGY_ENGINE_RETURNED_ZERO`, honest-absence) /
+      `record_failed` per day, mirroring `reprocess_sports_odds.py`'s `_coarse_row_key`/`_bucket_preflight_skip`
+      pattern with a distinct `venue="FEATURES_SPORTS_ARB"` coarse-row sentinel (never collides with MDPS's own
+      `ODDS_API`/`ODDS_API_DERIVED` coarse rows). Resolved the `instrument_type` design question the todo flagged:
+      `"odds"` — not a guess, it matches UAC's own pre-existing `_candle_contracts.py` SchemaContract registration for
+      `("sports", "odds", "arbitrage_opportunity_{tf}")`. Used the legacy `ManifestWriter.add()` per-shard path rather
+      than `record_captured()` — `record_captured()` is otherwise UNUSED in features-service production source and
+      triggers QG STEP 5.71's emission-policy pairing gate, which would have forced picking a `SERVICE_OUTPUT_POLICIES`
+      tier for a brand-new UAC data_type — a second, separate design decision genuinely out of scope for this todo.
+      Shipped `features-service@5b17aac0c5` (code+tests, full `quality-gates.sh` green) +
+      `deployment-service@96bd06d41e` + `@383773f567` (resolved the launcher's own now-stale "KNOWN GAP" comments,
+      the same doc-goes-stale-the-moment-you-fix-the-thing-it-describes case CLAUDE.md's misleading-doc rule targets).
+      **Did NOT launch the full 2020-06-06→present campaign this session** — see the new [DATA] P1 todo immediately
+      below and the 2026-08-22 Progress Log entry for why (host-contention-driven session unreliability made
+      responsible multi-day-VM monitoring infeasible in this session, not a code/design gap).
+- [ ] [DATA] P1. **Launch the full 2020-06-06→present arb-backfill campaign** now that manifest instrumentation is
+      wired (prior todo). `bash deployment-service/scripts/vm/launch-features-sports-arb-backfill.sh 2020-06-06
+      <today>` (SPOT default, `full` mode — resume-from-progress now works via the manifest pre-flight-skip). Arm an
+      owned `run_in_background` progress watchdog in the SAME turn as the launch per
+      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — monitor on the count of
+      `sports_arb/by_date/day=*/tick=*/opportunities.parquet` GCS objects created (entity-scoped, `time_created`), not
+      VM-alive activity. Prerequisite for the `[REVIEW]` monitoring/coverage todos below, which cover this campaign
+      too (don't duplicate their tracking here).
 - [ ] [SCRIPT] P1. **Backfill the `horizon` axis across the full history**, including the newly-promoted MODEL horizons
       T-2h and T-6h (P3), so the ML retrain has them over the whole period rather than only where they happen to exist
       today.
@@ -174,6 +180,29 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 ## Progress Log
 
+- **2026-08-22 (task `sports_taxonomy_p4_backfill-a541bcd4a650`, slot 21, data_engineering)** — Worked the
+  manifest-instrumentation todo (the one this same session's earlier task left open). Shipped
+  `features-service@5b17aac0c5` (`ArbDetectHandler._run_historical_backfill` now does the coarse per-day
+  pre-flight-skip lookup + `.add()`/`record_empty`/`record_failed` recording — see the flipped todo above for the
+  design decisions: `instrument_type="odds"` matches UAC's pre-existing SchemaContract registration, `.add()` over
+  `record_captured()` to avoid the unrelated STEP 5.71 emission-policy gate) + `deployment-service@96bd06d41e` +
+  `@383773f567` (the launcher's own "KNOWN GAP" comments, now stale, fixed in the same turn per the misleading-doc
+  rule). Full `quality-gates.sh` green on both repos (fixed 2 test failures the wiring introduced — the existing
+  `test_arb_detect_handler.py` stubs didn't account for the new `ManifestWriter` construction).
+  **Did NOT launch the full campaign** despite the todo asking for it: this session hit severe, repeated
+  `run_in_background`-wrapper instability (6+ QG runs reported `"killed"` by the harness notification layer, most
+  with a live `.benchmarks/qg-governor/killed.<pid>` marker check RULING OUT the QG resource governor as the cause —
+  see the corroborating entry appended to
+  `plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`, an existing open P1
+  covering exactly this failure class). `setsid`-detached processes DID survive and complete correctly (confirmed via
+  direct `ps -p <pid>` + log-tail polling, bypassing the unreliable wrapper notification) — but that recipe needs a
+  human/session able to keep polling through many short foreground checks, not a fire-and-forget multi-day VM launch
+  with an unattended progress watchdog, which this session's demonstrated instability made irresponsible to commit to
+  per the "no fire-and-forget" HARD RULE. Split the launch into its own `- [ ]` todo (immediately below the flipped
+  one) rather than leaving the original todo half-done-but-still-open, per this plan's own established pattern from
+  the arb-backfill-prerequisite todo two sessions ago (which took the same "shipped + validated, split the actual
+  launch into a new todo" approach for the same underlying reason class — SPOT-preemption-safe launches need real
+  resumability AND reliable monitoring, and only had the former here).
 - **2026-08-22 (task `sports_taxonomy_p4_backfill-2d0bea24572a`, slot 21, data_engineering)** — Worked todo #5
   (arbitrage backfill). Shipped the two real prerequisites: (1) `unified-api-contracts@dee6ec1093` — registered
   `BATCH_FEATURES_SPORTS_ARB` + the `features_sports_arb` computed-service source across the closed-set registries

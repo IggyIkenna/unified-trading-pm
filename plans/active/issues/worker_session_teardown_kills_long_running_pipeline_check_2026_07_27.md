@@ -536,3 +536,24 @@ tracked here rather than silently claimed complete.
   capability for `pipeline_e2e_check`) is directly gated by the explicit dated 2026-08-02 operator ruling (option A)
   until the shared-host-RAM-exhaustion mechanism (`mdps-e2e-shared-host-teardown-fixed`) also closes; that
   prerequisite remains unmet as of the doc's most recent 2026-08-15 reproduction entries.
+- **2026-08-22 (slot-21, data_engineering) — 12th+ reproduction (`quality-gates.sh`, not a `/data-pipeline-check-*`
+  skill), AND a refinement of the doc's existing `setsid` evidence.** Running `features-service`/`deployment-service`
+  `quality-gates.sh` via the harness's own `run_in_background` was killed 6+ consecutive times in one session (some
+  with zero output — killed before even the env-warning banner printed), each notified as
+  `status: "killed"`/`"was stopped"`. Checked `.benchmarks/qg-governor/killed.<pid>` (the governor's own SIGTERM
+  marker) after each kill: NO fresh marker matched the timing of 5 of the 6 kills — ruling out the QG resource
+  governor as the mechanism for those, consistent with this doc's existing "kill mechanism operates independent of
+  the watched process's execution phase" finding. **Refinement, not a repeat**: unlike the doc's line-518 claim that
+  `setsid`-class detachment "failed against the WorkerLivenessWatchdog pane-tree reap", relaunching via
+  `setsid bash scripts/quality-gates.sh > log 2>&1 < /dev/null & disown` (fully new session, `PPID=1`, not just
+  `nohup`) **DID survive** across this session's several run_in_background-wrapper kills — confirmed directly via
+  `ps -p <setsid_pid>` (still alive, `STAT=SN`, elapsed time climbing normally) and the log file growing, even while
+  the `run_in_background` WRAPPER task that launched it was independently reported `"killed"` by the harness in the
+  SAME turn. Two full `quality-gates.sh` runs (256s and 216s) completed this way with a genuine
+  `✅ ALL QUALITY GATES PASSED` + correct sentinel SHA, recovered by polling `ps -p <pid>` + `tail <logfile>` directly
+  in short foreground Bash calls rather than trusting the `run_in_background` tool's own completion notification.
+  **Working recipe for this session's shape of the failure** (may not generalize to every variant in this doc):
+  launch via `setsid ... > logfile 2>&1 < /dev/null & disown`, capture the setsid child PID from `ps -ef | grep`
+  (not `$!`, which is the setsid wrapper's own transient PID), then poll `ps -p <pid>` + `tail logfile` via plain
+  (non-`run_in_background`) Bash calls — the notification layer for `run_in_background` itself appears to be what's
+  unreliable in this failure mode, not necessarily the underlying process's survival.
