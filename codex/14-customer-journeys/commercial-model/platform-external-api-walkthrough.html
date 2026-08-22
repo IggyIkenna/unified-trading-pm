@@ -15704,36 +15704,83 @@
       <details class="ref">
         <summary>The instruction envelope<span class="tag-ref">Contract</span></summary>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
-          The <code>StrategyInstructionEnvelope</code> fields below, shaped as the body of the POST that carries them, field names and types are the real, declared contract; the request line is illustrative.
+          Two parts below, kept visually apart on purpose. <strong>Declared today</strong> is the real, shipped
+          <code>StrategyInstructionEnvelope</code> field list, verified against
+          <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> — every field name and type there is
+          load-bearing. <strong>Planned</strong> is a ruled-but-unbuilt extension; nothing in that block exists in code
+          yet, and its shape is deliberately not the flat sibling-fields shape an earlier draft of this page showed.
         </p>
         <div class="plate">
           <div class="plate-head">
-            <span class="label">Example</span><span class="note">Shape of a real POST body, values illustrative</span>
+            <span class="label">Declared today</span><span class="note">Shape of a real POST body, values illustrative</span>
           </div>
           <div class="plate-body scroll-x">
             <div class="code">POST /external/instructions HTTP/1.1
               Content-Type: application/json
 
               {
-              "action": "&lt;InstructionAction&gt;",
-              "instrument": "&lt;InstrumentKey&gt;",
-              "quantity": "&lt;decimal&gt;",
-              "reference_price": "&lt;decimal&gt;",
-              "execution_policy_ref": "&lt;str&gt;",
+              "instruction_id": "&lt;str&gt;",
+              "emitted_at_utc": "&lt;datetime&gt;",
+              "identity": "&lt;StrategyInstanceIdentity&gt;",
               "urgency": "&lt;Urgency&gt;",
+              "deadline_utc": "&lt;datetime | null&gt;",
+              "execution_policy_ref": "&lt;str | null&gt;",
+              "attestations": "&lt;dict[str, str]&gt;",
+              "correlation_id": "&lt;str | null&gt;",
               "eligible_venues": ["&lt;str&gt;", "..."],
-              "venue_constraints": "&lt;VenueConstraints&gt;",
-              "reference_position": "&lt;dict[str, decimal] | null&gt;",
-              "credit": "&lt;{entry_threshold, abandon_threshold} | null&gt;",
-              "position_adjustment_bps_per_unit_risk": "&lt;decimal | null&gt;"
+              "venue_constraints": "&lt;dict[str, VenueConstraints]&gt;",
+              "venue_routing_mode": "&lt;VenueRoutingMode&gt;",
+              "target_venue": "&lt;str | null&gt;",
+              "chain": "&lt;str | null&gt;",
+              "reference_price": "&lt;decimal | null&gt;",
+              "reference_price_mark_mode": "&lt;ReferencePriceMarkMode&gt;",
+              "received_at_utc": "&lt;datetime | null&gt;",
+              "sent_at_utc": "&lt;datetime | null&gt;"
               }</div>
           </div>
         </div>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
-          <code>reference_price</code> is the benchmark strategy assumed; <code>execution_policy_ref</code> names
-          which policy governs the instruction; <code>reference_position</code> is strategy's believed position per
-          eligible venue; <code>credit</code> is strategy-owned, a band or a threshold; and
-          <code>position_adjustment_bps_per_unit_risk</code> is a symmetric skew coefficient against raw position.
+          That is the whole shared envelope — <code>action</code>, the instrument, and the sizing fields are not on
+          it; they arrive on the per-action subtype that extends it. Three examples, real field names:
+          <code>TradeInstruction</code> carries <code>action: TRADE</code>,
+          <code>target_position_units: Decimal</code>, <code>target_instrument: str</code>;
+          <code>QuoteInstruction</code> carries <code>action: QUOTE</code>, <code>instrument: str</code>, and
+          narrows the envelope's optional <code>reference_price</code> to required; <code>SwapInstruction</code>
+          carries <code>action: SWAP</code>, <code>in_asset: str</code>, <code>out_asset: str</code>,
+          <code>in_amount: Decimal</code>, <code>min_out_amount: Decimal</code>. <code>reference_price</code> is the
+          benchmark strategy assumed, <code>reference_price_mark_mode</code> says whether execution marks fills
+          against it statically or re-derives it as the underlying moves, and <code>execution_policy_ref</code> names
+          which policy governs the instruction.
+        </p>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">Planned, ruled 2026-08-21, not built</span><span class="note">A per-instrument vector, not a flat scalar trio</span>
+          </div>
+          <div class="plate-body scroll-x">
+            <div class="code">class InstrumentReferenceEntry:
+              instrument_id: str
+              reference_price: Decimal
+              reference_position: dict[str, Decimal]  # per-venue, nested inside the entry
+              credit: CreditBand | None = None         # {entry_threshold, abandon_threshold}, per-entry
+              position_adjustment_bps_per_unit_risk: Decimal | None = None  # per-entry
+              sensitivity_coefficient: Decimal | None = None       # delta
+              second_order_coefficient: Decimal | None = None      # gamma
+              time_decay_coefficient: Decimal | None = None        # theta
+
+              # proposed addition to StrategyInstructionEnvelope, one entry per instrument in the universe
+              references: list[InstrumentReferenceEntry] = []</div>
+          </div>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--ink-3)">
+          Every related field for one instrument travels inside that instrument's own entry, not as parallel
+          same-length lists on the envelope, that shape was considered and rejected. <code>N=1</code> is a list of
+          one, the common single-instrument case is not special-cased. The venue axis is nested inside each entry's
+          <code>reference_position</code>, not a full <code>(instrument, venue)</code> cross-product, one strategy
+          instance still executes a given instrument on one venue. The implementation vehicle for all of this is the
+          factor-state model's snapshot/factor contract
+          (<code>/codex/04-architecture/cross-domain-state-fabric.md</code>), with the ruling below as its
+          strategy-facing constraints, not literal scalar fields on the envelope. This is planned; none of it is
+          built yet.
         </p>
       </details>
       <div class="callout">
@@ -15747,16 +15794,20 @@
       <h3>Reference position, credit, and per-position adjustment</h3>
       <p>
         A generalisation of the reference-price idea above, extending it from "what did the market look like" to "does
-        execution's view of the position match strategy's." <code>reference_position</code> states strategy's believed
-        position per eligible venue, shaped like <code>venue_constraints</code> so it stays meaningful when the venue is
-        not chosen until execution time (<code>SOR_AT_EXECUTION</code> routing); a mismatch on the venue actually used
-        is an integrity check, not a market-move tolerance, and reuses the same four-outcome risk-consequence vocabulary
+        execution's view of the position match strategy's" — per instrument. The planned <code>references</code> vector
+        (above) carries one <code>InstrumentReferenceEntry</code> per instrument in the strategy instance's universe;
+        each entry's <code>reference_position</code> states strategy's believed position per eligible venue on that one
+        instrument, shaped like <code>venue_constraints</code> so it stays meaningful when the venue is not chosen
+        until execution time (<code>SOR_AT_EXECUTION</code> routing). A mismatch on the venue actually used is an
+        integrity check, not a market-move tolerance, and reuses the same four-outcome risk-consequence vocabulary
         (<code>BLOCK</code>/<code>SCALE_DOWN</code>/<code>MONITOR</code>/ <code>TEST_ONLY</code>) the preflight risk
-        gate already supports elsewhere, defaulting to <code>BLOCK</code>. <code>credit</code> is strategy-owned and
-        strategy-computed, a band around the reference price for market-making, a hard fire-or-don't threshold for
-        arbitrage, execution only consumes whatever is cached. <code>position_adjustment_bps_per_unit_risk</code> is
-        one symmetric coefficient against the raw, single-instrument, single-venue position, generalising the existing
-        <code>skew_on_inventory</code> concept off market-making specifically. This is planned; none of it is built yet.
+        gate already supports elsewhere, defaulting to <code>BLOCK</code>, evaluated per entry rather than once per
+        instruction. Each entry's <code>credit</code> is strategy-owned and strategy-computed, a band around that
+        instrument's reference price for market-making, a hard fire-or-don't threshold for arbitrage, independent
+        per entry so an arb leg's two instruments can carry different thresholds, execution only consumes whatever is
+        cached. Each entry's <code>position_adjustment_bps_per_unit_risk</code> is one symmetric coefficient against
+        that instrument's raw, single-venue position, generalising the existing <code>skew_on_inventory</code> concept
+        off market-making specifically. This is planned; none of it is built yet.
       </p>
       <h3>The action vocabulary</h3>
       <div class="plate">
