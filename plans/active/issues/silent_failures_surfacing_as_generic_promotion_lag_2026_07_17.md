@@ -27,7 +27,7 @@ related:
   ]
 created: 2026-07-17
 author: unknown
-last_updated: 2026-07-17
+last_updated: 2026-08-21
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
@@ -105,7 +105,16 @@ it is currently the only thing that fires, so it absorbs every cause by accident
 
 ## Still open — the systemic gap
 
-- [ ] [DEVOPS] P0. **Re-do the `|| true` fix — the first attempt BROKE PROD and was rolled back (2026-07-17).** The
+- [ ] [DEVOPS] P0. **D124 ruling applied 2026-08-21 (issues_corpus_completion_dispatch_2026_08_21.md ledger): build
+      the `--selfcheck` protocol and retry the `|| true` credential-fetch fix** — root cause is fully understood (an
+      apostrophe inside a `${VAR:-...}` default word silently swallowed the `GH_TOKEN=` assignment); this removes a
+      real, currently-live silent-failure risk on the self-hosted glue-runner credential fetch. Add a `--selfcheck`
+      mode to `glue-runner-run.sh` that runs everything short of exec'ing `Runner.Listener`, exercise it on a scratch
+      slot, then roll to ONE unit and confirm `Listening for Jobs` before rolling the remaining four. Repo:
+      unified-trading-pm (`scripts/self-hosted-runners/glue-runner-run.sh`). Done-when: the fixed script (no
+      `${VAR:-...}` apostrophe traps, loud gcloud error + redaction on an empty secret) passes `--selfcheck`, the
+      one-unit canary shows `Listening for Jobs`, and all 5 runners are rolled without a crash-loop. **Re-do the
+      `|| true` fix — the first attempt BROKE PROD and was rolled back (2026-07-17).** The
       replacement block (loud gcloud error + redaction + empty-secret case) passed `bash -n` and passed three
       simulated-failure unit tests, but on the live runner it died with
       `glue-runner-run.sh: line 200: GH_TOKEN: unbound variable` — the JIT `generate-jitconfig` curl at ~L195, under the
@@ -171,7 +180,8 @@ it is currently the only thing that fires, so it absorbs every cause by accident
       SIT-gated-in-flight (`sit-gate/fleet-green` status pending), no-promote-PR-open, and PR-BLOCKED/CONFLICTING
       (`mergeable_state` dirty/blocked); a match-less case says "cause unknown" explicitly. 12 new regression tests
       (`test_promotion_lag_monitor_promote_pr_cause.py`), `quality-gates.sh` green.
-- [ ] [DEVOPS] P2. **`detect_breaking_change.py` is Python-only** (`endswith(".py")` + `ast.parse`), so every TS repo
+- [ ] [DEVOPS] P2. DEFERRED-BY-DESIGN — D124 ruling (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md
+      ledger): leave the TS differ as a backlog candidate unless promote latency becomes measured pain. **`detect_breaking_change.py` is Python-only** (`endswith(".py")` + `ast.parse`), so every TS repo
       (`deployment-ui`, `unified-trading-system-ui`) is permanently "unknown-delta" and needs a full SIT round-trip on
       EVERY promote. That is a structural promotion tax, not a fault — but it is why those two repos are always the last
       to promote and always in the lag list.
@@ -234,3 +244,10 @@ small/low-risk change despite being bundled into one todo.
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Issue doc tracking 3 already-fixed root causes plus 3 remaining open items about the promotion-lag alert being a symptom detector. grep confirms 3 open checkboxes (L108 P0 redo-the-||-true-fix, L174 P2 detect_breaking_change.py TS-blind-spot, L178 P3 systemd StartLimitBurst). The P0 item is explicitly operator-gated: its own root-cause section documents that the first retry attempt BROKE PROD (crash-looped all 5 glue runners, ~34 restarts) and mandates a --selfcheck whole-script validation...
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).
+
+- **2026-08-21 — ruling D124 (Glue-runner idiom + TS differ)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Build the protocol and retry (root cause fully understood; removes a
+  live-runner risk); leave the TS differ as a backlog candidate unless promote latency becomes measured pain. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. Applied: retagged the P0 `|| true` retry
+  todo to a plain executable build-and-canary-roll todo, and retagged the P2 TS-differ todo to DEFERRED-BY-DESIGN.
+  The P3 systemd `StartLimitBurst` todo is not covered by this ruling and stays untouched.

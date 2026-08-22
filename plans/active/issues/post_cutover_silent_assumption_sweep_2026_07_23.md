@@ -38,6 +38,7 @@ related:
   - /codex/06-coding-standards/quality-gates.md
   - /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md
 created: 2026-07-23
+last_updated: "2026-08-21"
 author: unknown
 priority: P1
 parent_epic: security_and_cross_cutting_master
@@ -671,7 +672,14 @@ exists in codex. See the `[DOC] P2` item under Resolution checklist for the full
       false `ldr-to-main-promote-fleet.yml` comment corrected. The 4th sub-item (`stuck_in_sit` tri-state) was
       deliberately forked into its own larger, properly-scoped doc: `issues/repo_ci_stuck_in_sit_tristate_2026_07_29.md`
       — track that item there, not here.
-- [ ] [INFRA] P2. Close the `sit_validated_workspace_digest` written-but-unread gap, or document why it is safe to drop.
+- [ ] [INFRA] P2. **D116 ruling applied 2026-08-21 (issues_corpus_completion_dispatch_2026_08_21.md ledger): split
+      this out and wire `sit_validated_workspace_digest` into the SIT gate comparison** — it is a real fail-open
+      point in cross-repo breaking-change protection (currently written but never read, so a repo validated against
+      an old UAC digest can promote after UAC v2 lands, per the "Fail-open points that remain" list above). Repo:
+      system-integration-tests / unified-trading-pm (wherever the SIT-gate comparison lives). Done-when: the SIT gate
+      reads `sit_validated_workspace_digest` and refuses to treat a repo as validated when the current workspace
+      digest has advanced past it, proven via a live re-test of the block→re-validate→pass cycle documented in the
+      "Clean bill of health" section above.
 - [x] ✅ [DOC] P2. Update `/codex/08-workflows/ci-cd-flow.md` (L75-109, L763, L777-786, L1183) to the current LDR→main
       model, and add the staging re-entry procedure INCLUDING "uncomment the disabled triggers" to codex. — **DONE
       2026-07-26 (slot-5, `cicd`) — `unified-trading-pm@97970974e`**, via
@@ -789,3 +797,10 @@ DO NOT FIX YET" — gate is execution-service handling live order flow, not yet 
 audit passes — the reconcile-missing-tags item is deliberately NOT a bulk backfill by design; the F3
 success-reporting remainder and F4 vacuous-crons item stay the same bundled bounded+open-ended pair; the
 `sit_validated_workspace_digest` item stays a genuine design call. No `assigned_vm` change.
+
+- **2026-08-21 — ruling D116 (Post-cutover residuals)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Split now and wire the digest — it's a real fail-open point in cross-repo
+  breaking-change protection. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. Applied:
+  retagged the `sit_validated_workspace_digest` todo from an open "document why it is safe to drop" design call to a
+  plain dispatchable "wire it in" build todo with a concrete done-when. The other 4 open items (F1 kill-switch,
+  missing-tags reconciliation, F3 remainder, F4 vacuous crons) are not covered by this ruling and stay untouched.
