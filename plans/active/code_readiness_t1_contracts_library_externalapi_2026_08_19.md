@@ -434,8 +434,34 @@ todos only to confirm they are data-movement, then leave it.
       formula from schema-carried values. Also documented `refresh_cadence_ms` as the STRATEGY-side cadence
       specifically — the issue is explicit that conflating it with execution's faster tick-driven loop is a design
       error. 5 tests incl. a JSON round-trip (the instruction crosses the EventTransport seam).
-- [ ] BLOCKED-OPERATOR-DECISION [BACKEND] P0. **RE-CHECKED 2026-08-21 (close-out pass) — still genuinely blocked, not
-      forceable, but the blocker has MOVED.** Q12-Q16 themselves ARE answered (confirmed against
+- [ ] [BACKEND] P0. **OPERATOR RULING 2026-08-22 — resolves the apparent tension flagged in the 2026-08-21
+      close-out pass below. The fabric snapshot contract GOVERNS. Q12's named field list described the required
+      ECONOMIC CONTENT, not flat scalar fields to place directly on every `StrategyInstructionEnvelope`.**
+      Verbatim ruling: "The fabric model does not prohibit scalars; it prohibits collapsing vectors and matrices
+      into misleading scalars." Concept → correct representation mapping the operator specified:
+      - Reference price → `F_i0`: scalar per output instrument, with price convention and units.
+      - Reference position → `q_0`: snapshot-level vector keyed by canonical risk dimension.
+      - Credit → `c_i`: typed per instrument/side/action; define whether already included in `F_i0`.
+      - Reference position adjustment → `a_i0`: scalar per output instrument.
+      - Position response → `A_i`: keyed row/vector against position dimensions — not one scalar unless
+        genuinely one-dimensional.
+      - Delta/Jacobian → `J_i`: keyed factor vector. Gamma/Hessian → `H_i`: sparse keyed factor-pair matrix.
+      - Theta → `Θ_i`: scalar with an explicit time unit.
+      - Cross-sensitivities → optional sparse `B_i` or equivalent typed structure.
+
+      **Explicit instruction — do not ship the literal Q12 field list, and do not wait for the full fabric spec
+      (Parts II-V) to be written**: "Implement a minimal versioned `StrategyModelSnapshot` now: snapshot-level
+      keyed `z0` and `q0`; per-instrument `reference_price`/`F_i0`; typed `credit` and reference adjustment; keyed
+      `J_i`; sparse keyed `H_i`; unit-qualified `Theta_i`; and keyed position-response row `A_i`." The instruction
+      envelope references the snapshot/model generation and relevant factor/position watermarks — carries
+      `model_snapshot_id`/`model_generation`/`factor_state_epoch`+`sequence`/`position_state_epoch`+`sequence`/
+      instruction-action data; the immutable `StrategyModelSnapshot` itself carries `F_i0`, `z0`, `q0`, `J_i`,
+      `H_i`, `Θ_i`, `A_i`, `c_i`, validity limits and watermarks. **Include dimension IDs, units, inclusion
+      conventions, and validity limits so no coefficient is ambiguous or double-counted.** This unblocks
+      implementation without locking into the wrong (flat-scalar) shape. Now bounded, real code work — build
+      `StrategyModelSnapshot` in UAC per this shape, then wire `StrategyInstructionEnvelope` to reference it.
+      **2026-08-21 close-out pass's original finding, preserved for context** (still the accurate diagnosis of WHY
+      this was ambiguous, now resolved by the ruling above): Q12-Q16 themselves ARE answered (confirmed against
       `/codex/04-architecture/cross-domain-state-fabric.md` § 14, "Closed since first publication" +
       "RESOLVED 2026-08-21" banner, and the issue doc's own "OPERATOR RULING 2026-08-21" section). But that same
       ruling explicitly says the implementation vehicle is the fabric's **snapshot/factor-state contract**
@@ -467,7 +493,12 @@ todos only to confirm they are data-movement, then leave it.
       literal text would ship the rejected shape; implementing the vector would answer five questions explicitly
       reserved for the operator. **Needs: a ruling on Q12-Q16**, then this becomes a bounded code task.
       Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
-- [ ] BLOCKED-OPERATOR-DECISION [BACKEND] P0. **RE-CHECKED 2026-08-21 (close-out pass) — same finding as
+- [ ] [BACKEND] P0. **RESOLVED by the same 2026-08-22 operator ruling documented in full on the `reference_position`
+      todo immediately above — not repeating verbatim.** `credit` maps to `c_i`: "typed per instrument/side/action;
+      define whether already included in `F_i0`" — carried on the `StrategyModelSnapshot`, not as a flat envelope
+      scalar. Ship together with `reference_position`/`StrategyModelSnapshot` above; do not implement separately
+      (the ruling treats the whole coefficient set as one typed snapshot, not independent fields landing
+      piecemeal). **RE-CHECKED 2026-08-21 (close-out pass) — same finding as
       `reference_position` immediately above: Q12-Q16 answered, but the ruling's stated implementation vehicle (the
       fabric snapshot/factor-state contract) vs. its own literal per-entry field list are in apparent tension, and
       Parts II-V of the fabric spec don't exist yet. Not re-explaining verbatim — see the note above.**
