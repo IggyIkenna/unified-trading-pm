@@ -625,10 +625,8 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Build the instruments catalogue definitions aggregation and field-change history — monthly-grain
       aggregation, mutable-field declaration, field-change log, point-in-time-equivalence proof. Evidence:
       `/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`.
-      **2026-08-22 — operator ratified the mechanism: current-state + narrow change log** (over monthly-
-      snapshots-only, which can't resolve an intra-month change, and full-row-versioning, which duplicates every
-      immutable field per change). Mutable-field DECLARATION lives in UAC — filed to T1's Inbound requests. T2
-      builds the monthly catalogue + field-change-log writer, dispatched to a background agent this session.
+      **2026-08-22 — operator ratified: current-state + narrow change log** (over monthly-snapshots-only or
+      full-row-versioning). Mutable-field DECLARATION filed to T1 (UAC). T2's writer dispatched to an agent.
 - [ ] [BACKEND] P0. Land the venue smoke-test bar and the venue E2E wiring. Evidence:
       `/plans/active/venue_smoke_test_bar_2026_08_16.md`, `/plans/active/venue_e2e_wiring_2026_08_16.md`.
       **NOTE 2026-08-20 (T2, `/autonomous`) — do not duplicate, check status first next session.** Pulled origin
@@ -738,7 +736,7 @@ todos only to confirm they are data-movement, then leave it.
 
 ### MTDS and MDPS
 
-- [ ] [BACKEND] P0. **BLOCKED-OPERATOR** — Fix the multi-instrument candle bundle write race — when 2+ underlyings
+- [ ] [BACKEND] P0. Fix the multi-instrument candle bundle write race — when 2+ underlyings
       land in the same shared `ticks.parquet` bundle each is written via an independent overwrite with no
       download-existing merge. Evidence:
       `/plans/active/issues/mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md`.
@@ -752,6 +750,8 @@ todos only to confirm they are data-movement, then leave it.
       slice into `candles_by_tf`, and `_streaming_write_per_tf` streams every batch for a true chain
       (`groups = [(instrument_id, tf_candles)]`), so the current code appears correct and the stale 1-of-7 bundles
       predate it. The next item is the piece of this that IS code-shaped.
+      **2026-08-22 — operator go-ahead given.** Not personally launched (17 peer sessions active) — already
+      AO-tracked, fix landed, relaunch specified in `cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`.
 - [x] [BACKEND] P0. **Close the multi-symbol survival gap with a unit test so the relaunch stops being the only
       oracle.** ✅ 2026-08-20 — shipped `market-data-processing-service@8bffeb8dfe` (verified an ancestor of
       `origin/live-defi-rollout`; landed blob re-read to confirm the tests are in it). Three tests drive the real
