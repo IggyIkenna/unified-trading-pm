@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "6dd65f81c134858c18fb2ba2768ba8d398cf3127"
+      "ldr_ci_status_sha": "7bfa7bd2d09810770816b738bd1341aa28a16f9b"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "3390c0b7ac1f2232318a787d8fa5bf4c178180ff"
+      "ldr_ci_status_sha": "7c257dd834856dc89fd2e09eb770e9b64295d6d6"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -897,7 +897,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 47,
         "large_file_count": 0,
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "33c728d29b2842057b4863f139f0dcc51b5fd333"
+      "ldr_ci_status_sha": "f1125b8abcc792f002ae27619a8b79432541cae4"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "8198fb9d822651e280edb5d4f6cdbed6333ef5b4"
+      "ldr_ci_status_sha": "2e1b6146d8b559a1329fd90a9954f118b638dec1"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "1cbaee00b58fbeb6db2b0b20b28a16eb8c185ef3"
+      "ldr_ci_status_sha": "2109fffb09cce4025aecb8a45a482d28ab650eb3"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1562,7 +1562,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "6afb004060b34de3cf4080cb8d992011e6ad81c3"
+      "ldr_ci_status_sha": "d813eea6e132693a2fd281944cf6473775b15910"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
