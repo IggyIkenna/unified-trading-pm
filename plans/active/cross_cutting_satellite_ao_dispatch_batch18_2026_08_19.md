@@ -136,11 +136,25 @@ source: >-
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md` — all 6 are `status: resolved` and
       archived under `plans/archive/issues/`. The relay+triage step genuinely happened. Updated the gate doc's row
       (State: IN PROGRESS → DONE; Blocked-on: fully closed). See Progress Log for full detail.
-- [ ] [DOC] P3. **`live_pipeline_persistence_hot_path_decoupling_2026_06_24.md`** — a stale inline YAML comment
+- [x] ✅ [DOC] P3. **`live_pipeline_persistence_hot_path_decoupling_2026_06_24.md`** — a stale inline YAML comment
       references a status/lock state that changed 2026-08-10/12; superseded in practice by the doc's later
       `archive_exempt: true` but still misleading to a reader. Correct or remove the stale comment. Done when: no
       comment in the doc references the pre-2026-08-10/12 status/lock state. Source:
       `plan_reconciler_findings_cross_cutting_2026_08_18.md` "Plans not reached" item 8.
+      **FOUND ALREADY DONE 2026-08-22 (slot 11) — fixed by an independent, earlier pass.** The stale comment was the
+      old `resolved_by` inline annotation (dated 2026-07-14), which asserted `status` was `blocked` (stale since the
+      2026-08-10 status correction to `open`) and that the doc was `locked_by: live-defi-rollout` (stale since the
+      corpus-wide placeholder clearing on 2026-08-12) — exactly the "status/lock state that changed 2026-08-10/12"
+      named above. Fixed in `unified-trading-pm@ec9720ce02` ("plan_reconciler cross-cutting — 3 more contradiction
+      fixes ... live_pipeline_persistence stale summary/resolved_by", 2026-08-19T19:06:41Z, dispatch agt-b2fcb2, `git
+      show` confirmed) — that pass rewrote `resolved_by`'s comment to state, correctly and in past tense, that
+      `locked_by` was cleared 2026-08-12 and the warm-tier build resolved 2026-08-13, and re-pointed `resolved_by` to
+      the plan that actually shipped the fix. That commit landed before this todo was ever dispatched to a worker —
+      the na-eligibility-audit extraction (same day, 2026-08-19) crossed paths with the independent fix rather than
+      missing it. Verified 2026-08-22: fresh-pulled `unified-trading-pm` to `origin/live-defi-rollout`, read the
+      full 295-line target doc end-to-end — the only 2 inline YAML comments remaining in its frontmatter
+      (`resolved_by`, `archive_exempt`) are both accurate/current; no comment anywhere in the doc references the
+      pre-2026-08-10/12 status/lock state. No new commit needed — the fix already exists on origin.
 - [ ] [DOC] P3. **`slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md`** — its na-eligibility-audit
       2026-08-17 Progress Log entry over-counted open items by 1 (described an already-`[x]` item as still open).
       Doesn't affect dispatch (assigned_vm already correct) — pure Progress Log text correction. Done when: the
@@ -197,3 +211,16 @@ source: >-
   every one of the 5 AGs. Updated `data_pipeline_e2e_milestones_gate_2026_07_24.md`'s Deferred-work-table row (State
   column: `**IN PROGRESS**` → `**DONE 2026-08-22 (relay+triage verified)**` with the same evidence inline;
   Blocked-on column: → "Nothing — fully closed").
+- **2026-08-22 (slot 11)**: item 8 (`live_pipeline_persistence_hot_path_decoupling_2026_06_24.md` stale inline YAML
+  comment) FOUND ALREADY DONE — see the checkbox annotation for full detail. The fix landed in
+  `unified-trading-pm@ec9720ce02` (2026-08-19T19:06:41Z, dispatch agt-b2fcb2), a separate plan_reconciler
+  cross-cutting pass that fixed 3 contradictions in one commit, this doc's stale `resolved_by` comment being one of
+  them — it just never flipped this batch's own tracking checkbox for item 8, since the na-eligibility-audit
+  extraction that created this checkbox ran the same day and evidently crossed paths with it rather than missing it.
+  `git show ec9720ce02` confirms the before/after: the old comment claimed `status: blocked` and
+  `locked_by: live-defi-rollout` as current facts; both were stale (status corrected to `open` 2026-08-10,
+  `locked_by` placeholder cleared corpus-wide 2026-08-12) and the fix commit replaced the comment with an accurate,
+  past-tense account. No new work was needed this pass — verification only. 2 siblings remain open (items 9-10,
+  `slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md` Progress Log over-count correction and
+  `prosewrap_padding_corpus_wide_1290_space_2026_08_03.md` `<pending>`-sha backfill) — outside this task's assigned
+  scope (item 8 only), not actioned here.
