@@ -155,3 +155,17 @@ parity lane): CeFi/Sports header ready/not-ready/unverified tallies (25/39 total
 snapshot and now read stale against today's per-cell wording/registry changes — needs a fresh `derive_readiness.py`
 run, not a doc-text fix; BETMGM/BETWAY nodes still show real historical rows despite being in the same 6-venue
 retirement ruling (their disposition is explicitly still operator-pending per this doc's own lane table).
+
+## Host contention, 2026-08-22
+
+Shared host reached load 275-344 on 10 cores with 26 concurrent `quality-gates.sh` processes, 8 quickmerges and 13
+pytest runs, stalling every lane's gate. Investigated per the runaway-process rule: PID 36696 was orphaned
+(reparented to init), 70 minutes old, running from a dead session's `/tmp/claude-*-cwd` isolated worktree, and was
+still spawning fresh sub-gates (two started 8 minutes before discovery) whose results no live parent could ever
+read. Terminated that tree only (36696, 36699, 73190, 73715, SIGTERM, all confirmed gone). Every other gate process
+had a live parent and was left untouched per the never-bulk-kill-a-peer rule. Load did not materially drop, which
+confirms the remaining pressure is legitimate concurrent fleet work, not orphans.
+
+Lesson for future multi-lane pushes: an isolated-worktree gate whose parent agent dies keeps running and can keep
+spawning, so a session that loses agents (network outage, crash) should sweep for `ppid=1` gate trees rather than
+assume its work stopped with it.
