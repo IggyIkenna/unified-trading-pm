@@ -507,7 +507,7 @@ todos only to confirm they are data-movement, then leave it.
       legacy Q12-Q16 set (vector one home; per-entry matrix incl. optional theta; venue nested per-instrument;
       per-entry credit/trigger/coefficient) — but Q12-Q16 were superseded by the factor-state model, so the
       implementation shape is `/codex/04-architecture/cross-domain-state-fabric.md` (R1-R16 snapshot/factor
-      contract), with those answers as constraints. Position vectors are RESOLVED (fabric R22, reconfirmed by operator 2026-08-21); still open: the five Wave-0 rulings. Add `reference_position` to `StrategyInstructionEnvelope`. **The shape this
+      contract), with those answers as constraints. Position vectors are RESOLVED (fabric R22, reconfirmed by operator 2026-08-21); the five Wave-0 rulings were ALL RESOLVED 2026-08-21 (stale "still open" corrected 2026-08-22 — see the repricer-generalization issue doc §15 item 5 for the five resolutions; the remaining gap is solely the fabric-vehicle-vs-literal-field-list tension + fabric Parts II-V absence described below). Add `reference_position` to `StrategyInstructionEnvelope`. **The shape this
       todo names (`dict[venue, Decimal]`, "same shape as the existing price leg") is SUPERSEDED** — the source issue
       carries a dated correction banner from a later same-day operator revision ruling that shape incomplete: it
       solves the venue axis but not the INSTRUMENT axis, since a strategy instance holds a universe of instruments.

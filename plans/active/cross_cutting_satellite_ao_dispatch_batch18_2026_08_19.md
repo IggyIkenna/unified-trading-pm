@@ -155,11 +155,13 @@ source: >-
       full 295-line target doc end-to-end — the only 2 inline YAML comments remaining in its frontmatter
       (`resolved_by`, `archive_exempt`) are both accurate/current; no comment anywhere in the doc references the
       pre-2026-08-10/12 status/lock state. No new commit needed — the fix already exists on origin.
-- [ ] [DOC] P3. **`slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md`** — its na-eligibility-audit
-      2026-08-17 Progress Log entry over-counted open items by 1 (described an already-`[x]` item as still open).
-      Doesn't affect dispatch (assigned_vm already correct) — pure Progress Log text correction. Done when: the
-      2026-08-17 marker's open-item count matches a fresh grep. Source:
-      `plan_reconciler_findings_cross_cutting_2026_08_18.md` "Plans not reached" item 9.
+- [x] ✅ [DOC] P3. **`slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md`** — its na-eligibility-audit
+      2026-08-17 Progress Log entry corrected. Verified via git archaeology rather than taking the source finding's
+      "over-counted" framing at face value: both items WERE genuinely open at audit time (21c5bec837/8bf3d8a16d,
+      2026-08-17T11:26:55Z); the lsof-walk item was completed ~2h later the same day (`c07863f742`,
+      2026-08-17T13:32:38Z) — the audit was accurate when written, not an over-count. A fresh grep of the target doc
+      now shows exactly 1 open item (the re-gate-message wording fix), matching the corrected marker text. —
+      unified-trading-pm@2de315f432.
 - [ ] [DOC] P3. **`prosewrap_padding_corpus_wide_1290_space_2026_08_03.md`** — 2 "DONE"/"shipped" Progress Log
       claims (the 2026-08-15 "Re-opened" and "Resolved... cicd escalation agt-f4b815" entries) cite a literal
       unfilled `<pending>` placeholder instead of a real commit sha. Identify which of several nearby commits (per
