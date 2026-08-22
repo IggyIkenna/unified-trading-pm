@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Deployment-UI environment tiers — dev / staging / prod
-summary:
-  The deployment-UI + backing deployment-api run in three env tiers (dev / staging / prod) mirroring
+summary: The deployment-UI + backing deployment-api run in three env tiers (dev / staging / prod) mirroring
   firebase-split-topology — tier resolved from CLOUD_DEPLOYMENT_ENV (backend) + window.location.hostname (frontend),
   never an in-UI toggle; each tier has its own Cloud Run instance / GCS buckets / Cloud Scheduler / service account so
   cross-env data leakage is impossible.
@@ -24,7 +23,7 @@ created: 2026-05-08
 authoritative_for: [deployment-UI dev/staging/prod environment-tier topology + env resolution + per-tier isolation]
 referenced_by: [/codex/05-infrastructure/deployment-ui-architecture.md]
 owner: harsh
-last_reviewed: 2026-05-18
+last_reviewed: 2026-08-22
 code_refs:
 codified: 2026-05-18
 sources:
@@ -117,9 +116,9 @@ GCS event/log bucket suffix examples per `bucket-isolation-model.md`:
 
 ## Phase H shipping status
 
-| Item | Description                             | Status                                    |
-| ---- | --------------------------------------- | ----------------------------------------- |
-| h1   | This codex doc                          | ✅ 2026-05-18                             |
-| h2   | deployment-api env-aware Monitor routes | ✅ 2026-05-18 @78b68c4                    |
-| h3   | deployment-ui env badge in Header       | ⏳ in-flight                              |
-| h4   | Staging + prod Cloud Run provisioning   | BLOCKED-OPERATOR — DNS + IAM (human-only) |
+| Item | Description                             | Status                                                                                                                                                                      |
+| ---- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| h1   | This codex doc                          | ✅ 2026-05-18                                                                                                                                                               |
+| h2   | deployment-api env-aware Monitor routes | ✅ 2026-05-18 @78b68c4                                                                                                                                                      |
+| h3   | deployment-ui env badge (StatusMenu)    | ✅ SHIPPED 2026-05-18 — deployment-ui@75202df (lands in `StatusMenu.tsx`'s `resolveEnvTier()`, not `Header.tsx` as originally scoped)                                       |
+| h4   | Staging + prod Cloud Run provisioning   | BLOCKED-OPERATOR — DNS + IAM (human-only); still open per `plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md` (archived 2026-05-21, H.4 DEFERRED-HUMAN-GATE) |

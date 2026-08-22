@@ -23,7 +23,7 @@ authoritative_for:
   ]
 referenced_by:
 owner:
-last_reviewed: 2026-05-20
+last_reviewed: 2026-08-22
 code_refs:
 ---
 

@@ -22,7 +22,7 @@ created: 2026-05-23
 authoritative_for: [greeks-service greek + carry-rate PricingLedger derivation]
 referenced_by: [/codex/04-architecture/global-ledger-architecture.md]
 owner:
-last_reviewed: 2026-05-23
+last_reviewed: 2026-08-22
 code_refs:
 type: architecture
 ---
@@ -40,6 +40,11 @@ type: architecture
 > -reload) remains an unwired Phase 1 stub with zero callers — the instrument-metadata need it was meant to serve was
 > fulfilled instead by `InstrumentReader` (HTTP + TTL cache) in the Phase 3 work above. No active plan owns wiring it;
 > left as-is rather than inventing new design intent.
+> **[DELTA 2026-08-22]** Re-verified for freshness. `config_reloaders.py` is still the same unwired Phase 1 stub (no
+> new callers). `features-service/features_service/volatility/io/pricing_ledger_reader.py` now exists and is active
+> for CeFi (Deribit) — the "Boundary vs features-service volatility" status line below was still describing it as
+> BLOCKED/pending; corrected to match the reader's own current docstring (CeFi active, TradFi still
+> BLOCKED-SCHEMA on `underlying_spot`).
 
 ## What it is
 
@@ -218,9 +223,10 @@ venue marks or running its own BSM. This avoids:
 `asset_canonical_id` (= `instrument_id`), take `option_delta` from the latest `event_type=MARK_UPDATE` row before the
 features window close. Fall back to `None` if no row exists (emit `empty_confirmed` for that shard's `greeks_block`).
 
-**Status (2026-05-24):** kernel + handler + batch backfill wired in greeks-service. features-service PricingLedger
-reader and greeks_block join are pending (plan Phase 3 CODE P0 — BLOCKED-SCHEMA: requires `underlying_spot` field in
-`MarkUpdateMessage` for TradFi IV fitting before features-service consumption fully closes the gap).
+**Status (2026-08-22):** kernel + handler + batch backfill wired in greeks-service. features-service now has an active
+PricingLedger reader (`volatility/io/pricing_ledger_reader.py`) — CeFi (Deribit) rows are read and consumed; TradFi
+remains BLOCKED-SCHEMA (requires `underlying_spot` field in `MarkUpdateMessage` for TradFi IV fitting before
+greeks-service populates TradFi rows for that reader to consume).
 
 ---
 
