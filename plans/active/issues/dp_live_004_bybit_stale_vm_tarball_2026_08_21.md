@@ -163,6 +163,21 @@ external action and is not performed by this escalation without that decision.
 
 ## Progress Log
 
+- **2026-08-22 (data_pipeline_failure escalation `agt-521494`, slot 33)**: DP-LIVE-004 re-fired for the OLD VM
+  (`mtds-live-cefi-consolidated-20260817-025031`), venue BYBIT-FUTURES, data_type `book_snapshot_5` (last attempt
+  0.4h old). `gcloud compute instances list` confirms both VMs still `RUNNING` (old since 2026-08-16T19:50:40-07:00,
+  replacement since 2026-08-21T13:07:39-07:00) — the controlled-cutover parallel-run window is unchanged. SSH into
+  the replacement VM (`mtds-live-cefi-consolidated-20260821-200626`) re-confirms `market-tick-data-service@efd0e788`
+  (the ack-logging fix) is still NOT deployed (`_log_subscribe_ack` grep count 0 in both connector files; no
+  `subscribe`/`ret_msg`/`success` lines in `live-bybit-futures-book-snapshot-5.log` beyond the generic bootstrap
+  line) — identical state to the sibling escalation `agt-81aea5` (~30min prior, `depth_of_book_10`) documented just
+  above. No new root cause. Rather than re-confirming the same stalled state a further time with no forward
+  progress (3+ same-day escalations now), filed blocked-question `BLK-9e8ffbb2` recommending the operator authorize
+  a fresh `mtds-live-cefi-consolidated-*` relaunch (FORCE=true, same precedented pattern) to actually pick up
+  `efd0e788`, then verify a real captured BYBIT-FUTURES row, then decommission both prior VMs — to converge this
+  loop instead of leaving it open indefinitely. Polled 2 minutes per the one-shot bounded-wait contract; no answer
+  arrived in that window, so the question is left standing for the operator/main agent (a later answer re-dispatches
+  a fresh worker per the standard blocked-question flow). No code/infra/manifest changes made this pass.
 - **2026-08-22 (data_pipeline_failure escalation `agt-81aea5`, slot 8)**: DP-LIVE-004 re-fired for this same VM
   (`mtds-live-cefi-consolidated-20260821-200626`), venue BYBIT-FUTURES, data_type `depth_of_book_10`. SSH-confirmed
   the ack-logging fix (`market-tick-data-service@efd0e788`, an ancestor of current LDR HEAD) is still not deployed
