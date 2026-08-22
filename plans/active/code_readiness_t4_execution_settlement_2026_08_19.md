@@ -353,8 +353,13 @@ todos only to confirm they are data-movement, then leave it.
 
 ## Todos
 
-- [ ] [AGENT] P0. Execute the execution/transfer cluster of the 2026-08-21 walkthrough feedback, tracked in
-      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (moved: line cap).
+- [x] ✅ [AGENT] P0. Execute the execution/transfer cluster of the 2026-08-21 walkthrough feedback, tracked in
+      `/plans/active/walkthrough_feedback_remediation_2026_08_21.md` (moved: line cap). **Cluster closed 2026-08-21**:
+      REBALANCE producer-signal question resolved as a non-issue (mechanically identical to on-chain transfers, zero
+      functional impact); manual-trade-fill → real GCS InstructionLedger gap (G6) built and shipped per the operator's
+      "route to execution, same place as manual trades" ruling — `execution-service@ee694cf46b` +
+      `unified-trading-library@707020ff7b`. Zero remaining `- [ ]` items in that plan's execution/transfer scope
+      (verified via grep — the plan's other open items are T1/T5 doc/artefact scope, not execution).
 
 ### W22 — strategy to execution messaging and the external instruction API
 

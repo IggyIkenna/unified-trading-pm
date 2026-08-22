@@ -535,15 +535,16 @@ strategy's `ExposureAggregator` rather than keeping a duplicate local exposure v
       down.
 - [ ] [BACKEND] P0. **Auto-adjustment of positions via booked reconciliation entries** — the correction is itself an
       audited entry, not a silent overwrite.
-- [ ] [BACKEND] P0. **Manual trades bookable as seen-by-the-system or not-seen**, for disaster cases: we know we hold a
-      position, reconciliation has not caught up, and it must not delete that position. Reconciliation pauses BEFORE
-      manual entry; persistent-delta (virtual) entries are excluded from the reconciliation delta.
-      **2026-08-21 (T4 tranche): the seen/not-seen half is schema-real** — `recon_excluded` threaded through
-      `ManualInstruction`/`TradeFillRecord`/`LedgerRow` and BLRS's ledger-matching skip (tested). **Still not
-      functionally complete**: no live trade — manual or strategy-driven — is ever written into the real GCS
-      `InstructionLedger` at all (confirmed by trace, not just grep) — see
-      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §7 G6. `recon_excluded` has nothing to
-      act on until a live-fill ledger-writer path exists.
+- [x] ✅ [BACKEND] P0. **Manual trades bookable as seen-by-the-system or not-seen**, for disaster cases: we know we
+      hold a position, reconciliation has not caught up, and it must not delete that position. Reconciliation pauses
+      BEFORE manual entry; persistent-delta (virtual) entries are excluded from the reconciliation delta.
+      `recon_excluded` threaded through `ManualInstruction`/`TradeFillRecord`/`LedgerRow` and BLRS's ledger-matching
+      skip (tested). **Closed 2026-08-21 (T4 tranche)**: the functional half landed same day — manual fills now
+      write a real `TradeFillRecord`/`LedgerRow` via `manual_instruction_ledger.py` (same `write_run_ledger`
+      batch/paper path), `execution-service@ee694cf46b` + `unified-trading-library@707020ff7b` — so
+      `recon_excluded` has a real live `LedgerRow` to act on for manual fills, per
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §7 G6. **Strategy-driven live fills remain
+      unwired** (out of this todo's manual-trade scope; would need its own follow-up if wanted).
 
 ## W13 — PnL attribution
 
