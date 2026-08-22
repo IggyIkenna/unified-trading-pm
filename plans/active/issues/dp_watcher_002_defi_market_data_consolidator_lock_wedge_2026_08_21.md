@@ -69,7 +69,7 @@ depends_on: []
 resolved_by:
 locked_by:
 locked_since:
-last_updated: "2026-08-21"
+last_updated: "2026-08-22"
 context_scope:
   [
     /plans/active/issues/manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md,
@@ -348,3 +348,47 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
   — flagging to main/operator via this Progress Log entry instead so the declined-fix state is visible to the
   next responder without re-asking the same question. `/done`ing this task on that basis: the doc accurately
   reflects current reality and there is no unblocked next step for a worker to take.
+- **2026-08-22T14:1x-14:2xZ (agent session, tooling-only dispatch)**: dispatched specifically to build the
+  metadata-only GCS patch capability this doc's own recovery has needed since the 2026-08-19T21:5xZ entry
+  (`blob.patch()`, never a re-upload) — this workspace had NO sanctioned way to do a metadata-only object patch
+  outside raw `google.cloud.storage`, which `block_destructive_commands.py` and the coding-standards ban
+  everywhere except UTL's own `cloud_interface` wrapper. **Shipped**: `unified-trading-library@78054a371b`
+  (`feat: add metadata-only GCS object patch to cloud_interface`) — `StorageClient.patch_blob_custom_metadata()`
+  (ABC method, GCS-only, mirrors the `conditional_upload_bytes`/`conditional_delete_blob` generation-CAS
+  convention) implemented via a new `_GCSMetadataPatchMixin` (`providers/_gcs_metadata_patch.py`, split out to
+  keep `gcp.py` under its 900-line cap — same pattern as the existing `_gcp_blob_guard.py` split) using
+  `Blob.patch()` — merges into the object's existing `metadata` dict via a fresh `reload()`, sends only the
+  dirtied `metadata` property, never `upload_from_*`/rewrite, so content bytes are provably untouched; optional
+  `if_generation_match` CAS guard, returns `False` (not raise) on precondition failure. Plus a URI-based
+  `gcs_patch_object_metadata()` wrapper in `gcs_blob_ops.py` (same convention as `gcs_copy_object`/
+  `gcs_delete_object`), both exported from `cloud_interface/__init__.py`. 8 new regression tests (happy-path
+  merge, no-existing-metadata, `if_generation_match` forwarding, generation-mismatch → `False`, plus the URI
+  wrapper's delegation) in `tests/cloud_interface/unit/test_gcp_providers.py` +
+  `tests/cloud_interface/unit/test_gcs_blob_ops.py`. `abstractions.py` also needed a same-cap split
+  (`abstractions_compute.py`, unrelated `ComputeClient`/`AnalyticsClient`/`MetadataClient`/etc. classes moved out
+  verbatim, re-exported unchanged) purely to make room for the one new ABC method. **QG**: `ALL QUALITY GATES
+  PASSED (465s)`, sentinel `dfe34c4755d5d1a3c082a93345fa75eeaf15258f`; one interim red (`test_g9_regression_
+  canonicalisation.py::test_five_thousand_sequential_writers_do_not_leak_fds`, a >300s `gc.collect()` timeout)
+  was confirmed a pre-existing host-contention flake — passes in 34.8s in isolation, diff touches none of that
+  code path, host had 19 concurrent `quality-gates.sh` processes running at the time. Shipped via
+  `quickmerge.sh --agent`; `git merge-base --is-ancestor 78054a371b origin/live-defi-rollout` confirmed
+  independently after the push (not just the script's own exit code).
+  **Did NOT execute the live recovery** with the new tool. Re-checked this doc's own record before touching
+  anything: the operator's `B` answer to `BLK-06756363` (`2026-08-22T07:19:13Z` — "do not touch production GCS
+  metadata without a live human review first") is still the most recent operator decision on record, already
+  reconfirmed by the prior (12:2x-12:3xZ) session's live re-check with no newer answer since. Treating that as
+  still controlling — a declined action does not become approved because a session now happens to have the
+  tool to perform it. **Fresh read-only state gathered this session** (~14:00Z, for whoever gets a fresh
+  go-ahead): canonical `_index/availability_index.parquet` — `generation=1787388651853992`,
+  `last_modified=2026-08-22T09:46:16.035Z`, `metadata=None` (marker still absent — wedge unbroken);
+  `_index/consolidator.lock` — `last_modified=2026-08-22T12:18:38.466Z`, `generation=1787401118462254`; scheduler
+  `uts-prod-manifest-consolidator-market-data-defi-cron` still `ENABLED`; most recent execution `pnhgp`
+  (started `13:48:06Z`) had no `completionTime` at check time — consistent with a live lock holder mid-attempt,
+  not independently confirmed via its own Cloud Logging output this session. **Unresolved measurement anomaly,
+  flagged not chased**: a `gcloud logging read ... --freshness=6h --order=asc` sweep at `14:00Z` returned entries
+  dated `2026-08-20` — a ~40h discrepancy versus the requested 6h window — either a `--freshness`+`--order=asc`
+  interaction gotcha (same class as todo 3's `--region`-omission false-negative) or a genuine anomaly; not
+  resolved, flagged so the next live-diagnosis session adds an explicit `timestamp>=` filter rather than trusting
+  `--freshness` alone with `--order=asc`. **Net state**: the tool blocker on todo 2's recovery is now fully
+  closed (`gcs_patch_object_metadata()` is live and tested); the remaining blocker is purely the standing
+  operator decline — todo 2 stays open, unchanged, pending a fresh operator go-ahead.
