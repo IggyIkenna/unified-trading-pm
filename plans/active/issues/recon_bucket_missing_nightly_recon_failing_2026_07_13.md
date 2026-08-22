@@ -164,7 +164,9 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
 
 > **D121 ruling applied 2026-08-21** (issues_corpus_completion_dispatch_2026_08_21.md ledger): "Promote — well-scoped
 > deterministic multi-repo work; 6+ audits over 5+ weeks reached the same conclusion." Split below into 5 AO-eligible,
-> worker-determinable pieces per the standing na-eligibility-audit recommendation (was one bundled P0 todo).
+> worker-determinable pieces per the standing na-eligibility-audit recommendation (was one bundled P0 todo). Grew to
+> 6 on 2026-08-22 — todo 3's fix needed a companion Terraform apply, split out as its own [INFRA] piece rather than
+> absorbed into [BACKEND] scope (see todo 3's DONE note + the new todo below it).
 
 - [ ] [INFRA] P0. Provision `uts-prod-execution-service-config-snapshot` Cloud Run Job (execution-service),
       replicating the same container-job Terraform pattern already used for strategy-service/mdps. Repo:
@@ -175,17 +177,34 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       (currently unwired) `--run-tag` CLI flag to an actual GCS `_SUCCESS`-marker writer under
       `t1-recon/ml/{date}/_SUCCESS`. Repo: ml-service, deployment-service. Done-when: a real triggered execution
       writes a `t1-recon/ml/{date}/_SUCCESS` marker.
-- [ ] [BACKEND] P0. Implement a run-tag-aware `_SUCCESS`-marker writer in strategy-service's batch CLI
+- [x] ✅ [BACKEND] P0. Implement a run-tag-aware `_SUCCESS`-marker writer in strategy-service's batch CLI
       (`t1-recon/strategy/{date}/_SUCCESS`) and add a self-default date fallback to `_resolve_date_args()`
       (mirroring ml-service/mdps's T-1 default) so the Terraform-provisioned job no longer hard-requires an explicit
       `--date`. Repo: strategy-service. Done-when: `uts-prod-strategy-service-t1-recon`'s next scheduled run
-      completes without the `ValueError: batch operation requires --date...` and writes the `_SUCCESS` marker.
+      completes without the `ValueError: batch operation requires --date...` and writes the `_SUCCESS` marker. —
+      DONE (code) 2026-08-22: date self-default already landed 2026-08-19 (daa2f9f5, left unflipped until now).
+      Added `--run-tag` CLI flag + `_write_t1_recon_success_marker` (mirrors ml-service's identical helper;
+      writes only when `run_tag != "batch"` AND every date in the batch succeeded, so a shard-isolated per-date
+      failure can't emit a false success signal) — strategy-service@37265af187, unit tests added
+      (`TestT1ReconSuccessMarker`, 4 cases). The Terraform job never passed `--run-tag t1-recon` (its own
+      in-file comment had flagged this exact gap as "out of scope" back when the writer didn't exist yet) — fixed
+      the args + the now-stale comment, deployment-service@c14565c0f6. Both repos QG green, both independently
+      verified as ancestors of `origin/live-defi-rollout`. NOT YET independently verified end-to-end: neither
+      commit has been `terraform apply`'d to live infra, so this todo's own Done-when (a real scheduled run
+      writing the marker) is still open — tracked as the new [INFRA] todo immediately below, split out because
+      `terraform apply` against shared prod state is infra-craft scope, not backend_engineer's.
+- [ ] [INFRA] P0. `terraform apply` deployment-service@c14565c0f6 (adds `--run-tag t1-recon` to
+      `uts-prod-strategy-service-t1-recon`'s Cloud Run Job args) against prod state, then verify the next 04:00
+      UTC scheduled run writes `t1-recon/strategy/{date}/_SUCCESS` to the recon bucket — the exact blob BLRS
+      Stage 0 polls for (`stage0_config_pull.py`'s `_EXPECTED_OUTPUTS["strategy"]`). Repo: deployment-service.
+      Done-when: a real triggered/scheduled execution writes the marker (not a manual dry-run) — cite the
+      execution ID.
 - [ ] [INFRA] P1. Un-pause the 7 feature-family t1-recon schedulers (calendar/delta-one/volatility/cross-instrument/
       multi-timeframe/commodity/sports) and register the missing `features-onchain` entry in
       `t1_batch_scheduler.tf`'s service map. Repo: deployment-service. Done-when: `gcloud scheduler jobs list` shows
       all 8 (7+onchain) feature-family t1-recon schedulers `ENABLED`, each with at least one real triggered
       execution.
-- [ ] [REVIEW] P0. Once the 4 todos above land, verify a real green 06:00Z `uts-prod-batch-live-reconciliation-service`
+- [ ] [REVIEW] P0. Once the 5 todos above land, verify a real green 06:00Z `uts-prod-batch-live-reconciliation-service`
       scheduled run (not a manual `--dry-run`) — cite the execution ID + Stage 5 output. Repo:
       batch-live-reconciliation-service.
 
@@ -300,3 +319,18 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   Applied: flipped `assigned_vm: NA` → `planning`, `execution_scope: local-only` → `orchestrator-agent`, and split
   the single bundled P0 todo into 5 AO-eligible pieces (see `## Todos` above), per the standing 2026-08-03/08-06/08-17
   na-eligibility-audit recommendation to promote-and-split rather than flip in place.
+
+- **backend_engineer 2026-08-22 (slot-25, dispatch `recon_bucket_missing_nightly_recon_failing-89b7fd444a1c`)**:
+  flipped todo 3 — strategy-service's `_SUCCESS`-marker writer + date fallback (the date fallback half had
+  already landed 2026-08-19, `daa2f9f5`, but the todo was never flipped). Shipped: `--run-tag` CLI flag +
+  `_write_t1_recon_success_marker` mirroring ml-service's identical helper (`ml_service/inference/cli/main.py`),
+  gated on `run_tag != "batch"` AND every date in the batch succeeding — strategy-service@37265af187, with a new
+  `TestT1ReconSuccessMarker` test class (4 cases). While verifying the done-when, found the Terraform job never
+  actually passed `--run-tag t1-recon` (confirmed via `audit03_cron_provisioning.tf`'s own in-file comment,
+  written when the writer didn't exist yet and explicitly flagged this as a future gap) — without it the new
+  writer would ship inert. Fixed the args + the now-stale comment — deployment-service@c14565c0f6. Both repos QG
+  green, both commits independently verified ancestors of `origin/live-defi-rollout` (not just quickmerge's own
+  "Landed" message). Did NOT run `terraform apply` myself — that's infra-craft scope (backend_engineer's
+  `does_not` explicitly excludes infra provisioning/cloud), and this touches shared prod Terraform state — split
+  it into a new [INFRA] todo instead of silently leaving the done-when unmet. Net: code-complete + shipped;
+  runtime-verified pending the new todo's apply + a real scheduled-run observation.
