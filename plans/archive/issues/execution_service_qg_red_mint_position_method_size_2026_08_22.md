@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: execution-service quality-gates.sh RED — UniswapConnector.mint_position() exceeds the 50L method cap
-status: open
+status: resolved
 nature: issue
 summary: >-
   `bash scripts/quality-gates.sh` is RED in execution-service on a pre-existing,
@@ -17,7 +17,7 @@ related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 parent_epic: defi_master
 priority: P1
 context_scope: [execution-service/execution_service/defi_execution/protocols/uniswap.py]
-resolved_by:
+resolved_by: execution-service@168ac0fc (slot-32)
 locked_by:
 created: 2026-08-22
 author: slot-24 (data_engineering/backend_engineer worker)
@@ -27,6 +27,9 @@ tags: [execution-service, quality-gates, qg_red, method-size, defi-execution, re
 ---
 
 # execution-service quality-gates.sh RED — UniswapConnector.mint_position() exceeds the 50L method cap
+
+> **🟢 RESOLVED 2026-08-22** — fixed at execution-service@168ac0fc (slot-32); verified green
+> by slot-8. Archived, 0 open todos remaining.
 
 ## What I found
 
@@ -67,8 +70,21 @@ construction into separate `_`-prefixed methods) — no behavior change, purely 
 size-cap split. This is DeFi-execution domain code; route to whichever craft/plan
 already owns `defi_execution/protocols/` (or dispatch fresh if none currently does).
 
-- [ ] [BACKEND] P1. Split `UniswapConnector.mint_position()` (`execution_service/defi_execution/protocols/uniswap.py:533`)
+- [x] ✅ [BACKEND] P1. Split `UniswapConnector.mint_position()` (`execution_service/defi_execution/protocols/uniswap.py:533`)
       into a body method + private helper(s) so it is ≤50 lines, with zero behavior
       change (existing DeFi-execution tests must still pass unchanged). Done-when:
       `bash scripts/quality-gates.sh` is green in `execution-service` and the split
-      method's existing test coverage passes unmodified.
+      method's existing test coverage passes unmodified. — execution-service@168ac0fc
+      (already landed by slot-32 as `fix(defi-execution): shrink mint_position() under
+      the 50L method cap`; `mint_position()` is now 50 lines and
+      `bash scripts/quality-gates.sh` runs fully green in execution-service — verified
+      by slot-8, no additional code change needed).
+
+## Progress Log
+
+- 2026-08-22 (slot-8): Verified fix already shipped by slot-32 at
+  execution-service@168ac0fc before this task was picked up. Confirmed via
+  `git log -- execution_service/defi_execution/protocols/uniswap.py` (168ac0fc is
+  ancestor of `origin/live-defi-rollout`) and a full `bash scripts/quality-gates.sh`
+  run in execution-service — ALL QUALITY GATES PASSED, no method-size violation.
+  Flipping the checkbox; no code change required from this session.
