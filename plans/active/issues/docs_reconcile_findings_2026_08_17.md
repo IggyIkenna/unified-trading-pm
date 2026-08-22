@@ -78,7 +78,11 @@ on one active issue doc). This doc captures what's NOT auto-fixable this run.
 
 - [x] ✅ [SCRIPT] P2. **Fix `fix_frontmatter.py`'s summary-truncation logic** — extracted (conflict-checked, clear) to
       `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 2. Track dispatch/completion there, not here.
-- [ ] [OPERATOR] P3. **Decide whether to backfill the ~1,115 inadequate archived-doc summaries this produced.**
+- [x] [OPERATOR] P3. **DONE 2026-08-21 — operator selected option B, executed.** 264 of the 276 `overview:`-bearing
+      docs migrated (`unified-trading-pm@ae146358b6`; 12 skipped — genuinely complex multi-paragraph content
+      needing literal block-scalar handling, not simple substitution; 1 of 265 candidates further excluded for a
+      `check_conflict_markers.sh` false-positive on unrelated pre-existing prose). The other ~796 stay accepted
+      debt per option B's own scope. Decide whether to backfill the ~1,115 inadequate archived-doc summaries this produced.**
       1,114 of 1,115 confirmed-inadequate summaries (from a corpus-wide sweep of 5,235 in-scope docs) are in
       `plans/archive/` -- dead history outside the live L0-L4 retrieval flow, not the codex/agents/active-plans
       corpus (which came back clean). Root cause for the ~1,072 that are simply EMPTY (not truncated):
