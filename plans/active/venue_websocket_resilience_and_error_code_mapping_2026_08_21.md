@@ -439,6 +439,34 @@ REUSES the frameworks that already exist rather than building new ones:
   (`--isolated`) was the ship path — a peer's live untracked `lending_indices_radiant.py` (lint-dirty) was
   failing the shared-tree gate, and isolated mode gates the named files against a clean origin checkout, immune to
   peer working-tree dirt (verified the landed SHA's content by grep, not by trusting ahead=0).
+- **2026-08-22 (deployment-service C2 ship — 6 attempts, 5 real blockers fixed, 6th genuinely host-blocked)** —
+  the last unlanded code unit in the plan went through a real diagnostic chain, not blind retries: (1) dirty UTL
+  dep → resolved once UTL landed; (2) a REAL import-pattern violation (`unified_trading_library.streaming` deep
+  import) → fixed with the same `# noqa: qg-deep-import` marker already used at 2 other sites in this plan
+  (confirmed the checker honors that exact marker by reading its source; confirmed the symbols are genuinely
+  absent from UTL's root facade — this is now a 3rd site for the facade-hoist P2 todo); (3) a 600s duration-only
+  timeout whose OWN gate output said "every content check passed... HOST CONTENTION, not your change" → the
+  sanctioned `IGNORE_TIMEOUT=true` escape (`/codex/06-coding-standards/quality-gates.md` "Sanctioned timeout
+  overrides") used correctly, once; (4) a dependency-conflict from a stale UAC checkout (3 commits behind origin
+  — a peer had landed unrelated `source_priority`/`pipeline_mode` work) → fast-forwarded cleanly, 0 conflicts —
+  **lesson**: a chained `git pull && ...` silently did NOT run once (blocked by the tool-batching hook with no
+  visible error until a follow-up state check caught it) — always verify a pull actually advanced HEAD with a
+  standalone follow-up command, never assume a chained command executed; (5) one shellcheck-suite test failure
+  (`TestShellcheckClean`, ~180 scripts batched into one subprocess) whose OWN docstring documents this exact
+  SIGPIPE-under-contention flake class ("scripts themselves were never in doubt... all pass in isolation") →
+  disproven by a clean standalone re-run (763s under heavy load, 0 errors). **Attempt 6** failed differently: 14
+  tests failed, ALL in files unrelated to the 3 shipped files (`test_data_status_queries.py`,
+  `test_data_status_turbo.py`, `test_turbo_service_config.py`, `test_vm_launcher_scripts.py`,
+  `test_missing_data_per_service.py`, `test_data_pipeline_monitors_cli.py`), terminating in
+  `pytest-timeout (>300.0s)` plus repeated `grpc.AuthMetadataPluginCallback` exceptions after a 3,529s (58min)
+  wall-clock run. Measured, not assumed: `ps aux` showed 15 concurrent `quality-gates.sh` processes fleet-wide
+  (across multiple slots) at the time — genuine, severe, multi-slot host contention, not a lost race or a content
+  defect. Per the workspace's "never worsen shared-host contention" + "≤2 full QGs at once" rules, a 7th
+  full-isolated-gate attempt was deliberately NOT launched into that load. **The 3 shipped files
+  (`scripts/recovery/rotate_websocket.py`, `tests/unit/test_rotate_websocket.py`,
+  `tests/unit/test_refetch_feed.py`) passed their own content/lint/import checks on every single attempt** —
+  only the unrelated whole-repo test suite failed under load. DEFERRED, not abandoned: retry once the host is
+  quieter (fewer concurrent `quality-gates.sh` processes) — the content is ready.
 
 ## Rule-9 final report — 2026-08-22
 
@@ -470,18 +498,20 @@ honest gap accounting; the drill also surfaced + fixed a fleet-wide connector-la
 execution guard has unit proof (resync-before-trust, venue-kill escalation) but a real private-stream paper run
 needs venue credentials (`[OPERATOR]`).
 
-**Open (plan stays active — do NOT archive)**: deployment-service `rotate_websocket` ship + C2 flip (blocked on a
-peer's live untracked terraform in the shared checkout); MTDS C3 manifest-write gap (P1 issue above); connector
+**Open (plan stays active — do NOT archive)**: deployment-service `rotate_websocket` ship + C2 flip (content-ready,
+6 attempts, 5 real blockers already fixed — deferred only on 2026-08-22's severe multi-slot host contention,
+15 concurrent `quality-gates.sh` processes measured); MTDS C3 manifest-write gap (P1 issue above); connector
 `_closed`-latch defensive hardening (P1); C4 real paper run (`[OPERATOR]` credentials); Phase-B P2 residuals
 (binance-futures codes, curve 403, `PROTOCOL_CAPABILITIES`, polymarket-perps probe, versifi `[OPERATOR]`); facade
-hoist (P2); multi-family error-key consolidation (P2); UAC freezegun-hardening (P2).
+hoist (P2, now 3 confirmed `qg-deep-import` sites for the same 9 rotation-sentinel symbols — UTL
+`ws_session_manager.py`, MTDS `_ws_session_bridge.py`, deployment-service `rotate_websocket.py`+its test);
+multi-family error-key consolidation (P2); UAC freezegun-hardening (P2).
 
 ## Deferred work after 2026-08-21
 
 | Item                                                        | State / why deferred                                                                                                                                                                           | Blocked on                                                   |
 | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| deployment-service `rotate_websocket` ship                  | gate-green on its own files; the TREE gate fails on a PEER's live untracked `terraform/gcp/pnl_attribution_scheduler.tf` (mtime 22:44Z, the code_readiness_t3 session) — protected, not inherited | the peer committing + registering their tf (not mine to do) |
-| C2 flip                                                     | UAC/UTL/alerting halves landed; flips on the deployment SHA                                                                                                                                    | the deployment ship above                                    |
+| deployment-service `rotate_websocket` ship + C2 flip        | content-ready (3 files pass their own content/lint/import checks on every attempt); 5 real blockers already fixed (dirty dep, deep-import, timeout, stale UAC dep, shellcheck flake); attempt 6 hit genuine severe multi-slot host contention (15 concurrent `quality-gates.sh`, terminated in pytest-timeout + grpc auth-plugin exceptions after 58min) — deliberately not retried a 7th time into that load per the "never worsen shared-host contention" rule | a quieter host — retry `cd deployment-service && IGNORE_TIMEOUT=true bash scripts/quickmerge.sh "feat(ws-resilience): rotate_websocket Layer-0 action — request-sentinel drop for a stale ws feed; refetch_feed test reads the bound action verbatim (C2)" --agent --isolated --files 'scripts/recovery/rotate_websocket.py tests/unit/test_rotate_websocket.py tests/unit/test_refetch_feed.py'` when `ps aux \| grep -c quality-gates.sh` is low |
 | C3 paper-mode rotation verification                         | code landed (bridge + runner); done-when needs a real paper-mode run with manifest-verified gap rows                                                                                           | MTDS ship, then a runtime run                                |
 | C5 consumer wiring + W14 epic flip + census closure         | error corpus landed; census test + dedupe (kucoin 109000/163000, kalshi/hyperliquid/polymarket)                                                                                                 | next UAC batch                                               |
 | Phase B residuals: binance-futures codes, curve 403,        | P2 todos above; browser-session retrievals                                                                                                                                                     | nothing (versifi: operator)                                  |
