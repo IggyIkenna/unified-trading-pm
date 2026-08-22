@@ -714,8 +714,13 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
 - [ ] [SCRIPT] P2. **strategy-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: strategy-service)
 - [ ] [SCRIPT] P2. **system-integration-tests** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
       system-integration-tests)
-- [ ] [SCRIPT] P2. **trading-agent-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
-      trading-agent-service)
+- [x] ✅ [SCRIPT] P2. **DONE — verified already-landed (2026-08-22, slot-10).** **trading-agent-service** — pip
+      CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: trading-agent-service) — `pyproject.toml` already
+      declared `"pip>=26.2"` and `uv.lock` already resolved `pip==26.2` (landed directly, no separate bump commit
+      found); only the inline comment was stale (still cited the old PYSEC-2026-196/26.1.2 fix version). Corrected the
+      comment to PYSEC-2026-3721/CVE-2026-13346 (same pattern as ml-service's todo above), full `quality-gates.sh`
+      green, shipped `trading-agent-service@12d9ad361c`, verified HEAD ancestor-or-equal of `origin/live-defi-rollout`
+      via `git merge-base --is-ancestor`.
 - [ ] [SCRIPT] P2. **(then) canonical + drop ignore.** Once every repo above is verified at `pip>=26.2`: edit
       `workspace-constraints.toml`'s `pip` entry to `pip>=26.2`, regenerate `canonical-dependency-manifest.json` via
       `generate_canonical_dependency_manifest.py`, re-run `check-dependency-alignment.py --json` fleet-wide to confirm
