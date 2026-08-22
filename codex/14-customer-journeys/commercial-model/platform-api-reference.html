@@ -1115,7 +1115,7 @@
       <summary>Header precedence, and what each path returns</summary>
       <p>
         The dependency checks, in this exact order, the first one present wins
-        (<code>unified-trading-library/unified_trading_library/cloud_interface/api_auth.py:319-387</code>):
+        (<code>unified-trading-library/unified_trading_library/cloud_interface/api_auth.py</code>):
       </p>
       <div class="scroll-x">
         <table>
@@ -1176,13 +1176,13 @@
           </tbody>
         </table>
       </div>
-      <div class="code-label">JWT claims (HS256): api_auth.py:16-25</div>
+      <div class="code-label">JWT claims (HS256): api_auth.py</div>
       <div class="code">
         { <b>"sub"</b>: "user-id", <b>"org_id"</b>: "org-123", <b>"role"</b>: "admin" | "internal" | "external",
         <b>"subscription_tier"</b>: "enterprise" | "data-pro" | "data-basic" | "free", <b>"exp"</b>: &lt;unix
         timestamp&gt;, <b>"iat"</b>: &lt;unix timestamp&gt; }
       </div>
-      <div class="code-label">AuthContext: the object every route sees after auth passes (api_auth.py:109-125)</div>
+      <div class="code-label">AuthContext: the object every route sees after auth passes (api_auth.py)</div>
       <div class="code">
         <span class="k">class</span> <b>AuthContext</b>: org_id: <i>str</i> user_id: <i>str</i>
         <i># "sub" claim</i> role: <i>str</i> <i># admin | internal | external</i> subscription_tier:
@@ -1203,13 +1203,13 @@
           and tested today, tightening a specific tier's scope is a config edit, not a route-logic one). A request
           for an <code>asset_group</code> outside a tightened tier's scope 403s. 401 behavior is unchanged.
           <b>Source:</b> <code>instruments-service/instruments_service/api/entitlement.py</code>,
-          <code>instruments-service/instruments_service/api/routers/external.py:94</code> (catalogue query),
-          <code>:131</code> (bulk parquet dump).
+          <code>instruments-service/instruments_service/api/routers/external.py</code> (catalogue query and bulk
+          parquet dump).
         </p>
         <p>
           On market-tick-data-service the auth dependency is still mounted at
           the router level for the 401 gate (<code>dependencies=[Depends(_api_auth)]</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:71</code>), but every
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>), but every
           endpoint (availability, batch delivery, stream delivery) now ALSO receives the resolved
           <code>AuthContext</code> (<code>auth: AuthDep</code>, the same cached dependency, not re-executed) and
           threads it through <code>market_tick_data_service/api/entitlement.py</code>, an org-scoped entitlement seam
@@ -1224,8 +1224,8 @@
           tightening a specific org's scope is a data change via <code>register_org_entitlement</code>, not a route-logic
           one). 401 behavior is unchanged. <b>Source:</b>
           <code>market-tick-data-service/market_tick_data_service/api/entitlement.py</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:121</code> (availability),
-          <code>:328</code> (batch delivery), <code>:411</code> (stream delivery).
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code> (availability,
+          batch delivery and stream delivery).
         </p>
       </div>
       <div class="callout">
@@ -1315,7 +1315,7 @@
     <p class="lede">
       Two endpoints over the already-written <code>instrument_availability</code> catalogue: a query and a bulk parquet
       dump. Read-only; this router never re-fetches from a venue.
-      <code>instruments-service/instruments_service/api/routers/external.py:1-140</code>.
+      <code>instruments-service/instruments_service/api/routers/external.py</code>.
     </p>
 
     <details class="ep">
@@ -1425,7 +1425,7 @@
           The <code>instruments</code> row shape is whatever columns the underlying
           <code>instruments.parquet</code> shard carries:
           <code>query_instruments</code>
-          (<code>instruments-service/instruments_service/engine/orchestrator/catalogue_query.py:112-169</code>)
+          (<code>instruments-service/instruments_service/engine/orchestrator/catalogue_query.py</code>)
           round-trips the shard DataFrame's own columns verbatim (<code>df.to_json(orient="records")</code>, line 155)
           rather than projecting a predetermined schema. <code>instrument_id</code> / <code>venue</code> /
           <code>instrument_type</code> above are confirmed canonical <code>InstrumentRecord</code> fields; the full
@@ -1469,7 +1469,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">external.py:60-100</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">external.py</p>
       </div>
     </details>
 
@@ -1529,7 +1529,7 @@
           HTTP/1.1 200 OK Content-Type: application/vnd.apache.parquet Content-Disposition: attachment;
           filename="instruments_cefi_BINANCE-SPOT_2026-08-18.parquet" Transfer-Encoding: chunked &lt;parquet bytes,
           streamed 1 MiB at a time — build_bulk_parquet unifies every matched shard's schema before writing a single
-          combined file, catalogue_query.py:191-250&gt;
+          combined file, catalogue_query.py&gt;
         </div>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -1573,7 +1573,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">external.py:108-140; catalogue_query.py:172-250</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">external.py; catalogue_query.py</p>
       </div>
     </details>
 
@@ -1588,8 +1588,8 @@
           <code>unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py</code>.
           <b>The CeFi spot-pair instrument-type token is <code>SPOT_PAIR</code>, not <code>SPOT</code></b>: it is the
           literal <code>InstrumentType.SPOT_PAIR</code> enum value, confirmed at
-          <code>canonical_id_builder.py:134</code> (membership) and <code>:268-270</code>
-          (<code>_build_cefi_simple</code>, the function that renders it).
+          <code>canonical_id_builder.py</code>, in both the membership check and
+          <code>_build_cefi_simple</code>, the function that renders it.
         </p>
         <div class="code">
           <i># VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</i>
@@ -1600,7 +1600,7 @@
           20)) <i># →</i> "CME:FUTURE:ES-20260620"
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          canonical_id_builder.py:1027-1174 (dispatch), :77-92 (docstring examples)
+          canonical_id_builder.py (dispatch and docstring examples)
         </p>
       </div>
     </details>
@@ -1706,7 +1706,7 @@
         </div>
         <p>
           The response envelope (the keys above) is verified directly against
-          <code>external.py:144-158</code>. The <em>contents</em> of <code>summary</code> / <code>venue_summary</code> /
+          <code>external.py</code>. The <em>contents</em> of <code>summary</code> / <code>venue_summary</code> /
           <code>venue_data_type_summary</code> are opaque: they are passed through verbatim from the daily
           <code>coverage.json</code> rollup written by
           <code>instruments-service/scripts/measure_honest_coverage.py</code> and are not typed by this router, so their
@@ -1756,7 +1756,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">external.py:65-163</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">external.py</p>
       </div>
     </details>
 
@@ -1879,7 +1879,7 @@
         <div class="code">
           HTTP/1.1 200 OK Content-Type: application/octet-stream Content-Disposition: attachment;
           filename="part-0000.parquet" Content-Length: 4831201 &lt;object bytes, streamed 1 MiB at a time — never loaded
-          fully into memory, external.py:206-214&gt;
+          fully into memory, external.py&gt;
         </div>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -1928,7 +1928,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">external.py:217-272</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">external.py</p>
       </div>
     </details>
 
@@ -2003,7 +2003,7 @@
         <p>
           The transport call (<code>unified_trading_library.streaming.event_facade.get_transport(topology).read(...)</code>,
           each envelope
-          serialised via <code>.model_dump_json()</code>, <code>external.py:304-310</code>) and the
+          serialised via <code>.model_dump_json()</code>, <code>external.py</code>) and the
           <code>CanonicalPersistEnvelope</code> field list itself: <code>schema_version</code>,
           <code>asset_group</code>, <code>data_type</code>, <code>pipeline_mode</code>, <code>period_start</code>,
           <code>period_end</code>, <code>source</code>, <code>available_at</code>, <code>retention_class</code>, exactly
@@ -2044,7 +2044,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">external.py:280-310</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">external.py</p>
       </div>
     </details>
 
@@ -2058,7 +2058,7 @@
         <p>
           <code>data_type</code> is not a free-text field: it is drawn from
           <code>VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE</code>
-          (<code>unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1503+</code>), keyed by
+          (<code>unified-api-contracts/unified_api_contracts/registry/market_data_categories.py</code>), keyed by
           <code>(asset_group, instrument_type)</code>. A representative slice:
         </p>
         <div class="scroll-x">
@@ -2103,7 +2103,7 @@
           </table>
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          market_data_categories.py:1503-1600 (full table is longer, every asset_group × instrument_type pair is
+          market_data_categories.py (full table is longer, every asset_group × instrument_type pair is
           enumerated there, not reproduced in full on this page)
         </p>
       </div>
@@ -2530,7 +2530,7 @@
         <p>
           The response envelope (<code>instruction_id</code> / <code>status</code> /
           <code>detail</code>) is <code>ExternalInstructionResponse</code>,
-          <code>external_instruction_api.py:63-68</code>. The contents of <code>detail</code> are whatever
+          <code>external_instruction_api.py</code>. The contents of <code>detail</code> are whatever
           <code>ManualOperationHandler.execute()</code> returns, passed through verbatim (<code>result</code> dict, line
           170), not typed by this router.
         </p>
@@ -2613,7 +2613,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">external_instruction_api.py:71-171</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">external_instruction_api.py</p>
       </div>
     </details>
   </section>
@@ -2740,7 +2740,7 @@
           (<code>rnd = 6 if is_btc else 2</code>, <code>_is_btc_account(curve)</code>); if the client has no equity
           history at all, the response is still <code>200</code> with a body of <code>"No data\n"</code> rather than a
           <code>404</code>, worth handling explicitly rather than assuming an error status. <b>Source:</b>
-          <code>client-reporting-api/client_reporting_api/api/routes/exports.py:160-166</code>.
+          <code>client-reporting-api/client_reporting_api/api/routes/exports.py</code>.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
@@ -2766,7 +2766,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">exports.py:148-221; core/entitlement.py:34-62</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">exports.py; core/entitlement.py</p>
       </div>
     </details>
 
@@ -2827,7 +2827,7 @@
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           The envelope shape (all seven fields above) is read directly from
-          <code>hwm.py:66-87</code>. <code>amount_usd</code>/<code>source_event_id</code> are elided above rather than
+          <code>hwm.py</code>. <code>amount_usd</code>/<code>source_event_id</code> are elided above rather than
           shown with invented values.
         </p>
         <div class="callout">
@@ -2835,7 +2835,7 @@
           <p>
             When the service runs with
             <code>CLOUD_MOCK_MODE=true</code> (<code>UnifiedCloudConfig().is_mock_mode()</code>), this endpoint returns
-            three preset demo rows (<code>_mock_hwm_timeline</code>, <code>hwm.py:30-63</code>) regardless of the real
+            three preset demo rows (<code>_mock_hwm_timeline</code>, <code>hwm.py</code>) regardless of the real
             client. Otherwise it reads
             <code>read_fee_recognition_rows(client_id, date_from, date_to)</code> (<code>core/hwm_reader.py</code>),
             a real GCS-backed reader over <code>FeeRecognitionRow</code> parquet shards emitted by the UTL
@@ -2871,7 +2871,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">hwm.py:1-111</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">hwm.py</p>
       </div>
     </details>
 
@@ -2903,7 +2903,7 @@
       </p>
       <p>
         The four <code>/api/v1/performance/*</code> endpoints (positions, balances, coin-breakdown) fall back to
-        fixtures only when <code>CLOUD_MOCK_MODE=true</code> (<code>performance.py:52,94,126,163</code>), real in a
+        fixtures only when <code>CLOUD_MOCK_MODE=true</code> (<code>performance.py</code>), real in a
         real deployment. <code>GET /api/v1/exports/daily-equity</code> and <code>GET /api/v1/exports/transfers</code>
         read real backing stores unconditionally (<code>get_equity_curve</code> / <code>get_transfers</code>).
       </p>
@@ -3267,7 +3267,7 @@
                 <td>
                   Close all positions for a client: <code>dry_run=true</code> (default) lists what would close,
                   <code>dry_run=false</code> submits real market close orders via CCXT
-                  (<code>emergency.py:162-176</code>)
+                  (<code>emergency.py</code>)
                 </td>
               </tr>
               <tr>
@@ -3606,7 +3606,7 @@
       <p>
         Emission source: <code>GroupBRunner</code> (the same paper/live tick runtime every archetype runs through)
         forwards every emitted <code>StrategyInstructionEnvelope</code> to a
-        <code>signal_broadcast_publisher</code> seam (<code>engine/backtest/runner.py:213,271-272</code>) wired at the
+        <code>signal_broadcast_publisher</code> seam (<code>engine/backtest/runner.py</code>) wired at the
         real, CLI-reachable <code>--operation paper-run</code> call site
         (<code>cli/handlers/paper_run_handler.py</code>, via
         <code>signal_broadcast/live_publish.make_signal_broadcast_publisher</code>). Depth-filter projection:
@@ -3618,7 +3618,7 @@
       </p>
       <p>
         Activation is a config row, not a code change: <code>Counterparty.status</code> is the sole gate
-        (<code>is_counterparty_active()</code>, <code>counterparty.py:71</code>); <code>transport.py</code>'s
+        (<code>is_counterparty_active()</code>, <code>counterparty.py</code>); <code>transport.py</code>'s
         <code>_authenticate()</code> checks it before anything else and <code>entitled_slots_for()</code> returns an
         empty set for a non-<code>ACTIVE</code> counterparty. The registry's <code>CounterpartyEntitlement.active_from</code>/
         <code>active_to</code> fields exist solely for billing/audit provenance (per the registry module's own
@@ -3720,7 +3720,7 @@
           </table>
         </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          unified_api_contracts/internal/domain/signal_broadcast/signal_payload.py:44-49,62-121; .../registry.py:185-190
+          unified_api_contracts/internal/domain/signal_broadcast/signal_payload.py; .../registry.py
         </p>
       </div>
     </details>
@@ -3803,7 +3803,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py:397-461</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py</p>
       </div>
     </details>
 
@@ -3851,7 +3851,7 @@
         <div class="code">{ "status": "accepted", "emission_id": "…" }</div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           Same three error cases as <code>GET /emissions</code> above (403/401/503); auth runs before the body is
-          processed. transport.py:463-478
+          processed. transport.py
         </p>
       </div>
     </details>
@@ -3868,7 +3868,7 @@
           <code>DeliveryHealthEnvelope{"health": …}</code>, a real Pydantic envelope wrapping
           <code>DeliveryHealthTracker.snapshot()</code>'s output. Same 403/401/503 auth errors as above.
         </p>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py:483-491</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py</p>
       </div>
     </details>
 
@@ -3886,7 +3886,7 @@
           >), so a counterparty cannot read reconciliation rows for a slot it is not entitled to. Same 403/401/503
           auth errors as above.
         </p>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py:493-503</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py</p>
       </div>
     </details>
 
@@ -3902,7 +3902,7 @@
           <code>PnlAttributionEnvelope{"rows": …}</code> from <code>PnlAttributionStore.rows_for()</code>. Same
           403/401/503 auth errors as above.
         </p>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py:505-512</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py</p>
       </div>
     </details>
 
@@ -3942,7 +3942,7 @@
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py:514-527</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">transport.py</p>
       </div>
     </details>
   </section>

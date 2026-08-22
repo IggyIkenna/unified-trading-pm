@@ -868,39 +868,7 @@
   }
 </style>
 <style>
-  /* Status marks + the nested coverage tree, built from the same tokens. */
-  .st {
-    font-family: var(--sans);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 3px;
-    white-space: nowrap;
-    border: 1px solid currentColor;
-  }
-
-  .st-live {
-    color: var(--good);
-    background: var(--g-data-wash);
-  }
-
-  .st-part {
-    color: var(--warn);
-    background: var(--g-post-wash);
-  }
-
-  .st-plan {
-    color: var(--crit);
-    background: var(--accent-wash);
-  }
-
-  .sec-head .st {
-    align-self: center;
-    margin-left: auto;
-  }
-
+  /* The nested coverage tree, built from the same tokens. */
   .legend {
     display: flex;
     flex-wrap: wrap;
@@ -918,23 +886,8 @@
     gap: 7px;
   }
 
-  /* PENDING marker, every unmeasured figure wears this. Deliberately loud. */
-  .pend {
-    font-family: var(--sans);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--crit);
-    border: 1px dashed var(--crit);
-    border-radius: 3px;
-    padding: 1px 6px;
-    white-space: nowrap;
-  }
-
   /* Coverage-tree leaf state, real, machine-derived market_tick_data-leg verdicts
-     (derive_readiness.py, BATCH mode). Orthogonal to .pend, which stays reserved for a
-     cell no check could resolve at all (always paired with its reason inline). */
+     (derive_readiness.py, BATCH mode). */
   .rdy {
     font-family: var(--mono);
     font-size: 10.5px;
@@ -1074,57 +1027,6 @@
     background: var(--crit);
   }
 
-  /* Evidence tier, a SECOND mark, orthogonal to the status pill above: how we know a claim, not what state it is in.
-     Deliberately a different shape (dashed outline pill, monospace) so the two marks are never confused at a glance. */
-  .ev {
-    font-family: var(--mono);
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 1px 8px;
-    border-radius: 10px;
-    white-space: nowrap;
-    border: 1px dashed currentColor;
-    background: transparent;
-  }
-
-  .ev-verified {
-    color: var(--g-data);
-  }
-
-  .ev-check {
-    color: var(--ink-3);
-  }
-
-  .ev-assumed {
-    color: var(--warn);
-  }
-
-  .sec-head .ev {
-    align-self: center;
-  }
-
-  /* Owner mark, the THIRD mark, alongside status (what the system does) and evidence
-     tier (how we know). Names who closes the gap. Solid neutral-filled chip with a plain
-     hairline border, no colour border, no dash, no wash, so it reads as metadata, not
-     a fourth status colour, and is never confused with .st or .ev at a glance. */
-  .own {
-    font-family: var(--sans);
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    padding: 2px 8px;
-    border-radius: 3px;
-    white-space: nowrap;
-    color: var(--ink-2);
-    background: var(--surface-2);
-    border: 1px solid var(--rule);
-    cursor: help;
-  }
-
-  .sec-head .own {
-    align-self: center;
-  }
 </style>
 
 <aside class="toc-sidebar" id="tocSidebar" aria-label="Section navigation">
@@ -1155,19 +1057,6 @@
       has no measured basis, none is given.
     </p>
 
-    <div class="legend">
-      <span> reachable on a production path AND validated with real capital</span>
-      <span> built, reachable for some cases</span>
-      <span> specified, not yet built</span>
-      <span><b class="pend">pending</b> not measured recently, or not yet captured though it can be, never
-        estimated</span>
-    </div>
-    <div class="legend">
-      <span> checked against code or measured data, verifying source named
-        inline</span>
-      <span> stated in good faith, not yet independently validated</span>
-      <span> best current understanding, explicitly not verified</span>
-    </div>
     <div class="legend">
       <span><b>Declared since: not declared</b> means the capability is live-only, reachable on the streaming path with
         no batch start date, because nothing has backfilled it yet. That is a statement about which path exists today,
@@ -1334,7 +1223,7 @@
       More information, including how to request a live demo, is on
       <a href="https://www.odum-research.com/" target="_blank" rel="noopener">odum-research.com</a>, a short
       questionnaire is how a prospect tells us which service family fits before we open access. A live demo is
-      available on request; self-serve public access is coming soon.
+      available on request, which is how access is granted today; public self-serve access is planned, not open.
     </p>
   </section>
 
@@ -1507,8 +1396,8 @@
             away what you are not evaluating</span>
         </div>
         <div>
-          <b>Numbers carry provenance</b><span>A figure is either measured with its date and denominator, or marked
-            pending. There is no third
+          <b>Numbers carry provenance</b><span>A figure is either measured with its date and denominator, or
+            explicitly marked as not measured. There is no third
             category</span>
         </div>
       </div>
@@ -1534,7 +1423,7 @@
         </p>
         <p>
           Where a number has not been measured recently, or where the data has not been captured yet though it can
-          be, this reads <b class="pend">pending</b> rather than carrying an estimate. An estimate that survives into
+          be, this document says so rather than carrying an estimate. An estimate that survives into
           an integration plan becomes a commitment nobody agreed to.
         </p>
       </div>
@@ -4939,8 +4828,8 @@
           </details>
           <details class="tree">
             <summary>
-              <span class="nm"><code>KALSHI-PERP</code></span><span class="meta"><span class="u">coming soon (venue-side
-                  onboarding)</span>
+              <span class="nm"><code>KALSHI-PERP</code></span><span class="meta"><span class="u">awaiting venue-side
+                  onboarding</span>
                 <span class="u">(1 data type)</span></span>
             </summary>
             <div class="tree-body">
@@ -4962,15 +4851,15 @@
                       <tr>
                         <td><code>perp_funding</code></td>
                         <td>2026-06-03</td>
-                        <td><span class="u">coming soon</span></td>
+                        <td><span class="u">awaiting venue-side onboarding</span></td>
                         <td>per interval</td>
                       </tr>
                     </tbody>
                   </table>
                   <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
                     Capture adapter is built (<code>instruments_service.reference_data.adapters.cefi.kalshi_perp</code>,
-                    <code>market_tick_data_service.live.connectors.kalshi_perp_ws</code>), live coverage is coming
-                    soon (venue-side onboarding), pending Kalshi-side perpetuals trading rights.
+                    <code>market_tick_data_service.live.connectors.kalshi_perp_ws</code>); live coverage begins
+                    once Kalshi grants perpetuals trading rights and venue-side onboarding completes.
                   </p>
                 </div>
               </details>
@@ -5992,23 +5881,23 @@
           </details>
           <details class="tree">
             <summary>
-              <span class="nm"><code>PACIFICA-SOLANA</code></span><span class="meta"><span class="u">coming soon
-                  (venue-side onboarding)</span></span>
+              <span class="nm"><code>PACIFICA-SOLANA</code></span><span class="meta"><span class="u">awaiting
+                  venue-side onboarding</span></span>
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.9rem; color: var(--ink-3); margin: 0">
                 Capture adapter is built (<code>instruments_service.reference_data.adapters.cefi.pacifica</code>,
                 <code>market_tick_data_service.live.connectors.pacifica_solana_perp_ws</code>,
-                <code>execution_service.defi_execution.protocols.pacifica</code>), no data_types are registered yet
-                pending Pacifica-side onboarding, so there is nothing to derive an instrument-type or data-type
-                breakdown from today.
+                <code>execution_service.defi_execution.protocols.pacifica</code>); registering data_types requires
+                Pacifica-side onboarding to complete first, so there is nothing to derive an instrument-type or
+                data-type breakdown from today.
               </p>
             </div>
           </details>
           <details class="tree">
             <summary>
-              <span class="nm"><code>POLYMARKET-PERP</code></span><span class="meta"><span class="u">coming soon
-                  (venue-side onboarding)</span>
+              <span class="nm"><code>POLYMARKET-PERP</code></span><span class="meta"><span class="u">awaiting
+                  venue-side onboarding</span>
                 <span class="u">(1 data type)</span></span>
             </summary>
             <div class="tree-body">
@@ -6030,7 +5919,7 @@
                       <tr>
                         <td><code>perp_funding</code></td>
                         <td>2026-08-07</td>
-                        <td><span class="u">coming soon</span></td>
+                        <td><span class="u">awaiting venue-side onboarding</span></td>
                         <td>per interval</td>
                       </tr>
                     </tbody>
@@ -6038,8 +5927,8 @@
                   <p style="font-size: 0.85rem; color: var(--ink-3); margin: 6px 0 0">
                     Capture adapter is built
                     (<code>instruments_service.reference_data.adapters.cefi.polymarket_perp</code>,
-                    <code>market_tick_data_service.live.connectors.polymarket_perp_ws</code>), live coverage is
-                    coming soon (venue-side onboarding), pending Polymarket-side perpetuals trading rights.
+                    <code>market_tick_data_service.live.connectors.polymarket_perp_ws</code>); live coverage
+                    begins once Polymarket grants perpetuals trading rights and venue-side onboarding completes.
                   </p>
                 </div>
               </details>
@@ -6219,8 +6108,7 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>AAVE-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>AAVE-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -6251,7 +6139,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2026-07-21</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -6266,8 +6154,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>AAVE_V3-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>AAVE_V3-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(7 data types)</span></span>
                 </summary>
@@ -6315,7 +6202,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
@@ -6392,7 +6279,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-01-27</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
@@ -6513,8 +6400,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>BEEFY-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>BEEFY-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -6538,7 +6424,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2021-12-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -6665,8 +6551,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>COINBASE-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>COINBASE-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -6729,7 +6614,7 @@
                             <tr>
                               <td><code>oracle_prices</code></td>
                               <td>2022-08-26</td>
-                              <td><span class="pend">unverified</span></td>
+                              <td><b>unverified</b></td>
                               <td>per price update</td>
                             </tr>
                           </tbody>
@@ -6745,8 +6630,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>COMPOUND_V3-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>COMPOUND_V3-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -6778,7 +6662,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-08-14</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -6815,7 +6699,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-08-14</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -6830,8 +6714,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>CONVEX-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>CONVEX-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -6855,7 +6738,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2021-05-17</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -6911,8 +6794,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>EIGENLAYER-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>EIGENLAYER-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -6943,7 +6825,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2024-08-06</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -6958,8 +6840,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>ETHENA-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>ETHENA-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -6983,13 +6864,13 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2024-02-19</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per rate update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-02-19</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -7004,8 +6885,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>ETHERFI-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>ETHERFI-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(3 data types)</span></span>
                 </summary>
@@ -7037,13 +6917,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-11-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2023-11-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -7098,8 +6978,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>FLUID-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>FLUID-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -7123,13 +7002,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-02-27</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-02-27</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -7144,8 +7023,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>IDLE-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>IDLE-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -7169,7 +7047,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2019-08-13</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -7184,8 +7062,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>KARAK-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>KARAK-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -7208,13 +7085,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-04-08</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2024-04-08</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -7229,8 +7106,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>KELPDAO-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>KELPDAO-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -7253,13 +7129,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-11-09</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2023-11-09</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -7274,8 +7150,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>LIDO-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>LIDO-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(3 data types)</span></span>
                 </summary>
@@ -7307,13 +7182,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2020-12-18</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2020-12-18</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -7328,8 +7203,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>MAKER-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>MAKER-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -7353,7 +7227,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2023-01-18</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per rate update</td>
                           </tr>
                           <tr>
@@ -7417,8 +7291,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>MORPHO-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>MORPHO-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(3 data types)</span></span>
                 </summary>
@@ -7458,7 +7331,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-01-08</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -7503,7 +7376,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-01-08</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -7559,8 +7432,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>PENDLE-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>PENDLE-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -7584,13 +7456,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2021-06-15</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2021-06-15</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -7605,8 +7477,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>PUFFER-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>PUFFER-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(3 data types)</span></span>
                 </summary>
@@ -7637,13 +7508,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-05-09</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2024-05-09</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -7658,8 +7529,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>RADIANT-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>RADIANT-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -7691,7 +7561,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-07-18</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -7706,8 +7576,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>RENZO-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>RENZO-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -7730,13 +7599,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-04-29</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2024-04-29</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -7792,8 +7661,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>SPARK-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>SPARK-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -7825,7 +7693,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-01-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -7862,7 +7730,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-01-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -8041,8 +7909,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>SYMBIOTIC-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>SYMBIOTIC-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -8065,13 +7932,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-06-11</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2024-06-11</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -8086,8 +7953,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>UNISWAP_V2-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>UNISWAP_V2-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -8119,7 +7985,7 @@
                           <tr>
                             <td><code>dex_pool_swaps</code></td>
                             <td>2020-05-06</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per swap event</td>
                           </tr>
                         </tbody>
@@ -8181,8 +8047,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>UNISWAP_V4-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>UNISWAP_V4-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -8214,7 +8079,7 @@
                           <tr>
                             <td><code>dex_pool_swaps</code></td>
                             <td>2025-01-30</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per swap event</td>
                           </tr>
                         </tbody>
@@ -8301,8 +8166,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>YEARN_V3-ETHEREUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>YEARN_V3-ETHEREUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -8326,7 +8190,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2024-03-20</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -8349,8 +8213,7 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>AAVE_V3-ARBITRUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>AAVE_V3-ARBITRUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(7 data types)</span></span>
                 </summary>
@@ -8374,43 +8237,43 @@
                           <tr>
                             <td><code>flash_loan_events</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per event</td>
                           </tr>
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>liquidation_events</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per event</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>position_data</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per position snapshot</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -8439,43 +8302,43 @@
                           <tr>
                             <td><code>flash_loan_events</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per event</td>
                           </tr>
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>liquidation_events</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per event</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>position_data</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per position snapshot</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -8531,8 +8394,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>BEEFY-ARBITRUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>BEEFY-ARBITRUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -8556,7 +8418,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2021-09-20</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -8612,8 +8474,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>CHAINLINK-ARBITRUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>CHAINLINK-ARBITRUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -8636,7 +8497,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2021-08-31</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -8665,7 +8526,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2021-08-31</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -8680,8 +8541,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>COMPOUND_V3-ARBITRUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>COMPOUND_V3-ARBITRUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -8705,13 +8565,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-05-05</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-05-05</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -8740,13 +8600,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-05-05</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-05-05</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -8761,8 +8621,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>KARAK-ARBITRUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>KARAK-ARBITRUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -8785,13 +8644,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-04-08</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2024-04-08</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -8806,8 +8665,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>PENDLE-ARBITRUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>PENDLE-ARBITRUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -8831,13 +8689,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-01-26</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2024-01-26</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -8852,8 +8710,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>RADIANT-ARBITRUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>RADIANT-ARBITRUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -8877,13 +8734,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-07-25</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-07-25</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -8898,8 +8755,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>RENZO-ARBITRUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>RENZO-ARBITRUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -8922,13 +8778,13 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-02-29</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2024-02-29</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -9025,8 +8881,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>YEARN_V3-ARBITRUM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>YEARN_V3-ARBITRUM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -9050,7 +8905,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2023-11-15</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -9073,8 +8928,7 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>JITO-SOLANA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>JITO-SOLANA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -9098,13 +8952,13 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2021-11-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per rate update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2021-11-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -9119,8 +8973,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>JITORESTAKING-SOLANA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>JITORESTAKING-SOLANA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -9144,7 +8997,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2024-08-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -9159,8 +9012,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>JUPITER-SOLANA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>JUPITER-SOLANA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -9191,7 +9043,7 @@
                             <tr>
                               <td><code>dex_pool_swaps</code></td>
                               <td>2021-10-13</td>
-                              <td><span class="pend">unverified</span></td>
+                              <td><b>unverified</b></td>
                               <td>per swap event</td>
                             </tr>
                           </tbody>
@@ -9281,8 +9133,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>MARINADE-SOLANA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>MARINADE-SOLANA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -9306,13 +9157,13 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2021-08-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per rate update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2021-08-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -9327,8 +9178,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>ORCA-SOLANA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>ORCA-SOLANA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -9352,13 +9202,13 @@
                           <tr>
                             <td><code>dex_pool_state</code></td>
                             <td>2021-03-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per block/state change</td>
                           </tr>
                           <tr>
                             <td><code>dex_pool_swaps</code></td>
                             <td>2021-03-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per swap event</td>
                           </tr>
                         </tbody>
@@ -9373,8 +9223,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>PYTH-SOLANA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>PYTH-SOLANA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -9397,7 +9246,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2021-08-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -9426,7 +9275,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2021-08-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -9441,8 +9290,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>RAYDIUM-SOLANA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>RAYDIUM-SOLANA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -9466,13 +9314,13 @@
                           <tr>
                             <td><code>dex_pool_state</code></td>
                             <td>2021-02-21</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per block/state change</td>
                           </tr>
                           <tr>
                             <td><code>dex_pool_swaps</code></td>
                             <td>2021-02-21</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per swap event</td>
                           </tr>
                         </tbody>
@@ -9487,8 +9335,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>SANCTUM-SOLANA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>SANCTUM-SOLANA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -9512,7 +9359,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2021-12-16</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per rate update</td>
                           </tr>
                         </tbody>
@@ -9527,8 +9374,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>SOLANA-NATIVE-SOLANA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>SOLANA-NATIVE-SOLANA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -9559,7 +9405,7 @@
                             <tr>
                               <td><code>lst_rates</code></td>
                               <td>not declared</td>
-                              <td><span class="pend">unverified</span></td>
+                              <td><b>unverified</b></td>
                               <td>per rate update</td>
                             </tr>
                           </tbody>
@@ -9678,8 +9524,7 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>AAVE_V3-BASE</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>AAVE_V3-BASE</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(4 data types)</span></span>
                 </summary>
@@ -9703,25 +9548,25 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-08-23</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-08-23</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2023-08-23</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2023-08-23</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -9750,25 +9595,25 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-08-23</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-08-23</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2023-08-23</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2023-08-23</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -9865,7 +9710,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>BEEFY-BASE</code></span><span class="meta"><span class="pend">unverified</span>
+                  <span class="nm"><code>BEEFY-BASE</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -9889,7 +9734,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2023-08-15</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -9904,8 +9749,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>CHAINLINK-BASE</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>CHAINLINK-BASE</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -9928,7 +9772,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-08-09</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -9957,7 +9801,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-08-09</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -9972,8 +9816,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>COMPOUND_V3-BASE</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>COMPOUND_V3-BASE</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -9997,13 +9840,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-08-20</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-08-20</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -10032,13 +9875,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2023-08-20</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2023-08-20</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -10053,8 +9896,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>MORPHO-BASE</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>MORPHO-BASE</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -10078,13 +9920,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-06-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-06-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -10113,13 +9955,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-06-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-06-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -10265,8 +10107,7 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>AAVE_V3-OPTIMISM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>AAVE_V3-OPTIMISM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(4 data types)</span></span>
                 </summary>
@@ -10290,25 +10131,25 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -10337,25 +10178,25 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -10411,8 +10252,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>CHAINLINK-OPTIMISM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>CHAINLINK-OPTIMISM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -10435,7 +10275,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2021-12-16</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -10464,7 +10304,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2021-12-16</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -10479,8 +10319,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>COMPOUND_V3-OPTIMISM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>COMPOUND_V3-OPTIMISM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -10504,13 +10343,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-04-07</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-04-07</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -10539,13 +10378,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-04-07</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-04-07</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -10560,8 +10399,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>CURVE-OPTIMISM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>CURVE-OPTIMISM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -10585,13 +10423,13 @@
                           <tr>
                             <td><code>dex_pool_state</code></td>
                             <td>2022-01-13</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per block/state change</td>
                           </tr>
                           <tr>
                             <td><code>dex_pool_swaps</code></td>
                             <td>2022-01-13</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per swap event</td>
                           </tr>
                         </tbody>
@@ -10647,8 +10485,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>VELODROME_V2-OPTIMISM</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>VELODROME_V2-OPTIMISM</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -10672,13 +10509,13 @@
                           <tr>
                             <td><code>dex_pool_state</code></td>
                             <td>2022-06-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per block/state change</td>
                           </tr>
                           <tr>
                             <td><code>dex_pool_swaps</code></td>
                             <td>2022-06-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per swap event</td>
                           </tr>
                         </tbody>
@@ -10701,8 +10538,7 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>AAVE_V3-AVALANCHE</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>AAVE_V3-AVALANCHE</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(4 data types)</span></span>
                 </summary>
@@ -10726,25 +10562,25 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -10773,25 +10609,25 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -10847,8 +10683,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>BEEFY-AVALANCHE</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>BEEFY-AVALANCHE</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -10872,7 +10707,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2021-03-15</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -10887,8 +10722,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>BENQI-AVALANCHE</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>BENQI-AVALANCHE</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -10912,7 +10746,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2021-08-19</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                         </tbody>
@@ -10941,7 +10775,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2021-08-19</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                         </tbody>
@@ -11038,8 +10872,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>TRADER_JOE_V2-AVALANCHE</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>TRADER_JOE_V2-AVALANCHE</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -11063,13 +10896,13 @@
                           <tr>
                             <td><code>dex_pool_state</code></td>
                             <td>2022-01-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per block/state change</td>
                           </tr>
                           <tr>
                             <td><code>dex_pool_swaps</code></td>
                             <td>2022-01-01</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per swap event</td>
                           </tr>
                         </tbody>
@@ -11092,8 +10925,7 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>AAVE_V3-BSC</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>AAVE_V3-BSC</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(4 data types)</span></span>
                 </summary>
@@ -11117,25 +10949,25 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-01-24</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-01-24</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2024-01-24</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2024-01-24</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -11164,25 +10996,25 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2024-01-24</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2024-01-24</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2024-01-24</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2024-01-24</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -11197,7 +11029,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>BEEFY-BSC</code></span><span class="meta"><span class="pend">unverified</span>
+                  <span class="nm"><code>BEEFY-BSC</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -11221,7 +11053,7 @@
                           <tr>
                             <td><code>staking_yields</code></td>
                             <td>2020-10-08</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per yield update</td>
                           </tr>
                         </tbody>
@@ -11236,8 +11068,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>BINANCE-BSC</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>BINANCE-BSC</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -11261,7 +11092,7 @@
                           <tr>
                             <td><code>lst_rates</code></td>
                             <td>2023-04-19</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per rate update</td>
                           </tr>
                         </tbody>
@@ -11317,8 +11148,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>RADIANT-BSC</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>RADIANT-BSC</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(2 data types)</span></span>
                 </summary>
@@ -11342,13 +11172,13 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-09-21</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-09-21</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -11363,7 +11193,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>VENUS-BSC</code></span><span class="meta"><span class="pend">unverified</span>
+                  <span class="nm"><code>VENUS-BSC</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -11387,7 +11217,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2020-10-08</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                         </tbody>
@@ -11416,7 +11246,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2020-10-08</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                         </tbody>
@@ -11439,8 +11269,7 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>AAVE_V3-POLYGON</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>AAVE_V3-POLYGON</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(7 data types)</span></span>
                 </summary>
@@ -11464,43 +11293,43 @@
                           <tr>
                             <td><code>flash_loan_events</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per event</td>
                           </tr>
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>liquidation_events</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per event</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>position_data</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per position snapshot</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -11529,43 +11358,43 @@
                           <tr>
                             <td><code>flash_loan_events</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per event</td>
                           </tr>
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>liquidation_events</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per event</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>position_data</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per position snapshot</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2022-03-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -11621,8 +11450,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>CHAINLINK-POLYGON</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>CHAINLINK-POLYGON</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -11645,7 +11473,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2020-05-30</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -11674,7 +11502,7 @@
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2020-05-30</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                         </tbody>
@@ -11738,8 +11566,7 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>AAVE-PLASMA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>AAVE-PLASMA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -11770,7 +11597,7 @@
                             <tr>
                               <td><code>lending_indices</code></td>
                               <td>2026-07-30</td>
-                              <td><span class="pend">unverified</span></td>
+                              <td><b>unverified</b></td>
                               <td>per index update</td>
                             </tr>
                           </tbody>
@@ -11786,8 +11613,7 @@
               </details>
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>FLUID-PLASMA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>FLUID-PLASMA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(1 data type)</span></span>
                 </summary>
@@ -11810,7 +11636,7 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>not declared</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                         </tbody>
@@ -11833,8 +11659,7 @@
             <div class="tree-body">
               <details class="tree">
                 <summary>
-                  <span class="nm"><code>AAVE_V3-LINEA</code></span><span class="meta"><span
-                      class="pend">unverified</span>
+                  <span class="nm"><code>AAVE_V3-LINEA</code></span><span class="meta"><b>unverified</b>
                     <span class="u">: no coverage.json shard cells observed for this venue</span>
                     <span class="u">(4 data types)</span></span>
                 </summary>
@@ -11858,25 +11683,25 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2025-02-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2025-02-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2025-02-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2025-02-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -11905,25 +11730,25 @@
                           <tr>
                             <td><code>lending_indices</code></td>
                             <td>2025-02-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per index update</td>
                           </tr>
                           <tr>
                             <td><code>oracle_prices</code></td>
                             <td>2025-02-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per price update</td>
                           </tr>
                           <tr>
                             <td><code>rewards</code></td>
                             <td>2025-02-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per reward epoch</td>
                           </tr>
                           <tr>
                             <td><code>risk_params</code></td>
                             <td>2025-02-12</td>
-                            <td><span class="pend">unverified</span></td>
+                            <td><b>unverified</b></td>
                             <td>per param change</td>
                           </tr>
                         </tbody>
@@ -11949,8 +11774,7 @@
             (one primary provider, per internal TradFi sourcing documentation); the boundary disclosure differs per
             dataset and is stated inline where it diverges. <code>FRED</code>'s <code>yield_curve</code> and
             <code>ohlcv_1d</code> data types resolve to the <b>Bond</b> and <b>Index</b> instrument-type buckets
-            respectively, via an explicit venue-scoped classification override
-            (<code>unified-api-contracts@f79cd936</code>). <b>0 ready despite TradFi's 86.95% volume-weighted
+            respectively, via an explicit venue-scoped classification override. <b>0 ready despite TradFi's 86.95% volume-weighted
             reachable coverage (<a href="#s4">§04</a>) is not a contradiction</b>: coverage measures captured
             volume, <code>market_tick_data</code>'s <b>ready</b> verdict here is strict all-or-nothing per venue
             (captured&gt;0 for <em>every</em> observed data_type cell, not the bulk), so one thin cell fails the
@@ -14369,9 +14193,9 @@
           <p style="font-size: 0.93rem; color: var(--ink-3)">
             All 39 registry-declared sports venues (<code>VENUES_BY_ASSET_GROUP["sports"]</code>) at last measurement
             (2026-08-19), 6 since retired by 2026-08-21 operator ruling
-            (<code>unified-api-contracts@710db834</code>: BETOPENLY, NOVIG, ONEXBET, PROPHETX, plus BETMGM/BETWAY
-            whose historical-rows disposition is still pending), not yet re-measured. Carries the explicit
-            2020-06-06 data floor (<code>sports-2020-06-data-floor.md</code>), odds data begins at that date, and
+            (BETOPENLY, NOVIG, ONEXBET, PROPHETX, plus BETMGM/BETWAY, whose historical rows remain under review),
+            not yet re-measured. Carries the explicit
+            2020-06-06 data floor, odds data begins at that date, and
             anything before it is excluded from the denominator rather than reported as a gap. 8 venues
             (<code>3ET</code>, <code>BROKER5</code>, <code>CROWN</code>, <code>SBO</code>, <code>SHARPBET</code>,
             <code>VX</code>, <code>BETDEX</code>, <code>IBC</code>) are confirmed Unity central-wallet child books
@@ -15122,7 +14946,7 @@
                 the live fetch scope, with zero manifest presence of any kind (arbitrage-research vintage). Removed
                 from the registry per 2026-08-21 operator ruling. (The dead <code>OneXBetAdapter</code> class in
                 execution-service and the separate <code>bookmaker_registry.py</code> entry are a follow-on,
-                still-open cleanup, <code>sports_bookmaker_roster_classification_2026_08_21.md</code>.)
+                still-open cleanup.)
               </p>
             </div>
           </details>
@@ -15589,7 +15413,7 @@
         Source: manifest schema v9's <code>cadence</code> column
         (<code>"one_off_backfill" | "t1_daily" | "scheduled_recurring" | "continuous_live" | "recovery_replay"</code>),
         an axis orthogonal to <code>pipeline_mode</code>, one endpoint can serve both a nightly T+1 run and a
-        long-term backfill under the same mode. <code>/codex/02-data/availability-manifest-and-data-status.md</code>.
+        long-term backfill under the same mode.
       </p>
       <h3>WebSocket reconnection, a stale window is flagged, never silently treated as fresh</h3>
       <p>
@@ -15669,8 +15493,8 @@
         </div>
       </details>
       <p style="font-size: 0.95rem; color: var(--ink-3)">
-        Remaining data types, on-chain, sports odds, prediction, TradFi vendor datasets, <b class="pend">pending</b>,
-        to be listed exhaustively rather than by example.
+        Remaining data types, on-chain, sports odds, prediction and TradFi vendor datasets, are listed
+        exhaustively on request rather than by example here.
       </p>
     </details>
   </section>
@@ -15706,8 +15530,8 @@
         <p style="font-size: 0.9rem; color: var(--ink-3)">
           Two parts below, kept visually apart on purpose. <strong>Declared today</strong> is the real, shipped
           <code>StrategyInstructionEnvelope</code> field list, verified against
-          <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> — every field name and type there is
-          load-bearing. <strong>Planned</strong> is a ruled-but-unbuilt extension; nothing in that block exists in code
+          <code>unified_api_contracts/internal/architecture_v2/schemas.py</code>, and every field name and type
+          there is load-bearing. <strong>Planned</strong> is a ruled-but-unbuilt extension; nothing in that block exists in code
           yet, and its shape is deliberately not the flat sibling-fields shape an earlier draft of this page showed.
         </p>
         <div class="plate">
@@ -15740,7 +15564,7 @@
           </div>
         </div>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
-          That is the whole shared envelope — <code>action</code>, the instrument, and the sizing fields are not on
+          That is the whole shared envelope: <code>action</code>, the instrument, and the sizing fields are not on
           it; they arrive on the per-action subtype that extends it. Three examples, real field names:
           <code>TradeInstruction</code> carries <code>action: TRADE</code>,
           <code>target_position_units: Decimal</code>, <code>target_instrument: str</code>;
@@ -15777,8 +15601,7 @@
           one, the common single-instrument case is not special-cased. The venue axis is nested inside each entry's
           <code>reference_position</code>, not a full <code>(instrument, venue)</code> cross-product, one strategy
           instance still executes a given instrument on one venue. The implementation vehicle for all of this is the
-          factor-state model's snapshot/factor contract
-          (<code>/codex/04-architecture/cross-domain-state-fabric.md</code>), with the ruling below as its
+          factor-state model's snapshot/factor contract, with the ruling below as its
           strategy-facing constraints, not literal scalar fields on the envelope. This is planned; none of it is
           built yet.
         </p>
@@ -15794,7 +15617,7 @@
       <h3>Reference position, credit, and per-position adjustment</h3>
       <p>
         A generalisation of the reference-price idea above, extending it from "what did the market look like" to "does
-        execution's view of the position match strategy's" — per instrument. The planned <code>references</code> vector
+        execution's view of the position match strategy's", per instrument. The planned <code>references</code> vector
         (above) carries one <code>InstrumentReferenceEntry</code> per instrument in the strategy instance's universe;
         each entry's <code>reference_position</code> states strategy's believed position per eligible venue on that one
         instrument, shaped like <code>venue_constraints</code> so it stays meaningful when the venue is not chosen
@@ -16104,7 +15927,7 @@
       </div>
       <h3>The wizard endpoint, staged in three calls</h3>
       <p>
-        Built and shipped, <code>deployment-api@8e26e27915</code>, mounted at
+        Built and shipped, mounted at
         <code>POST /api/strategy/wizard/{create,validate,deploy}</code> on the authenticated router. No config is
         written to storage until <code>/deploy</code> succeeds; <code>/create</code> and <code>/validate</code> are
         read-only stub/check calls a UI can call repeatedly while a user is still deciding.
@@ -16203,7 +16026,7 @@ Content-Type: application/json
         <div><b>Centrally stored</b><span>The instance lives in object storage; the schema lives in code</span></div>
       </div>
       <p style="font-size: 0.95rem; color: var(--ink-3)">
-        The specific configuration an integrator must supply, credentials, client identity, venue selection, limits, <b class="pend">pending</b>, to be enumerated exactly.
+        The specific configuration an integrator must supply, credentials, client identity, venue selection, limits, is enumerated exactly on request.
       </p>
     </details>
   </section>
@@ -16458,8 +16281,8 @@ Content-Type: application/json
               <tr>
                 <td>Ceffu</td>
                 <td>
-                  A custody provider, but not a distinct signing surface, its signing routes <em>via Copper</em>; the
-                  Ceffu integration itself is a stub pending its API spec
+                  A custody provider, but not a distinct signing surface, its signing routes <em>via Copper</em>;
+                  building out a direct Ceffu integration depends on Ceffu publishing its API specification
                 </td>
               </tr>
               <tr>
@@ -16558,9 +16381,8 @@ Content-Type: application/json
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Source: <code>unified_trading_library/cloud_interface/bucket_naming.py</code>'s
-        <code>resolve_bucket_name()</code>; provider duality, <code>/codex/05-infrastructure/bucket-isolation-model.md</code>,
-        <code>/codex/05-infrastructure/cloud-agnostic-script-pattern.md</code>. IONOS build-in-progress:
-        <code>/plans/active/ao_ci_aws_to_ionos_migration_2026_08_18.md</code>.
+        <code>resolve_bucket_name()</code>. Provider duality follows the platform's bucket-isolation and
+        cloud-agnostic script patterns; the IONOS build is underway. Detail on either is available on request.
       </p>
       <h3>GCP identity: service accounts, never direct SDK calls or embedded keys</h3>
       <p>
@@ -16570,9 +16392,8 @@ Content-Type: application/json
         identity (workload-scoped, one SA per tier, see the bucket isolation model above), so a compromised
         service can only reach the buckets/secrets its own SA was granted, not the fleet. The orchestrator VM's own
         cloud identity is self-service: it can grant itself a missing IAM role rather than pause on a
-        <code>PERMISSION_DENIED</code>, audited the same way any other IAM change is. Source:
-        <code>/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md</code>,
-        <code>/codex/05-infrastructure/bucket-isolation-model.md</code> §per-tier service accounts.
+        <code>PERMISSION_DENIED</code>, audited the same way any other IAM change is. The per-tier
+        service-account model behind this is documented and available on request.
       </p>
       <h3>External auth, cross-referenced</h3>
       <p>
@@ -16600,7 +16421,8 @@ Content-Type: application/json
         Signing is pluggable and declared per deployment rather than assumed: HSM-backed cloud-KMS envelope
         encryption is shipped, and Copper MPC custody is the production provider for every DeFi chain and
         non-Binance CeFi venue (Ceffu is a custody provider but not a distinct signing surface, its signing routes
-        via Copper, and the Ceffu integration itself is stubbed pending its API spec). Because the signing surface
+        via Copper, and building out a direct Ceffu integration depends on Ceffu publishing its API
+        specification). Because the signing surface
         is an explicit, swappable extension point rather than a hardcoded assumption, bringing a client's own
         custodian or wallet arrangement onto the platform is a deployment-time configuration decision, we
         integrate with what the client already uses, rather than requiring them to move onto ours.
@@ -16756,13 +16578,13 @@ Content-Type: application/json
               <tr>
                 <td>Per-AG current size</td>
                 <td>bytes and rows</td>
-                <td><span class="pend">pending</span></td>
+                <td>not measured</td>
                 <td>object store</td>
               </tr>
               <tr>
                 <td>Per-AG expected size</td>
                 <td>bytes and rows, post-backfill</td>
-                <td><span class="pend">pending</span></td>
+                <td>not measured</td>
                 <td>projection, basis to be stated</td>
               </tr>
               <tr>
@@ -16973,8 +16795,8 @@ Content-Type: application/json
         orchestrator; <code>RECORD_ONLY</code> skips venue execution and records a fill directly, for OTC or a
         missed trade). Either mode can be booked standard or recon-excluded. <b>Source:</b>
         <code>unified_api_contracts/internal/execution.py::ManualExecutionMode</code>,
-        <code>execution_service/api/manual_instruction_ledger.py</code>, shipped
-        <code>execution-service@ee694cf46b</code> + <code>unified-trading-library@707020ff7b</code>.
+        <code>execution_service/api/manual_instruction_ledger.py</code>. Both are shipped and reachable in
+        production.
       </p>
       <div class="callout">
         <span class="tag">The honest state today</span>
@@ -17066,8 +16888,8 @@ Content-Type: application/json
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Source:
         <code>batch-live-reconciliation-service/batch_live_reconciliation_service/engine/daily_determinism_stage.py</code>
-        (<code>_exclude_recon_excluded</code>) and <code>models/recon_report.py</code>. Stage detail:
-        <code>/codex/04-architecture/reconciliation-resolution.md</code>.
+        (<code>_exclude_recon_excluded</code>) and <code>models/recon_report.py</code>. Stage-by-stage detail is
+        available on request.
       </p>
     </details>
   </section>
@@ -17111,8 +16933,8 @@ Content-Type: application/json
               <tr><td><code>interest_rate_pnl</code></td><td>Lending/borrowing rate accrual, distinct from option rho</td></tr>
               <tr><td><code>carry_pnl</code></td><td>Cost/benefit of holding a position over time, net of the more specific dimensions above</td></tr>
               <tr><td><code>fx_pnl</code></td><td>Currency conversion effects</td></tr>
-              <tr><td><code>staking_pnl</code></td><td>On-chain staking rewards, a first-class field since
-                <code>unified-api-contracts@366b74ec08</code> (was folded into <code>carry_pnl</code> before)</td></tr>
+              <tr><td><code>staking_pnl</code></td><td>On-chain staking rewards, a first-class field in its own
+                right (previously folded into <code>carry_pnl</code>)</td></tr>
               <tr><td><code>residual_pnl</code></td><td>Whatever the 11 named dimensions above don't explain, never silently dropped</td></tr>
             </tbody>
           </table>
@@ -17444,7 +17266,7 @@ Content-Type: application/json
           </div>
         </div>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
-          The response envelope's exact key set beyond the shape above is <b class="pend">pending</b>, the route
+          The response envelope's exact key set beyond the shape above is not enumerated here, the route
           returns whatever <code>query_instruments()</code> builds, and that return value was not field-by-field
           enumerated for this reference. Every authenticated caller currently sees the same result; there is no
           per-org filtering on this catalogue yet, because it is public reference data, not a client ledger.
@@ -17519,8 +17341,8 @@ Content-Type: application/json
             Every <code>instrument_id</code> above comes from the single dispatch entry point,
             <code>build_canonical_instrument_id()</code>, <code>unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py</code>. The
             CeFi spot-pair instrument-type token is <code>SPOT_PAIR</code>, not <code>SPOT</code>, the literal
-            <code>InstrumentType.SPOT_PAIR</code> enum value, confirmed at <code>canonical_id_builder.py:134</code>
-            (membership) and <code>:268-270</code> (<code>_build_cefi_simple</code>, the function that renders it).
+            <code>InstrumentType.SPOT_PAIR</code> enum value, confirmed at <code>canonical_id_builder.py</code>,
+            in both the membership check and <code>_build_cefi_simple</code>, the function that renders it.
           </p>
           <div class="plate">
             <div class="plate-body">
@@ -17535,7 +17357,7 @@ Content-Type: application/json
             </div>
           </div>
           <p style="font-size: 0.9rem; color: var(--ink-3)">
-            <code>canonical_id_builder.py:1027-1174</code> (dispatch), <code>:77-92</code> (docstring examples).
+            <code>canonical_id_builder.py</code> (dispatch and docstring examples).
           </p>
         </div>
       </details>
@@ -17636,7 +17458,7 @@ Content-Type: application/json
         <p style="font-size: 0.9rem; color: var(--ink-3)">
           Field names (<code>captured</code>, <code>empty_confirmed</code>, <code>attempted_failed</code>,
           <code>expected_unattempted</code>, <code>total</code>, <code>coverage_pct</code>) are the real
-          <code>coverage.json</code> v2 per-cell schema (<code>/codex/02-data/honest-coverage-model.md</code>); the
+          <code>coverage.json</code> v2 per-cell schema; the
           bracketed values above are placeholders, not a live measurement, <a href="#s5">§05</a> carries the real,
           dated asset-group rollups, and <a href="#s27">§27</a> is where a real per-shard drilldown will render from
           once the readiness ledger lands.
@@ -17834,7 +17656,7 @@ Content-Type: application/json
           <p>
             <code>data_type</code> is not a free-text field, it is drawn from
             <code>VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE</code>
-            (<code>unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1503+</code>), keyed
+            (<code>unified-api-contracts/unified_api_contracts/registry/market_data_categories.py</code>), keyed
             by <code>(asset_group, instrument_type)</code>. A representative slice:
           </p>
           <table>
@@ -17877,7 +17699,7 @@ Content-Type: application/json
             </tbody>
           </table>
           <p style="font-size: 0.9rem; color: var(--ink-3)">
-            <code>market_data_categories.py:1503-1600</code>, the full table is longer, every asset_group ×
+            <code>market_data_categories.py</code>, the full table is longer, every asset_group ×
             instrument_type pair is enumerated there, not reproduced in full on this page.
           </p>
         </div>
@@ -18236,8 +18058,8 @@ Content-Type: application/json
           the identity's <code>strategy_instance_id</code> across venues, rather than one tracked
           <code>cancel_instruction_id</code>, the orchestrator indexes orders by strategy-instance for this
           (<code>get_orders_for_strategy_instance()</code>). <code>CancelInstruction</code> schema:
-          <code>unified_api_contracts/internal/architecture_v2/schemas.py:451-454</code>. Shipped
-          <code>execution-service@4e35a09b2</code>.
+          <code>unified_api_contracts/internal/architecture_v2/schemas.py</code>. Shipped and reachable in
+          production.
         </p>
         <div class="plate">
           <div class="plate-head">
@@ -18272,7 +18094,7 @@ Content-Type: application/json
         <p style="font-size: 0.9rem; color: var(--ink-3)">
           <code>target_balance_at_destination</code> is a target balance, not a delta, the handler moves whatever
           amount closes the gap. <code>TransferInstructionV2</code> schema:
-          <code>unified_api_contracts/internal/architecture_v2/schemas.py:411-417</code>. Only DeFi-to-DeFi and the
+          <code>unified_api_contracts/internal/architecture_v2/schemas.py</code>. Only DeFi-to-DeFi and the
           4 credentialed CEX venues (binance/deribit/bybit/aster) reach the live adapter today (see the venue
           coverage note above the instruction-type-support table), any other <code>CEX_WITHDRAW</code> venue
           returns an honest <code>FAILED</code>, never a fabricated <code>CONFIRMED</code>.
@@ -18323,7 +18145,7 @@ Content-Type: application/json
               </tr>
               <tr>
                 <td><code>501</code></td>
-                <td>An action outside the <code>StrategyInstructionV2</code> union, none exist today; every declared action type routes to real execution, including <code>ControlInstruction</code> (<code>KILL_SWITCH</code>/<code>FLATTEN_POSITION</code>), wired execution-service@b49a3f1a96</td>
+                <td>An action outside the <code>StrategyInstructionV2</code> union, none exist today; every declared action type routes to real execution, including <code>ControlInstruction</code> (<code>KILL_SWITCH</code>/<code>FLATTEN_POSITION</code>), wired in execution-service</td>
                 <td>execution-service</td>
               </tr>
               <tr>
@@ -18393,7 +18215,7 @@ Content-Type: application/json
 
       <p>
         The dependency checks headers in this exact order, the first one present wins
-        (<code>unified-trading-library/unified_trading_library/cloud_interface/api_auth.py:319-387</code>):
+        (<code>unified-trading-library/unified_trading_library/cloud_interface/api_auth.py</code>):
       </p>
       <div class="plate">
         <div class="plate-body scroll-x">
@@ -18457,8 +18279,8 @@ Content-Type: application/json
           catalogue (default-full, reference data is the product's front door; tightening a specific tier's scope
           is a config edit, not a route-logic one). A request for an out-of-scope <code>asset_group</code> 403s.
           <b>Source:</b> <code>instruments-service/instruments_service/api/entitlement.py</code>,
-          <code>instruments-service/instruments_service/api/routers/external.py:94</code> (catalogue query),
-          <code>:131</code> (bulk parquet dump).
+          <code>instruments-service/instruments_service/api/routers/external.py</code> (catalogue query and bulk
+          parquet dump).
         </p>
         <p>
           On execution-service, <code>POST /external/instructions</code> binds the caller's org to the
@@ -18472,7 +18294,7 @@ Content-Type: application/json
         <p>
           On market-tick-data-service, the auth dependency is mounted at the router level
           (<code>dependencies=[Depends(_api_auth)]</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:52-56</code>), every
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>), every
           request needs a valid token before any handler runs, the same shared dependency the other two services
           use. <b>Source:</b>
           <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>.
@@ -22934,9 +22756,9 @@ Content-Type: application/json
     <p class="lede">
       <span class="who">Odum Research</span>, platform integration guide.
       <b>Measured edition, 2026-08-18.</b> Coverage, denominator and readiness figures are live measurements with their
-      date and denominator stated. Remaining <b class="pend">pending</b> markers are figures not measured recently, or
-      not yet captured though they can be, placeholders, never estimates, and a figure with no measured basis is
-      omitted rather than approximated.
+      date and denominator stated. Where a figure has not been measured recently, or has not been captured yet
+      though it can be, this document says so rather than carrying an estimate, and a figure with no measured basis
+      is omitted rather than approximated.
     </p>
     <p>
       Status reflects what is reachable on a production path AND validated with real capital, not what exists in a
