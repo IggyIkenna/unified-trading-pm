@@ -158,6 +158,57 @@ up serving it.
       (`slot_account_attribution.py`'s call must stay unresolved — its whole purpose is
       DERIVING the account from a transcript, so passing one in would be circular.)
 
+## 2026-08-22 — the WRITE side: the boot prompt itself carried the wrong model (SHIPPED)
+
+Every fix above corrects a READ/display/pricing site. Nobody had touched the **boot prompt**,
+which is not display — it is what the WORKER is told it is. Found live from a slot-24
+investigation (operator: "account id says glm-5-turbo but the model is claude-sonnet-5").
+
+**Measured on the live process** (pid 4103216, slot 24): cmdline carried **no `--model` flag
+at all**, `ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic`, `ANTHROPIC_MODEL=glm-5-turbo`
+— while its boot prompt said `MODEL=claude-sonnet-5`. Root cause: `autospawn._do_spawn`
+derived `model or slot.model or "sonnet"` **twice, ~200 lines apart** — line 3053 fed it
+through `model_flag_for_provider` (correctly suppressing the flag for non-Anthropic), line
+2840 fed the raw guess straight into the prompt. Of the three terms, `slot.model` is the
+previous occupant's model (a stale cache) and `"sonnet"` is wrong for every non-Anthropic
+account.
+
+Second, independent defect found in the same pass: `effective_model_for_telemetry`
+reconstructed non-Anthropic models as `f"{provider}-{variant}"` from operator-declared
+`accounts.json` metadata. **Audited against the live registry: 15 of 16 non-Anthropic
+accounts disagreed with their own env file** — and the reconstruction emitted a THIRD
+vocabulary (`deepseek-pro`, `glm-5.2`) matching neither the env files nor `model_pricing`'s
+rate cards, so display and billing named the same session differently.
+
+- [x] [BACKEND] P1. Resolve the spawn model ONCE, from the account's own env file
+      (`ANTHROPIC_MODEL`) — the single thing that decides what actually runs — and feed both
+      the boot prompt and the CLI flag from it; add `PROVIDER` to the session vars so a
+      worker self-checking its tier (CLAUDE.md § Model tier) is told the truth. New
+      `accounts.runtime_model_for_account()` (mtime-cached so `creds_env_poller` rotations
+      land without a restart); `{provider}-{variant}` survives only as a last-resort fallback
+      that now logs once per account. — DONE 2026-08-22, `agent-orchestrator@8d19f986f2`.
+      Evidence: full `quality-gates.sh` PASSED (5401 passed/5 skipped, coverage 86.2067% vs
+      85.8559% baseline — ratchet up, basedpyright 0 errors, 468 dashboard tests). New
+      `tests/test_runtime_model_resolution.py` (14 cases) writes REAL env files — the existing
+      fixtures declare no `oauth_token_env_file`, so they take the fallback and would have
+      proven nothing. Verified against the live registry: **11 labels corrected**
+      (`codex-luna`→`gpt-5.6-luna`, `deepseek-v4-pro`→ real name, `glm-5.2`→`glm-5.3`,
+      `ollama-gemma3-27b`→`gemma-self-hosted`, 7 gemini), 8 Anthropic accounts unchanged.
+
+- [ ] [OPERATOR] P1. **4 gemini accounts have NO env file on the planning VM** —
+      `gemini-3-5-flash-lite-proj4`/`proj5`, `gemini-3-7-flash-proj4`/`proj5`. Every spawn onto
+      one 503s on auth. `gemini-3-5-flash-lite-proj5` is **`account_status: healthy` and
+      therefore selectable right now** — a live landmine. Needs `claude setup-token` (an
+      interactive OAuth flow, not scriptable) or the accounts re-disabled. Extends the
+      proj4-only finding in `/plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md`
+      — proj5 is new and was hidden until the fix above stopped fabricating a label for them.
+
+- [ ] [BACKEND] P3. `_do_spawn` still re-derives `effort or slot.effort or "medium"` and
+      `thinking or slot.thinking or "on"` in the same two-places-apart shape the model field
+      just had (`render_vars` vs the `tmux_spawn.spawn` call). Same class, lower stakes —
+      neither is account-determined — but collapse them onto the single resolution too.
+      Repo: agent-orchestrator.
+
 ## Previously deferred (both now resolved above)
 
 - [x] [BACKEND] P1-SUPERSEDED by the resolved entry above (kept verbatim for the record —
