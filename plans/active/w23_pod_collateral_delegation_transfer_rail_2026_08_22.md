@@ -86,6 +86,19 @@ assigned_role: backend_engineer
   upstream code needs to be tested against realistic PENDING→CONFIRMED/FAILED timing before POD's real endpoint
   exists.
 
+- 2026-08-22 — Section B item 1 shipped (execution-service@fbde066bf3): the duck-typed
+  `execute_collateral_delegation` interface + `TransferHandler._get_collateral_delegation_execute()` getattr-dispatch
+  resolver + its unit tests. **Scope note for whoever picks up item 2 next**: item 1's title ("Add
+  `execute_collateral_delegation` to `TransferAdapter`-implementing adapters") reads broadly, but items 1-5 in
+  Section B overlap enough (all plausibly touch `transfer_handler.py`/`adapter.py`) that landing all 5 in one todo
+  would step on items 3-5's own file ownership (`live_pod_adapter.py`, `mock_pod_adapter.py`,
+  `factory.py`'s `CompositeTransferAdapter`/`create_transfer_adapter`) before they're built. Item 1 was scoped
+  narrowly to exactly what's independently shippable + testable today: the Protocol-comment note (mirrors BRIDGE's)
+  and the handler-side getattr resolver (mirrors `_get_bridge_execute`) — proven via a fake adapter in tests, not a
+  real one (no real adapter exists yet). Item 2 (`_execute_custodian_delegation_transfer` + `_dispatch_transfer`
+  routing) should call `self._get_collateral_delegation_execute(instruction)` — already built — the same way
+  `_execute_bridge_transfer` calls `self._get_bridge_execute(instruction)`.
+
 ---
 
 ## Section A — UAC schema (unified-api-contracts)
@@ -118,7 +131,7 @@ assigned_role: backend_engineer
 
 ## Section B — execution-service adapter (mock-first)
 
-- [ ] [BACKEND] P0. **Add `execute_collateral_delegation` to `TransferAdapter`-implementing adapters via the SAME
+- [x] ✅ [BACKEND] P0. **Add `execute_collateral_delegation` to `TransferAdapter`-implementing adapters via the SAME
       duck-typed-method pattern BRIDGE uses** (`engine/transfers/adapter.py`'s comment above `get_transfer_status`
       explains why BRIDGE was NOT added to the `Protocol` itself — a required new method would break existing fake
       `TransferAdapter` test doubles elsewhere in the suite). Signature:
@@ -126,7 +139,16 @@ assigned_role: backend_engineer
       FundTransferContext | None, idempotency_key: str | None) -> TransferResult`. Dispatch it from
       `TransferHandler` via `getattr(self._adapter, "execute_collateral_delegation", None)` exactly mirroring
       `TransferHandler._execute_bridge_transfer`'s pattern — an adapter without it fails loud with an honest "adapter
-      does not support collateral delegation" `TransferResult`, never a silent success.
+      does not support collateral delegation" `TransferResult`, never a silent success. — execution-service@fbde066bf3.
+      Shipped: the `adapter.py` Protocol-comment extended with the exact signature above +
+      `TransferHandler._get_collateral_delegation_execute()` (getattr-based resolver, mirrors `_get_bridge_execute`
+      exactly) + `tests/unit/test_transfer_handler_collateral_delegation_dispatch.py` (adapter-with-support resolves
+      the bound method + is actually invokable; adapter-without-support fails loud with the honest message, never
+      raises). Scope boundary (see Progress Log): the orchestration method that CALLS this resolver
+      (`_execute_custodian_delegation_transfer`, item 2 below) and the concrete adapters that implement the method
+      (items 3-5 below) are NOT part of this todo — this todo only lands the duck-typed interface + its dispatch
+      resolver, so `getattr(self._adapter, "execute_collateral_delegation", None)` has somewhere real to resolve
+      TO once items 3-5 land.
 - [ ] [BACKEND] P0. **New `TransferHandler._execute_custodian_delegation_transfer` method**
       (`execution_service/engine/handlers/transfer_handler.py`, mirroring `_execute_bridge_transfer` at line ~568) —
       routed from `_resolve_transfer_type`/`_dispatch_transfer` when the resolved `BusTransferType` is
