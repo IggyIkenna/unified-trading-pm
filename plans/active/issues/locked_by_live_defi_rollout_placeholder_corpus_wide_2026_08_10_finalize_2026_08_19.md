@@ -55,22 +55,24 @@ source: >-
       reachable on `origin/live-defi-rollout` (`git merge-base --is-ancestor de854a729f origin/live-defi-rollout`)
       and confirmed live at `parity_watchdog.py:111` (emits an empty `locked_by:` field). **However the "zero NEW
       hits" re-verification did NOT pass** — see the new todo below.
-- [ ] [SCRIPT] P2. **Recurrence found 2026-08-22**: `plans/active/issues/dp_live_004_bybit_futures_book_snapshot_unproductive_2026_08_21.md`
-      (`author: data-pipeline-failure`, created 2026-08-21T04:03:11Z — AFTER the parity_watchdog fix landed) still
-      carries `locked_by: live-defi-rollout`. `parity_watchdog.py` was only ONE of at least two doc-creation
-      writers stamping this placeholder — this doc's author tag (`data-pipeline-failure`) does not match any
-      script found in this repo (`grep -rl "author: data-pipeline-failure"` over every `.py` in every cloned repo
-      in this slot returns zero hits), so the writer is either cross-repo (a data-pipeline-alerts monitor not
-      cloned in this workspace) or template-copied from `plans/PLAN_FORMAT.md`'s own literal example frontmatter
-      (lines 131/211/771 all show `locked_by: live-defi-rollout` as example text, itself a candidate root cause —
-      any doc-creation code/agent that copies that example verbatim reproduces the bug). Find the actual writer
-      (grep the data-pipeline-alerts/monitor codebase and/or the escalation-doc-creation path for
-      `data-pipeline-failure`) and patch it to emit an empty `locked_by:`; consider also fixing PLAN_FORMAT.md's
-      example values to a non-literal placeholder (e.g. `<actor> since <ts>`) so future copy-paste can't reproduce
-      this. (2 already-existing docs — `dp_fetch_009_cefi_liquidations_batch_aster_2026_08_20.md` and
-      `manifest_hygiene_red_changed_all_2026_08_20.md` — also carry the placeholder but predate the fix commit
-      [2026-08-20T08:03-08:24Z, fix landed 17:47Z same day], so they are NOT new evidence of recurrence; leave them
-      for the ordinary corpus sweep.)
+- [x] ✅ [SCRIPT] P2. **Recurrence found 2026-08-22** — resolved 2026-08-22 (slot 4): grepped every repo cloned in
+      this slot for a second literal `"locked_by: live-defi-rollout"` writer. Found ONE genuine, still-live
+      instance — `deployment-service/deployment_service/data_pipeline_monitors/escalation_issue_writer.py:158`
+      (`write_issue_doc`, `author: data-pipeline-fleet-monitor`) — a DIFFERENT writer from `parity_watchdog.py`,
+      confirming the doc's own hypothesis that more than one writer carried this bug. Patched it to emit an empty
+      `locked_by:` (matching the already-shipped `parity_watchdog.py` precedent) and updated its regression test
+      (`tests/unit/test_escalation_issue_writer.py`) to assert `locked_by is None`. Shipped:
+      `deployment-service@384c7263ff` (QG green, ancestry-verified on `origin/live-defi-rollout`).
+      **Author-tag caveat**: this writer's `author:` field reads `data-pipeline-fleet-monitor`, not the
+      `data-pipeline-failure` tag on the actual recurrence doc (`dp_live_004_...`) — so this fix closes a real,
+      independently-confirmed instance of the bug class but is not proven to be the SPECIFIC writer of that one
+      doc. No third writer with the `data-pipeline-failure` author tag was found anywhere in this slot's cloned
+      repos (deterministic code or otherwise), which is consistent with the doc's alternate hypothesis: an
+      AO-dispatched `data_pipeline_failure` agent hand-composing the doc's frontmatter and copy-pasting
+      `PLAN_FORMAT.md`'s own literal example value. Closed that vector too: `plans/PLAN_FORMAT.md` (this repo)
+      lines 131/211/771 changed from the literal `locked_by: live-defi-rollout` example to a non-literal
+      `<branch-name>` placeholder with an explicit "do NOT copy this literally" comment, per the todo's own
+      suggested wording.
 - [ ] [REVIEW] P3. Once the todo above lands (verified via a fresh-doc creation + repeat grep showing zero NEW
       hits), THEN re-verify the source doc `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`'s
       own `locked_by:`/`locked_since:` are clear before any further archival action (it is itself part of the
@@ -90,3 +92,10 @@ source: >-
   todo into three: the parity_watchdog verification (done), a new todo to hunt the second writer, and a
   re-sequenced final re-check of the source doc's own lock state. Did not touch the already-archived source doc's
   archival status — that determination stands unless the new writer-hunt todo surfaces reason to revisit it.
+- **2026-08-22** (slot 4, worker/review): found + fixed a second confirmed writer,
+  `deployment-service/deployment_service/data_pipeline_monitors/escalation_issue_writer.py` (shipped
+  `deployment-service@384c7263ff`), and closed the PLAN_FORMAT.md copy-paste vector the todo itself flagged as an
+  alternate root cause (`unified-trading-pm` doc-only commit, this same push). Could not identify a writer whose
+  `author:` tag literally reads `data-pipeline-failure` — see the todo's resolution note for the caveat. The
+  remaining `[REVIEW] P3` re-verification todo (fresh-doc + zero-NEW-hits repeat grep, then re-check the source
+  doc's own lock state) is unblocked and next.

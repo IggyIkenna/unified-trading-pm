@@ -128,7 +128,7 @@ thinking_tier: max | high | medium | mechanical | off | none # optional — exte
 
 # Plan-specific optional
 last_updated: YYYY-MM-DD
-locked_by: live-defi-rollout | NA
+locked_by: <branch-name> | NA # e.g. live-defi-rollout — do NOT copy this literally; leave EMPTY unless actively locked
 locked_since: YYYY-MM-DD
 context_scope: [/codex/<section>/<ssot-doc>.md, /plans/active/<related-doc>.md] # elective minimal reading-list; see doc-frontmatter-schema.md — populate this YOURSELF at authoring time (task_template.md §2a), don't just leave it for the next /context-scout sweep
 depends_on: [epic-slug, plan-slug-YYYY_MM_DD] # prerequisites; enables ordering + gates archival
@@ -208,7 +208,7 @@ parent: master_to_live_defi_2026_05_23 # always the cutover master (until cutove
 owner: ikenna | harsh | claude-code
 created: YYYY-MM-DD
 last_updated: YYYY-MM-DD
-locked_by: live-defi-rollout
+locked_by: <branch-name> # e.g. live-defi-rollout — do NOT copy this literally; leave EMPTY unless actively locked
 locked_since: YYYY-MM-DD
 asset_group: cefi | defi | tradfi | sports | prediction | cross-cutting | ao | ci | infrastructure | ui | meta
 related_plans:
@@ -673,8 +673,8 @@ master_to_live_defi_2026_05_23.md   ← cutover master (dated, one-shot; archive
         │       └─ row picked → audit conducted → ↓
         │
         └── plans/audit/results/<slug>_YYYY_MM_DD.md  ← AUDIT DOCS — timestamped review output
-                │
-                └─ findings → upgrade existing active plans OR spawn new ones → epic absorbs them
+        │
+        └─ findings → upgrade existing active plans OR spawn new ones → epic absorbs them
 ```
 
 - **Epics** are everlasting planning orchestrators — one per persistent code surface; no date suffix; no `estimate_*`
@@ -768,8 +768,9 @@ Plans that are actively being implemented can be locked to prevent premature arc
 
 ### Frontmatter fields:
 ```yaml
-locked_by: live-defi-rollout   # Branch actively implementing this plan
-locked_since: 2026-03-16       # ISO date when lock was set
+locked_by: <branch-name>       # e.g. live-defi-rollout — Branch actively implementing this plan; leave EMPTY/absent
+# unless actively locked — do NOT copy the example value literally
+locked_since: <YYYY-MM-DD>     # ISO date when lock was set
 ````
 
 ### Rules:
