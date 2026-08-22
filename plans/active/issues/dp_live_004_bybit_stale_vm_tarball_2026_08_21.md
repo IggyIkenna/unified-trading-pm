@@ -163,6 +163,20 @@ external action and is not performed by this escalation without that decision.
 
 ## Progress Log
 
+- **2026-08-22 (data_pipeline_failure escalation `agt-ebe5eb`, slot 31)**: DP-LIVE-004 re-fired again for the OLD VM
+  (`mtds-live-cefi-consolidated-20260817-025031`), venue BYBIT-FUTURES, data_type `book_snapshot_5` (last attempt
+  0.2h old). `gcloud compute instances list` confirms both VMs still `RUNNING` (old since 2026-08-16T19:50:40-07:00,
+  replacement since 2026-08-21T13:07:39-07:00) — unchanged from the immediately-prior escalation. SSH into the OLD
+  VM confirms `_log_subscribe_ack` grep count 0 in both connector files (expected — this VM predates even the
+  linear-instrument filter, per the earlier diagnosis) and the live log tail shows only routine `ManifestWriter`/
+  `RESOURCE_SAMPLE` lines, no subscribe/ack activity. `GET /api/escalations/active` shows only this escalation as
+  currently dispatched (the blocked-question mechanism is a separate surface from this queue, so its live status
+  couldn't be re-checked from here). No new root cause — identical stalled state to `agt-521494`/`agt-81aea5` above.
+  Did **not** re-file a duplicate blocked-question: `BLK-9e8ffbb2` (filed by `agt-521494`, recommending a fresh
+  `mtds-live-cefi-consolidated-*` relaunch with `FORCE=true` to pick up `market-tick-data-service@efd0e788`) is
+  already standing and unanswered; a second identical ask would only add noise, not information, per the same
+  reasoning `agt-81aea5` applied. Did not relaunch or decommission any VM myself (an unresolved operator decision,
+  not mine to make unilaterally). No code/infra/manifest changes made this pass.
 - **2026-08-22 (data_pipeline_failure escalation `agt-521494`, slot 33)**: DP-LIVE-004 re-fired for the OLD VM
   (`mtds-live-cefi-consolidated-20260817-025031`), venue BYBIT-FUTURES, data_type `book_snapshot_5` (last attempt
   0.4h old). `gcloud compute instances list` confirms both VMs still `RUNNING` (old since 2026-08-16T19:50:40-07:00,
