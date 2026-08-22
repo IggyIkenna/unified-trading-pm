@@ -150,28 +150,68 @@ coverage there too.
    consolidator-side data-loss risk distinct from a simple cadence/threshold mismatch. Not directly evidenced this
    session; flagged as a hypothesis only.
 
+## Reconciliation (2026-08-22, direct evidence — see Progress Log)
+
+**Both hypotheses are TRUE, each explaining a different part of the puzzle — not either/or as originally framed.**
+
+- **Part (a) — does DEFI raw-tick capture data newer than 2025-05-31 exist?** YES, but with a critical nuance the
+  original framing missed: it exists in the **canonical** (merged, through at least 2026-08-13 per the 2026-08-17
+  DuckDB read — millions of rows, e.g. `UNISWAP_V3`/`ETHEREUM`/`dex_pool_swaps` = 1,768,976 rows), but a **direct,
+  bounded, filtered live query of the RAW per-VM shard objects today (2026-08-22)** — `service_name=market-tick-data-service`
+  (the actual `_MTDS_SERVICE_NAME` constant; NOT the abbreviation "MTDS" the earlier framing used) + `data_type=dex_pool_swaps`
+  + `date>=2025-05-31` — returns **ZERO rows**. This is EXPECTED, not a contradiction: per-VM shards are pruned once
+  merged into canonical (`manifest-consolidator-ssot.md`), and the 3 DEFI collect-* Cloud Scheduler jobs that write
+  this exact `(service_name, data_type)` pair (`uts-prod-mtds-collect-dex-pools-cron` et al.) have been **PAUSED since
+  2026-07-18** (`defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md`) — so there is genuinely nothing NEW
+  for that specific `(service, data_type)` to sit unmerged in per-VM shards. A broader unfiltered
+  `date>=2025-05-31` per-VM-shard query DOES find 2,485 rows across 213 unique dates through **2026-08-22** (today) —
+  but all under OTHER service/data_type pairs (`instruments-service` enumerators, `market-data-processing-service`'s
+  own `dex_pool_swaps`-named candle OUTPUT — confirmed legitimate, same canonical name as its raw MTDS input, per the
+  2026-08-17 doc's own root-cause finding — plus a small `market-tick-data-service`/`lst_rates` trickle). **Hypothesis
+  1 (nothing new to merge) is CONFIRMED for the specific `(market-tick-data-service, dex_pool_swaps)` pair post-07-18.**
+- **Part (b) — same manifest surface, or different?** DIFFERENT. The 2026-08-17 finding read a **raw downloaded copy
+  of the then-healthy consolidated blob via a bounded DuckDB read**, entirely bypassing `read_availability_index()`'s
+  staleness/fallback gate. The 2026-08-21 Round 1-4 investigation (this doc) instead went through UTL's
+  `read_captured_days_by_cell`/`read_availability_index()` — and by the time that investigation started (09:57Z),
+  the consolidator had ALREADY been wedged since **06:22:40Z that same morning**
+  (`dp_watcher_002_defi_market_data_consolidator_lock_wedge_2026_08_21.md`), so every one of those reads was already
+  forced through the impoverished per-VM-shard-only fallback (14-41 cells) — it never saw the rich, already-merged
+  canonical history at all. **Hypothesis 2 (consolidator wedge, independently confirmed via DP-WATCHER-002) explains
+  why Round 1-4 found ~0 cells; hypothesis 1 (scheduler pause) explains why there's nothing NEW to find even once the
+  wedge clears for this specific data_type.** `--day 2026-07-05` (predates the 07-18 pause) SHOULD be recoverable
+  from canonical once the consolidator wedge is fixed (tracked, blocked on operator confirmation of the marker-restore
+  recovery — see the DP-WATCHER-002 doc's Progress Log) — todo 2 below is the re-run once that lands.
+
 ## Recommended decision
 
-- [ ] [DATA] P1. Reconcile hypothesis 1 vs 2 above with direct evidence: query the RAW per-VM-shard objects (not the
-      consolidated blob) for DEFI's canonical MTDS-service dex_pool_swaps cells directly (bounded, via
-      `unified_trading_library.manifest_writer`'s own per-VM-shard listing helpers, on a dedicated VM per the
-      heavy-I/O rule) to determine (a) whether ANY raw-tick shard object newer than 2025-05-31 genuinely exists for
-      DEFI, and (b) whether the 2026-08-17 "coverage through 2026-08-13" finding
-      (`mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md` item 1) was measuring the same
-      manifest surface this investigation is, or a different one (e.g. a stale local DuckDB snapshot). Repo:
-      unified-trading-library / market-data-processing-service. Done when: a definitive, evidenced answer to "does
-      DEFI raw-tick capture data newer than 2025-05-31 actually exist anywhere in GCS" is recorded here.
-- [ ] [DATA] P2. If hypothesis 1 is confirmed (genuinely nothing new since before the lookback floor), re-run this
-      driver against an OLDER `--day` that predates both the 07-18 pause AND falls within whatever the consolidator
-      last had fully merged — to get the FIRST clean terminal, non-"PROVED NOTHING" verdict this todo has been
-      chasing across 4 prior OOM/correctness fixes, unblocking `defi_satellite_ao_dispatch_batch19_2026_08_21.md`
-      item 3 and `data_pipeline_check_mdps_features_2026_07_20.md`'s 5-AG consolidated report. Repo:
-      market-data-processing-service. Done when: the DEFI leg reports a nonzero verified-cell count.
-- [ ] [DATA] P2. If hypothesis 2 is confirmed instead (a real incremental-merge correctness gap), file a scoped fix
-      plan against the manifest consolidator itself (Cloud Run job `uts-prod-manifest-consolidator-market-data-defi`)
-      — do NOT attempt this inline; it is a shared-infra fix, not a driver-script fix, and needs its own careful
-      review given `read_captured_days_by_cell` is shared by both the MTDS and MDPS drivers. Repo: TBD (whichever
-      repo owns the consolidator job's merge logic — not yet identified this session).
+- [x] [DATA] P1. ✅ **DONE 2026-08-22 (slot-19, data_engineering).** Reconciled hypothesis 1 vs 2 with direct evidence:
+      queried the RAW per-VM-shard objects (not the consolidated blob) for DEFI via
+      `unified_trading_library.manifest_writer._read_index._read_and_merge_per_vm_shards` (filtered, row-group-pushdown
+      bounded reads, `max_total_bytes=500MB` cap, run on the shared host wrapped in `run-bounded-analysis.sh` — no
+      dedicated VM needed since filters+byte-budget already bound the read; not a whole-corpus walk, scoped to
+      `_index/per_vm/` only). See "Reconciliation" section above for the full evidenced answer to both (a) and (b).
+      Repo: unified-trading-library (read-only diagnostic, no shipped code — script was a scratchpad one-off, not
+      committed). Done when: a definitive, evidenced answer to "does DEFI raw-tick capture data newer than
+      2025-05-31 actually exist anywhere in GCS" is recorded here. **Satisfied.**
+- [ ] [DATA] P2. **STILL OPEN, now precisely scoped by the 2026-08-22 reconciliation above**: re-run this driver
+      against `--day 2026-07-05` (predates the 07-18 collect-pause; should be present in canonical as of the last
+      genuine merge, 2026-08-21T06:21:55Z, per the 2026-08-17 finding's "through 2026-08-13" coverage) — BLOCKED on
+      the consolidator wedge fix landing first (`dp_watcher_002_defi_market_data_consolidator_lock_wedge_2026_08_21.md`'s
+      marker-restore recovery, currently awaiting an operator answer to its posted `/blocked` question) — to get the
+      FIRST clean terminal, non-"PROVED NOTHING" verdict this todo has been chasing across 4 prior OOM/correctness
+      fixes, unblocking `defi_satellite_ao_dispatch_batch19_2026_08_21.md` item 3 and
+      `data_pipeline_check_mdps_features_2026_07_20.md`'s 5-AG consolidated report. Repo: market-data-processing-service.
+      Done when: the DEFI leg reports a nonzero verified-cell count.
+- [x] [DATA] P2. ✅ **DONE — already covered, not duplicated.** Hypothesis 2 (a real incremental-merge/liveness gap,
+      not a mere cadence mismatch) is CONFIRMED (see the 2026-08-21 Progress Log entry below + the 2026-08-22
+      reconciliation above). The scoped fix this todo asked for already exists as its own tracked doc:
+      `dp_watcher_002_defi_market_data_consolidator_lock_wedge_2026_08_21.md` (root cause: missing
+      `consolidator_content_write_at` marker → fail-closed full merge → 7200s Cloud Run timeout → SIGKILL → orphaned
+      lock → re-arm loop, bit-for-bit the same mechanism `manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md`
+      already root-caused + fixed in source for cefi via `unified-trading-library@af783d92e4`/`53abdf72f3`). Filing a
+      second fix-plan doc here would duplicate that tracked work — cross-linking instead per findings-triage
+      ("fits another plan → annotate it, don't fix/duplicate"). Repo: unified-trading-library (fix already shipped);
+      deploy + marker-restore recovery tracked on the DP-WATCHER-002 doc, not here.
 
 ## Progress Log
 
@@ -201,3 +241,27 @@ coverage there too.
   the consolidator is unwedged and can actually merge it; this entry only explains WHY the consolidated view has
   been frozen, not what it will show once fresh. No code shipped this session (repo: market-tick-data-service — the
   fix belongs to the sibling doc, not duplicated here); doc-only cross-link, shipped via `safe-doc-push.sh`.
+- **2026-08-22 (slot-19, data_engineering)**: closed this doc's own open P1 todo 1 with direct, live evidence — see
+  "Reconciliation" section above. Wrote a bounded, filtered, non-committed scratchpad script
+  (`unified_trading_library.manifest_writer._read_index._read_and_merge_per_vm_shards`, `filters=` row-group pushdown
+  + `max_total_bytes=500_000_000` cap, run via `run-bounded-analysis.sh --mem-cap 3G` on the shared host — confirmed
+  the `_MTDS_SERVICE_NAME` constant is the literal string `"market-tick-data-service"`, NOT the abbreviation "MTDS"
+  this doc's earlier rounds used loosely, via `market-data-processing-service/scripts/pipeline_e2e_check.py:271`) to
+  query the DEFI bucket's `_index/per_vm/` shards directly, bypassing `read_availability_index()`'s staleness gate
+  entirely. **Pass 1** (`service_name=market-tick-data-service`, `data_type=dex_pool_swaps`, `date>=2025-05-31`):
+  **ZERO rows** — no fresh raw MTDS dex_pool_swaps shard exists right now. **Pass 2** (same date bound, no
+  service/data_type filter): **2,485 rows across 213 unique dates through 2026-08-22 (today)** — i.e. the per-VM
+  shard directory itself is NOT stale/empty, it's just that `market-tick-data-service`/`dex_pool_swaps` specifically
+  has nothing unmerged (consistent with the 3 collect-* schedulers, including dex-pools, having been PAUSED since
+  2026-07-18 — `defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md`, now independently corroborated with
+  fresh raw-shard-content evidence, not just the Cloud Scheduler state that doc checked). Also confirmed (Pass 2
+  breakdown) that `market-data-processing-service`/`dex_pool_swaps` = 284 raw shard rows through today — this is
+  MDPS's own candle-OUTPUT under the same canonical `data_type` name, already confirmed legitimate (not a raw-capture
+  signal) by the 2026-08-17 doc's own root-cause finding, so it does not contradict the "zero fresh raw MTDS capture"
+  conclusion. Read the 2026-08-17 sibling doc's item 1 in full to source the "coverage through 2026-08-13" claim
+  precisely: it was a **bounded DuckDB read against a locally downloaded copy** of the (then-healthy) consolidated
+  blob — a genuinely different surface than either this session's raw-per-VM-shard query or the 2026-08-21 Round 1-4
+  driver runs (UTL `read_captured_days_by_cell`/`read_availability_index()`, which by 09:57Z that morning was already
+  forced through the stale-fallback per the consolidator wedge starting 06:22:40Z the same day). No code shipped —
+  read-only diagnostic, script was a scratchpad one-off (not committed to any repo). Doc-only, shipped via
+  `safe-doc-push.sh`.

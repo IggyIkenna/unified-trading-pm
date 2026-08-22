@@ -167,3 +167,14 @@ one-shot dispatch.
   confirmed no conflicting VM, then checked the doc's own Track 8 correction's broader gate (Track-1/2 landing) —
   Track 1 still active with 2 open todos, so did NOT resume. See the `[OPERATOR]` todo above for full findings.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries) — added the data-pipeline-correctness-hard-rule codex SSOT (cited in the body's own Codex SSOTs section) + the oracle_prices sibling issue
+- **2026-08-22 (slot-19, data_engineering)**: independent corroboration with fresh raw-data evidence (side-finding
+  while closing `mdps_defi_captured_days_stale_consolidated_index_despite_healthy_consolidator_2026_08_21.md`'s own
+  P1 todo 1). A bounded, filtered live query of the DEFI bucket's raw `_index/per_vm/` shards
+  (`service_name=market-tick-data-service`, `data_type=dex_pool_swaps`, `date>=2025-05-31`) returns **ZERO rows** as
+  of today — this doc's Cloud Scheduler-state finding (3 collect-* jobs PAUSED since 2026-07-18) is now confirmed at
+  the raw-capture-content level too, not just the scheduler-state level: there is genuinely nothing unmerged for this
+  exact `(service, data_type)` pair sitting in per-VM shards. A broader unfiltered query of the same bucket/date-range
+  DOES find 2,485 rows through 2026-08-22 across other service/data_type pairs, confirming the per-VM shard directory
+  itself is healthy/active — the gap is specific to the paused collectors, not a general capture-pipeline outage. No
+  action taken on the still-open `[OPERATOR]` resume todo above (outside this session's scope — data-correctness
+  investigation only). Doc-only, shipped via `safe-doc-push.sh`.
