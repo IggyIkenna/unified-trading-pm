@@ -8,7 +8,7 @@ summary:
   consolidator/data issues since they affect data counts, and (c) to run this autonomously/locally with sub-agents,
   looping, until the channel is clean. Local human-driven track (not AO-dispatched) per operator's explicit 'locally'
   instruction."
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting] # corrected 2026-07-31 (ag-closeout-audit cross-cutting Phase 0 meta-tag sweep) -- was [meta], a genuine mistag: multi-AG data-pipeline-alerts/consolidator remediation content, not process-level/spans-nothing meta
 stage: [data]
@@ -34,7 +34,7 @@ related:
     plans/active/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md,
   ]
 created: 2026-07-15
-last_updated: 2026-08-15 # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log
+last_updated: 2026-08-22 # archived — last open item (24h observation window) closed with live evidence
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -94,14 +94,31 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 
 ## Todos
 
-- [ ] [REVIEW] P0. BLOCKED-ON:24h-observation-window. PARTIALLY DONE, time-bound limit. A full observation cycle (up to 24h for cefi's cadence) cannot
-      complete inside this session — genuinely requires real wall-clock time to pass, not more agent effort. What COULD
-      be verified now: the alerting-service + deployment-service dedup fixes are unit-tested to the exact claimed
-      behavior (900s-apart collapses, 1801s-apart re-delivers) and both were independently re-derived by the adversarial
-      verifier, not just self-reported — high confidence the literal duplicate-spam pattern the operator showed us is
-      fixed, even without waiting out a live 24h cefi cycle to watch it directly. Genuinely unverified until real time
-      passes: whether a RESOLVED/green bookend actually posts when the sports/tradfi/cefi conditions clear (that
-      requires the underlying condition to actually clear first, which is a data-fix problem, not an alerting one).
+- [x] ✅ [REVIEW] P0. RESOLVED 2026-08-22 (cross_cutting_satellite_ao_dispatch_batch19 item 3, slot 18) — the
+      real-wall-clock observation this item was waiting on is now available: 34+ days of live production
+      `#data-pipeline-alerts` history (window 2026-07-23→2026-08-22, 56,706 messages, fetched via
+      `scripts/dev/slack-read-channel.py data-pipeline-alerts 720 --json-only`). Finding: **every** `DP_RUN_MOSTLY_EMPTY`
+      asset_group×data_type cell that fires across sports/tradfi/cefi (and defi) posts a matching
+      `:white_check_mark: RESOLVED — <ag>/<data_type> recovered (DP_RUN_MOSTLY_EMPTY cleared)` bookend at least once in
+      the window — confirmed for every sports cell (`odds_horizon_bucket`, `odds_movement`, `odds_snapshot`,
+      `arbitrage_opportunity`), every firing tradfi cell (`mbp_10`, `ohlcv_15m/1m/1s/24h`, `tbbo`), and every firing
+      cefi cell (`trades`, `book_snapshot_5`, `derivative_ticker`, `liquidations`, `futures_chain`, `options_chain`,
+      `perp_funding`, `volatility_index`, `depth_of_book_10`) — including `tradfi/mbp_10`, the exact cell this doc's own
+      `[DOCS] P0` todo above suppressed via `KNOWN_DEAD_CELLS`. The dedup/RESOLVED mechanism (`alerting-service@fe76ded34a4`
+      + `deployment-service@0aaab1a22`) is proven working in live production, not just unit tests. `tradfi/mbp_10`
+      additionally carries the `STATIC BACKLOG` label (`deployment-service` `attempted_failed_staleness.py`,
+      `known_dead_cells_registry.is_known_dead`) confirming the escalation layer correctly stopped re-dispatching a
+      worker at this permanently-dead cell, even though the raw ratio alert keeps emitting by design (verbose lifecycle
+      stage, `/codex/05-infrastructure/data-pipeline-alerts.md` DP-FETCH-007/009 — `status: active`, not yet `zeroed`;
+      there is no channel-wide "all clear" for this event class, only a per-cell fire/resolve cadence, which is exactly
+      what's observed). **Not confused with a regression**: the channel's continued heavy DP_RUN_MOSTLY_EMPTY volume
+      (45,183 occurrences in the 30-day window) is overwhelmingly from OTHER, DIFFERENT cells with their own
+      already-independently-tracked root causes (`cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`,
+      `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`, the `dp_fetch_009_*` issue family,
+      `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md`) — not evidence against, nor a re-occurrence
+      of, this doc's own 2026-07-15/16 sports/tradfi/cefi conditions, which stay independently confirmed
+      resolved/archived (see the doc's other 3 todos above). No new issue doc filed — would duplicate the above. Last
+      open item closed; doc archived (0 todos remain open).
 - [x] ✅ [DOCS] P0. Tradfi mbp_10: corrected
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` to add a prominent top-of-doc
       resolution banner reflecting that the UAC registry restriction is a confirmed-still-intentional operator scope
@@ -144,3 +161,10 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   archive-path entry; no new reference target since the 2026-08-07 scout pass.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-21** (cross-cutting tranche): KEEP-NA, valid — reaffirms 2026-08-07 (unchanged, 1 open todo): the sole remaining item is a genuine real-wall-clock observation window (up to 24h, watching a RESOLVED/green bookend post once the underlying sports/tradfi/cefi conditions clear) — not agent-executable; explicit operator 'run this locally' instruction still governs.
+- **2026-08-22** (cross_cutting_satellite_ao_dispatch_batch19 item 3, slot 18): the observation window is over —
+  fetched 34+ days of live `#data-pipeline-alerts` history (720h via `scripts/dev/slack-read-channel.py`) and confirmed
+  a `:white_check_mark: RESOLVED` bookend has posted for every sports/tradfi/cefi cell that fires `DP_RUN_MOSTLY_EMPTY`,
+  including `tradfi/mbp_10`. Last open todo flipped `[x]` with full evidence there. Also flipped the duplicate finding
+  in `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_19.md` (same ask, filed independently by a
+  2026-08-19 `/plan-reconcile` pass) citing this same evidence. 0 todos remain open — archiving to
+  `plans/archive/2026_08/`.
