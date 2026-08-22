@@ -111,7 +111,7 @@ external action and is not performed by this escalation without that decision.
       not archived) — this todo's diagnostic progress feeds that doc's own "verify a real captured row / if
       unproductive, inspect subscribe acks" open todo directly; do not diagnose independently in both places.
       That doc's own todo 2 was itself resolved 2026-08-21 (negative captured-row result, root-caused, follow-up
-      filed at `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`) — root
+      filed at `/plans/archive/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`) — root
       cause: Bybit's own subscribe/unsubscribe ack control frames were silently dropped, unlogged, by every Bybit
       connector's receive loop, so there was no way to tell a rejected subscribe from an accepted one producing
       no ticks. Shipped the fix that follow-up doc's todos 1+2 called for: added a shared `_log_subscribe_ack()`
@@ -160,9 +160,74 @@ external action and is not performed by this escalation without that decision.
       all four BYBIT-FUTURES data types, decommission the old VM
       (`mtds-live-cefi-consolidated-20260817-025031`) per the 3-signal staleness
       check and confirm DP-LIVE-004 clears.
+- [ ] [INFRA] P1 — **NEW 2026-08-22 (autonomous dispatch).** Root-caused (see
+      Progress Log) and fixed the actual reason all four BYBIT-FUTURES data types
+      stayed zero-captured even on the `efd0e788`-deployed VM
+      (`mtds-live-cefi-consolidated-20260822-092840`): the shared linear-derivative
+      filter let `@INV` (inverse-margin) instruments through to the LINEAR-only
+      endpoint, and Bybit rejects the WHOLE subscribe batch (not just the bad
+      topic) when any `@INV` topic rides along with valid `@LIN` ones — silently
+      zeroing every chunk that happened to contain one of the 4 real BYBIT inverse
+      instruments (BTCUSD/DOGEUSD/LINKUSD/SOLUSD perpetual+future). Fix ships as
+      `market-tick-data-service@<pending quickmerge sha>`. Once shipped: launch a
+      fresh `mtds-live-cefi-consolidated-*` VM (FORCE=true, 4th parallel instance —
+      justified: none of the 3 existing VMs carry this fix, and this is the exact
+      relaunch-then-verify-then-decommission pattern already used twice today),
+      verify a real `capture_status=captured` BYBIT-FUTURES row on the new VM, then
+      decommission all 3 prior VMs together (superseding the single-VM decommission
+      todo above).
 
 ## Progress Log
 
+- **2026-08-22 (autonomous dispatch, `/autonomous`)**: Picked up per the operator's
+  `BLK-9e8ffbb2` answer **A** (authorize relaunch). Fresh-verified rather than
+  trusted: `gcloud compute instances list` confirms all THREE VMs still `RUNNING`
+  (`...-025031` since 2026-08-16, `...-200626` since 2026-08-21, `...-092840` since
+  2026-08-22T01:43:57-07:00). SSH-confirmed `...-092840` genuinely has `efd0e788`
+  deployed (`_log_subscribe_ack` present and firing — matches the D10 remediation
+  entry below) but a fresh per-VM manifest read (via UTL `get_storage_client()`,
+  not `gsutil` — the hook-blocked path) shows it is STILL 100% `empty_confirmed`
+  across all 4 BYBIT-FUTURES data types (`book_snapshot_5`/`depth_of_book_10`/
+  `derivative_ticker`/`trades`: 1294/1294 each, `max attempted_at`
+  2026-08-22T15:22Z — current, not stale), 6.5+ hours after launch. So the sibling
+  escalation `agt-81aea5`'s earlier "3rd-parallel-VM risk" concern from a few hours
+  ago is now moot: the 3rd VM already exists, has the ack fix, and is STILL not
+  producing captured rows — this is a live, unresolved code bug, not a
+  deploy-lag question.
+  **Root-caused via direct live reproduction** (not guesswork): live logs on
+  `...-092840` show exactly 4 repeating `Bybit subscribe ack REJECTED` topics every
+  reconnect cycle (`publicTrade.BTCUSD-25SEP26`, `publicTrade.DOGEUSD`,
+  `publicTrade.LINKUSD`, `publicTrade.SOLUSD` — all bare-USD, no `T`, i.e. Bybit
+  INVERSE/coin-margined instruments) and literally zero "accept" acks or real
+  ticks logged in 792 reconnect cycles over 6.5h. Traced to `_is_linear_derivative`
+  (`bybit_ws.py`) only checking `instrument_type` (PERPETUAL/FUTURE), never the
+  `@LIN`/`@INV` margin marker baked into the canonical `instrument_id` — so these 4
+  real BYBIT inverse instruments (Bybit only lists 4: BTC/DOGE/LINK/SOL) pass the
+  filter and reach the LINEAR-only endpoint (`_BYBIT_LINEAR_WS_URL` — inverse
+  contracts live on a SEPARATE `.../v5/public/inverse` endpoint this connector
+  never opens). Confirmed the blast radius with an isolated probe connection
+  (`aiohttp` direct to `wss://stream.bybit.com/v5/public/linear`, not the buggy
+  production reconnect loop): a batch of 3 valid `@LIN` topics
+  (`BTCUSDT`/`ETHUSDT`/`SOLUSDT`) + the 4 `@INV` ones got exactly ONE reject ack
+  and ZERO ticks in 20s; the SAME 3 valid topics alone (no `@INV` mixed in) got a
+  success ack and **217 real trade ticks in 15s**. Bybit fails the entire
+  subscribe request atomically when any topic in it is invalid — it does not
+  partially honor the valid topics. Since `_send_sub_batch` chunks the full sorted
+  instrument set into fixed-size batches, these 4 poisoned symbols zero out every
+  chunk they land in, which fully explains the observed 100% `empty_confirmed`
+  across ALL 4 data types (not a partial degradation limited to 4 symbols).
+  **Shipped the fix**: `_is_linear_derivative` now also excludes any `@INV`-marked
+  instrument (market-tick-data-service, `bybit_ws.py` — shared by both
+  `bybit_ws.py` and `bybit_futures_book_ticker_ws.py` via the existing
+  `is_bybit_linear_derivative` alias, so book_snapshot_5/depth_of_book_10/
+  derivative_ticker/trades all get the fix from one change). Updated
+  `tests/unit/test_bybit_ws_connector.py` (the OLD test literally asserted
+  `_is_linear_derivative("BYBIT:FUTURE:BTC-USD@INV-20261225") is True` — codifying
+  the bug; now asserts `False`, plus a new `test_connect_filters_out_inverse_margin_ids`
+  connect()-level test mirroring the existing SPOT_PAIR-filter test). Next: QG,
+  quickmerge, relaunch a 4th `mtds-live-cefi-consolidated-*` VM with the fix,
+  verify a real captured row, decommission all 3 prior VMs. See the linked
+  ack-unobserved doc's Progress Log for a duplicate-avoiding cross-reference.
 - **2026-08-22 (task `dp_live_004_bybit_stale_vm_tarball-953844d905c9`, slot 7, data_engineering)**: Picked up the
   same open `[DATA] P1` decommission todo already worked by slots 13/21 today. Fresh-verified rather than trusted:
   `gcloud compute instances list` shows THREE `mtds-live-cefi-consolidated-*` VMs now `RUNNING` in parallel —

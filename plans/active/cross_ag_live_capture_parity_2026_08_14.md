@@ -340,7 +340,7 @@ The rest is unowned.
         shard). Root cause: Bybit subscribe/unsubscribe ack frames are silently dropped, unlogged, in both
         `bybit_ws.py` and `bybit_futures_book_ticker_ws.py` — confirmed via SSH log inspection (zero
         subscribe/ack/reject lines across the connector's full run) + a direct code read. Filed
-        `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md` (3 tracked todos:
+        `/plans/archive/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md` (3 tracked todos:
         add ack-frame logging to both connectors, then re-verify). Closing THIS verification todo per its own
         stated fallback ("root cause named + fix filed"); the parent `[DATA] P1` captured-row todo above stays
         OPEN until a real captured row is confirmed post-ack-logging-fix — this todo only closes the
@@ -522,7 +522,7 @@ and succeeded on all recent runs; the index's age reflects the incremental-cutof
   todo 2)**: closed Finding C's nested `[INFRA] P2` post-relaunch-verification todo — the 2026-08-21
   `mtds-live-cefi-consolidated-20260821-200626` relaunch still shows 0 captured BYBIT-FUTURES rows across all 4
   data_types, root-caused to Bybit subscribe-ack frames being silently dropped/unlogged in both connector files.
-  Filed `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`. The parent
+  Filed `/plans/archive/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`. The parent
   `[DATA] P1` "close the pending captured-row verification for the four cefi shards" todo stays OPEN (it needs all
   4 venues, not just BYBIT-FUTURES, and its DoD is still unmet for BYBIT-FUTURES specifically) — see that todo's
   own text above for the full remaining scope.

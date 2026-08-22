@@ -19,7 +19,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/active/issues/dp_live_004_bybit_stale_vm_tarball_2026_08_21.md,
-    /plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md,
+    /plans/archive/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md,
   ]
 created: 2026-08-20
 author: data_pipeline_failure (slot 32, escalation agt-0d8048)
@@ -52,7 +52,7 @@ source: DP-LIVE-004 / DP_CRON_DID_NOT_FIRE (mtds-live-cefi-consolidated-20260817
 > **RESOLVED 2026-08-21 (data_engineering, slot 19)**: both todos done. The stale-image condition this doc tracks
 > is fixed (VM cycled, fix-provenance confirmed on the replacement). Post-relaunch verification found BYBIT-FUTURES
 > still 0 captured rows — a genuine, DIFFERENT bug (silently-dropped Bybit subscribe ack frames), now tracked in
-> its own follow-up: `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`.
+> its own follow-up: `/plans/archive/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`.
 > DP-LIVE-004 itself stays open/unmuted — this doc closes only the "stale image" diagnosis this doc's own scope
 > covers, per `/codex/11-project-management/issue-doc-lifecycle.md`'s terminal-status convention. No new codex
 > contract is established by this resolution (the VM-relaunch pattern is already covered by
@@ -131,7 +131,7 @@ follow-up in `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`.
       expensive for this bucket's 1700+ shards). Did NOT reclassify the existing rows. Root-caused via SSH log
       inspection + code read: Bybit's subscribe/unsubscribe ack frames are silently dropped, unlogged, in both
       `bybit_ws.py` and `bybit_futures_book_ticker_ws.py` — filed
-      `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md` with 3 tracked
+      `/plans/archive/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md` with 3 tracked
       todos. DP-LIVE-004 stays open/unmuted per the todo's own instruction — this is diagnosis, not closure.
 
 ## Progress Log
@@ -162,7 +162,7 @@ follow-up in `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`.
   connector's full ~2h run) + a direct code read (both `bybit_ws.py` and `bybit_futures_book_ticker_ws.py` send
   `{"op":"subscribe",...}` with no logging, and their receive loops silently drop any frame that isn't a
   recognized tick payload — including Bybit's own ack control frames). Filed
-  `/plans/active/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md` (3 tracked `[CODE]`/
+  `/plans/archive/issues/dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md` (3 tracked `[CODE]`/
   `[DATA]` todos) and updated `/plans/active/cross_ag_live_capture_parity_2026_08_14.md`'s matching Finding-C
   nested todo with the same evidence. This doc's own scope (stale VM image) is now fully resolved — archiving per
   the plan-completion-and-archival-discipline HARD RULE (all todos `[x]`, unlocked). DP-LIVE-004 the ALERT
