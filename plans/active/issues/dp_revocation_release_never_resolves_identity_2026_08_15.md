@@ -150,9 +150,10 @@ Option 1 is the structural fix; option 2 is a stopgap that only covers the 3 eve
       `tests/unit/test_data_pipeline_monitors.py` (asserts `resolved == ["DP_VM_GONE_NO_CAPTURE::vm-x"]`,
       `seen_identities == ["DP-VM-001"]`, `released == ["DP-VM-001"]`); full suite green (`quality-gates.sh --no-fix`,
       3462 passed, 5 skipped, 0 failed, coverage 73.25%).
-- [ ] [OPERATOR] P2. Decide whether existing stuck holds (if any accumulated since the arming commit went live,
-      ~2026-08-14T11:40Z) need manual clearing once the fix lands, or whether they self-heal on next delivery of the
-      same key. DoD: a stated decision, not a default.
+- [ ] [INFRA] P2. Audit whether stuck revocation holds accumulated since the arming commit went live
+      (~2026-08-14T11:40Z) need manual clearing, or self-heal on next delivery of the same key (check
+      `vm-census/admission-hold/` for any hold predating the `bf69b2b289` fix). Per D71 ruling (2026-08-22):
+      approved — cheap, and a stuck hold silently blocks deploys with no page. Repo: deployment-service.
 
 ## Evidence
 
@@ -167,3 +168,6 @@ Option 1 is the structural fix; option 2 is a stopgap that only covers the 3 eve
 
 **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:43bcf5289ade19ff]: KEEP-NA, valid -- Grep-verified 1 open checkbox (line 153), matching inventory_open_todos=1. The 2 code/test fixes are already shipped and checked [x] (deployment-service@bf69b2b289). The sole remaining item is explicitly [OPERATOR]-tagged and asks for a genuine risk-tolerance/operational decision (manual-clear vs let-self-heal) with no default allowed -- a real, unresolved operator question, not a technical task.
+- **2026-08-22 — ruling D71 (Revocation-hold audit)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Audit once — cheap, and a stuck hold silently blocks deploys with no page. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
