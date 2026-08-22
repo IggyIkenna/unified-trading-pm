@@ -57,6 +57,16 @@ files a session is actually shipping — confirmed via direct diagnostic
 around it with a direct push under the `dirty-deps` carve-out (CLAUDE.md git-discipline HARD RULE), but that carve-out
 exists for exactly this kind of pre-existing, unrelated blocker — it should not become the routine path for PM ships.
 
+**Scope clarification, measured 2026-08-22 — this is a GOVERNANCE block, not a production incident.** The direct
+imports resolve fine at runtime: deployment-api builds `FROM` the UTL base image (Dockerfile:68) and pip-installs
+deployment-service `--no-deps` on top (Dockerfile:140-142), and UTL's base already supplies `boto3`, `pandas`,
+`pyarrow`, `google-cloud-run`, `google-cloud-compute`. `uts-shared-deployment-api` `/health` returns 200 healthy.
+Nothing is degraded for users *because of the tier violation*. Re-verified the same day:
+`check-dependency-alignment.py --repo deployment-api --json` -> `aligned: false`
+(`internal_in_manifest_not_pyproject: deployment-service`), so the Stage 1.5 shipping block IS still live. Urgency is
+therefore pipeline-throughput, not incident — which is what justifies shipping the four relocations one at a time
+with gates green between each rather than rushing them as a batch.
+
 ## Root cause
 
 `deployment_api/routes/_aws_deployments.py` and `deployment_api/routes/_cloud_run_executions.py` both import
@@ -149,65 +159,76 @@ DIFFERENT escalation, `agt-614918`); not this doc's scope, not touched here, cro
       evidence. The doc's original two named files (`_aws_deployments.py`, `_cloud_run_executions.py`) had already
       moved their SPECIFIC violation elsewhere by the time this session found them; both still have OTHER, unfixed
       `deployment_service.backends`/`data_pipeline_monitors` imports (see the 7-file list above).
-- [ ] [BACKEND] P2. **Fully scoped 2026-08-21 (interactive session, slot 17) — ready to implement, see the
-      Progress section below for the concrete per-item design.** All 7 remaining call sites investigated;
-      NONE are simple relocations like the first two (both `_gcp_sdk.py` and `cli/utils/manifest_reader.py` turn
-      out to be **explicitly-documented, audited exceptions** in `QUALITY_GATE_BYPASS_AUDIT.md` §2.5/§2.18 with
-      their own stated resolution paths — not oversights — and `launcher_registry`'s 400-line dict is guard-tested
-      against deployment-service's own file tree, a poor relocation candidate). Operator decision 2026-08-21:
-      build real new deployment-service API endpoints for the genuinely-live/credentialed pieces, matching the
-      exact existing `get_cloud_run_status_batch`/`POST /api/v1/cloud-run/status-batch` pattern in
-      `deployment_service_client.py`, rather than relocating or overriding the documented exceptions. Execute
-      each item below one at a time — design, implement, `quality-gates.sh` green in both repos, ship via
-      quickmerge, flip this todo's checklist — same rigor as the two already-shipped fixes. Repo: deployment-api +
-      deployment-service.
+- [ ] [BACKEND] P2. **RE-DESIGNED 2026-08-22 (slot-30, interactive) — the 2026-08-21 HTTP-endpoint design is
+      SUPERSEDED.** That design said "build real new deployment-service API endpoints ... matching the exact
+      existing `get_cloud_run_status_batch`/`POST /api/v1/cloud-run/status-batch` pattern". Two things were wrong
+      with its premises, both measured this session:
+      (a) it cited `QUALITY_GATE_BYPASS_AUDIT.md` §2.5/§2.18 as "explicitly-documented, audited exceptions" for
+      `_gcp_sdk` and `manifest_reader`. §2.5 is *"Imports Inside Functions — MIGRATION_PENDING"* — a different gate,
+      about deployment-api's own lazy-import placement — and there is **no §2.18 in that file at all**. Neither is
+      an audited exception to the tier boundary.
+      (b) all four remaining modules are **stateless** — none needs deployment-service's runtime process,
+      credentials, or state — so none of them warrants a network hop. Verified by import-list inspection:
+      `manifest_reader` imports only UAC + UTL + pandas/pyarrow; `aws_census` only boto3 + stdlib;
+      `launcher_registry` only `pathlib.Path`; `_gcp_sdk` is a 71-line lazy `__getattr__` shim with no logic.
+      **Operator decision 2026-08-22: relocate to UTL, do not build HTTP endpoints.** This matches the tier
+      checker's own remedy ("move shared code to a lower tier") and the 4-for-4 precedent in this repo pair
+      (`deployment_shard_responsibility.py`, `deployment_admission_gate.py`, `deployment_gcs_tail.py`,
+      `deployment_registry.py` all already relocated to UTL for exactly this reason). Subprocess was explicitly
+      REJECTED as a fix for these: it satisfies the import-based checker while leaving the vendored-image coupling
+      fully intact, and pays interpreter cold-start on per-request read paths.
+
+      **Blast radius, measured — the four are NOT uniform; ship them one at a time, gates green in BOTH repos
+      between each. Batching them is where this goes wrong.**
+
+      | Module | consumers in deployment-service | other repos | shape |
+      | --- | --- | --- | --- |
+      | `aws_census` | 1 src + 2 tests | none | clean move |
+      | `manifest_reader` | 4 src + 1 test | none | move, medium |
+      | `launcher_registry` | 7 src + 6 tests + a dedicated QG | none | **partial** move only |
+      | `_gcp_sdk` | 8 src + 1 test | none | **do not move** |
+
+      Apparent alerting-service / agent-orchestrator hits are **string references, not imports** (log/context text
+      like `launcher=(resolve via launcher_registry)`, and a docstring citation) — verified, no cross-repo import
+      risk from those.
+
       - [x] `_gcs_tail` (`_aws_deployments.py:162`, `read_terminal_exit_code`) — DONE 2026-08-21. Relocated a
             self-contained copy of `read_terminal_exit_code`/`read_text_tail`/`_call_with_timeout`/
-            `EXIT_STATUS_BLOB`/`RUN_LOG_BLOB` to a new `unified_trading_library/deployment_gcs_tail.py` module
-            (deliberately NOT importing deployment-service's own `_gcs.py`/`_gcs_tail.py` back out, per the
-            original design note — `_gcs.py` has 5 other internal deployment-service-only consumers not worth
-            the blast radius). Bare `except Exception:` sites converted to `except Exception as exc: logger.debug(...)`
-            to match `deployment_admission_gate.py`'s sibling convention and clear UTL's broad-except gate.
-            Shipped: `unified-trading-library@b565fcb9fa` (module + `__init__.py` export + 7 unit tests, mirrors
-            deployment-service's own `test_gcs_tail.py` coverage), `deployment-api@f0f2681876` (`_aws_deployments.py`
-            call site swapped to `from unified_trading_library import read_terminal_exit_code`). Both repos'
-            `quality-gates.sh` green before ship. Re-verified: `check-dependency-alignment.py --repo deployment-api
-            --json` still `aligned: false` (expected — 6 call sites remain of the original 7).
-      - [ ] `manifest_reader` (`_deploy_turbo.py:606`, `ManifestReader.get_coverage_summary`) — **no new endpoint
-            needed.** deployment-service already exposes `GET /api/v1/data-coverage-summary`
-            (`deployment_service/api/routes/state.py:592`) wrapping the exact same call
-            (`ManifestReader.get_coverage_summary(service, asset_groups)`). Add a `get_data_coverage_summary`
-            async client method to `deployment_service_client.py` (mirror `get_cloud_run_status_batch`'s
-            shape) and swap `_deploy_turbo.py`'s import for a client call — the route is already `async def`
-            with `await asyncio.to_thread(...)`, so this is a straight swap, no async-conversion needed.
-      - [ ] `launcher_registry` (`vm_admin.py:262`, `resolve_launcher_for_vm`) — add a tiny new
-            `GET /api/v1/vm/{vm_name}/launcher` deployment-service endpoint (returns `{launcher: str|null}`) +
-            matching client method; convert `vm_admin.py`'s restart-decision route to call it instead of
-            importing the registry directly.
-      - [ ] `_gcp_sdk` cluster (4 files, 5 operations — the biggest piece): add new deployment-service endpoints
-            for each, following `get_cloud_run_status_batch`'s exact request/response shape convention:
-            - `list_cloud_functions(project_id, region)` (`_gcp_cloud_functions.py:95`) → new endpoint
-            - `list_cloud_run_services(project_id, region)` (`_cloud_run_services.py:124`) → new endpoint
-            - `latest_execution_by_job(project_id, region)` (`_cloud_run_executions.py:130`) → new endpoint
-            - `list_job_executions(project_id, job_short_name, region, limit)` (`_cloud_run_executions.py:203`)
-            → new endpoint (detail-popover run-history, page_size=limit vs the thin-list's page_size=1 —
-            keep this cost distinction in the new design)
-            - `gcp_cloud_run_revisions(cfg)` (`artifact_pipeline/providers.py:442`) — reuses
-            `list_cloud_run_services` internally + lists revisions per service (`RevisionsClient`); design
-            as its own endpoint or fold into the cloud-run-services response, whichever avoids a second
-            services-list RPC (the existing code deliberately reuses one list to avoid exactly that)
-            Each of the 4 deployment-api call sites converts from its current sync function (some already
-            called from async routes via a sync boundary) to an async client call — verify each call site's
-            actual caller context before converting, since `providers.py`'s usage may differ from the route
-            files'. Preserve the "honest degradation to `[]`/`{}` on any error, never a crash" contract exactly
-            — every existing function already documents this as deliberate.
-      - [ ] `aws_census` (`_aws_deployments.py:69,432` — `list_batch_census`/`list_ec2_census`/
-            `list_ecs_census`/`list_lambda_census`): add ONE combined new deployment-service endpoint
-            returning all 4 census types together (matches how `_aws_deployments.py`'s own `load_aws_inventory`
-            already calls all 4 together for one inventory build — no reason to split into 4 round-trips).
-            Preserve the existing `importlib.util.find_spec` degrade-to-`[]` guard's INTENT (the AWS census
-            seam being genuinely unavailable) as an HTTP-level equivalent (a clean error response the caller
-            degrades on, not a crash).
+            `EXIT_STATUS_BLOB`/`RUN_LOG_BLOB` to a new `unified_trading_library/deployment_gcs_tail.py` module.
+            Shipped: `unified-trading-library@b565fcb9fa`, `deployment-api@f0f2681876`. Both repos'
+            `quality-gates.sh` green before ship.
+      - [ ] **(1st — lowest risk)** `aws_census` (`_aws_deployments.py:69,432`) — relocate the whole module to
+            UTL. Zero `deployment_service.*` imports; UTL already carries `boto3>=1.40.70` and has
+            `cloud_interface/providers/aws.py` + `aws_compute.py` + `_aws_sdk_protocols.py` as its home. Only ONE
+            deployment-service consumer to re-point (`data_pipeline_monitors/missing_live_producer_watcher.py`)
+            plus its 2 tests. Preserve the `importlib.util.find_spec` degrade-to-`[]` guard verbatim.
+      - [ ] **(2nd)** `_gcp_sdk` cluster (5 call sites: `_cloud_run_executions.py:132,207`,
+            `_gcp_cloud_functions.py:97`, `_cloud_run_services.py:126`, `artifact_pipeline/providers.py:448`) —
+            **do NOT move deployment-service's `_gcp_sdk`**; it has 8 internal consumers there and moving it buys
+            that repo nothing. UTL is ALREADY a sanctioned GCP SDK boundary
+            (`cloud_interface/providers/gcp_compute.py` already imports `run_v2` + `compute_v1` and wraps
+            `run_v2.ServicesClient`/`RevisionsClient`). Extend UTL's `cloud_interface` with what the 5 sites need
+            and point them there; leave deployment-service untouched. **One dep gap**: UTL's pyproject has
+            `google-cloud-run` and `google-cloud-compute` but NOT `google-cloud-functions`, needed for the
+            `functions_v2` site — add it. (It resolves in the deployed image today via the UTL base image chain,
+            but it is undeclared in both lockfiles, so declare it rather than rely on that.)
+      - [ ] **(3rd)** `manifest_reader` (`_deploy_turbo.py:606`, `ManifestReader.get_coverage_summary`) —
+            relocate to UTL. 929 lines, zero `deployment_service.*` imports; UTL already carries pandas>=2.3 +
+            pyarrow>=23 and has no `ManifestReader` name collision. FOUR deployment-service consumers to re-point:
+            `cli/utils/data_status_extended.py`, `cli/commands/deploy_missing.py`, `cli/commands/data_status.py`,
+            `api/routes/state.py`. Before moving, check overlap against UTL's existing manifest modules
+            (`manifest_freshness.py`, `manifest_reprocess.py`, `candidate_manifest_store.py`) so this does not
+            become a 5th parallel manifest reader.
+      - [ ] **(4th — PARTIAL move, read the gotcha)** `launcher_registry` (`vm_admin.py:262`) — move ONLY the
+            `LAUNCHER_FOR_VM_PREFIX` dict + `resolve_launcher_for_vm()` + `is_known_non_capture_host()` to UTL.
+            **Leave `_LAUNCHER_DIR` and `launcher_path()` in deployment-service.** Why: `launcher_registry.py:59`
+            is `_LAUNCHER_DIR = Path(__file__).resolve().parents[2] / "scripts" / "vm"` — move that file into UTL
+            and `parents[2]` resolves inside UTL's tree, where `scripts/vm/launch-*.sh` does not exist, so
+            `launcher_path()` returns a bogus path **with no exception raised**. Its guard gate
+            (`scripts/quality_gates/check_vm_launcher_prefix_registration.py`) also walks deployment-service's own
+            `scripts/vm/` and documents itself as repo-local. deployment-api imports only
+            `resolve_launcher_for_vm` and never calls `launcher_path()` — verified — so the partial move is
+            sufficient for it.
       - [ ] Once every site above is converted, re-run `check-dependency-alignment.py --repo deployment-api
             --json` and confirm `aligned: true`.
 - [ ] [SCRIPT] P2. Once ALL `deployment_service.*` imports are gone from deployment-api, remove the stale
@@ -216,6 +237,19 @@ DIFFERENT escalation, `agt-614918`); not this doc's scope, not touched here, cro
       confirm `aligned: true` for real this time. Repo: unified-trading-pm.
 - [ ] [AGENT] P3. Once aligned, re-run a real PM quickmerge (not just the diagnostic) to confirm Stage 1.5 passes
       again fleet-wide, not just for deployment-api specifically.
+- [ ] [OPERATOR] P2. **Unrelated live defect found in passing 2026-08-22, filed here per the same
+      cross-reference convention this doc already uses for the `pip` mismatch.** The GCP Cloud Functions inventory
+      panel has been silently empty in prod: `uts-prd-sa@central-element-323112.iam.gserviceaccount.com` lacks
+      `cloudfunctions.functions.list`. Confirmed from Cloud Run logs, not inferred —
+      `GCP Cloud Functions census failed (degrading to empty list): 403 Permission 'cloudfunctions.functions.list'
+      denied on 'projects/central-element-323112/locations/asia-northeast1/functions'` (2026-08-21T12:21:22Z and
+      :17Z). `deployment_api/routes/_gcp_cloud_functions.py:123`'s `except Exception` degrades this to `{}` by
+      design, so the panel shows empty rather than erroring and nobody notices. Fix is an IAM grant
+      (`roles/cloudfunctions.viewer` on the project, or the narrower list permission) — per CLAUDE.md both cloud
+      identities are IAM-self-service, so this is a fix, not an ask. Tagged `[OPERATOR]` because it is a
+      **production IAM change**, not because it is blocked. Repos: none (infra). NOTE: while fixing, consider
+      whether "degrade to empty" is the right contract for a *permission* error as opposed to a transient API
+      error — a permanently-empty panel that never alerts is how this survived undetected.
 
 ## Progress Log
 
@@ -233,3 +267,22 @@ DIFFERENT escalation, `agt-614918`); not this doc's scope, not touched here, cro
   sys.path). Caught via `quickmerge`'s internal re-gate (a standalone `quality-gates.sh` run had NOT caught it —
   worth noting that discrepancy for whoever investigates it next, not chased further here). Fixed by restoring a
   MINIMAL empty-stub version of just that protection, without the admission-specific fakes.
+- **2026-08-22 (slot-30, interactive)**: P2's HTTP-endpoint design SUPERSEDED and replaced with a measured
+  UTL-relocation design (see the todo). Corrections made this session, each verified rather than reasoned:
+  (1) the `QUALITY_GATE_BYPASS_AUDIT.md` §2.5/§2.18 citation does not support the tier-boundary exception it was
+  cited for — §2.5 is a different gate (imports-inside-functions) and §2.18 does not exist;
+  (2) all four remaining modules are stateless (import lists inspected), so none needs a network hop;
+  (3) inbound blast radius measured per module (1 / 4 / 7 / 8 deployment-service consumers) — the four are not
+  interchangeable and `launcher_registry` would break SILENTLY if moved whole, via its `parents[2]`-rooted
+  `_LAUNCHER_DIR`;
+  (4) `_gcp_sdk` should not move at all — UTL is already a GCP SDK boundary and deployment-service has 8 internal
+  consumers;
+  (5) the tier violation is a governance/pipeline block, not a runtime break — the deployed image resolves the
+  imports fine.
+  Also corrected the root-cause claim in the sibling issue
+  `/plans/active/issues/deployment_service_client_broken_functions_2026_08_20.md` and at its origin in
+  `deployment-api/deployment_api/clients/deployment_service_client.py`'s docstring: deployment-service's API IS
+  deployed (Cloud Run `deployment-dashboard`, all 13 `/api/v1` routes, publicly invokable, HTTP 200 measured) —
+  the nine "broken HTTP functions" are broken only because `DEPLOYMENT_SERVICE_URL` is never set. That false claim
+  had already misdirected at least one downstream session into designing endpoints against a server it believed
+  absent. No code changes to the four call sites yet — corrections and design only.
