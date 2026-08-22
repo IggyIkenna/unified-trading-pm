@@ -35,6 +35,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-08-16
+last_updated: "2026-08-21"
 author: claude-agent
 parent_epic: predictions_master
 assigned_vm: NA
@@ -160,3 +161,9 @@ Full per-bullet disposition of `prediction_satellite_ao_dispatch_batch4_2026_07_
   gate of this shape does not fall under §3a's reversibility carve-out (that carve-out covers GCS object/prefix/
   bucket deletes with a soft-delete undo window, not a manifest reason-code reclassification whose risk is a
   silent false-positive mark on already-captured data, which has no equivalent restore mechanism).
+
+- **2026-08-21 — ruling D2 (Manifest/GCS correction batch)**: OPERATOR-RULED 2026-08-21 — APPROVED ALL under each
+  item's stated precondition (retention check / fresh dry-run / snapshot-first). Execute serially, one item per
+  verified step, citing the gate result inline. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger. Already applied above (2026-08-22 D2 execution pass): this item's own precondition does not match D2's
+  three named types, so the `--apply` was correctly withheld; todo 1 stays open, unchanged by this entry.

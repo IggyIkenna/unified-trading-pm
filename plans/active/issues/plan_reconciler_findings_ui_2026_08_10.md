@@ -22,7 +22,7 @@ related:
     /plans/active/ui_satellite_ao_dispatch_batch3_2026_08_09.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-15"
+last_updated: "2026-08-21"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -259,23 +259,23 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
 > that were left as narrative flags rather than tracked checkboxes, per the workspace's "every follow-up is a `- [ ]`
 > todo, never prose" hard rule. `assigned_vm`/`status` on this doc left untouched.
 
-- [ ] [OPERATOR] P3. **Scope the 3 orphaned "Out of scope (named successors)" items in
-      `plans/active/deployment_registry_firestore_migration_2026_07_14.md`** (real-time UI listeners /
-      push-instead-of-poll; archiving emitted `lifecycle-events`/resource samples to a durable event log; `run.log`
-      whole-file-overwrite efficiency via GCS compose/rotation) — each is explicitly named as "separate, own plan" in
-      that doc's own text but none has a tracking plan/issue doc. Needs a human call on whether/when each becomes its
-      own plan, not a mechanical fix. From Filed item 7. **NEEDS SCOPING — not yet a tracked plan (flagged 2026-08-15,
-      plan_reconciler reconciliation session — still stays open, no dedicated plan drafted this pass; out of this
-      session's mandate to author one).**
-- [ ] [OPERATOR] P2. **Define "the agreed window" soak duration in
-      `plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md`** — its `[REVIEW] P1` "Soak" todo (line 111)
-      and the preceding `[BACKEND] P1` todo both reference "the agreed window" with no duration ever stated anywhere in
-      the doc; the soak can't be run to a defined done-when without it. Currently moot while the phase is HALTED on an
-      earlier precondition (dual-write-soak precondition not yet met, per that doc's own Progress Log), but needs
-      resolving before Phase 3 can proceed once unblocked. From Filed item 8. **Still moot as of 2026-08-15
-      (plan_reconciler reconciliation session) — re-checked `..._p3_cutover_2026_07_14.md`'s Progress Log fresh: the
-      4-item GO/NO-GO data-precondition checklist (unrelated to this todo, see the doc's now-corrected banner) is still
-      not fully met, so Phase 3 has not reached the soak step yet. Stays open, not force-flipped.**
+- [ ] [DOC] P3. **D114 ruling applied (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md ledger): author 3
+      separate plan docs for the orphaned "Out of scope (named successors)" items in
+      `plans/active/deployment_registry_firestore_migration_2026_07_14.md`** — (1) real-time UI listeners /
+      push-instead-of-poll, (2) archiving emitted `lifecycle-events`/resource samples to a durable event log, (3)
+      `run.log` whole-file-overwrite efficiency via GCS compose/rotation. Each becomes its own
+      `plans/active/<slug>_2026_08_22.md` doc (default `assigned_vm: NA` per the standard ask-before-creating rule
+      unless the operator says otherwise), citing
+      `plans/active/deployment_registry_firestore_migration_2026_07_14.md:187-190` as source. From Filed item 7.
+      Done-when: 3 new plan docs exist, each cross-linked from the parent doc's "Out of scope" section.
+- [ ] [DATA] P2. **D114 ruling applied (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md ledger): check the
+      GO/NO-GO precondition, set the duration if near, else it can wait.** Re-check
+      `plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md`'s 4-item GO/NO-GO data-precondition
+      checklist's current status; if it is now met or genuinely near, set "the agreed window" soak duration explicitly
+      in that doc's `[REVIEW] P1` "Soak" todo (line ~111) with a stated rationale (e.g. a specific 24h/48h/72h value);
+      if it remains far from met, leave the duration unset and note the re-check trigger/date instead. From Filed item
+      8. Done-when: either a concrete duration is written into that doc, or a dated note explains why it's still
+      premature and names what would need to change.
 - [x] [DOC] P3. **DONE 2026-08-16 (plan_reconciler Phase -1).** `cursor-configs/skills/plan-reconcile/SKILL.md:648`
       described this skill's dispatch default as "the worker (opus / effort max / thinking on)" — contradicted
       CLAUDE.md's 2026-08-07/08-08 ruling (opus-required = ZERO categories, manual-only) and
@@ -410,3 +410,9 @@ staged batch before commit).
 - **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:1babc61ff534fae3]: KEEP-NA, valid — both remaining open
   items are `[OPERATOR]`-tagged genuine human calls (scoping 3 orphaned successor items; defining an undefined
   soak-duration value), neither worker-determinable. Consistent with this doc's own 2026-08-10 self-audit note.
+
+- **2026-08-21 — ruling D114 (Firestore-migration successors)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Author the 3 plans (bounded, prevents drift); set the duration if the GO/NO-GO
+  precondition is near, else it can wait. Applied by retagging both open todos above from `[OPERATOR]`-gated to plain
+  dispatchable todos (author 3 successor plan docs; check-then-set the soak duration). Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
