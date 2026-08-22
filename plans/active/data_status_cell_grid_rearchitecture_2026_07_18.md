@@ -132,7 +132,7 @@ real fix is to never load the whole manifest per request.
       deployment-api@777f1fa531 and restating the plan's own not-a-full-history-fix caveat so the codex doc doesn't
       overclaim. — unified-trading-pm@6804f35e8d (shipped same session as todo 3, before the na-eligibility-audit
       reclassification pass landed — this checkbox lagged that shipment, not redone).
-- [ ] [BACKEND] P1. **Phase 2a — row-group-streamed slice for filtered non-DeFi/non-Prediction requests** — narrower,
+- [x] ✅ [BACKEND] P1. **Phase 2a — row-group-streamed slice for filtered non-DeFi/non-Prediction requests** — narrower,
       immediately-actionable first slice of the original "Phase 2" todo (rescoped 2026-08-22 after a full-pipeline
       investigation found the true scope is ~25+ methods across 8 files, not ~10-15 across ~3 — see the 2026-08-22
       Progress Log entry for the full breakdown + the found/expected-separability principle every later sub-todo
@@ -158,7 +158,12 @@ real fix is to never load the whole manifest per request.
       factory — the pattern already proven in `tests/unit/test_route_venue_year_coverage.py`'s `_row_groups()` helper,
       no real multi-row-group parquet fixture needed) asserts byte-identical output vs the non-streamed path for a
       >1-row-group, venue-filtered fixture, PLUS a case proving the genesis-clamp matches when the true minimum date
-      lives in a LATER chunk than the first one that happens to contain the requested venue.
+      lives in a LATER chunk than the first one that happens to contain the requested venue. — deployment-api@e5234daebf;
+      evidence: `tests/unit/test_manifest_category_builder_streamed.py` (15 specs green — eligibility gate,
+      byte-identical streamed-vs-bulk slice, genesis-in-later-chunk, empty-bucket, `_build_manifest_category` wiring)
+      + `tests/unit/test_data_status_service.py::TestManifestStatusVenueFilter` updated to mock both code paths and
+      still green; full `deployment-api` `quality-gates.sh` green (5453 tests, function/method size gates satisfied
+      via `_stream_process_chunk`/`_stream_accumulate_chunks`/`_build_manifest_category_streamed` splits).
 - [ ] [BACKEND] P2. **Phase 2b — extend streamed path to DeFi** — replicate `_postprocess_defi_merged_index`'s
       per-row-safe DeFi sub-steps (`_filter_to_canonical_defi_venues`, `_canonicalise_defi_venue_column`) per chunk
       inside `_stream_prepare_manifest_slice` (confirmed per-row-safe by reading their bodies during the 2026-08-22
@@ -435,3 +440,32 @@ real fix is to never load the whole manifest per request.
   8f is the final wiring + the full byte-identical test the ORIGINAL todo 8 asked for). Judged safer to ship this
   research + re-scoping now than to rush a partial/risky implementation of shared fleet-wide manifest-aggregation
   code under session time/context pressure — implementing 8a is the next actionable unit.
+
+- **2026-08-22 — Todo 8a shipped (slot-6 agent, deployment-api@e5234daebf).** New file
+  `deployment_api/services/data_status/manifest_category_builder_streamed.py`: `category_stream_eligible(cat,
+  row_filters, pipeline_modes, venue)` gates eligible (non-defi/prediction + at least one narrowing filter) requests
+  through `ManifestCategoryStreamedMixin._stream_prepare_manifest_slice`, which streams
+  `iter_manifest_row_groups(bucket)` and applies `_apply_manifest_filters`/`_drop_legacy_defi_and_canonicalise` per
+  chunk (split into `_stream_process_chunk` + `_stream_accumulate_chunks` to satisfy the 50-line method-size gate),
+  discarding non-matching rows before concatenation. Tracks a running service-masked (not venue/row-filtered)
+  per-chunk minimum date for the `effective_start` genesis clamp, exactly as spec'd — proved via a dedicated test
+  that puts the true corpus-wide minimum date in a LATER chunk than the first one containing the requested venue.
+  Wired into `_build_manifest_category` by inserting `ManifestCategoryStreamedMixin` into the mixin chain between
+  `ManifestCategoryBuilderMixin` and `ManifestCategoryBuilderDualScopeMixin`; ineligible requests fall through to
+  `super()._build_manifest_category(...)` (the pre-existing bulk path) unchanged. Also split
+  `_resolve_category_bucket` out of `_resolve_category_bucket_and_index` (pure code motion) so the streamed path can
+  resolve a bucket name without paying for `_read_defi_merged_index`'s bulk read.
+
+  **Regression found + fixed in the same session**: `TestManifestStatusVenueFilter::test_venue_filter_narrows_to_requested_venue`
+  (`test_data_status_service.py`) passed `cat="CEFI"` + `venue=["BINANCE-FUTURES"]` with only `_read_defi_merged_index`
+  mocked — this now routes through the NEW streamed path (venue filter + non-defi/prediction category is exactly
+  todo 8a's eligibility target), so the test needed `_resolve_category_bucket` + `iter_manifest_row_groups` mocked
+  too (both patched to serve the same fixture data the bulk mock already used). Fixed by extending that test's
+  `_build_with` helper; confirmed the fix doesn't paper over a real behavior change (both code paths now produce the
+  same filtered slice for this fixture, verified by the new byte-identical adversarial test in the new test file).
+
+  Evidence: new `tests/unit/test_manifest_category_builder_streamed.py` (15 specs: eligibility-gate cases,
+  streamed-vs-bulk byte-identical slice on a >1-row-group venue-filtered fixture, the genesis-in-later-chunk case,
+  empty-bucket→None, `_build_manifest_category` wiring proving eligible/ineligible requests call the right read
+  primitive and never both) + full `deployment-api` `quality-gates.sh` green (5453 tests passed, basedpyright clean,
+  no new size/lint/ratchet violations).
