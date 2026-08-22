@@ -160,6 +160,22 @@ known — see the "Findings triage" note in `CLAUDE.md` if this needs its own tr
       **DUPLICATE OF**: reconciliation into `[x]` is owned by `plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`'s
       open todo 1 (status: active) — not independently flipped here, per this doc's own governance rule; the design call
       itself was already shipped (`agent-orchestrator@9cd1fa0`, see Progress Log).
+- [ ] [UI] P3. **Fix the "Task Token Usage panel" fixture drift in
+      `deepseek-per-turn-metrics.spec.ts`** — flagged in this doc's own Progress Log twice (2026-08-15/17 and again
+      2026-08-18) but never converted to a tracked todo until now. Two tests in that describe block (distinct from the
+      "Accounts panel" describe block, which is unrelated and passing) are currently `test.fixme()`-marked
+      (`agent-orchestrator/.github/workflows/dashboard-e2e.yml`'s new CI gate would otherwise be red on day one from
+      pre-existing, out-of-scope drift — see `dashboard_deepseek_e2e_specs_red_stale_fixture_expectations_2026_08_08.md`
+      todo 2's evidence): (1) "CI/CD bucket shows '—' for Reasoning" — `E2E_USAGE_TS_HOUR_B_INPUT_TOKENS = 90000`
+      (seeded for the hourly usage time-series feature) shares the `dispatch_role="cicd"` tag with the older
+      `E2E_CICD_USAGE_INPUT_TOKENS = 2000`, so the assertion sees `92.0K` instead of `2.0K` — same bug class as the
+      already-fixed `agent-orchestrator@6a4b7cb` episode; (2) "Lifetime row derives turns/task..." — expects `6.5`
+      turns/task, recomputation over the current two `TaskUsageRow` fixtures may or may not still land there (last
+      measured `4.8`/`6.5` depending on session — needs a fresh recompute, not just a number swap). Fix: either
+      re-scope each seeded fixture row so it doesn't cross-bucket with the other feature's row, or recompute + pin the
+      assertions to the current fixture state (same case-(a) pattern as the sibling wallet-split fix,
+      `agent-orchestrator@6e3d06c`) — needs the actual derivation traced first, not a blind re-baseline. Done when: both
+      tests pass and are un-`fixme`'d. Repo: agent-orchestrator.
 
 ## Why this wasn't chased further this session
 
