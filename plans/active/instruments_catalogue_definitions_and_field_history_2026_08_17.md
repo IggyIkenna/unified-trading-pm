@@ -194,17 +194,32 @@ instrument costs one narrow row, not a duplicated definition row.
 replayed backwards for any field whose `changed_at > D` — or, for coarse queries, simply that month's catalogue.
 Both paths must return the same answer, and that equivalence is a test, not an assumption.
 
-- [ ] [OPERATOR] P0. **Ratify or replace this design.** The requirement is the operator's; the mechanism is a proposal.
-      The decision worth making explicitly: current-state + narrow change log (above) versus monthly snapshots alone
-      (simpler, but cannot resolve an intra-month change) versus full-row versioning (simplest to query, most
-      expensive to store).
+- [x] ✅ [OPERATOR] P0. **Ratify or replace this design.** The requirement is the operator's; the mechanism is a
+      proposal. ✅ 2026-08-22 — **operator ratified: current-state + narrow change log**, over monthly-snapshots-
+      alone (can't resolve an intra-month change) and full-row-versioning (duplicates every immutable field per
+      mutable-field change).
 - [ ] [BACKEND] P0. **Declare the mutable-field set explicitly in UAC.** Only declared-mutable fields are historised.
       A field that changes but was never declared mutable is a silent correctness bug — so the declaration is the
       control, and adding a field to it is a deliberate act.
+      **2026-08-22 — filed to T1's Inbound requests** (`code_readiness_t1_contracts_library_externalapi_2026_08_19.md`).
+      T2 built an interim `MUTABLE_CATALOGUE_FIELDS` constant against this todo, isolated for a one-line swap once
+      UAC's real registry lands — real finding while building it: the design doc's own candidate set (tick_size,
+      contract_size, DeFi risk params) was read off the 51-column per-date snapshot; the persisted 41-column
+      rolled-up `CATALOG_COLUMNS` this writer actually diffs does NOT carry tick_size/min_size/pool_fee_tier/
+      rate_method_selector at all — only `contract_size` survives into the interim set. Flagging so UAC's
+      declaration accounts for this gap rather than declaring fields the catalogue can't currently historise.
 - [ ] [BACKEND] P0. **Add the definitions to the rolled-up catalogue** at monthly grain, split by venue — the actual
       gap that currently forces day-by-day reads.
+      **2026-08-22 — CODE BUILT, not yet shipped.** `instruments_service/reference_data/catalogue_monthly_rollup.py`
+      (75 lines) + a partition-correctness/idempotency test, wired into `promote_catalogue()`. Queued behind the
+      host QG governor as of this note; evidence pending in the T2 tranche plan once landed.
 - [ ] [BACKEND] P0. **Implement the field-change log** with the schema above, written by the same writer that updates
       current state, in the same transaction/step — never a later reconciliation pass, or the two drift.
+      **2026-08-22 — CODE BUILT, not yet shipped.** `instruments_service/reference_data/catalogue_field_history.py`
+      (202 lines), written BEFORE `promote_catalogue()`'s final `copy_blob`/`delete_blob` finalize (a retry after a
+      write failure re-diffs against the still-old `previous` state — safe/idempotent, never drifts from current-
+      state). 4-part negative-control test suite written (genuine change → 1 row; undeclared/immutable field change
+      → 0 rows; no change → 0 rows; two consecutive changes → 2 distinct rows). Queued behind QG; evidence pending.
 - [ ] [BACKEND] P1. **Prove point-in-time equivalence**: for a sampled set of instruments and dates, the change-log
       replay and the monthly catalogue agree. Include a negative control — a known tick-size change must make a naive
       latest-state read visibly wrong.
