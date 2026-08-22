@@ -473,14 +473,25 @@ a new todo below, not built blind this session.
       consuming it, matching the load_rate_indices() precedent. BENQI needs its Core-Markets Comptroller address
       resolved first (only the Isolated-Markets address was found). Fluid needs its Resolver-contract shape
       researched before it can be scoped at all -- separate sub-item.
-- [ ] [BACKEND] P2. Build the Radiant reserve-data reader in MTDS (not features-service -- see architecture note
-      above): LendingPoolAddressesProvider.getLendingPool() (0x454A8DAF74b24037ee2FA073ce1BE9277ED6160A on Arbitrum
-      resolves to 0xE23B4AE3624fB6f7cDEF29bC8EAD912f1Ede6886) live-confirmed 2026-08-21. Needs a NEW 12-field
-      V2-shaped getReserveData() ABI (Radiant is NOT V3-shaped -- AavePositionsMixin._RESERVE_DATA_ABI does not
-      decode it correctly, confirmed by live word-count). Available liquidity = aToken.totalSupply() -
-      variableDebtToken.totalSupply() (+ stableDebtToken if nonzero), both live-confirmed for WETH/ARB/USDC. Also:
-      instruments-service's radiant.py curated vault_address values do not match the real on-chain aToken addresses
-      -- worth checking separately when this is built.
+- [x] ✅ [BACKEND] P2. **SHIPPED 2026-08-22 — `market-tick-data-service@33c728d2`.** Built the Radiant
+      reserve-data reader (`lending_indices_radiant.py`, real direct-RPC collector using the V2-shaped
+      `getLendingPool()`/`getReserveData()` path, wired into the lending-indices dispatch alongside
+      fluid/morpho's dedicated-collector pattern). **Also found and fixed a real silent-wrong-answer bug in
+      the process**: `_oracle_prices_constants.py`'s `_RADIANT_ORACLE_ADDRESS` was derived from
+      `0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb` — Arbiscan-labeled "Aave: Pool Addresses Provider V3",
+      i.e. AAVE's OWN AddressesProvider (Aave reuses this exact address across chains via CREATE2). Every
+      historical `oracle_prices` row captured under `venue=RADIANT` was actually AAVE's Arbitrum oracle
+      price, mislabeled. Corrected to Radiant's own AddressesProvider (live eth_call-confirmed against
+      docs.radiant.capital). **Historical GCS rows under the wrong label have NOT been purged/recaptured** —
+      that's separate scope, see the new todo below. `instruments-service/radiant.py`'s curated
+      `vault_address` values still don't match the real on-chain aToken addresses — not checked in this
+      shipment, flagging for whoever builds against it next.
+- [ ] [BACKEND] P2. **New 2026-08-22.** Purge/recapture the historical `oracle_prices` GCS rows mislabeled
+      `venue=RADIANT` (they're actually AAVE's Arbitrum oracle price, per the bug above) — a real data-quality
+      fix, not just a code fix. Scope: find the affected date range (RADIANT-ARBITRUM genesis 2022-07-25
+      onward, until `market-tick-data-service@33c728d2` landed), decide whether to delete-and-recapture or
+      relabel-in-place, per this workspace's GCS/manifest delete-safety protocol (human-gated for prod
+      deletes unless reversibility-qualified).
 - [ ] [BACKEND] P3. Investigate reward_rate general per-protocol reward-token source -- not researched in the
       2026-08-21 session (budget). EigenRewardsCalculator is EIGEN-specific; unknown whether a general pattern
       exists across protocols. Genuinely unresearched, not confirmed-blocked.
