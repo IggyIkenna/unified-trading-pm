@@ -16488,7 +16488,7 @@ Content-Type: application/json
         No service calls <code>google.cloud</code>/<code>boto3</code> directly, and no service reads a credential
         JSON off disk. Every storage read/write goes through <code>get_storage_client()</code>, every secret read
         through <code>get_secret_client()</code>, both resolve the calling service's own GCP service-account
-        identity (workload-scoped, one SA per tier — see the bucket isolation model above), so a compromised
+        identity (workload-scoped, one SA per tier, see the bucket isolation model above), so a compromised
         service can only reach the buckets/secrets its own SA was granted, not the fleet. The orchestrator VM's own
         cloud identity is self-service: it can grant itself a missing IAM role rather than pause on a
         <code>PERMISSION_DENIED</code>, audited the same way any other IAM change is. Source:
@@ -16874,13 +16874,13 @@ Content-Type: application/json
             </thead>
             <tbody>
               <tr>
-                <td><b>Standard</b> — <code>recon_excluded: false</code> (default)</td>
+                <td><b>Standard</b>: <code>recon_excluded: false</code> (default)</td>
                 <td>Booked like any automated fill; participates in normal batch-live-reconciliation ledger-matching</td>
               </tr>
               <tr>
-                <td><b>Audited, recon-excluded</b> — <code>recon_excluded: true</code></td>
+                <td><b>Audited, recon-excluded</b>: <code>recon_excluded: true</code></td>
                 <td>Still fully booked and audited (same <code>TradeFillRecord</code>/<code>LedgerRow</code> path,
-                  same FCA audit trail) but deliberately skipped from ledger-matching comparison — for a fill that
+                  same FCA audit trail) but deliberately skipped from ledger-matching comparison, for a fill that
                   legitimately cannot reconcile against the normal loop (e.g. a disaster-path fill placed while the
                   automated pipeline was down), so it doesn't manufacture a false reconciliation deviation</td>
               </tr>
@@ -16891,7 +16891,7 @@ Content-Type: application/json
       <p style="font-size: 0.9rem; color: var(--ink-3)">
         The flag is orthogonal to <code>ManualExecutionMode</code> (<code>EXECUTE</code> routes to the venue via the
         orchestrator; <code>RECORD_ONLY</code> skips venue execution and records a fill directly, for OTC or a
-        missed trade) — either mode can be booked standard or recon-excluded. <b>Source:</b>
+        missed trade). Either mode can be booked standard or recon-excluded. <b>Source:</b>
         <code>unified_api_contracts/internal/execution.py::ManualExecutionMode</code>,
         <code>execution_service/api/manual_instruction_ledger.py</code>, shipped
         <code>execution-service@ee694cf46b</code> + <code>unified-trading-library@707020ff7b</code>.
@@ -16900,7 +16900,7 @@ Content-Type: application/json
         <span class="tag">The honest state today</span>
         <p>
           The booking mechanics above (both options) are built and shipped. What remains specified, not built: a
-          manual-trade UI/path confirmed reachable for EVERY venue with no exceptions — venue-by-venue coverage of
+          manual-trade UI/path confirmed reachable for EVERY venue with no exceptions. Venue-by-venue coverage of
           the disaster-path requirement itself is unverified. It is a P0 item precisely because it is the fallback
           for every other P0 item in this document failing at once.
         </p>
@@ -17022,7 +17022,7 @@ Content-Type: application/json
             </thead>
             <tbody>
               <tr><td><code>delta_pnl</code></td><td>Directional price exposure</td></tr>
-              <tr><td><code>gamma_pnl</code></td><td>Convexity — how delta itself changes with price</td></tr>
+              <tr><td><code>gamma_pnl</code></td><td>Convexity, how delta itself changes with price</td></tr>
               <tr><td><code>theta_pnl</code></td><td>Time decay</td></tr>
               <tr><td><code>vega_pnl</code></td><td>Implied-volatility sensitivity</td></tr>
               <tr><td><code>rho_pnl</code></td><td>Interest-rate sensitivity of an option's own price</td></tr>
@@ -17031,9 +17031,9 @@ Content-Type: application/json
               <tr><td><code>interest_rate_pnl</code></td><td>Lending/borrowing rate accrual, distinct from option rho</td></tr>
               <tr><td><code>carry_pnl</code></td><td>Cost/benefit of holding a position over time, net of the more specific dimensions above</td></tr>
               <tr><td><code>fx_pnl</code></td><td>Currency conversion effects</td></tr>
-              <tr><td><code>staking_pnl</code></td><td>On-chain staking rewards — first-class field since
+              <tr><td><code>staking_pnl</code></td><td>On-chain staking rewards, a first-class field since
                 <code>unified-api-contracts@366b74ec08</code> (was folded into <code>carry_pnl</code> before)</td></tr>
-              <tr><td><code>residual_pnl</code></td><td>Whatever the 11 named dimensions above don't explain — never silently dropped</td></tr>
+              <tr><td><code>residual_pnl</code></td><td>Whatever the 11 named dimensions above don't explain, never silently dropped</td></tr>
             </tbody>
           </table>
         </div>
@@ -17052,10 +17052,10 @@ Content-Type: application/json
       <div class="callout">
         <span class="tag">The honest state today: the aggregator is built, nothing calls it yet</span>
         <p>
-          <code>strategy-service</code>'s <code>PnLAttributionAggregator.aggregate()</code> is real and complete — it
+          <code>strategy-service</code>'s <code>PnLAttributionAggregator.aggregate()</code> is real and complete, it
           sums per-position attribution dicts into a <code>PortfolioPnLAttribution</code> across all 12 dimensions
           above, plus the asset-group/strategy groupings. What is not yet built: no endpoint, periodic job, or event
-          consumer constructs one in production today (confirmed 2026-08-22 — zero non-test call sites). <b>Source:</b>
+          consumer constructs one in production today (zero non-test call sites). <b>Source:</b>
           <code>strategy_service/position/core/pnl_attribution_aggregator.py</code>,
           <code>unified_api_contracts/canonical/domain/position/__init__.py::PortfolioPnLAttribution</code>.
         </p>
@@ -17950,7 +17950,7 @@ Content-Type: application/json
           all 16 action types, and the instruction type-support table above names each one's own production path.
         </p>
         <div class="callout">
-          <span class="tag">Two transport variants — REST is general-purpose, the event-log path is ATOMIC-only</span>
+          <span class="tag">Two transport variants: REST is general-purpose, the event-log path is ATOMIC-only</span>
           <p>
             This REST endpoint is the general-purpose path: any of the 16 action types, any client, synchronous
             response. A second, narrower transport also exists: <code>StrategyInstructionSubscriber</code> polls the
