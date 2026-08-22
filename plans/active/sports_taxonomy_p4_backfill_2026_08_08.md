@@ -6,7 +6,9 @@ summary: >-
   captured snapshot/movement rows (the old counts were phantom manifest rows), while odds_horizon_bucket is the surviving
   derived type. The 2026-08-20 operator decision is to wire the snapshot/movement adapters into the live MDPS driver
   first; no standalone historical shard-day, runtime, or SPOT-cost projection is valid until that output contract is
-  implemented. The 10,345-object pre-launch C3 corpus remains governed by the 2020-06 floor ruling.
+  implemented. The pre-launch C3 corpus is DISPOSED (2026-08-22) — measured at 12 real objects at execution time, not
+  the stale 10,345 figure cited in the 2026-06-11 R8 sweep (two intervening 2026-07-21/27 wipe campaigns had already
+  swept up the overwhelming majority, unlabelled as C3-specific work).
 status: active
 nature: process
 asset_group: [sports]
@@ -171,11 +173,31 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       launcher's own printed "Logs: gcloud compute ssh ... tail -f /home/ikennaigboaka/logs/features-backfill.log"
       hint is STALE (the actual mechanism is the GCS-tee `run.log` above, not a local file at that path) — worth a
       follow-up doc fix but out of scope for this todo.
-- [ ] [DATA] P1. **Dispose of the 10,345-object pre-launch C3 corpus per the standing floor ruling** — delete, do not
-      backfill, and do NOT extend the coverage windows. Runs agent-autonomously via delete-safety §3a: a FRESH, same-run
-      `gcs_bucket_soft_delete_retention_seconds()` >= 604800 check before any object delete; if the check fails, stop
-      and say so rather than proceeding. Close out
-      `/plans/archive/2026_08/sports_prelaunch_cf5_verify_residual_2026_07_24.md` by citing this ruling.
+- [x] ✅ [DATA] P1. **Disposed 2026-08-22 (slot-24, data_engineering)** — Deleted the sports
+      `SportsObjectClass.PRE_LAUNCH_WINDOW` ("C3_pre_launch_window") corpus per the standing floor ruling. **Measured
+      drift**: the corpus cited as 10,345 objects (2026-06-11 R8 sweep) is actually **12 objects** at execution time —
+      the two much larger 2026-07-21 (398,240 objects) and 2026-07-27 (30,182 objects) `sports_reference/by_date/`
+      pre-floor wipe campaigns already swept up the overwhelming majority of the original C3 population, even though
+      neither was scoped/labelled as C3-specific disposal. Per "trust the actual distribution, not the constant", this
+      disposed of the measured current population, not the stale cited figure. Method: bounded (single-walk-safe) —
+      since every sports floor is now uniformly clamped to 2020-06-06, the walk was scoped to the 3 remaining pre-floor
+      `day=` dirs under `sports_reference/by_date/` (delimiter listing), classified via the sibling
+      `migration_orphan_sweep_sports.py::classify_reference_object` (reused, not re-implemented, so
+      CANONICAL_MANIFESTED/LEGACY_DUPLICATE/NON_DATA/JUNK objects under the same pre-floor days were correctly
+      excluded). §3a fresh check: `gcs_bucket_soft_delete_retention_seconds()` == 604800s (7d), queried in the same
+      execution session immediately before delete — qualified for the agent-autonomous path. All 12 objects were
+      `api_football` `fixtures_outcomes` for `day=2020-06-01` across 12 minor leagues. Verified: census (12 found) →
+      apply (12 DELETED, 0 ERROR) → post-delete `gcs_describe_object()` on all 12 URIs confirms `None` (genuinely
+      gone). Did NOT extend coverage windows. Closed out
+      `/plans/archive/2026_08/sports_prelaunch_cf5_verify_residual_2026_07_24.md` (see its own edit for the citation).
+      **Memory-bounding finding** (fixed in the same commit, not filed separately — the sibling sweep module's own
+      `_load_covered_index` is the one at risk, so future callers benefit too): the sports reference manifest index
+      is 19,524,934 rows × 41 columns (383MB compressed); loading it via the sibling's default full-column
+      `.to_dict("records")` path SIGKILLed (exit 137) when run directly on this host. The disposal script
+      column-prunes to the 6 fields `build_sports_covered_index` actually consumes and filters to
+      `capture_status=="captured"` via pyarrow BEFORE materialising any Python row objects — ran clean under a 6G
+      `run-bounded-analysis.sh` cap after the fix. Evidence: `instruments-service@4219aaa45a`
+      (`scripts/dispose_c3_prelaunch_sports_corpus_2026_08_22.py`).
 - [ ] [REVIEW] P0. **Monitor on a PROGRESS metric, not activity.** Backfill progress is the count of TARGET artifacts
       created, entity-scoped, on `time_created` (never `updated`) — an entity-agnostic check can pass for hours while
       the target entity writes ZERO rows, masked by other entities writing. Arm an owned `run_in_background` heartbeat
@@ -198,6 +220,16 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 ## Progress Log
 
+- **2026-08-22 (slot-24, data_engineering, task `sports_taxonomy_p4_backfill-a61a45b2c3a9`)** — Flipped the C3
+  pre-launch-window disposal todo. Measured the corpus fresh rather than trusting the 2026-06-11-derived 10,345
+  figure: only 12 real objects remained (the 2026-07-21 + 2026-07-27 broader pre-floor wipes had already removed the
+  rest). Census → apply → post-delete `gcs_describe_object()` verification, all clean. Also fixed a live memory-bound
+  gap in the sibling `migration_orphan_sweep_sports.py::_load_covered_index` (full 41-column
+  `.to_dict("records")` over 19.5M rows SIGKILLed at exit 137 on this shared host) by column-pruning to the 6 fields
+  actually consumed and filtering to `capture_status=="captured"` via pyarrow before materialising Python objects.
+  Session died mid-task after the first (unbounded) attempt crashed; resumed cleanly on the same slot with WIP intact
+  (orchestrator's dirty-state gate had already auto-committed the in-progress script). Shipped
+  `instruments-service@4219aaa45a`. See the flipped todo above for full evidence.
 - **2026-08-22 (slot-19, data_engineering, task `sports_taxonomy_p4_backfill-df1ffc213ffe`)** — Flipped the `horizon`
   axis backfill todo. Launched `fts-backfill-20260822-131018`
   (`launch-features-sports-backfill-vm.sh --redo-all --tables odds_features 2020-06-06 2026-08-22`) to re-derive the

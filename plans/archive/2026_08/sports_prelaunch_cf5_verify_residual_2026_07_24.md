@@ -102,7 +102,7 @@ context_scope:
       LANDED:** quickmerge's pre-flight dep-audit refused across 3 retries because a LIVE sibling was continuously
       running fleet manifest-regen / version-alignment (UTL→UAC dirty, version bumps 0.14→0.15) — must not stomp foreign
       WIP. **The verified fix is PRESERVED on `origin/wip-preserve/mtds-346-cf5-trades` (mtds@d0a15a3)** — land it with
-      `quickmerge.sh --agent --files 'market_tick_data_service/scripts/rebuild_sports_manifest_v9.py     tests/unit/scripts/test_rebuild_sports_manifest_v9.py'`
+      `quickmerge.sh --agent --files 'market_tick_data_service/scripts/rebuild_sports_manifest_v9.py tests/unit/scripts/test_rebuild_sports_manifest_v9.py'`
       (cherry-pick the wip commit onto a clean MTDS tree) the moment all MTDS deps are clean. Reason-level only
       (status-diff GREEN — does NOT block the G4 apply). Repo: market-tick-data-service. Provenance: 2026-06-16 prod
       MDPS index diagnosis.
@@ -110,9 +110,13 @@ context_scope:
       `/codex/02-data/sports-2020-06-data-floor.md` (operator ruling 2026-07-21, `unified-api-contracts@8cdf7808`): all
       sports `SOURCE_COVERAGE_START`/`DATA_TYPE_COVERAGE_START` floors are clamped to `date(2020, 6, 6)`, so the C3
       pre-floor corpus is fabrication-by-construction — delete, do not backfill. Re-confirmed by the operator
-      2026-08-08. Disposition executed by `/plans/active/sports_taxonomy_p4_backfill_2026_08_08.md`
-      (active/unimplemented as of this edit; agent-autonomous via delete-safety §3a), closed out by its finalize
-      sibling. Do NOT extend the coverage windows. ~~[DATA] P1. Sports pre-launch-window corpus decision (C3, 10,345
+      2026-08-08. Disposition **EXECUTED 2026-08-22** by `/plans/active/sports_taxonomy_p4_backfill_2026_08_08.md`
+      (agent-autonomous via delete-safety §3a — see that plan's Progress Log for the full evidence trail:
+      `instruments-service@4219aaa45a`). **Measured drift**: the corpus was actually 12 real objects at execution
+      time, not the 10,345 cited below from the 2026-06-11 R8 sweep — two intervening, broader 2026-07-21/27
+      `sports_reference/by_date/` pre-floor wipe campaigns (neither scoped/labelled as C3-specific) had already swept
+      up the overwhelming majority. Do NOT extend the coverage windows. ~~[DATA] P1. Sports pre-launch-window corpus
+      decision (C3, 10,345
       objects — operator-gated): either extend the UAC windows (`SOURCE_COVERAGE_START["footystats"]` 2019-01-01 →
       2018-01-01 — the footystats HISTORICAL season API demonstrably serves 2018 rows now on disk; + the api_football
       `DATA_TYPE_COVERAGE_START` sub-entity windows) and re-run `backfill_orphan_class_e_sports.py` to manifest the
@@ -130,6 +134,10 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-22 (slot-24, data_engineering)** — Closing out this doc's C3 disposition per the standing floor ruling:
+  `/plans/active/sports_taxonomy_p4_backfill_2026_08_08.md`'s C3-disposal todo executed the delete
+  (`instruments-service@4219aaa45a`), measuring the corpus at 12 real objects (not the 10,345 cited below) at
+  execution time. See that plan's Progress Log for the full evidence trail (census/apply/post-delete verification).
 - 2026-07-24 — plan forked from `migration_verification_orphan_safety_2026_06_10.md` (line-cap remediation split); no
   further work done yet beyond what the parent's archived Progress Log already recorded.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — MIXED: todo 1 (land the preserved CF-5 relabel
