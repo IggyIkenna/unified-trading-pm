@@ -179,6 +179,15 @@ template, minus the third-party dependency).
       owner double-checking exactly what system-prompt payload that smoke test actually sent). Until this is fixed,
       Codex/Luna is NOT usable for any real dispatch from a CLAUDE.md-carrying workspace, only for a stripped/bare
       session — this bake-off's Codex/Luna lane is blocked pending a real fix here, not a config issue.
+      **ROOT CAUSE RESOLVED 2026-08-19, confirmed by `/plan-reconcile ao` 2026-08-22** — the schema-layer 400 above is
+      fixed: `codex_bridge_server.py`'s `AnthropicMessage.role` now reads `Literal["user", "assistant", "system"]`
+      (`agent-orchestrator@7a1be88b`, verified an ancestor of `origin/live-defi-rollout`, so landed, not just
+      written). The "NOT usable for any real dispatch" and "blocked pending a real fix" clauses above are therefore
+      STALE — read them as history, not current state. **This todo nonetheless stays `[ ]` open**, because its own
+      Done-when is a *marker-influence* proof (a real CLAUDE.md marker string demonstrably echoed/acted on by the
+      Codex-backed response), which the schema fix unblocks but does not itself establish. This also does NOT
+      contradict the `[REVIEW] P0` smoke-test gate below: that gate's `[x]` stands on its own cited evidence, and the
+      sentence above speculating the gate "didn't catch it" was written before the root cause was known and fixed.
 - [x] ✅ [INFRA] P0. Translate `tool_use`/`tool_result` round-tripping correctly. **DONE 2026-08-19** — shipped in
       the sibling plan `/plans/active/codex_mcp_tool_use_bridge_2026_08_18.md` (agent-orchestrator@ea9ecd2b4e, new
       `server/codex_mcp_proxy.py`): real MCP-based `tool_use`/`tool_result` round-tripping, proven via a live

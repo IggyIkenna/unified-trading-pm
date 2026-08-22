@@ -136,3 +136,10 @@ check for this directly rather than only counting raw crossings.
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:96033122b406632d]: RECLASSIFY (per-todo split) — todo 1 (7-day ActivityRow rate measurement) extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3. Doc stays NA for todo 2 (the raise-threshold action, correctly conditional on todo 1's own result).
 - **context-scout 2026-08-19**: populated context_scope (5 entries).
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item (raise the threshold once confirmed over-tuned) stays explicitly conditioned on the measurement extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3, not yet landed; not a standalone bounded action.
+- **/plan-reconcile ao 2026-08-22 — CORRECTION to the entry immediately above**: that measurement HAD already landed
+  when the note was written. `ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3 is `[x]` ("**DONE — see Progress
+  Log 2026-08-20**"), and that doc's 2026-08-20 entry carries the full result: 1,760 qualifying losses (10.46/hour),
+  **194 threshold-crossing episodes in seven days (27.71/day)** simulating the canary's 120s tick over a 600s window
+  at threshold 3, of which only **8 of 1,048 crossing-member rows (0.8%)** had a preceding
+  `SESSION-TEARDOWN ... reason=manual` line within 60s. The gating condition for this doc's remaining
+  raise-the-threshold todo is therefore **satisfied**, and that todo is now actionable rather than blocked.

@@ -103,12 +103,18 @@ checkboxes.
       (re-verify live before editing) and archived, so the gate has already lifted. Update or remove the banner so a
       worker reading it doesn't self-skip a genuinely-available item. Done when: the banner reflects the current
       (lifted) gate state, or is removed if no longer needed. Repo: unified-trading-pm.
-- [ ] [DOC] P3. **Finding 2 — verify/correct the "main.md § Account-failover triggers" citation** in
+- [x] ✅ [DOC] P3. **Finding 2 — the "main.md § Account-failover triggers" citation — RESOLVED 2026-08-22** in
       `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` items 7-9. `grep -rl "Account-failover triggers"
       agent-orchestrator` returns zero matches (checked 2026-08-20; re-verify fresh) — the only `main.md` in that repo
-      is an unrelated test fixture. `server.py` is confirmed the actual trigger-table location. Done when: the
-      citation is corrected to point at `server.py` (or the correct real location if the table has since moved), or
-      dropped if `server.py` alone is self-sufficient without a named pointer. Repo: unified-trading-pm.
+      is an unrelated test fixture. **RESOLVED 2026-08-22 (`/plan-reconcile ao`) — the source finding was a FALSE
+      POSITIVE, and this todo as written would have made the citation worse.** `### Account-failover triggers` is real,
+      at **`unified-trading-pm/agents/main.md:689`**; the zero-match grep was scoped to `agent-orchestrator`, but the
+      citation was never claimed to live there (the source issue doc qualifies it as `unified-trading-pm/agents/main.md`
+      at `:14` and `:234`) — only batch25's restatement dropped the repo prefix. Action taken: re-qualified both
+      occurrences in `ao_satellite_ao_dispatch_batch25_2026_08_19.md` and corrected the originating finding in
+      `/plans/active/issues/context_scout_stale_citations_and_doc_drift_2026_08_20.md`. The original instruction
+      (repoint at `server.py`) was deliberately NOT followed — `server.py` reads the trigger table, it is not the
+      table. Repo: unified-trading-pm.
 - [ ] [DOC] P3. **Finding 3 — fix or remove the miscited Codex SSOTs line** in
       `/plans/active/issues/backlog_500_malformed_depends_on_comment_2026_08_19.md`. Its "## Codex SSOTs" section
       cites `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` as covering "the review-role

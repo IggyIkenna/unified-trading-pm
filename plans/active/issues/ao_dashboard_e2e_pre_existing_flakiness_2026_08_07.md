@@ -308,6 +308,12 @@ shipped independently or these findings would still be sitting entirely undocume
   test-runner's own `process.env`" convention, since any spec doing a direct out-of-band fetch is exposed to the same
   class of bug. The `PlanRegenLoop`-in-mock-mode class this todo also asked to cover (item 2's `worker-chat.spec.ts`
   fix) was already documented separately in that same codex file per batch8-002's Progress Log entry above — not
+  [**CORRECTED 2026-08-22 (`/plan-reconcile ao`): the "already documented separately" half of this claim is FALSE.**
+  A full-file grep of `/codex/06-coding-standards/ui-testing-layers.md` for `PlanRegenLoop`/`plan_regen` returns **0
+  hits** — verified independently on 2026-08-19 and again on 2026-08-22, four days apart. That pattern was never
+  written; only the `backlog-collision.spec.ts` pattern this entry also describes actually landed. It is tracked as
+  an open `[DOCS] P2` todo in `/plans/active/issues/plan_reconciler_findings_ao_2026_08_19.md` — do not treat that
+  codex section as existing.]
   duplicated here. Item 1 (`deepseek-per-turn-metrics.spec.ts` + `deepseek-wallet-reconciliation.spec.ts`) remains
   genuinely open — no re-run confirmation exists against either fix yet, so this todo cannot fully close until that
   lands. Doc-level disposition unchanged (checkbox stays with the finalize plan per this doc's own governance rule).

@@ -128,7 +128,7 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
 7. **Add `overage_status == "rejected"` as an explicit 5th account-failover trigger condition**, covering both
    observed `overage_disabled_reason` values (`out_of_credits`, `org_level_disabled`), alongside the existing four
    pct/rate-limit checks feeding `rotate_all_slots_off_account`. Fully root-caused (exact trigger-table location
-   cited, `main.md` § "Account-failover triggers" + `server.py`) with a stated scope; the doc's own separate
+   cited, `unified-trading-pm/agents/main.md` § "Account-failover triggers" + `server.py`) with a stated scope; the doc's own separate
    interaction-analysis section already confirmed this fix is safe with respect to the CI-escalation reserve pool.
    Source: `account_failover_ignores_overage_rejected_2026_08_18.md`.
 8. **Investigate whether account rotation excludes overage-rejected accounts from its selection pool** — a scoped
@@ -221,7 +221,7 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       "session-ok"). See Progress Log 2026-08-20.**
 - [x] ✅ [BACKEND] P2. Add `overage_status == "rejected"` as an explicit 5th account-failover trigger condition
       (covering both `out_of_credits` and `org_level_disabled`) in the account-monitoring path that feeds
-      `rotate_all_slots_off_account` (`server.py`, per `main.md` § "Account-failover triggers"). Should fire
+      `rotate_all_slots_off_account` (`server.py`, per `unified-trading-pm/agents/main.md` § "Account-failover triggers"). Should fire
       regardless of `weekly_pct`/`five_hour_pct`. Done when: a session on an overage-rejected account is proactively
       rotated rather than left to die `death_class: unexplained`. Repo: agent-orchestrator. **DONE 2026-08-20 (slot
       18) — agent-orchestrator@acf72243d5.** Root-caused: `overage_status` was captured on `AccountUsageRow` but
@@ -232,7 +232,7 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       `out_of_credits` and `org_level_disabled`. This flows through unchanged to every existing caller: dispatch-time
       account picking (`_pick_headroom_account`/`pick_next_account`), the proactive worker-slot failover kill
       (`_drain_worker_account_failover`), and main agent's `_handle_account_unusable`. Updated the stale
-      "not used for routing" comment in `orm.py` and added the 5th row to `main.md`'s "Account-failover triggers"
+      "not used for routing" comment in `orm.py` and added the 5th row to `unified-trading-pm/agents/main.md`'s "Account-failover triggers"
       table. Tests: 3 new cases in `tests/test_auth_failed_rotation.py::TestAccountIsUsable` (rejected+out_of_credits
       fires regardless of weekly_pct=90; rejected+org_level_disabled fires; overage_status="allowed" stays usable).
       Full QG green (5275 passed, coverage 86.14%, dashboard vitest 469/469, tsc clean).

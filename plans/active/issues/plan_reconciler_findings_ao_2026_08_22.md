@@ -64,14 +64,16 @@ depends_on: []
   `superseded_by`-while-active, 0 locked docs, 0 `assigned_vm` outside `{planning, NA}`.
 - **Phase 2 evidence sweep**: all 354 open todos scanned for self-cited `repo@sha` completion evidence; 22 hits, each
   adjudicated (3 in depth against live code). **0 genuine missed flips.**
-- **NOT RUN THIS PASS — Phase 1's multi-agent cross-doc contradiction fan-out.** The skill's Phase 1 calls for up to
-  10 parallel read-only hunters reading every non-grace doc in full (the 2026-08-19 pass used 6 hunters over ~1.16MB);
-  this session operated under a standing instruction not to spawn sub-agents, so cross-doc contradiction hunting was
-  limited to mechanical flags plus targeted verification of specific claims. **What that means concretely**: the
-  contradiction classes this pass CAN'T have found are plan↔plan and plan↔epic disagreements that require reading two
-  full docs side by side. The classes it DID cover — mechanical flags, evidence-backed flips, prior-findings
-  reconciliation, and every claim reachable by targeted grep-then-read — are complete. A follow-up run with the
-  hunter fan-out enabled is needed before this tranche can be called fully reconciled.
+- **Phase 1 multi-agent contradiction sweep: RAN** (operator-authorised mid-session). 5 read-only hunters
+  (general-purpose, sonnet, `SUB_AGENT_MANDATORY_RULES.md` contract at each spawn top), partitioned by `parent_epic`
+  and size-balanced: A1/A2/A3 = `orchestrator_master` (66 docs, ~1.71MB, split 22/22/22), B =
+  `agent_operating_framework_master` (39 docs, ~645KB), C = `security_and_cross_cutting_master` +
+  `observability_master` + `plan_hygiene_master` + `ci_master` (14 docs, ~384KB). **All 5 completed; 119/119 docs read
+  in full by exactly one hunter each** (several needed paginated reads to clear the page cap; each confirmed full
+  coverage), plus every cited epic hub. Zero hunter writes — read-only throughout.
+- **Adversarial verification: every hunter candidate was re-verified by me against the source** (and, where the claim
+  was about code, against live code on `origin/live-defi-rollout`) before any edit. This REVERSED the verdict on the
+  highest-severity candidate — see Phase 1 results. No finding was applied on hunter assertion alone.
 
 ## Phase -1 — prior findings docs reconciled
 
@@ -162,38 +164,37 @@ looked like genuine flip candidates and were each run down against live code:
 
 ## Routed to operator (6)
 
-- [ ] [PM] P1. **R1 — epic `related_plans:` roster drift, and a data-loss risk in the obvious fix.**
-      **CORRECTION to this pass's own earlier number**: I first measured "6 roster entries vs 43 children" for
-      `plans/epics/plan_hygiene_master.md` and reported the gap as ~37 missing. That compared two different
-      populations and overstated it. The roster is a DERIVED projection with a definition owned by its generator,
-      `scripts/plans/populate_epic_bodies_2026_05_21.py`: it scans **`plans/active/*.md` only** and keeps only
-      **`status: active`** docs (the section it feeds is literally "Assigned ACTIVE plans"). My 43 was every doc in
-      `plans/active/` **plus** `plans/active/issues/` at any status — measured breakdown: **36 are
-      `plans/active/issues/` docs at `status: open`, 8 are `plans/active/` docs at `status: active`**. Against the
-      roster's own definition the real drift for this epic is **5 missing + 2 stale**, not 37.
-      Missing: `ao_satellite_ao_dispatch_batch1_2026_08_21_finalize`, `cefi_satellite_ao_dispatch_batch20_2026_08_16_finalize`,
-      `cefi_satellite_ao_dispatch_batch22_2026_08_19_finalize`, `cefi_satellite_ao_dispatch_batch23_2026_08_21_finalize`,
-      `epic_taxonomy_restructure_and_html_reconcile_2026_08_18`. Stale (would be dropped):
-      `infra_satellite_ao_dispatch_batch11_2026_08_09` + its finalize. Real drift is corpus-wide, not local to one
-      epic — the generator's own `--dry-run` reports it **would rewrite the frontmatter of 22 of 31 epics**.
+- [ ] [PM] P1. **R1 — epic `related_plans:` roster drift. DEFERRED BY OPERATOR RULING 2026-08-22: "leave the roster
+      changes for now, we will do it when we run the script so that its done properly."** No roster was touched this
+      pass. Measurements recorded here so they are ready when the script is run.
 
-      **The finding that matters more, and why the fix is NOT just "run the script":**
+      **CORRECTION to this pass's own earlier number**: I first reported "6 roster entries vs 43 children, ~37
+      missing" for `plans/epics/plan_hygiene_master.md`. That compared two different populations and overstated it.
+      The roster is a DERIVED projection whose definition is owned by its generator,
+      `scripts/plans/populate_epic_bodies_2026_05_21.py`: it scans **`plans/active/*.md` only**, keeping only
+      **`status: active`** docs. My 43 was every doc in `plans/active/` **plus** `plans/active/issues/` at any status —
+      measured: **36 `plans/active/issues/` docs at `status: open`, 8 `plans/active/` docs at `status: active`**.
+      Against the roster's own definition the real drift for that epic is **5 missing + 2 stale**, not 37. Corpus-wide
+      the drift is real: the generator's `--dry-run` reports it **would rewrite the frontmatter of 22 of 31 epics**.
+
+      **The blocker to resolve before the script is run** (this is what "properly" has to cover):
       `update_related_plans_frontmatter()` replaces the WHOLE `related_plans:` value, and the generator never scans
       `plans/active/issues/`. But **177 current roster entries across the epic corpus point into `../active/issues/`**
-      (54 block-style + 123 flow-style, measured) — every one of them hand-added, including the single `issues/` entry
-      the 2026-08-19 `/plan-reconcile ao` pass added to `plan_hygiene_master` itself. Running
-      `populate_epic_bodies_2026_05_21.py --apply` as-is would **delete all 177**. That is a silent data-loss
-      regression sitting behind the most obvious reading of "just re-run the generator", so this pass did not run it.
+      (54 block-style + 123 flow-style, measured) — all hand-added over months. Running `--apply` as it stands would
+      **delete all 177**. Decide first whether issue docs belong in epic rosters; if yes, teach the generator to scan
+      `plans/active/issues/*.md` (treating `status: open` as the issue-doc equivalent of `active`) before running it.
 
-      **[WORKER REC]**: before any wiring, teach the generator to scan `plans/active/issues/*.md` too (treating
-      `status: open` as the issue-doc equivalent of `status: active`), so the projection covers the population the
-      rosters have de-facto been carrying for months. Then add a shrinking-ratchet detector
-      (`check_epic_roster_completeness.py`, same shape as `check_ag_closeout_linkage.py`) wired into
-      `run_hygiene_sweep.sh` via `run_check`, whose remediation line points at the corrected generator. Wiring a
-      detector to today's generator would institutionalise the deletion above, so the generator fix must land first.
-      Operator-gated on one question that is genuinely a preference, not a fact: **should issue docs appear in epic
-      `related_plans:` rosters at all?** If yes, the above is the plan; if no, the 177 existing entries should be
-      removed deliberately and the generator left as-is.
+      **Three further instances confirmed by this pass's hunters, all the same mechanism, all left untouched**:
+      (a) `plans/epics/orchestrator_master.md:70` frontmatter records a roster correction applied 2026-08-19, but the
+      body's auto-populated "Assigned active plans" section — the priority queue workers actually read — still says
+      "26 active plans" and omits exactly the plans that note says were added (`batch23_2026_08_17` + its finalize,
+      `slot0_self_cleaning_daemon_2026_08_18`), plus `batch24`/its finalize; 29 frontmatter entries − 3 = 26, an exact
+      match confirming the body was never regenerated. (b) Same file `:458-460`: the last auto-generated entry renders
+      `**title**: >-` — a bare YAML block-scalar indicator with the text missing — and the file ends there.
+      (c) `plans/epics/security_and_cross_cutting_master.md`: 7 AO-fleet-mechanics issue docs declare it as
+      `parent_epic` while its written Scope covers only shard-granularity/data-status/deployment-build, and none
+      appear in its roster (hunter self-rated low confidence — could not determine whether the 2026-08-18 taxonomy
+      restructure intended to reassign them).
 
 - [ ] [PM] P2. **R2 — 2 HARD line-cap violations in the ao tranche** (splitting a plan is a planning decision, so this
       is operator-gated by the skill's own rule): `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
@@ -231,6 +232,23 @@ looked like genuine flip candidates and were each run down against live code:
       `verifier:` when the required dry-run (tracked in the migration plan) is scheduled; separately consider whether
       `check_runbook_fields.py` should treat blank as missing.
 
+- [ ] [BACKEND] P2. **R7 — `last_updated` staleness is a TOOLING gap, not per-doc sloppiness; hand-patching dates is
+      churn that re-rots.** The hunters measured a frontmatter `last_updated` older than the doc's own newest dated
+      Progress Log entry in **13 of 22 (A2), 12 of 22 (A1), 13 of 22 (A3)** docs — roughly half the tranche. Decisive
+      evidence it is mechanical, not stylistic: at least **four** docs carry an inline comment recording they were
+      *already corrected once* for this exact staleness and drifted again within days
+      (`ao_creds_env_poller_disabled_2026_08_18`, `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06`,
+      `fleet_wide_deepseek_crash_loop_undetected_2026_08_11`, `review_agent_evidence_gated_write_capability_2026_08_09`).
+      Cause: `context-scout` and `na-eligibility-audit` append Progress Log entries without bumping `last_updated`.
+      Not cosmetic — Phase 1 item 5 is a case where an audit pass read an unbumped `last_updated` as a "no content
+      changed" skip-signal and published a wrong verdict off it. **[WORKER REC]**: make the two appending skills bump
+      `last_updated` when they write a Progress Log entry (or have `run_hygiene_sweep.sh` derive/assert it), and do
+      NOT bulk-patch the ~25 current dates by hand — per CLAUDE.md's "delete the number that rotted rather than
+      updating it", a hand-patched date re-rots on the next append. One exception worth fixing regardless:
+      `dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md` took an `assigned_vm: NA → planning` flip (a real
+      dispatch-eligibility change) on 2026-08-21 without a bump, so the timing of a material change is now
+      unrecoverable from its frontmatter.
+
 ## Host hygiene (not a corpus finding, reported because it will bite someone)
 
 - **Slot 5's `unified-trading-pm` checkout has an unresolved merge conflict** —
@@ -239,11 +257,65 @@ looked like genuine flip candidates and were each run down against live code:
   ao-tranche issue doc), is a known cause of blocked escalation dispatch. Not touched — resolving another slot's
   conflict is exactly the "never edit a dirty file you don't own" rule. Flagged for the owner.
 
+## Phase 1 — contradiction sweep results (applied)
+
+All six below were re-verified by me against the source before any edit. Roster findings excluded per R1's deferral.
+
+1. **[P0 → re-adjudicated, hunter's verdict REVERSED]** `codex_luna_flex_bridge_2026_08_14.md` carries an `[x]`
+   `[REVIEW] P0` "smoke-test gate before any real fleet traffic — DONE 2026-08-19" directly below a same-day finding
+   documenting a 100%-reproducible (6/6) hard 400 failure that explicitly speculates the gate "didn't catch it". The
+   hunter ruled the *gate* was the wrong side. **It is not.** The root cause — `codex_bridge_server.py`'s
+   `AnthropicMessage.role` lacking a `"system"` variant — was **fixed in `agent-orchestrator@7a1be88b` (2026-08-19)**;
+   I read the live file (`role: Literal["user", "assistant", "system"]`) and confirmed the sha is an ancestor of
+   `origin/live-defi-rollout`. The STALE side is therefore the hard-failure prose ("Until this is fixed, Codex/Luna is
+   NOT usable for any real dispatch"), not the gate. Annotated the prose as root-cause-resolved, kept the `[ ]` todo
+   open (its Done-when is a marker-*influence* proof the schema fix unblocks but does not establish), and recorded
+   that the gate's `[x]` is not contradicted. **This is why Phase 3 exists** — applying the hunter's verdict would
+   have reopened a correctly-closed P0 gate and left the genuinely stale text standing.
+2. **[P1, CONFIRMED, FIXED]** `ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md`'s 2026-08-21 note says its
+   gating measurement is "not yet landed". It landed the day before: `ao_satellite_ao_dispatch_batch25_2026_08_19.md`
+   item 3 is `[x]` "DONE — see Progress Log 2026-08-20", with the full result (194 threshold-crossing episodes in 7
+   days; 8 of 1,048 crossing rows, 0.8%, benign). Appended a dated correction — that doc's remaining
+   raise-the-threshold todo is **actionable, not blocked**.
+3. **[P1, CONFIRMED FALSE POSITIVE, FIXED IN 3 PLACES]** `context_scout_stale_citations_and_doc_drift_2026_08_20.md`
+   called `main.md § "Account-failover triggers"` a dead citation, from `grep -rl ... agent-orchestrator` returning
+   zero. The citation never pointed there: the heading is real at **`unified-trading-pm/agents/main.md:689`**, and the
+   source issue doc qualifies it fully. Worse, the false finding was already propagated into an **open, undispatched**
+   `[DOC] P3` todo in `ao_satellite_ao_dispatch_batch2_2026_08_21.md` telling a worker to repoint the citation at
+   `server.py` — which reads the trigger table but is not the table. Corrected the originating finding, closed the
+   batch2 todo with evidence and an explicit note that its instruction was deliberately not followed, and
+   re-qualified both occurrences in batch25.
+4. **[P2, CONFIRMED, FIXED]** `ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md:310` claims the
+   `PlanRegenLoop`-in-mock-mode pattern "was already documented separately in that same codex file". A full-file grep
+   of `/codex/06-coding-standards/ui-testing-layers.md` for `PlanRegenLoop`/`plan_regen` returns 0 hits — verified
+   2026-08-19 and again 2026-08-22. Annotated the false half; the real work stays tracked as R4.
+5. **[P1, CONFIRMED, FIXED]** `codex_mcp_tool_use_bridge_2026_08_18.md`'s 2026-08-21 audit entry says "Both open todos
+   remain". The `[REVIEW] P1` unpause todo closed the same day with live `AccountUsageRow` evidence
+   (`status=healthy`, 8 real dispatches across 5 slots); the doc has **1** open todo, not 2. The stale verdict came
+   from trusting an unbumped `last_updated` as a "nothing changed" skip-signal — see R7.
+6. **[P1, CONFIRMED, FIXED]** `ao_satellite_ao_dispatch_batch23_2026_08_17.md`'s body banner still read
+   "**`status: draft`** — the safety rail. Never auto-ingested/dispatched until an operator flips this to `active`"
+   while its frontmatter had been `status: active` since 2026-08-18 and workers executed todos 1-4 on 2026-08-20. A
+   reader trusting the banner would conclude the plan was still gated. Rewritten to match, following sibling
+   `batch22`'s correctly-updated banner as the template.
+
+### Refuted / not acted on
+
+- Item 1 above, re-adjudicated — the hunter's nominated authoritative side was wrong on the code facts.
+- `backlog_500_malformed_depends_on_comment_2026_08_19.md`'s `assigned_vm: planning` + `execution_scope: NA` pairing:
+  cosmetic — `assigned_vm` is the fail-closed dispatch matcher, so dispatch behaviour is unaffected.
+- Several apparent numeric contradictions across the wedge/stash docs: each self-explained by the docs' own dated
+  Progress Log entries (counts explicitly superseded). Correctly not findings.
+- All roster findings: real, but deferred per R1.
+
 ## Phase 5.9 — no-miss ledger
 
-- `routed_to_operator` = **6** (R1-R6); `parked_in_issue_doc` = **6**. **Balanced.**
-- `agent_skips` = **0** (no sub-agents spawned this pass — see Coverage); `enumerated` = **0**. **Balanced.**
-- Applied fix classes = 2 (assigned_vm parse defect ×2 docs; prose→todo conversion ×1 doc / 4 todos).
+- `routed_to_operator` = **7** (R1-R7); `parked_in_issue_doc` = **7**. **Balanced.**
+- `agent_skips` = **0** (5 hunters spawned, 5 completed, none skipped or died); `enumerated` = **0**. **Balanced.**
+- Hunter candidates raised = 18; CONFIRMED + applied = 6; re-adjudicated against the hunter = 1; refuted = 4;
+  deferred per R1 ruling = 7 (all roster-class).
+- Applied fix classes = 5 (assigned_vm parse defect ×2 docs; parent_epic parse defect ×1 doc; prose→todo conversion
+  ×1 doc / 4 todos; dangling-ref repointing ×3; Phase 1 contradiction fixes ×8 edits across 8 docs).
 - Candidates investigated and refuted = 3 (enumerated above, with the evidence that killed each).
 - Zero-checkbox docs: found **5**, converted **1**, explained-as-correct **1**, routed **3** (R5).
 

@@ -72,8 +72,12 @@ source: >-
 
 # AO satellite AO batch 23
 
-> **`status: draft`** — the safety rail. Never auto-ingested/dispatched until an operator flips this to `active`.
-> **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** once activated.
+> **`status: active`** — flipped from `draft` 2026-08-18 (`/plan-reconcile ao` trust-mode ruling, see
+> `operator_ruling_record_plan_reconcile_ao_2026_08_18.md` #4): the todos were already fully vetted and
+> conflict-checked per this doc's own Phase 2 write-up, so `draft` was a copy-paste template artifact, not a content
+> gate. Todos 1-4 were executed by workers on 2026-08-20. **`assigned_vm: planning` /
+> `execution_scope: orchestrator-agent`**. _(Banner corrected 2026-08-22 by `/plan-reconcile ao` — it still read
+> `status: draft` / "never auto-ingested until an operator flips this", contradicting the frontmatter for 4 days.)_
 
 ## Why this plan exists
 

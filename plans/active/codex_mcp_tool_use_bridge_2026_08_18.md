@@ -333,3 +333,10 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
   content change since the 2026-08-19 verdict. Both open todos remain: an `[REVIEW] P1` operator-gated account
   unpause (a real production-dispatch-affecting flip, deliberately not mine to do per this plan's own Non-goals),
   and a `[DOC] P2` final archival todo explicitly gated on that unpause. Doc stays `assigned_vm: NA`.
+- **/plan-reconcile ao 2026-08-22 — CORRECTION to the entry immediately above**: "Both open todos remain" was already
+  wrong when written. The `[REVIEW] P1` unpause todo is `[x]`, closed the SAME day (2026-08-21) with live evidence in
+  its own checkbox text — `AccountUsageRow` queried directly on the orchestrator VM showing
+  `account_id=codex-luna status=healthy` (not `disabled`), `last_used_at=2026-08-21 05:36:58 UTC`, cross-checked
+  against 8 real completed `TaskUsageRow` dispatches across 5 slots. This doc has **1** open todo, not 2 — only the
+  `[DOC] P2` archival item, whose gate is now satisfied. The stale verdict came from trusting the unbumped
+  `last_updated: 2026-08-19` as a "nothing changed" skip-signal, which it is not.

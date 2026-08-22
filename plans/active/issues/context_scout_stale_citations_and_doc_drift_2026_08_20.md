@@ -73,6 +73,15 @@ checkout (a different repo, or renamed since the citation was written). Not bloc
 actual trigger-table location per direct code read — but whoever picks up items 7-9 should verify the citation
 before trusting it literally.
 
+**CORRECTED 2026-08-22 (`/plan-reconcile ao`) — this finding was a FALSE POSITIVE.** The citation is real and
+resolves: `### Account-failover triggers` exists at **`unified-trading-pm/agents/main.md:689`**. The grep above was
+scoped to the `agent-orchestrator` repo, but the citation never claimed to point there — the source issue doc
+(`account_failover_ignores_overage_rejected_2026_08_18.md:14,234`) qualifies it fully as
+`unified-trading-pm/agents/main.md`. Only batch25's restatement dropped the repo prefix, making it *ambiguous*, not
+dead. The correct remedy is to **re-qualify** the citation with its repo prefix, NOT to repoint it at `server.py` —
+that would replace a correct pointer to the trigger TABLE with a pointer to the code that reads it. Wrong-repo grep
+scoping is the same measurement error class as CLAIM <= MEASUREMENT's "0 hits != missing".
+
 ## 3. `backlog_500_malformed_depends_on_comment_2026_08_19.md` — Codex SSOTs citation doesn't cover its own claim
 
 The doc's "## Codex SSOTs" section cites `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` as
