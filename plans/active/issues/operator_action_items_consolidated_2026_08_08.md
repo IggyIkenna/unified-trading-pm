@@ -25,6 +25,7 @@ related:
     /plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md,
   ]
 created: 2026-08-08
+last_updated: 2026-08-21
 author: claude-agent
 parent_epic: agent_operating_framework_master
 priority: P1
@@ -88,24 +89,25 @@ applied autonomously and is not repeated here.
       value already match... No write was performed. This staged write is now historical reference only." Flipped by
       plan_reconciler (infra tranche, agt-830118, 2026-08-18) — this doc's checkbox had never been updated to reflect
       the source doc's own resolution.
-- [ ] [OPERATOR] P3. **Create `bybit-trade-api-key`/`bybit-trade-api-key-secret` in GCP** — direction already approved
-      (2026-07-28), only your own Bybit exchange login can create the actual key. **Citation corrected 2026-08-18**
-      (plan_reconciler, infra tranche, agt-830118): the real, still-open item lives in
-      `plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md:147-153`, NOT
-      `orchestrator_vm_e2e_hardening_2026_07_24.md` (0 hits for "bybit" in that file) — this line's citation was wrong
-      from filing; the underlying task itself is still genuinely open, unaffected by the citation fix.
+- [ ] [BLOCKED-CREDENTIALS] P3. **RULED 2026-08-21 (D19): `bybit-trade-api-key` now EXISTS in GSM (verified live
+      2026-08-21/22); only `bybit-trade-api-key-secret` remains absent — blocked on the operator's own Bybit
+      exchange login (no cloud identity can create a third-party exchange key).** Direction already approved
+      2026-07-28. Full checklist + live-verified fallback behavior tracked in
+      `plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md:147-153` (real, still-open item;
+      this line is a redirect pointer, not a duplicate work item).
 - [ ] [OPERATOR] P3. **Wallet-key provisioning for OKX/Binance/Bybit + live-trading kill-switch arming** — permanent
       human-only hard-stop, gating the `ML_DIRECTIONAL_CONTINUOUS` cutover to real capital. Not time-sensitive; do when
       ready.
 
 ## 2. GitHub UI clicks (no public REST API exists for these)
 
-- [ ] [OPERATOR] P1. **`unified-trading-pm` → Settings → Actions → General → "Require approval for all outside
-      collaborators"** on fork-PR workflow runs. Confirmed live P0 exposure (public repo, 8 self-hosted runners
-      attached, verified 2026-08-06 that no API endpoint exists for this setting). Sibling `allowed_actions` tightening
-      in the same finding was already applied via the API. Cited in both
+- [ ] [OPERATOR] P1. **RULED 2026-08-21 (D20): operator has committed to clicking `unified-trading-pm` → Settings →
+      Actions → General → "Require approval for all outside collaborators" in the GitHub UI — still pending as of
+      2026-08-21 (a GitHub-UI-only setting; no public API exists for it, verified 2026-08-06).** Confirmed live P0
+      exposure (public repo, 8 self-hosted runners attached). Sibling `allowed_actions` tightening in the same finding
+      was already applied via the API. Cited in both
       `plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` and (duplicate)
-      `plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`.
+      `plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`. Verify via repo settings once done.
 
 ## 3. Git stash cleanup — 6 checkouts audited today, all read-only, nothing dropped
 
@@ -114,16 +116,23 @@ history) — not just timestamp-sorted. **CLEARLY SAFE entries are ready for you
 need your own quick look first (reasons given per checkout). `git stash drop`/`clear` is categorically blocked for
 autonomous workers, so none of this was executed.
 
-- [ ] [OPERATOR] P3. **`.tabs/1` (96 entries, ALL safe)** — `cd .tabs/1/unified-trading-pm && git stash clear` (safer
+- **[OPERATOR] P3. CANCELLED — SUPERSEDED 2026-08-21 (D3 ruling: full stash/WIP cleanup APPROVED in principle; the
+  `.tabs/1` counts/commands below are stale — index drifted 96→59 per the 2026-08-22 re-audit note further down).**
+  The sibling doc `/plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md` is now the
+  actively-maintained SSOT for `.tabs/1` cleanup — act there, not from this line's stale commands. Original: `.tabs/1`
+  (96 entries, ALL safe)** — `cd .tabs/1/unified-trading-pm && git stash clear` (safer
       than discrete drops here — this checkout has a live `*/5 * * * *` cron that mutates the stash list, so a
       SHA-anchored `clear` sidesteps index-drift risk). Zero genuinely-lost content found across all 96.
-- [ ] [OPERATOR] P3. **`.tabs/2` (26 entries: 16 safe, 10 ambiguous)** — 16 safe drop commands ready (descending-index
+- **[OPERATOR] P3. CANCELLED — SUPERSEDED 2026-08-21 (D3 ruling, same class as `.tabs/1` above)** — `.tabs/2` counts
+  are stale (26→102 per the 2026-08-22 re-audit); act via the sibling SSOT tracker, not this line. Original: `.tabs/2` (26 entries: 16 safe, 10 ambiguous)** — 16 safe drop commands ready (descending-index
       list in the audit). The 10 ambiguous entries (idx 0-9) are 10 successive snapshots of the SAME unlanded content —
       a `cefi_fwd_vm_preempted...md` "duplicate-launch race" fix section that doesn't exist anywhere in git history,
       **and the live working tree currently has an unresolved 3-way merge conflict (raw git conflict-marker syntax, all
       three parts) on that exact file** — resolve that conflict first, verify the cited `deployment-service@4c28ca640f`
       commit is real, then all 10 become safe to drop as duplicates.
-- [ ] [OPERATOR] P3. **`.tabs/3` (42 entries: 30 safe, 12 ambiguous)** — 30 safe drop commands ready. Of the 12
+- **[OPERATOR] P3. CANCELLED — SUPERSEDED 2026-08-21 (D3 ruling, same class as `.tabs/1` above)** — `.tabs/3` counts
+  are stale (42→152 per the 2026-08-22 re-audit); act via the sibling SSOT tracker, not this line. Original: `.tabs/3` (42 entries: 30 safe, 12
+      ambiguous)** — 30 safe drop commands ready. Of the 12
       ambiguous: 9 are one big never-committed full-repo reformat sweep (prettier/black-style, ~988 files, matches the
       workspace's own banned "bare unpinned prettier" pattern — likely abandoned, your call whether it was ever wanted);
       the other 3 are each a single small never-landed doc-accuracy line (quoted verbatim in the audit, trivial to
@@ -134,15 +143,30 @@ autonomous workers, so none of this was executed.
       re-audit this checkout fresh (or at minimum re-verify each target entry's content before dropping) before acting
       on this row. Unlike `.tabs/1` above, this row was never given a SHA-anchored/`clear`-style command that would
       sidestep index drift.
-- [ ] [OPERATOR] P3. **`.tabs/4` (12 entries: 10 safe, 2 ambiguous)** — 10 safe drop commands ready. The 2 ambiguous
+- **[OPERATOR] P3. CANCELLED — SUPERSEDED 2026-08-21 (D3 ruling, same class as `.tabs/1` above)** — `.tabs/4` counts
+  are stale (12→131 per the 2026-08-22 re-audit); act via the sibling SSOT tracker, not this line. Original: `.tabs/4` (12 entries: 10 safe, 2
+      ambiguous)** — 10 safe drop commands ready. The 2 ambiguous
       (idx 7, 8) are an unlanded analytical finding from an archived issue (low stakes — the functional fix shipped a
       different way).
-- [ ] [OPERATOR] P3. **`.tabs/7` (1 entry, safe)** — `git stash drop stash@{0}` (an orphan-adopted WIP already fully
+- **[OPERATOR] P3. CANCELLED — SUPERSEDED 2026-08-21 (D3 ruling: moot)** — live re-count 2026-08-22 shows `.tabs/7`
+  at 0 stash entries (already resolved); the original single-entry drop command no longer applies. Original:
+  `.tabs/7` (1 entry, safe)** — `git stash drop stash@{0}` (an orphan-adopted WIP already fully
       superseded by the live committed doc).
-- [ ] [OPERATOR] P3. **Root clone `unified-trading-pm/` (12 entries: 11 safe, 1 ambiguous)** — 11 safe drop commands
+- **[OPERATOR] P3. CANCELLED — SUPERSEDED 2026-08-21 (D3 ruling, same class as `.tabs/1` above)** — root-clone
+  counts are stale (12→8 per the 2026-08-22 re-audit); act via the sibling SSOT tracker, not this line. Original:
+  Root clone `unified-trading-pm/` (12 entries: 11 safe, 1
+      ambiguous)** — 11 safe drop commands
       ready. The 1 ambiguous (idx 5) is a small "RATIFIED + LOAD-BEARING" doc-text rewrite that never landed — low
       stakes.
-- [ ] [OPERATOR] P3. **`sandbox-test-user` checkout (12 entries: 7 safe, 5 ambiguous)** — this checkout turned out to be
+- [x] N. ✅ [SCRIPT] P3. **RULED 2026-08-21 (D3: APPROVED — "recover sandbox fix" sub-item resolved).** Retire the
+      `sandbox-test-user` checkout by deleting
+      `~/Code/sandbox-test-user/unified-trading-system-repos/unified-trading-pm` — already confirmed (2026-08-22
+      investigation below) that nothing in its 12-entry stash pile is recoverable-and-still-needed: the suspected
+      hardcoded-GCP-project-ID fix turned out to be an unrelated March-era whole-workspace reformat from a retired
+      layout, and today's live QG already enforces the equivalent check fleet-wide via
+      `quality-gates-service-template.sh`. **Not executed here** (a filesystem action on a residual dev-machine path
+      outside this repo) — flagged dispatchable, done when the directory is removed. Original: `sandbox-test-user`
+      checkout (12 entries: 7 safe, 5 ambiguous)** — this checkout turned out to be
       a **dead automation artifact from March 2026** (the actual live `quickmerge.sh` checkout of that era, last commit
       5 months ago, on `main` not `live-defi-rollout`) — worth deciding whether it's worth reconciling further at all
       vs. just retiring. 7 safe drop commands ready. Of the 5 ambiguous: 4 share the same **never-landed,
@@ -195,10 +219,12 @@ for the operator/next session rather than executed here.
 ## 5. Permanent hard-stops (not time-sensitive, listed for completeness)
 
 - [ ] [OPERATOR] P3. **Live wallet + custody approval (Copper/CEFFU)** for the live-trading leg of the paper↔batch↔live
-      determinism proof. `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`.
+      determinism proof. `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`. **Reaffirmed by ruling
+      D21 (2026-08-21)**: not time-sensitive, no new readiness evidence — stays reserved for your own sign-off.
 - [ ] [OPERATOR] P3. **Final go-ahead for real-money live trading activation** — sports Groups A-H readiness ladder AND
       the general cross-cutting live-trading sign-off (same underlying decision, cited from 2 docs). Reserved for your
       own explicit sign-off. `plans/active/issues/sports_predictions_live_mode_activation_readiness_2026_07_21.md`.
+      **Reaffirmed by ruling D21 (2026-08-21)**: not time-sensitive, no new readiness evidence.
 
 ## 6. Loose ends worth a quick look
 
@@ -245,24 +271,29 @@ reports on 2026-08-10 so they live on one list instead of five, and so those rep
 archive. Nine other `[OPERATOR]` items in those same reports were resolved or re-homed to AO the same day and are closed
 in place with their evidence — they are deliberately NOT repeated here.
 
-- [ ] [OPERATOR] P2. **Confirm the 6 transcribed rulings in
-      `operator_ruling_record_ao_round5_apply_session_2026_08_08.md` are accurate.** Operator-only — cannot be
-      worker-determined. Carried from `ag_closeout_audit_ao_parked_2026_08_10.md` (finding 4 item 1), 2026-08-10.
-- [ ] [OPERATOR] P3. **Approve or decline the ICE/OPRA Databento subscription add.** Billing decision, no data-derivable
-      answer. Source `/plans/active/issues/databento_ice_opra_subscription_ask_2026_08_09.md` (retagged `[tradfi]`
-      2026-08-10). Carried from `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` finding 2.
-- [ ] [OPERATOR] P3. **Provision `glassnode-api-key` in Secret Manager, or decline.** Glassnode is NOT a removed
-      provider and the adapter is scaffolded; per `/codex/02-data/external-data-always-available-rule.md` exhausting the
-      free path is a credential ask, not a descope. The Kaiko half of the original joint ask was closed by the
-      2026-08-10 ruling — do not provision `kaiko-api-key`. Source
-      `/plans/active/issues/glassnode_kaiko_credential_ask_2026_08_09.md`.
-- [ ] [OPERATOR] P3. **Provision `sportradar-api-key` and decide Sportradar's scope, or decline.** Human-held
-      credential; the sports-only `SportradarAdapter` is blocked on it. Source
-      `/plans/active/issues/sportradar_credential_ask_2026_08_09.md` (retagged `[sports]` 2026-08-10). Carried from
-      `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` finding 6.
-- [ ] [OPERATOR] P2. **Rule on `tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`**: flip
-      `status: draft` → `active`, OR provision the IPRoyal residential-proxy credential (~$7 PAYG) to unblock its items
-      4/5/7, OR decline and leave it parked. Carried from `ag_closeout_audit_tradfi_parked_2026_08_10.md` finding 2.
+- [x] N. ✅ [OPERATOR] P2. **CONFIRMED 2026-08-21 (D24, operator-ruled)**: all 6 transcribed rulings in
+      `operator_ruling_record_ao_round5_apply_session_2026_08_08.md` are accurate as transcribed. Carried from
+      `ag_closeout_audit_ao_parked_2026_08_10.md` (finding 4 item 1), 2026-08-10.
+- [ ] [OPERATOR] P3. **DEFERRED-BY-DESIGN — RULED 2026-08-21 (D25): DECLINED for now** — no Databento ICE/OPRA
+      add-ons; both stay deliberately fail-closed (dated ruling). Billing decision, no data-derivable answer. Source
+      `/plans/active/issues/databento_ice_opra_subscription_ask_2026_08_09.md` (retagged `[tradfi]` 2026-08-10).
+      Carried from `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` finding 2.
+- [ ] [OPERATOR] P3. **DEFERRED-BY-DESIGN — RULED 2026-08-21 (D17): DECLINED for now** ("none of these yet") — no
+      Glassnode purchase; the adapter stays dormant, this stays a credential ask (re-ask only on a named product
+      need). Glassnode is NOT a removed provider and the adapter is scaffolded; per
+      `/codex/02-data/external-data-always-available-rule.md` exhausting the free path is a credential ask, not a
+      descope. The Kaiko half of the original joint ask was closed by the 2026-08-10 ruling — do not provision
+      `kaiko-api-key`. Source `/plans/active/issues/glassnode_kaiko_credential_ask_2026_08_09.md`.
+- [ ] [OPERATOR] P3. **DEFERRED-BY-DESIGN — RULED 2026-08-21 (D18): DECLINED for now** — no Sportradar purchase;
+      `SportradarAdapter` stays dormant (credential ask, dated). Human-held credential; the sports-only
+      `SportradarAdapter` is blocked on it. Source `/plans/active/issues/sportradar_credential_ask_2026_08_09.md`
+      (retagged `[sports]` 2026-08-10). Carried from `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` finding 6.
+- [ ] [OPERATOR] P2. **DEFERRED-BY-DESIGN — RULED 2026-08-21 (D107): IPRoyal ~$7 proxy purchase NOT approved
+      (unselected)** — `tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md` stays parked,
+      `BLOCKED-CREDENTIALS` for the IPRoyal proxy; re-ask only if the operator wants to revisit the
+      flip-to-active or decline-outright options named below. Original options: flip `status: draft` → `active`, OR
+      provision the IPRoyal residential-proxy credential (~$7 PAYG) to unblock its items 4/5/7, OR decline and leave
+      it parked. Carried from `ag_closeout_audit_tradfi_parked_2026_08_10.md` finding 2.
 - [ ] [OPERATOR] P1. **Complete or explicitly re-park the 2026-08-07 ruling's remaining 2/8 + 0/1 items**: flip
       `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (+ its finalize twin) to `active`, and schedule item 8's
       fold/archive of `tradfi_consolidated_closeout_2026_07_18.md` once the currently-active tradfi batches clear.
@@ -274,9 +305,10 @@ Six human-judgment items that were pinning four dated `ag_closeout_audit_*_parke
 `[OPERATOR]`-tagged at source — they are `[DOCS]`/`[LOCAL]`/`[DOC]` design calls — but none has a worker-determinable
 outcome, so they belong on this list rather than in an audit report nobody owns.
 
-- [ ] [OPERATOR] P3. **Decide where future operator-ruling sessions get recorded** among the 3 options named in
-      `/plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md` item 2. A judgment call, low
-      urgency. Carried from `ag_closeout_audit_ao_parked_2026_08_10.md` 2026-08-10.
+- [x] N. ✅ [OPERATOR] P3. **RULED 2026-08-21 (D23, ADOPTED-REC)**: a dedicated ruling-record doc per session — simplest,
+      with 2 working precedents already in the corpus. Implementation of this convention (writing it into
+      `plans/PLAN_FORMAT.md`) is tracked as `operator_ruling_record_ao_round5_apply_session_2026_08_08.md`'s own todo
+      2. Carried from `ag_closeout_audit_ao_parked_2026_08_10.md` 2026-08-10.
 - [ ] [OPERATOR] P3. **Resolve the aggregate-zero-path signal design fork** in
       `/plans/archive/issues/ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md`'s `[DATA]` todo — a two-direction
       design choice with no evidence-based tiebreaker; its `[UI]` and `[BACKEND]` todos are both blocked behind it.
@@ -310,3 +342,13 @@ outcome, so they belong on this list rather than in an audit report nobody owns.
   doc by `plan_reconciler ao 2026-08-19` (still unresolved, no drift in this doc's own pointer); L188
   (`/plans/archive/issues/ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md`) remains archived with its cited
   design-fork unresolved — no reclassification needed for either citation. No new bounded item found.
+- **2026-08-21 — ruling D3 (Stash-pile and stale-WIP cleanup)**: OPERATOR-RULED 2026-08-21 — APPROVED the full stash/WIP cleanup (fresh blob re-verify before each drop; .tabs/3 re-audit first; recover sandbox fix; per-file review of slot-0 dirty files). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-21 — ruling D17 (Glassnode API key)**: OPERATOR-RULED 2026-08-21 — DECLINED for now ('none of these yet'): no Glassnode purchase; adapter stays dormant, todo stays BLOCKED-CREDENTIALS with this dated ruling (re-ask only on a named product need). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-21 — ruling D18 (Sportradar scope and purchase)**: OPERATOR-RULED 2026-08-21 — DECLINED for now: no Sportradar purchase; SportradarAdapter stays dormant (BLOCKED-CREDENTIALS, dated). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-21 — ruling D19 (Bybit trade-scoped key)**: OPERATOR-RULED 2026-08-21 — partially present: bybit-trade-api-key exists, bybit-trade-api-key-secret does NOT. EXECUTABLE half: confirm the code's scoped-name fallback works with bybit-api-secret; the missing secret stays a credential-ask (operator's Bybit login). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-21 — ruling D20 (GitHub outside-collaborator approval)**: OPERATOR-RULED 2026-08-21 — operator will click 'Require approval for all outside collaborators' in the GitHub UI. Pending-operator; verify via the repo settings once done. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-21 — ruling D21 (Live-trading hard-stop timing)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): When ready — every prior pass re-confirmed these as not-time-sensitive reserved sign-offs with no new readiness evidence. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-21 — ruling D23 (Ruling-record convention)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): Dedicated ruling-record doc per session — simplest, with 2 working precedents already in the corpus. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-21 — ruling D24 (Round-5 ruling transcription check)**: OPERATOR-RULED 2026-08-21 — CONFIRMED: all 6 round-5 rulings accurate as transcribed. Close the doc. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-21 — ruling D25 (Databento ICE/OPRA subscriptions)**: OPERATOR-RULED 2026-08-21 — DECLINED for now: no Databento ICE/OPRA add-ons; both stay deliberately fail-closed (dated ruling recorded on the docs). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-21 — ruling D107 (Consolidated action-items residual)**: OPERATOR-RULED 2026-08-21 — IPRoyal ~$7 proxy NOT approved (unselected): forexfactory stays BLOCKED-CREDENTIALS. Every other (non-spend) disposition in this batch ADOPTED as recommended. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
