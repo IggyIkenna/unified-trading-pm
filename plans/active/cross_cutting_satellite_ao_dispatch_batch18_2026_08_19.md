@@ -85,12 +85,15 @@ source: >-
       ExposureAggregator/exposure_aggregator); same-named `gross_exposure_usd`/`net_exposure_usd` ctx keys are
       caller-supplied `account_state` only, and the sole prod call-site (`engine/orchestrator.py:246`) passes no
       `account_state` → unpopulated on the live path. Resolved 2026-08-19 (slot 7) — see Progress Log.**
-- [ ] [AGENT] P3. **Resolve the dead `feedback_market_making_reference_price_model.md` reference** cited by both
+- [x] ✅ [AGENT] P3. **Resolve the dead `feedback_market_making_reference_price_model.md` reference** cited by both
       `vol_trading/options.py` (strategy-service) and `quote_maintenance.py` (execution-service)'s docstrings —
       confirmed not to exist anywhere in `unified-trading-pm`. Repoint both docstrings to
       `execution_delta_proxy_repricer_generalization_2026_08_18.md` (the closest real record of this design) since
       authoring a new standalone memo pre-design would be premature. Done when: both docstrings cite a real,
-      existing path. Source: `execution_delta_proxy_repricer_generalization_2026_08_18.md` item at line 366.
+      existing path. Source: `execution_delta_proxy_repricer_generalization_2026_08_18.md` item at line 366. —
+      strategy-service@3caf053e. `quote_maintenance.py` (execution-service) was already repointed by a prior
+      session; `market_making/continuous.py` (strategy-service) carried the same dead reference and was fixed in
+      the same commit.
 
 ## From `plan_reconciler_findings_cross_cutting_2026_08_18.md`
 
