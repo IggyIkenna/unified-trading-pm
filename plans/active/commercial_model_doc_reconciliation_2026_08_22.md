@@ -184,15 +184,17 @@ The intent behind the exclusions is that POD can run it today and layer their ow
       session editing the same file has its hunks swept into the same entry, and that a mid-run STAGE 1 failure
       never restores it. This todo covers only the codex line; the fix belongs to that issue.
 
-- [ ] [BACKEND] P1. **`DEFI_VENUES` in `live_execution_venues.py` is stale and silently narrows the manual path.**
-      It holds `{"UNISWAP_V3", "AAVE", "AAVE_V3-ETHEREUM", "LIDO-ETHEREUM"}` and its only consumer is
-      `execution_service/operations/manual/__init__.py`, the manual operations branch. The instruction handlers
-      carry far wider sets: swap covers Uniswap V2/V3/V4, Curve and Balancer; lend covers AAVE V3, Compound V3,
-      EulerV2, Fluid and Morpho; stake covers Lido and EtherFi. So a manual operation against any protocol outside
-      those four falls through the DeFi branch while the same venue routes fine through an instruction. Either widen
-      the frozenset from the handlers' own sets or derive it from them so it cannot drift again. Provenance: found
-      2026-08-22 when this constant was mistaken for the execution gate and caused a client document to understate
-      execution coverage as three protocol families when it is ten.
+- [ ] [BACKEND] P1. **Three overlapping DeFi venue-gate constants mean three different things, and none says so
+      where it is defined.** `_WIRED_CONNECTOR_ATTRS` in `engine/handlers/defi_live_dispatch.py` is the real live
+      on-chain dispatch gate and holds `{"_uniswap", "_aave", "_lido"}`. The per-handler `SUPPORTED_VENUES` sets are
+      backtest and BenchmarkMatcher membership, roughly ten protocol families, and several handler docstrings say so
+      explicitly while others do not. `DEFI_VENUES` in `cli/handlers/live_execution_venues.py` is a third set gating
+      only the manual operations branch. Reading any one of them as "what we can execute" gives a different answer,
+      and two of the three gave a wrong answer to a reader on 2026-08-22, once understating live coverage and once
+      overstating it into a client document before it was caught. Name the meaning in a docstring at each definition
+      site, ideally deriving the narrower sets from the broader ones so they cannot drift apart silently.
+      Provenance: measured 2026-08-22 while reconciling the commercial documents; the live gate was confirmed by its
+      own refusal path, which returns an explicit failure naming the missing call-shape rather than simulating.
 - [ ] [BACKEND] P1. **High-water mark is computed on raw total equity, contradicting the workspace rule that it
       never is.** `engine/core/components/pnl_monitor.py` tracks a high-water mark on raw total equity seeded at
       initial capital. The governing rule is that HWM is never raw equity and must be TWR, notional or
