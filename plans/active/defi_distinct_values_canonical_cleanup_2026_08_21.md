@@ -205,6 +205,27 @@ drift_direction: advance-code
 - [ ] [SCRIPT] P2. 14. **`dex_swaps` → `dex_pool_swaps` content migration** (3.46M rows, real legacy-only content) —
       execute per /plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md under its
       five-part proof gating; not a blanket rename. (repo: market-tick-data-service)
+- [ ] [SCRIPT] P2. 18. **`check_plan_commit_sha_evidence.py` false-fails every sibling citation when the commit runs
+      inside a git WORKTREE** — measured 2026-08-22 (this plan's doc push from a temp worktree at origin): git exports
+      an ABSOLUTE `GIT_DIR` (`.git/worktrees/<name>`) to hooks, so the checker's `git -C <sibling-repo> cat-file -t
+      <sha>` resolves against the PM worktree's object store and reports real, on-origin citations as unresolvable;
+      the same checker run by hand from the worktree (`--workspace-root <ws> --only …`) is clean. Fix: strip
+      `GIT_DIR`/`GIT_WORK_TREE`/`GIT_INDEX_FILE` from the sibling-repo subprocess env (or `env -u` in
+      `run_hygiene_sweep.sh`'s invocation). safe-doc-push's isolated mode may hit this too — verify. (repo:
+      unified-trading-pm; `scripts/quality_gates/check_plan_commit_sha_evidence.py`)
+- [ ] [DATA] P1. 19. **KAMINO-SOLANA residual 339 captured rows (2026-08-09..13) + KAMINO_LENDING 80 rows
+      (2026-06-01..08-05) + BLAZESTAKE 1 row (2026-08-06)** — measured in the 2026-08-22 mid-state census: the todo-5
+      copy plan only covered KAMINO-SOLANA 2026-06-01..08-05; rows written between then and the writer fix (last
+      legacy write 2026-08-14) were out of scope, and the KAMINO_LENDING third spelling was never in scope. Expect the
+      N5r/N6r canon-swap to re-key them (spelling-legacy class, twins from the projection); VERIFY post-swap they are
+      0, else extend the todo-5 migration to the residual window. (repo: market-tick-data-service)
+- [ ] [SCRIPT] P2. 20. **Walkthrough doc uses glued venue names in client-facing prose** — operator-flagged
+      2026-08-22: `codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html` hand-writes
+      `KAMINO-SOLANA`, `ORCA-SOLANA`, `PACIFICA-SOLANA` (×4), `JITO-SOLANA`, `MARGINFI-SOLANA`, `MARINADE-SOLANA`,
+      `NATIVE-SOLANA`, `JUPITER-SOLANA`, `PYTH-SOLANA`, `JITORESTAKING-SOLANA` — hand-authored (not API-generated),
+      and a slot-2 session is actively editing it under /plans/active/walkthrough_feedback_remediation_2026_08_21.md
+      (PROTECTed — do not edit concurrently from this slot). Fold canonical bare-venue + `chain=SOLANA` naming into
+      that remediation pass, or apply here once it lands. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. 15. **Post-phase codex audit**: update defi-canonical-naming-ssot (phantom-registration class,
       Solana double-glue gotcha), update/flip the owned checkboxes in the related issue docs, fix any doc that misled
       during this work. (repo: unified-trading-pm)
@@ -226,6 +247,21 @@ drain, then todo 9. Serialize EVERY index rewrite (CAS makes a race a wasted hou
 
 ## Progress Log
 
+- **2026-08-22 ~12:30 London (mid-state census + operator Q&A)** — Read-only DuckDB census of the live index
+  (scratchpad `midstate_*.csv`, generation 1787388651853992): distinct ANY-status = 83 venues / 34 data_types / 17
+  itypes / 23 chains (BEFORE: 108/32/16/23); CAPTURED-view = 67 venues, 23 data_types. Remaining captured legacy:
+  `POOL`/`PERPETUAL` itypes (canon-swap), KAMINO-SOLANA 339 + KAMINO_LENDING 80 + BLAZESTAKE 1 (todo 19),
+  dex_pools 29 (todo 16), dex_swaps 189,061 real content (todo 14); `rate_indices` is 0-captured (fully retired —
+  drops from the panel at the next rollup regen). Blank-itype (todo 10) quantified: overwhelmingly
+  `empty_confirmed`/`expected_unattempted` blanket absence stamps cross-joined per venue×data_type (e.g. AAVE_V3 ×
+  19,453 rows EACH for dex_pool_state/eigenlayer_rewards/perp_daily_ctx/staking_yields/… — capabilities the protocol
+  does not have): the same expected-universe cross-join disease as todo 6 but for NON-perp data_types; the IS fix
+  gated only `_DEFI_PERP_ONLY_DATA_TYPES`, so full capability-gating + purge is the todo-10 execution shape
+  (denominator correctness, post-swap). Operator (interactive): 82-behind PM = the co-occupant's 2 ungated local
+  commits (their issue doc: PM quickmerge blocked by two pre-existing gates); two `pull --rebase --autostash`
+  attempts aborted (`could not detach HEAD`, live peer edits mid-tree) — not forced; my pushes go via the
+  origin-based worktree. Walkthrough HTML glued venues = hand-authored prose, slot-2 actively editing (todo 20).
+  UAC tree is now CLEAN (peer landed); UTL + deployment-service still dirty — one-off/launcher ship still gated.
 - **2026-08-22 ~10:00 London (todo 6 DONE on VM; stale-EXIT_STATUS monitor trap; doc-push path)** — Purge VM
   attempt 2 (with `VM_ASSET_GROUP=DEFI`) ran end-to-end in 13 min in-region: download + census 4 min, pass 2 7 min,
   7.15 GB CAS upload 81 s → generation 1787388651853992 (vs ~1h+ per attempt over the laptop uplink yesterday —
