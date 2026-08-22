@@ -434,7 +434,7 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       `uts-prod-ml-t1-schedule` — both have real, working Cloud Run Jobs behind them (todos 1/2), so resumed
       both live via `gcloud scheduler jobs resume` (verified `ENABLED`). Real remaining work (the 6-job
       provisioning) split into the new todo directly below.
-- [ ] [INFRA] P1. Provision the 6 missing feature-family Cloud Run Jobs (calendar/delta-one/volatility/
+- [x] ✅ [INFRA] P1. Provision the 6 missing feature-family Cloud Run Jobs (calendar/delta-one/volatility/
       cross-instrument/multi-timeframe/commodity), mirroring the container-job Terraform pattern already used
       for execution-service/ml-service/strategy-service, and wire a `--run-tag`-aware `_SUCCESS`-marker writer
       into each family's operation in `features-service`'s CLI (mirrors `ml_service`'s
@@ -443,7 +443,87 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       for BLRS (Stage 0 only checks the 3 artifacts named in todos 1/2/4) but blocks real feature data reaching
       ml-service's inputs. Repos: features-service, deployment-service (terraform). Done-when: `gcloud run jobs
       list` shows all 6 `uts-prod-features-{family}-service-t1-recon` jobs, each with ≥1 real succeeded
-      execution and its scheduler `ENABLED`.
+      execution and its scheduler `ENABLED`. — DONE (infra-scope only) 2026-08-22 (slot-22): a `t1_recon_features_jobs.tf`
+      module already existed (unapplied, 0 in terraform state) with a comment falsely citing marker-writer
+      commits `features-service@06f07789`/`@38000fee` — verified via `git show`/`git merge-base --is-ancestor`
+      that NEITHER commit exists in this repo, and a repo-wide grep for `t1-recon/features`,
+      `_write_t1_recon_success_marker`, `t1_recon_success` returns zero hits — no family writes the marker;
+      corrected the stale comment in-file. `terraform init` needed the explicit prod backend-config flags
+      (`-backend-config="prefix=terraform/state/prod"`) — the committed `main.tf` backend block's `dev` prefix
+      is a known stub (see `bucket_estate_consolidation_to_sub100_2026_07_13.md`'s Wave-0 note). Scoped
+      `-target=module.t1_recon_features_job` plan showed a clean "6 to add, 0 to change, 0 to destroy" — applied.
+      All 6 jobs confirmed live + `Ready` (`gcloud run jobs list`). Triggered a real execution of all 6:
+      **0/6 succeeded** — every family hit a REAL, PRE-EXISTING Python code bug on first live invocation, none
+      an infra/Terraform gap: calendar (`...-bcgmc`) `error: unrecognized arguments: --run-tag t1-recon`;
+      commodity (`...-f87bm`) `--start-date is required for --mode batch`; volatility (`...-d27jf`, then
+      `...-6pbz8`) first `the following arguments are required: --feature-group` (fixed via Terraform — see
+      below), then `time data 'None' does not match format '%Y-%m-%d'`; delta-one (`...-tl987`, then
+      `...-gdkv5`) same `--feature-group` gap then `--start-date and --end-date are required for batch/incremental
+      mode`; cross-instrument (`...-kpwnm`) ran real code (`BatchHandler: Loading delta-one features from gs://...`)
+      but crashed `FileNotFoundError: No delta-one features found under .../day=None/` (date resolved to the
+      literal string "None", not a real date); multi-timeframe (`...-mpkg9`) is the ONE family with CORRECT
+      date self-default (resolved `date=2026-08-22` cleanly) but is genuinely blocked on delta-one having zero
+      real output yet (`No upstream data: ... produced 0 instruments`) — not a code bug on its own side.
+      **One infra-fixable gap found + fixed**: delta-one/volatility's CLI requires `--feature-group` with no
+      default (Terraform's args never passed it) — added `--feature-group ALL` (a registered choice) to both,
+      re-applied — `deployment-service@e3bc8d0a48`, QG green (targeted plan: "0 add, 2 change, 0 destroy"), re-triggered — this surfaced their NEXT,
+      genuinely-code-level failure (date self-default, cited above), confirming the fix itself was correct.
+      **Everything else is Python service-logic** (backend_engineer craft, `does_not` excludes it from infra) —
+      split into the 3 `[BACKEND]` todos immediately below rather than crossing craft lines (mirrors this doc's
+      todo-2/3/4 split pattern used repeatedly above). Did NOT un-pause any of the 6 schedulers — none has a
+      real successful execution yet, and un-pausing a scheduler for a job guaranteed to fail daily would just
+      add 6 more DP-WATCHER-006-class noisy failure alerts to the exact escalation-dispatcher-dedup problem
+      this doc's own Progress Log already documents at length (10 dispatches against one static failure).
+- [ ] [BACKEND] P0. Add a T-1 self-default for the missing-date argument (`--start-date`/`--end-date` for
+      commodity/delta_one, `--date`/`--end-date` for cross_instrument/volatility) to commodity, delta_one,
+      cross_instrument, and volatility's batch CLIs — mirroring ml-service/mdps/multi_timeframe's ALREADY-CORRECT
+      self-default pattern (multi_timeframe cleanly resolves `date=2026-08-22` with no `--date` passed; the
+      other 4 do not) — so the Terraform-provisioned t1-recon jobs no longer hard-require an explicit date.
+      Live evidence (2026-08-22, all 4 confirmed via real triggered executions, 2 attempts each): commodity
+      (`uts-prod-features-commodity-service-t1-recon-f87bm`) `ERROR:features_service.commodity.cli.main:
+      --start-date is required for --mode batch` (`features_service/commodity/cli/main.py:75-82`); delta_one
+      (`...-gdkv5`) `ERROR:features_service.delta_one.cli.main:Argument validation failed: --start-date and
+      --end-date are required for batch/incremental mode`; volatility (`...-6pbz8`)
+      `ERROR:features_service.volatility.cli.service_entry:Argument validation failed: time data 'None' does
+      not match format '%Y-%m-%d'`; cross_instrument (`...-kpwnm`) resolves the literal Python `None` object
+      into its GCS path construction (`_resolve_run_args()`, `features_service/cross_instrument/cli/main.py:114-130`
+      — `date_val = args.date if args.date is not None else args.end_date`, no fallback when both are absent),
+      producing `gs://.../delta_one/by_date/day=None/` and crashing `FileNotFoundError`. Same bug class this
+      doc already fixed once for strategy-service (see "2026-07-14 update"/todo 3 above) — same fix shape.
+      cross_instrument is ALSO blocked (separately, not itself a code bug) on delta_one having zero real output
+      yet — re-trigger cross_instrument only after delta_one's own fix + a successful run land. Repo:
+      features-service. Done-when: each of the 4 families' next triggered execution resolves a real date (not
+      an error, not the literal string "None") and completes successfully — cite each execution ID. No Cloud
+      Build trigger exists for features-service project-wide (`gcloud builds triggers list` returns 0 rows,
+      same gap ml-service hit 3x in this doc) but the deployed `:latest` image was built recently
+      (2026-08-22T15:29:04Z, tag `c41bba1`) via SOME mechanism not yet identified — verify the deployed image
+      actually contains this fix before re-triggering (compare the digest / a log line unique to the new code);
+      if it predates the fix, split a new `[INFRA] P0.` rebuild+redeploy todo (mirrors this doc's todo-2c/3c
+      precedent) rather than re-triggering against stale code.
+- [ ] [BACKEND] P0. Wire `--run-tag` into calendar's `--operation compute` CLI parser. Live evidence: both
+      triggered executions of `uts-prod-features-calendar-service-t1-recon` (`...-bcgmc`, 2026-08-22) failed
+      identically with `error: unrecognized arguments: --run-tag t1-recon` — `features_service/calendar/cli/
+      handlers/batch_handler.py` internally threads `run_tag` defensively (`getattr(self.args, "run_tag",
+      "batch")`, line ~148, plus an existing `--run-tag` `add_argument` at line ~439) but calendar's OTHER
+      operations (economic_results/corporate_actions/forexfactory, per their own handler files) already accept
+      `--run-tag` while `compute` — the operation the Terraform job actually invokes — does not; find + fix
+      wherever the `compute` operation's argparse is actually registered (not directly in `calendar/cli/*.py`
+      flat files — likely routed through a shared dispatcher, since `grep -rn "ArgumentParser("
+      features_service/calendar/cli/*.py` returns nothing). Repo: features-service. Done-when:
+      `uts-prod-features-calendar-service-t1-recon`'s next triggered execution accepts `--run-tag t1-recon`
+      without an argparse error and completes successfully — cite the execution ID. Same image-freshness caveat
+      as the todo above (verify the deployed image contains the fix before re-triggering).
+- [ ] [BACKEND] P1. Implement the `--run-tag`-aware `_SUCCESS`-marker writer this doc's original todo asked for
+      (mirroring ml-service's `_write_t1_recon_success_marker`, `ml_service/inference/cli/main.py:65-80`) across
+      all 6 feature families, writing to `t1-recon/features/{family}/{date}/_SUCCESS` once each family's
+      `--run-tag t1-recon` compute operation completes successfully. Confirmed via repo-wide grep (2026-08-22)
+      that this does NOT exist anywhere in features-service today (zero hits for `t1-recon/features`,
+      `_write_t1_recon_success_marker`, `t1_recon_success`) — a prior Terraform-file comment falsely claimed 2
+      commits already implemented it (see the DONE note on the todo above); they do not exist. Not
+      Stage-0-blocking for BLRS (per the original todo's own text) but is genuinely-requested scope and needed
+      before ml-service or any other consumer can gate on feature-family completion. Repo: features-service.
+      Done-when: each of the 6 families writes a real `t1-recon/features/{family}/{date}/_SUCCESS` blob on a
+      successful `--run-tag t1-recon` run — cite at least one real GCS object listing as evidence.
 - [ ] [REVIEW] P0. Once the todos above land, verify a real green 06:00Z `uts-prod-batch-live-reconciliation-service`
       scheduled run (not a manual `--dry-run`) — cite the execution ID + Stage 5 output. Repo:
       batch-live-reconciliation-service.
@@ -773,3 +853,31 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   evidence-gated write capability — review.md § 6 covers only a false-done revert or a 1-3 line code patch).
   Skipping with `reason_code: GATED` again (monitoring-window wait, not a genuine ambiguity) — will re-dispatch
   to the next eligible worker once the clock + remaining prereqs allow it.
+
+- **infra 2026-08-22 (slot-22, dispatch `recon_bucket_missing_nightly_recon_failing-890fede80a62`)**: flipped
+  todo 6 (provision the 6 feature-family Cloud Run Jobs) — infra-scope only, live-verified 0/6 real
+  successes. Found `t1_recon_features_jobs.tf` already written (unapplied, 0 in `terraform state list`) with
+  a comment falsely citing 2 marker-writer commits that don't exist in features-service history — corrected
+  the comment in-file after verifying via `git show`/`git merge-base --is-ancestor` (both fail) and a
+  repo-wide grep (zero hits for `t1-recon/features`/`_write_t1_recon_success_marker`/`t1_recon_success`).
+  `terraform init` needed explicit `-backend-config="prefix=terraform/state/prod"` (committed `main.tf`'s
+  inline backend block still stubs `dev` — same known gotcha `bucket_estate_consolidation_to_sub100_2026_07_13.md`
+  Wave-0 already documented). Scoped `-target=module.t1_recon_features_job` plan/apply: clean "6 to add, 0
+  to change, 0 to destroy" — all 6 jobs live + `Ready`. Triggered real executions of all 6: every single one
+  failed on a genuine pre-existing Python bug, not an infra gap — calendar (`--run-tag` unrecognized by the
+  `compute` operation's argparse), commodity (`--start-date` required, no self-default), volatility/delta_one
+  (missing required `--feature-group`, THEN — after I fixed that via Terraform, re-applied, re-triggered —
+  the SAME missing-date-self-default bug as commodity), cross_instrument (date resolves to the literal
+  string `None`, crashes on a GCS path built from it), multi_timeframe (the one family with correct T-1
+  self-default, but genuinely blocked on delta_one having zero real output — not its own bug). Confirmed my
+  one infra-fixable finding (the missing `--feature-group` arg) actually was infra-scoped by fixing it and
+  watching it surface the NEXT, clearly-code-level failure underneath. Did not touch any scheduler — none of
+  the 6 has a real successful execution, and un-pausing now would just manufacture 6 more DP-WATCHER-006-class
+  daily failure alerts into the exact escalation-dispatcher-dedup problem this doc's Progress Log already
+  documents at length. Split 3 new `[BACKEND]` todos (T-1 self-default across 4 families; calendar's
+  `--run-tag` wiring; the still-entirely-missing `_SUCCESS`-marker writer across all 6) rather than crossing
+  craft lines, same split pattern used repeatedly above. Flagged in the self-default todo: no Cloud Build
+  trigger exists for features-service (`gcloud builds triggers list` 0 rows, same gap ml-service hit 3x in
+  this doc) but its `:latest` image WAS built recently (2026-08-22T15:29:04Z) via some mechanism not yet
+  identified — whoever picks up the backend todos should verify the deployed image actually contains their
+  fix before re-triggering, not assume it does.
