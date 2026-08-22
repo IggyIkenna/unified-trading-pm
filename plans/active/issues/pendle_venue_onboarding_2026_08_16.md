@@ -31,6 +31,7 @@ related:
     /plans/archive/issues/symbiotic_venue_onboarding_2026_08_16.md,
   ]
 created: 2026-08-16
+last_updated: 2026-08-21
 resolved_by:
 locked_by:
 drift_direction: advance-code
@@ -92,9 +93,11 @@ context_scope:
 - [ ] [AGENT] P3. **Resolve `config["pendle_markets"][market_id]` addresses** (SY/YT/PT/underlying-token contracts
       per market) before any live construction — the connector's own docstring already states unconfigured markets
       return an explicit error, so this is a config-population task, not a code-correctness one.
-- [ ] [AGENT] P3. **Decide whether Pendle belongs in any strategy archetype's `venue_universe`** — it is currently
-      absent from all of them; if no archetype needs it, the P2 items above are still worth doing (closes the
-      SIT-invariant latent gap pre-emptively) but drop to P3.
+- [ ] [AGENT] P3. **RULED 2026-08-21 (D108, ADOPTED-REC): keep P3** — no archetype declares Pendle; the parent doc
+      (`venue_readiness_and_registry_hardening_2026_08_16.md`) has live tracking of the SIT-invariant reachability
+      gate. Decide whether Pendle belongs in any strategy archetype's `venue_universe` — it is currently absent
+      from all of them; if no archetype needs it, the P2 items above are still worth doing (closes the SIT-invariant
+      latent gap pre-emptively) but stay P3.
 
 ## Progress Log
 
@@ -106,3 +109,4 @@ context_scope:
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — conflict-checked before considering RECLASSIFY on the 3 seemingly-bounded remaining items (withdraw redemption implementation, DEFI_VENUE_TO_CONNECTOR_CLASS map entry, pendle_markets config addresses): `venue_readiness_and_registry_hardening_2026_08_16.md` (assigned_vm: NA, active) is this doc's own parent and independently, actively tracks the karak/pendle/symbiotic SIT-invariant reachability gate (14+ dated confirmations of `new_regressions=['karak','pendle','symbiotic']`, most recently confirming pendle's connector-class map entry is still the reason the invariant stays red) — real overlapping live tracking on at least the connector-map item. Per the conflict-check rule, staying NA rather than extracting. Doc stays `assigned_vm: NA`.
+- **2026-08-21 — ruling D108 (Pendle priority)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): Keep P3 — no archetype declares Pendle; the parent doc has live tracking. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
