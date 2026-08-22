@@ -606,6 +606,22 @@ successor plan, the work remains tracked here as still-open todos, not lost).
 
 ## Progress Log
 
+- **2026-08-22 (T5 wave-2, /autonomous) — collision + recovery**: after shipping batches 2-8, a concurrent slot-2
+  session's large-scale rewrite (`unified-trading-pm@6573c2e4ea`, "client-voice pass, marker apparatus removed,
+  security split", net -1,051 lines, built correctly ON TOP of my batch8 per `merge-base --is-ancestor`, so not a
+  stale-base revert) swept away several of my content additions while doing its own legitimate restructuring —
+  PnL attribution (§22), manual-trade booking options (§20), GCP-identity/external-auth (Security section),
+  Pub/Sub transport variant, fees/gas HOW-exposed framing, and the fresh 633-triples/46.1%-coverage/292-venue
+  numbers (reverted to stale 660/48.54%/288 in 4 separate spots) were all found missing on a post-ship
+  content-survival grep. Recovered per rule 4 (merge, don't blind-revert): re-applied each finding adapted to
+  their new structure (dropped the `st-*`/`ev-*` marker badges they deliberately removed doc-wide; the KILL_SWITCH
+  501 gap I found was independently closed by their session with a newer sha, left as theirs — more current than
+  mine). Verified landed: `unified-trading-pm@f9ea72fe91`, 6/6 recovery markers present on origin, 0 stale "660"
+  references remain. Lesson for future sessions on this file: a post-ship content-survival grep is not optional
+  even when the collision issue doc's liveness-gate checks pass clean at ship time — a rewrite that lands AFTER
+  your push, built correctly on top of it, can still silently drop your content while doing legitimate work of
+  its own; check again after any gap where a concurrent session could have shipped.
+
 - 2026-08-21 — T4 wave-1b session: drafted an independent todos-1-3 implementation, QG-passed, then found a
   CONCURRENT session had already landed a more complete version (`execution-service@b1857845c`) and a THIRD
   session had already flipped todos 1-4 in this doc — discarded the redundant draft rather than re-shipping a
