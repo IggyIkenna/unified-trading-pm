@@ -76,8 +76,14 @@ summary: >-
   at 16% real usage read as ~100% full, so 128 of 173 forced compacts came back
   `forced_compact_ineffective` and escalated to `context_wedge_kill`: 22 mid-task deaths in one
   4h window, 7 workers killed inside 2 seconds. Fixed by registering the account-scoped ids
-  (agent-orchestrator@bef7b7f89f), which also made `kill_session(reason=)` durable so a future
-  mass kill is attributable from the DB rather than a ~1h volatile journal.
+  (agent-orchestrator@bef7b7f89f); measured 25 min later, `forced_compact` went 22 -> 0 and
+  `forced_compact_ineffective` 24 -> 0 across matched windows. A second change in that commit,
+  persisting `kill_session(reason=)`, was REVERTED 20 minutes on (agent-orchestrator@e8944ca1fb):
+  it opened a nested `BEGIN IMMEDIATE` inside callers that already hold the write lock and, by
+  swallowing every exception, would have failed silently in exactly the mass-kill case it
+  targeted. Kill-reason attribution therefore remains OPEN. Note the revert's first stated
+  cause was wrong — a `database is locked` burst was blamed on correlation, but the tracebacks
+  name pre-existing paths and never that helper; see the todo for the corrected account.
 status: open
 resolved_by:
 nature: issue
@@ -445,13 +451,29 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       NVIDIA-hosted Gemma models stay unregistered and a test pins that.
       — `agent-orchestrator@bef7b7f89f`
 
-- [x] [BACKEND] P2. **`kill_session(reason=...)` now reaches the DB.** Was `logger.warning`
-      only, and journald here is volatile (~1h); just ~5 of ~20 call sites had a companion
-      activity event, so the 09:39 seven-worker mass kill was unattributable — forensics could
-      say only `external_kill_suspected: true, evidence: "tmux kill-session"`. Now emitted from
-      INSIDE `kill_session`, so a new call site cannot forget it; best-effort with
-      function-local imports so a DB hiccup never breaks a teardown.
-      — `agent-orchestrator@bef7b7f89f`
+- [ ] [BACKEND] P2. **`kill_session(reason=...)` persistence — ATTEMPTED, REVERTED, still open.**
+      Shipped in `agent-orchestrator@bef7b7f89f` as a `session_scope()` write from inside
+      `kill_session`; reverted 20 minutes later in `agent-orchestrator@e8944ca1fb`.
+      **Correction to my own attribution, recorded because it is the more useful lesson:** I
+      first blamed the revert on a `database is locked` burst, from an hourly correlation (0/h
+      for four hours, then 14 in the deploy hour) plus a real nested-transaction mechanism in
+      the code. That was WRONG. The tracebacks name `routes/state.py:340
+      report_dashboard_stall`, `worker_liveness/_git_alerts.py:55 maybe_explain_idle_slot`,
+      `worker_liveness/__init__.py` and `tmux_pruner.py:580` — all pre-existing paths;
+      `_log_session_killed` appears ZERO times in the log. The real trigger was the restart
+      itself: a 24-session mass-kill at 12:04, then a dashboard stall + idle-slot-explainer
+      storm at 12:07. Dispatch recovered unaided by 12:28. Correlation plus a plausible
+      mechanism is not causation — read the traceback frames.
+      **The design was still wrong, which IS why it stays reverted.** `db.py::_on_begin` issues
+      `BEGIN IMMEDIATE` (SQLite's RESERVED write lock) on every non-read-only transaction, and
+      `kill_session` is called from inside open write transactions (`worker_liveness_watchdog`
+      opens `session_scope` at :1645 and calls it ~70 lines later, still inside). A nested
+      `BEGIN IMMEDIATE` contends with the lock the caller already holds — and because the helper
+      swallowed every exception it would have failed SILENTLY in exactly the mass-kill case it
+      was built for, persisting nothing while adding writer contention.
+      **Do it one of these ways instead**: pass the caller's live `db` in; emit AFTER the
+      enclosing transaction closes; or attach the reason to the `tmux_session_lost` payload
+      `tmux_pruner` already writes. A comment at the old site records this.
 
 - [ ] [BACKEND] P1. **`gpt-5.6-luna`'s registered window is contradicted by observation.**
       Registered 272,000, but `learned_context_windows.json` records an `auto_boundary_tokens`
