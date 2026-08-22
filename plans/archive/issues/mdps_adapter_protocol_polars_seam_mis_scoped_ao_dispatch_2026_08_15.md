@@ -18,7 +18,7 @@ summary: >-
   mdps_adapter_protocol_pandas_to_polars_2026_06_21.md) and its own estimate (shared with one other item) was 2.0
   calibrated AI-days — never a 1-hour single-worker task. Per CLAUDE.md's "AO-eligible = outcome DETERMINABLE by the
   worker alone" rule, this should not have been extracted into a bounded AO-dispatch batch as-is.
-status: open
+status: complete
 nature: issue
 scope: [engineer, admin]
 asset_group: [cross-cutting]
@@ -36,7 +36,7 @@ source: cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md todo pickup, s
 assigned_vm: NA
 parent_epic: mtds_mdps_master
 priority: P3
-resolved_by:
+resolved_by: /plans/active/mdps_adapter_protocol_polars_migration_2026_08_22.md
 locked_by:
 context_scope:
   [
@@ -50,6 +50,11 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **📁 ARCHIVED 2026-08-22.** This doc's finding is resolved: its `[DESIGN]` scoping todo is satisfied by
+> `/plans/active/mdps_adapter_protocol_polars_migration_2026_08_22.md`, which carries the file surface, sequencing,
+> and verification bar forward (the migration itself is not yet executed — that plan tracks it). Kept here as the
+> historical record of the mis-scoping finding.
 
 # MDPS adapter-protocol polars seam — mis-scoped for AO dispatch
 
@@ -123,12 +128,17 @@ Do NOT re-extract this todo into a future AO satellite-dispatch batch as a singl
 
 ## Todos
 
-- [ ] [DESIGN] P3. Scope a dedicated implementation plan for the MDPS adapter-protocol polars seam (one atomic PR:
+- [x] ✅ [DESIGN] P3. Scope a dedicated implementation plan for the MDPS adapter-protocol polars seam (one atomic PR:
       `base_adapter.py`'s 5 shared pandas helpers + all 18 `market_data_processing_service/app/adapters/*` files + the 4
       `.to_pandas()` caller-side sites in `live_workers_chain.py`/`live_workers_streaming.py`), including a
       numeric-parity verification step for the 5 groupby-heavy adapters (cefi/trades_adapter.py,
       cefi/book_snapshot_adapter.py, cefi/liquidations_adapter.py, sports/bucket_assignment_adapter.py,
       tradfi/ohlcv_passthrough.py) before ship. Repo: market-data-processing-service.
+      ✅ 2026-08-22 — scoped as `/plans/active/mdps_adapter_protocol_polars_migration_2026_08_22.md` (human-driven
+      per operator ruling on plan dispatch, `status: draft` until execution begins). Enumerates the exact file
+      surface from this doc's own survey, a proposed dual-path sequencing so the 13 light adapters ship
+      independently of the 5 heavy ones, and the same two-part verification bar (unmodified test suite green +
+      numeric-parity diff against a real historical shard) this doc's Recommended-decision section specified.
 
 ## Progress Log
 

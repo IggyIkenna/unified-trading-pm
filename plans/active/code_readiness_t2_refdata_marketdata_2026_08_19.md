@@ -769,16 +769,14 @@ todos only to confirm they are data-movement, then leave it.
       writer. That absence, not the code, is why the issue stayed VM-gated for eleven days.
 - [ ] [BACKEND] P1. Land the MDPS adapter-protocol / polars-seam migration as ONE atomic change across the 18
       adapter files sharing the ABC/Protocol boundary. Evidence:
-      `/plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
-      **2026-08-20 (T2, `/autonomous`) — checked, deliberately NOT attempted this pass.** The cited issue doc is
-      itself the finding: a concrete file-by-file scope survey (already done, not redone here) confirms this is
-      an atomic single-PR migration across all 18 adapters at once (a partial conversion breaks the shared
-      Protocol polymorphically), 5 of which do genuine groupby feature-engineering with no trivial 1:1 polars
-      swap — correctness-risk on LIVE candle production, not a mechanical change. Estimated 2.0 calibrated
-      AI-days on its own, and **already operator-deferred TWICE** across two archived predecessor plans before
-      this doc was even filed. Forcing this through in the remaining time of a long multi-item session would
-      trade rigor for a checkbox — left open at its real size, a genuine candidate for its own dedicated
-      session.
+      `/plans/active/mdps_adapter_protocol_polars_migration_2026_08_22.md`.
+      **2026-08-20 (T2) — deliberately not attempted, atomic 18-file boundary + 5 correctness-judgment adapters,
+      operator-deferred twice before, needs its own session.** Full finding archived to
+      `plans/archive/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
+      **2026-08-22 (T2) — scoping half now done.** `mdps_adapter_protocol_polars_migration_2026_08_22.md` authored
+      (human-driven per operator ruling, `status: draft`): exact 18+1+4 file surface, dual-path sequencing so 13
+      light adapters ship independent of the 5 heavy ones, numeric-parity verification bar. MIGRATION ITSELF still
+      unexecuted — left open for its own dedicated session, per the plan's own todos.
 - [x] [BACKEND] P1. Resolve the B21 distinct-values non-canonical live finding. Evidence:
       `/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md`.
       ✅ 2026-08-20 — **nothing further actionable from this tranche's 3 repos.** The issue doc has been

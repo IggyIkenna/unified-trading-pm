@@ -46,7 +46,7 @@ context_scope:
     /codex/06-coding-standards/quality-gates.md,
     market-tick-data-service/market_tick_data_service/cli/handlers,
     market-data-processing-service/market_data_processing_service/app/adapters,
-    /plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md,
+    /plans/active/mdps_adapter_protocol_polars_migration_2026_08_22.md,
   ]
 ---
 
@@ -170,8 +170,10 @@ byte-identical output before/after).
       adapters (the ABC boundary can't be half-converted) with 5 files (cefi/trades_adapter.py,
       cefi/book_snapshot_adapter.py, cefi/liquidations_adapter.py, sports/bucket_assignment_adapter.py,
       tradfi/ohlcv_passthrough.py) needing genuine groupby-based feature-engineering rewrites, not type-hint swaps —
-      full file-by-file survey + recommended dedicated design/execution + numeric-parity-verification plan in
-      `issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
+      full file-by-file survey in the (now-archived) `issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_
+      2026_08_15.md`; its `[DESIGN]` scoping todo is now satisfied by
+      `/plans/active/mdps_adapter_protocol_polars_migration_2026_08_22.md` (human-driven, `status: draft` pending
+      execution — the dedicated design/execution effort itself is NOT yet done, only its scope).
 - [x] ✅ [DESIGN] P3. **Phase-6 `_publish_emission_check` scalability — RESOLVED, already shipped
       (round5-cross-cutting-audit 2026-08-08).** Both options already live+composed: in-process 60s-TTL cache
       (`read_availability_index`) + optional `manifest_index` pre-read passthrough (MDPS commit `ca69f512`, "F3 safe
@@ -218,8 +220,14 @@ byte-identical output before/after).
   half-converted) with 5 files needing genuine groupby-based feature-engineering rewrites on live candle-production
   code, matching the same scope already operator-deferred twice under two archived predecessor plans (prior combined
   estimate 2.0 calibrated AI-days). Did not attempt the migration; this item stays P3/parked here pending a dedicated
-  design/execution effort. Full survey + recommendation:
+  design/execution effort. Full survey + recommendation (now archived):
   `issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
+- **2026-08-22 (T2)**: that issue doc's `[DESIGN]` scoping todo is now satisfied —
+  `/plans/active/mdps_adapter_protocol_polars_migration_2026_08_22.md` authored (human-driven per operator ruling,
+  `status: draft`), enumerating the exact 18+1+4 file surface, a dual-path sequencing so the 13 light adapters ship
+  independently of the 5 heavy ones, and the numeric-parity verification bar. The MIGRATION ITSELF remains
+  unexecuted — this closes only the scoping half. Source issue doc archived to
+  `plans/archive/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
 
 - **na-eligibility-audit 2026-08-17** [body-hash:ed2216fabc187778]: KEEP-NA, stale-items corrected -- closed 3 of 5 open items (connector-reconnect-tests, UAC generated-artifact-churn, PM quality-gates.sh confirm): all already shipped, each citing this exact doc as Source, inside the active cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (parent_epic infrastructure_master) -- market-tick-data-service@26eef1999f (2026-08-15), unified-api-contracts@f70f29c8 (2026-08-15), and PM's own quality-gates.sh confirmed green (sentinel .qg_last_passed_sha == HEAD 8b7e53a624). Doc stays assigned_vm: NA for its 2 remaining genuine items (MTDS file-split programme, Polars adapter migration -- both large, non-bounded). Cross-cutting tranche audit conflict-check finding.
 ## Deferred work — migrated to:
