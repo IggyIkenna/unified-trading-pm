@@ -121,9 +121,12 @@ context_scope:
 - [ ] [AGENT] P1. **Add the decided version marker to every native (non-ccxt) REST adapter.** Confirm which
       adapters (from Phase 1's inventory) genuinely lack one before adding — some URLs may already embed a version
       segment that just needs to be asserted rather than newly introduced.
-- [ ] [AGENT] P1. **Confirm and, if needed, tighten the ccxt-wrapped venues' version story** per Phase 1's
+- [x] [AGENT] P1. **Confirm and, if needed, tighten the ccxt-wrapped venues' version story** per Phase 1's
       decision — either document why the existing pyproject range is sufficient, or add the per-venue check
-      decided in Phase 1.
+      decided in Phase 1. — execution-service@48bf2728: added `CCXT_VERSION_RANGE` (">=4.5.24,<5.0.0", matching
+      pyproject/uv.lock) and a real runnable `assert_ccxt_version_pinned()` check + unit tests in `ccxt_common.py`
+      confirming the pyproject range IS the pinning mechanism for the 8 ccxt-wrapped venues, per Phase 1's decision
+      that a separate per-venue HTTP version assertion is not required underneath ccxt.
 - [ ] [AGENT] P1. **DeFi protocol connectors: pin the expected contract address/ABI version per protocol** if
       Phase 1 decided this is a materially different mechanism than the REST-API-version concept — cross-check
       against W15's audit findings first (`/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`)
@@ -175,3 +178,4 @@ context_scope:
 - **2026-08-20, slot 4, Phase 1 version-semantics decision**: Evidence from the real adapter walk and scoped cassettes supports a transport-specific marker: native CeFi and sports use URL/endpoint API path versions with normalized response-schema fingerprints where no explicit version exists; CCXT records the exact lock-resolved library version but does not assert an upstream venue API version; on-chain DeFi uses chain/network plus contract-address and ABI/selector fingerprints, while REST-backed DeFi follows the native rule; TradFi inherits the shared IBKR gateway protocol and has no independent exchange version. Structural hashes ignore values, timestamps, ordering, and secrets.
 - 2026-08-21, slot 14: real run at 2026-08-21T00:00:00Z inspected 17 cassettes, found 13 stale at the 90-day budget and 4 undated sports cassettes, and exited 1. This confirms an actionable failure state rather than a forced-green stub.
 - **2026-08-21, slot 14, implementation ship**: `execution-service@1d7c1cf4a6` landed via quickmerge after `bash scripts/quality-gates.sh --no-fix` exited 0 (8,898 passed, 22 skipped, 1 xfailed; 82.57% coverage). The checker is offline and read-only: it fingerprints normalized response structure, ignores values/order/timestamps, and applies a 90-day capture-date budget; the live run reported 13 stale and 4 undated cassettes for Phase 4 follow-up.
+- **2026-08-22, slot 8, ccxt version-story confirmation**: `execution-service@48bf2728`. Confirmed the pyproject/uv.lock ccxt range (`>=4.5.24,<5.0.0`, resolved `4.5.39`) is still the pinning mechanism per Phase 1's decision — no upstream-venue HTTP assertion added underneath ccxt, structural cassette checks remain the drift guard. Made this a real runnable check rather than only a design-doc claim: `CCXT_VERSION_RANGE` + `assert_ccxt_version_pinned()` in `ccxt_common.py`, with unit tests (`test_ccxt_common.py::TestAssertCcxtVersionPinned`) covering both the in-range pass and an out-of-range `RuntimeError`. Full `quality-gates.sh` green; shipped via quickmerge, verified on origin.
