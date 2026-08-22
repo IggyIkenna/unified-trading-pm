@@ -699,8 +699,8 @@ as the cryptography sweep above): bump `pip` floor to `>=26.2` in each repo's `p
       no other package changes), full `quality-gates.sh` green, shipped. (repo: market-data-processing-service) —
       market-data-processing-service@e8233149ac, verified HEAD ancestor-or-equal of `origin/live-defi-rollout` via
       `git merge-base --is-ancestor`.
-- [ ] [SCRIPT] P2. **market-tick-data-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
-      market-tick-data-service)
+- [x] ✅ [SCRIPT] P2. **market-tick-data-service** — pip CVE-2026-13346 bump per recipe above (was 26.1.2). (repo:
+      market-tick-data-service) — market-tick-data-service@384b76438; uv.lock regenerated (stale >=26.1.2 specifier in lock), stale PYSEC-2026-196 comment corrected to PYSEC-2026-3721/CVE-2026-13346
 - [x] ✅ [SCRIPT] P2. **DONE — verified already-landed (2026-08-21, slot-8).** **ml-service** — pip
       CVE-2026-13346 bump per recipe above (was 26.1.2). (repo: ml-service) — ml-service@7c83545
       ("fix(deps): raise pip floor to >=26.2, closes PYSEC-2026-3721"), verified HEAD ancestor-or-equal of
