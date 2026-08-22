@@ -162,15 +162,39 @@ looked like genuine flip candidates and were each run down against live code:
 
 ## Routed to operator (6)
 
-- [ ] [PM] P1. **R1 — `plans/epics/plan_hygiene_master.md` `related_plans:` roster is 6 entries against 43 real
-      children** (measured this pass: `rg -l '^parent_epic: plan_hygiene_master$'` over `plans/active/` +
-      `plans/active/issues/` → 43). The 2026-08-19 pass filed this as "~17 missing"; it is now ~37, i.e. the roster is
-      drifting faster than it is being patched, which makes hand-patching the wrong fix. **[WORKER REC]**: do not
-      hand-edit — `plans/epics/orchestrator_master.md:345` cites `scripts/plans/populate_epic_bodies_2026_05_21.py`
-      for exactly this roster-population job, and the script is present and executable. Decide whether to (A) re-run
-      it for every epic as the standing mechanical refresh, (B) re-run it for `plan_hygiene_master` only, or (C) wire
-      it into `run_hygiene_sweep.sh` so rosters can't drift again. Operator-gated because a fleet-wide re-run mutates
-      every epic doc, which is beyond a single tranche's remit.
+- [ ] [PM] P1. **R1 — epic `related_plans:` roster drift, and a data-loss risk in the obvious fix.**
+      **CORRECTION to this pass's own earlier number**: I first measured "6 roster entries vs 43 children" for
+      `plans/epics/plan_hygiene_master.md` and reported the gap as ~37 missing. That compared two different
+      populations and overstated it. The roster is a DERIVED projection with a definition owned by its generator,
+      `scripts/plans/populate_epic_bodies_2026_05_21.py`: it scans **`plans/active/*.md` only** and keeps only
+      **`status: active`** docs (the section it feeds is literally "Assigned ACTIVE plans"). My 43 was every doc in
+      `plans/active/` **plus** `plans/active/issues/` at any status — measured breakdown: **36 are
+      `plans/active/issues/` docs at `status: open`, 8 are `plans/active/` docs at `status: active`**. Against the
+      roster's own definition the real drift for this epic is **5 missing + 2 stale**, not 37.
+      Missing: `ao_satellite_ao_dispatch_batch1_2026_08_21_finalize`, `cefi_satellite_ao_dispatch_batch20_2026_08_16_finalize`,
+      `cefi_satellite_ao_dispatch_batch22_2026_08_19_finalize`, `cefi_satellite_ao_dispatch_batch23_2026_08_21_finalize`,
+      `epic_taxonomy_restructure_and_html_reconcile_2026_08_18`. Stale (would be dropped):
+      `infra_satellite_ao_dispatch_batch11_2026_08_09` + its finalize. Real drift is corpus-wide, not local to one
+      epic — the generator's own `--dry-run` reports it **would rewrite the frontmatter of 22 of 31 epics**.
+
+      **The finding that matters more, and why the fix is NOT just "run the script":**
+      `update_related_plans_frontmatter()` replaces the WHOLE `related_plans:` value, and the generator never scans
+      `plans/active/issues/`. But **177 current roster entries across the epic corpus point into `../active/issues/`**
+      (54 block-style + 123 flow-style, measured) — every one of them hand-added, including the single `issues/` entry
+      the 2026-08-19 `/plan-reconcile ao` pass added to `plan_hygiene_master` itself. Running
+      `populate_epic_bodies_2026_05_21.py --apply` as-is would **delete all 177**. That is a silent data-loss
+      regression sitting behind the most obvious reading of "just re-run the generator", so this pass did not run it.
+
+      **[WORKER REC]**: before any wiring, teach the generator to scan `plans/active/issues/*.md` too (treating
+      `status: open` as the issue-doc equivalent of `status: active`), so the projection covers the population the
+      rosters have de-facto been carrying for months. Then add a shrinking-ratchet detector
+      (`check_epic_roster_completeness.py`, same shape as `check_ag_closeout_linkage.py`) wired into
+      `run_hygiene_sweep.sh` via `run_check`, whose remediation line points at the corrected generator. Wiring a
+      detector to today's generator would institutionalise the deletion above, so the generator fix must land first.
+      Operator-gated on one question that is genuinely a preference, not a fact: **should issue docs appear in epic
+      `related_plans:` rosters at all?** If yes, the above is the plan; if no, the 177 existing entries should be
+      removed deliberately and the generator left as-is.
+
 - [ ] [PM] P2. **R2 — 2 HARD line-cap violations in the ao tranche** (splitting a plan is a planning decision, so this
       is operator-gated by the skill's own rule): `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
       (1015 > 1000) and `plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md` (1010 > 1000). Both

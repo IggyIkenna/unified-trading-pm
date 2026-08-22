@@ -25,7 +25,7 @@ tags: [plan-hygiene, na-eligibility-audit, script, slot-safety, tooling-bug]
 related:
   [
     /plans/active/issues/na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 parent_epic: plan_hygiene_master

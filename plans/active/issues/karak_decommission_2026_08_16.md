@@ -32,7 +32,7 @@ execution_scope: local-only
 tags: [defi, karak, decommission, restaking, venue-removal]
 priority: P1
 source: operator-request-2026-08-16
-parent_epic: defi_master # corrected 2026-08-21 (ag-closeout-audit defi tranche, Phase 2 sweep) -- was security_and_cross_cutting_master; Karak is a single DeFi restaking venue decommission (asset_group already corrected to [defi] 2026-08-19), matching this doc's own asset_group correction
+parent_epic: defi_master
 related:
   [
     /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,
@@ -199,6 +199,14 @@ change — a token grep alone misses path-prefix/filename/registry-membership bi
       so "unreachable" is moot, not resolved).
 
 ## Progress Log
+
+- **/plan-reconcile ao 2026-08-22**: stripped the inline `# corrected 2026-08-21 ...` comment from the
+  `parent_epic:` frontmatter line (rationale preserved: it was `security_and_cross_cutting_master`, corrected to
+  `defi_master` by ag-closeout-audit's defi Phase 2 sweep, matching this doc's own `asset_group: [defi]`
+  correction). `regen_backlog_from_plan.py`'s `parse_frontmatter_parent_epic` does not strip inline `#` comments
+  (verified by reading it — no `.split("#")`, unlike the `status`/`execution_scope`/`sequential`/`effort`
+  parsers), so the value was being read as the whole comment-laden string rather than `defi_master`. Same defect
+  class as the `assigned_vm` instance fixed this pass in the two `dp_fetch_009_cefi_liquidations_*` docs.
 
 - **2026-08-16**: issue authored. Full-workspace `grep -rli "karak"` across execution-service, unified-api-contracts,
   strategy-service, instruments-service, market-tick-data-service, market-data-processing-service, features-service,

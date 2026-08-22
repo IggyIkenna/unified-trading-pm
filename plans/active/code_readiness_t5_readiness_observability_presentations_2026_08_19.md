@@ -654,7 +654,7 @@ todos only to confirm they are data-movement, then leave it.
 - [x] [BACKEND] P1. Fix `git stash push/pop` silently dropping content under high branch velocity — this defect
       costs every tranche real work. Evidence:
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`.
-      **DONE 2026-08-21**: both extracted items in `/plans/active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`
+      **DONE 2026-08-21**: both extracted items in `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`
       landed — item 1 (repro of both the stale-pathspec and transient-empty-pathspec hypotheses, both confirmed)
       at `unified-trading-pm@9e5e873988`, item 2 (promoted the confirmed `git pull --rebase --autostash` per-batch
       fix into `/codex/05-infrastructure/per-tab-worktrees.md`) at `unified-trading-pm@e022d3f0e3`. This doc's own
