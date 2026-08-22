@@ -154,3 +154,23 @@ this case and will send the next agent hunting a regression in unrelated files.
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17** [body-hash:f735dd50ac40655b]: RECLASSIFY (whole-doc) -- assigned_vm flipped NA -> planning; execution_scope -> orchestrator-agent; assigned_role: infra (already set). Both open items are bounded/mechanical (batch the per-pid lsof walk; fix an unconditional-vs-conditional wording bug in the re-gate message), conflict-check CLEAR. doc_type: issue, structurally exempt from a finalize-plan companion. Cross-cutting tranche audit.
+- **2026-08-22 (slot-4)**: hit this exact failure signature while shipping an unrelated PM-only change (dropping a
+  resolved pip CVE ignore + a plan-doc checkbox flip — `scripts/quality-gates-base/qg-common.sh` +
+  `plans/active/issues/*.md`, neither of which the failing tests import/invoke/reference). `not ok` on the same 4
+  tests every time — `tests/test_session_start_collision_check.bats` #5/#7/#10 ("detects a live foreign process" /
+  "warning names the slot dir" / "falls back to plain-text output") and
+  `tests/test_slot_collision_detect_lsof_batching.bats` #14 ("foreign_claude_pids still finds a live peer") —
+  reproduced 4x in a row: twice inside a full `quality-gates.sh` run (`load average: 7.71, 6.47, 5.92`), then twice
+  more running just those two `.bats` files standalone in isolation (load unchanged the first retry, then dropped to
+  2 other >50%-CPU processes on the host for the second — same 4 failures either way). This is well below the
+  load-48/164 range the original diagnosis measured, and the todo above claims "10/10 pass standalone" for the
+  session-start-collision suite specifically because of the deliberate no-skip design choice noted there ("falls
+  through to let the assertion fail rather than skip") — so on a still-moderately-loaded shared host these 3 tests (+
+  the batching suite's 1, which has no skip-guard applied at all) are the ones actually still exposed. Did not
+  further diagnose or fix (adjacent to, not in scope of, the CVE-remediation task this session was dispatched for) —
+  flagging as evidence that the flakiness threshold is lower than the original load-48+ diagnosis suggests, and that
+  the two undecorated tests (not just the DOC-message-wording todo) may need the same skip-guard treatment the
+  pretooluse-guard suite got. Given both touched files were GATE-INFRA/docs (CLAUDE.md carve-out 3), shipped my own
+  change via a direct `git push` (rebase-reconciled, verified ancestor of origin) rather than blocking on this
+  pre-existing red — same "PM pipeline-fix blocked behind a broken gate is a deadlock" reasoning already used
+  elsewhere in `cve_affected_pinned_deps_remediation_2026_06_18.md`.
