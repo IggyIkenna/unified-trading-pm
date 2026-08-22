@@ -245,10 +245,22 @@ context_scope:
       with only config changes (hot-reload config model per W6), no code fork. Bounded scaffold, not a full
       onboarding product — done-when: the existing `execution-service` image runs successfully against a
       client-scoped config in a local/staging test, no source changes required.
-- [ ] [BACKEND] P1. Broker and routing configuration via the existing `venue_constraints` field on
-      `StrategyInstructionEnvelope` — population and validation only, no new schema (per 2026-08-19 operator
-      direction already recorded in the epic). Done-when: a `venue_constraints` value submitted on any wired
-      action is read and enforced by the routing path, not silently ignored.
+- [x] [BACKEND] P1. ✅ SHIPPED 2026-08-22 — execution-service@27a5e4f31e. Added shared enforcement helpers
+      (`_resolve_venue_constraint`/`_enforce_max_notional_usd`/`_resolve_max_slippage_bps`/`_enforce_fee_tier`/
+      `_venue_constraint_metadata` in `external_instruction_defi.py`), wired into every instruction builder that
+      resolves a venue: TRADE and QUOTE (`external_instruction_api.py`), and SWAP/LEND/WITHDRAW/BORROW/REPAY/
+      STAKE/UNSTAKE/LP_MINT/LP_BURN/ATOMIC-leg (`external_instruction_defi.py`). `max_notional_usd` hard-rejects
+      (400) when `amount * reference_price` exceeds the submitted cap for the resolved venue; `max_slippage_bps`
+      overrides `ExecutionInstruction`'s existing default (50bps) — a real routing-parameter override onto an
+      already-consumed field, not a new one; `fee_tier` rejects (400) an LP_MINT whose own `fee_tier` doesn't
+      match the venue's required tier (the one instruction shape with a directly comparable field to check
+      against). `min_liquidity_usd` has no live pool-liquidity oracle at this translation layer to enforce it
+      against, so it surfaces into `ExecutionInstruction.metadata` instead of being silently dropped. TRANSFER/
+      BRIDGE/CANCEL/CONTROL/ATOMIC-envelope out of scope — they don't route a single order to one venue the same
+      way. Tests: new `TestVenueConstraintsEnforcement` in `tests/unit/test_external_instruction_api.py` (HTTP-
+      boundary 400/200 proof for TRADE + SWAP, direct builder-level tests for the slippage-override/metadata-
+      passthrough/fee_tier-mismatch/no-matching-venue paths). Evidence: `bash scripts/quality-gates.sh`
+      (9084 passed, 21 skipped, 1 xpassed; sentinel=27a5e4f31edb85d8f380ff826c08dfbe6e0c8c13).
 - [ ] [BACKEND] P1. Registered-client management for the external-automated deployment — an allow-list check
       execution-service's external surface enforces before accepting an instruction from a non-manual caller
       (reuse the existing `create_api_auth`/`AuthContext` org-scoping already used by
