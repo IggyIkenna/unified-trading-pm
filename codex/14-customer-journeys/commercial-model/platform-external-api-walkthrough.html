@@ -2335,31 +2335,26 @@
       </p>
       <div class="stat-row">
         <div class="stat">
-          <span class="v">660</span><span class="k">Venue × instrument-type × data-type triples in scope
-            <span class="u">(12 unresolved, disclosed)</span></span>
+          <span class="v">633</span><span class="k">Venue × instrument-type × data-type triples in scope
+            <span class="u">(0 unresolved, resolved 2026-08-21, all 12 fixed)</span></span>
         </div>
         <div class="stat">
-          <span class="v">48.54<span class="u">%</span></span><span class="k">Reachable coverage, volume-weighted <span
-              class="u">denominator 119,500,618</span></span>
+          <span class="v">46.1<span class="u">%</span></span><span class="k">Reachable coverage, volume-weighted <span
+              class="u">denominator 121,014,703</span></span>
         </div>
-        <div class="stat"><span class="v">3,960</span><span class="k">Shards in scope, measured 2026-08-18</span></div>
         <div class="stat">
-          <span class="v">288</span><span class="k">Venues in the 2026-08-18 coverage manifest, readiness-dump grain
+          <span class="v">292</span><span class="k">Venues in scope, readiness-dump grain (declared ∪ observed)
             <span class="u">: not directly comparable to registry-declared counts</span></span>
         </div>
       </div>
       <div class="callout">
-        <span class="tag">How to read 48.54%</span>
+        <span class="tag">How to read 46.1%</span>
         <p>
           <b>Volume-weighted across shards</b>, not a naive average of asset groups, the same data averaged naively per
-          asset group reads 73.04%. The 25-point spread is method, not data, which is why the basis is stated rather
+          asset group reads 72.62%. The ~26-point spread is method, not data, which is why the basis is stated rather
           than the number quoted alone. Denominator is captured + attempted-failed + expected-unattempted; the
           not-expected class is excluded, since counting a venue's pre-existence as a gap makes a complete dataset look
-          broken.
-        </p>
-        <p>
-          Independently re-derived twice within 0.14 points on 2026-08-17 and 2026-08-18 at different grains, the
-          agreement is what makes it quotable.
+          broken. Source: instruments-service <code>measure_honest_coverage.py</code>, re-run 2026-08-22.
         </p>
       </div>
     </details>
@@ -6250,8 +6245,8 @@
             Every one of the 103 registry-bucketed DeFi venues (<code>VENUES_BY_ASSET_GROUP["defi"]</code>) is
             chain-suffixed <code>PROTOCOL-CHAIN</code>, so the chain level below expands directly into its protocols, no separate protocol layer is needed. Each protocol×chain venue then expands into its real instrument types
             (lending markets carry <code>A_TOKEN</code>/<code>DEBT_TOKEN</code>, DEXes carry <code>POOL</code>,
-            liquid-staking carries <code>LST</code>, and so on, <code>venue_instrument_type_triples()</code>, 660 real
-            triples, 12 unresolved cells fleet-wide 2026-08-19) and data types. Coverage state is the same
+            liquid-staking carries <code>LST</code>, and so on, <code>venue_instrument_type_triples()</code>, 633 real
+            triples, 0 unresolved fleet-wide (resolved 2026-08-21) and data types. Coverage state is the same
             <code>market_tick_data</code> BATCH leg used for every other asset group here.
           </p>
           <details class="tree">
@@ -16206,9 +16201,9 @@ Content-Type: application/json
       dependent steps into one sequence.
     </p>
     <details class="sec-body" open>
-      <summary>Three levels of depth, take as much as you need</summary>
+      <summary>Four levels of depth, take as much as you need</summary>
       <p>
-        Execution can be adopted at three depths, and they are genuinely separable. You do not have to take the smarts
+        Execution can be adopted at four depths, and they are genuinely separable. You do not have to take the smarts
         to get the connectivity.
       </p>
       <div class="plate">
@@ -16233,8 +16228,8 @@ Content-Type: application/json
               <tr>
                 <td><b>2. Algorithms</b></td>
                 <td>
-                  Policy-selected execution algos, <code>TWAP</code>, <code>VWAP</code>, <code>ICEBERG</code>, rather
-                  than straight market orders
+                  Policy-selected execution algos, real-time-scoring order execution rather than straight market
+                  orders, and select proprietary algos to capture alpha vs. basic execution
                 </td>
                 <td>You want execution quality without building it</td>
               </tr>
@@ -16242,6 +16237,14 @@ Content-Type: application/json
                 <td><b>3. Sequences</b></td>
                 <td>Chained dependent actions as one governed unit, borrow, then swap, then stake</td>
                 <td>Multi-step on-chain positions</td>
+              </tr>
+              <tr>
+                <td><b>4. Treasury management</b></td>
+                <td>Wallet transfers between venues (<code>TRANSFER</code>), settlements, and DeFi
+                  lend/borrow/stake (<code>LEND</code>/<code>BORROW</code>/<code>STAKE</code>/<code>UNSTAKE</code>/
+                  <code>REPAY</code>) through the same instruction envelope and audit trail as a trade, not a
+                  separate back-office system</td>
+                <td>Managing capital across venues and chains, not just placing orders</td>
               </tr>
             </tbody>
           </table>
@@ -16524,6 +16527,26 @@ Content-Type: application/json
         <code>/codex/05-infrastructure/cloud-agnostic-script-pattern.md</code>. IONOS build-in-progress:
         <code>/plans/active/ao_ci_aws_to_ionos_migration_2026_08_18.md</code>.
       </p>
+      <h3>GCP identity: service accounts, never direct SDK calls or embedded keys</h3>
+      <p>
+        No service calls <code>google.cloud</code>/<code>boto3</code> directly, and no service reads a credential
+        JSON off disk. Every storage read/write goes through <code>get_storage_client()</code>, every secret read
+        through <code>get_secret_client()</code>, both resolve the calling service's own GCP service-account
+        identity (workload-scoped, one SA per tier — see the bucket isolation model above), so a compromised
+        service can only reach the buckets/secrets its own SA was granted, not the fleet. The orchestrator VM's own
+        cloud identity is self-service: it can grant itself a missing IAM role rather than pause on a
+        <code>PERMISSION_DENIED</code>, audited the same way any other IAM change is. Source:
+        <code>/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md</code>,
+        <code>/codex/05-infrastructure/bucket-isolation-model.md</code> §per-tier service accounts.
+      </p>
+      <h3>External auth, cross-referenced</h3>
+      <p>
+        The caller-facing side of authentication, JWT bearer tokens, the legacy API-key path, and the
+        per-org/per-client entitlement scoping layered on top, is the six-endpoint external API's own concern, not
+        a duplicate story here: see the external API reference section's "What auth does not do" callouts for each
+        router. This section is the platform's internal identity (how a service reaches GCP); that section is
+        external identity (how a caller reaches this platform).
+      </p>
       <h3>Dual authorization on treasury movements</h3>
       <p>
         A withdrawal is not a single signature away from moving funds. The number of independent, HMAC-signed
@@ -16674,14 +16697,15 @@ Content-Type: application/json
             <tbody>
               <tr>
                 <td>Venue universe size</td>
-                <td>660 (venue × instrument_type × data_type) triples; 288 venues in the coverage manifest</td>
-                <td>2026-08-18</td>
+                <td>633 (venue × instrument_type × data_type) triples, 0 unresolved; 292 venues in the
+                  readiness-dump scope (declared ∪ observed)</td>
+                <td>2026-08-22</td>
                 <td>capability registry, re-run from source</td>
               </tr>
               <tr>
                 <td>Current coverage</td>
-                <td>48.54% reachable, volume-weighted; denominator 119,500,618 over 3,960 shards</td>
-                <td>2026-08-18</td>
+                <td>46.1% reachable, volume-weighted; denominator 121,014,703</td>
+                <td>2026-08-22</td>
                 <td>availability manifest, via the honest-coverage dump</td>
               </tr>
               <tr>
@@ -16706,10 +16730,10 @@ Content-Type: application/json
                 <td>projection, basis to be stated</td>
               </tr>
               <tr>
-                <td>Readiness per AG</td>
-                <td>288 venues × 3 modes = 864 rows, ready 0, not_ready 844, unverified 20</td>
-                <td>2026-08-18</td>
-                <td>readiness contract, derived not declared</td>
+                <td>Readiness, overall</td>
+                <td>292 venues × 4 modes = 1,168 rows, ready 0, not_ready 1,144, unverified 24</td>
+                <td>2026-08-22</td>
+                <td>readiness contract, derived not declared, re-run this session</td>
               </tr>
             </tbody>
           </table>
@@ -16772,6 +16796,28 @@ Content-Type: application/json
             </tbody>
           </table>
         </div>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--ink-3)">
+        How each component is meant to be exposed, not just what it covers: <b>clearing</b>/<b>broker</b>/
+        <b>exchange</b> are reference data, per-venue commission schedules keyed off a cost-model artifact, not a
+        caller-supplied parameter; <b>gas</b> is likewise reference data by default (a per-venue estimate) but can
+        be overridden per instruction where the caller has a better live quote; <b>other</b> is the one genuinely
+        parameter-driven field, since it exists specifically for costs no reference table can anticipate. None of
+        the five is exposed as its own external API field today.
+      </p>
+      <div class="callout">
+        <span class="tag">A real, adjacent-but-different cost model already exists</span>
+        <p>
+          The exact five-component split (clearing/broker/exchange/gas/other) is not built anywhere in the
+          pipeline. execution-service's <code>estimate_cost()</code> (<code>engine/v2/cost_models.py</code>) prices
+          an instruction against a per-venue <code>CostModelArtifact</code> and returns <code>commission_usd</code>
+          + <code>gas_cost_usd</code> + <code>slippage_cost_usd</code> + <code>total_cost_usd</code>, a
+          3-component model (commission folds broker+exchange together; slippage is a real dimension this
+          section's target taxonomy doesn't name; clearing and "other" don't exist in it at all). It is called
+          internally, not exposed as an external endpoint or a strategy-service consumer today, the "in
+          strategy-service, so a decision can weigh cost before acting" half of the target design below is not
+          built.
+        </p>
       </div>
       <div class="keypoints">
         <div>
@@ -16860,11 +16906,47 @@ Content-Type: application/json
             channel</span>
         </div>
       </div>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Two booking options, per instruction</span
+          ><span class="note"><code>ManualInstructionRequest.recon_excluded</code>, built and shipped</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr><th>Option</th><th>Behaviour</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>Standard</b> — <code>recon_excluded: false</code> (default)</td>
+                <td>Booked like any automated fill; participates in normal batch-live-reconciliation ledger-matching</td>
+              </tr>
+              <tr>
+                <td><b>Audited, recon-excluded</b> — <code>recon_excluded: true</code></td>
+                <td>Still fully booked and audited (same <code>TradeFillRecord</code>/<code>LedgerRow</code> path,
+                  same FCA audit trail) but deliberately skipped from ledger-matching comparison — for a fill that
+                  legitimately cannot reconcile against the normal loop (e.g. a disaster-path fill placed while the
+                  automated pipeline was down), so it doesn't manufacture a false reconciliation deviation</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--ink-3)">
+        The flag is orthogonal to <code>ManualExecutionMode</code> (<code>EXECUTE</code> routes to the venue via the
+        orchestrator; <code>RECORD_ONLY</code> skips venue execution and records a fill directly, for OTC or a
+        missed trade) — either mode can be booked standard or recon-excluded. <b>Source:</b>
+        <code>unified_api_contracts/internal/execution.py::ManualExecutionMode</code>,
+        <code>execution_service/api/manual_instruction_ledger.py</code>, shipped
+        <code>execution-service@ee694cf46b</code> + <code>unified-trading-library@707020ff7b</code>.
+      </p>
       <div class="callout">
         <span class="tag">The honest state today</span>
         <p>
-          This is specified, not built, and coverage across venues is unverified. It is a P0 item precisely because it
-          is the fallback for every other P0 item in this document failing at once.
+          The booking mechanics above (both options) are built and shipped. What remains specified, not built: a
+          manual-trade UI/path confirmed reachable for EVERY venue with no exceptions — venue-by-venue coverage of
+          the disaster-path requirement itself is unverified. It is a P0 item precisely because it is the fallback
+          for every other P0 item in this document failing at once.
         </p>
       </div>
     </details>
@@ -16972,11 +17054,39 @@ Content-Type: application/json
         number is sliced cannot be reconciled against it, and an unreconcilable pair of numbers is worse than either
         number alone.
       </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">The 12 declared attribution dimensions</span
+          ><span class="note"><code>PortfolioPnLAttribution</code>, UAC canonical schema</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr><th>Dimension</th><th>What it captures</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>delta_pnl</code></td><td>Directional price exposure</td></tr>
+              <tr><td><code>gamma_pnl</code></td><td>Convexity — how delta itself changes with price</td></tr>
+              <tr><td><code>theta_pnl</code></td><td>Time decay</td></tr>
+              <tr><td><code>vega_pnl</code></td><td>Implied-volatility sensitivity</td></tr>
+              <tr><td><code>rho_pnl</code></td><td>Interest-rate sensitivity of an option's own price</td></tr>
+              <tr><td><code>funding_pnl</code></td><td>Perpetual funding payments received/paid</td></tr>
+              <tr><td><code>basis_pnl</code></td><td>Spot-vs-derivative price basis</td></tr>
+              <tr><td><code>interest_rate_pnl</code></td><td>Lending/borrowing rate accrual, distinct from option rho</td></tr>
+              <tr><td><code>carry_pnl</code></td><td>Cost/benefit of holding a position over time, net of the more specific dimensions above</td></tr>
+              <tr><td><code>fx_pnl</code></td><td>Currency conversion effects</td></tr>
+              <tr><td><code>staking_pnl</code></td><td>On-chain staking rewards — first-class field since
+                <code>unified-api-contracts@366b74ec08</code> (was folded into <code>carry_pnl</code> before)</td></tr>
+              <tr><td><code>residual_pnl</code></td><td>Whatever the 11 named dimensions above don't explain — never silently dropped</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div class="keypoints">
         <div>
           <b>Same dimensions as risk</b><span>Account, instrument, instrument type, whatever axis exposure is reported
             on, PnL attributes on the same
-            axis</span>
+            axis (<code>by_asset_group</code>/<code>by_strategy</code> groupings, plus <code>total_pnl</code>)</span>
         </div>
         <div>
           <b>A first-class output</b><span>Alongside account balances, risk and normalised exposure, not a derived
@@ -16984,10 +17094,14 @@ Content-Type: application/json
         </div>
       </div>
       <div class="callout">
-        <span class="tag">The honest state today</span>
+        <span class="tag">The honest state today: the aggregator is built, nothing calls it yet</span>
         <p>
-          This is specified, not built. Nothing in this section is a measured figure, and no PnL attribution is
-          currently reported on this platform in the shape described here.
+          <code>strategy-service</code>'s <code>PnLAttributionAggregator.aggregate()</code> is real and complete — it
+          sums per-position attribution dicts into a <code>PortfolioPnLAttribution</code> across all 12 dimensions
+          above, plus the asset-group/strategy groupings. What is not yet built: no endpoint, periodic job, or event
+          consumer constructs one in production today (confirmed 2026-08-22 — zero non-test call sites). <b>Source:</b>
+          <code>strategy_service/position/core/pnl_attribution_aggregator.py</code>,
+          <code>unified_api_contracts/canonical/domain/position/__init__.py::PortfolioPnLAttribution</code>.
         </p>
       </div>
     </details>
@@ -17879,6 +17993,24 @@ Content-Type: application/json
           family). Field examples below use <code>TRADE</code>; the request/response envelope shape is the same for
           all 16 action types, and the instruction type-support table above names each one's own production path.
         </p>
+        <div class="callout">
+          <span class="tag">Two transport variants — REST is general-purpose, the event-log path is ATOMIC-only</span>
+          <p>
+            This REST endpoint is the general-purpose path: any of the 16 action types, any client, synchronous
+            response. A second, narrower transport also exists: <code>StrategyInstructionSubscriber</code> polls the
+            UTL event-log spine (<code>EventTransport</code> facade, the same facade that gives
+            <code>paper(W)==batch-rerun(W)</code> determinism elsewhere on this platform) for
+            <code>ATOMIC</code> instructions only, published by strategy-service under the
+            <code>atomic_instruction</code> data type, source <code>strategy</code>, scoped to the
+            <code>cefi</code>/<code>defi</code>/<code>prediction</code> asset groups (not sports or TradFi). It is
+            not a Pub/Sub mirror of every action type on this endpoint, only the multi-leg atomic path, for a
+            strategy publishing directly onto the event log rather than calling this REST endpoint. Each consumed
+            leg converts through the same instruction-conversion code the manual-trade path uses, then executes via
+            the same orchestrator. Source:
+            <code>execution_service/engine/strategy_instruction_subscriber.py</code>, wired at startup in
+            <code>api/main.py::_run_strategy_instruction_subscriber</code>.
+          </p>
+        </div>
         <div class="plate">
           <div class="plate-head"><span class="label">Body fields</span><span class="note">TRADE action (JSON)</span>
           </div>
