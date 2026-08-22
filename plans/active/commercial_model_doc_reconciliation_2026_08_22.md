@@ -62,7 +62,8 @@ drift_direction: advance-code
 | `strategy-service-deep-dive.html`       | Contracts, configuration, integration points. Handed to an AI with the codebase.    |
 | `ODUM_Elysium_Phase2_Update_2026-07-24.html` | **Frozen historical record.** Excluded from the audit. Leave its contents alone. |
 
-`strategy-service-walkthrough.html` is being merged into the deep dive and then deleted.
+`strategy-service-walkthrough.html` was merged into the deep dive and deleted; the deep dive now carries its unique
+material and every inbound reference points at the deep dive.
 
 ## The carve-out boundary
 
@@ -122,21 +123,45 @@ The intent behind the exclusions is that POD can run it today and layer their ow
 
 ## Todos
 
-- [ ] [AGENT] P0. **Ground-truth fact base from code, registries and data.** Venue, chain and protocol counts by
+- [x] ✅ [AGENT] P0. **Ground-truth fact base from code, registries and data.** Venue, chain and protocol counts by
       asset group; the `StrategyInstructionV2` member list; family and archetype counts; DeFi execution reality per
       protocol and chain; the external endpoint inventory with auth and real rate limiting; the wired-versus-specified
       status of transfers, reconciliation, breakers, kill switch, hot reload, custody, signals and the batch equals
       paper determinism claim; and the honest data-coverage position. Output is a measured fact sheet with evidence
       inline, plus an explicit list of figures the documents currently get wrong.
-- [ ] [AGENT] P0. **Conflict audit across the four stable documents** (walkthrough SSOT, api-reference, architecture,
+- [x] ✅ [AGENT] P0. **Conflict audit across the four stable documents** (walkthrough SSOT, api-reference, architecture,
       carve-out). Classify by contradictory fact, contradictory capability claim, terminology drift, structural
       contradiction. A narrower scope in the carve-out document is not a conflict; a different fact about the platform
       is. Resolve each against the SSOT, and against the codebase where the SSOT is itself wrong.
-- [ ] [AGENT] P0. **Merge `strategy-service-walkthrough.html` into `strategy-service-deep-dive.html`** and delete the
-      walkthrough, repointing every inbound reference. Add end-to-end code flow for instance startup and config load,
-      signal to instruction to execution request, a reconciliation cycle, and a breaker trip into kill switch. The
-      document leans on enumerations and payload blocks today and needs narrative flow.
-- [ ] [DOC] P0. **Apply the conflict resolutions** across all five live documents, SSOT first then the dependants.
+- [x] [AGENT] P0. ✅ **Merge `strategy-service-walkthrough.html` into `strategy-service-deep-dive.html`** and delete
+      the walkthrough, repointing every inbound reference. Deep dive is now 19 sections: the walkthrough's unique
+      material lands as §02 strategy identity, §05 the mode axis with testnet as a paper sub-mode, §07 coin/venue/
+      funding selection, §08 reconciliation engines and the four scenarios, §10 risk, §12 the execution seam and its
+      config loop, §19 signal leasing, plus transfer/custody/treasury detail folded into §11, the read-only position
+      adapter contract into §13, and fill fidelity into §16. New §06 carries the four traced code paths: instance
+      startup and config load, signal to instruction to published execution request, a reconciliation cycle, and a
+      breaker trip into the kill switch, each naming real modules and callables verified against
+      `strategy-service`. Status/evidence/owner chips, internal plan links and em-dashes removed throughout; venue,
+      chain, protocol, archetype, module and router counts re-measured from the live registries and corrected.
+- [ ] [DOC] P2. `plans/active/code_readiness_t2_refdata_marketdata_2026_08_19.md` still lists the deleted
+      `strategy-service-walkthrough.html` in its artefact reading list, and still says "four client-sendable
+      documents" where the sibling tranche plans now say three. It could not be edited in the same pass because the
+      file sits at 1,001 lines against a 1,000-line hard cap, so every commit touching it is rejected until it is
+      split. Split it, then apply both corrections.
+- [ ] [SCRIPT] P3. Drop the deleted `strategy-service-walkthrough.html` from
+      `scripts/plan-hygiene/allocate_code_readiness_tranches.py`'s `SPINE_SOURCES` tuple and reword the historical
+      example naming it in `scripts/plan-hygiene/check_artefact_enum_drift.py`'s module docstring. Neither breaks
+      today (`load_spine_text()` guards on `fp.exists()`, and the drift checker globs the directory rather than
+      naming files), so this is tidy-up that belongs in a gated code push rather than a doc push.
+- [ ] [DOC] P3. `plans/epics/html/system_readiness_master.html` still names `strategy-service-walkthrough.html` as
+      lane A's owned file. It is a rendered dashboard for the archived
+      `client_artefact_remediation_elysium_2026_08_18.md`, so repointing it at the deep dive would misstate what that
+      plan owned. Regenerate or retire the dashboard instead.
+- [x] ✅ [DOC] P0. **Apply the conflict resolutions** to the walkthrough and api-reference — unified-trading-pm@6ef0b73c7e.
+      Stale SSE access-control disclosure replaced, route-module count re-measured to 34 with its counting rule stated
+      inline, transfer-rails table rebuilt around `TransferHandler`, rotting line citations deleted in favour of bare
+      file names, 633 versus 683 reconciled with each basis named and the noun settled on shard, envelope versus V2
+      union disambiguated. Architecture and carve-out resolutions ship with their own retargeting passes.
 - [ ] [DOC] P0. **Retarget `carveout-engineering.html` to POD** with Elysium AM as the contract basis: retitle, write
       to POD as the operating counterparty, ground the exclusions in Annex A rather than in preference, and state the
       Article 4 ownership test as the reason the boundary falls where it does. Reconcile the existing eleven-component
@@ -160,6 +185,27 @@ The intent behind the exclusions is that POD can run it today and layer their ow
       never restores it. This todo covers only the codex line; the fix belongs to that issue.
 
 ## Progress log
+
+**2026-08-22, second entry.** The ground-truth pass confirmed every headline breadth figure (171 live, 194 declared,
+24 chains, 59 protocols, 16 instruction types) and found one flatly wrong number, 59 archetypes where the registry
+holds 60, originating in a stale docstring in the enum itself. It also surfaced several correct-but-misleading
+figures now carried as qualifiers: only 10 of 24 chains carry a live DeFi venue, only 3 protocols have end-to-end
+live execution wiring, and real custody integrations number 2 rather than 4. Uniswap V4 LP turns out not to be
+callable at all, since `LpMintInstruction` carries no field for the pool price the V4 path requires, which
+retrospectively validates keeping V4 out of the LP lists. The signals surface is wired on origin but its registry
+holds two suspended stubs, so it dispatches to zero recipients.
+
+Two authentication defects were found incidentally and verified directly rather than taken on report, then filed
+as `/plans/active/issues/unauthenticated_manual_execution_surface_and_unresolved_rbac_identity_2026_08_22.md`
+(unified-trading-pm@77faa65ca6): execution-service mounts `/manual/*` with no auth dependency while both sibling
+routers on adjacent lines carry one, and deployment-api's RBAC reads a request-state identity that only its tests
+ever write. The first carries an operator todo, since its severity depends on Cloud Run ingress configuration that
+is not set by any file in these repositories.
+
+The coverage section was built for real rather than scaffolded: 3,725 shard rows at venue by instrument-type by
+data-type grain with completion bars, read from the daily `coverage.json` the honest-coverage measurement writes,
+so it regenerates rather than rotting. Note this introduces a third universe size alongside the 633 readiness-dump
+and 683 declared-registry counts; the section names its own basis, but all three side by side is a follow-up.
 
 **2026-08-22.** Plan opened. Carve-out scope taken from operator direction and cross-checked against the executed
 Elysium AM consulting agreement and POD's own positioning material. Operator rulings recorded: carve-out document
