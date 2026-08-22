@@ -263,7 +263,7 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       backend_engineer craft, not infra's (`does_not`: "Python service business logic"). Split into the new
       `[BACKEND] P0.` todo immediately below rather than crossing craft lines, mirroring the todo-2/todo-3
       split pattern already used twice in this doc today.
-- [ ] [BACKEND] P0. Fix `strategy_service/engine/core/dependency_checker.py`'s `UPSTREAM_DEPS` `bucket_kind`
+- [x] ✅ [BACKEND] P0. Fix `strategy_service/engine/core/dependency_checker.py`'s `UPSTREAM_DEPS` `bucket_kind`
       values (`"ml-predictions-store"` at line ~68, `"features-delta-one"` at line ~74) to use valid UAC bucket
       kinds (per `resolve_bucket_name()`'s registered set — likely `ml-store` and `features`/
       `features-calendar` or a per-family kind, whichever the actual upstream ml-inference/features-delta-one
@@ -275,7 +275,20 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       and `... service=features-delta-one-service kind=features-delta-one` both raised
       `unified_trading_library.cloud_interface.bucket_naming.BucketNamingError`. Done-when:
       `uts-prod-strategy-service-t1-recon`'s next triggered/scheduled execution completes successfully and
-      writes `t1-recon/strategy/{date}/_SUCCESS` — cite the execution ID.
+      writes `t1-recon/strategy/{date}/_SUCCESS` — cite the execution ID. — CODE FIXED 2026-08-22 (slot-3):
+      confirmed via `deployment-service/configs/cloud-providers.yaml` + UTL
+      `unified_trading_library/cloud_interface/bucket_naming.py` `_KIND_ALIASES` that
+      `"ml-predictions-store"`/`"features-delta-one"` are RETIRED, non-existent yaml keys (the five per-kind ml
+      aliases + the five per-kind features aliases were sunset 2026-07-19); registered `ml-inference-service`
+      to `bucket_kind: "ml-store"` (flat kind, unchanged `asset_group_required: False`) and
+      `features-delta-one-service` to `bucket_kind: "features"` with `asset_group_required: True` (the Fold-A
+      per-asset_group dict `resolve_bucket_name` actually resolves against) — strategy-service@6934261192, QG
+      green (`bash scripts/quality-gates.sh --no-fix` exit 0), verified ancestor of
+      `origin/live-defi-rollout`. Broader done-when (next scheduled 04:00 UTC execution writing the
+      `_SUCCESS` marker) NOT yet independently verified — the fix landed after today's failing run; the next
+      scheduled execution (~2026-08-23T04:00Z) is the first opportunity to confirm live. Follow-up
+      monitoring todo not added here (P0 code-fix scope only, per this task's own `done_definition`
+      "Checkbox flipped in plan + code shipped").
 - [x] ✅ [INFRA] P1. Un-pause the 7 feature-family t1-recon schedulers (calendar/delta-one/volatility/
       cross-instrument/multi-timeframe/commodity/sports) and register the missing `features-onchain` entry —
       CORRECTED 2026-08-22 (slot-26): the premise didn't hold, see Progress Log for full live evidence. The 6
