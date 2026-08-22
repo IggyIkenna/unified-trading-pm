@@ -9,6 +9,7 @@ summary:
   March-2026 origin incident and the hard rule it already produced — no new action needed, historical only.
 status: open
 nature: process
+archive_exempt: true
 resolved_by:
 asset_group: [meta]
 stage: [meta]
@@ -118,15 +119,9 @@ drift_direction: advance-code
       refactor, not fabricated or silently dropped. Annotated the archived doc's `update-code-references` entry with
       a `verified:` field (same commit).
 
-- [ ] [OPERATOR] P3. Name the specific document/session referred to as "Chunks 1/2 and Phase B full code review" (an
-      unreviewed prior deliverable named in the original audit request). An exhaustive search — AND-grep for all three
-      terms across `unified-trading-pm/plans/{active,archive}` including dated subfolders, `plans/ai/`, `plans/audit/`,
-      `plans/prompts/`, and `codex/`, plus a `git log --all-match --grep` sweep across every repo in the workspace for
-      "chunk 1"+"chunk 2" or "phase b"+"code review" — found no document or commit where these terms co-occur with
-      pending-review language. The reference is either informal/chat-only (never committed to a written artifact) or
-      predates what's searchable in this workspace. Repo: unified-trading-pm. This is a genuine ambiguity with no
-      data-derivable answer (task_template.md §4 finding U, positive test (i)) — cannot be resolved by a dispatched
-      worker alone.
+- **[OPERATOR] P3. CANCELLED — SUPERSEDED 2026-08-22 (D115 ruling: operator did not locate the "Chunks 1/2 and Phase
+      B full code review" artifact either — closed as chat-only/unresolvable; the search was exhaustive, no pointer
+      exists).**
 
 ## Progress Log
 
@@ -227,3 +222,11 @@ drift_direction: advance-code
   data-derivable answer).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **2026-08-22 — ruling D115 ("Chunks 1/2" review artifact)**: OPERATOR-RULED 2026-08-21 — operator did not locate
+  the artifact either. Close as chat-only/unresolvable (the search was exhaustive; no pointer exists). Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-22 — archive_exempt justification**: D115's ruling converts this doc's sole remaining open todo
+  ([OPERATOR] P3, "Chunks 1/2") to CANCELLED, leaving 0 open todos. Per the ruling-sweep task's own scope, doc
+  archival is a separate ritual not performed here — `archive_exempt: true` added to frontmatter so this
+  intentional 0-open-todos state doesn't trip `check_archive_candidates`; a future archival pass may still pick
+  this doc up on its own schedule.

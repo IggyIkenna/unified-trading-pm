@@ -161,10 +161,10 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
 
 ## Follow-up (not done here — out of scope for this one-shot escalation)
 
-- [ ] [CODE] P3. Consider whether `page_operator` findings in general should distinguish "an active supervising process
-      already owns this" from "genuinely orphaned" before paging, rather than adding a bespoke per-signal carve-out each
-      time a new benign-but-noisy exit code surfaces (this is the second such carve-out in this file, after
-      124/worker_stalled — a pattern worth generalizing if a third case appears).
+- [ ] [CODE] P3. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D72): Wait — 2 data points (124/worker_stalled, this
+      exit_code=5 case) is too thin to design the right generalized `page_operator` abstraction distinguishing "an
+      active supervising process already owns this" from "genuinely orphaned"; each bespoke per-signal carve-out has
+      been cheap so far — continue that pattern until a third case appears, then revisit generalizing.
 - [x] ✅ [DOC] P3. **DONE — unified-trading-pm@c5816bc7e6 (reconciled via
       `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md`).**
       `/codex/15-runbooks/incidents/rb_infra_relaunch.md` currently frames every DP-VM-001 dispatch as "relaunch the VM"
@@ -238,3 +238,6 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
   Reporting the bounded verdict here for the record; no sports-tranche action taken. Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-17** [body-hash:a7853aa3849808f9]: KEEP-NA, valid — sole open item is an open-ended generalization judgment call ("should page_operator distinguish active-supervising vs orphaned before paging"); main fix already shipped+verified (deployment-service@27fd5779). 5 prior re-verification passes agree.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **2026-08-22 — ruling D72 (page_operator carve-out generalization)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Wait — 2 data points is thin for the right abstraction; each carve-out
+  has been cheap. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -76,14 +76,13 @@ CEFI exclusion for `LIQUIDATION_CAPTURE` is confirmed intentional at the current
 `strategy-service`'s `archetype_slots_defi.py` LIQUIDATION_CAPTURE entry (strategy-service@f89c6d8235). Two possible
 forward paths, tracked as follow-ups rather than done here:
 
-- [ ] [QUANT_DEV] P3. Design + implement a real CEFI `LIQUIDATION_CAPTURE` variant ("bid-ladder placement near
-      liquidation price" per the manifest's hyperliquid note) — either extend `LiquidationCaptureEngine` with a
-      CEFI-specific `on_tick` path or split into a new archetype, then add real CEFI slot(s) (repo:
-      strategy-service).
-- [ ] [BACKEND] P3. If the CEFI bid-ladder variant is never pursued, downgrade
-      `archetype_capability_manifest.json`'s `LIQUIDATION_CAPTURE` CEFI cell from `PARTIAL` to `BLOCKED` (matching
-      the existing DEFI-perp cell's pattern) so the manifest stops overclaiming an unimplemented capability (repo:
-      unified-api-contracts).
+- **[CODE] P3. CANCELLED — SUPERSEDED 2026-08-22 (D89 ruling: downgrade the capability manifest instead of
+      building the CEFI variant — cheap, stops the capability manifest overclaiming; the real CEFI bid-ladder
+      variant, originally scoped as quant_dev craft, will not be pursued).**
+- [ ] [BACKEND] P3. Downgrade `archetype_capability_manifest.json`'s `LIQUIDATION_CAPTURE` CEFI cell (hyperliquid)
+      from `PARTIAL` to `BLOCKED`, matching the existing DEFI-perp cell's pattern, so the manifest stops overclaiming
+      an unimplemented capability. Per D89 ruling (2026-08-22): downgrade decided — cheap, stops the overclaim.
+      Repo: unified-api-contracts.
 
 ## Progress Log
 
@@ -91,3 +90,6 @@ forward paths, tracked as follow-ups rather than done here:
 - **na-eligibility-audit 2026-08-17 (re-verify, cefi tranche)** [body-hash:dc77ef79f6a7a88a]: KEEP-NA, valid — re-confirmed, hash drift only (no new staleness). Same 2 open items as the first-pass marker above: item 1 GENUINE_WORK (brand-new CEFI archetype/signal design), item 2 DEPENDENCY_BLOCKED (trigger condition — a decision not to pursue item 1 — still unmade). Doc stays assigned_vm: NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-22 — ruling D89 (CEFI liquidation-capture variant)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Downgrade — cheap, stops the capability manifest overclaiming. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -218,12 +218,10 @@ new scope, not a wiring bug in what already exists.
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **Rule on the close-all contract** — new `/api/orders` endpoint in execution-service, or migrate
-      `close_all/*` onto `/manual/instruction`? Both halves currently pass their own tests while the seam is broken.
-      **Note 2026-08-15**: a ruling on this exact question is already recorded below, § "CLOSE-ALL RULING (operator,
-      2026-08-15)" — migrate onto `/manual/instruction`. **The implementation has now shipped (next todo, ✅)** —
-      this todo stays open only pending an operator's explicit close-out of the ruling itself, not for any remaining
-      work.
+- **[OPERATOR] P0. CANCELLED — SUPERSEDED 2026-08-22 (D76 ruling: close the ruling — the close-all contract question
+      is formally closed; migrate-onto-`/manual/instruction` was already decided § "CLOSE-ALL RULING (operator,
+      2026-08-15)" and the implementation already shipped, `strategy-service@701dce1850` +
+      `execution-service@3800849e87`).**
 - [x] [AGENT] P0. ✅ **Implement whichever side the ruling picks, and add the missing HTTP-level test** —
       `strategy-service@701dce1850` (close_all request-shape mapping onto `POST /manual/instruction`) +
       `execution-service@3800849e87` (the HTTP-level contract test, FastAPI `TestClient` against the real router,
@@ -560,9 +558,9 @@ the `DELETED` statuses in UAC are for VMs and client-reporting, not fills. Zero 
       is never auto-unbooked, while everything else keeps reconciling; warning at entry.
 - [ ] [AGENT] P0. **Soft-delete with audit (MiFID)** — status change only, never row removal; record actor + reason;
       deleted entries excluded from behaviour but retained and auditable.
-- [ ] [OPERATOR] P1. **Confirm whether OTC reconciliation should auto-book the difference** between internal and
-      exchange position. Described as expected behaviour during the ruling but **not found in code** (zero OTC hits in
-      `position/`) — either it lives elsewhere, or it is unbuilt and this is its todo.
+- [ ] [AGENT] P1. Build OTC reconciliation as a MANUAL REVIEW step, not auto-booking, between internal and exchange
+      position (currently unbuilt — zero OTC hits in `position/`). Per D76 ruling (2026-08-22): require manual OTC
+      review — auto-booking a hand-entered quantity risks compounding a typo into a real trade. Repo: strategy-service.
 
 ## AUDIT / IMMUTABILITY OF THE PRIVATE RECORD (operator ruling 2026-08-15)
 
@@ -892,3 +890,13 @@ rendered as a broken grid, because that component expects `div > b + span`.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:265f9cd3225b808a]: KEEP-NA, valid -- Heterogeneous P0 issue spanning caller-graph reachability + 2 operator-ruling sections on live-capital reconciliation/audit machinery. Of 11 open items: 2 explicit [OPERATOR] tags, 1 redirects to a LOCAL/operator-scoped design todo per 2026-08-09 ruling BLK-7f4d33db, 1 blocked on Chunk A's number (doc's own note: "has moved three times"), 3 new safety mechanisms on live-capital reconciliation (doc's own text: a typo here "compounds into a real trade"), 3 depend on an undecided OrderStatus-extension-vs-parallel-audit-event design fork, 1 (audit-coverage extension, line 598) is a lower-confidence MISCLASSIFIED_LIKELY_AO_ELIGIBLE flag for a future pass, not acted on this run. A prior same-day pass already closed 2 stale items; none of the current 11 are stale. Cross-cutting tranche audit.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-22 — ruling D76 (e2e wiring rulings)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Close the ruling, require manual OTC review (typo-compounding risk), and scope the
+  wiring as a LOCAL design plan — it's a live-capital design call, not a patch. Applied above to the close-all-ruling
+  todo (CANCELLED, already closed+shipped) and the OTC-auto-book todo (retagged to require manual review). The
+  "scope the wiring as a LOCAL design plan" part of this ruling additionally applies to the still-open `[AGENT] P0`
+  items under this doc's "MANUAL / DISASTER-RECOVERY DESIGN" (reconciliation pause, virtual/persistent-delta entry,
+  soft-delete) and "AUDIT / IMMUTABILITY OF THE PRIVATE RECORD" sections — per the ruling these are a live-capital
+  design call that should be scoped as their own LOCAL design plan rather than dispatched as direct AGENT patches;
+  not individually rewritten in this pass (a plan-authoring task, out of scope for a doc-ruling sweep) — flagged here
+  so it isn't lost. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

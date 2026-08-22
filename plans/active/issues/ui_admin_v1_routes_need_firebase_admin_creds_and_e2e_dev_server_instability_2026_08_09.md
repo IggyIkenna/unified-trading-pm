@@ -115,9 +115,10 @@ just the ones in `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
 
 ## Todos
 
-- [ ] [INFRA] P2. Decide + provision either a `FIREBASE_ADMIN_CREDENTIAL` CI secret or a Firebase-emulator-backed E2E
-      job for `.github/workflows/ci.yml`'s `e2e` job, so `/api/v1/*` admin routes resolve instead of 500ing on missing
-      Admin SDK credentials. Verify by re-running `tests/e2e/user-management.spec.ts` in CI and confirming the
+- [ ] [INFRA] P2. Wire a Firebase-emulator-backed E2E job for `.github/workflows/ci.yml`'s `e2e` job (`pnpm
+      emulators:start` + seed before Playwright runs), so `/api/v1/*` admin routes resolve instead of 500ing on
+      missing Admin SDK credentials. Per D135 ruling (2026-08-22): emulator-backed — avoids provisioning/rotating a
+      live admin credential in CI. Verify by re-running `tests/e2e/user-management.spec.ts` in CI and confirming the
       `/api/v1/users` 500 is gone. (repo: unified-trading-system-ui)
 - [x] ✅ [INFRA] P2. Diagnose why the `pnpm dev:mock` Next dev server dies (`ERR_CONNECTION_REFUSED`) partway through a
       sustained ~20-test sequential Playwright run against it (reproduced both self-started and Playwright-`webServer`-
@@ -156,3 +157,6 @@ just the ones in `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
   gap confirmed still live, not stale.
 - **context-scout 2026-08-17**: populated context_scope (6 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-22 — ruling D135 (Firebase admin E2E strategy)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Emulator-backed — avoids provisioning/rotating a live admin credential in CI.
+  Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

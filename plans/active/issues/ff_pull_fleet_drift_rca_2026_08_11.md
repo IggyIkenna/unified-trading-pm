@@ -121,15 +121,15 @@ was **not** recoverable from those stashes, nor from 89 dangling blobs.
       made the misdiagnosis above possible and will do so again. This is the one genuinely open defect from this RCA.
       **DONE 2026-08-13** — `unified-trading-pm@c89e109ea7` ("tag every slot-cron-ff-pull.sh log verdict with its clone
       identity").
-- [ ] [OPERATOR] P2. Decide whether the `uv.lock` auto-clean should extend from "purely `version =` drift" to also cover
-      `[package.metadata] requires-dist` / `provides-extras`-only churn (sibling metadata propagation, equally
-      non-authoritative). Guard it on this repo's own `pyproject.toml` being clean, so an in-flight local dependency
-      edit is never discarded. NOT done unprompted: getting it wrong silently reverts genuine dependency work.
-      Deliberately do NOT add `--frozen`/`--locked` to `scripts/setup.sh`'s `uv lock` — that call is load-bearing (it is
-      how a repo picks up sibling workspace bumps that never touch its own `pyproject.toml`).
-- [ ] [OPERATOR] P2. 43 archived repos under `archive/` and `_archived/` still carry the stale inlined
-      `semver-agent.yml` as uncommitted dirt. Harmless (not ff-pulled, not in CI) but it inflates every workspace-wide
-      dirty-repo count and hid the live signal. Decide: bulk-clean or leave.
+- [ ] [OPERATOR] P2. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D80): Keep `uv.lock` auto-clean narrow (purely
+      `version =` drift only) — widening to also cover `[package.metadata] requires-dist`/`provides-extras`-only
+      churn risks discarding real in-flight dependency edits. Deliberately do NOT add `--frozen`/`--locked` to
+      `scripts/setup.sh`'s `uv lock` — that call is load-bearing (it is how a repo picks up sibling workspace bumps
+      that never touch its own `pyproject.toml`). Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+      ledger.
+- [ ] [SCRIPT] P2. Bulk-clean the 43 archived repos under `archive/` and `_archived/` that still carry the stale
+      inlined `semver-agent.yml` as uncommitted dirt — one-time, low-risk, fixes the workspace-wide dirty-repo count
+      noise that hid the live signal. Per D80 ruling (2026-08-22): bulk-clean approved (not leave-as-is).
 - [x] ✅ [SCRIPT] P3. `ff-starvation-detect.sh` exits early on a detached HEAD (`[skip:detached]` in the actor). A
       detached clone can therefore drift unboundedly with no verdict from either side. Confirm whether that is intended.
       **DONE 2026-08-13** — `unified-trading-pm@bb75f3d5ce` ("emit DETACHED HEAD verdict from starvation detector").
@@ -151,3 +151,7 @@ was **not** recoverable from those stashes, nor from 89 dangling blobs.
 - **ag-closeout-audit 2026-08-21 (ci tranche hygiene fix)**: dropped stale `ci` tag from `asset_group` — both remaining
   open todos are `[OPERATOR]` P2 non-ci-specific decisions (uv.lock scope, 43-archived-repo cleanup), and this doc's
   own 2026-08-17 na-eligibility-audit verdict already classified it under the `infra` tranche only.
+- **2026-08-22 — ruling D80 (ff-pull drift cleanups)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Keep auto-clean narrow (widening risks discarding real dependency edits) and
+  bulk-clean the archives (one-time, low-risk, fixes the dirty-count noise). Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

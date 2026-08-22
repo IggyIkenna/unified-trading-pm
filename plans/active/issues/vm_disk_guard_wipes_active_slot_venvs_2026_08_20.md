@@ -176,10 +176,10 @@ operator call, not a worker's.
 - [ ] [INFRA] P2. Determine what removed slot 7's venv the SECOND time on 2026-08-20, outside any logged
       `vm-disk-guard` window (between a successful `uv sync` and the QG run that followed it). Either attribute it to a
       known mechanism or confirm the guard ran unlogged — do not assume it is the same cause. (repo: agent-orchestrator)
-- [ ] [OPERATOR] P2. Decide whether AO-spawned workers SHOULD register a real `orch-slot-<N>` tmux session (making the
-      guard's existing test correct as written), or whether the tmux-name signal should be dropped entirely in favour
-      of orchestrator state. This is the fork the fix above depends on and it is a design call about worker spawn
-      topology, not a worker-determinable outcome. (repo: agent-orchestrator)
+- [ ] [INFRA] P2. Drop the tmux-session-name liveness signal from `vm-disk-guard.sh` entirely, relying solely on the
+      already-shipped `/proc/<pid>/cwd` + command-line liveness checks (`agent-orchestrator@616e15a4ca` /
+      `@087f1723ca`). Per D139 ruling (2026-08-22): drop tmux — the shipped signal covers both worker types;
+      fabricated sessions risk confusing send-keys nudges and TmuxPruner. (repo: agent-orchestrator)
 - [ ] [INFRA] P3. Bring baseline `/` usage down far enough that the guard is genuinely exceptional rather than firing
       on most 2-hourly passes — it has run at 80-81% on 3 of the last 4 logged passes, so today the fleet is
       effectively running with venv reclamation always-on. (repo: agent-orchestrator)
@@ -219,3 +219,7 @@ operator call, not a worker's.
   `dashboard/node_modules` (missing declared `@vitest/coverage-v8`) — a pre-existing env staleness (a bash-script
   change cannot influence dashboard deps), fixed via `npm --prefix dashboard install`, then full QG green. Same
   env-fix class the sibling items in `/plans/active/ao_satellite_ao_dispatch_batch24_2026_08_18.md` recorded.
+- **2026-08-22 — ruling D139 (Disk-guard liveness signal)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Drop tmux — the shipped signal covers both worker types; fabricated sessions risk
+  confusing send-keys nudges and TmuxPruner. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+  ledger.

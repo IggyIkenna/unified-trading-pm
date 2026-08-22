@@ -378,10 +378,10 @@ longer has its own download button.
       `OKX_FUTURES`) is ALSO confirmed phantom (zero real OPTION rows anywhere in the OKX family) but deliberately NOT
       touched yet — only `SPOT_PAIR` was explicitly requested; `OPTION` tracked as its own follow-up below, pending
       explicit go-ahead.
-- [ ] [CODE] P2. **Remove the phantom `OPTION` declaration from bare `OKX` and `OKX_FUTURES`** — confirmed via the same
-      production-manifest check above (zero real OPTION rows anywhere across bare OKX/OKX-SPOT/OKX-SWAP/ OKX-FUTURES),
-      flagged in the mockup, not yet fixed in code — deliberately deferred pending explicit go-ahead (unlike SPOT_PAIR,
-      this wasn't explicitly requested yet).
+- [ ] [CODE] P2. **Remove the phantom `OPTION` declaration from bare `OKX` and `OKX_FUTURES` — go-ahead now given.**
+      Confirmed via the same production-manifest check above (zero real OPTION rows anywhere across bare
+      OKX/OKX-SPOT/OKX-SWAP/OKX-FUTURES) — same evidence class as the already-shipped `SPOT_PAIR` fix
+      (`unified-api-contracts@23fa3a99`). Per D85 ruling (2026-08-22): approved.
 - [x] [VERIFY] P2. **CLOSED, no code fix — `BINANCE-DELIVERY`'s missing declaration is correct as-is** (Finding 4,
       corrected). Investigated via a 3-way workflow; confirmed MTDS has zero tick-data rows ever for this venue and
       `mvp_scope.py` v10 (2026-06-27) explicitly descopes it from cefi MVP. Not a registry gap — closing this todo.
@@ -468,9 +468,9 @@ longer has its own download button.
       (cosmetic/naming confusion, not a data-correctness bug), but worth a small pass once the instrument_type work
       above lands, so the two features don't keep getting conflated.
 - [ ] [CODE] P1. Move `market_metadata` off the MTDS `per_venue_per_data_type_daily` axis
-      (`mtds.py:143-215,182-196,618-623`) onto the `reference_scope`-based model — either drop it from
-      `PREDICTION_DATA_TYPE_META` entirely (per UAC's own "not separate" disclaimer) or route its presence-tracking
-      through the genesis/day-scope catalogue mechanism instead.
+      (`mtds.py:143-215,182-196,618-623`) onto the `reference_scope`-based model. Per D85 ruling (2026-08-22): route
+      market_metadata through reference_scope (route its presence-tracking through the genesis/day-scope catalogue
+      mechanism) — NOT drop it from `PREDICTION_DATA_TYPE_META` — consistent with the corrected shard-dimension model.
 
       **INVESTIGATED (2026-08-15, /plan-reconcile, operator interactive) — stays open, reworded framing only.** Code
           does carry a 3rd mechanism not in the todo's original 2 options: `deployment_api/services/data_status/mtds_meta.py:162-176`
@@ -638,3 +638,8 @@ longer has its own download button.
 - **context-scout 2026-08-17**: re-verified context_scope (6 entries), unchanged.
 - **na-eligibility-audit 2026-08-19** [body-hash:16f5a4257186529d]: KEEP-NA, valid — Full re-read (639 lines), confirms exactly 7 open checkboxes, grep-verified. All operator-gated/judgment/dependency-blocked: mockup-review-pacing ×2 (leaf-model re-verify, parquet resharding design), DERIBIT-COMBO retirement needs its own unscoped consumer-impact audit first, market_metadata MTDS-axis move is a genuine 2-option architect call (the 2026-08-15 plan_reconciler investigation confirmed only a partial symptom-level mitigation exists, not either named fix), phantom OPTION removal on bare OKX deliberately deferred pending explicit go-ahead (unlike the already-shipped SPOT_PAIR sibling fix), 2 cosmetic items sequenced behind the resharding design. Reaffirms 6 prior passes (2026-07-27 through 2026-08-16).
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries).
+- **2026-08-22 — ruling D85 (Honest-coverage model rulings)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Keep resharding gated (its own text requires mockup sign-off — no change made to
+  that `[DESIGN] P1` todo, status quo confirmed), approve the OPTION removal (same evidence class as the shipped
+  fix), route market_metadata through reference_scope (consistent with the model). Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

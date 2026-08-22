@@ -150,15 +150,14 @@ automatic fleet-wide safety net that investigation's stated intent was.
 
 ## What's NOT done / follow-up needed
 
-- [ ] [HUMAN] P2. **Add an independent, dedicated polling cadence for deployment-api's D.3 health-alert gate** — e.g. a
-      Cloud Scheduler job analogous to `dp_heartbeat_watcher_cron`'s `*/5 * * * *` hitting a lightweight
-      `/api/deployments/inventory` (or equivalent) endpoint on a schedule independent of any dashboard being open or the
-      once-daily digest. Weigh whether to reuse the existing inventory endpoint (accepting its ~45s TTL / `_census_pool`
-      cost) vs. building a narrower "alert-check-only" path that skips the full Cloud Run job/service/AWS census fan-out
-      (cheaper, lower blast-radius on the `max_workers=1` refresh-serialization invariant documented at
-      `deployments_inventory.py` line ~296-307 — see that comment for why raising pool concurrency without also bounding
-      total fan-out risks the OOM regression it fixed). Done when: a Cloud Scheduler job (or equivalent standing
-      trigger) reaches `_load_inventory()` on a bounded interval (target: `*/5`-`*/15` minutes, matching the sibling
+- [ ] [INFRA] P2. **Add an independent, dedicated polling cadence for deployment-api's D.3 health-alert gate, via a
+      NARROWER alert-check-only path — DECIDED.** Per D67 ruling (2026-08-22): lean narrower — the existing
+      45s-TTL full inventory endpoint's `_census_pool` fan-out carries a documented OOM-regression risk; no committed
+      ruling text exists beyond this lean, so build the narrower "alert-check-only" path (skipping the full Cloud Run
+      job/service/AWS census fan-out) rather than reusing the existing endpoint. A Cloud Scheduler job analogous to
+      `dp_heartbeat_watcher_cron`'s `*/5 * * * *` should hit this narrower path on a schedule independent of any
+      dashboard being open or the once-daily digest. Done when: a Cloud Scheduler job (or equivalent standing
+      trigger) reaches the alert-check path on a bounded interval (target: `*/5`-`*/15` minutes, matching the sibling
       watchers' cadence) independent of UI traffic and the daily digest, verified via `gcloud scheduler jobs describe`
       showing recent successful invocations and a corresponding `_persist_alert` ledger entry appearing within that
       interval of a deliberately-induced `hung` test VM (not just the unit test — an end-to-end schedule-fires-in-prod
@@ -187,3 +186,6 @@ automatic fleet-wide safety net that investigation's stated intent was.
   default. 6th consecutive audit/reconcile pass (na-eligibility-audit ×4, plan_reconciler ×2 — most recently
   `plan_reconciler_findings_ui_2026_08_18.md` Filed item 4, "confirmed still accurate, not superseded") reaching the
   same verdict; no content drift found this pass. No reclassification.
+- **2026-08-22 — ruling D67 (Health-alert gate cron shape)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Lean narrower — documented OOM-regression risk from census fan-out; no committed
+  ruling in the record. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
