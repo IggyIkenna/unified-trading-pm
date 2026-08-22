@@ -787,6 +787,60 @@ check_stash_pile_for_slot() {
     done
 }
 
+# Bare-root (slot-0) dirty/untracked alert
+# (/plans/active/issues/bare_root_repo_agent_writes_unenforced_2026_08_21.md). Slot 0's classify_repo
+# calls already detect a DIRTY bare-root repo (an agent write landing in the un-slotted
+# ${WORKSPACE_PATH}/<repo>/ checkout instead of the writer's assigned .tabs/<N>/<repo>/ slot
+# worktree), but until now that verdict was passive telemetry -- reported via post_snapshot only,
+# with no alert path, unlike the numbered-slot loop's FF-starvation/stash-pile watchdogs above. This
+# pages the same way: same dedup-per-episode marker-file pattern as check_starvation_for_slot /
+# check_stash_pile_for_slot (one ping per (slot, repo) DIRTY episode, cleared the moment the repo is
+# clean again so a fresh episode re-pings), and the same post_starve_ping inbox-message mechanism
+# (the slot-0 message inbox already receives post_snapshot's own POSTs). state=="dirty" already
+# covers untracked files -- classify_repo's porcelain scan folds `??` (untracked) lines into the same
+# dirty_files/dirty_files_sample it uses for modified files, and state precedence puts "dirty" ahead
+# of every other state, so no separate untracked check is needed. Toggle off with
+# BARE_ROOT_DIRTY_WATCHDOG=0.
+BARE_ROOT_DIRTY_WATCHDOG="${BARE_ROOT_DIRTY_WATCHDOG:-1}"
+
+check_bare_root_dirty_for_slot() {
+    local slot_id="$1" rows_tsv="$2"
+    [[ "${BARE_ROOT_DIRTY_WATCHDOG}" -eq 1 ]] || return 0
+    local token
+    token=$(resolve_token_for_slot "${slot_id}") || return 0
+    mkdir -p "${STARVE_STATE_DIR}" 2>/dev/null || true
+
+    # NB: deliberately `cut`, never `IFS=$'\t' read -r a b c ...` — bash treats tab as "IFS
+    # whitespace" regardless of what IFS is set to, so `read` COLLAPSES consecutive tabs (i.e. any
+    # empty field) and trims leading/trailing ones, silently misaligning every field after the first
+    # empty one. classify_repo's rows routinely carry empty fields (dirty_oldest_iso, unpushed_plans,
+    # ahead_oldest_iso, behind_oldest_iso are empty whenever inapplicable) — confirmed by direct
+    # reproduction. `cut -f` treats each tab literally (matching post_snapshot's own `line.split("\t")`
+    # in Python, which has no such collapsing), so it's the only correct tool here.
+    local line repo_name state dirty_files dirty_sample_raw marker payload
+    while IFS= read -r line; do
+        [[ -z "${line}" ]] && continue
+        repo_name=$(cut -f1 <<< "${line}")
+        state=$(cut -f3 <<< "${line}")
+        dirty_files=$(cut -f4 <<< "${line}")
+        dirty_sample_raw=$(cut -f11 <<< "${line}")
+        [[ -z "${repo_name}" ]] && continue
+        marker="${STARVE_STATE_DIR}/slot-${slot_id}__${repo_name}.bare-root-dirty"
+        if [[ "${state}" == "dirty" && "${dirty_files}" -gt 0 ]]; then
+            if [[ ! -f "${marker}" ]]; then
+                payload="BARE-ROOT DIRTY -- slot 0 / ${repo_name}: ${dirty_files} dirty/untracked file(s) in the un-slotted root checkout (${WORKSPACE_PATH}/${repo_name}/), NOT any .tabs/<N>/ slot worktree. A bare root repo path is NEVER a valid slot to write in -- see /codex/05-infrastructure/per-tab-worktrees.md. Sample: ${dirty_sample_raw}. Investigate the writer, move the work into its owning slot, then clear this repo."
+                if post_starve_ping "${slot_id}" "${repo_name}" "${payload}" "${token}" "bare-root-dirty"; then
+                    : > "${marker}" 2>/dev/null || true
+                fi
+            else
+                log_quiet "[bare-root-dirty-dup] slot ${slot_id}/${repo_name} — already signalled this episode"
+            fi
+        else
+            [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+        fi
+    done <<< "${rows_tsv}"
+}
+
 # Decode the `exp` (Unix epoch, UTC) claim from a JWT's second (payload) segment.
 # Prints the epoch on success; prints nothing and returns non-zero on any malformed/
 # undecodable input — callers MUST treat that as "can't tell, skip" rather than
@@ -967,6 +1021,7 @@ if slot_in_filter "0"; then
     done
     if [[ -n "${rows_tsv//[$'\n\t ']/}" ]]; then
         post_snapshot "0" "${rows_tsv}"
+        check_bare_root_dirty_for_slot "0" "${rows_tsv}"
     else
         log_quiet "[skip:empty] slot 0 (main workspace) — no git repos found"
     fi
