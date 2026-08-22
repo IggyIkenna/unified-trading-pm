@@ -142,14 +142,16 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       **Did NOT launch the full 2020-06-06→present campaign this session** — see the new [DATA] P1 todo immediately
       below and the 2026-08-22 Progress Log entry for why (host-contention-driven session unreliability made
       responsible multi-day-VM monitoring infeasible in this session, not a code/design gap).
-- [ ] [DATA] P1. **Launch the full 2020-06-06→present arb-backfill campaign** now that manifest instrumentation is
-      wired (prior todo). `bash deployment-service/scripts/vm/launch-features-sports-arb-backfill.sh 2020-06-06
-      <today>` (SPOT default, `full` mode — resume-from-progress now works via the manifest pre-flight-skip). Arm an
-      owned `run_in_background` progress watchdog in the SAME turn as the launch per
-      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — monitor on the count of
-      `sports_arb/by_date/day=*/tick=*/opportunities.parquet` GCS objects created (entity-scoped, `time_created`), not
-      VM-alive activity. Prerequisite for the `[REVIEW]` monitoring/coverage todos below, which cover this campaign
-      too (don't duplicate their tracking here).
+- [x] ✅ [DATA] P1. **Launched 2026-08-22 (slot-8, data_engineering) — full 2020-06-06→2026-08-22 arb-backfill
+      campaign.** `bash deployment-service/scripts/vm/launch-features-sports-arb-backfill.sh 2020-06-06 2026-08-22`
+      on SPOT (`e2-standard-4`, `asia-northeast1-c`), VM `features-arb-backfill-20260822-090011`, tarballs verified
+      fresh at launch (features-service@132ad23bc95b, unified-api-contracts@8198fb9d8226,
+      deployment-service@6dd65f81c134). Manifest pre-flight-skip (from the prior todo's wiring) makes this resumable
+      from progress, not a `START_DATE` replay, on preemption. Armed an owned `run_in_background` progress watchdog
+      in the same turn (5-min interval, polling VM status + a `opportunities.parquet` object count under
+      `sports_arb/by_date/` via UTL's `get_storage_client().list_blobs()`, never a `gsutil`/`gcloud storage` CLI
+      call). Prerequisite for the `[REVIEW]` monitoring/coverage todos below, which cover this campaign too (don't
+      duplicate their tracking here).
 - [ ] [SCRIPT] P1. **Backfill the `horizon` axis across the full history**, including the newly-promoted MODEL horizons
       T-2h and T-6h (P3), so the ML retrain has them over the whole period rather than only where they happen to exist
       today.
@@ -180,6 +182,20 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 ## Progress Log
 
+- **2026-08-22 (task `sports_taxonomy_p4_backfill-0816c47ffebe`, slot 8, data_engineering)** — Launched todo #6
+  (full arb-backfill campaign). Fresh-pulled the fleet, verified `launch-features-sports-arb-backfill.sh` (usage:
+  `[--force] [--env] [--on-demand] START_DATE END_DATE`, no separate "full" flag — resumability is intrinsic via
+  the prior todo's manifest pre-flight-skip) then ran
+  `bash launch-features-sports-arb-backfill.sh 2020-06-06 2026-08-22` — no singleton-lock refusal (no other
+  `features-arb-backfill-*` VM running), tarballs verified fresh, VM `features-arb-backfill-20260822-090011`
+  created RUNNING on SPOT in `asia-northeast1-c`. Armed a `run_in_background` watchdog (background task
+  `b06v96rek`, ~28 min bounded window, 5-min poll interval) that reads VM status via `gcloud compute instances
+  describe` (instance metadata, not an object op) and the real `opportunities.parquet` object count under
+  `sports_arb/by_date/` via a small one-off script
+  (`deployment-service/scripts/dev/_arb_watchdog_progress_check.py`, lifecycle-marked temporary, using UTL's
+  `get_storage_client().list_blobs()` — never `gsutil`/`gcloud storage`). Did not run the follow-on `[REVIEW]`
+  todos (monitoring/waste-audit/terminal-verdict) — those are separate, already-tracked items and this campaign
+  will run for many hours; a future session should continue the watch and eventually action them.
 - **2026-08-22 (task `sports_taxonomy_p4_backfill-a541bcd4a650`, slot 21, data_engineering)** — Worked the
   manifest-instrumentation todo (the one this same session's earlier task left open). Shipped
   `features-service@5b17aac0c5` (`ArbDetectHandler._run_historical_backfill` now does the coarse per-day
