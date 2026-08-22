@@ -18813,6 +18813,24 @@ Content-Type: application/x-ndjson
           family). Field examples below use <code>TRADE</code>; the request/response envelope shape is the same for
           all 16 action types, and the instruction type-support table above names each one's own production path.
         </p>
+        <div class="callout">
+          <span class="tag">Two transport variants — REST is general-purpose, the event-log path is ATOMIC-only</span>
+          <p>
+            This REST endpoint is the general-purpose path: any of the 16 action types, any client, synchronous
+            response. A second, narrower transport also exists: <code>StrategyInstructionSubscriber</code> polls the
+            UTL event-log spine (<code>EventTransport</code> facade — the same facade that gives
+            <code>paper(W)==batch-rerun(W)</code> determinism elsewhere on this platform) for
+            <code>ATOMIC</code> instructions only, published by strategy-service under the
+            <code>atomic_instruction</code> data type, source <code>strategy</code>, scoped to the
+            <code>cefi</code>/<code>defi</code>/<code>prediction</code> asset groups (not sports or TradFi). It is
+            not a Pub/Sub mirror of every action type on this endpoint — only the multi-leg atomic path, for a
+            strategy publishing directly onto the event log rather than calling this REST endpoint. Each consumed
+            leg converts through the same instruction-conversion code the manual-trade path uses, then executes via
+            the same orchestrator. <b>Source:</b>
+            <code>execution_service/engine/strategy_instruction_subscriber.py</code>, wired at startup in
+            <code>api/main.py::_run_strategy_instruction_subscriber</code>.
+          </p>
+        </div>
         <div class="plate">
           <div class="plate-head"><span class="label">Body fields</span><span class="note">TRADE action — JSON</span></div>
           <div class="plate-body scroll-x">
