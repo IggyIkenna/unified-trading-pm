@@ -46,7 +46,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-archive_exempt: true # 2026-08-10 slot-21 (original rationale): follow-up (rebuild_tradfi_manifest.py re-run) tracked in batch11 plan. SUPERSEDED 2026-08-19 (plan_reconciler) -- the rebuild re-run landed directly in this doc 2026-08-16 (slot-6), and the doc's real remaining work (the 880,933-row LIVE-manifest retire todo below) is tracked here directly, not in batch11.
+archive_exempt: true # SUPERSEDED AGAIN 2026-08-22 (slot-6): the retire todo below is now done (0 open todos) -- this bridges the mode-2 cross-repo flip-then-archive split (plan-completion-and-archival-discipline.md § archive_exempt bridge); dropped in the immediately-following git-mv archival commit. Prior rationale (2026-08-10, superseded 2026-08-19): follow-up tracked in batch11 plan.
 resolved_by:
 source:
   [
@@ -153,7 +153,7 @@ Not urgent (static, not actively growing) but real and unaddressed.
       typed instead of misfiled under `FUTURE`). ✅ — the code fix + rebuild both verified working as designed.
       **Done-when narrowed to what a rebuild can actually achieve** (see the new retire todo below for the remaining
       "0 stale rows in the LIVE CONSOLIDATED manifest" half — a rebuild alone cannot satisfy that, see Progress Log).
-- [ ] [OPERATOR] [DATA] P2. **NEW 2026-08-16 (slot-6) — retire the 880,933 pre-fix stale `instrument_type=FUTURE`
+- [x] [OPERATOR] [DATA] P2. ✅ EXECUTED 2026-08-22 — **NEW 2026-08-16 (slot-6) — retire the 880,933 pre-fix stale `instrument_type=FUTURE`
       rows from the LIVE CONSOLIDATED manifest** (`market-data-tick-tradfi-prd-central-element-323112/_index/
       availability_index.parquet`). Root cause (confirmed 2026-08-16, see Progress Log): `ManifestWriter`
       per-VM-shard writes + the manifest consolidator's merge are ADDITIVE, keyed on the full row_key including
@@ -326,3 +326,32 @@ Not urgent (static, not actively growing) but real and unaddressed.
   this REOPENED banner originally — the rebuild's own scope (writer-fix verification) IS genuinely done; the
   live-manifest-recount half is a distinct, larger, gated piece of work.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **slot-6 2026-08-22** (D2 execution, operator disposition D2 in
+  `plans/active/issues_corpus_completion_dispatch_2026_08_21.md`, "APPROVED ALL under each item's stated
+  precondition"): **retire todo EXECUTED**. Fresh precondition re-check (same-run, not assumed):
+  `gcs_bucket_soft_delete_retention_seconds("market-data-tick-tradfi-prd-central-element-323112")` = 604800s
+  (>=604800 required — PASS, §3a reversibility-qualified). Fresh population re-measure (bounded, column-projected
+  read, `read_availability_index`): **880,933** stale rows — IDENTICAL to the 2026-08-16 count, i.e. the population
+  had actually STOPPED growing since that measurement (the "actively growing" framing at the top of this doc no
+  longer holds as of this session). Content-verify (Part 2, five-part proof): built the counterpart-key set
+  (combo/futures_chain/options_chain, venue=CME) = 597,981 unique (underlying, data_type, date) keys; of the
+  880,933 stale rows, **873,007 have a live counterpart** (safe to retire) and **7,926 have none** (left
+  untouched — grown from the 2026-08-10 census's 649/76,454, but still only 0.90% of the stale population, well
+  under this session's own anomaly guard). Shipped a dedicated content-verified retire script
+  (`market-tick-data-service@53e6d971ce`: `scripts/one_offs/retire_tradfi_cme_future_stale_manifest_rows_2026_08_22.py`
+  + a fresh-precondition-check companion + regression tests, full `quality-gates.sh` green — 11230 passed) following
+  the `retire_dex_pool_fees_all_captured_rows_2026_08_12.py` worked-example pattern (CAS `if_generation_match` +
+  consolidator-cron-paused hard-abort + pre-write snapshot). Execution: paused
+  `uts-prod-manifest-consolidator-market-data-tradfi-cron`; `--apply` run against the live 14,475,628-row consolidated
+  index (381.5 MB) retired **873,007** rows (kept 13,602,621), snapshot written to
+  `_index/snapshots/pre_tradfi_cme_future_retire_20260822T092732Z.parquet` before the CAS write (generation
+  `1787390851299624` → `1787391132658175`, no race); resumed the cron after. **Verification (this doc's own
+  Done-when)**: live-manifest recount of CME `instrument_type=FUTURE` + populated `underlying` + blank
+  `instrument_id` rows = **7,926** — exactly the no-counterpart residual left deliberately untouched, matching the
+  dry-run/apply-time classify count exactly (no drift). The 7,926 residual is a SEPARATE, smaller-scope follow-up
+  (each needs its own twin-migration or `no-migrate-first` disposition before it can ever be dropped) — tracked as
+  its own todo in the new
+  `plans/active/issues/tradfi_cme_future_no_counterpart_residual_2026_08_22.md` issue doc (never left as prose here)
+  rather than reopening this doc's Done-when, since it is a materially different, smaller-scope problem than this
+  issue's original 880,933-row finding. This todo's Done-when is met for the population this issue was filed
+  against.
