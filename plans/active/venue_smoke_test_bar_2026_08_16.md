@@ -214,3 +214,36 @@ quality gates passed (1155s); the landed commit is an ancestor of `origin/live-d
 **2026-08-20 — citation correction.** The earlier entry and checkbox cited the pre-push local SHA
 `03c79c82a`, which was not the landed commit. Corrected both references to the quickmerge-verified
 `unified-api-contracts@23cf22dda6`.
+
+**2026-08-22 (slot 19, review) — Sports rows + testnet verdict reconciled into this contract.** Source:
+`/plans/active/sports_venue_smoke_batch1_2026_08_20.md` (all five todos closed). **Current generator output
+cited**: `unified-api-contracts/scripts/generate_venue_smoke_test_work_list.py`, measured 2026-08-20/21 at
+39 in-scope Sports (venue, data_type) rows (32 declared `sports` venues × `odds`, minus the Databento-exempt
+set — 0 Sports cells fall in the 8-cell Databento exemption list). **Data floor cited**:
+`/codex/02-data/sports-2020-06-data-floor.md`'s 2020-06-06 odds-start floor — the batch's own floor/oracle
+verification todo (slot-4, 2026-08-21) directly asserted every Sports row resolves to a non-Databento source
+and that the pre-floor `2020-06-05` window is rejected with the documented empty/inverted-range signal for
+every distinct resolved source/data-type pair, plus the canonical-path negative control rejected via
+`canonical_path_violations(require_pipeline_mode=True)`.
+- **Row-level capture status**: VM execution attempt #2 (`pipeline-e2e-check-mtds-20260821-154512-a0ace0`,
+  `--generator-scoped-sports`) measured 99 cells across the 33-shard generator-scoped set (force/skip/canonical
+  legs): 0 passed, 75 failed fail-closed (`no_parquet_under:...` / `canonical_no_matching_objects_in_test_bucket`),
+  24 skipped (`no_captured_data_for_cell`, declared cells with no captured data at all). RED, not a false pass —
+  root cause is `--auto-day`-sampled days with no scheduled fixture/odds activity for the sampled venue, the same
+  mechanism `/plans/archive/issues/sports_venue_smoke_checker_scope_and_canonical_gap_2026_08_20.md` already
+  documented. This satisfies the "fails loudly, demonstrated not asserted" Definition-of-done bar for Sports
+  specifically — the suite went RED on genuine absence, and every row's reason is individually named.
+- **Testnet verdict, all 33 declared `VENUES_BY_ASSET_GROUP["sports"]` venues** (0 real venue-hosted
+  testnet/sandbox/demo endpoint found for any): Group A (`BETFAIR_EX_UK`, `BETFAIR_EX_EU`) — real execution
+  adapter, credential-blocked, simulated via the Betfair-specific `betfair_paper_matcher.py`. Group B
+  (`MATCHBOOK`) — real execution adapter, production-only API, falls back to the generic `PaperBettingAdapter`.
+  Group C (30 data-axis-only venues, no execution adapter) — simulated via the generic `PaperBettingAdapter`.
+  Full per-venue table in `sports_venue_smoke_batch1_2026_08_20.md`'s 2026-08-22 (slot 13) Progress Log entry.
+  0 of the 33 venues have any testnet endpoint at all (not merely unprovisioned), so no `BLOCKED-CREDENTIALS`
+  tag applies to Sports — every venue's answer is "simulate via matching engine," recorded per-venue as this
+  section's W5 P1 todo requires.
+
+Per-AG reconciliation only — this entry closes Sports' own slice of the shared testnet/row-coverage todos above;
+those todos stay unchecked pending the sibling DeFi/CeFi/TradFi/Prediction reconciliations
+(`defi_venue_smoke_batch1_2026_08_20_finalize.md` / `cefi_...` / `tradfi_...` / `prediction_...`, each carrying
+the same-shaped `[REVIEW] P2. Reconcile every <AG> row...` todo).
