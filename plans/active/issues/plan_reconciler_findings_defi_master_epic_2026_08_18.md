@@ -28,6 +28,7 @@ related:
     /plans/active/issues/plan_reconciler_findings_defi_2026_08_16.md,
   ]
 created: "2026-08-18"
+last_updated: "2026-08-21"
 author: plan_reconciler
 source: "interactive session, /plan-reconcile defi_master (epic-scoped)"
 locked_by:
@@ -207,9 +208,12 @@ used).
   taxonomy restructure, same day). Deferred; the fix stays applied locally, uncommitted, pending either a real
   split of this doc or a 5th operator-ruled carve-out.
 
-- [ ] [DOCS] P2. Ship `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s mis-cited-VM correction (see
-      above) — needs the doc split under its own 1000L cap first, or a `check_line_caps.sh` carve-out for a
-      bounded multi-line content correction.
+- [ ] [DOCS] P2. **RULED 2026-08-21 (D9, ADOPTED-REC): narrow carve-out approved** — `check_line_caps.sh` gets a
+      5th carve-out for a genuine bounded multi-line content correction (matches the existing 4 narrow carve-outs'
+      shape; closes a recurring false-positive class without letting content growth past the cap generally).
+      Implement the carve-out, then ship `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s mis-cited-VM
+      correction (already applied locally, uncommitted — see above) under it. Done when: the carve-out is in
+      `check_line_caps.sh` and the correction is committed.
 
 - **na-eligibility-audit 2026-08-19** (tranche=defi, dispatch agt-88e4bb): KEEP-NA, valid — read end to end, 1 open
   item confirmed (matches Phase-0). The remaining todo needs either splitting `defi_track01_per_instrument_and_canon_id_2026_07_24.md`
@@ -218,4 +222,5 @@ used).
   1000L-cap class of finding: "splitting a plan is an operator-gated planning decision per CLAUDE.md, not a
   mechanical trim"). Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **2026-08-21 — ruling D9 (Over-cap plan handling policy)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): Split both docs now; also approve the narrow carve-out — it closes a recurring false-positive class without letting content growth past the cap. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 - **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed; sole open item still needs either splitting `defi_track01_per_instrument_and_canon_id_2026_07_24.md` under its own line cap or an operator-ruled `check_line_caps.sh` carve-out — both operator-gated per this corpus's established precedent. Doc stays `assigned_vm: NA`.

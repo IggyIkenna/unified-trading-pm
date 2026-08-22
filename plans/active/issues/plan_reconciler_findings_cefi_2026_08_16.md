@@ -14,6 +14,7 @@ scope: [engineer, admin]
 tags: [plan_reconciler, reconciliation, cefi, sharded]
 related: [/plans/active/cefi_consolidated_closeout_2026_07_18.md]
 created: 2026-08-16
+last_updated: "2026-08-21"
 author: plan_reconciler
 source: agt-2e82f7
 # was: cefi_master (epic-assignment audit 2026-08-19) -- doc is a plan-reconciliation run report (stale checkboxes, digest corrections, archival, dangling refs) over the cefi tranche, not cefi asset-group content itself
@@ -212,9 +213,11 @@ grep, a line-cap split — operator/planning-gated per Phase 5's rules), tracked
       `mdps-backfill-cefi-20260808-095136`, confirmed gone) and `mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md`'s
       DEFI re-run leg (VM `pipeline-e2e-check-mtds-20260815-172227-4ffa29`, confirmed gone, report likely already at
       its named GCS path).
-- [ ] [INFRA] P2. Split `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` (1079L, 79 over
-      the 1000-line hard cap — confirmed via `wc -l` 2026-08-16) — 2 genuinely-open todos are explicit design/judgment
-      calls, so this is a real remediation not a mechanical trim.
+- [ ] [INFRA] P2. **RULED 2026-08-21 (D9, ADOPTED-REC): split now.** Split
+      `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` (1079L, 79 over the 1000-line hard
+      cap — confirmed via `wc -l` 2026-08-16) into a parent index + child plan(s) per the standard split pattern — 2
+      genuinely-open todos are explicit design/judgment calls, so this is a real remediation not a mechanical trim.
+      Done when: the doc is back under the 1000L cap and both design/judgment todos are preserved in a child doc.
 - [x] [INFRA] P3. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
       `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 11. Original text:
       `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` is AT the 1000-line hard cap with
@@ -374,3 +377,4 @@ None — all 80 non-grace docs in the cefi tranche were read in full by the hunt
   unchanged (not archived — 2 genuine open items remain; the lock gates archival/unlock only, per
   `agents/plan_reconciler.md`, not general Progress-Log append edits already made by 2 prior sibling-skill passes).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **2026-08-21 — ruling D9 (Over-cap plan handling policy)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): Split both docs now; also approve the narrow carve-out — it closes a recurring false-positive class without letting content growth past the cap. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -26,6 +26,7 @@ related:
     /plans/active/issues/plan_reconciler_findings_infra_2026_08_18.md,
   ]
 created: "2026-08-19"
+last_updated: "2026-08-21"
 author: plan_reconciler
 source: "Epic-scoped /plan-reconcile security_and_cross_cutting_master run, laptop-driven sub-agent session,
   2026-08-19. DO-NOT-SHIP constraint in force (shared checkout under heavy multi-session contention, 70-entry
@@ -287,13 +288,14 @@ house style makes this systemic, not incidental):
       sibling `dp_vm_003_canonical_migration_cefi_deribit_sweep_wedged_relaunched_fresh_name_2026_08_16.md` (same
       shape, correctly `assigned_vm: NA`) — likely both should reclassify. Routed to `/na-eligibility-audit`'s
       disjoint remit (this skill flips checkboxes, not NA/planning classification calls), not applied here.
-- [ ] [REVIEW] P1. `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md:113` — sole open todo's own inline
-      text says the remaining scope is "GATED+REVIEWED/human-judgment work" per
-      `repo_scripts_governance_audit_2026_06_18.md`, warning an unsupervised AO sweep "risks deleting
-      campaign-in-flight one-offs" — yet the todo carries no `[OPERATOR]`/`BLOCKED-<TOKEN>` tag or
-      `depends_on`/`gate_on_depends` link. Real delete-risk, matches finding O/T/U's tagging bar directly —
-      highest-priority item in this Filed list given the delete-risk class this epic's conservative posture
-      exists to catch.
+- [ ] [REVIEW] P1. **RULED 2026-08-21 (D113, ADOPTED-REC): retag — costs nothing and matches the delete-safety
+      HARD RULE.** Add `[OPERATOR]` (or a `BLOCKED-<TOKEN>`) tag + cite
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` to
+      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md:113`'s sole open todo — its own inline text says
+      the remaining scope is "GATED+REVIEWED/human-judgment work" per `repo_scripts_governance_audit_2026_06_18.md`,
+      warning an unsupervised AO sweep "risks deleting campaign-in-flight one-offs," yet the todo carries no
+      delete-risk tag or `depends_on`/`gate_on_depends` link today. Matches finding O/T/U's tagging bar directly.
+      Done when: `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md:113`'s todo carries the tag + citation.
 - [ ] [REVIEW] P1. `cve_affected_pinned_deps_remediation_2026_06_18.md` — sole open todo is explicitly
       documented, twice, by the doc's own Progress Log as inherently open-ended/not bounded ("recommend treating
       as a standing/recurring check, not a one-shot-closeable todo"), yet stays `assigned_vm: planning`,
@@ -408,3 +410,4 @@ current/correctly-open). ~120 raw candidate findings from the hunter sweep; 20 a
   own `## Report` section for the published link). DO-NOT-SHIP in force throughout — lead session ships this doc
   + every target-doc edit listed above.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **2026-08-21 — ruling D113 (batch1b delete-risk retag)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority, AUTONOMOUS_AGENT_RULES rule 2): Retag — costs nothing and matches the delete-safety HARD RULE. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
