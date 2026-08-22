@@ -25,6 +25,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-03
+last_updated: "2026-08-21"
 author: unknown
 parent_epic: security_and_cross_cutting_master
 # reclassified NA -> planning 2026-08-03 (na-eligibility-audit, cross-cutting tranche) — conflict-check CLEAR
@@ -135,17 +136,10 @@ Mechanical, bounded remediation — not a design/judgment call:
 - [x] ✅ [BACKEND] P3. **DONE — verified 2026-08-20.** `scripts/plan-hygiene/prosewrap_padding_baseline.yaml` reads
       `violation_count: 0`; live `check_prosewrap_padding.sh` run confirms 0 violations against baseline 0 — target
       plateau reached. (repo: unified-trading-pm)
-- [ ] [OPERATOR] P2. **Decide whether to invest in a source-level fix for the generative mechanism itself** (confirmed
-      2026-08-15, Progress Log below): `prettier-autostage.sh` reflowing an ordinary commit's own staged
-      `plans/active/*.md` file can worsen pre-existing near-threshold indentation via prettier's non-idempotent
-      proseWrap bug, and this is deliberately NOT blocked at precommit (correctly — blocking unrelated edits on someone
-      else's stale prose would be worse). Options: (a) patch `.prettierrc`/prettier version/config fleet-wide to close
-      the underlying non-idempotency (highest leverage, highest blast radius — touches every repo's formatting); (b)
-      make `prettier-autostage.sh` skip re-reformatting a file's pre-existing over-threshold paragraphs specifically
-      (narrower, still nontrivial — needs a way to diff "reflow of existing content" from "this commit's real formatting
-      need"); (c) accept continuous hand-repair as the permanent model and treat the ratchet purely as a rate-limiter,
-      never expecting it to reach a stable low plateau. **Done when**: the operator picks a direction (or explicitly
-      rules "(c), accept as-is") — this is cross-cutting fleet tooling, not a single-session call.
+- [ ] [OPERATOR] P2. DEFERRED-BY-DESIGN — D117 ruling (2026-08-21, issues_corpus_completion_dispatch_2026_08_21.md
+      ledger): accept option (c), continuous hand-repair + the ratchet as a rate-limiter; fleet-wide prettier/config
+      patch blast radius is disproportionate to a cosmetic whitespace bug. Ratchet holds the corpus at 0 (verified
+      2026-08-20). No further source-level investment planned; re-open only if the ratchet climbs materially again.
 
 ## Progress Log
 
@@ -252,3 +246,8 @@ Mechanical, bounded remediation — not a design/judgment call:
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries).
+
+- **2026-08-21 — ruling D117 (proseWrap non-idempotency)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Accept the ratchet — it holds the corpus at 0; fleet-wide prettier blast radius is
+  disproportionate to a cosmetic bug. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+  Applied: retagged the sole remaining `[OPERATOR]` todo above to DEFERRED-BY-DESIGN.

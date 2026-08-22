@@ -17,6 +17,7 @@ scope: [engineer]
 tags: [betfair, sports-odds, prediction, dead-code, scope-correction]
 related: [prediction_satellite_ao_dispatch_batch6_2026_07_29]
 created: 2026-08-09
+last_updated: "2026-08-21"
 author: slot-17 (backend_engineer)
 parent_epic: predictions_master
 assigned_vm: planning
@@ -190,7 +191,10 @@ concrete reason not to).
           the live API. Todo 4's live-verify pass should confirm the resolver actually matches real captured markets,
           not just that the wiring compiles.
 
-- [ ] [BLOCKED-CREDENTIALS][INFRA] P2. **RETAGGED 2026-08-11 (slot-20, backend_engineer) — was `[BACKEND]`** — egress
+- [ ] [BLOCKED-CREDENTIALS][INFRA] P2. **D118 ruling applied 2026-08-21 (issues_corpus_completion_dispatch_2026_08_21.md
+      ledger): BLOCKED-CREDENTIALS naming "Betfair account holder must change the account password via betfair.com
+      (ACCOUNT_PENDING_PASSWORD_CHANGE) — operator confirmed 2026-08-21 they cannot do this themselves; no agent
+      action possible."** RETAGGED 2026-08-11 (slot-20, backend_engineer) — was `[BACKEND]` — egress
       done 2026-08-12; residual live-verify credential-gated, ask BLK-5180c9d1. Provisioning a new `europe-west2`
       network egress (VM/proxy) is `infra` craft's domain per `backend_engineer.md`'s `does_not` ("Infra provisioning,
       VM launches, CI/CD, cloud (→ infra)") — retagged so dispatch routes correctly; see the matching retag note in the
@@ -422,3 +426,9 @@ concrete reason not to).
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+
+- **2026-08-21 — ruling D118 (Betfair password rotation)**: OPERATOR-RULED 2026-08-21 — operator CANNOT change the
+  Betfair password. Root cause is Betfair's own ACCOUNT_PENDING_PASSWORD_CHANGE flag (not a workspace defect): the
+  account holder must change it on betfair.com. Stays BLOCKED-OPERATOR naming the account holder; no agent action
+  possible. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. Applied: retagged todo 4's
+  gate marker above to explicitly name the exact dependency + date rather than a bare credential-gated pointer.
