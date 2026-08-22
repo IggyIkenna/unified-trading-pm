@@ -243,10 +243,14 @@ impression:
       `order.order_id[:32]` (Betfair's customerRef caps at 32 chars) as the ref; new regression test
       `test_betfair_place_bet_threads_customer_ref` asserts the kwarg reaches the venue call. (repo:
       execution-service)
-- [ ] [BACKEND] P0. Kalshi: make `_build_kalshi_headers()` fail closed on a signing error instead of silently
+- [x] ✅ [BACKEND] P0. Kalshi: make `_build_kalshi_headers()` fail closed on a signing error instead of silently
       substituting a raw SHA-256 digest for a valid RSA-PSS signature on any `ValueError` during key load/sign
       (`kalshi.py:116-128`); HIGH finding: checklist points 1 and 2 — a broken/misconfigured private key should
-      raise, not construct and send a fabricated "signature". (repo: execution-service)
+      raise, not construct and send a fabricated "signature". — execution-service@93dada9b04: removed the
+      try/except ValueError fallback so a broken/misconfigured RSA key now raises instead of signing with a
+      fabricated SHA-256 digest; test fixtures switched from a fake PEM string to a real ephemeral RSA key
+      (the fake-PEM tests were unknowingly relying on the fallback path), plus new coverage asserting invalid-PEM
+      and non-RSA-key inputs raise `ValueError`. (repo: execution-service)
 - [ ] [BACKEND] P0. Add durable client-order-id idempotency across Kalshi, Matchbook, and Polymarket CLOB order
       placement: Kalshi generates a fresh UUID on every call unless the caller explicitly supplies one (no
       retry-safe reuse across an ambiguous-outcome retry), Matchbook has no client-order-id mechanism at all, and
