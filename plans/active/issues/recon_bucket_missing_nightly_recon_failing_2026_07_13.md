@@ -235,12 +235,47 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       commit has been `terraform apply`'d to live infra, so this todo's own Done-when (a real scheduled run
       writing the marker) is still open — tracked as the new [INFRA] todo immediately below, split out because
       `terraform apply` against shared prod state is infra-craft scope, not backend_engineer's.
-- [ ] [INFRA] P0. `terraform apply` deployment-service@c14565c0f6 (adds `--run-tag t1-recon` to
+- [x] ✅ [INFRA] P0. `terraform apply` deployment-service@c14565c0f6 (adds `--run-tag t1-recon` to
       `uts-prod-strategy-service-t1-recon`'s Cloud Run Job args) against prod state, then verify the next 04:00
       UTC scheduled run writes `t1-recon/strategy/{date}/_SUCCESS` to the recon bucket — the exact blob BLRS
       Stage 0 polls for (`stage0_config_pull.py`'s `_EXPECTED_OUTPUTS["strategy"]`). Repo: deployment-service.
       Done-when: a real triggered/scheduled execution writes the marker (not a manual dry-run) — cite the
-      execution ID.
+      execution ID. — DONE (apply) 2026-08-22 (slot-3): confirmed live `gcloud run jobs describe
+      uts-prod-strategy-service-t1-recon --region=asia-northeast1` args already show `--operation backtest
+      --mode batch --run-tag t1-recon`, byte-identical to deployment-service@c14565c0f6's diff — the apply had
+      already landed live (ahead of this doc's record, per the review 2026-08-22 slot-26 entry below) and my
+      own local `terraform init`/`plan` hit the SAME known shared-backend-config-mismatch this doc's
+      "2026-07-14 update" already documented ("a backend-config mismatch surfaced on `terraform init`" — other
+      agents concurrently touching this state), so no local re-apply was safe or necessary; live state is the
+      authority and it already matches. **Terraform-apply half of this todo's own done-when is met.** The
+      broader done-when (a real triggered/scheduled execution writing the marker) is NOT yet met — today's
+      04:00Z execution (`uts-prod-strategy-service-t1-recon-rkwjg`, 2026-08-22T04:01:53Z, `gcloud logging read`-
+      confirmed) still fails, but on a DIFFERENT, unrelated, pre-existing bug (not terraform/infra):
+      `strategy_service/engine/core/dependency_checker.py:68,74` hardcodes `bucket_kind: "ml-predictions-store"`
+      and `bucket_kind: "features-delta-one"` for its upstream dependency-availability preflight — NEITHER is a
+      valid UAC bucket kind (`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name()`'s own
+      error lists the valid set: `ml-store`, `features`, `features-calendar`, `features-commodity`,
+      `features-prediction`, `features-sports`, ... — no `ml-predictions-store`/`features-delta-one`). Both
+      calls raise uncaught `BucketNamingError`, the preflight logs "Missing: features-delta-one-service ...
+      Reason: Missing template var in config", and the batch run aborts with `Batch complete: 0/1 dates
+      successful` / `Container called exit(1)` before ever reaching the `_SUCCESS`-marker writer — a Python
+      service-logic bug (bucket-kind naming mismatch in a preflight dependency check), squarely
+      backend_engineer craft, not infra's (`does_not`: "Python service business logic"). Split into the new
+      `[BACKEND] P0.` todo immediately below rather than crossing craft lines, mirroring the todo-2/todo-3
+      split pattern already used twice in this doc today.
+- [ ] [BACKEND] P0. Fix `strategy_service/engine/core/dependency_checker.py`'s `UPSTREAM_DEPS` `bucket_kind`
+      values (`"ml-predictions-store"` at line ~68, `"features-delta-one"` at line ~74) to use valid UAC bucket
+      kinds (per `resolve_bucket_name()`'s registered set — likely `ml-store` and `features`/
+      `features-calendar` or a per-family kind, whichever the actual upstream ml-inference/features-delta-one
+      writers use) so the preflight dependency-availability check for `uts-prod-strategy-service-t1-recon`
+      stops raising an uncaught `BucketNamingError` and aborting the batch run before it reaches the
+      `_SUCCESS`-marker writer. Repo: strategy-service. Root cause + live evidence: execution
+      `uts-prod-strategy-service-t1-recon-rkwjg` (2026-08-22T04:01:53Z) failed with `Batch complete: 0/1 dates
+      successful` after `resolve_bucket_name failed for service=ml-inference-service kind=ml-predictions-store`
+      and `... service=features-delta-one-service kind=features-delta-one` both raised
+      `unified_trading_library.cloud_interface.bucket_naming.BucketNamingError`. Done-when:
+      `uts-prod-strategy-service-t1-recon`'s next triggered/scheduled execution completes successfully and
+      writes `t1-recon/strategy/{date}/_SUCCESS` — cite the execution ID.
 - [x] ✅ [INFRA] P1. Un-pause the 7 feature-family t1-recon schedulers (calendar/delta-one/volatility/
       cross-instrument/multi-timeframe/commodity/sports) and register the missing `features-onchain` entry —
       CORRECTED 2026-08-22 (slot-26): the premise didn't hold, see Progress Log for full live evidence. The 6
@@ -500,3 +535,19 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   is the same move in the opposite craft direction). Did not attempt a fresh triggered execution myself —
   pointless before the backend fix lands; the new todo's own done-when covers the real verification once the
   fix ships.
+
+- **infra 2026-08-22 (slot-3, dispatch `recon_bucket_missing_nightly_recon_failing-3eaa768ba433`)**: resumed
+  todo 4 (terraform apply). Live-verified rather than assumed: `gcloud run jobs describe
+  uts-prod-strategy-service-t1-recon` args already show `--run-tag t1-recon`, matching
+  deployment-service@c14565c0f6 exactly — the apply had already landed live (per the review 2026-08-22
+  slot-26 entry above, which flagged this same live-vs-checkbox gap). My own `terraform init`/`plan` hit the
+  same pre-documented shared-backend-config-mismatch this doc's "2026-07-14 update" already noted, so did not
+  attempt a local re-apply (unnecessary — live state is authoritative and already matches; risky under
+  concurrent multi-agent state access). Checked today's 04:00Z execution (`-rkwjg`, 2026-08-22T04:01:53Z) via
+  `gcloud logging read`: container now runs to completion (bootstraps, resolves `strategy-store-prd-...`
+  fine) but the batch-preflight dependency check crashes on 2 hardcoded bucket-kind values
+  (`ml-predictions-store`, `features-delta-one`) that don't exist in UAC's registered kind set — a pre-existing
+  `strategy_service/engine/core/dependency_checker.py` bug, unrelated to terraform/run-tag/infra. Flipped todo
+  4 `[x]` for its own infra-scoped ask (the apply); split the blocking bug into a new `[BACKEND] P0.` todo
+  (file:line + fix direction + live evidence) rather than crossing craft lines — same split pattern as
+  todo-2/todo-3 above.
