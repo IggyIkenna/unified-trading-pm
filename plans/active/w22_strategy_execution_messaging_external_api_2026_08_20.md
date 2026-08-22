@@ -227,12 +227,19 @@ context_scope:
 
 ### Deployment topology and external hosting
 
-- [ ] [BACKEND] P1. Verify + document schema consistency across the three deployment paths (internal Pub/Sub via
-      the new subscriber above, external-automated HTTP/WebSocket, manual HTTP) now that all three route through
-      `StrategyInstructionV2`/the engine's `Instruction` type — this is a verification pass once the messaging-
-      bridge and vocabulary todos above land, not new design (the schema is already shared; confirm it stays
-      that way). Done-when: one instruction type submitted via all three paths produces byte-identical
-      `Instruction` construction (modulo timestamp), proven by a real test, not asserted.
+- [x] [BACKEND] P1. ✅ SHIPPED 2026-08-22 — execution-service@2127f64ca8. Verified via a new real round-trip test
+      (`tests/unit/test_three_path_schema_consistency.py`) that manual HTTP
+      (`manual_instruction_helpers._build_strategy_instruction`), external-automated HTTP
+      (`external_instruction_api._build_strategy_instruction_from_trade`), and the internal Pub/Sub subscriber
+      (`strategy_instruction_subscriber.atomic_instruction_to_engine_instructions`) all converge on
+      `instruction_convert.manual_request_to_instruction()` and produce byte-identical engine `Instruction`
+      construction (modulo `instruction_id`/timestamps — the subscriber path's `:leg:<n>` suffix is by design).
+      The test surfaced one genuine drift, fixed in the same commit: `atomic_instruction_to_engine_instructions()`
+      never threaded `strategy_id` onto the constructed `Instruction`, unlike the two HTTP paths — silently
+      breaking `CANCEL`'s `ALL_FOR_STRATEGY_INSTANCE` sweep (`external_instruction_api._cancel_all_for_strategy_instance`)
+      for any order originated via the strategy→execution Pub/Sub bridge. Now passes
+      `strategy_id=instruction.identity.strategy_instance_id` through, same as the other two paths. Evidence:
+      `bash scripts/quality-gates.sh` (ALL QUALITY GATES PASSED, 152s; sentinel=2127f64ca82f44a0b038e7ac1eba49b0d2642336).
 - [ ] [BACKEND] P2. Scaffold the client-hosted deployment option — a Dockerfile + config template proving the
       SAME image `execution-service` already builds can run against a registered client's own infrastructure
       with only config changes (hot-reload config model per W6), no code fork. Bounded scaffold, not a full
