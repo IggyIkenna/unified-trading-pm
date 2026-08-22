@@ -142,3 +142,18 @@ correctly-empty until a captured row is confirmed post-fix.
   venue on the same shard, SSH log inspection confirming zero subscribe-ack observability across the connector's
   full run, and a direct code read confirming the receive loop silently drops Bybit's own ack control frames in
   both `bybit_ws.py` and `bybit_futures_book_ticker_ws.py`.
+- **2026-08-22 (data_pipeline_failure escalation `agt-81aea5`, slot 8)**: DP-LIVE-004 re-fired for the SAME VM
+  (`mtds-live-cefi-consolidated-20260821-200626`), venue BYBIT-FUTURES, data_type `depth_of_book_10` (last attempt
+  0.3h old, still unproductive). SSH-confirmed this is still the pre-fix runtime, not a new bug: `sudo grep -c
+  '_log_subscribe_ack'` on the live VM returns `0` for both `bybit_futures_book_ticker_ws.py` and `bybit_ws.py` —
+  `market-tick-data-service@efd0e788` (the ack-logging fix; confirmed an ancestor of current
+  `origin/live-defi-rollout` HEAD `a9b1d055c9`) has not been deployed to this VM. Grepped all four live BYBIT-FUTURES
+  log files (`book-snapshot-5`, `depth-of-book-10`, `derivative-ticker`, `trades`) for `subscribe`/`ret_msg`/ack
+  patterns — zero matches beyond the generic kill-switch bootstrap line, confirming zero subscribe-ack observability
+  is still live on this VM as of 2026-08-22T00:0xZ. No new root cause found; this is todo 3 exactly as already
+  scoped — the VM needs another relaunch to pick up `efd0e788` before ack evidence can be observed. Did not perform
+  the relaunch myself (a live-infra VM cutover already governed by the operator's 2026-08-21 controlled-cutover
+  ruling and actively tracked in `dp_live_004_bybit_stale_vm_tarball_2026_08_21.md`'s open todo; adding a third
+  parallel VM instance without a fresh sign-off risked compounding the in-flight two-VM verify-before-cutover
+  window). No code or manifest changes made. Escalation closed as diagnosis-confirmed / no new action needed at this
+  time.

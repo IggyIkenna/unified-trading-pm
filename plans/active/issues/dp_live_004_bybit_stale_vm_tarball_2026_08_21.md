@@ -163,6 +163,15 @@ external action and is not performed by this escalation without that decision.
 
 ## Progress Log
 
+- **2026-08-22 (data_pipeline_failure escalation `agt-81aea5`, slot 8)**: DP-LIVE-004 re-fired for this same VM
+  (`mtds-live-cefi-consolidated-20260821-200626`), venue BYBIT-FUTURES, data_type `depth_of_book_10`. SSH-confirmed
+  the ack-logging fix (`market-tick-data-service@efd0e788`, an ancestor of current LDR HEAD) is still not deployed
+  to this VM (`_log_subscribe_ack` count 0 in both connector files) and all four Bybit log files still show zero
+  subscribe/ack observability — no new root cause, matches the already-diagnosed pending-relaunch state. Full
+  evidence appended to the canonical follow-up doc
+  (`dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`). Did not relaunch the VM myself (would add a
+  third parallel instance on top of the already in-flight two-VM verify-before-cutover window; that action stays
+  with the already-scoped [DATA]/[INFRA] todo below under the existing operator ruling). No code/manifest changes.
 - **2026-08-21 (slot-10, infra, task `dp_live_004_bybit_stale_vm_tarball-9fedd3a6cca7`)**: Shipped the code fix
   the linked follow-up doc (`dp_live_004_bybit_futures_subscribe_ack_unobserved_2026_08_21.md`) root-caused and
   called for — Bybit's subscribe/unsubscribe ack control frames were silently dropped, unlogged, by every
