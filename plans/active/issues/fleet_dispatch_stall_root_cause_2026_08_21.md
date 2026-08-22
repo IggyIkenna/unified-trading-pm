@@ -66,7 +66,18 @@ summary: >-
   (agent-orchestrator@fb903131a3). That MOVED the wedge rather than lifting it — the sweep left
   each slot ahead-and-behind, i.e. FM5 `diverged` — fixed the same session by realigning whenever
   leaving HEAD ahead would not be a supported state (agent-orchestrator@a439ec74bd). Live after
-  both: dirty-state quarantines 0, slots inheriting normally.
+  both: dirty-state quarantines 0, slots inheriting normally. THE MID-TASK DEATHS had a SEPARATE
+  root cause, found 2026-08-22 once dispatch was flowing again and the restart correlation was
+  gone: every Gemini account sets ANTHROPIC_MODEL to its own account id
+  (`gemini-3-5-flash-lite-proj1`), which prefix-matches NEITHER registry key, so all six
+  credentialed Gemini accounts had no registered context window. `is_known_proxied_model` then
+  read False, the proxied-calibration distrust guard never engaged, and AO trusted the CLI's own
+  learned 151,981-167,764 against a real 1,048,576 — computing context pct ~6x too HIGH. Workers
+  at 16% real usage read as ~100% full, so 128 of 173 forced compacts came back
+  `forced_compact_ineffective` and escalated to `context_wedge_kill`: 22 mid-task deaths in one
+  4h window, 7 workers killed inside 2 seconds. Fixed by registering the account-scoped ids
+  (agent-orchestrator@bef7b7f89f), which also made `kill_session(reason=)` durable so a future
+  mass kill is attributable from the DB rather than a ~1h volatile journal.
 status: open
 resolved_by:
 nature: issue
@@ -412,6 +423,62 @@ asserts the end-to-end property instead: after `unpark_task`, `prereqs_met` is T
       surfaced it. Verify the outcome, not the metric you aimed at.
       — `agent-orchestrator@a439ec74bd` (+2 tests: diverged must realign, ahead-but-not-behind
       must still be left alone; suite 5470, 0 failed)
+
+- [x] [BACKEND] P0. **The Gemini context-window blind spot — THE cause of the surviving
+      mid-task deaths. Fixed 2026-08-22.** Every `~/.claude-accounts/gemini-*.env` sets
+      `ANTHROPIC_MODEL` to its OWN account id (`gemini-3-5-flash-lite-proj1`) because the proxy
+      routes per-project quota off that string — hyphens where the vendor writes dots, plus a
+      `-projN` suffix. Neither registry key (`gemini-3.5-flash-lite`, `gemini-3.7-flash`)
+      prefix-matches those, so all six credentialed Gemini accounts fell through
+      `_ALLOWED_MODEL_WINDOWS`.
+      CHAIN: `is_known_proxied_model` → False ⇒ the proxied-calibration DISTRUST guard never
+      engaged ⇒ `context_window_for` trusted the CLI's own learned value, **151,981-167,764
+      against a real 1,048,576**. AO computed context pct **~6x too HIGH** — a worker at 16%
+      real read as ~100% full — which drove **128 of 173 forced compacts (74%) to
+      `forced_compact_ineffective`** (compaction cannot drain a window that was never full) and
+      on into `context_wedge_kill`: **22 mid-task deaths in one 4h window, 7 workers killed
+      inside 2 seconds**. Same bug CLASS as the `_CONTEXT_WINDOW_GPT_5_6_LUNA` comment already
+      in that file, opposite direction.
+      Registering proj1-proj5 for both families puts Gemini on the footing the module already
+      documents for DeepSeek: AO's pct reads honestly low and stops force-compacting, while the
+      CLI's own ~200K auto-compaction handles the real limit. No fallback added — the retired
+      NVIDIA-hosted Gemma models stay unregistered and a test pins that.
+      — `agent-orchestrator@bef7b7f89f`
+
+- [x] [BACKEND] P2. **`kill_session(reason=...)` now reaches the DB.** Was `logger.warning`
+      only, and journald here is volatile (~1h); just ~5 of ~20 call sites had a companion
+      activity event, so the 09:39 seven-worker mass kill was unattributable — forensics could
+      say only `external_kill_suspected: true, evidence: "tmux kill-session"`. Now emitted from
+      INSIDE `kill_session`, so a new call site cannot forget it; best-effort with
+      function-local imports so a DB hiccup never breaks a teardown.
+      — `agent-orchestrator@bef7b7f89f`
+
+- [ ] [BACKEND] P1. **`gpt-5.6-luna`'s registered window is contradicted by observation.**
+      Registered 272,000, but `learned_context_windows.json` records an `auto_boundary_tokens`
+      of **279,064** — the CLI's own statement of the window it enforces, i.e. it let a session
+      reach 279,064 before auto-compacting. Because the model is `is_known_proxied_model`,
+      `context_window_for` short-circuits to the registered value and never consults that
+      boundary, so codex-luna workers read too-full in the same direction as the Gemini bug
+      (~3%, not 6x). Do NOT guess a replacement: needs a vendor-sourced figure, then update
+      `_CONTEXT_WINDOW_GPT_5_6_LUNA` and the allowlist test together. Empirical lower bound is
+      279,064.
+
+- [ ] [BACKEND] P3. **Decide whether `session_killed` should join
+      `tmux_pruner._INTENTIONAL_SIGNALS`.** Deliberately left out of the shipping change:
+      treating EVERY AO-initiated kill as an intentional teardown is a separate semantic
+      decision about death classification. A genuine crash never passes through
+      `kill_session`, so adding it looks safe and would extend the classifier from ~5 named
+      reasons to all ~20 call sites — but verify that against a real window of
+      `unexplained_death_forensics` rows before doing it.
+
+- [ ] [INFRA] P3. **Stale model/account leftovers found during the window audit.** Two env
+      files exist for accounts absent from `data/config/accounts.json` —
+      `nvidia-diffusiongemma` (`diffusiongemma-26b-a4b-it`) and `nvidia-gemma-4-31b-it`
+      (`gemma-4-31b-it`); both are superseded by `gemma-self-hosted` and correctly UNregistered,
+      so this is cleanup, not a window bug. Separately `kimi-k2.6` and `kimi-k3` sit in
+      `learned_context_windows.json` (k3 with a 157,096 auto-boundary, so it really ran) but
+      appear in no account today. Confirm all four are retired, then remove the env files and
+      prune the learned entries.
 
 - [ ] [BACKEND] P3. **Decide whether an unresolvable-quarantine alert is still worth building.**
       The original premise no longer holds: post-fix the slot's tree is realigned CLEAN, so the
