@@ -17370,6 +17370,26 @@ Content-Type: application/json
         <code>/codex/05-infrastructure/cloud-agnostic-script-pattern.md</code>. IONOS build-in-progress:
         <code>/plans/active/ao_ci_aws_to_ionos_migration_2026_08_18.md</code>.
       </p>
+      <h3>GCP identity: service accounts, never direct SDK calls or embedded keys</h3>
+      <p>
+        No service calls <code>google.cloud</code>/<code>boto3</code> directly, and no service reads a credential
+        JSON off disk. Every storage read/write goes through <code>get_storage_client()</code>, every secret read
+        through <code>get_secret_client()</code> — both resolve the calling service's own GCP service-account
+        identity (workload-scoped, one SA per tier — see <a href="#s3">bucket isolation</a> above), so a compromised
+        service can only reach the buckets/secrets its own SA was granted, not the fleet. The orchestrator VM's own
+        cloud identity is self-service: it can grant itself a missing IAM role rather than pause on a
+        <code>PERMISSION_DENIED</code>, audited the same way any other IAM change is. <b>Source:</b>
+        <code>/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md</code>,
+        <code>/codex/05-infrastructure/bucket-isolation-model.md</code> §per-tier service accounts.
+      </p>
+      <h3>External auth, cross-referenced</h3>
+      <p>
+        The caller-facing side of authentication — JWT bearer tokens, the legacy API-key path, and the
+        per-org/per-client entitlement scoping layered on top — is the six-endpoint external API's own concern, not
+        a duplicate story here: see <a href="#s26">§26</a>'s "What auth does not do" callouts for each router. This
+        section is the platform's internal identity (how a service reaches GCP); §26 is external identity (how a
+        caller reaches this platform).
+      </p>
       <h3>Dual authorization on treasury movements</h3>
       <p>
         A withdrawal is not a single signature away from moving funds. The number of independent, HMAC-signed
