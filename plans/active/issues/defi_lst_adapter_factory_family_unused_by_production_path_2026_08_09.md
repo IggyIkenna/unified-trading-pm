@@ -120,13 +120,11 @@ only). This is the same audit methodology, one layer down: `market_interface/fac
       confirmed pre-existing unrelated failures (`test_bucket_resolution_uses_category_tradfi`,
       `TestKalshiMarket::test_market_validates_against_ac_schema` — reproduced identically on a clean stash of this
       diff).
-- [ ] [OPERATOR] P2. Decide the fate of the RenzoAdapter/PufferAdapter/RocketPoolAdapter/SolblazeAdapter/LidoAdapter/
-      EtherFiAdapter family (and now CoinbaseCbEthAdapter, once the operator has seen this doc): (a) confirm the
-      ABI-direct (`_collect_evm_lst_rows`) + oracle-prices (`_aave_oracle_collection.py`) paths already give complete,
-      honest LST coverage and delete these 6 (+ maybe 7) now-redundant adapter classes + their tests, or (b) identify a
-      real gap they'd close (e.g. instruments-service reference-data catalogue population, which nothing currently
-      populates for these tokens) and wire a real consumer. Repo: market-tick-data-service (+ instruments-service if
-      (b)). Done when: an operator ruling picks (a) or (b) and the corresponding code change lands.
+- [ ] [SCRIPT] P2. Delete RenzoAdapter/PufferAdapter/RocketPoolAdapter/SolblazeAdapter/LidoAdapter/EtherFiAdapter (+
+      CoinbaseCbEthAdapter) — 7 now-redundant LST adapter classes + their tests — from market-tick-data-service. The
+      ABI-direct (`_collect_evm_lst_rows`) + oracle-prices (`_aave_oracle_collection.py`) paths already give
+      complete, honest LST coverage. Per D61 ruling (2026-08-22): approved — delete now; reconsider only on a named
+      product need. Repo: market-tick-data-service.
 
 ## Progress Log
 
@@ -142,3 +140,6 @@ only). This is the same audit methodology, one layer down: `market_interface/fac
   applies — there is only the one item, and it is not bounded. Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-16** [body-hash:fe02c3b6ddf2195d]: KEEP-NA, valid — The one prior todo (registering CoinbaseCbEthAdapter) is already closed with concrete evidence (regression tests added, full local suite green modulo two confirmed pre-existing unrelated failures).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **2026-08-22 — ruling D61 (Unused LST adapter family)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Delete — ABI-direct already gives equivalent-or-better coverage; reconsider only
+  on a named product need. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

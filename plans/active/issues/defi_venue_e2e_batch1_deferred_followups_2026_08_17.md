@@ -80,13 +80,15 @@ NA` is correct; not auto-dispatchable as-is.
       registry's own provenance rule, an address may only be added with an in-repo citation of a verifiable
       external source (project docs, verified block-explorer contract) — never authored/inferred/extrapolated.
       Done-when: all 7 have a cited address, or a `DELIBERATELY ABSENT` note explaining why no address exists.
-- [ ] [OPERATOR] P3. Decide whether AAVE-PLASMA should be added to strategy-service's archetype/slot catalogue
+- [ ] [BACKEND] P3. **RULED 2026-08-22 (D66): AAVE-PLASMA IS a priority — YES, add it.** Implementation todo now
+      filed at `/plans/active/venue_e2e_wiring_2026_08_16.md` (the active parent tracking plan for venue e2e
+      wiring, which owns strategy-service work in this tranche) rather than duplicated here. This checkbox stays
+      open only as a pointer — flip it citing that todo's commit once shipped. Original text preserved for
+      context: decide whether AAVE-PLASMA should be added to strategy-service's archetype/slot catalogue
       (`engine/strategies/v2/archetype_slots_defi.py`, `target_universe/catalog_carry.py`,
       `catalog_yield_defi.py`) — the adapter-resolution layer already supports it
       (`VENUE_TO_ADAPTER_KEY["AAVE-PLASMA"] = "aave_v3"`, chain threaded via `RoutingConfig`'s free-form RPC
-      fields), but no slot anywhere currently selects Plasma as a chain. This is a new-scope decision (which
-      chain to target next), not a bug fix. Done-when: operator decides yes/no; if yes, a bounded implementation
-      todo is filed against strategy-service.
+      fields), but no slot anywhere currently selects Plasma as a chain.
 
 ## Progress Log
 
@@ -104,3 +106,9 @@ NA` is correct; not auto-dispatchable as-is.
   strategic decision). `grep -cE '^[[:space:]]*[-*] \[ \]'` = 2, matching Phase-0's open_todos=2.
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-21** (defi tranche, wave 2): KEEP-NA, valid — re-confirmed, no change since 2026-08-18. Both open items remain cleanly `[OPERATOR]`-tagged (external on-chain address sourcing under the registry's provenance rule; AAVE-PLASMA archetype-catalogue strategic decision). Doc stays `assigned_vm: NA`.
+- **2026-08-22 — ruling D66 (AAVE-PLASMA archetype coverage)**: OPERATOR-RULED 2026-08-21 — AAVE-PLASMA IS a
+  priority: file the strategy-service archetype/slot catalogue implementation todo now. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. Applied: filed the implementation todo in
+  `/plans/active/venue_e2e_wiring_2026_08_16.md` (repos includes strategy-service), retagged todo 2 above from
+  `[OPERATOR]` to a pointer citing it. Todo 1 (LST address sourcing) is untouched — no ruling in this dispatch
+  addresses it, stays genuinely `BLOCKED-CREDENTIALS`/`[OPERATOR]` pending an external citable source.

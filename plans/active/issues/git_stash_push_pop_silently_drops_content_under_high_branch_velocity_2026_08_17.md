@@ -280,10 +280,9 @@ concurrency-safety problem this whole investigation had to rediscover and patch 
 - [ ] [SCRIPT] P3. If a future task promotes a grind-style bulk-doc-edit tool to `scripts/`, port over the
       `/context-scout` skill's line-cap pre-check (Fifth finding above).
       This is so it does not need to be hand-diagnosed and manually patched per-file again.
-- [ ] [REVIEW] P2. Decide whether this workspace's grind-style hand-rolled commit loops should be retired in favor of
-      routing bulk doc/plan-flip backfills through `scripts/dev/safe-doc-push.sh` (Sixth finding above).
-      The hand-rolled approach worked empirically this session once fixed, but duplicates safety properties
-      (isolated-worktree commits) the prescribed tool already provides.
+- **[REVIEW] P2. CANCELLED — SUPERSEDED 2026-08-22 (D84 ruling: retire grind-style hand-rolled commit loops —
+  safe-doc-push.sh already solves the exact concurrency-safety problem this investigation rediscovered piecemeal;
+  no further build needed since the grind scripts were never promoted to `scripts/`).**
 
 ## Progress Log
 
@@ -319,3 +318,7 @@ concurrency-safety problem this whole investigation had to rediscover and patch 
   independently hit a live instance of this doc's own documented failure class — 23 of this audit's own edits to
   other docs were silently dropped from the working tree mid-session on this same heavily-contended checkout
   (82+ autostash entries observed), matching this doc's "genuine stash-pathspec-staleness hazard" finding.
+- **2026-08-22 — ruling D84 (Retire grind-style bulk scripts)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Retire — safe-doc-push already solves the exact concurrency-safety
+  problem this investigation rediscovered piecemeal. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

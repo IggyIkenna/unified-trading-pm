@@ -158,17 +158,13 @@ timeout-to-operator path.
 
 ## Open decision for the operator
 
-- [ ] [OPERATOR] P1. Decide: extend `escalation.py:778`'s collision-guard exemption to include
-      `market-tick-data-service` (mirrors the accepted `unified-trading-pm` precedent exactly — same
-      narrow-blast-radius reasoning, same symptom shape), OR hold off and let this specific
-      escalation clear naturally once the repo frees up, revisiting only if the pattern recurs across
-      multiple future `/escalation-queue-reconcile` runs (which would itself be the multi-window
-      evidence this session's single observation lacks). (repo: agent-orchestrator)
-- [ ] [SCRIPT] P2. If the operator approves extending the exemption: widen the
-      `_pm_escalation_collision_exempt` check (`escalation.py:778-779`) to a small allowlist
-      (`repo in {"unified-trading-pm", "market-tick-data-service"}`), ship via the normal
-      QG + quickmerge path, and re-verify `agt-934add` (or whatever escalation is live at fix time)
-      actually dispatches on the next tick. (repo: agent-orchestrator)
+- [ ] [OPERATOR] P1. DEFERRED-BY-DESIGN — RULED 2026-08-22 (D75): Hold off on extending the collision-guard
+      exemption to `market-tick-data-service` — one ~60-min window doesn't establish MTDS traffic as
+      invariant-like; widening a dispatch-safety guard needs more evidence. Revisit only if the pattern recurs
+      across multiple future `/escalation-queue-reconcile` runs. Source:
+      /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger. (repo: agent-orchestrator)
+- **[SCRIPT] P2. CANCELLED — SUPERSEDED 2026-08-22 (D75 ruling: hold off on extending the collision-guard
+  exemption — no widening needed now; revisit only if the starvation pattern recurs).**
 - [ ] [SCRIPT] P3. Whichever way the P1 decision goes, consider adding a `logger.info`/`log_activity`
       call inside `retry_queued_escalations` (and the collision-guard branch specifically) so a
       future `/escalation-queue-reconcile` run doesn't have to fall back to functional-inference
@@ -176,3 +172,10 @@ timeout-to-operator path.
       line would make Step 2's "is the pass actually running" check a straight `journalctl` grep
       instead of indirect reasoning. Small, non-urgent observability gap, not blocking. (repo:
       agent-orchestrator)
+
+## Progress Log
+
+- **2026-08-22 — ruling D75 (MTDS collision-guard exemption)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Hold off — one ~60-min window doesn't establish MTDS traffic as
+  invariant-like; widening a dispatch-safety guard needs more evidence. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

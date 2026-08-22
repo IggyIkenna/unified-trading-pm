@@ -79,13 +79,13 @@ collide with a live promotion the moment deployment-service's next promote PR ac
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide bulk-bless-after-review vs. re-ship-each-individually vs. show-and-wait for the 19
-      remaining `deployment-service` bypass commits listed above — per `/ci-reconcile` §4, this is a judgment call,
-      not a mechanical fix.
-- [ ] [SCRIPT] P3. Once the operator picks a path: push the 3 already-created reprovenance blessing commits
-      (`reprovenance_bypass.sh` was run without `--push` for `7c8b2101`/`a6881d12`/`e18d5850`), and either
-      reprovenance the 19 remaining via `scripts/cicd/reprovenance_bypass.sh <sha> --push` (bless path) or re-ship
-      equivalent content via `quickmerge.sh --agent --files` (re-ship path) for whichever are approved.
+- **[OPERATOR] P2. CANCELLED — SUPERSEDED 2026-08-22 (D14 ruling: bulk-bless after review approved — the 3
+  already-reviewed commits were clean and all repos' gates are green, so bulk-bless removes latent promotion risk
+  at lowest cost).**
+- [ ] [SCRIPT] P3. Push the 3 already-created reprovenance blessing commits (`reprovenance_bypass.sh` was run
+      without `--push` for `7c8b2101`/`a6881d12`/`e18d5850`), and reprovenance the 19 remaining via
+      `scripts/cicd/reprovenance_bypass.sh <sha> --push` (bless path). Per D14 ruling (2026-08-22): bulk-bless after
+      review approved — the 3 already-reviewed commits were clean and all repos' gates are green.
 
 ## Progress Log
 
@@ -94,3 +94,7 @@ collide with a live promotion the moment deployment-service's next promote PR ac
   re-checked untruncated. The 3 already-verified-clean commits were reprovenanced before the miscount was caught;
   the remaining 19 are left for the operator per the same size/authorship gate the MTDS/IS sibling finding already
   established.
+- **2026-08-22 — ruling D14 (Historical quickmerge-bypass commits)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Bulk-bless after review — the 3 already-reviewed commits were clean
+  and all repos' gates are green; this removes latent promotion risk at lowest cost. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

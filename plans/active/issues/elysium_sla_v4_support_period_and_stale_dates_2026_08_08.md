@@ -111,8 +111,9 @@ complete" by 30 June 2026, which did not happen.
       reversal — kept for history, not current guidance. The reissue-vs-side-letter MECHANISM decision (todo below) is
       NOT resolved by this reversal — it's still open, and now also governs the client-facing 30-day correction, not
       just the stale dates.
-- [ ] [OPERATOR] P1. Decide how to correct the five stale June/May-2026 dates given the SLA has been sent: reissue as v5
-      with the September/October timeline, or handle by side letter.
+- [ ] [DOCS] P1. Draft SLA v5 (30-day support period per the 2026-08-11 standardization ruling, corrected
+      September/October dates replacing the five stale June/May-2026 dates) for operator review BEFORE anything
+      goes to the client. Per D26 ruling (2026-08-22): approved — draft v5 for operator review first.
 - [ ] [OPERATOR] P2. Confirm the actual send date of the delay letter. The codex record is dated 2026-07-20, but both
       attachments carry mtime 2026-07-29 18:56, and the sent copy opens "Following the quick WhatsApp massager the other
       day" — wording absent from the 2026-07-20 draft. If the real send was ~29 July, rename/redate the codex record.
@@ -224,23 +225,17 @@ complete" by 30 June 2026, which did not happen.
       detector first validated by injecting a known collision and a known overflow and confirming both fired**, no
       horizontal page overflow, themes resolve in all three states (light / dark-stamped / un-stamped), 44% of scroll
       hidden at default and 64% fully collapsed (measured).
-- [ ] [OPERATOR] P1. **Decide the carve-out presentation sequencing.** Three options were assessed; recommendation is
-      the third. (a) Build the lite repo and hand it over — maximum credibility, but pre-delivers the carve-out before
-      election, which is free optionality for the client. (b) Hand over deliberately unfinished/unconnected code —
-      **recommended against**: Art. 4.5 entitles them to Work Product on request so hobbled delivery is legally shaky,
-      and an engineer distinguishes "reduced by design" from "deliberately broken" in an afternoon, which converts a
-      commercial conversation into a trust problem. (c) **Build the lite repo now, demonstrate it, deliver on election**
-      — shows the file tree and the import closure running, hands over the manifest, and makes Art. 4.5 compliance a
-      days-not-weeks problem. Build it regardless of the client decision: it validates the import closure (and therefore
-      the tier architecture), becomes the template for the next Carry & Yield client per
-      [`elysium-account-trajectory-2026-05-14.md`](/codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md),
-      and surfaces gaps like the funding-reader defect above before a client does.
-- [ ] [OPERATOR] P1. **Decide which DOCUMENTATION ships with a carve-out — separately from the code.**
-      [`/codex/02-data/carry-venue-live-integration-reference.md`](/codex/02-data/carry-venue-live-integration-reference.md)
-      is worth more to a rebuilder than the source is: it enumerates, per venue, the exact endpoint, funding field,
-      settlement interval, symbol mapping and sign-convention gotcha for 13 venues. That single document turns the
-      largest carve-out work item (the live funding readers, ~5-10 AI-days) into roughly one day. It should not be in a
-      hand-over package by default, and Exhibit A currently says nothing about documentation scope either way.
+- [ ] [AGENT] P1. **Build the lite carve-out repo now, demonstrate it, deliver on election (option (c))** — shows the
+      file tree and the import closure running, hands over the manifest, and makes Art. 4.5 compliance a
+      days-not-weeks problem; build it regardless of the client decision (validates the import closure/tier
+      architecture, becomes the template for the next Carry & Yield client, surfaces gaps like the funding-reader
+      defect before a client does). Per D27 ruling (2026-08-22): approved — build the "lite" carve-out repo now;
+      ship the inert betfair/ibkr/polymarket adapters as-is.
+- [ ] [AGENT] P1. **Withhold `/codex/02-data/carry-venue-live-integration-reference.md` from any carve-out hand-over
+      package by default** — it enumerates, per venue, the exact endpoint, funding field, settlement interval,
+      symbol mapping and sign-convention gotcha for 13 venues, turning the largest carve-out work item into roughly
+      one day if disclosed. Update Exhibit A to state the documentation scope explicitly. Per D27 ruling
+      (2026-08-22): approved — withhold the venue-integration reference.
 - [ ] [AGENT] P2. **Fix the funding-reader gap BEFORE any lite-repo demonstration**, not just before a hand-over
       (upgrade of scope on the P0 above). If an engineer traces `features["funding_rate_apy_bps"]` to nothing during a
       demo, that is the wrong impression at the worst moment. The readers exist in
@@ -425,3 +420,9 @@ they were independent. Worth the operator knowing before forwarding it.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:edb7041bdca17290]: KEEP-NA, stale-item corrected -- closed the VENUE_TO_ADAPTER_KEY-location todo (lines 280-285): the premise (symbol location unknown) is false -- the symbol is defined at unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:104 (confirmed live on disk 2026-08-17; the candidate's own rg -l search never reached that repo/path), already documented in the active registry_ssot_hardening_2026_08_16.md's Measured Baseline (line 84) and cross-cited by 2 other candidates from this same audit run. Doc stays assigned_vm: NA for its other 18 open items (this is a HUMAN-gated client-SLA doc). Cross-cutting tranche audit conflict-check finding.
+- **2026-08-22 — ruling D26 (Elysium SLA v5 reissue)**: OPERATOR-RULED 2026-08-21 — APPROVED: draft SLA v5 (30-day
+  support period, corrected dates) for operator review BEFORE anything goes to the client. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+- **2026-08-22 — ruling D27 (Elysium disclosure and carve-out scope)**: OPERATOR-RULED 2026-08-21 — APPROVED: build
+  the "lite" carve-out repo now, withhold the venue-integration reference, ship the inert betfair/ibkr/polymarket
+  adapters as-is. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

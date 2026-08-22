@@ -142,10 +142,13 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
       outcomes with a date") is only half-satisfiable from this ruling alone — the outcome is now known, but no owner or
       target date was assigned. **Do not invent an owner or date** — see the placeholder todo below; update the codex
       doc once that placeholder resolves. Repo: unified-trading-pm.
-- [ ] [OPERATOR] P3. **Placeholder — assign an owner + target date for finishing the `TestingStage` migration** (per the
-      2026-08-09 ruling above: unfinished, not a deliberate keep). Not worker-determinable — stays open until the
-      operator names both. **Done when**: `/codex/04-architecture/operational-modes.md` records the owner + target date,
-      and the todo above is closed alongside it.
+- [ ] [OPERATOR] P3. RULED 2026-08-22 (D106): assigning an owner + target date for finishing the `TestingStage`
+      migration is approved in principle (unblocks the codex-doc todo above) — this still needs an actual name +
+      date from the operator, not fabricated here. **Placeholder — assign an owner + target date for finishing the
+      `TestingStage` migration** (per the 2026-08-09 ruling above: unfinished, not a deliberate keep). Not
+      worker-determinable — stays open until the operator names both. **Done when**:
+      `/codex/04-architecture/operational-modes.md` records the owner + target date, and the todo above is closed
+      alongside it.
 - [x] ✅ WITHDRAWN 2026-08-09 — [BACKEND] P2. ~~Finish the `_PAPER_VENUE_KEYS` deletion `pvl-p17c` claimed.~~ Rests on a
       finding that turned out to be wrong (see Finding 4 above): the migration DID happen and the surviving symbol is a
       legitimate post-branch allowlist, not the anti-pattern. Deleting it would break sports paper routing for all 5
@@ -167,9 +170,9 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
       corpus-wide post-edit and confirmed zero remaining ACTIVE-plan/codex stale-usage hits outside those two
       intentional correction notes + this todo's own source/tracking docs). Independently re-verified 2026-08-10 via
       `ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md` todo 1 (fresh corpus-wide grep, zero unexpected hits).
-- [ ] [BACKEND] P3. **Decide the `aave_live.py` `paper_trade: bool` constructor arg.** Either fold it into
-      `OperationalMode`/`ExecutionTarget` like `service_config.py`'s was, or document why a protocol-level flag is
-      legitimately different. **Done when**: the arg is gone, or the codex doc records the exemption with a reason.
+- [ ] [BACKEND] P3. Fold `aave_live.py`'s `paper_trade: bool` constructor arg into `OperationalMode`/`ExecutionTarget`
+      (matching `service_config.py`'s pattern) — remove the standalone protocol-level flag. Per D106 ruling
+      (2026-08-22): approved — no protocol-level reason for an exception was found. **Done when**: the arg is gone.
       Repo: execution-service.
 
 ## Progress Log
@@ -217,3 +220,7 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:8750ba313ec956d0]: KEEP-NA, valid — item 1 is downstream of item 2's operator placeholder; item 2 is explicitly operator-only (needs an owner+target date assigned); item 3 is an unresolved design fork with no stated preference.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 3/3)**: KEEP-NA, valid — all 3 remaining items stay genuinely gated: item 1 is downstream of item 2's operator placeholder; item 2 is explicitly `[OPERATOR]`-tagged (assign an owner + target date, "not worker-determinable" per its own text); item 3 (`aave_live.py` `paper_trade: bool` arg) is an explicit "decide" design call. No new bounded item found on this re-read.
+- **2026-08-22 — ruling D106 (Operational-modes migration rulings)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Assign owner+date (unblocks the codex-doc todo) and fold the flag for
+  convention consistency — no protocol-level reason for an exception was found. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

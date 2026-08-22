@@ -191,7 +191,8 @@ verified complete**.
 - [ ] [CODE] P2. UAC D15: HYPERLIQUID/ASTER `pipeline`→`live` — handler already actively collects
       (`perp_funding_handler.py`), so data source is proven; but first CONFIRM the axis classification (audit noted they
       may be CeFi-axis perp venues on their own L1/BSC, candidates for removal from the DeFi registry rather than
-      flip-to-live). Resolve classification → flip-to-live OR move to CeFi registry. Source: defi_code_codex_drift D15.
+      flip-to-live). Resolve classification → flip-to-live OR move to CeFi registry. Per D88 ruling (2026-08-22):
+      approved — correct asset_group classification now to avoid downstream drift. Source: defi_code_codex_drift D15.
       **SMOKE-TEST RESULTS 2026-06-02 (slot 7 — real network probes; keys from SM
       `thegraph-api-key`/`helius-api-key`):**
 
@@ -228,15 +229,20 @@ verified complete**.
 - [ ] [CODE] P1. MTDS reconcile `liquidations` path for radiant/euler — `liquidations_handler.py:196`
       `_DEFAULT_PROTOCOLS` excludes them while `evm_defi_handler` emits liquidations; confirm ONE canonical emit path so
       data-status doesn't show phantom-missing liquidation cells (UAC declares `liquidation_events` for
-      RADIANT-ARB/BSC + EULER). Repo: market-tick-data-service. Source: e2e trace 2026-06-02.
+      RADIANT-ARB/BSC + EULER). Per D88 ruling (2026-08-22): approved — narrowing (excluding radiant/euler from the
+      emit path) would silently reduce coverage; wire the full emit path as canonical. Repo:
+      market-tick-data-service. Source: e2e trace 2026-06-02.
 - [ ] [CODE] P1. MTDS verify `risk_params` emit for radiant/euler matches the declared
       `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (evm_defi_handler `_EVM_DEFI_DATA_TYPE` is `lending_indices`-only; if
       risk_params isn't actually written, either add the emit OR drop risk_params from the cap to stay
-      honest-coverage-coherent). Repo: market-tick-data-service. Source: e2e trace 2026-06-02.
+      honest-coverage-coherent). Per D88 ruling (2026-08-22): approved — narrowing would silently reduce coverage;
+      add the missing emit rather than dropping risk_params from the declared capability. Repo:
+      market-tick-data-service. Source: e2e trace 2026-06-02.
 - [ ] [CODE] P1. strategy-service `engine/strategies/v2/target_universe/catalog.py:1006` `_RECURSIVE_STAKED_LEND` — add
       venus/benqi/radiant/euler_v2 as carry_staked_basis lending-leg options (+ specs in
-      `_build_carry_recursive_staked`) so they're usable as a lending leg, not just data-available. Repo:
-      strategy-service. Source: e2e trace 2026-06-02.
+      `_build_carry_recursive_staked`) so they're usable as a lending leg, not just data-available. Per D88 ruling
+      (2026-08-22): approved — the wiring blocker is resolved. Repo: strategy-service. Source: e2e trace
+      2026-06-02.
 - [x] ✅ [CODE] P2. UAC D10 PICASSO — **EXCLUDED + fully wiped** (operator 2026-06-02). Registry entries removed
       @`fa9238fb`; then orphan `external/picasso/` dir + facade + instruments-service `adapters/defi/picasso.py` + test
       removed in the Solayer-kill pass — unified-api-contracts@`4abec5c6` + instruments-service@`84b2a2d8`. Source:
@@ -555,3 +561,7 @@ tracked here.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:5af62d8a8a9c192f]: KEEP-NA, valid — 6 open checkboxes: UAC axis-classification design call, 2 MTDS reconciliation items with embedded design forks, a strategy-service venue-addition needing domain expertise, 2 tofu-apply items under an explicit Operator-gated infra section. Separate finding (not verdict-changing): this doc's Progress Log cites a locked_by block across 5 entries that the current frontmatter does not actually carry (blank field) — flagging for whoever next touches archival reasoning here, not correcting the historical entries per append-only discipline.
+- **2026-08-22 — ruling D88 (Registry/wiring audit rulings)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): All three recs — correct asset_group avoids downstream drift,
+  narrowing would silently reduce coverage, and the wiring blocker is resolved. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

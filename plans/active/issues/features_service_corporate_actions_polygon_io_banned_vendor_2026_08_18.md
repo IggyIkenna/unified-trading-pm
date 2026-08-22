@@ -94,10 +94,10 @@ exclusion. No downstream consumer is currently claiming corporate-actions capabi
       minimum wired into a real, callable operation, not orphaned code; what's unconfirmed is whether anything
       actually schedules it. Bounded, worker-determinable investigation — dispatched separately from todos 2/3
       below, which stay genuinely operator/design-gated.
-- [ ] [OPERATOR] P1. **Decide the re-sourcing path** — evaluate yfinance's `Ticker.dividends`/`Ticker.splits` first
-      (same library already live in this file for earnings, see "real precedent" section above) before considering
-      a paid data contract; confirm whether yfinance's coverage/reliability is acceptable for the tickers this
-      capability needs, or whether it's deprioritized until a paid source exists.
+- [ ] [DATA] P1. **Evaluate yfinance's `Ticker.dividends`/`Ticker.splits`** (same library already live in this file
+      for earnings) as the `corporate_actions` re-sourcing path, replacing the banned Polygon.io adapter — confirm
+      coverage/reliability is acceptable for the tickers this capability needs. Per D79 ruling (2026-08-22):
+      approved — yfinance first; escalate to a paid data contract only if coverage proves inadequate.
 - [ ] [AGENT] P2. **Once re-sourced, declare `corporate_actions` in `FEATURE_REQUIRED_INPUTS` and `EVENT_DRIVEN` in
       `ARCHETYPE_FEATURE_GROUPS`** the same way the other 6 archetypes were declared 2026-08-18 — real dispatch-site
       citation, non-empty `InputReq` set.
@@ -139,3 +139,6 @@ independently re-derived, this is a direct-read confirmation of the adapter's re
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Todo 2 (`[OPERATOR]` vendor re-sourcing decision —
   yfinance vs. a paid contract) is genuine diligence/judgment work; todo 3 stays contingent on it. `assigned_vm`
   unchanged.
+- **2026-08-22 — ruling D79 (Corporate-actions re-sourcing)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): yfinance first; escalate to paid only if coverage proves inadequate.
+  Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
