@@ -132,22 +132,76 @@ real fix is to never load the whole manifest per request.
       deployment-api@777f1fa531 and restating the plan's own not-a-full-history-fix caveat so the codex doc doesn't
       overclaim. — unified-trading-pm@6804f35e8d (shipped same session as todo 3, before the na-eligibility-audit
       reclassification pass landed — this checkbox lagged that shipment, not redone).
-- [ ] [BACKEND] P1. **Phase 2 — row-group-streamed full-history aggregation** — `date_window` pushdown (todo 3) does
-      NOT bound a genuinely full-history request: pyarrow row-group pushdown only skips groups entirely OUTSIDE the
-      window, and cefi/MTDS-scale manifests have row groups spanning 2-2.5 calendar years each (measured,
-      `manifest_source.iter_manifest_row_groups` docstring / `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`)
-      — a full-history window overlaps virtually every row group, so pushdown provides ~0 reduction for that specific
-      case. The proven fix for THIS case already exists for a sibling endpoint:
-      `deployment_api/routes/data_status/_live_coverage_venue_year.py` streams `iter_manifest_row_groups(bucket)` one
-      row group at a time and accumulates compact per-key COUNTS (never holding more than one row group's raw rows in
-      memory, bounded regardless of corpus size). Extend the SAME pattern to `_build_manifest_category`'s aggregation
-      pipeline (venue breakdown, MTDS honest-coverage override, sub-dimension grouping, dual-scope) — a materially
-      larger rewrite (~10-15 methods) than todo 3, hence split out as its own todo rather than folded into it. This is
-      the todo that actually unblocks todo 6 (guard retirement) for the worst case. **Strengthened done-when (finding V,
-      `task_template.md` §3 — shared fleet-wide manifest-aggregation code, no soft-delete-style safety net if a subtle
-      correctness bug ships)**: the FULL existing `_build_manifest_category` regression suite must stay green AND a NEW
-      adversarial test must assert the row-group-streamed path produces byte-identical aggregate output to the
-      pre-change full-load path on a fixture with >1 row group per key.
+- [ ] [BACKEND] P1. **Phase 2a — row-group-streamed slice for filtered non-DeFi/non-Prediction requests** — narrower,
+      immediately-actionable first slice of the original "Phase 2" todo (rescoped 2026-08-22 after a full-pipeline
+      investigation found the true scope is ~25+ methods across 8 files, not ~10-15 across ~3 — see the 2026-08-22
+      Progress Log entry for the full breakdown + the found/expected-separability principle every later sub-todo
+      depends on). Add `deployment_api/services/data_status/manifest_category_builder_streamed.py` (new file —
+      `manifest_category_builder.py` is already 869/900 lines, no headroom): a
+      `ManifestCategoryStreamedMixin._stream_prepare_manifest_slice` that streams `iter_manifest_row_groups(bucket)`
+      and applies the EXISTING `_apply_manifest_filters`/`_drop_legacy_defi_and_canonicalise` per chunk (both are
+      per-row-safe — no cross-row/cross-chunk dependency — so applying them per-chunk before concatenation vs once
+      after is mathematically equivalent; AND-composed predicates commute), discarding non-matching rows immediately
+      so only the small filtered subset is ever concatenated. Track a running per-chunk minimum date (service-masked,
+      NOT venue/row-filtered — mirrors `_clamp_manifest_dates`'s genesis source exactly, which reads genesis from the
+      RAW unfiltered index) for the `effective_start` genesis clamp. Wire via a `category_stream_eligible(cat,
+      row_filters, pipeline_modes, venue) -> bool` gate (module-level, same new file) into `_build_manifest_category`:
+      eligible when `cat.lower() not in {"defi", "prediction"}` (both need extra per-row postprocessing —
+      `_postprocess_defi_merged_index`'s whitelist filter/venue-canonicalisation/CQG-promotion — not yet replicated
+      per-chunk; see todos 8b/8c) AND at least one of row_filters/pipeline_modes/venue is present (an UNFILTERED
+      full-history request keeps every row regardless of chunking, so streaming-then-concatenating costs the SAME
+      peak memory as today's bulk read — zero benefit; that worst case is todo 8f's job). Also need a
+      bucket-has-any-data check (mirrors `_resolve_category_bucket_and_index`'s `if index.empty: return None` — track
+      whether `iter_manifest_row_groups` yielded ANY chunk at all, before any filtering) so an empty bucket still
+      returns `_empty_category_result` instead of a spuriously-populated one. Done-when: `_build_manifest_category`
+      regression suite stays green AND a new adversarial test (mock `iter_manifest_row_groups` via a `side_effect`
+      factory — the pattern already proven in `tests/unit/test_route_venue_year_coverage.py`'s `_row_groups()` helper,
+      no real multi-row-group parquet fixture needed) asserts byte-identical output vs the non-streamed path for a
+      >1-row-group, venue-filtered fixture, PLUS a case proving the genesis-clamp matches when the true minimum date
+      lives in a LATER chunk than the first one that happens to contain the requested venue.
+- [ ] [BACKEND] P2. **Phase 2b — extend streamed path to DeFi** — replicate `_postprocess_defi_merged_index`'s
+      per-row-safe DeFi sub-steps (`_filter_to_canonical_defi_venues`, `_canonicalise_defi_venue_column`) per chunk
+      inside `_stream_prepare_manifest_slice` (confirmed per-row-safe by reading their bodies during the 2026-08-22
+      investigation — no cross-row dependency). Also confirm `_collect_defi_index_frames`'s multi-bucket merge
+      semantics IF `_MTDS_DEFI_SUB_DIMENSIONS` (currently EMPTY — all Phase-1 sub-buckets retired 2026-07-14) is ever
+      repopulated; until then a single-bucket stream is byte-identical. Removes DeFi from
+      `_STREAM_INELIGIBLE_CATEGORIES`.
+- [ ] [BACKEND] P2. **Phase 2c — extend streamed path to Prediction** — replicate
+      `promote_prediction_cqg_from_instrument_id` per chunk (per-row-safe: promotes `instrument_id` →
+      `canonical_question_group` when the latter is empty — no cross-row dependency). Removes Prediction from
+      `_STREAM_INELIGIBLE_CATEGORIES`.
+- [ ] [BACKEND] P1. **Phase 2d — streamed venue breakdown + MTDS honest-coverage override** — the core
+      found/expected-separability work. `_build_venue_breakdown`/`_build_one_venue_entry` (`venue_resolution.py`) and
+      `_apply_mtds_honest_coverage`/`mtds_honest_coverage_for_venue` (`venue_resolution.py` + `mtds.py` +
+      `mtds_dt_entries.py` — the last not yet read; read it first) split cleanly into an EXPECTED side
+      (`mtds_expected_dates_for_venue_dt`/`get_expected_data_types_for_venue` — UAC config + date range ONLY,
+      independent of `filtered`, so compute ONCE outside the chunk loop — calling it per-chunk and summing would
+      wrongly multiply it by the row-group count) and a FOUND side (distinct `(venue, data_type, date)` triples
+      actually present in `filtered` — safe to accumulate via simple per-chunk counting SUMMED across chunks, because
+      the manifest consolidator guarantees no duplicate shard-atom key across the whole corpus — SSOT
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "UNION-ALL correctness" — so row groups are
+      chunk-disjoint by key and `.size()`-style counts are exactly additive, the same principle
+      `_live_coverage_venue_year.py` already relies on). Confirm `_mtds_seeded_entry_counts`'s seeded-dt branch
+      (`mtds_dt_entries.py`) is ALSO found-side-only before assuming it's safe to accumulate the same way. Done-when:
+      same regression-suite-green + byte-identical adversarial test bar as 8a, extended to the `venues`/`data_types`
+      result keys.
+- [ ] [BACKEND] P2. **Phase 2e — streamed sub-dimension grouping** — `_build_data_type_grouping` +
+      `_build_v4_sub_dimensions`'s 4 extras (`_build_chain_breakdown`, `_build_defi_sub_dimension_breakdown`,
+      `_build_feature_group_breakdown`, `_build_underlying_grouping` — none read yet, read first) plus sports
+      honest-coverage (`sports_helpers.py::sports_honest_coverage` + `_honest_coverage_per_league`/`_global` +
+      `get_sports_entity_start_date`/`get_entity_league_coverage` — none read yet). Apply the SAME found/expected
+      split as 8d — expect these to follow the identical pattern (sports fixture calendars + transfer windows are
+      config/UAC-derived "expected", like MTDS's).
+- [ ] [BACKEND] P1. **Phase 2f — wire the fully-streamed pipeline for the genuine full-history worst case + dual-scope
+      + guard retirement** — once 8a-8e land, extend `category_stream_eligible` to ALSO cover the unfiltered
+      full-history case (the ORIGINAL worst case "Phase 2" was created for) — the only slice that needs the full
+      found/expected-split machinery from 8d/8e even with NO row/venue filter narrowing the input. Mirror into
+      `manifest_category_builder_dual_scope.py`'s `_build_manifest_category_dual_scope`/
+      `_compute_venue_breakdown_with_overrides_dual_scope`. Add the FULL adversarial byte-identical test across the
+      WHOLE `_build_manifest_category` result dict (not just the slices 8a-8e tested individually) on a full-history,
+      multi-row-group, multi-venue, MTDS-honest-coverage-eligible fixture — this is the test the original todo 8's
+      strengthened done-when actually asked for. Only then does todo 6 (load-test / guard retirement) become honestly
+      closeable for the worst case.
 
 ## Progress Log
 
@@ -334,3 +388,50 @@ real fix is to never load the whole manifest per request.
   true` (todo 7 genuinely depends on todo 3; todos 3/6/7/8 plausibly share files in the
   `deployment_api/services/data_status/` tree, so intra-plan concurrency stays off). Authored companion
   `data_status_cell_grid_rearchitecture_finalize_2026_08_21.md` per the finalize-plan-coverage rule.
+
+- **2026-08-22 — Todo 8 investigation + split (slot-24 agent, deployment-api — no code shipped this session).**
+  Dispatched to implement the original "Phase 2 — row-group-streamed full-history aggregation" todo (now split into
+  8a-8f above). Read the FULL `_build_manifest_category` pipeline end-to-end (`manifest_category_builder.py`,
+  `venue_resolution.py`, `breakdowns_domain.py`, `defi.py`, `coverage.py`, `coverage_metrics.py`, `mtds.py`) before
+  writing any code, per the "no soft-delete-style safety net" strengthened done-when.
+
+  **Finding: the true scope is materially larger than the todo's own "~10-15 methods" estimate** — ~25+ methods
+  across 8 files (the 7 above + `mtds_dt_entries.py` and `sports_helpers.py`, neither read yet), because the
+  aggregation isn't a flat set of simple row counts: MTDS honest-coverage override, sports honest-coverage, and the
+  v4 sub-dimension breakdowns each cross-reference a UAC/config-derived EXPECTED universe against the
+  manifest-derived FOUND set — a fundamentally different shape than the proven `_live_coverage_venue_year.py`
+  sibling (which only ever counts manifest rows, no external expected-universe cross-reference).
+
+  **The principle that makes streaming safe (load-bearing for every 8a-8f sub-todo)**: EXPECTED-side values
+  (`mtds_expected_dates_for_venue_dt`, sports fixture calendars, transfer windows) depend ONLY on UAC config + the
+  request's date range — NEVER on `filtered` — so they MUST be computed ONCE outside any chunk loop; calling the
+  same expected-computation once per row-group chunk and summing would multiply it by the row-group count (a
+  correctness bug, not just an inefficiency). FOUND-side values (distinct `(venue, data_type, date)` triples
+  actually present) ARE safe to accumulate via simple per-chunk counting summed across chunks, because the manifest
+  consolidator's dedup guarantees exactly one row per shard-atom key across the WHOLE corpus (SSOT
+  `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "UNION-ALL correctness") — row groups are therefore
+  chunk-disjoint by key, so `.size()`-style row counts are exactly additive, matching the same assumption
+  `_live_coverage_venue_year.py` already relies on (confirmed by reading its `_process_manifest_chunk`/
+  `_accumulate_venue_year_counts` implementation).
+
+  **Also found**: `_read_defi_merged_index`'s DeFi/Prediction postprocessing (`_postprocess_defi_merged_index` —
+  venue whitelist filter, venue canonicalisation, CQG promotion) is per-row-safe but not yet replicated in a
+  streamed form — scoped out to todos 8b/8c rather than blocking the first slice. Row/venue/pipeline_mode filters
+  and `_drop_legacy_defi_and_canonicalise` are ALSO per-row-safe and commute with the date-range mask regardless of
+  application order (AND-composed predicates), which is what makes todo 8a's per-chunk-then-concatenate design
+  byte-identical to today's read-then-filter-once design. `_MTDS_DEFI_SUB_DIMENSIONS` (the DeFi multi-bucket merge
+  list `_collect_defi_index_frames` iterates) is currently EMPTY (all Phase-1 sub-buckets retired 2026-07-14), which
+  is what makes 8a/8b tractable as a single-bucket stream rather than needing a multi-bucket merge design now.
+
+  **Test pattern already proven in this codebase** (no new fixture-building infra needed): `_row_groups()` in
+  `tests/unit/test_route_venue_year_coverage.py` mocks `iter_manifest_row_groups` via a `side_effect` factory
+  yielding plain in-memory DataFrames as separate "row groups" — no real multi-row-group parquet file needs to be
+  written. Every 8a-8f adversarial test should reuse this pattern.
+
+  **Split rationale**: same reasoning as this plan's own todo 8 being split out of todo 3 originally ("a materially
+  larger rewrite... hence split out as its own todo") — the newly-discovered true scope repeats that pattern one
+  level deeper, so todo 8 (the original combined scope) is REPLACED above by 8a-8f, sequenced by genuine dependency
+  (8a is the base primitive; 8b/8c extend its category coverage; 8d/8e are the harder found/expected-split work;
+  8f is the final wiring + the full byte-identical test the ORIGINAL todo 8 asked for). Judged safer to ship this
+  research + re-scoping now than to rush a partial/risky implementation of shared fleet-wide manifest-aggregation
+  code under session time/context pressure — implementing 8a is the next actionable unit.
