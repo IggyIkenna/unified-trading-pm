@@ -28,7 +28,7 @@ created: 2026-07-28
 authoritative_for: [plan archival-when-done ritual, todos-not-prose rule, finalize-plan no-double-gate rule]
 referenced_by: [CLAUDE.md § "Plans — format + authoring discipline"]
 owner:
-last_reviewed: 2026-08-17
+last_reviewed: 2026-08-21
 code_refs:
 ---
 
@@ -329,6 +329,26 @@ discipline's own referrer-fixup requirement (a stale ref must be fixed before th
 incident + the shipped fix (`unified-trading-pm@d765b4cfb1`, `scripts/plan-hygiene/check_line_caps.sh`):
 `/plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`. Regression
 coverage: verified via an isolated scratch repo, not the live corpus.
+
+### `locked_by: live-defi-rollout` was a hardcoded branch-name placeholder, not a real lock (fixed 2026-08-12/18)
+
+**If a doc's `locked_by:` reads exactly `live-defi-rollout` (the shared branch name, not any registered actor id),
+treat it as the now-fixed instance of a corpus-wide bug, not a genuine claim — but it is still a HARD-STOP until
+actually cleared: do not unlock it yourself.** Root-caused 2026-08-10: a one-off frontmatter-conformity script
+(`scripts/plans/fix_epic_frontmatter_2026_05_21.py:133`) hardcoded this literal string, and the pattern propagated into
+96 `plans/active`/`plans/active/issues` docs via a copied doc-creation template between 2026-05-21 and 2026-07-11.
+Genuine locks in this corpus always carry a real actor id (`plan_reconciler (agt-xxxxxx) since <ts>`, `harsh-fleet-audit`,
+etc.) — `live-defi-rollout` never has. The operator ruled Option B (2026-08-12): a one-off script
+(`scripts/plans/clear_locked_by_placeholder_2026_08_12.py`) cleared `locked_by`/`locked_since` on every doc carrying
+exactly that value, shipped in 4 batched commits (2026-08-12/18), and the actual writer
+(`scripts/cicd/parity_watchdog.py`) was patched the same session to stop stamping it on new docs. **Practical
+consequence**: a doc found today still carrying this exact placeholder is either (a) a doc the corpus-wide clear missed
+(rare — verify via `git log` whether the clear-script commits post-date the doc's own creation) or (b) a NEW
+recurrence, meaning the `parity_watchdog.py` fix regressed — either way it is still `locked_by:`-set and therefore still
+a HARD-STOP: an agent finding one MUST ask the operator for a targeted `[unlock-plan]` (as was done 2026-08-10 for
+`deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`, the confirmed case that surfaced this bug), never
+clear it autonomously just because the value is a known-bogus one. Full investigation + evidence:
+`/plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`.
 
 ## 2. Every follow-up is a canonical `- [ ]` todo — never prose
 

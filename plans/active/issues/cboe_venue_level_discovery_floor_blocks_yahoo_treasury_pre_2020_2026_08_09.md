@@ -138,10 +138,11 @@ urgency, and warrants its own scoped implementation + test pass.
 - [ ] [DATA] P3. Once the floor fix ships, relaunch the CBOE Treasury-INDEX launcher
       (`launch-tradfi-bf-cboe-indices-ohlcv-24h.sh`) with `--start-floor 2000-01-01` to backfill the 2000-2020-06 window
       that this bug currently blocks, and verify real captured coverage in the manifest for all 4 pre-2018 tenors. Repo:
-      market-tick-data-service / deployment-service. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch
-      agt-a70469): KEEP-NA-STALE (already-duplicated) — extracted verbatim into
-      `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` todo 2 (status: draft, same Source citation as above, todo
-      2). Same reasoning — citation-only, `assigned_vm: NA` unchanged.)**
+      market-tick-data-service / deployment-service. **EXTRACTED `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md`**
+      (na-eligibility-audit 2026-08-10, tradfi tranche, dispatch agt-a70469): KEEP-NA-STALE (already-duplicated) —
+      extracted verbatim into that plan's todo 2 (status now active per 2026-08-16/2026-08-21 re-checks, operator-narrowed
+      to `--start-floor 2018-01-01`; same Source citation, todo 2). Same reasoning — citation-only, `assigned_vm: NA`
+      unchanged.)**
 
 ## Progress Log
 

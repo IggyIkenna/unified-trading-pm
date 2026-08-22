@@ -9,7 +9,7 @@ summary: >-
   request, 1 stale-VM-completion-claim needing live follow-up). 1 candidate refuted (not a real finding). 12 further
   candidates deferred untouched — genuinely in today's 12h grace window. Zero blocked-questions filed (trust mode
   2026-08-15 ruling — every judgment call in this run had a defensible direct resolution). Run complete.
-status: open
+status: archived
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -44,6 +44,14 @@ context_scope:
 ---
 
 # plan_reconciler defi-tranche findings — 2026-08-18
+
+> **🗄️ ARCHIVED 2026-08-21** — run complete, 0 open checkboxes on this doc itself; every candidate this run
+> surfaced was fixed, applied, refuted, or routed by name to its own owning doc (the finalize-plan-coverage gap,
+> the formatting-convention question, and the live-infra follow-up all name a specific target doc/file as owner,
+> not this run-journal). Per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md),
+> a doc with every todo done (here: zero todos of its own) archives immediately. Archived by an ARCHIVE_RESOLVED
+> chunk sweep (`queue_archive_resolved.json`, chunk 5).
 
 Dispatch `agt-94f58e`, slot 29, tranche `defi`.
 

@@ -103,8 +103,13 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **RECURRED 2026-08-12 — pay the outstanding Databento invoice again; the account went unpaid a
-      second time after the 2026-08-10 restoration below.** Evidence: `mtds-live-tradfi-cme-trades-20260809-163443`'s
+- [ ] [BLOCKED-UPSTREAM-OUTAGE] P0. **Databento CME billing — operator paying.** **RULED 2026-08-21 (operator decision
+      D5, `.ao_checkpoints/issues_corpus_completion_2026_08_21/triage_decisions.json`)**: operator pays the
+      outstanding Databento CME (GLBX.MDP3) invoice directly — retagged from `[OPERATOR]` (an open decision) to
+      `BLOCKED-UPSTREAM-OUTAGE` (the decision is made; only the vendor-side payment/restoration is outstanding). No
+      further worker action on this todo until the operator confirms payment — then re-verify per the method below
+      before lifting any dependent gate. **RECURRED 2026-08-12 — pay the outstanding Databento invoice again; the
+      account went unpaid a second time after the 2026-08-10 restoration below.** Evidence: `mtds-live-tradfi-cme-trades-20260809-163443`'s
       `run.log` records `gateway error code=api_key_deactivated err='User or API key deactivated'` at
       2026-08-12T00:03:56.894Z, immediately followed by a reconnect attempt that also failed CRAM auth:
       `CRAM authentication error: Unable to submit the request because there is an unpaid invoice.` The process itself
@@ -159,7 +164,12 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       this doc `status: resolved` but un-archived in the interim per this workspace's own `archive_exempt`-bridge
       precedent (`RULED 2026-08-09` in the archival-discipline SSOT) — the doc also still functions as the standing
       awareness/runbook record for this incident class until the sweep lands.
-- [ ] [OPERATOR] P1. **The CURRENT `tradfi-bf-cme-ohlcv-1m-` fleet-wide relaunch wave (~29 instances) is confirmed
+- [x] ✅ [OPERATOR] P1. **RESOLVED 2026-08-21 (operator ruling D5, recorded in
+      `/plans/active/issues/ag_closeout_audit_cross_tranche_big_findings_2026_08_21.md` item 7) — option (A): paused
+      the fleet wave mechanism at its actual source + shipped a live billing-probe gate as defense-in-depth.** See
+      the dated Progress Log entry below in THIS doc for full evidence (mechanism found, pause verified, VMs
+      stopped, code shipped). **The CURRENT
+      `tradfi-bf-cme-ohlcv-1m-` fleet-wide relaunch wave (~29 instances) is confirmed
       hitting the same billing block.** NEW 2026-08-17 (slot 16, data_pipeline_failure escalation agt-4e1517) —
       launched ~09:01-09:06Z today across
       `btc`/`es`/`eth`/`g01-6a-6l`/`g02-6m-cl`/`g03-ct-hg`/`mbt`/`met`/`nq` groups, years 2020-2026) is confirmed
@@ -179,6 +189,18 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       trigger of whatever launched this wave (looks scheduled/automated, not this session's doing) or whether it
       already has its own stop condition — flagging for the operator rather than guessing.
 
+- [ ] [OPERATOR] P1. **NEW 2026-08-21 — the actual `tradfi-bf-cme-ohlcv-1m-` fleet-wide relaunch mechanism found this
+      session (a crontab entry directly on the AO orchestrator VM's `ubuntu` user running `scripts/wave_launcher.py`
+      every 3h, `WAVE_MAX_CONCURRENT=20`) predates this session, is completely undocumented (no install script /
+      Terraform resource / referring doc anywhere in the corpus names it — grepped), and its origin is unknown.**
+      Paused (commented out, not deleted — see Progress Log) rather than removed, so it stays reversible and
+      inspectable. Decide: (a) formalize it into Terraform (replacing or alongside the existing but 2-months-dormant
+      `uts-prod-tradfi-wave-launcher-cron` Cloud Scheduler + Cloud Run Job pair, which this crontab appears to have
+      silently superseded without ever being registered anywhere), or (b) delete it permanently once the Terraform
+      Cloud Scheduler job is confirmed to still work end-to-end (untested since 2026-06-25) and re-enable that
+      instead. Either way, re-enabling ANYTHING should wait until Databento CME billing is confirmed OK (this doc's
+      other P0 todo) — the shipped `cme_billing_probe_ok()` gate (deployment-service@3367cfea) now protects either
+      path.
 - [x] ✅ [CODE] P2. **Databento live WS auth/billing failure is recorded as `empty_confirmed[SOURCE_RETURNED_ZERO]` (false honest-absence) instead of `record_failed` — surface the gateway auth failure into the runner's empty-window classification.** Verified live 2026-08-20 (slot 31, agt-db01a4): `mtds-live-tradfi-cme-trades-20260809-163443` recorded 40 `empty_confirmed[SOURCE_RETURNED_ZERO]` rows across 08-12..08-20 for a stream whose Databento key was deactivated 2026-08-12T00:03:56Z (unpaid invoice), because `market_tick_data_service/live/websocket_runner.py::_record_empty_window` routes to `record_failed` only on `_in_connectivity_gap()` (watchdog GAP) — a state `market_tick_data_service/live/connectors/databento_tradfi_ws.py` never sets for an auth failure, so every window is stamped honest-absence. Mirror the batch path (`databento_adapter.py` classifies `402/DATABENTO_PAYMENT_REQUIRED` as a venue error): surface credential-failure state from the connector so the runner writes `attempted_failed[CLASSIFIED_VENUE_ERROR]` per `/codex/02-data/honest-absence-downstream-handling.md` §401-rule. Distinct from the retry/backoff + feed-alive-watchdog todo above. Evidence: market-tick-data-service@6836a68eb5484e7d424405d557921cda30de47a4; quality-gates=PASS (11,071 passed, 82.07% coverage).
 
 ## Plans/issues gated by this doc (sweep log)
@@ -482,3 +504,54 @@ archival — no live Databento dependency).
   `/plans/active/issues/dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md` and
   `/plans/active/issues/dp_cron_did_not_fire_still_storming_after_gcs_persistence_fix_2026_08_20.md` rather than
   duplicated here — this entry only adds the CME-OHLCV-relaunch-wave reconfirmation, which belongs on this doc.
+- **2026-08-21 (operator ruling D5, autonomous dispatch) — fleet wave mechanism PAUSED at its actual source; 2
+  zero-progress VMs stopped; live billing-probe gate shipped.** Operator ruled (D5,
+  `.ao_checkpoints/issues_corpus_completion_2026_08_21/triage_decisions.json`): pay the invoice directly AND pause
+  the fleet mechanism now (zero-cost, autonomous), make relaunch conditional on a live billing probe. **Root-cause
+  finding (misled every prior session that checked, including several entries in this very doc): the daily
+  17-114 VM/day relaunch wave was NOT driven by the Terraform-managed `uts-prod-tradfi-wave-launcher-cron` Cloud
+  Scheduler job** — that job is confirmed `state: PAUSED` since 2026-06-24, unchanged, zero executions of its Cloud
+  Run Job (`uts-prod-tradfi-wave-launcher`) since 2026-06-25 (`gcloud scheduler jobs describe` /
+  `gcloud run jobs executions list`, both re-verified live this session) — **it was a separate, undocumented crontab
+  entry directly on the AO orchestrator VM's (`i-0c9b283b31d6b5ca7`) `ubuntu` user**, running
+  `scripts/wave_launcher.py` every 3h at `WAVE_MAX_CONCURRENT=20` (the hard ceiling), confirmed via the script's own
+  `vm-census/wave-launcher-last-run.json` sentinel showing a fresh tick at `2026-08-21T21:00:06Z` — 3 minutes before a
+  ~20-VM burst appeared in `gcloud logging read` (`protoPayload.methodName="v1.compute.instances.insert"`, all
+  `principalEmail=unified-trading-sa@central-element-323112.iam.gserviceaccount.com`, 21:03-21:26Z). Every prior
+  session (2026-08-09/11/15×3/17) that checked only the Cloud Scheduler job and concluded "PAUSED, not the source"
+  was correct about that job but never found this shadow host cron. **Actions taken, in order:**
+  1. **Paused at the source** — via AWS SSM `AWS-RunShellScript` on `i-0c9b283b31d6b5ca7`: backed up the `ubuntu`
+     crontab (`/home/ubuntu/crontab_backup_pre_wave_launcher_pause_2026_08_21.txt`), then commented out the
+     `wave_launcher.py` line with a dated marker citing this doc + the re-enable condition (billing confirmed OK
+     AND the shipped billing-probe gate live), confirmed via `crontab -l -u ubuntu` post-edit.
+  2. **Verified the pause held** — 0 `tradfi-bf-cme-ohlcv-1m*` instances present in `gcloud compute instances list`
+     both immediately after the pause and again at a fresh check 20 minutes later (`2026-08-21T22:54:57Z` →
+     `2026-08-21T23:14:57Z`, background-timed, zero rows both times) — zero new CME VMs launched in the observation
+     window.
+  3. **Stopped the 2 CME VMs that were running at pause time, burning SPOT compute for zero progress** —
+     `tradfi-bf-cme-ohlcv-1m-es-2022-20260821-215556` (ES.FUT/OPT, launched 21:55) and
+     `tradfi-bf-cme-ohlcv-1m-nq-2020-20260821-221610` (NQ.FUT/OPT, launched 22:16). Read `run.log` for both directly
+     via UTL `get_storage_client()` (never subprocess) before deleting: both showed the identical
+     `DatabentoAdapter: GLBX.MDP3/ohlcv_1s failed [402]: 402 account_delinquent_invoice` on every attempted date with
+     `SHARD_INCOMPLETE`/0-records writes, confirming genuine zero progress against the billing wall (not a
+     transient/recoverable state) before `gcloud compute instances delete`.
+  4. **Shipped a live Databento billing-probe gate into `wave_launcher.py` as defense-in-depth** for whenever this
+     (or the Terraform Cloud Scheduler) mechanism is re-enabled: `cme_billing_probe_ok()` calls
+     `databento.Historical(...).metadata.get_cost()` — a cost ESTIMATE that never transfers data / never bills —
+     scoped to `GLBX.MDP3`, which still exercises the same account+dataset entitlement check a real fetch would hit.
+     `run_tick()` now drops CME dispatches from the wave (logs + emits `DP_TRADFI_CME_BILLING_BLOCKED`) whenever the
+     probe fails, fail-CLOSED on any exception (an ambiguous probe error must never be read as "billing is fine").
+     Evidence: `deployment-service@3367cfea` (`scripts/wave_launcher.py`,
+     `tests/unit/test_wave_launcher_cme_billing_probe.py`); quality-gates=PASS (3660 passed, 0 failed, sentinel
+     `e15198e4b2d6bbdab6758805cc5dba0e8a5fa778`→`3367cfea`); verified ancestor-or-equal of
+     `origin/live-defi-rollout` (0 ahead/0 behind post-push). Also fixed one PRE-EXISTING, unrelated red-gate test in
+     the same shipped commit (`tests/unit/test_refetch_feed.py::test_dry_run_plan_includes_cli` — stale literal
+     `refetch-feed:binance` vs. the already-shipped, intentional `rotate-websocket:binance` verb-aware routing from
+     `/plans/active/venue_websocket_resilience_and_error_code_mapping_2026_08_21.md`; confirmed via `git log`/`git
+     diff` that no local WIP or plan collision existed — a stale-assertion fix, not a design change) per the
+     autonomous-dispatch rule that red quality gates in this slot are mine to fix now, not defer.
+  **Not done this session (explicitly out of scope for D5, left for the operator/a future session):** re-enabling
+  either mechanism (correctly stays paused until the operator confirms the invoice is paid AND live-verifies CME
+  specifically, per this doc's own dataset-scoped-not-account-wide finding from 2026-08-15); registering the
+  discovered host-cron mechanism into Terraform/a tracked launcher registry (it predates this session and its origin
+  is unknown — flagging as a follow-up, not fixing the meta-problem of "undocumented host crons exist" here).

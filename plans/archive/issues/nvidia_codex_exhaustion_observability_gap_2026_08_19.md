@@ -14,8 +14,8 @@ summary: >-
   accounts). This means a real fleet dispatch against NVIDIA or Codex today would keep hammering an
   exhausted account with no automatic failover and no record of why — exactly the "smoke test gets
   stuck on a single exhausted model" failure mode the operator was concerned about.
-status: open
-resolved_by:
+status: archived
+resolved_by: agent-orchestrator@25589117c3, agent-orchestrator@39604c9ced, agent-orchestrator@7a1be88b8c, agent-orchestrator@d6fc37c0cb
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -59,8 +59,18 @@ source: >-
   accounts touched).
 assigned_role: infra
 drift_direction: none
-archive_exempt: true
 ---
+
+> **🟢 ARCHIVED 2026-08-21** — every todo closed: the NVIDIA-specific half of the gap is now moot-by-construction
+> (NVIDIA/Gemma accounts deregistered 2026-08-20 in favor of self-hosted Ollama Gemma,
+> agent-orchestrator@5598fd0412); the real production bug blocking Codex/Luna (codex-bridge 501ing every
+> streaming turn) was root-caused and fixed (agent-orchestrator@39604c9ced, @7a1be88b8c); a full real-provider
+> round-robin was validated live on production 2026-08-20 (agent-orchestrator@25589117c3, @c48e37e281); a
+> `--resume`-onto-saturated-context bug found along the way was fixed the same session
+> (agent-orchestrator@25589117c3). Cross-referenced by
+> `/plans/active/issues/codex_luna_heartbeat_sandbox_network_stuck_loop_2026_08_20.md` and
+> `/plans/active/issues/ao_dispatch_skew_root_cause_and_session_cleanup_2026_08_21.md` — both repointed off this
+> archived path as part of this archival.
 
 # NVIDIA/Gemma and Codex/Luna have zero exhaustion detection — proactive or reactive
 

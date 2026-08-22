@@ -1,8 +1,7 @@
 ---
 doc_type: codex-runbook
 title: RB-CONN-001 — Exchange WebSocket Degradation
-summary:
-  Operator runbook for CONNECTIVITY_GAP_DETECTED / TICK_STALENESS on a venue — decide wait vs failover_feed vs
+summary: Operator runbook for CONNECTIVITY_GAP_DETECTED / TICK_STALENESS on a venue — decide wait vs failover_feed vs
   disable_venue+cancel_open_orders against the dependency_health_policy thresholds; both feeds down → SEV0 DUAL_FAILURE.
 status: current
 nature: process
@@ -53,6 +52,10 @@ Category: **Connectivity** · Runbook ID: **RB-CONN-001**.
 ## Resolve
 
 - If recoverable: wait for venue WS to restore + monitor.
+- Silently-stale WS (no close frame, feed just quiet): rotate the session via the rotate_websocket Layer-0 action —
+  drops the WsSessionManager rotation-request sentinel; make-before-break where the venue's WsProtocolSpec allows
+  duplicate subscriptions, else break-then-make + REST gap backfill. A refetch_feed re-pull closes data gaps but does
+  not revive a dead socket. Bound for ws-sourced venues via `rotate-websocket:<source>` in the freshness registry.
 - If beyond hard threshold: fail over to backup feed via failover_feed Layer-0 OR Safety Ops manual.
 - If both feeds down: disable_venue + cancel_open_orders.
 

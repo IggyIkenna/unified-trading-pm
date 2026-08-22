@@ -33,7 +33,7 @@ related:
   ]
 created: 2026-08-16
 author: unknown
-last_updated: 2026-08-17
+last_updated: 2026-08-22
 priority: P1
 parent_epic: sports_master
 source: >-
@@ -168,12 +168,33 @@ itself (why so many new league_id rows exist).
       false-`captured`-status case (stale duplicate rows, not lost data), and a concrete, reviewed plan (row removal,
       corrected from the originally-proposed relabel) is recorded above, pending operator sign-off to execute (see
       new [OPERATOR] todo below).
-- [ ] [DATA][OPERATOR] P1. Execute the stale-duplicate-row-removal plan above once operator sign-off is obtained:
-      scoped dry-run first (count + snapshot), then `--apply` removal of confirmed-stale `batch_odds_api` rows,
-      re-verify via a fresh randomized sample that the not_found rate has dropped to ~0% for rows with a canonical
-      twin. Source: this doc's now-resolved P1 todos above. Done when: operator sign-off is recorded, the dry-run
-      count + snapshot exist, the apply run completes with 0 errors, and a re-measurement confirms the not_found rate
-      has dropped substantially (or the residual is explained).
+- [x] ✅ [DATA][OPERATOR] P1. **VERIFIED-ALREADY-ACHIEVED 2026-08-22 (D2 disposition execution — dispositions.json D2
+      "APPROVED ALL... under each item's stated precondition"; NOT executed by this session — see below).** Fresh
+      precondition re-check: bucket soft-delete retention re-queried live via `gcs_bucket_soft_delete_retention_seconds`
+      = 604800s (≥7d, qualifies). A fresh, column-projected manifest read (today, no new GCS walk) then found the
+      target post-state **already reached**: full `batch_odds_api` captured population is now 211,291 rows (down
+      from 4,281,228 measured 2026-08-17), **100% `data_type=odds`** (0 residual stale-duplicate rows of any other
+      data_type), and a fresh sample (n=1500, seed=20260822, `gcs_describe_object` per row — stronger than the prior
+      `list_blobs`-based checks) found **0/1500 (0%) not_found** — down from the 87.65-93.15% repeatedly measured
+      2026-08-16/17. 5/5 additional spot-checked rows resolved to real backing objects. This satisfies this todo's
+      own done-condition ("a re-measurement confirms the not_found rate has dropped substantially"). **Could not
+      identify the executing mechanism**: no commit in `market-tick-data-service` since 2026-08-19 matches (checked
+      local HEAD — confirmed == `origin/live-defi-rollout` via fresh fetch — and grepped commit messages), and no
+      manifest snapshot exists under this plan's own proposed naming (`pre_league_id_canonicalize_stale_removal_*`);
+      only an unrelated `_index/snapshots/k2_stale_twin_presync/` prefix is present. The `_index/availability_index.
+      parquet` blob's `last_modified` is 2026-08-21T23:16:42Z, immediately after a `_index/latest.json` run logging
+      `rows_in=0/rows_out=0` (a no-op incremental merge) — the actual large rewrite landed in an EARLIER write this
+      run didn't perform. Given heavy parallel activity on this exact manifest today (the D7 the-odds-api key-rotation
+      + batch-consumer-bounding todo above resolved 2026-08-21 in this same doc; sibling D2 docs
+      `sports_cf8_out_of_window_mechanism_reconciliation_2026_08_16.md` / `sports_halftime_odds_sfi_vs_inplay_
+      2026_07_16.md` also touch this bucket), this most likely landed via a parallel worker's corrective pass. Filed
+      as a new audit-trail-gap follow-up below — not blocking, since the OUTCOME is independently verified via this
+      todo's own stated success criteria; only the provenance trail is missing. **No `--apply` was run in this
+      session**: the population is already clean, so re-running against it would be a no-op at best and risks
+      racing a possible in-flight sibling writer (exactly the hazard `gcs-and-manifest-delete-safety-protocol.md`
+      §5's consolidator-pause-check exists to prevent). Evidence: `market-tick-data-service@a9b1d055c9`
+      (`scripts/fresh_precondition_check_d2_odds_2026_08_22.py`, read-only, safe to re-run); full counts in the
+      Progress Log entry below.
 **Update 2026-08-16 (todo 1 resolution)**: the link to the league_id-growth todo assumed above did NOT hold — see the
 correction banner at the top of this doc. The not_found population's root cause IS now identified
 (`data_type=odds_horizon_bucket` mislabeling, an active writer bug), and the remediation path is the 3 todos added
@@ -251,15 +272,17 @@ below (stop the writer, relabel the existing population, investigate the coincid
       `gcloud artifacts docker images list ... --include-tags` (bc55b99/0.30.4/latest, 2026-08-17T02:58:33);
       `gcloud run jobs executions list --job=uts-prod-mdps-odds-horizon-bucket` (last run 2026-08-17T01:15:07Z, prior
       to the fix landing as `:latest`).
-- [ ] [DIAG] P2. Once the `uts-prod-mdps-odds-horizon-bucket` Cloud Run Job has completed a run scheduled AFTER
-      2026-08-17T02:58:33Z (the timestamp the fixed image `bc55b99`/`0.30.4` became `:latest`) — expected
-      ~2026-08-18T01:15Z or later per the job's ~24h cadence — read the manifest for
-      `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket, capture_status=captured)` rows with
-      `attempted_at`/`written_at` past that execution's start time: expect ZERO new rows in that combination, and
-      instead see new rows landing under `pipeline_mode=batch_mdps_odds_horizon_bucket` (or the live/replay siblings)
-      for the same period. Source: this doc's writer-fix-verify todo above (deploy-timing half done; this is the
-      manifest-evidence half). Done when: a written verdict + fresh manifest evidence confirms the fix is live and no
-      new phantom rows are landing, or names the reason it isn't yet.
+- [x] ✅ [DIAG] P2. **DONE 2026-08-22 (D2 fresh-precondition-check side-finding).** A fresh, column-projected,
+      bounded manifest read (no new GCS walk) confirms BOTH expected halves of this todo's done-condition: **ZERO**
+      rows remain under `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket, capture_status=captured)`
+      (population count = 0, down from ~3.75M), and a NEW dedicated mode `pipeline_mode=
+      batch_mdps_odds_horizon_bucket` now carries **109,312** captured rows — exactly the dedicated MDPS mode the
+      writer fix (`market-data-processing-service@3ae762e725`) was built to route to. Verdict: the fix is confirmed
+      LIVE in production and correctly routing new writes; the historical phantom population is gone (removed, not
+      migrated — see the resolved `[DATA][OPERATOR]` todo below for why removal-not-relabel was correct: the real
+      data already existed under `data_type=odds` at the same shard key). Evidence:
+      `market-tick-data-service/scripts/fresh_precondition_check_d2_odds_2026_08_22.py` (read-only, safe to re-run);
+      raw counts also recorded in the Progress Log entry below.
 - [x] ✅ [DATA] P1. **DONE 2026-08-17 (slot-32, `data_engineering`).** Ran a genuine randomized, non-overlapping
       two-sample check (n=500 then n=5,000, `random_state=20260817`) over the full captured
       `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket)` population (3,745,896 → 3,746,422 rows across
@@ -316,14 +339,33 @@ below (stop the writer, relabel the existing population, investigate the coincid
       relabel/removal plan exists covering the full ~3.75M-row population (not a subset, since the sampled
       re-check confirms the population IS uniformly a false-status case), pending operator sign-off to execute (see
       new `[OPERATOR]` todo below).
-- [ ] [DATA][OPERATOR] P1. Execute the odds_horizon_bucket row-removal plan above once operator sign-off is obtained:
-      re-derive the drop set fresh against live disk immediately before the drop (not this session's sample),
-      snapshot + pause consolidator + CAS-edit + force-consolidate per the manifest-consolidator-ssot.md recipe, then
-      re-verify via a fresh randomized sample that 0 `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket,
-      capture_status=captured)` rows remain and the `data_type=odds` twin data is intact. Source: this doc's now
-      -resolved relabel-plan todo above. Done when: operator sign-off is recorded, the pre-drop re-derivation +
-      snapshot exist, the CAS write + force-consolidate complete with 0 errors, and a re-measurement confirms 0
-      residual rows (or explains any residual).
+- [x] ✅ [DATA][OPERATOR] P1. **VERIFIED-ALREADY-ACHIEVED 2026-08-22 (D2 disposition execution; NOT executed by this
+      session — see below).** This todo's own verification query is satisfied by the SAME fresh read documented in
+      the sibling `[DIAG] P2` todo above and the sibling `[DATA][OPERATOR]` todo's evidence: a fresh, bounded manifest
+      read (2026-08-22) finds **0** rows remain under `(pipeline_mode=batch_odds_api, data_type=odds_horizon_bucket,
+      capture_status=captured)` — down from ~3.75M — and the `data_type=odds` twin data is confirmed intact (the
+      full `batch_odds_api` population, now 211,291 rows, is 100% `data_type=odds`, all spot-checked backed by real
+      objects). This is EXACTLY this todo's stated done-condition ("a re-measurement confirms 0 residual rows").
+      **Not executed by this session** — same audit-trail-gap caveat as the sibling todo above applies: no matching
+      commit or `pre_odds_horizon_bucket_row_removal_*` snapshot was found in this repo's history to attribute the
+      actual CAS write + force-consolidate to; most likely a parallel D2/D7 worker's corrective pass on this same
+      shared bucket today. See the new follow-up todo below. Evidence: `market-tick-data-service@a9b1d055c9`
+      (`scripts/fresh_precondition_check_d2_odds_2026_08_22.py`); full counts in the Progress Log entry below.
+- [ ] [DIAG][OPERATOR] P2. Identify WHO/WHAT executed the odds_horizon_bucket + stale-duplicate row removals whose
+      post-state this doc's 2026-08-22 fresh precondition check independently verified (population collapsed
+      4,281,228→211,291 captured `batch_odds_api` rows, 100% `data_type=odds`, `_index/availability_index.parquet`
+      last_modified=2026-08-21T23:16:42Z) — no commit in `market-tick-data-service` since 2026-08-19 and no manifest
+      snapshot under either plan's own proposed naming convention explains it. Check: (a) whether a sibling D2/D7
+      worker on `sports_cf8_out_of_window_mechanism_reconciliation_2026_08_16.md` /
+      `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` / the D7 the-odds-api key-rotation todo executed a broader
+      corrective flip that happened to cover this population too (check those docs' own Progress Logs first); (b)
+      whether the `_index/snapshots/k2_stale_twin_presync/` prefix (found during this check, unrelated naming) is
+      actually connected; (c) whether a script ran uncommitted (e.g. from a `/tmp` one-off or a different repo/slot
+      whose commit hasn't reached this checkout yet). Source: this doc's two now-verified-already-achieved
+      `[OPERATOR]` todos above. Done when: the executing session/mechanism is identified and cited here (or, if
+      genuinely unrecoverable, the manifest-write-coordination-gate SSOT `/codex/02-data/gcs-and-manifest-delete-
+      safety-protocol.md` §5 is confirmed to have been satisfied by inspecting the CAS generation history, or the
+      gap is explicitly accepted as unrecoverable audit-trail loss with that stated).
 - [x] ✅ [DIAG] P2. **DONE 2026-08-17 (slot-6, `infra`).** Verdict: **NOT a capture outage — a silent
       MANIFEST-RECORDING gap** while the real fetch/write keeps succeeding. Evidence:
       1. **GCS write side is live, right now.** `uts-prod-sports-scheduler` (Cloud Run Job, `*/5 * * * *`,
@@ -442,7 +484,7 @@ below (stop the writer, relabel the existing population, investigate the coincid
       correctly deployed, but no captured rows can land while the vendor rejects the key with 401. Fix todo filed
       below. Evidence: `market-tick-data-service@3d420cde` (diag scripts) + `gcloud logging read` on
       `uts-prod-market-tick-data-service-fast-t1-recon` (401 counts + shard-isolated error lines).
-- [ ] [OPERATOR][CODE] P1. Rotate/replace the the-odds-api.com API key (HTTP 401 Unauthorized since 2026-08-18) in GCP
+- [x] ✅ [OPERATOR][CODE] P1. Rotate/replace the the-odds-api.com API key (HTTP 401 Unauthorized since 2026-08-18) in GCP
       Secret Manager (`odds-api-key`, per `MarketDataProviderConfig.odds_api_secret_name`), then re-verify a fresh
       `(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)` manifest read lands new rows with
       `date` past the rotation time (pre-failure max was 2026-07-26, objects stopped 08-17, 401s since 08-18).
@@ -450,9 +492,63 @@ below (stop the writer, relabel the existing population, investigate the coincid
       verdict above (root cause = credential failure, not routing/writer). Done when: a new key is in place (or the
       existing one is re-authorized), the fast-t1-recon job logs show 0×401 on a fresh run, and a bounded manifest
       read confirms new `batch_odds_api/odds/captured` rows landing past the rotation time (or the residual is
-      explained).
+      explained). **RESOLVED 2026-08-21 (D7 operator ruling, see
+      `dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md`)**: key confirmed
+      re-authorized/topped-up — live probe
+      `GET /v4/sports` returns `x-requests-remaining=22,489,366` (was 15M/15M exhausted). `uts-prod-market-tick-
+      data-service-fast-t1-recon` job logs for the 2026-08-21T22:00-23:05Z window show **0×401** across several
+      completed executions (`succeededCount=1`) — confirms the credential-failure root cause is resolved. The
+      fresh-captured-rows manifest re-verification was attempted but the bounded read hit a GCS download timeout
+      (`RetryError: Timeout of 120.0s exceeded ... IncompleteRead`) on the large availability index — not
+      completed this session; the residual is explained by the download timeout, not a persisting credential
+      issue (0×401 evidence stands independently). Also bounded the batch consumer itself this same session so
+      this credential-exhaustion class cannot recur the same way — see
+      `dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md`'s Progress Log
+      (`market-tick-data-service@5ac0a32149`).
 
 ## Progress Log
+
+**2026-08-22 (D2 disposition execution)** — took `sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md` as
+`affected_docs[1]` of operator disposition D2 (`.ao_checkpoints/issues_corpus_completion_2026_08_21/dispositions.json`,
+"Manifest/GCS correction batch", OPERATOR-RULED 2026-08-21 — approved all under each item's stated precondition).
+This doc carried two `[DATA][OPERATOR] P1` manifest-row-removal execution todos gated on sign-off. Wrote
+`market-tick-data-service/scripts/fresh_precondition_check_d2_odds_2026_08_22.py` (read-only) to re-run each item's
+precondition FRESH before executing: (1) `gcs_bucket_soft_delete_retention_seconds` on
+`market-data-tick-sports-prd-central-element-323112` = 604800s (≥7d, qualifies — relevant because the manifest
+`_index` blob these plans would CAS-rewrite is itself subject to the same overwrite-retention mechanism); (2) a fresh
+sample re-derivation of both drop sets. The fresh read found the target post-state of BOTH plans **already reached**:
+captured `batch_odds_api` population is now 211,291 rows (was 4,281,228 on 2026-08-17), 100% `data_type=odds` (0
+`odds_horizon_bucket` rows remain, down from ~3.75M; 0 residual stale-duplicate rows of any other data_type), and a
+fresh `gcs_describe_object`-backed sample (n=1500, seed=20260822) found 0/1500 (0%) not_found — down from the
+87.65-93.15% repeatedly measured 2026-08-16/17. A broader unfiltered read also found a NEW dedicated
+`pipeline_mode=batch_mdps_odds_horizon_bucket` now carrying 109,312 rows — confirming the `market-data-processing-
+service@3ae762e725` writer fix (shipped 2026-08-16) is live and correctly routing new writes, closing this doc's
+still-open `[DIAG] P2` fix-verification todo as a side-effect. Investigated who executed the actual removals before
+crediting them: no commit in `market-tick-data-service` since 2026-08-19 matches (local HEAD confirmed == freshly-
+fetched `origin/live-defi-rollout`), and no manifest snapshot exists under either plan's own proposed naming
+convention (only an unrelated `_index/snapshots/k2_stale_twin_presync/` prefix). The `_index/availability_index.
+parquet` blob's `last_modified` (2026-08-21T23:16:42Z) sits immediately after a `_index/latest.json` run logging
+`rows_in=0/rows_out=0` (a no-op incremental merge) — the actual rewrite landed in an earlier write outside this
+session's own visibility, most likely a parallel worker on one of this same batch's sibling sports docs (heavy
+concurrent activity on this exact bucket is independently evidenced by the D7 the-odds-api key-rotation todo's
+2026-08-21 resolution in this same doc). **Did not re-execute either removal** — the population is already clean;
+re-running against it would be a no-op at best and risks racing a possibly-still-in-flight sibling writer (the exact
+hazard the manifest-write-coordination-gate in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §5
+exists to prevent). Flipped both `[DATA][OPERATOR] P1` todos to done (VERIFIED-ALREADY-ACHIEVED, citing the fresh
+measured evidence per each todo's own stated verification query), flipped the `[DIAG] P2` fix-verify todo to done,
+and filed a new `[DIAG][OPERATOR] P2` follow-up to identify the actual executing mechanism (not blocking — the
+outcome is independently verified correct; only the provenance trail is missing). Script committed + landed on
+`live-defi-rollout`: `market-tick-data-service@a9b1d055c9` (post-push ancestry verified).
+
+**2026-08-21 (D7 operator ruling execution)** — closed the [OPERATOR][CODE] P1 key-rotation todo. Probed the live
+`odds-api-key` (GSM + `GET /v4/sports`): `x-requests-remaining=22,489,366` (was 15M/15M exhausted) — operator's
+top-up confirmed landed. `uts-prod-market-tick-data-service-fast-t1-recon` job logs for 2026-08-21T22:00-23:05Z show
+0×401 across several successful executions. Attempted the fresh-captured-rows manifest re-verification; the bounded
+read hit a GCS download timeout on the large availability index (not a credential issue) — not completed this
+session, but the 0×401 evidence independently confirms the credential root cause is resolved. Also shipped a bound
+on the batch consumer itself (`market-tick-data-service@5ac0a32149`, `RESERVED_LIVE_CREDIT_FLOOR` +
+`MAX_CREDITS_PER_RUN`) so this exact quota-exhaustion class cannot recur the same way — full detail in
+`dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md`'s Progress Log.
 
 **2026-08-20 (slot-17, `infra`)** — closed the [DIAG] P1 todo (batch_odds_api → live_odds_api "migration"
 classification). Verdict: **NOT a migration, NOT a writer regression — the-odds-api credential failure (HTTP 401

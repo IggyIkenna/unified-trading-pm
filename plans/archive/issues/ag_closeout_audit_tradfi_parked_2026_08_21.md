@@ -4,7 +4,7 @@ title: ag-closeout-audit tradfi 2026-08-21 — orphan projection + parked findin
 summary: >-
   2026-08-21 /ag-closeout-audit tradfi tranche Phase 1 audit (3 batches, 74 candidate docs). Compact orphan table —
   full escalation-worthy findings live in the cross-tranche big-findings doc.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
@@ -29,6 +29,13 @@ source: ["2026-08-21 — /ag-closeout-audit tradfi, 3 Phase-1 batches, 74 candid
 depends_on: []
 context_scope: [/plans/active/issues/ag_closeout_audit_cross_tranche_big_findings_2026_08_21.md]
 ---
+
+> **📦 ARCHIVED 2026-08-21 (archive-lane sweep)** — Phase 1-3 fully processed: 74 candidates, 3 batches; all rows
+> re-verified (excluding the 4 `dp_vm_001_tradfi_bf_cme_ohlcv_1m_*` docs, explicitly skipped as already tracked in
+> the cross-tranche big-findings doc); 2 genuinely bounded items extracted to
+> `plans/active/tradfi_satellite_ao_dispatch_batch20_2026_08_21.md`; 2 misclassifications corrected; both mechanical
+> hygiene flags applied. 0 open todos, no lock. Kept as a historical audit-run record; ongoing tradfi-tranche
+> tracking lives in `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`.
 
 # ag-closeout-audit tradfi 2026-08-21
 
@@ -111,3 +118,8 @@ block, 8+ days stale, burning real SPOT compute daily, unanswered pause-vs-accep
   `dp_vm_001_mdps_tradfi_2026_...md`) carry `parent_epic: security_and_cross_cutting_master` despite
   `asset_group: [tradfi]` single-AG content — the same mistag class the 2 named flags fixed. Worth a dedicated
   sweep, not attempted here (outside this pass's Phase-2 scope of the 2 explicitly-named docs).
+- **2026-08-21 (archive-lane sweep)**: Re-verified for archival — `status` not draft, no `locked_by`, no
+  `archive_exempt`, 0 open todos (report doc, no checkboxes), evidence holds. Archived per the 6-step ritual: banner
+  added, `status: resolved`, moved to flat `plans/archive/issues/` (`doc_type: issue`). Sole referrer
+  (`tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md:408`) is a prose citation only, correctly left
+  as historical evidence, no `related:` frontmatter fix needed there.

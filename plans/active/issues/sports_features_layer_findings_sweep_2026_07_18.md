@@ -638,7 +638,9 @@ a credential ask.
 - [ ] [MODEL] P2. Consider adding T-6h or T-2h as a MODEL horizon: both carry 68 fixtures vs T-24h's 25 (2.7x coverage),
       are safely pre-match, and fall after most team news. **Resolved by the dated `✅ OPERATOR RULING 2026-08-08`
       banner at the top of this doc** (add BOTH, not either/or) — implemented by
-      `sports_taxonomy_p3_consumers_2026_08_08.md`'s `[CODE] P0` todo (line ~125, `assigned_vm: planning`, reconfirmed
+      `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`'s `[CODE] P0` todo (line ~261, `assigned_vm: planning`,
+      **➡️ DUPLICATE OF** `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` (verified `status: active` + still
+      open there, 2026-08-21 dedup pass), reconfirmed
       still open/active 2026-08-09). Not duplicating here.
 
 ---

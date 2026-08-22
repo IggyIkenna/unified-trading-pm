@@ -275,6 +275,16 @@ drift_direction: advance-code
       metrics, a genuine gas-priority axis) is actually built** — at that point THIS is the todo to reopen, and
       the real design question becomes generic ("does urgency belong on `ExecutionInstruction` for every
       transfer, not REBALANCE-specifically"), not a `BusTransferType` producer-signal problem.
+      **Re-litigated and RE-AFFIRMED 2026-08-22 (T5, /autonomous)**: a later same-day session independently
+      proposed collapsing `BusTransferType.REBALANCE` entirely (fewer instruction types), and a dispatched agent
+      found a live producer (`strategy_service/transfer_coordinator.py:396`'s gas-reserve-topup leg sets
+      `transfer_type=BusTransferType.REBALANCE` explicitly, pinned by
+      `test_compute_rebalance_transfers.py:135,197`) — correctly stopped before deleting anything, since that
+      contradicts this exact resolution. **Deciding between the two same-day rulings**: affirm THIS one — keep
+      `BusTransferType.REBALANCE` as the deliberate future-seam placeholder described above. Zero functional
+      impact today (dispatches byte-identical to `ON_CHAIN`, confirmed above), a live producer already depends
+      on the enum value existing, and collapsing it would require touching strategy-service's gas-reserve-topup
+      leg for zero behavioral gain. No code change.
 - [x] [BACKEND] P2. **New, found 2026-08-21 during todo 3's implementation.** The manual-trade
       `recon_excluded` flag (todo 3) is threaded end-to-end through `ManualInstructionRequest` →
       `ManualInstruction`/`ManualInstructionAuditLog` (FCA audit trail, real) → `TradeFillRecord`/`LedgerRow`

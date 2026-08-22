@@ -128,6 +128,19 @@ class VenueCapability:
     child_venues: Optional[List[ChildVenueDecl]]  # for META_BROKER
 ```
 
+## Websocket-protocol axis (2026-08-21)
+
+Every `SourceCapability` in `registry/capability_declarations/` carries `ws_protocol: WsProtocolSpec | None`
+(`unified_api_contracts/registry/ws_protocol.py`) — the venue's PUBLISHED websocket contract: ping/pong initiator +
+cadence, forced-disconnect window, auth-refresh mechanism/cadence, subscription/connection caps,
+`duplicate_subscription_allowed` (make-before-break rotation feasibility), post-reconnect resubscribe semantics,
+sequence-gap detection, and REST gap-backfill endpoints. Resolve via `resolve_ws_protocol(source)` after
+`capability_data.bootstrap_capabilities()`. Honest provenance: fields default `None` (= not researched / not
+published — never a guess) and `doc_url`/`doc_retrieved` carry the citation; a venue with no ws surface records
+`no_websocket_surface` in `notes` explicitly. `extra="forbid"` makes a declaration typo an import-time error. Primary
+consumer: the UTL `WsSessionManager` rotation policy — SSOT
+`/codex/04-architecture/venue-websocket-resilience.md`.
+
 ## Operation spec
 
 ```python

@@ -39,7 +39,7 @@ related:
   ]
 created: "2026-08-05"
 author: unknown
-last_updated: "2026-08-05"
+last_updated: "2026-08-21"
 parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -228,6 +228,10 @@ Run service and alerting on drift beyond some threshold — that's the real rema
   target the sole remaining open item (the `[OPERATOR]` webhook-population + e2e Slack-delivery follow-up).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
 
+- **2026-08-21 — ruling D53 (Traffic-pin alert webhook)**: ATTEMPT — populate the GSM webhook secret via a one-off
+  GH workflow dispatch (the GH secret cannot be read back, a workflow can write it to GSM); verify with a UAT
+  canary rollback. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
+
 ## Follow-ups
 
 - [x] ✅ [INFRA] P2. Deploy traffic-pin-to-slack-bridge.py as a Cloud Run service with a push subscription on the
@@ -237,12 +241,14 @@ Run service and alerting on drift beyond some threshold — that's the real rema
       shell `cloud-monitoring-slack-ci-failures-webhook` created (no versions yet — operator-gated credential step
       below). End-to-end Slack delivery NOT yet verified (awaiting webhook URL population per [OPERATOR] todo below).
 
-- [ ] [OPERATOR] P2. Populate the GSM secret with the #ci-failures Slack incoming webhook URL and verify end-to-end
-      Slack delivery. The webhook URL is stored in GitHub Actions secret `SLACK_CI_WEBHOOK_URL` (write-only/unreadable
-      by agents — a genuine credential ask, not an IAM gap). Command to populate the secret:
-      `printf "<#ci-failures-webhook-url>" | gcloud secrets versions add cloud-monitoring-slack-ci-failures-webhook --data-file=- --project=central-element-323112`
-      — then verify e2e by triggering a canary rollback on a UAT Cloud Run service and confirming the Slack message
-      arrives in #ci-failures.
+- [ ] [INFRA] P2. Populate `cloud-monitoring-slack-ci-failures-webhook` in GSM via a one-off GH Actions workflow
+      dispatch that reads the existing `SLACK_CI_WEBHOOK_URL` repo secret and writes it to Secret Manager (the
+      secret's value can't be read back directly outside a workflow run, but a workflow can forward it) — per D53
+      ruling (ATTEMPT, 2026-08-21). Command inside that workflow step:
+      `printf "%s" "$SLACK_CI_WEBHOOK_URL" | gcloud secrets versions add cloud-monitoring-slack-ci-failures-webhook --data-file=- --project=central-element-323112`.
+      Then verify end-to-end by triggering a canary rollback on a UAT Cloud Run service and confirming the Slack
+      message arrives in #ci-failures. Done when: `gcloud secrets versions list cloud-monitoring-slack-ci-failures-webhook`
+      shows a new version and a live UAT canary test posts to #ci-failures.
 
 > **2026-08-06 archive-candidate audit**: Todo 1 is flipped [x] but its own body lists 'NOT DONE (needs operator): (a)
 > store Slack webhook, (b) deploy the bridge as Cloud Run, (c) verify end-to-end Slack delivery' — the alert is loggable

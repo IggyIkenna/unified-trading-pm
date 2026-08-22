@@ -138,6 +138,9 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
       reconciliation todo owns this closure (see the 2026-08-08 Progress Log entry below); this todo just makes that
       already-stated intent a tracked item instead of prose, per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2.
+      **➡️ DUPLICATE OF** `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08_finalize.md` todo 2 (2026-08-21 dedup
+      pass, verified `status: active`) — tracked verbatim there per 6 prior na-eligibility-audit KEEP-NA-STALE
+      confirmations (2026-08-09 through 2026-08-21); not independently dispatchable.
 
 ## Progress Log
 

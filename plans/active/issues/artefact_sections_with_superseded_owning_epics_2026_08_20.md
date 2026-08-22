@@ -27,7 +27,7 @@ context_scope:
     /plans/active/state_fabric_artefacts_2026_08_20.md,
   ]
 created: 2026-08-20
-last_updated: "2026-08-20"
+last_updated: "2026-08-21"
 parent_epic: system_readiness_master
 assigned_vm: NA
 locked_by:
@@ -69,12 +69,15 @@ also means T7b will try to reconcile these sections against an owner that does n
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Establish whether a successor epic exists.** Read both superseded epics' `superseded_by`
-      frontmatter and follow it. A negative result must be measured — naming what was checked — not inferred from the
-      absence of child plans.
-- [ ] [REVIEW] P1. **If there is no successor, assign an owner** for each section per the epic-assignment rule:
-      asset-group-specific work goes to the asset-group epic; shared-mechanism work goes to the owning epic even when
-      found via one asset group. PnL attribution is shared-mechanism.
+- [ ] [REVIEW] P1. Per D38 ruling (2026-08-21, autonomous-dispatch authority): check `superseded_by` frontmatter on
+      both `global_ledger_pnl_attribution_master` and `dart_and_promote_master` for a successor epic first. Done when:
+      for each epic, either a successor is named and cited here, or its absence is confirmed by stating exactly what
+      was checked (not inferred from the absence of child plans).
+- [ ] [REVIEW] P1. Per D38 ruling (2026-08-21): if no successor exists for either epic (per the todo above), assign
+      PnL-attribution/promote-workflow ownership to the shared-mechanism owning epic per the epic-assignment rule
+      (asset-group-specific work → the asset-group epic; shared-mechanism work, even found via one asset group → the
+      owning epic). Done when: the chosen owning epic is named and cited here, and its frontmatter updated if
+      reassigned.
 - [ ] [DOC] P2. **Record the resolution in the artefact-to-epic coverage map** once that map exists
       ([state_fabric_artefacts](/plans/active/state_fabric_artefacts_2026_08_20.md)), so the next orphan is caught by
       the map rather than by someone re-deriving the mapping by hand.
@@ -89,3 +92,7 @@ todo on the artefacts plan.
   whether a successor epic exists per the two superseded epics' `superseded_by` frontmatter, assign an owner per
   the epic-assignment rule, record the resolution once the artefact-to-epic map exists) — none is a bounded,
   worker-determinable outcome without an epic-ownership decision first. Cross-cutting tranche, batch 2 of 3.
+
+**2026-08-21 — ruling D38 (Superseded-epic artefact ownership)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+authority, AUTONOMOUS_AGENT_RULES rule 2): Check for successors first, fall back to shared-mechanism epic
+assignment. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

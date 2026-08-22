@@ -32,7 +32,7 @@ related:
   ]
 created: 2026-07-17
 author: unknown
-last_updated: 2026-07-23 # re-verified against the live VM (main): DB_PATH todo CLOSED (gate passes), l2_book todo
+last_updated: 2026-08-21 # re-verified against the live VM (main): DB_PATH todo CLOSED (gate passes), l2_book todo
 # re-scoped (measurement void under the dispatch pause), backlog-relations still blocked-upstream after 6 days
 parent_epic: orchestrator_master
 assigned_vm: NA
@@ -219,8 +219,11 @@ source:
       which is why three table/tree attempts were rejected. Needs `GET /api/backlog/graph` behind it. **Gate**: design
       received → implemented → the relation a table cannot express (one prereq gating tasks in multiple plans) is
       visible in one view.
-- [ ] [INFRA] P2. BLOCKED-ON:l2_book_microstructure_capture_2026_07_13 returning to `assigned_vm: planning`
-      (currently swept into the fleet-wide dispatch pause). ⚠️ **RE-SCOPED 2026-07-23 — the original measurement is now VOID; do NOT close this as fixed.**
+- [ ] [INFRA] P2. Per D34 ruling (OPERATOR-RULED 2026-08-21 — APPROVED: reactivate l2_book_microstructure_capture
+      so the reopen-drop dispatch-defect re-test can run): flip
+      `plans/active/l2_book_microstructure_capture_2026_07_13.md`'s `assigned_vm: NA` back to
+      `assigned_vm: planning` (`execution_scope: orchestrator-agent`), then execute the re-test gate described
+      below. ⚠️ **RE-SCOPED 2026-07-23 — the original measurement is now VOID; do NOT close this as fixed.**
       Re-measured on the migrated live DB: only **1** `l2_book%` task row survives
       (`l2_book_microstructure_capture-001`, `done`), while the plan still shows **2 open todos**. That looks like the
       same divergence, only worse — **but it is not evidence any more**: the plan is now `assigned_vm: NA` (swept into
@@ -302,3 +305,6 @@ source:
   `plans/active/l2_book_microstructure_capture_2026_07_13.md` — still `status: active`, `assigned_vm: NA`, so the
   plan has not returned to `assigned_vm: planning` and the gate this todo names has genuinely not opened yet. Doc
   stays `assigned_vm: NA`.
+- **2026-08-21 — ruling D34 (l2_book plan reactivation)**: OPERATOR-RULED 2026-08-21 — APPROVED: reactivate
+  l2_book_microstructure_capture (assigned_vm: planning) so the reopen-drop dispatch-defect re-test can run.
+  Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

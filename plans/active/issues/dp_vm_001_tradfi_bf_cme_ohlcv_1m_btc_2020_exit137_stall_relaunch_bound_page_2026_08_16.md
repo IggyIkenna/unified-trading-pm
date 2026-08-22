@@ -324,3 +324,15 @@ DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains gen
   relaunch-bound tightening policy question, converted from prose 2026-08-17) remains genuinely operator-gated; the
   recurring `btc-2020` billing-block pages through 2026-08-18 are all already explained by the tracked P0 billing doc,
   no new information. `assigned_vm` unchanged.
+- **2026-08-21 (operator ruling D5, Databento CME billing — operator paying)**: the recurring `btc-2020` (and
+  fleet-wide) `tradfi-bf-cme-ohlcv-1m-` relaunches this doc chronicles were NOT driven by the Terraform-managed
+  `uts-prod-tradfi-wave-launcher-cron` Cloud Scheduler job (confirmed `state: PAUSED` since 2026-06-24, unchanged,
+  re-verified this session) — they were driven by a separate, undocumented crontab entry directly on the AO
+  orchestrator VM's `ubuntu` user (`0 */3 * * * ... scripts/wave_launcher.py`, `WAVE_MAX_CONCURRENT=20`), invisible to
+  every prior session that checked only the Cloud Scheduler job and concluded (correctly, but incompletely) "not the
+  source." Paused at the source (crontab entry commented out, backup at
+  `/home/ubuntu/crontab_backup_pre_wave_launcher_pause_2026_08_21.txt` on the orchestrator VM) and a live
+  Databento/GLBX.MDP3 billing-probe gate shipped into `wave_launcher.py` itself as defense-in-depth for whenever this
+  (or the Terraform-managed Cloud Scheduler) mechanism is re-enabled. Full writeup + evidence:
+  `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md` Progress Log. This doc's own open
+  `≤2/(vm-prefix,day)` policy todo is unaffected by this change — left open, unrelated decision.

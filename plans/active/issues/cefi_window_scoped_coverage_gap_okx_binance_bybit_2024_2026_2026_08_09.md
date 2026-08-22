@@ -47,7 +47,7 @@ related:
     /plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md,
     /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
     /plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md,
-    /plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md,
+    /plans/archive/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md,
   ]
 context_scope:
   [

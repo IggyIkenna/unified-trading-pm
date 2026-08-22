@@ -3,7 +3,7 @@ doc_type: issue
 title: ag-closeout-audit prediction 2026-08-21 — orphan projection + parked findings
 summary: >-
   2026-08-21 /ag-closeout-audit prediction tranche Phase 1 audit (1 batch, 30 candidate docs). Compact orphan table.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -29,6 +29,14 @@ source: ["2026-08-21 — /ag-closeout-audit prediction, 1 Phase-1 batch, 30 cand
 depends_on: []
 context_scope: [/plans/active/issues/ag_closeout_audit_cross_tranche_big_findings_2026_08_21.md]
 ---
+
+> **📦 ARCHIVED 2026-08-21 (archive-lane sweep)** — Phase 1-3 fully processed: 30 candidates, 1 batch; every orphan-table
+> row re-classified to a terminal disposition (6 correctly excluded, 1 extracted to
+> `plans/active/prediction_satellite_ao_dispatch_batch16_2026_08_21.md`); the sole mechanical hygiene flag reconfirmed
+> accurate. 0 open todos, no lock. Kept as a historical audit-run record; ongoing prediction-tranche tracking lives in
+> `/plans/active/prediction_consolidated_closeout_2026_07_18.md`. The `data_completion_prediction_2026_07_15.md`
+> CQG-migration finding this doc carried (now 6+ consecutive re-confirmations 2026-07-25→08-21, escalation-worthy) is
+> tracked at its live source doc, not lost by this archival.
 
 # ag-closeout-audit prediction 2026-08-21
 
@@ -78,3 +86,9 @@ manifest cell DIVERGENT_EMPTY on 43% of days across the entire capture history �
   an `➡️ EXTRACTED` banner, not deleted. `data_completion_prediction_2026_07_15.md`'s CQG-migration finding is now a
   6th consecutive re-confirmation across 2026-07-25→08-21 — flagging prominently per the carried-finding escalation
   rule: this needs an operator ruling or a dedicated scoping plan authored directly, not another audit re-triage.
+- **2026-08-21 (archive-lane sweep)**: Re-verified for archival — `status` not draft, no `locked_by`, no
+  `archive_exempt`, 0 open todos (report doc, no checkboxes), evidence holds. Archived per the 6-step ritual: banner
+  added, `status: resolved`, moved to flat `plans/archive/issues/` (`doc_type: issue`). Fixed the sole structural
+  referrer — `prediction_satellite_ao_dispatch_batch16_2026_08_21.md`'s `related:` frontmatter dropped this doc's
+  entry (its prose citation of this doc as provenance is left intact, per the archival-referrer rule that prose
+  citation of an archived doc as historical evidence is the correct end-state).

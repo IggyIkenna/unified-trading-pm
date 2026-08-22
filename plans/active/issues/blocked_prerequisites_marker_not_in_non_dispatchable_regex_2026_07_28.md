@@ -31,7 +31,7 @@ related:
   ]
 created: 2026-07-28
 author: unknown
-last_updated: 2026-07-28
+last_updated: 2026-08-21
 parent_epic: agent_operating_framework_master
 priority: P2
 source: [sports_odds_api_scattered_multiyear_gaps-002]
@@ -173,15 +173,12 @@ same-corpus dependencies). Instead:
       open checkbox), or (c) legitimately still using the string alongside a NOW-also-present recognized token — i.e.
       zero open checkboxes rely on `BLOCKED-PREREQUISITES` alone to suppress dispatch. **DONE 2026-08-14** — re-ran the
       corpus-wide grep; every live open checkbox carrying the marker is accounted for in the disposition table below.
-- [ ] [BACKEND] P3. **New from the 2026-08-14 audit**: build the per-todo same-file `prereqs` mechanism (or extend
-      `_NON_DISPATCHABLE_RE` with a narrower, same-corpus-dependency-aware marker distinct from the genuinely-external
-      `BLOCKED-<TOKEN>` family) so a same-plan todo dependency like the 6 occurrences audited above can express itself
-      structurally instead of relying on free-text `BLOCKED-PREREQUISITES`, which `_NON_DISPATCHABLE_RE` still does not
-      recognize. This is the residual design question the 2026-07-30 slot-6 disposition first flagged and the 2026-08-14
-      audit re-confirmed still open — a genuine `agent-orchestrator` design fork (repo: agent-orchestrator), not
-      decidable unilaterally by a single audit pass. **Done when**: either a shipped mechanism lets a same-plan
-      dependency suppress dispatch without a permanently-excluding text marker, or an operator ruling explicitly defers
-      this (see the plan-destination HARD RULE — ask before drafting a bigger design plan for this).
+- [ ] [BACKEND] P3. Per D41 ruling (2026-08-21, autonomous-dispatch authority): build the per-todo same-file
+      `prereqs` mechanism (not the narrower `_NON_DISPATCHABLE_RE` marker alternative) so a same-plan todo dependency
+      like the 6 occurrences audited above can suppress dispatch structurally, composing with the existing
+      `depends_on`/`gate_on_depends` machinery. Repo: agent-orchestrator. Done when: a shipped mechanism lets a
+      same-plan todo dependency suppress dispatch without a permanently-excluding text marker, verified via a
+      regression test, quality-gates.sh green.
 
 ## Progress Log
 
@@ -298,3 +295,7 @@ same-corpus dependencies). Instead:
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ed5262c1f0adb2ae]: KEEP-NA, valid — sole remaining item is a self-labeled genuine agent-orchestrator design fork, not decidable unilaterally by an audit pass.
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item is a self-labeled genuine agent-orchestrator design fork (build a per-todo prereqs mechanism vs. extend the marker regex), not decidable unilaterally; unchanged since 2026-08-17.
+
+**2026-08-21 — ruling D41 (Per-todo prerequisites mechanism)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+authority, AUTONOMOUS_AGENT_RULES rule 2): Build the per-todo mechanism — fixes the root and composes with existing
+depends_on machinery. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

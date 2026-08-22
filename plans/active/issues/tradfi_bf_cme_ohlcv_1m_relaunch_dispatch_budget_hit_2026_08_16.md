@@ -237,3 +237,15 @@ a repeat of the `cefi-aster-` pollution issue.
   recurrence-pattern flag naming the now-7th occurrence; no new decision blocking beyond the two open todos
   below). No code changed this session.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-21 (operator ruling D5, Databento CME billing — operator paying)**: the daily `tradfi-bf-cme-ohlcv-1m-`
+  relaunch volume this doc chronicles (and the "moots the relaunch-bound tightening" framing in D5's own question)
+  traces to a separate, undocumented crontab entry on the AO orchestrator VM's `ubuntu` user running
+  `scripts/wave_launcher.py` every 3h at `WAVE_MAX_CONCURRENT=20` — NOT the Terraform-managed
+  `uts-prod-tradfi-wave-launcher-cron` Cloud Scheduler job (confirmed still `state: PAUSED` since 2026-06-24). Paused
+  at the source (crontab entry commented out on the orchestrator VM) and a live GLBX.MDP3 billing-probe gate shipped
+  into `wave_launcher.py` as defense-in-depth. Full writeup + evidence:
+  `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md` Progress Log. This doc's remaining
+  open P3 todo (manually relaunch `g02-6m-cl-2024` now vs. wait) is now moot either way while CME billing stays
+  blocked — a manual relaunch would hit the same 402 wall; left open as-is, not force-closed, since the underlying
+  A-vs-B relaunch-budget-shape decision it references is a separate, already-`[x]`-resolved question (option B,
+  shipped `deployment-service@2058bab339`).

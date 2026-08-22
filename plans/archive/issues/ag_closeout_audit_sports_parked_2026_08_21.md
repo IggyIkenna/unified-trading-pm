@@ -3,7 +3,7 @@ doc_type: issue
 title: ag-closeout-audit sports 2026-08-21 — orphan projection + parked findings
 summary: >-
   2026-08-21 /ag-closeout-audit sports tranche Phase 1 audit (3 batches, 82 candidate docs). Compact orphan table.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -28,6 +28,13 @@ source: ["2026-08-21 — /ag-closeout-audit sports, 3 Phase-1 batches, 82 candid
 depends_on: []
 context_scope: [/plans/active/issues/ag_closeout_audit_cross_tranche_big_findings_2026_08_21.md]
 ---
+
+> **📦 ARCHIVED 2026-08-21 (archive-lane sweep)** — Phase 1-3 fully processed: 82 candidates, 3 batches; all 17
+> orphan-table rows re-read directly, 1 genuinely bounded item extracted to
+> `plans/active/sports_satellite_ao_dispatch_batch17_2026_08_21.md`, 2 misclassifications corrected (already
+> self-dispatched, not orphans), 1 live file-corruption finding resolved in-session. 0 open todos, no lock. Kept as a
+> historical audit-run record; ongoing sports-tranche tracking lives in
+> `/plans/active/sports_consolidated_closeout_2026_07_19.md`.
 
 # ag-closeout-audit sports 2026-08-21
 
@@ -103,3 +110,8 @@ original one-line summary). Disposition column added; taxonomy column preserved 
   merge-conflict markers embedded in the working-tree file itself, not editable safely this session). All other 12
   rows re-confirmed correctly orphaned for their originally-stated reason. Did not re-open or re-litigate any
   archived/already-closed sports docs outside this parked doc's own 17-row table — out of this session's scope.
+- **2026-08-21 (archive-lane sweep)**: Re-verified for archival — `status` not draft, no `locked_by`, no
+  `archive_exempt`, 0 open todos (report doc, no checkboxes), evidence holds. Archived per the 6-step ritual: banner
+  added, `status: resolved`, moved to flat `plans/archive/issues/` (`doc_type: issue`). Fixed the sole structural
+  referrer — `sports_satellite_ao_dispatch_batch17_2026_08_21.md`'s `related:` frontmatter dropped this doc's entry
+  (its prose citations of this doc as provenance are left intact).

@@ -87,7 +87,7 @@ governance — ruff-lint, deprecate/delete audit) ·
 (ARCHIVED 2026-07-30, RESOLVED — fleet-wide setuptools CVE, PYSEC-2026-3447, bumped 82.0.1→83.0.0, ignore removed) ·
 [/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md](/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md) (uv
 binary drifted off its pinned version on the VM fleet) ·
-[issues/pm_scripts_typecheck_debt_2026_06_11.md](/plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md) (PM
+[issues/pm_scripts_typecheck_debt_2026_06_11.md](/plans/archive/issues/pm_scripts_typecheck_debt_2026_06_11.md) (PM
 `scripts/` basedpyright typecheck-debt ratchet regression) ·
 [utl_uac_reuse_consolidation_remediation_2026_06_10.md](/plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md)
 (ARCHIVED 2026-07-27; UTL/UAC dedup/reimplementation consolidation refactor) ·

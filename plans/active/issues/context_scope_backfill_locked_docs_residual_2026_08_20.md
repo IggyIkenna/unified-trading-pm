@@ -24,7 +24,7 @@ related:
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
 created: "2026-08-20"
-last_updated: "2026-08-20"
+last_updated: "2026-08-21"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -62,12 +62,17 @@ confirmation the lock is stale.
 
 ## Follow-up
 
-- [ ] [SCRIPT] P3. Check whether these 4 docs' `locked_by: live-defi-rollout` lock is still live or stale (per this
-      workspace's liveness-gated inherited-dirty-WIP convention), and either archive them (if the lock naturally clears
-      via their own resolution path) or backfill `context_scope` on them directly (only after an operator-approved
-      unlock, never autonomously). Repo: unified-trading-pm.
+- [ ] [SCRIPT] P3. DEFERRED-BY-DESIGN — per D54 ruling (ADOPTED-REC 2026-08-21, "Wait — the docs are already
+      resolved and will most likely archive on their own"): no liveness check or context_scope backfill scheduled
+      now. Re-check only if the 4 docs (`empty_reprobe_disagreement_all_2026_08_18.md`, `_2026_08_19.md`,
+      `manifest_hygiene_red_all_2026_08_18.md`, `manifest_hygiene_red_cefi_2026_08_16.md`) are still present,
+      locked, and unarchived at a future sweep well past today. Repo: unified-trading-pm.
 
 ## Progress Log
 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-21 (ao tranche batch 2/3)**: KEEP-NA, valid — sole remaining item requires either the 4 named docs' own resolution path to naturally archive them, or an operator-approved unlock before any `context_scope` backfill — the todo's own text explicitly forbids autonomous action on a locked doc. Re-verified live: all 4 docs (`empty_reprobe_disagreement_all_2026_08_18`, `_2026_08_19`, `manifest_hygiene_red_all_2026_08_18`, `manifest_hygiene_red_cefi_2026_08_16`) still present at `plans/active/issues/`, still `status: resolved` + `locked_by: live-defi-rollout`, unarchived since 2026-08-20 — no change to the underlying ask.
+
+- **2026-08-21 — ruling D54 (Locked-doc context_scope backfill)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Wait — the docs are already resolved and will most likely archive on
+  their own. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

@@ -91,8 +91,8 @@ Massive-fka-Polygon.io** (`polygon` = the CHAIN).
   check on `ldr_main` repos) + `quality-gates-v2` (promote PR) + quickmerge-provenance — label-check / SIT-digest /
   dep-order are RETIRED/advisory, NOT blocking. `staging` KEPT + REVERSIBLE (major/breaking bump or operator decision
   routes THROUGH it; gates unchanged). **LDR never runs server QG**; `main` = reconciled projection back-merged to LDR
-  (`main-backmerge-to-ldr`) — **landing on `main` DEPLOYS NOTHING**: AO self-pulls LDR (`ao-self-pull.sh`, root cron
-  every 2min, restarts on HEAD move), other services deploy via Cloud Build →
+  (`main-backmerge-to-ldr`) — **landing on `main` DEPLOYS NOTHING**: AO self-pulls LDR (`ao-self-pull.sh` cron;
+  restarts ONLY on RELEVANT HEAD moves), other services deploy via Cloud Build →
   `…/runtime-deployment-topology.md` §5. `--hotfix`
   needs `[hotfix]`. **Release**: semver-agent on `push:[main]` → git-tag mint + `publish-package` wheel to AR;
   major/1.0.0 via human staging; `reconcile_release_tags.py` = stall detector, not minter. `unified-trading-codex`

@@ -119,15 +119,15 @@ Candidate directions (not evaluated in depth, listed for whoever picks this up):
 
 ## Todos
 
-- [ ] [OPERATOR] P3. Decide which of the 3 candidate directions above (or another) is worth building, if any — this
-      is a genuine judgment call between "prevent" (adds mechanism + maintenance cost for a hazard that resolved
-      cleanly on its own once) and "document the recovery, don't prevent" (cheaper, relies on the next occurrence
-      also being caught before a silent overwrite). Done when: a stated direction, or an explicit "not worth fixing,
-      the observed recovery path is sufficient" ruling.
-- [ ] [DOCS] P3. Once ruled, if a fix direction is chosen: implement it (either the reservation marker, or the
-      tightened fork-prompt language added to `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s "Running as one
-      of N concurrent sharded tranche workers" section, generalizing it to cover single-session-forks-itself, not
-      just AO-dispatched sibling workers). Done when: the chosen fix is live and this doc is closed citing it.
+- [x] N. ✅ [OPERATOR] P3. Direction decided 2026-08-21 per D33 ruling (ADOPTED-REC, autonomous-dispatch authority,
+      AUTONOMOUS_AGENT_RULES rule 2): Tighten fork-prompt language — cheapest reduction; a full lock's maintenance
+      cost isn't justified by one zero-loss incident. — /plans/active/issues_corpus_completion_dispatch_2026_08_21.md
+      ledger D33.
+- [ ] [DOCS] P3. Implement the D33-ruled fix: tighten the fork-prompt language in
+      `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s "Running as one of N concurrent sharded tranche workers"
+      section — generalize it to explicitly disclaim inherited narrative about a parent's own concurrent Phase 1
+      run, covering single-session-forks-itself (not just AO-dispatched sibling workers). Done-when: SKILL.md's
+      language is live and this doc is closed citing the commit.
 
 ## Progress Log
 
@@ -142,3 +142,7 @@ Candidate directions (not evaluated in depth, listed for whoever picks this up):
   building a prevention mechanism vs. accepting the observed after-the-fact recovery as sufficient; todo 2 is
   gated on todo 1's outcome (nothing to implement until a direction is ruled). Not mechanically bounded. Doc stays
   `assigned_vm: NA`.
+- **2026-08-21 — ruling D33 (Fork batch-draft collision prevention)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Tighten fork-prompt language — cheapest reduction; a full lock's
+  maintenance cost isn't justified by one zero-loss incident. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

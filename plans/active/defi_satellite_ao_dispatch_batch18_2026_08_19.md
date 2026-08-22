@@ -37,7 +37,7 @@ related:
     /plans/active/issues/na_eligibility_audit_defi_blocks_2026_08_19.md,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
     /plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md,
-    /plans/active/issues/plan_reconciler_findings_defi_2026_08_18.md,
+    /plans/archive/issues/plan_reconciler_findings_defi_2026_08_18.md,
     /plans/active/defi_migration_audit_log_2026_07_24.md,
     /plans/active/defi_live_poller_phased_build_2026_08_15.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,

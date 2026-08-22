@@ -18,7 +18,7 @@ tags: [plan-reconcile, full-sweep, corpus-hygiene, triage]
 related:
   [
     /plans/active/issues/plan_reconciler_findings_all_2026_08_12.md,
-    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: 2026-08-20
 author: interactive session, slot-6
@@ -42,7 +42,7 @@ context_scope:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
+    /plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
   ]
 ---
 
@@ -96,7 +96,7 @@ still needs attention once a class-level fix lands.
       (independently found by at least 4 different hunters) -- a branch name landing in the lock-holder field,
       not a real lock, blocking otherwise-ready archivals. Operator ruling: treat any doc where this is the ONLY
       blocker as unlocked and archive-eligible. A standing tracker already exists at
-      `/plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` (cited "2 files" as
+      `/plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` (now archived; cited "2 files" as
       of its own last count; this sweep found 9+, confirming it's an active, growing tooling bug, not historical
       residue) -- update that doc's count and root-cause it (find what's stamping the branch name into this field)
       rather than re-litigating per-doc here.

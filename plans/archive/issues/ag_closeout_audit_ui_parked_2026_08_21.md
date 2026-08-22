@@ -3,7 +3,7 @@ doc_type: issue
 title: ag-closeout-audit ui 2026-08-21 — orphan projection + parked findings
 summary: >-
   2026-08-21 /ag-closeout-audit ui tranche Phase 1 audit (1 batch, 17 candidate docs). Compact orphan table.
-status: open
+status: resolved
 nature: issue
 asset_group: [ui]
 stage: [meta]
@@ -28,6 +28,13 @@ source: ["2026-08-21 — /ag-closeout-audit ui, 1 Phase-1 batch, 17 candidates"]
 depends_on: []
 context_scope: [/plans/active/issues/ag_closeout_audit_cross_tranche_big_findings_2026_08_21.md]
 ---
+
+> **📦 ARCHIVED 2026-08-21 (archive-lane sweep)** — Phase 1-3 fully processed: 17 candidates, 1 batch; all 12
+> orphaned rows re-verified directly (0 cleared the bounded/AO-eligible bar, no new batch drafted), all 4 mechanical
+> hygiene flags re-checked (no direct fix applicable this pass), 1 row's underlying doc since resolved+archived. The
+> stuck-dispatch big finding (`deployment_api_unauthenticated_prod_p0_2026_08_10_finalize.md`) was escalated, not
+> fixable via doc edit. 0 open todos, no lock. Kept as a historical audit-run record; ongoing ui-tranche tracking
+> lives in `/plans/active/ui_consolidated_closeout_2026_07_30.md`.
 
 # ag-closeout-audit ui 2026-08-21
 
@@ -128,3 +135,6 @@ below for the full sweep summary.
   (dashboard access, or the VM-side `sqlite3 state.db` query that successfully diagnosed a similar stuck-lock case
   on 2026-08-20) rather than another doc-side re-check. Full detail in the "Mechanical hygiene flags" section above.
   No files committed/pushed this pass (edits only, per this session's own instructions).
+- **2026-08-21 (archive-lane sweep)**: Re-verified for archival — `status` not draft, no `locked_by`, no
+  `archive_exempt`, 0 open todos (report doc, no checkboxes), evidence holds. No corpus referrers found. Archived per
+  the 6-step ritual: banner added, `status: resolved`, moved to flat `plans/archive/issues/` (`doc_type: issue`).

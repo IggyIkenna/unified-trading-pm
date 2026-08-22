@@ -280,6 +280,166 @@ byte-exact-matched) is conclusively established regardless of which script produ
 scope) — the fix path is already the one this doc's ruling #3 names (fix-consolidator → re-derive-index →
 build-MTDS-collectors → recompute), not a new one.
 
+## INVESTIGATED 2026-08-21 — health_factor / LTV-liq-threshold-for-5-protocols / Radiant reserve reader
+
+Session scope: the "build-MTDS-collectors → recompute" remaining scope from the todo below, narrowed to 3 sub-questions.
+Real, live-verified findings only — no code shipped this session (see disposition per item).
+
+**(1) `health_factor` protocol-aggregate source — STOP, premise contradicted, no build attempted.**
+`REQUIRED_OUTPUT_COLUMNS["health_factor"]` (`orchestrator_calculators.py:47-55`) names
+`aave_health_factor`/`aave_total_collateral_eth`/`aave_total_debt_eth`/`aave_available_borrows_eth`/
+`aave_current_liquidation_threshold`. These are **exactly** Aave V3 `Pool.getUserAccountData(address user)`'s return
+tuple (`totalCollateralBase`, `totalDebtBase`, `availableBorrowsBase`, `currentLiquidationThreshold`, `ltv`,
+`healthFactor` — confirmed against `aave/aave-v3-core` `IPool.sol`), the canonical **wallet/account-scoped** call — not
+a guess, the field names are a 1:1 match. `AaveProtocolDataProvider`/`Pool.getReserveData()` (reserve-level, already in
+`market-tick-data-service/market_interface/adapters/defi/aave_positions.py` `_RESERVE_DATA_ABI`) has zero
+health-factor-shaped fields (liquidityIndex/borrow-rates/aToken addresses only) — reserves don't carry a "total
+collateral" or "health factor" at all; that concept only exists per-account. Aave itself exposes no
+protocol-wide-aggregate health factor (averaging `getUserAccountData()` over every borrower isn't an Aave-published
+metric — it would be re-deriving wallet data in aggregate, the exact pattern the prior session rejected). **The
+orchestrator.py `_process_health_factor` docstring's claim ("protocol-level aggregates, not wallet-specific") is
+asserted, not backed by any real source** — this is very likely the origin of the false framing this task started
+from. Per the task's own stop condition: reporting precisely rather than building. **No fix applied; this shard stays
+`attempted_failed`/unwritten under the existing `_require_declared_outputs` gate — correctly, since no real
+protocol-aggregate source exists.** Follow-up needs an **operator ruling**: either (a) accept `health_factor` as
+genuinely wallet-scoped and re-route it through position-risk-centralization instead of the on-chain
+protocol-aggregate feature pipeline, or (b) retire the feature_group as unbuildable.
+
+**(2) LTV/liquidation-threshold for COMPOUND_V3/EULER_V2/FLUID/VENUS/BENQI — real sources found for 3, no build (architecture blocker).**
+- **Compound V3 (Comet)**: `Comet.getAssetInfoByAddress(asset)` — **live eth_call CONFIRMED** 2026-08-21 against the
+  real mainnet USDC Comet (`0xc3d688B66703497DAA19211EEdff47f25384cdc3`, from
+  `compound-finance/comet/deployments/mainnet/usdc/roots.json`) for WETH collateral: returns an 8-word
+  `AssetInfo` struct (offset, asset, priceFeed, scale, `borrowCollateralFactor`, `liquidateCollateralFactor`,
+  liquidationFactor, supplyCap) — real, non-zero values observed on-chain.
+- **Venus (BSC)**: Compound-fork `Comptroller.markets(vTokenAddress)` exposes `collateralFactorMantissa` +
+  `liquidationThresholdMantissa` per market (confirmed via `VenusProtocol/venus-protocol` `ComptrollerStorage.sol` +
+  `docs-v4.venus.io`) — real, not live-called this session.
+- **BENQI (Avalanche)**: same Compound-fork Comptroller shape (`collateralFactorMantissa` via `markets(qiTokenAddress)`)
+  — real pattern, but only the Isolated-Markets Comptroller address was found this session
+  (`0xfc8C7271BdC3816D7AB1fc802216bad387692Ce1`); the Core-Markets Comptroller address (the one this codebase actually
+  needs) was not resolved.
+- **Euler V2**: per-vault `LTVConfig` (distinct `borrowLTV`/`liquidationLTV`, ramping fields) confirmed via
+  `euler-xyz/euler-vault-kit` docs + audit — real, queried through Euler's Lens contracts, not live-called this
+  session (no vault address resolved yet).
+- **Fluid**: NOT confirmed. Fluid's LTV/liquidation data lives behind its Vault `Resolver` contracts
+  (`docs.fluid.instadapp.io`), not a simple single-call getter like the other 4 — needs deeper research before a
+  calculator can be scoped. Still BLOCKED.
+
+**Architecture blocker (applies to all 4 confirmed sources above, not just Fluid)**: every existing features-service
+on-chain calculator (`compound_v3_liquidity_calculator.py`, `euler_v2_liquidity_calculator.py`, `aave_risk_calculator.py`,
+etc.) fetches over **HTTP** (DefiLlama Yields API) — features-service does not own chain RPC credentials.
+`features_service/onchain/collectors/chain_event_scanners.py`'s own docstring states this explicitly: "features-onchain-
+service does not own chain credentials; the runner pulls keys from Secret Manager via `ApiKeyReloader`". The 4 real
+sources above are all **on-chain `eth_call`s**, not HTTP APIs — building `<protocol>_risk_calculator.py` files that
+call them directly from features-service would need new RPC-credential plumbing that doesn't exist in this service
+today (MTDS owns that, via Alchemy clients — see `aave_positions.py`), or an MTDS-side collector (mirroring the
+existing Radiant oracle-price collection pattern) that features-service's `data_loader` then reads, matching the
+`load_rate_indices()` precedent every other calculator in this file already uses. **Scoping and building that
+plumbing is a real, larger follow-up** — not attempted this session to avoid a same-file cross-service-boundary
+violation (`NO service↔service deps` — features-service depends only on UTL/UAC/`unified-*-interface`, never imports
+MTDS directly). No calculator files were created.
+
+**reward_rate**: not investigated this session (budget). Still open/unresearched — do not assume `EigenRewardsCalculator`
+generalizes; genuinely unresearched, not "still blocked" in the confirmed sense.
+
+**(3) RADIANT reserve reader — getLendingPool() CONFIRMED live; ABI-shape finding; no build (same architecture blocker + a real ABI mismatch).**
+Live-verified independently 2026-08-21 (own `eth_call`, not just reading the pre-existing note in
+`market-tick-data-service/.../_oracle_prices_constants.py`, which has an unrelated **uncommitted, stale** (~8h old)
+local diff in that repo — not touched, not mine, per multi-agent safety rules):
+`LendingPoolAddressesProvider.getLendingPool()` on `0x454A8DAF74b24037ee2FA073ce1BE9277ED6160A` (Arbitrum) resolves to
+`0xE23B4AE3624fB6f7cDEF29bC8EAD912f1Ede6886`, matching the local uncommitted note exactly.
+
+**Real finding — the task's premise ("combine with `AavePositionsMixin`'s existing `_RESERVE_DATA_ABI`") does not hold
+as stated**: calling `getReserveData(asset)` against Radiant's `LendingPool` for WETH/ARB/USDC returns **12 words**
+(V2-shaped: configuration, liquidityIndex, variableBorrowIndex, currentLiquidityRate, currentVariableBorrowRate,
+currentStableBorrowRate, lastUpdateTimestamp, aTokenAddress, stableDebtTokenAddress, variableDebtTokenAddress,
+interestRateStrategyAddress, id) — **not** the 15-word V3 struct `AavePositionsMixin._RESERVE_DATA_ABI` decodes
+(that ABI has `accruedToTreasury`/`unbacked`/`isolationModeTotalDebt` and a different field order). This matches
+Radiant's own docstring ("Aave-V2-fork") but contradicts reusing the V3-shaped ABI verbatim — a genuinely new
+12-field ABI is needed, not a straight reuse. Confirmed available-liquidity computable
+(`aToken.totalSupply() - variableDebtToken.totalSupply()`, e.g. USDC: 18,956,249,967 - 6,191,028,812 =
+12,765,221,155 raw units) via 2 extra ERC20 `totalSupply()` calls per reserve.
+
+Also found: `instruments-service/instruments_service/reference_data/adapters/defi/radiant.py`'s curated
+`vault_address` values (e.g. rWETH `0xF4B1486DD74D07706052A33d31d7c0AAFD0659E1`) do **not** match the real aToken
+address `getReserveData()` returns for WETH (`0xfb6f79db694ab6b7bf9eb71b3e2702191a91df56`) — worth a separate look,
+not chased further this session (out of this todo's scope; flagging per the "misled you → fix or flag" rule).
+
+Same architecture blocker as (2) applies: this reader belongs on the MTDS side (same repo as `aave_positions.py` and
+the existing Radiant oracle collector), not bolted directly onto features-service. No calculator files were created.
+
+## INVESTIGATED 2026-08-22 — health_factor operator ruling RESOLVED: real collector already exists, in strategy-service not MTDS; no build needed
+
+Corrected framing from the operator (this session): we don't need a protocol-wide aggregate — for OUR OWN Aave
+positions we already know the wallets, so wallet-scoped `getUserAccountData()` for those specific wallets is a
+legitimate, bounded use. Tasked to build this MTDS-side, reusing MTDS's existing `aave_positions.py`/
+`_radiant_oracle_collection.py` infra. **Investigation found the premise needs one correction: the real,
+live-wired wallet-scoped collector already exists — in `strategy-service`, not MTDS — and MTDS has zero
+wallet-scoped on-chain read infra to reuse.**
+
+**(1) Real wallet source — CONFIRMED, two independent real sources, not invented:**
+- **Own-client wallets**: `strategy-service/strategy_service/position/config_reloaders.py`'s
+  `DefiWalletDomainConfig` (`wallets: dict[client_id, dict[chain, wallet_address]]`), a GCS-backed hot-reloadable
+  domain config (`ConfigReloaderBase(domain="defi_wallets", ...)`), resolved via `get_active_defi_wallets()` /
+  `chains_for_client(client_id)`.
+- **Third-party candidate wallets** (for liquidation-hunting archetypes, not our own positions):
+  `aave_candidate_discovery.py`'s subgraph-sourced watch-list, via `discover_aave_borrower_candidates()`.
+
+**(2) Real collector — CONFIRMED ALREADY LIVE-WIRED, not a gap:**
+`strategy-service/strategy_service/position/position_interface/adapters/aave.py::AavePositionAdapter.get_lending_position()`
+already makes exactly the call this task specified: `getUserAccountData(address)` (selector `0xbf92857c`,
+verified against 4byte.directory 2026-08-18) on the Aave V3 Pool
+(`0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2`), decodes the 6-word return tuple, and emits
+`health_factor`/`ltv_ratio`/`collateral_usd`/`debt_usd` — i.e. the 5 `REQUIRED_OUTPUT_COLUMNS["health_factor"]`
+columns this doc's 2026-08-21 investigation matched to this exact call. It correctly reports `health_factor=None`
+(honest-absence) rather than Aave's uint256-max "no risk" sentinel when a wallet carries zero debt. Two real
+callers already wire it to the two wallet sources above:
+`strategy_service/position/core/defi_health_poller.py::poll_client_defi_wallets()` (own-client wallets →
+`risk.py::update_lending_positions()` → `margin_health_cache`) and
+`strategy_service/position/core/candidate_wallet_health_poller.py::poll_candidate_wallet()` (candidate wallets →
+`margin_health_cache.record_margin_health()` directly).
+
+**(3) Live-verified 2026-08-22 (real eth_call, no credentials — public RPC)**: replayed the exact call
+`AavePositionAdapter` makes — `eth_call` to `0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2`,
+data=`0xbf92857c` + 32-byte-padded address — against `https://ethereum-rpc.publicnode.com` (no API key) for the
+zero address. Real mainnet response decodes to `totalCollateralBase=11929042313` ($119.29 at 8-decimal base-currency
+convention), `totalDebtBase=0`, `availableBorrowsBase=4875399593` ($48.75), `currentLiquidationThreshold=7800`
+(78.00% at 4-decimal bps), `ltv=4087` (40.87%), `healthFactor=uint256-max` — matching
+`AavePositionAdapter`'s documented decimal conventions and its zero-debt sentinel handling exactly. The
+selector, target address, decode shape, and sentinel logic are confirmed correct against live chain state.
+
+**(4) Why no MTDS build was made — the real consumers already bypass the GCS `health_factor` feature_group
+entirely, so building a collector to feed it would be building for a dead pipe:**
+`strategy-service/strategy_service/engine/core/gcs_feature_provider.py`'s own docstring states the GCS
+`health_factor` feature_group parquet is one of five **byte-identical placeholder** shards — base identity
+columns only, zero real feature columns. The two archetypes that actually gate on health factor —
+`engine/strategies/v2/arbitrage_structural/liquidation_capture.py` and
+`engine/strategies/v2/mev/liquidation_bundle.py` — do **not** read that GCS feature group at all; both read
+"the centralized margin-health cache" (`margin_health_cache.py`), which `defi_health_poller.py`/
+`candidate_wallet_health_poller.py` already populate from real `AavePositionAdapter` eth_calls. So the GCS
+`health_factor` feature_group schema this doc's `REQUIRED_OUTPUT_COLUMNS` names is not on the real data path at
+all — it is vestigial. Building a second MTDS-side `getUserAccountData()` collector (duplicating the selector/
+decode/sentinel logic `AavePositionAdapter` already gets right) to write into that placeholder parquet would
+(a) violate "reuse infrastructure, don't build a parallel one" — the real infra is one repo over, and (b) feed a
+pipe nothing downstream reads.
+
+**Ruling applied**: **(b)-adjacent** — not "retire as unbuildable" (it IS buildable and already built), but
+**retire the GCS `health_factor` feature_group / `REQUIRED_OUTPUT_COLUMNS["health_factor"]` schema as the wrong
+target** — the real wallet-scoped health-factor pipeline already exists end-to-end in strategy-service and is
+already the live data path the archetypes use. No MTDS code shipped this session (none was correctly scoped to
+ship). If a genuinely new consumer needs health_factor via the GCS/features-service path specifically (not the
+live cache), the correct follow-up is wiring strategy-service's *existing* `AavePositionAdapter` output to also
+write a GCS parquet in the canonical shard shape — reusing the adapter, not re-deriving it in MTDS — tracked as
+a new todo below, not built blind this session.
+
+- [ ] [BACKEND] P2. If a real consumer needs `health_factor` via the GCS/features-service parquet path (distinct
+      from the live `margin_health_cache` path `liquidation_capture.py`/`liquidation_bundle.py` already use),
+      wire `strategy-service`'s existing `AavePositionAdapter.get_lending_position()` (already real,
+      live-verified 2026-08-22) to also persist a GCS parquet in the canonical `health_factor` feature_group
+      shard shape for `DefiWalletDomainConfig`'s known wallets — do not re-implement the eth_call/decode logic in
+      MTDS. Confirm a real consumer exists before building (name it) — this todo is a placeholder for the
+      possibility, not a confirmed requirement as of 2026-08-22.
+
 ## Todos
 
 - [ ] [DATA] P0. **PARTIALLY CLOSED by batch-6 todo 18 (slot-4, 2026-07-30, features-service@d8a643a0).** Fix onchain
@@ -297,6 +457,33 @@ build-MTDS-collectors → recompute), not a new one.
       ltv/liquidation_threshold/reward_rate/flash_loan_liquidity/health-factor inputs, then rerun the 5 feature-less
       calculators) — the consolidator/re-derive-index portion is now moot (there was never a broken consolidator to
       fix).
+- [x] [OPERATOR] P2. **RESOLVED 2026-08-22** — see "INVESTIGATED 2026-08-22" section above. health_factor is
+      inherently wallet-scoped (confirmed 2026-08-21); the wallet-scoped pipeline already exists end-to-end and
+      live-wired in strategy-service (`AavePositionAdapter` + `defi_health_poller.py` +
+      `candidate_wallet_health_poller.py`, real wallets from `DefiWalletDomainConfig` +
+      `aave_candidate_discovery.py`), live-verified 2026-08-22 via a real eth_call against public mainnet RPC.
+      The GCS `health_factor` feature_group `REQUIRED_OUTPUT_COLUMNS` schema is retired as the wrong target — the
+      real consumers (`liquidation_capture.py`/`liquidation_bundle.py`) already read the live
+      `margin_health_cache` path instead, not that GCS parquet. Do not build a calculator against this schema.
+- [ ] [BACKEND] P2. Scope + build the MTDS-side on-chain risk-parameter collector infrastructure for
+      COMPOUND_V3/VENUS/EULER_V2 (real sources confirmed 2026-08-21: Comet.getAssetInfoByAddress() live-verified;
+      Venus/BENQI Comptroller markets() mapping; Euler V2 per-vault LTVConfig via Lens) -- this is RPC-credentialed
+      on-chain data, so it belongs in market-tick-data-service (mirrors aave_positions.py /
+      _radiant_oracle_collection.py, not a features-service HTTP-API calculator) with features-service's data_loader
+      consuming it, matching the load_rate_indices() precedent. BENQI needs its Core-Markets Comptroller address
+      resolved first (only the Isolated-Markets address was found). Fluid needs its Resolver-contract shape
+      researched before it can be scoped at all -- separate sub-item.
+- [ ] [BACKEND] P2. Build the Radiant reserve-data reader in MTDS (not features-service -- see architecture note
+      above): LendingPoolAddressesProvider.getLendingPool() (0x454A8DAF74b24037ee2FA073ce1BE9277ED6160A on Arbitrum
+      resolves to 0xE23B4AE3624fB6f7cDEF29bC8EAD912f1Ede6886) live-confirmed 2026-08-21. Needs a NEW 12-field
+      V2-shaped getReserveData() ABI (Radiant is NOT V3-shaped -- AavePositionsMixin._RESERVE_DATA_ABI does not
+      decode it correctly, confirmed by live word-count). Available liquidity = aToken.totalSupply() -
+      variableDebtToken.totalSupply() (+ stableDebtToken if nonzero), both live-confirmed for WETH/ARB/USDC. Also:
+      instruments-service's radiant.py curated vault_address values do not match the real on-chain aToken addresses
+      -- worth checking separately when this is built.
+- [ ] [BACKEND] P3. Investigate reward_rate general per-protocol reward-token source -- not researched in the
+      2026-08-21 session (budget). EigenRewardsCalculator is EIGEN-specific; unknown whether a general pattern
+      exists across protocols. Genuinely unresearched, not confirmed-blocked.
 
 ## Progress Log
 
@@ -337,3 +524,14 @@ build-MTDS-collectors → recompute), not a new one.
 - **na-eligibility-audit 2026-08-16** [body-hash:eb6c098a1e58cc26]: KEEP-NA, valid — Single open [DATA] P0 todo's title implies a broad consolidator/re-derive-index/build-MTDS-collectors/recompute chain, but the todo's own updated text narrows it: the consolidator/re-derive-index portion is now moot (already shipped 2026-07-30, features-service@d8a643a0, per a sibling doc's root-cause correction) — only 'build-MTDS-collectors → recompute' remains, i.e.
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **investigation 2026-08-21**: Investigated the 3 open sub-questions (health_factor source, 5-protocol LTV sources,
+  Radiant reserve reader) with live eth_call verification (own RPC calls, not just re-reading prior notes). No code
+  shipped -- see the INVESTIGATED section above for full findings and the 4 new todos this added. Headline: (1)
+  health_factor's REQUIRED_OUTPUT_COLUMNS are Aave getUserAccountData()'s exact field names -- inherently
+  wallet-scoped, contradicts the "protocol aggregate" framing this task started from, operator ruling needed; (2)
+  real sources confirmed for Compound V3 (live-verified)/Venus/Euler V2, Fluid still unresearched, BENQI
+  Core-Markets address unresolved; (3) Radiant's getLendingPool() independently re-confirmed live, but its
+  getReserveData() is V2-shaped (12 words), not V3-shaped like AavePositionsMixin's existing ABI -- a real ABI
+  mismatch, not a straight reuse. All 3 need on-chain RPC calls, which features-service's existing calculators don't
+  do (HTTP-only, DefiLlama) -- building requires MTDS-side collector work, scoped as follow-up todos rather than a
+  same-session cross-service-boundary build.

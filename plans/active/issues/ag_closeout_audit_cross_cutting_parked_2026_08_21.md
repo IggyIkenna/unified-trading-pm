@@ -14,6 +14,7 @@ scope: [engineer, admin]
 tags: [ag-closeout-audit, cross-cutting, orphan-projection]
 related: [/plans/active/issues/ag_closeout_audit_cross_tranche_big_findings_2026_08_21.md, /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
 created: 2026-08-21
+last_updated: 2026-08-21
 author: claude-session-2026-08-21
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -152,10 +153,24 @@ recon), 12 (git-stash/autostash hazard).
   scope, needs an operator call): whether to actually promote batch19/batch20 themselves — both contain real,
   already-vetted, conflict-checked bounded work from 2026-08-19 that has sat undispatched for 2+ days.
 
+## Todos
+
+- [ ] [INFRA] P2. Per D8 ruling (ADOPTED-REC 2026-08-21: "Promote all — already conflict-checked, vetted work idle
+      only for lack of sign-off"): promote `cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md` and
+      `cross_cutting_satellite_ao_dispatch_batch20_2026_08_19.md` from `status: draft` to `status: active`, and
+      flip their gated `_finalize` companions' `status` back from `blocked` to `active` (they were set to `blocked`
+      this same run precisely because their drafts were undispatched — see Mechanical hygiene flags above). Done-when:
+      both batch frontmatter read `status: active`, both finalize plans read `status: active`, and
+      `regen_backlog_from_plan.py` ingests both batches' todos (confirmed via a live backlog listing).
+
 ## Progress Log
 
 - **2026-08-21**: Doc created directly from the 2026-08-21 /ag-closeout-audit cross-cutting Phase-1 sweep (6
   batches, the largest tranche). No mechanical fixes applied yet.
+- **2026-08-21 — ruling D8 (Draft satellite batches activation)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch
+  authority, AUTONOMOUS_AGENT_RULES rule 2): Promote all — each is already conflict-checked, vetted work idle only
+  for lack of sign-off; the defi batch also stops recurring false DP-FETCH-009 pages. Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.
 - **ag-closeout-audit 2026-08-21 (cross-cutting tranche, Phase 2+3 sweep)**: Phase 2 — applied all 5 mechanical
   hygiene fixes (4 real edits + 1 confirmed-no-op), see updated flags above with per-item evidence. Phase 3 — did a
   full re-verification pass over every row in the Batch 1-2 orphan table (24 rows): deep-read 6 candidate docs in

@@ -5,7 +5,7 @@ summary: >-
   quality-gates.sh for market-tick-data-service is currently RED due to two unrelated pre-existing findings from other
   recent commits, blocking unrelated in-flight work (confirmed not caused by this reporter's diff -- a crc32c
   content-verify fix in migrate_tradfi_underlying_display_names_2026_08.py, which touches neither flagged file).
-status: open
+status: archived
 nature: issue
 asset_group: [defi, sports]
 stage: [data]
@@ -17,14 +17,13 @@ parent_epic: security_and_cross_cutting_master
 source: "tradfi_satellite_ao_dispatch_batch13_2026_08_13.md todo 4 -- discovered while shipping an unrelated fix"
 assigned_vm: NA
 created: 2026-08-15
-resolved_by:
+resolved_by: market-tick-data-service (Morpho URL fix via defi_satellite_ao_dispatch_batch14_2026_08_16.md), unified-trading-pm@438838ae72 (adapter-contract baseline bump)
 locked_by:
 locked_since:
 priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
 context_scope:
   [
     /codex/04-architecture/shard-level-failure-isolation.md,
@@ -33,6 +32,12 @@ context_scope:
     /plans/active/defi_satellite_ao_dispatch_batch14_2026_08_16.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-21** — both findings resolved: the adapter-contract regression was a false alarm
+> (cohesion-module split + same-day baseline bump, verified live via the scanner 2026-08-15,
+> unified-trading-pm@438838ae72); the hardcoded Morpho URL fix was extracted 2026-08-16 into
+> `defi_satellite_ao_dispatch_batch14_2026_08_16.md` and has since shipped for real (`_MORPHO_BLUE_API_URL` now
+> derives via `get_evm_protocol_rest_url('morpho')`, verified live 2026-08-21).
 
 # market-tick-data-service QG RED — two unrelated pre-existing findings
 

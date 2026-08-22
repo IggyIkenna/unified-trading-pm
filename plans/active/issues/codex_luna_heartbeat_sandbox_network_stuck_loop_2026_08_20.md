@@ -42,7 +42,6 @@ related:
     /plans/active/codex_mcp_tool_use_bridge_2026_08_18.md,
     /plans/active/codex_luna_flex_bridge_2026_08_14.md,
     /plans/active/issues/codex_native_cli_vs_bridge_architecture_decision_2026_08_20.md,
-    /plans/active/issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md,
     /plans/active/issues/idle_lingering_session_reclaim_not_firing_2026_08_19.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
@@ -63,7 +62,6 @@ context_scope:
     agent-orchestrator/server/codex_mcp_proxy.py,
     agent-orchestrator/server/worker_liveness_watchdog.py,
     /plans/active/codex_mcp_tool_use_bridge_2026_08_18.md,
-    /plans/active/issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
 supersedes:

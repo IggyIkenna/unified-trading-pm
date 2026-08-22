@@ -149,7 +149,8 @@ covers will hit the identical wall; `g01-6a-6l-2020` is not special.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. BLOCKED-ON:tradfi_databento_account_billing_suspended_2026_08_09.md — same underlying ask as
+- [ ] [OPERATOR] P1. **DUPLICATE OF `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`**
+      (status: blocked, verified 2026-08-21) — same underlying ask as
       that doc's existing P0 `[OPERATOR]` todo (pay the Databento invoice) — no new action needed beyond that doc; this doc exists to
       correct the sibling docs' hypothesis and record a fresh confirmation. Once billing is restored, the
       `g01-6a-6l-2020` shard (and its 2020-06-10-onward remainder) needs a fresh relaunch — not urgent to track
@@ -197,6 +198,9 @@ covers will hit the identical wall; `g01-6a-6l-2020` is not special.
   Progress Log (2026-08-17, slot 16) — did not re-page the operator (would be a duplicate ask); did not relaunch
   per RB-INFRA-RELAUNCH. No code changed this session.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **dedup pass 2026-08-21**: added an explicit `DUPLICATE OF` marker on the sole open todo (already-verbatim per the
+  na-eligibility-audit entry directly below) so the plan-hygiene open-task counter stops double-counting it against
+  `tradfi_databento_account_billing_suspended_2026_08_09.md`'s own P0 todo — no content change.
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open todo is a verbatim duplicate of
   `tradfi_databento_account_billing_suspended_2026_08_09.md`'s own P0 `[OPERATOR]` todo (pay the Databento invoice) —
   no independent action needed here. Cross-referenced this pass: the sibling

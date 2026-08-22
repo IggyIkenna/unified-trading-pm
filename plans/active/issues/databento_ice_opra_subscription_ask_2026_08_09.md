@@ -34,6 +34,7 @@ context_scope:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: 2026-08-09
+last_updated: 2026-08-21
 author: agent (slot-19)
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -97,10 +98,10 @@ the current 3-dataset plan), not a mechanical implementation step — do not add
 without the operator's explicit go-ahead, since doing so would let the `assert_*` gate start ALLOWING calls that would
 incur real metered billing the moment they're queried.
 
-- [ ] [OPERATOR] P3. Decide whether to add an ICE (`IFEU.IMPACT`/`IFUS.IMPACT`) and/or OPRA subscription to the existing
-      Databento account (billing decision — see cost consequences enumerated in
-      `/codex/02-data/tradfi-databento-sourcing-ssot.md` §"Consequences of the 3-dataset choice"). `BLOCKED-CREDENTIALS`
-      (subscription-gated, not a missing API key).
+- [ ] [DATA] P3. DEFERRED-BY-DESIGN — per D25 ruling (OPERATOR-RULED 2026-08-21): Databento ICE/OPRA subscription
+      DECLINED for now — no ICE (`IFEU.IMPACT`/`IFUS.IMPACT`) or OPRA add-ons; both stay deliberately fail-closed
+      via the existing `assert_*` allowlist gate. Re-ask only on a named product need. See
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md` §"Consequences of the 3-dataset choice".
 - [ ] [CODE] P3. Once approved: add the subscribed dataset code(s) to `ALLOWED_DATABENTO_DATASETS` in
       `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py` (confirmed live at
       this path 2026-08-18, plan_reconciler — already named in this doc's own `context_scope`) + verify the
@@ -127,3 +128,7 @@ incur real metered billing the moment they're queried.
 - **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Both todos remain a billing/subscription decision
   (`CREDENTIAL_BLOCKED`) plus its contingent code follow-up; no content change since the 08-18 pass. `assigned_vm`
   unchanged.
+
+- **2026-08-21 — ruling D25 (Databento ICE/OPRA subscriptions)**: OPERATOR-RULED 2026-08-21 — DECLINED for now: no
+  Databento ICE/OPRA add-ons; both stay deliberately fail-closed (dated ruling recorded on the docs). Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

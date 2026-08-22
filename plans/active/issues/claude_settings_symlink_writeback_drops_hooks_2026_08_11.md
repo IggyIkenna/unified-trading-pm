@@ -38,7 +38,7 @@ resolved_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-11
+last_updated: 2026-08-21
 context_scope:
   [
     scripts/workspace/link-claude-skills.sh,
@@ -143,8 +143,12 @@ indefinitely and the clone silently diverges from the SSOT.
       control IDE sessions. — `unified-trading-pm@e103a86d6c`. Shipped via
       `infra_satellite_ao_dispatch_batch16_2026_08_13.md` (reconciled here 2026-08-15, source doc's own checkbox had
       gone stale).
-- [ ] [INVESTIGATE] P2. Decide whether `DISABLE_AUTOUPDATER: "1"` in the team settings is still wanted, now that it pins
-      the CLI (1.0.112) a full generation behind the Cursor extension (2.1.227). Document the reason if it stays.
+- [ ] [INFRA] P2. Remove `DISABLE_AUTOUPDATER: "1"` from `cursor-configs/settings.json` per D50 ruling (ADOPTED-REC
+      2026-08-21, "Remove unless a specific compatibility issue is guarded — the generation gap risks its own bugs")
+      — unless a concrete, currently-live compatibility break against the pinned CLI (1.0.112) is found first, in
+      which case document that specific guarded reason inline instead of removing. Done when: the key is removed
+      (or, if kept, the settings.json comment states the specific guarded compatibility issue) and
+      `quality-gates.sh` passes green.
 - [x] ✅ [INVESTIGATE] P3. Memory: the `pyright-lsp@claude-plugins-official` plugin spawned one basedpyright language
       server per Claude session — 6 servers against slot 1 alone, 1.6 GB, each independently indexing a 31-repo
       workspace with no sharing. Disabled in the team + personal settings 2026-08-11 at operator direction (in-editor
@@ -216,3 +220,7 @@ convention for every other same-repo path.
 **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:d1f41650d3b5a2cd]: KEEP-NA, valid — first audit pass
 (no prior marker). Sole open item ("decide whether `DISABLE_AUTOUPDATER` is still wanted") is a policy tradeoff
 decision, not a fact-finding task — not worker-determinable alone.
+
+- **2026-08-21 — ruling D50 (Claude CLI autoupdater pin)**: ADOPTED-REC 2026-08-21 (autonomous-dispatch authority,
+  AUTONOMOUS_AGENT_RULES rule 2): Remove unless a specific compatibility issue is guarded — the generation gap
+  risks its own bugs. Source: /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

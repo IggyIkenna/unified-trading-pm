@@ -25,9 +25,12 @@ scope: [engineer]
 tags: [defi, vault-share-price, manifest, instrument-id, per-instrument-grain]
 related:
   [
-    /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
-    /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
+  # 2026-08-21 (archival sweep): dropped defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20 (archived to
+  # plans/archive/issues/, fully resolved — the systemic write-path fix landed market-tick-data-service@4ca2640d).
+  # 2026-08-21 (QG fix, escalation agt-b4a8e9): that drop left this doc orphaned from its AG-closeout family
+  # (ratchet regression, ag_closeout_linkage_baseline.yaml orphan_count=0) — re-linked to defi's closeout.
 created: "2026-07-31"
 author: unknown
 last_updated: "2026-07-31"
@@ -55,11 +58,13 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/vault_share_price_handler.py,
     market-tick-data-service/scripts/rename_vault_venue_canonical.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md,
   ]
 ---
 
 # vault_share_price_handler.py manifest instrument_id gap
+
+> Originating build plan (resolved, archived — cited here as historical evidence, per the archive-safety ratchet,
+> operator ruling 2026-08-17): `/plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`.
 
 ## What I found
 

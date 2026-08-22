@@ -331,9 +331,17 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       server running", zero `lsof` handles on the path; the only live tmux server on the host is pid 3514516 on the
       isolated fleet socket, `ELAPSED=448991s` (~124.7h / ~5.2 days) — unbroken since the 2026-08-13 17:14:35Z respawn
       this doc's own Progress Log already tracks. No further operator judgment needed on this item.
-- [ ] [INFRA] P2. Consider whether AO needs its own periodic self-check that the fleet's actual live server pid matches
-      the isolated socket (not just per-slot `has-session`) — the split-brain here persisted ~3h because nothing was
-      cross-checking "is the CURRENT server on the path we think it's on."
+- [x] ✅ [INFRA] P2. **DONE 2026-08-21** — `agent-orchestrator@5b917c1148`. Added `TmuxPruner._check_tmux_socket_isolation`,
+      run on the same two ticks as `_check_tmux_server_liveness`: resolves the current server via
+      `current_tmux_server_pid()` (this process's own env, same resolution any AO code path uses), looks up its
+      REAL bound socket via `find_tmux_server_pids()` (native `/proc/net/unix` scan, immune to the stale-cached-
+      path issue plain `lsof`/`ss` have), and compares against the expected isolated path
+      (`tmux_spawn.expected_isolated_socket_path()`, a new public accessor for the existing `_TMUX_DEFAULT_SOCKET`
+      constant). Fire-on-change + RESOLVED-bookend alert (new `tmux_socket_split_brain_detected`/`_resolved`
+      activity events + Slack pages), same shape as the existing tmux-server-died alert, disk-deduped so it
+      survives an orchestrator restart mid-episode. 6 new tests (transition, resolved-bookend, never-fires,
+      restart-survives-latch, no-server-reachable-is-not-a-split-brain, no-known-socket-for-pid edge case); full
+      quality-gates.sh green.
 - [ ] [INVESTIGATE] P2. **Checked 2026-08-21 — confirmed permanently unrecoverable, same as death #2 above, still
       open (waiting on recurrence).** Root-cause slots 10 & 11's genuine mid-task SIGTERM at 2026-08-14 23:33:47-48Z
       (part of the 5-slot cluster investigated below) — no OOM (`cgroup oom_kill=0` both), no elevated host
@@ -346,18 +354,24 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       auditd retention window as death #2, 7 days too old to reach this timestamp. Not recoverable via forensics
       now; only a fresh recurrence can be caught live. Same "pane vanished before the pruner's next tick" class this
       doc already tracks generally, not confirmed as a new distinct mechanism.
-- [ ] [INFRA] P3. `check-ao-recent-deaths.sh`'s `burst_size` (and the doc's own "burst = server-wide crash" heuristic)
-      conflates ordinary same-tick `one_task_per_session` recycles (`kill_session reason="manual"`, logged right after a
-      normal `slot_done`/`slot_done_verified`) with genuine crash/kill losses — both land as `tmux_session_lost` rows
-      and both count toward `burst_size`. The 2026-08-14 23:33:47-48Z "5-slot burst" (below) was actually 3 benign
-      recycles + 2 genuine losses; the raw diagnostic made it look like one homogeneous event. Consider
-      cross-referencing each burst member against a preceding `reason="manual"` `SESSION-TEARDOWN` log line (or the
-      `slot_done` event) within the same ~60s window before classifying it as "genuine." **Cross-link 2026-08-18**:
-      `/plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md` is very likely the SAME
-      undercounting gap manifesting in a second consumer (`TmuxSessionLossRateCanary`'s rolling-window breach count,
-      not just `check-ao-recent-deaths.sh`'s `burst_size`) — that doc's own measurement todo should reuse this
-      doc's already-proven method (the 2026-08-14 23:33 cluster below, where 3/5 counted losses were confirmed
-      benign `reason="manual"` recycles) rather than re-deriving it from scratch.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-21** — `agent-orchestrator@47ba8e004b`. Fixed both consumers of this same
+      conflation:
+      1. `check-ao-recent-deaths.sh` now shows a windowed (+/-30s) burst-composition breakdown per row --
+         "burst_window(+/-30s)=N total, M genuinely unexplained, K already-explained" -- computed via a
+         correlated SQL subquery against `death_class` (already-verified against a synthetic in-memory sqlite3 db
+         matching this doc's own 3-benign+2-genuine worked example, plus `shellcheck`/`bash -n` clean), rather than
+         making the reader manually cross-reference each row's own `death_class` across a whole burst.
+      2. **Cross-link 2026-08-18 followed up (the referenced doc,
+         `/plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md`, no longer exists anywhere
+         in the corpus -- active or archived, confirmed via a full `find`+content grep; the underlying investigation
+         it called for had never actually been done).** Read `TmuxSessionLossRateCanary._count_excluded_losses`
+         directly: confirmed it had ZERO `death_class` awareness at all -- only excluded one_shot/scheduled agents
+         and idle-status slots, so a benign `worker_one_task_per_session_reset` recycle counted FULLY toward the
+         rolling-window breach threshold, exactly the "likely overtuned" hypothesis. Fixed:
+         `agent-orchestrator@c906069879` adds an explicit `death_class == "intentional_teardown"` exclusion
+         (missing/null `death_class` is deliberately NOT excluded, so a genuine gap never silently hides a real
+         problem). 4 new tests against a real test DB (this function was previously only ever tested via mocking);
+         full quality-gates.sh green both times.
 - [x] [INFRA] P1. Root-cause + fix `death_forensics.py`'s `check_external_kill` — its `ausearch -ts`/`-te` date
       format (4-digit-year, single combined token) was silently rejected by this VM's ausearch build on EVERY call
       since the module shipped 2026-08-15, masking every "could not check" as ausearch flakiness rather than a real

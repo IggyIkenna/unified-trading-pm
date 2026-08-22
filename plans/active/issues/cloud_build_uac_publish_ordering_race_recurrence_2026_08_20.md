@@ -110,6 +110,13 @@ ordering) vs. accept-and-re-alert — is a fleet-level judgment call, tracked as
       self-heal behavior and just track it. Bounded investigation + judgment — operator / future /ci-reconcile pass;
       not a mechanical fix. Reference:
       /codex/06-coding-standards/dockerfile-standards.md § "uv pip install Retry Wrapper (BuildKit-secret GAR auth)".
+      **EXTRACTED → `cloud_build_uac_publish_ordering_race_recurrence_strategy_service_2026_08_20.md`** — this
+      fleet-level decision has already been made and shipped (status: open, `/plans/active/issues/`; its 2026-08-21
+      DESIGN DECISION rejected the retry-widen/resolve-gate-poll approach and shipped a publisher-side fix instead —
+      tag-trigger rollout + fail-closed guard, `unified-trading-library@65d04d5d` / `instruments-service@56869f32` /
+      `unified-trading-pm@c66f71e3d5`, tracked at `publish_package_semver_tag_race_breaks_consumer_builds_2026_08_20.md`,
+      status: open). That sibling doc's own Progress Log names fund-administration-service among the confirmed
+      same-class recurrences. No separate fleet-level decision needed from this doc.
 
 ## Progress Log
 

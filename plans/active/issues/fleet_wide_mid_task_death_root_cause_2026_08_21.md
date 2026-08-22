@@ -222,17 +222,43 @@ duplicated.
       misclassified `unexplained`) and is a no-op, never a regression, when the respawn wins first. New test
       asserts the activity event; full quality-gates.sh green.
 - [ ] [INFRA] P3. `death_forensics.check_external_kill`'s EXECVE-based search is structurally blind to AO's own
-      `kill_session()` calls (direct `os.kill()` syscalls, not an execve'd subprocess) — needs a different audit
-      rule type (auditd SIGNAL records) to close, not attempted this session.
+      `_reap_pane_tree` sub-step (direct `os.kill()` syscalls, not an execve'd subprocess) — needs a different audit
+      rule type (auditd SIGNAL records) to close. **Narrowed 2026-08-21**: `kill_session()`'s MAIN teardown IS
+      execve-visible (confirmed live on slot 25 via a real `ausearch` hit on `tmux kill-session`) — only the
+      pane's descendant-process REAPING sub-step stays invisible, a narrower gap than originally stated.
+      **Not implemented this session (deliberately, not just deferred): a real, newly-discovered risk.**
+      This host's auditd retention is already only ~25-30 minutes — 5 files x 8MB, rotating every ~6
+      minutes under this host's real event volume (measured this session investigating two historical
+      deaths). Arming a host-wide SIGNAL watch on every `kill` syscall (not just AO's own) would add
+      meaningfully more audit volume fleet-wide, shrinking that already-tight window further — a real
+      tradeoff between closing this blind spot and making EVERY OTHER forensic investigation on this host
+      (not just AO's) have even less retained history to search. Needs an explicit design/operator decision
+      on that tradeoff before implementing, not a default yes.
 - [ ] [DATA] P3. GLM shared-key blind quota estimator — no clean fix without a real upstream quota endpoint;
       consider pattern-matching the literal `[1308][Usage limit reached...]` 429 body as a stopgap
       classification signal if this recurs at volume.
 - [ ] [DATA] P3. `sub-f-odum2default`'s cicd/monitoring-role residual pattern and the possibly-stale
       `context_activity_silence_detected` reading — both need more samples/investigation before a fix can be
       designed.
-- [ ] [DOC] P3. Monitor for recurrence: confirm no new cross-slot broad-pkill-style mass-death bursts appear
+- [x] [DOC] P3. Monitor for recurrence: confirm no new cross-slot broad-pkill-style mass-death bursts appear
       now that the pkill-guard-bin fix is live, and confirm the classification-gap fixes correctly reduce the
       "unexplained" share of new deaths (re-run this doc's scoping query in a week+).
+      — **ANSWERED 2026-08-21 (slot 17), and the answer is that they DO recur: 178 of the 726 `tmux_session_lost`
+      events in a 48h window (25%) fall inside a burst of >=3 DISTINCT slots within any 60s window, at a mean
+      14.8 events/hr sustained across the whole window.** (Burst share measured directly here with that explicit
+      definition — an earlier agent pass in the same session reported 44% using an unstated definition; the 25%
+      figure is the one to cite.) But these bursts are NOT the pkill class this todo was watching for, which
+      is why the fix correctly shows no effect on them. The recurring bursts have a different, now-root-caused
+      mechanism: `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` firing on its FIRST tick after an
+      orchestrator restart. Every `idle_lingering_session_reclaim` burst in a 12h activity-log window lands
+      40-55s after an `ao-self-pull.sh` restart, with ZERO in between (49 reclaims; 7 slots in the 20:04 burst,
+      9 in the 20:16 one) — a restart is exactly when every between-tasks worker still reads `idle`, because the
+      `/heartbeat` that would have flipped it to `working` was refused during the gap, while the tick counter
+      disk-persisted since 2026-08-18 is already at threshold-1. Full chain, measurements and the shipped fix
+      (a post-restart observation grace + a restart-relevance gate cutting ~59% of the restarts):
+      `/plans/active/issues/fleet_dispatch_stall_root_cause_2026_08_21.md`. Closing this todo as answered rather
+      than leaving it as a standing watch — the recurrence question now has a cause and an owner doc; that doc
+      carries the "re-measure 24h after the fix" follow-up.
 - [ ] [OPERATOR] P1. `gemini-3-5-flash-lite-proj4` and `gemini-3-7-flash-proj5` have NO credential env file on
       this host (`~/.claude-accounts/<id>.env` does not exist) — confirmed live 2026-08-21 18:24-18:47 UTC via
       repeated `autospawn_failed` events on slots 3/4/25, all with the identical error
