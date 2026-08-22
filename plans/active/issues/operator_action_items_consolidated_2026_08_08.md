@@ -153,6 +153,30 @@ autonomous workers, so none of this was executed.
 Full per-entry tables with exact commands are in each sub-agent's report (not re-quoted here for length) — ask me to
 pull any specific checkout's full table back up if you want it before deciding.
 
+**2026-08-22 (D3 ledger re-audit) — every count and index above is now STALE, confirmed by fresh re-count**: this
+section's per-checkout counts (96/26/42/12/1/12) are the 2026-08-08 baseline; a fresh `git stash list | wc -l` pass
+today found `.tabs/1`=59, `.tabs/2`=102, `.tabs/3`=152, `.tabs/4`=131, `.tabs/7`=0 (already resolved), root=8 — every
+one has moved, in both directions, since 2026-08-08. **Do not run any drop command from this section as written.**
+The sibling doc `/plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md` is the actively
+maintained, more current tracker for `.tabs/1-4` + root (its own 2026-08-22 entry carries today's fresh counts and
+the same stale-index warning) — treat it as the current SSOT for those five checkouts, not this section.
+**`sandbox-test-user` item resolved**: investigated 2026-08-22 — the checkout is a 12-entry-stash `unified-trading-pm`
+clone nested at `~/Code/sandbox-test-user/unified-trading-system-repos/unified-trading-pm` (last touched March 2026,
+`main` branch, pre-dates the `codex/`/`cursor-configs/` restructure). The stashes carrying the described hardcoded
+`central-element-323112` GCP-project-ID fix (`stash@{8}`, `{10}`, `{11}`) turned out to be huge, unrelated
+whole-workspace reformats from an entirely retired layout (`github-integration/`, `.cursor/rules/`,
+`cursor-rules/` — none of which mirror the current tree's structure); their "central-element-323112" hits are
+QA-detection-logic touch-ups (e.g. an indentation change to an `rg "central-element-323112"` check in an old
+`scripts/quality-gates.sh`), not the described 6-script literal-to-variable fix itself. That fix is **moot to port**:
+today's live QG (`/codex/06-coding-standards/quality-gates.md`, "GCP_PROJECT_ID: Use GCP_PROJECT_ID only" /
+"Hardcoded central-element-*") already enforces the equivalent check on Python source fleet-wide via
+`quality-gates-service-template.sh`, and the two specific March-era scripts this doc named
+(`scripts/quality-gates.sh`, `scripts/validation/pre-flight-audit.sh`) no longer contain the literal in the current
+tree at all — they were rewritten past recognition in the March→August restructure. **Retiring the sandbox-test-user
+checkout without porting anything is correct** — nothing found there is recoverable-and-still-needed. Mechanical
+retirement (deleting the directory) is a filesystem action on a residual dev-machine path, not a repo change; left
+for the operator/next session rather than executed here.
+
 ## 4. Reviews only you can do (judgment, not a fact-check)
 
 - [ ] [OPERATOR] P2. **Honest-coverage mockup design reviews** (4 related sub-questions, paced to your own cadence):

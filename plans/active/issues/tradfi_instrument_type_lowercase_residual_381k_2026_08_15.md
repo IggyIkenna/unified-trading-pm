@@ -415,6 +415,13 @@ AO-eligible follow-up:
       fully superseded by the current committed tree (`85dac5b9`/`1928fbf4`), safe to drop. A prior `git stash drop`
       attempt this session was blocked by a pre-commit/session hook; per workspace discipline this needs an operator
       call rather than a forced workaround. (repo: market-tick-data-service, slot-25 checkout)
+
+      **2026-08-22 (D3 ledger execution attempt)**: could not locate a "slot-25" checkout on this Mac host — only
+      `.tabs/1` through `.tabs/11` exist locally (checked every one's `market-tick-data-service` clone; none is
+      tagged/numbered 25). "Slot-25" here likely refers to an AO-orchestrator worker slot (cloud VM), not a laptop
+      `.tabs/N` directory, so this stash is not reachable from this session. Left open, unresolved — whoever has
+      access to that specific checkout (or the orchestrator VM) needs to re-verify the entry is still present and
+      still content-matches this description before dropping it.
 - [x] ✅ [SCRIPT] P3. `instruments-service/tests/unit/scripts/test_enumerate_expected_universe_v2.py`
       `test_enumerate_v2_tradfi_bundle_types_present_set_suppression_and_dedup` (around line 1000-1044, fixed 2026-08-15
       escalation `agt-4a5047`/PR#1241 alongside the 4 hard-failing combo-casing tests — see that same PR's commit for

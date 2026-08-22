@@ -29,6 +29,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-12
+last_updated: 2026-08-21
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -97,10 +98,14 @@ Recover with `git stash apply stash@{0}` if any of it is worth salvaging.
 
 ## Follow-ups
 
-- [ ] [OPERATOR] P3. **Confirm the parked slot-3 split is redundant and can be dropped.** Origin's `b13e3a2b` already
-      satisfies the file-size gate for both files, so the parked copy is believed fully superseded — but it is another
-      session's work, so an agent should not drop it unilaterally. Done when: either the stash is dropped, or a specific
-      part of it is identified as worth porting onto origin's decomposition. Repo: market-tick-data-service.
+- [x] ✅ [OPERATOR] P3. **CONFIRMED RESOLVED 2026-08-22** — re-verified fresh per D3's approval condition (fresh
+      `git stash show`/`list`, not a stale-index reuse). `.tabs/3/market-tick-data-service` (the exact checkout this
+      doc names) shows **0 stash entries today** — `git stash list` is empty. This confirms the drop already
+      recorded in the sibling doc's Progress Log
+      (`/plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md`, "Parked MTDS duplicate
+      refactor — ✅ Done. Operator ran the drop 2026-08-12"), which this doc's own copy of the todo had never been
+      closed to reflect. Origin's `b13e3a2b` decomposition remains the sole live one; nothing further to reconcile.
+      No drop was attempted or needed this session.
 - [ ] [SCRIPT] P3. **Decide whether a cheap collision signal is worth building for in-flight refactors.** Both sessions
       could see the same red gate; neither could see that another session was already fixing it.
       `slot-git-status-report.sh` already reports per-slot dirty state on a 5-minute cron, so the raw signal (two slots
@@ -114,3 +119,11 @@ Recover with `git stash apply stash@{0}` if any of it is worth salvaging.
 - **na-eligibility-audit 2026-08-17** [body-hash:7705874b65fa6859]: KEEP-NA, valid -- Both remaining items are genuinely non-bounded. The first is explicitly [OPERATOR]-tagged: the doc's own text says the parked stash is 'another session's work, so an agent should not drop it unilaterally' -- an explicit human-call framing. The second asks whether a fleet-wide collision-detection mechanism is worth building at all -- a workspace-tooling policy judgment call (build vs. explicitly reject with reasoning), not a determinable-by-worker-alone outcome.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **D3 ledger 2026-08-22**: OPERATOR-RULED 2026-08-21 (D3, "Stash-pile and stale-WIP cleanup") approved the full
+  cleanup with a fresh-verify-before-drop condition. Re-verified `.tabs/3/market-tick-data-service` fresh (0 stash
+  entries) and closed the first todo above as already-resolved (see its own entry for evidence). The second
+  `[SCRIPT] P3` collision-signal todo is a separate design question, out of D3's stash/WIP scope — left open.
+- **2026-08-21 — ruling D3 (Stash-pile and stale-WIP cleanup)**: OPERATOR-RULED 2026-08-21 — APPROVED the full
+  stash/WIP cleanup (fresh blob re-verify before each drop; `.tabs/3` re-audit first; recover sandbox fix; per-file
+  review of slot-0 dirty files). Already applied to this doc's own todo (see the entry immediately above). Source:
+  /plans/active/issues_corpus_completion_dispatch_2026_08_21.md ledger.

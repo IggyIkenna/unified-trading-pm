@@ -495,3 +495,25 @@ precisely because they were corrupt. Do not read the unique/stale split as work-
   provably zero-loss stash entries) remains categorically blocked for agents by
   `block_destructive_commands.py`'s guardrail (`git stash drop` forbidden regardless of review outcome) — a policy
   block, not a worker judgment call, consistent with every prior audit on this doc.
+- **D3 ledger re-audit 2026-08-22** (this session, per `/plans/active/issues_corpus_completion_dispatch_2026_08_21.md`
+  D3 — "APPROVED the full stash/WIP cleanup (fresh blob re-verify before each drop; .tabs/3 re-audit first...)").
+  Fresh `git stash list | wc -l` in every checkout this doc tracks, measured today (read-only, nothing dropped —
+  `git stash drop` is still hard-blocked for this session by `block_destructive_commands.py`, unchanged):
+
+  | Checkout  | Last measured count           | 2026-08-22 count | Delta     |
+  | --------- | ------------------------------ | ---------------- | --------- |
+  | `.tabs/1` | 108 (2026-08-09)                | 59                | -49       |
+  | `.tabs/2` | 35 (2026-08-09)                 | 102               | +67       |
+  | `.tabs/3` | 125 (2026-08-18, plan_reconcile) | 152               | +27       |
+  | `.tabs/4` | 16 (2026-08-09, still growing)   | 131               | +115      |
+  | root      | 12 (2026-08-08)                 | 8                 | -4        |
+
+  **Verdict: every index-based drop instruction in this doc (and in the mirrored section 3 of
+  `operator_action_items_consolidated_2026_08_08.md`) is STALE and MUST NOT be run as-is** — every checkout's count
+  has moved since its own last measurement, in both directions (some shrank, meaning drops happened through some
+  other path; `.tabs/3` and `.tabs/4` grew substantially). This pass re-counted only — it did **not** attempt a
+  fresh per-entry content re-verification of any of these 452 entries across 5 checkouts (out of this session's
+  budget; flagging rather than guessing, per this doc's own established discipline). The still-open `[OPERATOR] P1`
+  "discard the 5 provably zero-loss entries" todo above (`.tabs/3`, indices computed 2026-08-16, already flagged
+  stale once on 2026-08-18 at 125) is now **doubly stale** at 152 — those five `stash@{N}` indices almost certainly
+  point at different content today; do not reuse them. No drop was attempted or would have succeeded this session.

@@ -35,7 +35,7 @@ context_scope:
     scripts/workspace/link-claude-skills.sh,
   ]
 created: 2026-08-11
-last_updated: 2026-08-11
+last_updated: 2026-08-21
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
@@ -78,12 +78,33 @@ fast-forward).
 
 ## What's still open
 
-- [ ] [OPERATOR] P3. **Decide commit-vs-discard for the 3 stuck files** in the Mac base checkout
-      (`e2e-testing/.github/workflows/notify-slack.yml`, `execution-service/uv.lock`,
-      `system-integration-tests/.github/workflows/quality-gates-v2.yml`) — each needs a human look since none are
-      obviously safe to auto-resolve (a staged-but-uncommitted workflow file, a lockfile drift, a gate-config edit).
-      Once resolved, slot 0 should read clean on the next FF-cron tick. Repo: unified-trading-pm (base checkout is
-      workspace-level, not repo-specific).
+- [ ] [OPERATOR] P3. **Decide commit-vs-discard for the base checkout's dirty files** — per-file diff review
+      completed 2026-08-22 (D3 ledger, "per-file review of slot-0 dirty files"; never blanket-discard). Findings,
+      per file:
+      - `e2e-testing/.github/workflows/notify-slack.yml` — **RESOLVED, no action needed.** The file no longer
+        exists at that path and `git status` on the `e2e-testing` base checkout is fully clean. Whatever it was
+        (staged-but-uncommitted), it's gone.
+      - `execution-service/uv.lock` — **RESOLVED as originally reported** (no longer dirty), but a **different**
+        file is now dirty in the same checkout: `scripts/run_execution_alpha_measurement.py` (modified, mtime
+        2026-08-18). Diff reviewed: replaces a direct `from google.cloud import storage as gcs` +
+        `gcs.Client(...).bucket(...).blob(...).upload_from_string(...)` call with
+        `get_storage_client(project_id=...).upload_bytes(...)` — this is exactly the workspace's own banned-pattern
+        fix (direct `google.cloud` import → `get_storage_client()`). **Recommend COMMIT, not discard** — it reads
+        as a real, in-progress compliance fix, not abandoned WIP. Not committed by this session (base/un-slotted
+        checkout is outside this session's write scope per the multi-agent safety rule — never touch another
+        session's live checkout unilaterally).
+      - `system-integration-tests/.github/workflows/quality-gates-v2.yml` — **STILL dirty, confirmed today.** Diff
+        reviewed: adds a `needs.quality-gates-v2.outputs.billing_kill != 'true'` skip-guard on the failure-notify
+        job, plus a `CI_TRIGGER_BRANCH`/`ci_trigger_branch` substitution-placeholder comment for `ldr_terminal`
+        repos. The source template (`unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`) already
+        carries related content, so this reads as legitimate in-progress template-alignment work, not junk.
+        **Recommend COMMIT after confirming it matches (or precedes) the current template**, not discard.
+        **Two additional dirty files in this same repo, not in the original finding**: `.github/workflows/
+        image-build-gate.yml` (modified) and `.github/workflows/notify-slack.yml` (new, untracked) — neither
+        reviewed in depth this pass; flagging so the operator's look covers all 3, not just the 1 originally
+        tracked.
+      Once resolved, slot 0 should read clean on the next FF-cron tick. Repos: e2e-testing, execution-service,
+      system-integration-tests (base checkout is workspace-level, not repo-specific).
 - [x] ✅ [SCRIPT] P3. **Identify + fix the source of the stray `<repo>/<repo>` self-referential symlinks** (2026-08-09
       15:28, uniform across every repo in the base checkout) and clean up the existing ones — cosmetic (doesn't block
       FF), but worth tracing to stop it recurring. Repo: unified-trading-pm. **SHIPPED —
@@ -99,3 +120,10 @@ fast-forward).
 - **context-scout 2026-08-17**: re-verified context_scope (2 entries), unchanged.
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:232a39505df4eaf3]: KEEP-NA, valid — sole open todo asks the operator to decide commit-vs-discard for 3 specific uncommitted files across 3 repos — genuine judgment about human intent behind pre-existing edits.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **D3 ledger 2026-08-22**: per-file diff review performed (D3 approval condition, "never blanket-discard") — see
+  the updated todo above for per-file findings. 1 of the 3 originally-named files is already resolved
+  (`e2e-testing`'s `notify-slack.yml` no longer exists); `execution-service`'s `uv.lock` is also resolved but a
+  different file in the same repo is now dirty instead; `system-integration-tests`'s `quality-gates-v2.yml` remains
+  dirty as originally reported, plus 2 more dirty files in that repo not previously tracked. No commit made this
+  session — base checkout is outside this session's write scope (multi-agent safety: never touch another
+  session's live checkout unilaterally); left as an evidence-backed operator decision.
