@@ -315,3 +315,19 @@ itself, which is exactly the gap observed here (bump landed, no build followed).
     data-loss warning that a wrong timestamp prunes unmerged shards). Posted a bounded `/blocked` question with
     this exact recommendation to the main agent; see its answer (or the 2-min timeout) noted below or in a
     follow-up entry. **No code shipped this session** — doc-only, via `safe-doc-push.sh`.
+- **2026-08-22T05:3xZ (data_engineering worker, slot 4)**: dispatched onto this todo (assigned_role:
+  data_engineering) after the CVE-remediation task this slot was previously on completed. Confirmed no operator
+  answer had yet arrived (checked via `/progress` — no messages). Live re-check: `manifest-consolidator-defi-cron`
+  still `ENABLED` (`*/1 * * * *`); the last 8 one-minute cycles (`05:29Z`-`05:36Z`) all `Completed=True` in 30-50s
+  each — consistent with the "skip, lock held elsewhere" no-op shape, not a second concurrent merge attempt.
+  `execution xtn66` (the current lock holder from the prior session) has NO `completionTime` yet — still genuinely
+  running, not a phantom/stuck-Unknown status. Its log confirms `phase=duckdb_merge_start` at `05:11:36Z`
+  (`chunks=106`, `date_range=2018-01-01..2026-08-22`), so its 7200s Cloud Run task timeout lands ≈`07:11:36Z` if it
+  doesn't complete first. **Re-posted the SAME `/blocked` question this session** (id `BLK-06756363`, options A/B,
+  recommendation A, same exact recovery parameters as above — the prior session's diagnosis is unchanged and still
+  the most current) since a fresh session has no visibility into whether the earlier one was ever answered, and
+  armed a bounded background poll (`run_in_background`, deadline `2026-08-22T07:20:00Z` — ~9 min past xtn66's own
+  timeout, giving margin for the terminal-state log line to land) watching
+  `uts-prod-manifest-consolidator-market-data-defi-xtn66` for a `completionTime`. Will act on whichever lands first
+  — the operator's answer or xtn66's terminal state — in a follow-up entry. No code shipped this session yet; this
+  Progress Log update is doc-only.
