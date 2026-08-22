@@ -2539,20 +2539,22 @@
         <p>
           A body with <code>"action": "QUOTE"</code> (schema: <code>QuoteInstruction</code>) is intercepted before the
           TRADE-only path above and never reaches the 501 branch either; see the callout at the top of this section for
-          the exact reasoning. It arms delta-proxy repricing and returns immediately.
+          the exact reasoning. It arms delta-proxy repricing and returns immediately, and the resulting limit order reaches the venue
+          on a subsequent underlying tick rather than on this call.
         </p>
         <div class="code-label">Example response: 200</div>
         <div class="code">
           { "instruction_id": "instr-quote-7c21", "status": "REGISTERED", "detail": { "underlying_instrument_id":
           "BINANCE-SPOT:SPOT_PAIR:BTCUSDT", "delta": "0.52", "gamma": "0.03", "original_bid": "65480.00",
-          "original_ask": "65520.00", "note": "Delta-proxy repricing is armed for this instrument. No order was placed:
-          quote submission requires an underlying-tick loop calling QuoteMaintainer.on_underlying_tick, which is not
-          wired in execution-service yet." } }
+          "original_ask": "65520.00", "note": "Delta-proxy repricing is armed for this instrument. No order was placed by this
+          call. The service runs a feature-tick subscriber that calls QuoteMaintainer.on_underlying_tick on every
+          underlying tick, and the resulting BUY at bid / SELL at ask limit order is submitted to the venue when the
+          two-sided order state next changes." } }
         </div>
         <p>
           Every field above, including the exact <code>note</code> string, is
-          read directly from <code>_register_quote_instruction()</code>,
-          <code>external_instruction_api.py:133-171</code>.
+          read directly from <code>_register_quote_instruction()</code> in
+          <code>external_instruction_api.py</code>.
         </p>
 
         <h3>Errors</h3>
