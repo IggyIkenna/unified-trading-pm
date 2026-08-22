@@ -125,3 +125,24 @@ once the ground truth is nailed down.
   untouched pending a dedicated read of its full routing logic, since its own three self-descriptions
   disagree with each other and a docs-reconcile pass editing on inference risked making it worse, not
   better.
+- **2026-08-22 (docs-reconcile, dispatch agt-a33599)**: re-swept the doctrine-consistency hunter fresh
+  (unrelated trigger — today's Phase 0 freshness-gate check surfaced a NEW regression, a missing
+  `last_reviewed:` on `venue-websocket-resilience.md`, fixed separately) and found the 2026-08-21 fix was
+  incomplete in 2 of its own 3 touched files, plus a 4th file it missed entirely — all 3 are the SAME
+  "`--to-staging` cascades through staging" stale-doctrine remnant contradicting the "no-op today"
+  statement the 2026-08-21 fix correctly added elsewhere in the same files: (1)
+  `.cursor/rules/core/always-use-quickmerge.mdc`'s "Dependency Cascade" section (lines ~43-45, untouched
+  2026-08-21) still described `--to-staging` as cascading through ALL dependents with PRs targeting
+  staging — corrected to state the no-op + point at the real PM-driven cascade mechanism; (2)
+  `.cursor/rules/dependencies/breaking-change-major-version-protocol.mdc`'s "Tier-Ordered Migration"
+  section (line ~240, untouched 2026-08-21) told the reader to "Use `--to-staging` ... to cascade the
+  breaking change through staging" — directly contradicting this SAME file's own already-correct lines
+  26-29/196-198 ("that flag is a no-op today") — corrected to match; (3)
+  `.cursor/rules/workflow/full-cicd-flow.mdc` — NOT in the 2026-08-21 fix's file list at all — still named
+  the retired "three-tier branch model" (line 35) and described LDR promoting to staging every 15m via a
+  `ldr-to-staging-promote` job (line 37), contradicting CLAUDE.md's current LDR→main-direct/staging-dormant
+  statement — corrected both lines to match. `scripts/quickmerge.sh` itself still deliberately NOT
+  touched, per this doc's own still-open todo — these 3 fixes are downstream doc-doctrine corrections
+  only, not a resolution of the todo itself. Phase 0 re-verified fully clean after all 4 edits (incl. the
+  unrelated freshness-gate fix). Shipped together with today's other Phase 0/1 fixes,
+  `unified-trading-pm@pending` (see this run's `/done` evidence for the final SHA).

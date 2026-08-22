@@ -34,7 +34,7 @@ created: 2026-08-21
 authoritative_for: [ws-protocol registry axis, ws session rotation policy, rotate-websocket Layer-0 action]
 referenced_by: []
 owner:
-last_reviewed:
+last_reviewed: 2026-08-22
 code_refs:
   [
     unified-api-contracts/unified_api_contracts/registry/ws_protocol.py,

@@ -237,9 +237,10 @@ T2 consumers: same decision — does this change T2's public API?
 T3 / Service consumers: same decision
 ```
 
-Use `--to-staging` in quickmerge to cascade the breaking change through staging. Only repos that
-actually depend on the changed tier receive a `dependency-update` dispatch — the cascade is selective
-by the actual dependency graph in `workspace-manifest.json`, not by tier level alone.
+The breaking-change cascade is automatic and PM-driven, not something `--to-staging` performs (that
+flag is a no-op today — see above). Only repos that actually depend on the changed tier receive a
+`dependency-update` dispatch — the cascade is selective by the actual dependency graph in
+`workspace-manifest.json`, not by tier level alone.
 
 **PM's role:** PM receives the version-bump dispatch, updates the manifest, and dispatches
 `dependency-update` to direct dependents of the changed repo. Each hop in the cascade only

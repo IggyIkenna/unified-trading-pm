@@ -32,6 +32,6 @@ When aligning dependencies, pushing to main, or resolving merge conflicts, follo
 ## Related
 
 - `dependency-alignment-and-setup-flow.mdc` — Phase 1–2 detail
-- `always-use-quickmerge.mdc` — quickmerge usage and three-tier branch model
+- `always-use-quickmerge.mdc` — quickmerge usage and the LDR-trunk model
 - `dependencies/breaking-change-major-version-protocol.mdc` — what counts as a breaking change
-- Ship model (LDR-trunk, as-built): a unit lands on `live-defi-rollout` via `quickmerge --agent --files`; the Tier-C drain (`ldr-to-staging-promote`, every 15m) promotes it onward. The old per-repo "sync to main" is retired — see the codex SSOT above.
+- Ship model (LDR-trunk, as-built): a unit lands on `live-defi-rollout` via `quickmerge --agent --files`; default promote is LDR→`main` DIRECT (staging DORMANT) via `ldr-to-main-promote-fleet.yml` + `ldr-to-main-promote.yml` (*/30, auto-merge) — a major/breaking bump or an operator decision routes THROUGH staging instead (KEPT + REVERSIBLE). The old per-repo "sync to main" is retired — see the codex SSOT above.

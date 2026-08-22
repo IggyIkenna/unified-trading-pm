@@ -41,8 +41,8 @@ snapshot, which had drifted stale.
 ## Dependency Cascade
 
 - **Feature mode (--dep-branch):** cascades across dep repos on a named feature branch; QG only, no PR. Branch auto-derived from current git branch.
-- **Staging mode (--to-staging):** cascades breaking change through ALL actual dependents (recursive DAG walk via `topologicalOrder`); PRs target staging. Branch auto-derived from HEAD.
-- **`--branch NAME` + `--to-staging`** → hard fail (mutually exclusive).
+- **`--to-staging` is a no-op today** (see "LDR Trunk Model" above) — it does NOT cascade a breaking change through dependents. The real breaking-change cascade is PM-driven: the CI version-bump dispatches to PM, which dispatches a `dependency-update` to each direct dependent per the actual dependency graph (`workspace-manifest.json`) — see `codex/08-workflows/dependency-cascade.md`.
+- **`--branch NAME` + `--to-staging`** → hard fail (mutually exclusive) — flag-parsing validation only; the flag itself performs no routing.
 - The cascade is **selective**: only repos with a dependency edge to the changed repo are touched. Not all 60 repos.
 
 **SSOT:** `unified-trading-pm/codex/08-workflows/ci-cd-flow.md` (§ "Dependency promotion") + `codex/08-workflows/dependency-cascade.md`
