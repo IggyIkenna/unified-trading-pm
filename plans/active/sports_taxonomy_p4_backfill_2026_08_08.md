@@ -58,10 +58,13 @@ locked_since:
 
 # Sports taxonomy P4 — derived-layer backfill
 
-> **🟡 CAMPAIGN STALLED 2026-08-22 (see issue doc):** no VM for either the MDPS bucket/movement/snapshot campaign or
-> the arb-backfill campaign is currently running. MDPS coverage has two real gaps (`2022-01-01→2023-06-30` died
-> mid-run with no recovery relaunch; `2025-01-01→2026-08-06` never launched); the arb-backfill campaign wrote zero
-> real rows fleet-wide due to a banned `ManifestWriter.add()` call. Details + fix/relaunch todos:
+> **🟢 CAMPAIGN ADVANCING 2026-08-22** (updated from the prior 🟡 STALLED banner, now stale — see this plan's own
+> Progress Log below for the full terminal honest-coverage verdict): the `2022-01-01→2023-06-30` MDPS
+> bucket/movement/snapshot gap has COMPLETED cleanly (`mdps-sports-bucket-20260822-150734`, 47/47 days accounted for,
+> 0 failures, exit_code=0). The `2025-01-01→2026-08-06` MDPS gap and the `horizon`-axis (`odds_features`) full-history
+> backfill are both actively RUNNING and healthy (`mdps-sports-bucket-20260822-150914`; `fts-backfill-20260822-131018`
+> — neither complete yet). The arb-backfill campaign remains correctly un-relaunched, gated on its still-open P0 code
+> fix (banned `ManifestWriter.add()`). Full evidence + fix/relaunch todos:
 > `/plans/active/issues/sports_p4_backfill_progress_metric_audit_2026_08_22.md`.
 
 > Gated on P2's migration (`gate_on_depends: true`). Operator ruling 2026-08-08: backfill is a FOLLOW-UP plan gated on
@@ -234,6 +237,10 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
       only `captured` / `empty_confirmed` — no `attempted_failed`, no `expected_unattempted` left unreconciled. This is
       the convergence bar `/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md` sets for
       sports; cite that doc and flip its state rather than duplicating its tracking.
+      **Status as of 2026-08-22 (slot-4, review): NOT YET CONVERGED** — see this plan's Progress Log entry this same
+      date for the full evidence trail (one of two MDPS gaps closed, one MDPS gap + the horizon-axis backfill still
+      in flight, arb-backfill still blocked on its P0 code fix). Re-check once
+      `/plans/active/issues/sports_p4_backfill_progress_metric_audit_2026_08_22.md`'s open items land.
 
 ## Codex SSOTs
 
@@ -246,6 +253,37 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 ## Progress Log
 
+- **2026-08-22 (slot-4, review-craft, task `sports_taxonomy_p4_backfill-c9efcecc7e25`)** — Worked the [REVIEW] P0
+  "Terminal honest-coverage verdict" todo. **Verdict: NOT YET CONVERGED** — real `attempted_failed`/incomplete-backfill
+  remains, so the checkbox stays open; this replaces the stale 🟡 STALLED banner with a current 🟢 ADVANCING one rather
+  than flipping the todo on a false-done basis. Live-verified via `gcloud compute instances list` (3 VMs RUNNING:
+  `fts-backfill-20260822-131018`, `mdps-sports-bucket-20260822-{150734,150914}`; 0 `features-arb-backfill-*`) plus a
+  fresh UTL `download_from_storage()` read (never `gcloud storage`/`gsutil` — blocked by the workspace hook) of each
+  VM's `run.log` tail:
+  - **`mdps-sports-bucket-20260822-150734` (2022-01-01→2023-06-30 tail resume, `2023-05-15→2023-06-30`) — COMPLETED
+    since the audit doc's snapshot**: final summary `days_total=47 days_success=39 days_empty=8 days_failed=0`,
+    `movement_days_failed=0`, `snapshot_days_failed=0`, `exit_code=0`, clean self-delete shutdown. This specific gap
+    is now genuinely closed (`gcloud compute instances list` still showed it RUNNING moments earlier — a shutdown-race
+    artifact, not a discrepancy; the log is authoritative).
+  - **`mdps-sports-bucket-20260822-150914` (2025-01-01→2026-08-06 full range) — actively progressing, not complete**:
+    `[63/583] Processing sports odds for 2025-03-04` as of 15:23:31Z, steady `LOSS_GUARD_PASS` lines throughout, zero
+    tracebacks/`attempted_failed` observed in the tail.
+  - **`fts-backfill-20260822-131018` (horizon-axis `odds_features`, full 2020-06-06→2026-08-22 redo) — actively
+    progressing, not complete**: tail shows real GCS reference reads dated `day=2021-05-21` (~349/2,269 days by
+    date-position), consistent with the plan's own multi-day-campaign estimate; no failure signatures in the tail.
+  - **`arbitrage_opportunity` — still zero real historical rows, correctly NOT relaunched**: confirmed via
+    `sports_p4_backfill_progress_metric_audit_2026_08_22.md`'s still-open `[DATA] P0` fix todo (banned
+    `ManifestWriter.add()` in `arb_detect_handler.py::_run_historical_backfill`) and its own `[DATA] P1` guard
+    ("do not relaunch until the fix lands") — both correctly still open, and no `features-arb-backfill-*` VM is in
+    the live fleet. 1,323 `attempted_failed` days from the earlier full-campaign attempt remain in the manifest until
+    the fix lands and the campaign re-runs.
+  Per this todo's own instruction, the convergence BAR is owned by
+  `/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md` (cited, not duplicated here) —
+  that doc's own per-vendor census table pre-dates the P4 derived-layer expansion (odds_snapshot/odds_movement/
+  arbitrage_opportunity/odds_features aren't rows in it yet), so this entry is the P4-scoped verdict, not a rewrite of
+  that doc's tracking. **Not flipping the checkbox** — genuinely not converged. Re-check once the two in-flight VMs
+  reach a terminal state and the arb P0 fix has landed + been relaunched to completion; those are already tracked in
+  `sports_p4_backfill_progress_metric_audit_2026_08_22.md`, not re-tracked here.
 - **2026-08-22 (slot-24, data_engineering, task `sports_taxonomy_p4_backfill-a61a45b2c3a9`)** — Flipped the C3
   pre-launch-window disposal todo. Measured the corpus fresh rather than trusting the 2026-06-11-derived 10,345
   figure: only 12 real objects remained (the 2026-07-21 + 2026-07-27 broader pre-floor wipes had already removed the
