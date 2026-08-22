@@ -25,7 +25,6 @@ related:
     /codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html,
     /codex/14-customer-journeys/commercial-model/platform-architecture.html,
     /codex/14-customer-journeys/commercial-model/carveout-engineering.html,
-    /codex/14-customer-journeys/commercial-model/strategy-service-walkthrough.html,
     /plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md,
     /plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,

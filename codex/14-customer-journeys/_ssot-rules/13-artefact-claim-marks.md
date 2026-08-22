@@ -23,11 +23,7 @@ authoritative_for: [artefact status/evidence-tier/owner-mark markup, owner-mark 
 referenced_by: []
 owner:
 last_reviewed:
-code_refs:
-  [
-    codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html,
-    codex/14-customer-journeys/commercial-model/strategy-service-walkthrough.html,
-  ]
+code_refs: [codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html]
 ---
 
 # Rule 13 — Artefact claim marks (status, evidence tier, owner)

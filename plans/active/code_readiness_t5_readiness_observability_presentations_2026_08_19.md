@@ -78,13 +78,12 @@ Everything in this tranche is **complete in code**. The ONLY things that may sti
 Anything outside those five that is not code-complete is REMAINING WORK. SSOT for the goalpost:
 `/plans/epics/system_readiness_master.md` § "Definition of done".
 
-**The acceptance test is the artefacts.** These four client-sendable documents must stop carrying `pending`,
+**The acceptance test is the artefacts.** These three client-sendable documents must stop carrying `pending`,
 `planned`, `partial`, `not built` or `unverified` on any claim that is not one of the five above:
 
 - `/codex/14-customer-journeys/commercial-model/platform-architecture.html`
 - `/codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html`
 - `/codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html`
-- `/codex/14-customer-journeys/commercial-model/strategy-service-walkthrough.html`
 
 Their status markers carry `owner: W1`…`W22` tags binding each claim to a workstream in
 `/plans/epics/system_readiness_master.md`. Closing a W-item is what clears its marker. **Never clear a marker by
@@ -421,7 +420,7 @@ todos only to confirm they are data-movement, then leave it.
       2026-08-19). "Backfills still running" is itself one of the five allowed pending states for the artefacts —
       not something T5 closes, something T5 reports honestly as in-progress.
 - [ ] [BACKEND] P1. Resolve the manifest-hygiene red findings. Evidence:
-      `/plans/active/issues/manifest_hygiene_red_all_2026_08_17.md`, `/plans/active/issues/manifest_hygiene_red_all_2026_08_18.md`.
+      `/plans/active/issues/manifest_hygiene_red_all_2026_08_17.md`, `/plans/archive/issues/manifest_hygiene_red_all_2026_08_18.md`.
       **Re-checked 2026-08-20**: the 2026-08-18 doc is `status: resolved` (duplicate, closed). The 2026-08-17 doc
       has 10/14 items `[x]` — real diagnosis + 3 confirmed fixes landed (`market-tick-data-service@f67a7480b3`,
       `instruments-service@a586f34102`, plus others cited inline). The 4 remaining `[ ]` are `[DATA]` P2: 2 are
@@ -430,7 +429,7 @@ todos only to confirm they are data-movement, then leave it.
       attempted here — a VM launch for a non-trivial data audit is a deliberate action, not something to fold
       into a fast batch-flip pass; leaving genuinely open rather than forcing it.
 - [x] [BACKEND] P1. Resolve the empty-reprobe disagreement finding. Evidence:
-      `/plans/active/issues/empty_reprobe_disagreement_all_2026_08_17.md`. — **Found already resolved 2026-08-20**:
+      `/plans/archive/issues/empty_reprobe_disagreement_all_2026_08_17.md`. — **Found already resolved 2026-08-20**:
       the issue doc's own `status: resolved` (corrected 2026-08-19), sole todo `[x]` with hard evidence
       (`market-tick-data-service@bf9fe5c4cc`). Nothing to do. (Checkbox-flip oversight from earlier this session
       corrected now — the resolution note was written but the box itself was never ticked.)

@@ -72,13 +72,12 @@ Everything in this tranche is **complete in code**. The ONLY things that may sti
 Anything outside those five that is not code-complete is REMAINING WORK. SSOT for the goalpost:
 `/plans/epics/system_readiness_master.md` § "Definition of done".
 
-**The acceptance test is the artefacts.** These four client-sendable documents must stop carrying `pending`,
+**The acceptance test is the artefacts.** These three client-sendable documents must stop carrying `pending`,
 `planned`, `partial`, `not built` or `unverified` on any claim that is not one of the five above:
 
 - `/codex/14-customer-journeys/commercial-model/platform-architecture.html`
 - `/codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html`
 - `/codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html`
-- `/codex/14-customer-journeys/commercial-model/strategy-service-walkthrough.html`
 
 Their status markers carry `owner: W1`…`W22` tags binding each claim to a workstream in
 `/plans/epics/system_readiness_master.md`. Closing a W-item is what clears its marker. **Never clear a marker by
