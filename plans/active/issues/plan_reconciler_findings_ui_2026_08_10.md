@@ -198,7 +198,7 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
 
 ## Filed
 
-1. `plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` — NEW issue doc. Root-caused
+1. `plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` — NEW issue doc. Root-caused
    `locked_by: live-defi-rollout` (96 docs corpus-wide, plus at least 1 epic) to a hardcoded placeholder in
    `scripts/plans/fix_epic_frontmatter_2026_05_21.py:133`, not any real actor claim. Directly blocks the
    `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` archive candidate (5 consecutive audit passes

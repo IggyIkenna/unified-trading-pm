@@ -45,6 +45,12 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-22** — the doc's sole todo is `[x]` done, unlocked, not `archive_exempt`; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. All 7 dangling active-form citations of `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`
+> are now repointed or moot (5 already fixed by other sessions, 2 moot because their source docs archived in the
+> interim); the corpus grep for the dangling active-form path returns 0 hits.
+
 # Residual prose referrers to the archived locked_by-placeholder doc
 
 ## What I found
@@ -82,15 +88,26 @@ same-line link-repoint") on any of these that are over-cap.
 
 ## Todo
 
-- [ ] [SCRIPT] P3. Repoint all 7 dangling citations of the old active-corpus path listed above (`plans` +
+- [x] ✅ [SCRIPT] P3. Repoint all 7 dangling citations of the old active-corpus path listed above (`plans` +
       `/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`) to point instead at
       `/plans/archive/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` (same-line path-token
       substitution only), then re-verify via a corpus grep for the old active-form path returning 0 hits under
       `plans/active` + `plans/epics`. Also verify the `plans/epics/security_and_cross_cutting_master.md` bare-filename
-      comment mention and repoint if it resolves as a checked path.
+      comment mention and repoint if it resolves as a checked path. — **DONE 2026-08-22 (slot-21)**.
 
 ## Progress Log
 
 - **2026-08-21**: filed during chunk-3 archival-lane processing, discovered as a byproduct of archiving
   `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`. Out of this session's chunk scope (none of
   these 7 files were assigned to this batch), so filed as a tracked follow-up rather than fixed inline.
+- **2026-08-22 (slot-21)**: re-grepped the corpus before touching anything — of the original 7, **5 were already
+  repointed by other sessions** since 2026-08-21 (items 1/2/3/6 already cite `/plans/archive/issues/...`; items 4/7
+  are moot — both source docs were themselves archived in the interim, taking their bridge comments out of the
+  active-corpus scope this check covers). Only item 5
+  (`plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md:201`, a "Filed" run-journal citation) still had the
+  dangling active-form path — fixed (`unified-trading-pm@<see commit>`). Verified via corpus grep: 0 hits for
+  `plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` under `plans/active/` +
+  `plans/epics/`. Also checked `plans/epics/security_and_cross_cutting_master.md:82`'s bare-filename `locked_by:`
+  comment mention — it's a leading-slash-free bare filename inside a YAML comment (not a `related:`/`context_scope:`
+  entry), which `check_reference_paths.py` does not resolve-check per its `/plans/...`/`/codex/...` leading-slash
+  scope — left as-is (accurate context, not a checked dangling path).
