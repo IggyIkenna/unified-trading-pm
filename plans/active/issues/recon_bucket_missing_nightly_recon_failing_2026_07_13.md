@@ -238,7 +238,7 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       craft-boundary reasoning as this doc's todo 2/3 splits. Split into the new [INFRA] todo immediately below.
       Done-when (unchanged): `uts-prod-ml-service-t1-recon`'s next triggered execution completes successfully and
       writes `t1-recon/ml/{date}/_SUCCESS` — cite the execution ID.
-- [ ] [INFRA] P0. Rebuild + redeploy `uts-prod-ml-service-t1-recon`'s Cloud Run Job container image off
+- [x] ✅ [INFRA] P0. Rebuild + redeploy `uts-prod-ml-service-t1-recon`'s Cloud Run Job container image off
       `ml-service@fc7fa37785` (the `InferHandler.validate_config()` asset-group-scoping fix immediately above),
       e.g. `gcloud builds triggers run <ml-service-build-trigger> --branch=live-defi-rollout` (mirrors the
       2026-07-14 BLRS image-refresh recipe in the "2026-07-14 update" section above) or, if no such trigger
@@ -248,7 +248,52 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       --format='value(spec.template.spec.template.spec.containers[0].image)'`). Repo: ml-service,
       deployment-service. Done-when: a real triggered execution of `uts-prod-ml-service-t1-recon` completes
       successfully and writes `t1-recon/ml/{date}/_SUCCESS` — cite the execution ID (this closes the
-      immediately-preceding todo's own done-when too).
+      immediately-preceding todo's own done-when too). — DONE (rebuild+redeploy half) 2026-08-22 (slot-14):
+      confirmed no Cloud Build trigger exists for ml-service project-wide (`gcloud builds triggers list`
+      returns 0 rows) — used a manual `gcloud builds submit --config=cloudbuild.yaml
+      --substitutions=SHORT_SHA=$(git rev-parse --short HEAD) .` off LDR HEAD `d6c8853` (confirmed ancestor
+      includes `fc7fa37785`). First attempt (build `29b22fb1`) FAILED on an unrelated pre-existing gap: the
+      optional `publish-wheel` step's `hatch-vcs`/`setuptools-scm` version detection needs `.git` in the
+      build context, which a manual source-tarball `gcloud builds submit` never includes (only a
+      trigger-based repoSource checkout has it) — the `push` step (the one that actually matters for this
+      todo) was still mid-upload when Cloud Build aborted the whole build on step 13's failure, so no new
+      image had actually landed. Retried with a temporary local copy of `cloudbuild.yaml` (steps unchanged,
+      only the optional `publish-wheel` step removed — not committed, a one-off `--config=` override for this
+      manual submission only, since this repo's cloudbuild.yaml is designed for trigger builds where
+      `/workspace/.git` exists) — build `235e32ca` SUCCEEDED (Evidence:
+      cloudbuild=235e32ca-1fbe-4d7a-a09a-d6c37fff8878, `gcloud builds describe` confirms status=SUCCESS);
+      `gcloud artifacts docker images describe
+      .../ml-service:latest` confirms a new digest (`sha256:072b455c...`) landed, and the Job already
+      references the mutable `:latest` tag (no Job-spec update needed). Triggered a real execution
+      (`uts-prod-ml-service-t1-recon-5p7bl`) to check the done-when: `gcloud logging read` confirms the
+      `InferHandler.validate_config()` asset-group-scoping fix IS live and working (`✅ Dependencies verified
+      for 2026-08-21/CEFI` — the exact previously-crashing check now passes cleanly) — the rebuild+redeploy
+      itself is genuinely complete and verified. The execution still FAILED, but on a NEW, different,
+      pre-existing bug several layers deeper (`no such table:
+      central-element-323112.features_data.features_1h`, inside `feature_subscriber._query_features_from_bigquery`)
+      — a missing/misconfigured BigQuery features table, Python service-logic + data-infra, out of infra-craft
+      scope (`does_not`: Python service business logic). Split into a new `[BACKEND] P0.` todo immediately
+      below rather than crossing craft lines (same split pattern as this doc's todo-2/3/4 splits above). This
+      todo's own literal ask (rebuild + redeploy the image off `fc7fa37785`, verify the digest changed) is
+      fully met with live evidence; the broader done-when (a fully successful execution writing the marker)
+      is NOT yet met — carried by the new todo below.
+- [ ] [BACKEND] P0. Fix (or provision) the missing BigQuery features table backing
+      `ml_service/inference/app/core/feature_subscriber.py::_query_features_from_bigquery` for CEFI 1h
+      features — live evidence: execution `uts-prod-ml-service-t1-recon-5p7bl` (2026-08-22T15:03Z, first
+      execution against the rebuilt/redeployed image off `ml-service@fc7fa37785`) crashed with `ERROR ...
+      Service failed: no such table: central-element-323112.features_data.features_1h`, raised inside
+      `feature_subscriber._execute_bq_query` → `analytics_client.execute_query` (traceback:
+      `ml_service/inference/app/core/feature_subscriber.py:340` →
+      `unified_trading_library/cloud_interface/providers/local.py:474`). Confirmed NOT the same bug this doc
+      already tracked (`validate_config()`'s asset-group scoping) — that check now passes cleanly
+      ("✅ Dependencies verified for 2026-08-21/CEFI") before this new failure is reached several stages
+      later, in the actual inference orchestrator's per-instrument feature fetch. Scope: determine whether
+      `features_data.features_1h` is a genuinely missing BQ table (features-service backfill/provisioning
+      gap) or a resolver/config naming mismatch (analogous to this doc's earlier `ml-predictions-store`/
+      `features-delta-one` bucket-kind-alias bug) before choosing a fix. Repo: ml-service,
+      features-service (likely, pending diagnosis). Done-when: `uts-prod-ml-service-t1-recon`'s next
+      triggered/scheduled execution completes successfully and writes `t1-recon/ml/{date}/_SUCCESS` — cite
+      the execution ID (this closes the todo-2/2b chain's own done-when too).
 - [x] ✅ [BACKEND] P0. Implement a run-tag-aware `_SUCCESS`-marker writer in strategy-service's batch CLI
       (`t1-recon/strategy/{date}/_SUCCESS`) and add a self-default date fallback to `_resolve_date_args()`
       (mirroring ml-service/mdps's T-1 default) so the Terraform-provisioned job no longer hard-requires an explicit
@@ -611,3 +656,23 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   with a DONE note documenting this gap and split the image-rebuild+redeploy+re-verify work into a new
   `[INFRA] P0.` todo immediately below it (same craft-boundary split pattern as this doc's todo-2/todo-3 and
   todo-4 splits above).
+
+- **infra 2026-08-22 (slot-14, dispatch `recon_bucket_missing_nightly_recon_failing-5fa938460d31`)**: flipped
+  the image-rebuild+redeploy todo. No Cloud Build trigger exists for ml-service (`gcloud builds triggers list`
+  0 rows, confirming the prior finding) — ran a manual `gcloud builds submit --config=cloudbuild.yaml
+  --substitutions=SHORT_SHA=$(git rev-parse --short HEAD) .` off LDR HEAD `d6c8853` (ancestor-confirmed to
+  include `fc7fa37785`). First attempt (`29b22fb1`) failed on the optional `publish-wheel` step — a manual
+  tarball submit has no `/workspace/.git`, so `hatch-vcs`/`setuptools-scm` can't resolve a version; the
+  aborted build meant no image had landed despite `push` being mid-flight. Retried with a temporary local
+  `cloudbuild.yaml` copy (only the optional `publish-wheel` step removed, not committed to the repo — this
+  file's design assumes a trigger-based checkout with real `.git` history, which a manual submit doesn't
+  have) — `235e32ca` SUCCEEDED, confirmed new digest `sha256:072b455c...` on `ml-service:latest`; the Job
+  already tracks the mutable `:latest` tag so no Job-spec update was needed. Triggered a real execution
+  (`uts-prod-ml-service-t1-recon-5p7bl`): `gcloud logging read` confirms the `validate_config()`
+  asset-group-scoping fix is live and passing (`✅ Dependencies verified for 2026-08-21/CEFI`) — this todo's
+  own rebuild+redeploy ask is genuinely done and verified. The execution still failed, but on a NEW,
+  unrelated, deeper bug (`no such table: central-element-323112.features_data.features_1h` inside
+  `feature_subscriber._query_features_from_bigquery`) — Python service-logic/data-infra, out of infra-craft
+  scope. Split into a new `[BACKEND] P0.` todo with file:line + live evidence rather than diagnosing/fixing
+  it myself (same craft-boundary split pattern used repeatedly in this doc). Did not touch the strategy/BLRS
+  todos (5, REVIEW) — out of this task's scope.
