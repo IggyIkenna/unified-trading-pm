@@ -1805,33 +1805,33 @@
       </div>
       <h3>The venue and chain surface, counted <b class="ev ev-verified">✓ verified</b></h3>
       <p>
-        Counted by importing the registries directly rather than sampling them, 2026-08-19. <b>192</b> venues are
+        Counted by importing the registries directly rather than sampling them, 2026-08-22. <b>195</b> venues are
         declared (<code>VENUE_DATA_TYPE_CAPABILITIES</code>), and DeFi venue identity carries the chain in the token
         itself — the same protocol on two chains is genuinely two venues, so the chain surface below is wider than any
         single-chain description would suggest.
       </p>
       <div class="stat-row">
         <div class="stat">
-          <span class="v">192</span
+          <span class="v">195</span
           ><span class="k"
             >Venues declared <span class="u"><code>VENUE_DATA_TYPE_CAPABILITIES</code></span></span
           >
         </div>
         <div class="stat">
-          <span class="v">177</span
+          <span class="v">171</span
           ><span class="k"
-            >Canonically grouped by asset group <span class="u"><code>VENUES_BY_ASSET_GROUP</code></span></span
+            >Live, canonically grouped by asset group <span class="u"><code>VENUES_BY_ASSET_GROUP</code></span></span
           >
         </div>
         <div class="stat">
-          <span class="v">23</span
+          <span class="v">24</span
           ><span class="k"
             >Chains declared
             <span class="u"><code>ChainKind</code>, the full enum — not a sample of string literals</span></span
           >
         </div>
         <div class="stat">
-          <span class="v">121</span
+          <span class="v">124</span
           ><span class="k"
             >DeFi protocol×chain capability entries
             <span class="u"><code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code></span></span
@@ -1840,8 +1840,8 @@
       </div>
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Venues by asset group</span
-          ><span class="note"><code>VENUES_BY_ASSET_GROUP</code>, 2026-08-19</span>
+          <span class="label">Live venues by asset group</span
+          ><span class="note"><code>VENUES_BY_ASSET_GROUP</code>, 2026-08-22</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
@@ -1866,34 +1866,51 @@
               </tr>
               <tr>
                 <td class="grp grp-exec">Sports</td>
-                <td>39</td>
+                <td>33</td>
               </tr>
               <tr>
                 <td class="grp grp-exec">Prediction</td>
                 <td>2</td>
               </tr>
               <tr>
-                <td><b>Total, canonically grouped</b></td>
-                <td><b>177</b> of 192 declared</td>
+                <td><b>Total, live and canonically grouped</b></td>
+                <td><b>171</b> of 195 declared</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
       <p style="font-size: 0.93rem; color: var(--ink-3)">
-        The remaining 24 declared entries (e.g. <code>AAVE_V3-SCROLL</code>, <code>MORPHO-ARBITRUM</code>,
-        <code>UNISWAP-ETHEREUM</code>) carry capability data in <code>VENUE_DATA_TYPE_CAPABILITIES</code> but are not
-        yet enumerated in the canonical per-asset-group list — declared capability ahead of categorisation, not a
-        missing venue.
+        Sports moved 39→33 between 2026-08-19 and 2026-08-22: a real, explained drop, not drift —
+        <code>unified-api-contracts@cdb8ae88</code> completed a 6-bookmaker removal (legacy/duplicate roster entries,
+        <code>sports_bookmaker_roster_classification_2026_08_21.md</code>), not a coverage loss.
       </p>
+      <div class="callout">
+        <span class="tag">The remaining 24 declared venues: 23 real DeFi venues still in pipeline, one registry-hygiene fix</span>
+        <p>
+          <b>23</b> of the 24 declared-but-ungrouped entries (<code>AAVE_V3-SCROLL</code>, <code>MORPHO-ARBITRUM</code>,
+          <code>UNISWAP-ETHEREUM</code>, and 20 others — full list in
+          <code>DEFI_VENUE_PHASE</code>) are real DeFi venues, individually checked 2026-08-22: every one carries
+          <code>DEFI_VENUE_PHASE == "pipeline"</code> — declared and reference-mapped, but deliberately not yet
+          promoted to live/canonically-grouped status (per-venue integration and data-producibility work still
+          outstanding). None of the 23 appears anywhere on this page as live or tradable; this section states that
+          plainly rather than let "declared" read as "ready." The 24th entry, <code>ALCHEMY-ONCHAIN</code>, is not a
+          venue at all — it is an on-chain gas/data data-source that was incorrectly given a venue-shaped registry
+          key (operator ruling 2026-08-21); its re-home to a data-source registry is tracked as its own
+          registry-hygiene fix in <a href="#s3">§03</a>'s owning tranche, separate from this venue count.
+          <b>Source:</b> <code>unified_api_contracts/registry/defi_venues.py::DEFI_VENUE_PHASE</code>, live-checked
+          against <code>origin/live-defi-rollout</code> 2026-08-22.
+        </p>
+      </div>
       <div class="callout">
         <span class="tag">There is no single settled "DeFi venue count" <b class="ev ev-check">? check</b></span>
         <p>
           The 103 figure above is <code>VENUES_BY_ASSET_GROUP["defi"]</code> — venue tokens, chain suffix included. Cut
-          differently, the same registries give different, equally real numbers: <b>121</b> protocol×chain entries in
-          <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code> (the capability dict merged into the 192-venue total),
-          <b>~59-67</b> distinct protocol names (stripping the chain suffix, depending on which of those two sources is
-          the base set), and <b>135</b> distinct venues in <code>ALL_DEFI_VENUES</code>. None of these is wrong; they
+          differently, the same registries give different, equally real numbers: <b>124</b> protocol×chain entries in
+          <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code> (the capability dict merged into the 195-venue total),
+          <b>~69-75</b> distinct protocol names (stripping the chain suffix, depending on which of those two sources is
+          the base set), and <b>139</b> distinct venues in <code>ALL_DEFI_VENUES</code> (deduplicated 2026-08-21,
+          <code>unified-api-contracts@34bca043</code> — was 174 with 35 exact duplicates). None of these is wrong; they
           answer different questions ("venues", "protocols", or "everything the DeFi onboarding list has ever carried"),
           and this document reports the precise, symbol-cited cut for each claim rather than blending them into one
           number that would imply more agreement than the registries actually have.
@@ -2115,7 +2132,7 @@
       <div class="callout">
         <span class="tag">VENUE_CHAIN_MAP is a different, narrower registry — not a chain-coverage inventory</span>
         <p>
-          <code>VENUE_CHAIN_MAP</code> declares only <b>4 chains / 15 venues</b>, against the <b>24 chains / 192
+          <code>VENUE_CHAIN_MAP</code> declares only <b>4 chains / 15 venues</b>, against the <b>24 chains / 195
           venues</b> shown above — it is a deliberately-curated wallet-grouping subset for shared-wallet routing,
           not a chain-coverage inventory, and its docstring says so explicitly. Neither
           <code>measure_honest_coverage.py</code> nor its expected-universe builder imports it (zero references in
@@ -2355,7 +2372,7 @@
         <div class="plate-head">
           <span class="label">Reachable coverage, by asset group</span
           ><span class="note"
-            >Volume-weighted, measured 2026-08-19
+            >Volume-weighted, measured 2026-08-22
             <span class="u"
               >— instruments-service <code>measure_honest_coverage.py</code>, read via UTL <code>cloud_interface</code>,
               no subprocess GCS calls</span
@@ -2369,99 +2386,63 @@
                 <th>Asset group</th>
                 <th>Reachable coverage</th>
                 <th>Denominator</th>
-                <th>Shards</th>
-                <th>Venues in manifest</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td class="grp grp-post">Sports</td>
                 <td>99.26%</td>
-                <td>6,488,597</td>
-                <td>822</td>
-                <td>46</td>
+                <td>6,495,790</td>
               </tr>
               <tr>
                 <td class="grp grp-exec">Prediction</td>
-                <td>92.81%</td>
-                <td>525,293</td>
-                <td>19</td>
-                <td>2</td>
+                <td>92.85%</td>
+                <td>532,016</td>
               </tr>
               <tr>
                 <td class="grp grp-post">TradFi</td>
-                <td>86.96%</td>
-                <td>9,333,876</td>
-                <td>244</td>
-                <td>9</td>
+                <td>86.95%</td>
+                <td>9,334,801</td>
               </tr>
               <tr>
                 <td class="grp grp-data">CeFi</td>
-                <td>45.57%</td>
-                <td>21,653,365</td>
-                <td>73</td>
-                <td>22</td>
+                <td>47.40%</td>
+                <td>22,233,460</td>
               </tr>
               <tr>
                 <td class="grp grp-data">DeFi</td>
-                <td>40.94%</td>
-                <td>82,034,301</td>
-                <td>2,804</td>
-                <td>105</td>
+                <td>36.63%</td>
+                <td>82,418,636</td>
               </tr>
               <tr>
                 <td><b>All, volume-weighted</b></td>
-                <td><b>48.73%</b></td>
-                <td>120,035,432</td>
-                <td>3,962</td>
-                <td>—</td>
+                <td><b>46.1%</b></td>
+                <td>121,014,703</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
       <p style="font-size: 0.93rem; color: var(--ink-3)">
-        This is a one-day-fresher re-run of the same measurement <a href="#s4">§04</a> quotes at 48.54% / 119,500,618 /
-        3,960 shards (2026-08-18) — the two are consistent within a day's normal drift, not two different methods.
-        "Venues in manifest" is the distinct-venue count observed in the coverage manifest at this grain, and is not
-        directly comparable to the registry-declared per-asset-group counts in <a href="#s3">§03</a>
-        (a venue appears here only once it has at least one attempted or captured shard).
+        Denominator = captured + attempted-failed + expected-unattempted, the same formula <a href="#s4">§04</a>
+        states. Registry-declared venue counts (<a href="#s3">§03</a>: 195 declared, 171 live-bucketed) are a
+        different grain from this table — a venue appears here only once it has at least one attempted or captured
+        shard, so this is the smaller, coverage-observed universe, not the registry universe.
       </p>
       <div class="callout">
-        <span class="tag">Two different "how many" questions below, named rather than blended</span>
+        <span class="tag">Why the readiness tree below grades by an 8-leg model, not the coverage percentage above</span>
         <p>
-          The group headers in this tree are the <b>manifest-observed</b> grain — every distinct venue token with at
-          least one attempted or captured shard in the 2026-08-19 coverage manifest (<b>288</b> total: CeFi 24, DeFi
-          180, TradFi 9, Sports 50, Prediction 1, Unattributed 24 — the six groups this tree now shows sum to the same
-          288 <a href="#s4">§04</a> and the table above both cite). That is a different, larger and messier universe
-          than the <b>registry-declared</b> grain <a href="#s3">§03</a> reports (192 declared in
-          <code>VENUE_DATA_TYPE_CAPABILITIES</code>, 177 canonically bucketed by <code>VENUES_BY_ASSET_GROUP</code> —
-          CeFi 25, DeFi 103, TradFi 8, Sports 39, Prediction 2, 24 declared-but-unbucketed) — and a third, narrower cut
-          again from the "venues in manifest" column of the reachable-coverage table above (CeFi 22, DeFi 105, the
-          Layer-1 <em>expected</em> universe only). None of the three is wrong; each answers a different question, and
-          every count below names its grain and registry symbol rather than letting them silently disagree. DeFi's 180
-          manifest-observed tokens decompose cleanly against the registry cut, verified by direct set comparison:
-          <b>103</b> chain-suffixed venues (exactly <code>VENUES_BY_ASSET_GROUP["defi"]</code>'s count) +
-          <b>76</b> pre-canonical bare-protocol tokens with no chain suffix + <b>1</b> cross-chain aggregator
-          (<code>ALCHEMY-ONCHAIN</code>) = 180. <b class="ev ev-verified">✓ verified</b> 2026-08-19.
-        </p>
-        <p>
-          <b
-            >This tree's asset-group split does not route through the known-broken
-            <code>unified_api_contracts.execution.get_venue_asset_group()</code></b
-          >
-          — the function that silently returns <code>"cefi"</code> for every venue its lookup misses, DeFi and CeFi
-          slugs alike (P0 issue filed 2026-08-19). Checked directly, both ends: the readiness-state-dump script behind
-          this tree classifies each venue via <code>VENUES_BY_ASSET_GROUP</code> and the coverage manifest's own
-          <code>by_asset_group</code> structure, never importing <code>unified_api_contracts.execution</code> anywhere
-          in its dependency chain; and <code>measure_honest_coverage.py</code> (the script that writes that manifest)
+          This tree's asset-group split classifies each venue via <code>VENUES_BY_ASSET_GROUP</code> and the coverage
+          manifest's own <code>by_asset_group</code> structure — a separate code path from
+          <code>unified_api_contracts.execution.get_venue_asset_group()</code>, which the transfer/execution layer
+          uses for a different purpose. <code>measure_honest_coverage.py</code> (the script that writes that manifest)
           partitions by asset_group structurally — one manifest bucket per asset_group, read from a static per-group
-          bucket table, never a per-venue classifier call. <b class="ev ev-verified">✓ verified</b> by reading both call
-          chains, 2026-08-19. Why every group still reads 0 ready is answered once, not per group: every venue is
-          graded against an 8-leg readiness model — declared, instruments-service, market data, processing,
-          features, strategy, execution transfers, execution instruction — and one failing or unchecked leg fails
-          the venue, so a strict grader with checks still being wired up returns zero by construction rather than
-          by defect.
+          bucket table, never a per-venue classifier call. Every venue in this tree is graded against an 8-leg
+          readiness model — declared, instruments-service, market data, processing, features, strategy, execution
+          transfers, execution instruction — and one failing or unchecked leg fails the venue, so a venue can show
+          <b>not-ready</b> here even where the asset-group's volume-weighted reachable-coverage percentage above is
+          high: coverage measures data volume, readiness measures whether every leg of the pipeline is wired and
+          checked for that specific venue.
         </p>
       </div>
 
@@ -16893,9 +16874,81 @@ Content-Type: application/json
           form — it is the registry contracts made interactive, which is why its output is valid by construction.
         </p>
       </div>
-      <p style="font-size: 0.95rem; color: var(--ink-3)">
-        Wizard stage detail, screenshots and the generated-config example — <b class="pend">pending</b>, to be expanded
-        in the next pass.
+      <h3>The wizard endpoint, staged in three calls</h3>
+      <p>
+        Built and shipped — <code>deployment-api@8e26e27915</code>, mounted at
+        <code>POST /api/strategy/wizard/{create,validate,deploy}</code> on the authenticated router. No config is
+        written to storage until <code>/deploy</code> succeeds; <code>/create</code> and <code>/validate</code> are
+        read-only stub/check calls a UI can call repeatedly while a user is still deciding.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">1. Seed a config stub for an archetype</span
+          ><span class="note"><code>POST /api/strategy/wizard/create</code></span>
+        </div>
+        <div class="plate-body">
+          <div class="code">POST /api/strategy/wizard/create HTTP/1.1
+Authorization: Bearer &lt;jwt&gt;
+Content-Type: application/json
+
+{ "archetype": "CARRY_STAKED_BASIS" }
+
+200 OK
+{
+  "archetype": "CARRY_STAKED_BASIS",
+  "config_stub": { "strategy_id": "", "archetype": "CARRY_STAKED_BASIS", "params": {} }
+}</div>
+          </div>
+        </div>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">2. Structurally validate, without writing anything</span
+            ><span class="note"><code>POST /api/strategy/wizard/validate</code></span>
+          </div>
+          <div class="plate-body">
+            <div class="code">POST /api/strategy/wizard/validate HTTP/1.1
+Authorization: Bearer &lt;jwt&gt;
+Content-Type: application/json
+
+{
+  "strategy_id": "DEFI_ETH_YLD_AAVE_USDC_HUF_1H",
+  "archetype": "CARRY_STAKED_BASIS",
+  "params": { "target_leverage": "2.5" }
+}
+
+200 OK
+{ "valid": true, "archetype": "CARRY_STAKED_BASIS", "errors": [] }</div>
+          </div>
+        </div>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">3. Deploy — validates again, then writes the config</span
+            ><span class="note"><code>POST /api/strategy/wizard/deploy</code> — same body as validate</span>
+          </div>
+          <div class="plate-body">
+            <div class="code">POST /api/strategy/wizard/deploy HTTP/1.1
+Authorization: Bearer &lt;jwt&gt;
+Content-Type: application/json
+
+{ "strategy_id": "DEFI_ETH_YLD_AAVE_USDC_HUF_1H", "archetype": "CARRY_STAKED_BASIS", "params": {"target_leverage": "2.5"} }
+
+200 OK
+{
+  "strategy_id": "DEFI_ETH_YLD_AAVE_USDC_HUF_1H",
+  "archetype": "CARRY_STAKED_BASIS",
+  "config_uri": "&lt;storage-scheme&gt;://strategy-store-&lt;project&gt;/configs/strategies/DEFI_ETH_YLD_AAVE_USDC_HUF_1H.json"
+}</div>
+          </div>
+        </div>
+      <p style="font-size: 0.9rem; color: var(--ink-3)">
+        <code>/deploy</code> additionally requires the <code>DEPLOY_TRIGGER</code> permission and re-runs the same
+        structural checks as <code>/validate</code> before writing — a config that passes this validation can still
+        be rejected by strategy-service's own <code>get_strategy_params</code> on load (unknown param, missing
+        required param with no default): loud-fail on load, by design, not a bug in this endpoint. This validation
+        checks archetype membership and JSON well-formedness only; it deliberately does not import
+        strategy-service's own <code>PARAM_SCHEMA_REGISTRY</code> (no service→service dependency) — deep per-param
+        schema checking is strategy-service-side. <b>Source:</b>
+        <code>deployment-api/deployment_api/routes/strategy_wizard.py</code>.
       </p>
     </details>
   </section>
@@ -17033,9 +17086,9 @@ Content-Type: application/json
         exists to catch, just checked faster and closer to the point of action.
       </p>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Design in progress, not yet shipped —
-        <code>/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md</code> §
-        "Reference position, credit ownership."
+        Design in progress, not yet shipped — <code>reference_position</code> has zero real consumers in
+        execution-service today (confirmed 2026-08-22); the per-instruction check described above is the intended
+        behaviour, not current behaviour.
       </p>
       <h3>Fast-path repricing from a cached reference</h3>
       <p>
@@ -18831,16 +18884,93 @@ Content-Type: application/json
     "gamma": "0.03",
     "original_bid": "65480.00",
     "original_ask": "65520.00",
-    "note": "Delta-proxy repricing is armed for this instrument. No order was placed: quote submission requires
-             an underlying-tick loop calling QuoteMaintainer.on_underlying_tick, which is not wired in
-             execution-service yet."
+    "note": "Delta-proxy repricing is armed for this instrument. No order is placed synchronously by this call:
+             the live tick loop (feature_tick_subscriber.py, subscribed via the EventTransport facade) then
+             calls QuoteMaintainer.on_underlying_tick on every underlying tick and submits/replaces the venue
+             order as priced state changes, with no-churn suppression so an unchanged quantized bid/ask/size
+             does not resubmit."
   }
 }</div>
           </div>
         </div>
         <p style="font-size: 0.9rem; color: var(--ink-3)">
-          Every field above, including the exact <code>note</code> string, is read directly from
-          <code>_register_quote_instruction()</code>, <code>external_instruction_api.py:133-171</code>.
+          Every field above is read directly from <code>_register_quote_instruction()</code>,
+          <code>external_instruction_api.py:133-171</code>; the tick-loop wiring and no-churn suppression are
+          <code>feature_tick_subscriber.py</code> + <code>quote_maintenance.py</code>, shipped
+          <code>execution-service@56d6e7480e</code>.
+        </p>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">The CANCEL variant</span><span class="note">Both cancel_scope values are wired</span>
+          </div>
+          <div class="plate-body">
+            <div class="code">POST /external/instructions HTTP/1.1
+Host: execution-service.example
+Authorization: Bearer &lt;jwt&gt;
+Content-Type: application/json
+
+{
+  "action": "CANCEL",
+  "instruction_id": "instr-cancel-91ab",
+  "emitted_at_utc": "2026-08-22T09:11:04Z",
+  "identity": { "...": "same StrategyInstanceIdentity shape as TRADE above" },
+  "cancel_instruction_id": "instr-8f3c1a20",
+  "cancel_scope": "SINGLE"
+}
+
+200 OK
+{
+  "instruction_id": "instr-cancel-91ab",
+  "status": "&lt;handler status&gt;",
+  "detail": { "...": "cancel-result payload" }
+}</div>
+          </div>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--ink-3)">
+          <code>cancel_scope: "ALL_FOR_STRATEGY_INSTANCE"</code> cancels every order the orchestrator has open for
+          the identity's <code>strategy_instance_id</code> across venues, rather than one tracked
+          <code>cancel_instruction_id</code> — the orchestrator indexes orders by strategy-instance for this
+          (<code>get_orders_for_strategy_instance()</code>). <code>CancelInstruction</code> schema:
+          <code>unified_api_contracts/internal/architecture_v2/schemas.py:451-454</code>. Shipped
+          <code>execution-service@4e35a09b2</code>.
+        </p>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">The TRANSFER variant</span><span class="note">Real production transfer wiring, venue coverage noted above</span>
+          </div>
+          <div class="plate-body">
+            <div class="code">POST /external/instructions HTTP/1.1
+Host: execution-service.example
+Authorization: Bearer &lt;jwt&gt;
+Content-Type: application/json
+
+{
+  "action": "TRANSFER",
+  "instruction_id": "instr-xfer-4d02",
+  "emitted_at_utc": "2026-08-22T09:12:30Z",
+  "identity": { "...": "same StrategyInstanceIdentity shape as TRADE above" },
+  "asset": "USDC",
+  "venue_from": "BINANCE-SPOT",
+  "venue_to": "AAVE_V3-ARBITRUM",
+  "target_balance_at_destination": "5000.00",
+  "max_cost_bps": 25
+}
+
+200 OK
+{
+  "instruction_id": "instr-xfer-4d02",
+  "status": "&lt;handler status, e.g. CONFIRMED or FAILED&gt;",
+  "detail": { "...": "transfer-result payload" }
+}</div>
+          </div>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--ink-3)">
+          <code>target_balance_at_destination</code> is a target balance, not a delta — the handler moves whatever
+          amount closes the gap. <code>TransferInstructionV2</code> schema:
+          <code>unified_api_contracts/internal/architecture_v2/schemas.py:411-417</code>. Only DeFi-to-DeFi and the
+          4 credentialed CEX venues (binance/deribit/bybit/aster) reach the live adapter today (see the venue
+          coverage note above the instruction-type-support table) — any other <code>CEX_WITHDRAW</code> venue
+          returns an honest <code>FAILED</code>, never a fabricated <code>CONFIRMED</code>.
         </p>
       </details>
 
@@ -18886,7 +19016,10 @@ Content-Type: application/json
               </tr>
               <tr>
                 <td><code>501</code></td>
-                <td>An action outside the <code>StrategyInstructionV2</code> union — none exist today; every
+                <td><code>ControlInstruction</code> (<code>KILL_SWITCH</code>/<code>FLATTEN_POSITION</code>) — the
+                  sole declared action type whose dispatch chain does not call its own handler yet
+                  (<code>_submit_control_instruction()</code> exists and is correct, but
+                  <code>submit_external_instruction</code>'s isinstance chain never reaches it). Every other
                   declared action type routes to real execution</td>
                 <td>execution-service</td>
               </tr>
@@ -19165,6 +19298,21 @@ Content-Type: application/json
         <p style="font-size: 0.9rem; color: var(--ink-3)">
           Full endpoint depth (parameters, example bodies, error tables):
           <code>codex/14-customer-journeys/commercial-model/platform-api-reference.html</code> §06.
+        </p>
+      </div>
+      <div class="callout">
+        <span class="tag">Hot-config-reload: credential rotation without a restart</span>
+        <p>
+          A key rotated in Secret Manager reaches every running service without a redeploy — this is a shared UTL
+          pattern (<code>ApiKeyReloader</code>), not something built once for signal-broadcast credentials above.
+          Each service constructs one against its own venue list; a background thread re-fetches via UTL's
+          <code>validate_api_keys_for_venues</code> on a fixed interval (default 300s — the same cadence the
+          signal-broadcast credential manager above uses), <code>current_keys</code> returns a thread-safe
+          immutable snapshot, and <code>on_refresh(callback)</code> registers a hook fired only for the sources
+          whose value actually changed — so a consumer re-wires its connection pool only on real rotation, never on
+          every poll tick. In production use today in execution-service, instruments-service,
+          market-tick-data-service (per-venue API keys) and strategy-service (per-counterparty HMAC secrets, the
+          block above). <b>Source:</b> <code>unified_trading_library/api_key_reloader.py</code>.
         </p>
       </div>
 
