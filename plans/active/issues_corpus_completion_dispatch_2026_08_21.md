@@ -242,6 +242,14 @@ genuine wall) · ADOPTED-REC (decided under rule 2 using the documented record; 
       `tradfi_autonomous_session_operator_decisions_2026_07_25`, `operator_ruling_record_plan_reconcile_session_2026_08_15`,
       `sit_gate_treadmill_*`, `cefi_empty_confirmed_historical_breakdown_reference_*`) → leave active, correct their
       queue verdict to STANDING-REFERENCE. Done-when: every pass-1 skip has one of those four dispositions logged.
+      `wiv6q901k` (2.5h, 172 tool calls) processed all 51 candidates with real dispositions (18 archived/superseded,
+      13 locked_by-cleared-then-archived, 12 standing-reference-kept correctly left open, 6 genuinely skipped —
+      1 gate-still-open, 2 real-actor-locks, 1 stale-duplicate deferred to its own tracked operator-gated delete, 2
+      re-verified-not-actually-0-open) — but never shipped any of it (repeated contention-driven reverts over its own
+      2.5h run). Recorded the full per-doc record at
+      `.ao_checkpoints/issues_corpus_completion_2026_08_21/archival_pass2_result.json`; dispatched a dedicated
+      reconciliation agent (`aa77a3d57eba3ef6c`) to verify + ship it in scoped batches, explicitly warned this checkout
+      also carries substantial unrelated peer WIP right now (confirmed via `git status`) — never `git add -A`.
 - [x] 2. ✅ [SCRIPT] P0. Mark the 49 COVERED_ELSEWHERE docs with the counter-recognized EXTRACTED/DUPLICATE-OF or
       superseded_by form (serial lane) — `unified-trading-pm@6c274b982d` + `@dc08518953` + `@c66f71e3d5` + `@4c8de37473`
       (47 processed: 14 newly marked, 5 edited, 1 partial, 18 verified already-deduped/0-open, 9 flagged for archival;
